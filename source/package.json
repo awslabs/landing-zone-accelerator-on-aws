@@ -1,0 +1,62 @@
+{
+  "name": "aws-compliance-accelerator",
+  "version": "2.0.0",
+  "description": "AWS Compliance Accelerator",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Amazon Web Services",
+    "url": "https://aws.amazon.com"
+  },
+  "private": true,
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.14.0",
+    "@typescript-eslint/parser": "^2.14.0",
+    "eslint": "^6.8.0",
+    "eslint-import-resolver-node": "^0.3.2",
+    "eslint-import-resolver-typescript": "^2.0.0",
+    "eslint-plugin-import": "^2.19.1",
+    "eslint-plugin-license-header": "^0.2.0",
+    "fs-extra": "^8.1.0",
+    "jest": "^26.4.2",
+    "jsii": "^1.11.0",
+    "jsii-pacmak": "^1.11.0",
+    "tslint": "^5.20.1",
+    "typescript": "~3.9.7"
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "1.102.0",
+    "@types/jest": "^26.0.10",
+    "@types/node": "10.17.27",
+    "aws-cdk": "1.102.0",
+    "jest": "^26.4.2",
+    "lerna": "^4.0.0",
+    "ts-jest": "^26.2.0",
+    "ts-node": "^9.0.0",
+    "typescript": "~3.9.7"
+  },
+  "scripts": {
+    "cleanup": "lerna run cleanup --stream && rm -rf node_modules && rm -rf yarn.lock",
+    "cleanup:tsc": "lerna run cleanup:tsc --stream",
+    "build": "lerna run build --stream",
+    "test": "lerna run test --stream",
+    "cdk:synth:installer": "yarn build && lerna run cdk --scope=@aws-accelerator/installer -- synth"
+  },
+  "workspaces": {
+    "packages": [
+      "./packages/@aws-accelerator/*",
+      "./packages/@aws-compliant-constructs/*"
+    ],
+    "nohoist": [
+      "**/deepmerge",
+      "**/deepmerge/**",
+      "**/npmlog",
+      "**/npmlog/**",
+      "**/@types/npmlog",
+      "**/@types/npmlog/**",
+      "**/deep-diff",
+      "**/deep-diff/**",
+      "**/@types/deep-diff",
+      "**/@types/deep-diff/**"
+    ]
+  }
+}

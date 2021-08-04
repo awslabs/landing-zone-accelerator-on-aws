@@ -1,0 +1,40 @@
+{
+  "name": "@aws-accelerator/installer",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Amazon Web Services",
+    "url": "https://aws.amazon.com"
+  },
+  "bin": {
+    "installer": "bin/installer.js"
+  },
+  "scripts": {
+    "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock",
+    "cleanup:tsc": "tsc --build ./ --clean",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest --coverage",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "1.102.0",
+    "@types/jest": "^26.0.10",
+    "@types/node": "10.17.27",
+    "aws-cdk": "1.102.0",
+    "jest": "^26.4.2",
+    "ts-jest": "^26.2.0",
+    "ts-node": "^9.0.0",
+    "typescript": "~3.9.7"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-s3-assets": "1.102.0",
+    "@aws-cdk/cloud-assembly-schema": "1.102.0",
+    "@aws-cdk/core": "1.102.0",
+    "@aws-cdk/cx-api": "1.102.0",
+    "@aws-cdk/region-info": "1.102.0",
+    "@aws-compliant-constructs/secure-vpc": "0.0.0",
+    "constructs": "^3.3.69",
+    "source-map-support": "^0.5.16"
+  }
+}

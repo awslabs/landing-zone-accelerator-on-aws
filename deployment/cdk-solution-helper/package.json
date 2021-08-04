@@ -1,0 +1,10 @@
+{
+  "name": "cdk-solution-helper",
+  "version": "0.1.0",
+  "devDependencies": {
+    "fs": "0.0.1-security"
+  },
+  "dependencies": {
+    "fs": "0.0.1-security"
+  }
+}

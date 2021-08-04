@@ -1,0 +1,35 @@
+*.js
+!deployment/.typescript/cdk-solution-helper/index.js
+package-lock.json
+!jest.config.js
+*.d.ts
+*.tsbuildinfo
+node_modules
+!source/.typescript/lambda/**/*.js
+!source/lambda/**/*.js
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
+!**/cdk-solution-helper/index.js
+
+deployment/global-s3-assets
+deployment/regional-s3-assets
+open-source/
+
+# Temporary folders
+tmp/
+temp/
+
+# yarn files
+yarn-error.log
+
+# jest coverage folder
+coverage/
+
+### VisualStudioCode ###
+.vscode/*
+
+### macOS ###
+.DS_Store
