@@ -20,6 +20,5 @@
     "typeRoots": ["../../../node_modules/@types"],
     "composite": true,
   },
-  "include": ["lib"],
   "exclude": ["cdk.out"]
 }

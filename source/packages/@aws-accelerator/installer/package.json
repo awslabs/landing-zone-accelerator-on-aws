@@ -28,12 +28,15 @@
     "typescript": "~3.9.7"
   },
   "dependencies": {
+    "@aws-cdk/aws-codepipeline": "1.102.0",
+    "@aws-cdk/aws-codepipeline-actions": "1.102.0",
     "@aws-cdk/aws-s3-assets": "1.102.0",
     "@aws-cdk/cloud-assembly-schema": "1.102.0",
     "@aws-cdk/core": "1.102.0",
     "@aws-cdk/cx-api": "1.102.0",
     "@aws-cdk/region-info": "1.102.0",
-    "@aws-compliant-constructs/secure-vpc": "0.0.0",
+    "@aws-compliant-constructs/secure-s3-bucket": "^0.0.0",
+    "@aws-compliant-constructs/secure-vpc": "^0.0.0",
     "constructs": "^3.3.69",
     "source-map-support": "^0.5.16"
   }

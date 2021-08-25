@@ -39,7 +39,9 @@
     "cleanup:tsc": "lerna run cleanup:tsc --stream",
     "build": "lerna run build --stream",
     "test": "lerna run test --stream",
-    "cdk:synth:installer": "yarn build && lerna run cdk --scope=@aws-accelerator/installer -- synth"
+    "cdk:synth:installer": "yarn build && lerna run cdk --scope=@aws-accelerator/installer -- synth",
+    "cdk:deploy:installer": "yarn build && lerna run cdk --scope=@aws-accelerator/installer -- deploy",
+    "cdk:list:installer": "lerna run cdk --scope=@aws-accelerator/installer -- list"
   },
   "workspaces": {
     "packages": [
