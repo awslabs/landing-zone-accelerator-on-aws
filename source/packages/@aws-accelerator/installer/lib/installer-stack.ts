@@ -12,8 +12,8 @@ export class InstallerStack extends cdk.Stack {
   private readonly repositorySource = new cdk.CfnParameter(this, 'RepositorySource', {
     type: 'String',
     description: 'Specify the git host',
-    allowedValues: ['GitHub', 'CodeCommit'],
-    default: 'GitHub',
+    allowedValues: [RepositorySources.GITHUB, RepositorySources.CODECOMMIT],
+    default: RepositorySources.GITHUB,
   });
   private readonly repositoryName = new cdk.CfnParameter(this, 'RepositoryName', {
     type: 'String',
