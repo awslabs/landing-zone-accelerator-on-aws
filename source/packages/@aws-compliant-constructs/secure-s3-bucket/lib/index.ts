@@ -53,7 +53,7 @@ export class SecureS3Bucket extends cdk.Construct {
     });
     this.cmk.addAlias(props.kmsAliasName);
 
-    this.bucket = new s3.Bucket(this, 'Bucket', {
+    this.bucket = new s3.Bucket(this, 'Resource', {
       encryption: s3.BucketEncryption.KMS,
       encryptionKey: this.cmk,
       removalPolicy: RemovalPolicy.DESTROY,

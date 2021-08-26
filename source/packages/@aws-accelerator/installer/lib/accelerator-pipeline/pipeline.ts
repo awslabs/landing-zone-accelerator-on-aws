@@ -25,7 +25,7 @@ export class AcceleratorPipeline extends cdk.Construct {
     });
 
     // cfn_nag: Suppress warning related to the pipeline artifacts S3 bucket
-    const cfnBucket = bucket.node.findChild('Bucket').node.findChild('Resource') as s3.CfnBucket;
+    const cfnBucket = bucket.node.defaultChild?.node.defaultChild as s3.CfnBucket;
     cfnBucket.cfnOptions.metadata = {
       cfn_nag: {
         rules_to_suppress: [
@@ -55,14 +55,14 @@ export class AcceleratorPipeline extends cdk.Construct {
       assumedBy: new iam.ServicePrincipal('codepipeline.amazonaws.com'),
     });
 
-    const pipeline = new codepipeline.Pipeline(this, 'Pipeline', {
+    const pipeline = new codepipeline.Pipeline(this, 'Resource', {
       pipelineName: 'AWS-Accelerator',
       artifactBucket: bucket.getS3Bucket(),
       role: pipelineRole,
     });
 
     // cfn_nag: Suppress warning related to high SPCM score
-    const cfnPipelinePolicy = pipeline.role.node.findChild('DefaultPolicy').node.findChild('Resource') as iam.CfnPolicy;
+    const cfnPipelinePolicy = pipeline.role.node.findChild('DefaultPolicy').node.defaultChild as iam.CfnPolicy;
     cfnPipelinePolicy.cfnOptions.metadata = {
       cfn_nag: {
         rules_to_suppress: [
