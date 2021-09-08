@@ -33,3 +33,9 @@ coverage/
 
 ### macOS ###
 .DS_Store
+
+### IntelliJ ###
+.idea
+
+### Exclude Documentation ###
+docs

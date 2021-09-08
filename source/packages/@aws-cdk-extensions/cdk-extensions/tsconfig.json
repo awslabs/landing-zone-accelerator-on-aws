@@ -19,15 +19,15 @@
     "inlineSources": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
-    "typeRoots": [
-      "../../../node_modules/@types"
-    ],
-    "composite": false
+    "typeRoots": ["../node_modules/@types"]
   },
-  "include": [
-    "lib"
-  ],
   "exclude": [
+    "node_modules",
     "cdk.out"
-  ]
+  ],
+  "typedocOptions" :{
+    "entryPoints": ["./lib/index.ts"],
+    "out": "docs"
+  }
 }
+

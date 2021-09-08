@@ -9,14 +9,22 @@ import * as s3 from '@aws-cdk/aws-s3';
 import { SecureS3Bucket } from '@aws-compliant-constructs/secure-s3-bucket';
 import { CodeCommitTrigger } from '@aws-cdk/aws-codepipeline-actions';
 
+
+import {ConfigRepository} from "./config-repository";
+
 export interface AcceleratorPipelineProps {
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
 }
 
+/**
+ * AWS Accelerator Pipeline Class, which creates the pipeline for AWS Landing zone
+ */
 export class AcceleratorPipeline extends cdk.Construct {
+
   constructor(scope: cdk.Construct, id: string, props: AcceleratorPipelineProps) {
     super(scope, id);
+
 
     const bucket = new SecureS3Bucket(this, 'SecureBucket', {
       s3BucketName: `aws-accelerator-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
@@ -37,16 +45,12 @@ export class AcceleratorPipeline extends cdk.Construct {
       },
     };
 
-    /**
-     * Configuration Repository
-     */
-
-    const configRepo = new codecommit.Repository(this, 'ConfigurationRepo', {
-      repositoryName: 'aws-accelerator',
+    const configRepository = new ConfigRepository(this,"ConfigRepository",{
+      repositoryName:"accelerator-config",
+      repositoryBranchName: "main",
+      description: "AWS Accelerator configuration repository, created and initialized with default config file by pipeline"
     });
 
-    // TODO: Insert custom resource to initialize the CodeCommit repository with
-    // default configuration files
 
     /**
      * Pipeline
@@ -56,7 +60,7 @@ export class AcceleratorPipeline extends cdk.Construct {
     });
 
     const pipeline = new codepipeline.Pipeline(this, 'Resource', {
-      pipelineName: 'AWS-Accelerator',
+      pipelineName: "AWS-Accelerator",
       artifactBucket: bucket.getS3Bucket(),
       role: pipelineRole,
     });
@@ -77,6 +81,8 @@ export class AcceleratorPipeline extends cdk.Construct {
     const acceleratorRepoArtifact = new codepipeline.Artifact('Source');
     const configRepoArtifact = new codepipeline.Artifact('Config');
 
+
+
     pipeline.addStage({
       stageName: 'Source',
       actions: [
@@ -89,7 +95,7 @@ export class AcceleratorPipeline extends cdk.Construct {
         }),
         new codepipeline_actions.CodeCommitSourceAction({
           actionName: 'Configuration',
-          repository: configRepo,
+          repository: configRepository.getRepository(),
           branch: 'main',
           output: configRepoArtifact,
           trigger: CodeCommitTrigger.NONE,
@@ -284,5 +290,6 @@ export class AcceleratorPipeline extends cdk.Construct {
         }),
       ],
     });
+
   }
 }
