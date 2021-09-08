@@ -18,7 +18,10 @@
     "experimentalDecorators": true,
     "strictPropertyInitialization": false,
     "typeRoots": ["../../../node_modules/@types"],
-    "composite": true,
+    "composite": false,
   },
-  "exclude": ["cdk.out"]
+  "exclude": [
+    "node_modules",
+    "cdk.out"
+  ]
 }

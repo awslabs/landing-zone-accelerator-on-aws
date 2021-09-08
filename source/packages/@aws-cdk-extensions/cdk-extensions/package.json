@@ -1,5 +1,5 @@
 {
-  "name": "@aws-compliant-constructs/secure-vpc",
+  "name": "@aws-cdk-extensions/cdk-extensions",
   "version": "0.0.0",
   "license": "Apache-2.0",
   "author": {
@@ -17,8 +17,14 @@
   },
   "devDependencies": {
     "@aws-cdk/assert": "1.102.0",
+    "@aws-cdk/aws-codecommit": "1.102.0",
     "@types/jest": "^26.0.10",
     "@types/node": "10.17.27",
+    "eslint": "^6.8.0",
+    "eslint-import-resolver-node": "^0.3.2",
+    "eslint-import-resolver-typescript": "^2.0.0",
+    "eslint-plugin-import": "^2.19.1",
+    "eslint-plugin-license-header": "^0.2.0",
     "jest": "^26.4.2",
     "ts-jest": "^26.2.0",
     "typescript": "~4.4.2"
@@ -27,7 +33,6 @@
     "@aws-cdk/core": "1.102.0"
   },
   "dependencies": {
-    "@aws-cdk/aws-ssm": "1.102.0",
     "@aws-cdk/core": "1.102.0"
   }
 }

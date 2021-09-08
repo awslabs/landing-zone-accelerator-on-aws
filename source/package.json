@@ -21,7 +21,7 @@
     "jsii": "^1.11.0",
     "jsii-pacmak": "^1.11.0",
     "tslint": "^5.20.1",
-    "typescript": "~3.9.7"
+    "typescript": "~4.4.2"
   },
   "devDependencies": {
     "@aws-cdk/assert": "1.102.0",
@@ -32,7 +32,8 @@
     "lerna": "^4.0.0",
     "ts-jest": "^26.2.0",
     "ts-node": "^9.0.0",
-    "typescript": "~3.9.7"
+    "typedoc": "^0.21.9",
+    "typescript": "~4.4.2"
   },
   "scripts": {
     "cleanup": "lerna run cleanup --stream && rm -rf node_modules && rm -rf yarn.lock",
@@ -41,12 +42,14 @@
     "test": "lerna run test --stream",
     "cdk:synth:installer": "yarn build && lerna run cdk --scope=@aws-accelerator/installer -- synth",
     "cdk:deploy:installer": "yarn build && lerna run cdk --scope=@aws-accelerator/installer -- deploy",
-    "cdk:list:installer": "lerna run cdk --scope=@aws-accelerator/installer -- list"
+    "cdk:list:installer": "lerna run cdk --scope=@aws-accelerator/installer -- list",
+    "docs": "npx typedoc --packages ."
   },
   "workspaces": {
     "packages": [
       "./packages/@aws-accelerator/*",
-      "./packages/@aws-compliant-constructs/*"
+      "./packages/@aws-compliant-constructs/*",
+      "./packages/@aws-cdk-extensions/*"
     ],
     "nohoist": [
       "**/deepmerge",

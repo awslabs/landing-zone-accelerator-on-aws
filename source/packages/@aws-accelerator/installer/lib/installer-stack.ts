@@ -1,11 +1,18 @@
+/**
+ * @module
+ * Module comment
+ */
+
 import * as cdk from '@aws-cdk/core';
 
-import { AcceleratorPipeline } from './accelerator-pipeline';
+import { AcceleratorPipeline } from './index';
+
 
 enum RepositorySources {
   GITHUB = 'github',
   CODECOMMIT = 'codecommit',
 }
+
 
 export class InstallerStack extends cdk.Stack {
   // TODO: Add allowedPattern for all CfnParameter uses
