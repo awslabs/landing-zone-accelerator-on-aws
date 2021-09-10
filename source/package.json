@@ -28,6 +28,9 @@
     "@types/jest": "^26.0.10",
     "@types/node": "10.17.27",
     "aws-cdk": "1.102.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "husky-init": "^7.0.0",
     "jest": "^26.4.2",
     "lerna": "^4.0.0",
     "ts-jest": "^26.2.0",
@@ -43,7 +46,11 @@
     "cdk:synth:installer": "yarn build && lerna run cdk --scope=@aws-accelerator/installer -- synth",
     "cdk:deploy:installer": "yarn build && lerna run cdk --scope=@aws-accelerator/installer -- deploy",
     "cdk:list:installer": "lerna run cdk --scope=@aws-accelerator/installer -- list",
-    "docs": "npx typedoc --packages ."
+    "docs": "npx typedoc --packages .",
+    "prepare": "cd ../ && husky install source/.husky",
+    "postinstall": "cd ../ && husky install source/.husky && cd source",
+    "lint": "lerna run lint --stream",
+    "prettier": "lerna run prettier --stream"
   },
   "workspaces": {
     "packages": [
