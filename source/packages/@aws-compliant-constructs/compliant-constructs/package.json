@@ -13,13 +13,22 @@
     "cleanup:tsc": "tsc --build ./ --clean",
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "jest --coverage"
+    "test": "jest --coverage",
+    "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'",
+    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'"
   },
   "devDependencies": {
     "@aws-cdk/assert": "1.102.0",
     "@types/jest": "^26.0.10",
     "@types/node": "10.17.27",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^4.0.0",
     "jest": "^26.4.2",
+    "prettier": "^2.3.2",
     "ts-jest": "^26.2.0",
     "typescript": "~3.9.7"
   },
