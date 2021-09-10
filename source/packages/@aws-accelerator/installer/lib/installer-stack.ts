@@ -4,15 +4,12 @@
  */
 
 import * as cdk from '@aws-cdk/core';
-
-import { AcceleratorPipeline } from './index';
-
+import * as pipeline from './pipeline';
 
 enum RepositorySources {
   GITHUB = 'github',
   CODECOMMIT = 'codecommit',
 }
-
 
 export class InstallerStack extends cdk.Stack {
   // TODO: Add allowedPattern for all CfnParameter uses
@@ -66,7 +63,7 @@ export class InstallerStack extends cdk.Stack {
       },
     };
 
-    new AcceleratorPipeline(this, 'Pipeline', {
+    new pipeline.AcceleratorPipeline(this, 'Pipeline', {
       sourceRepositoryName: this.repositoryName.valueAsString,
       sourceBranchName: this.repositoryBranchName.valueAsString,
     });

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from '@aws-cdk/core';
-import { InstallerStack } from '../lib/installer-stack';
+import * as installer from '../lib/installer-stack';
 
 const app = new cdk.App();
 
-new InstallerStack(app, 'InstallerStack', {});
+new installer.InstallerStack(app, 'InstallerStack', {});

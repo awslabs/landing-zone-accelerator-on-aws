@@ -1,16 +1,12 @@
-import * as cdk from '@aws-cdk/core';
 import * as codebuild from '@aws-cdk/aws-codebuild';
 import * as codecommit from '@aws-cdk/aws-codecommit';
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import * as iam from '@aws-cdk/aws-iam';
 import * as s3 from '@aws-cdk/aws-s3';
-
-import { SecureS3Bucket } from '@aws-compliant-constructs/secure-s3-bucket';
-import { CodeCommitTrigger } from '@aws-cdk/aws-codepipeline-actions';
-
-
-import {ConfigRepository} from "./config-repository";
+import * as cdk from '@aws-cdk/core';
+import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
+import * as config_repository from './config-repository';
 
 export interface AcceleratorPipelineProps {
   readonly sourceRepositoryName: string;
@@ -21,12 +17,10 @@ export interface AcceleratorPipelineProps {
  * AWS Accelerator Pipeline Class, which creates the pipeline for AWS Landing zone
  */
 export class AcceleratorPipeline extends cdk.Construct {
-
   constructor(scope: cdk.Construct, id: string, props: AcceleratorPipelineProps) {
     super(scope, id);
 
-
-    const bucket = new SecureS3Bucket(this, 'SecureBucket', {
+    const bucket = new compliant_constructs.SecureS3Bucket(this, 'SecureBucket', {
       s3BucketName: `aws-accelerator-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
       kmsAliasName: 'alias/accelerator/pipeline/s3',
       kmsDescription: 'AWS Accelerator Pipeline Bucket CMK',
@@ -45,12 +39,12 @@ export class AcceleratorPipeline extends cdk.Construct {
       },
     };
 
-    const configRepository = new ConfigRepository(this,"ConfigRepository",{
-      repositoryName:"accelerator-config",
-      repositoryBranchName: "main",
-      description: "AWS Accelerator configuration repository, created and initialized with default config file by pipeline"
+    const configRepository = new config_repository.ConfigRepository(this, 'ConfigRepository', {
+      repositoryName: 'accelerator-config',
+      repositoryBranchName: 'main',
+      description:
+        'AWS Accelerator configuration repository, created and initialized with default config file by pipeline',
     });
-
 
     /**
      * Pipeline
@@ -60,7 +54,7 @@ export class AcceleratorPipeline extends cdk.Construct {
     });
 
     const pipeline = new codepipeline.Pipeline(this, 'Resource', {
-      pipelineName: "AWS-Accelerator",
+      pipelineName: 'AWS-Accelerator',
       artifactBucket: bucket.getS3Bucket(),
       role: pipelineRole,
     });
@@ -81,8 +75,6 @@ export class AcceleratorPipeline extends cdk.Construct {
     const acceleratorRepoArtifact = new codepipeline.Artifact('Source');
     const configRepoArtifact = new codepipeline.Artifact('Config');
 
-
-
     pipeline.addStage({
       stageName: 'Source',
       actions: [
@@ -91,14 +83,14 @@ export class AcceleratorPipeline extends cdk.Construct {
           repository: codecommit.Repository.fromRepositoryName(this, 'SourceRepo', props.sourceRepositoryName),
           branch: props.sourceBranchName,
           output: acceleratorRepoArtifact,
-          trigger: CodeCommitTrigger.NONE,
+          trigger: codepipeline_actions.CodeCommitTrigger.NONE,
         }),
         new codepipeline_actions.CodeCommitSourceAction({
           actionName: 'Configuration',
           repository: configRepository.getRepository(),
           branch: 'main',
           output: configRepoArtifact,
-          trigger: CodeCommitTrigger.NONE,
+          trigger: codepipeline_actions.CodeCommitTrigger.NONE,
         }),
       ],
     });
@@ -290,6 +282,5 @@ export class AcceleratorPipeline extends cdk.Construct {
         }),
       ],
     });
-
   }
 }
