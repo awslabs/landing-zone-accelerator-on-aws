@@ -38,7 +38,6 @@
     "@aws-cdk/core": "1.102.0",
     "@aws-cdk/cx-api": "1.102.0",
     "@aws-cdk/region-info": "1.102.0",
-    "@aws-compliant-constructs/secure-s3-bucket": "^0.0.0",
-    "@aws-compliant-constructs/secure-vpc": "^0.0.0"
+    "@aws-compliant-constructs/compliant-constructs": "^0.0.0"
   }
 }

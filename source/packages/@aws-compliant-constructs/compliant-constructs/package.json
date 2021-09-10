@@ -1,5 +1,5 @@
 {
-  "name": "@aws-compliant-constructs/secure-vpc",
+  "name": "@aws-compliant-constructs/compliant-constructs",
   "version": "0.0.0",
   "license": "Apache-2.0",
   "author": {
@@ -21,13 +21,16 @@
     "@types/node": "10.17.27",
     "jest": "^26.4.2",
     "ts-jest": "^26.2.0",
-    "typescript": "~4.4.2"
+    "typescript": "~3.9.7"
   },
   "peerDependencies": {
     "@aws-cdk/core": "1.102.0"
   },
   "dependencies": {
-    "@aws-cdk/aws-ssm": "1.102.0",
+    "@aws-cdk/aws-iam": "1.102.0",
+    "@aws-cdk/aws-kms": "1.102.0",
+    "@aws-cdk/aws-lambda": "1.102.0",
+    "@aws-cdk/aws-s3": "1.102.0",
     "@aws-cdk/core": "1.102.0"
   }
 }
