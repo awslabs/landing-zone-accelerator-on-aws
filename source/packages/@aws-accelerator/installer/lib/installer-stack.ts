@@ -29,10 +29,10 @@ export class InstallerStack extends cdk.Stack {
     description: 'The name of the git branch to use for installation',
   });
 
-  private readonly notificationEmail = new cdk.CfnParameter(this, 'NotificationEmail', {
-    type: 'String',
-    description: 'The notification email that will get Accelerator State Machine execution notifications.',
-  });
+  // private readonly notificationEmail = new cdk.CfnParameter(this, 'NotificationEmail', {
+  //   type: 'String',
+  //   description: 'The notification email that will get Accelerator State Machine execution notifications.',
+  // });
 
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -49,16 +49,16 @@ export class InstallerStack extends cdk.Stack {
               this.repositoryBranchName.logicalId,
             ],
           },
-          {
-            Label: { default: 'Accelerator Configuration' },
-            Parameters: [this.notificationEmail.logicalId],
-          },
+          // {
+          //   Label: { default: 'Accelerator Configuration' },
+          //   Parameters: [this.notificationEmail.logicalId],
+          // },
         ],
         ParameterLabels: {
           [this.repositorySource.logicalId]: { default: 'Source' },
           [this.repositoryName.logicalId]: { default: 'Repository Name' },
           [this.repositoryBranchName.logicalId]: { default: 'Branch Name' },
-          [this.notificationEmail.logicalId]: { default: 'Notification Email' },
+          // [this.notificationEmail.logicalId]: { default: 'Notification Email' },
         },
       },
     };

@@ -120,7 +120,7 @@ export class SecureS3Bucket extends cdk.Construct {
     return this.bucket;
   }
 
-  protected validate(): string[] {
+  protected override validate(): string[] {
     const errors: string[] = [];
 
     // errors.push('some error');

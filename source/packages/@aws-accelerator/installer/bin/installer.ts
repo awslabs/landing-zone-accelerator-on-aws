@@ -5,4 +5,4 @@ import * as installer from '../lib/installer-stack';
 
 const app = new cdk.App();
 
-new installer.InstallerStack(app, 'InstallerStack', {});
+new installer.InstallerStack(app, 'AWSAccelerator-InstallerStack', {});
