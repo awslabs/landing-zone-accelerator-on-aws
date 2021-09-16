@@ -5,11 +5,16 @@ import * as CdkExtensions from '../lib/index';
 /*
  * Example test
  */
-// test('SNS Topic Created', () => {
-//   const app = new cdk.App();
-//   const stack = new cdk.Stack(app, "TestStack");
-//   // WHEN
-//   new CdkExtensions.CdkExtensions(stack, 'MyTestConstruct');
-//   // THEN
-//   expectCDK(stack).to(countResources("AWS::SNS::Topic",0));
-// });
+test('CdkExtensions.Repository', () => {
+  const app = new cdk.App();
+  const stack = new cdk.Stack(app, 'TestStack');
+  // WHEN
+  new CdkExtensions.Repository(stack, 'MyTestConstruct', {
+    repositoryBranchName: 'main',
+    repositoryName: 'AWS-accelerator',
+    s3BucketName: 'Testbucket',
+    s3key: 'testkey',
+  });
+  // THEN
+  expectCDK(stack).to(countResources('AWS::SNS::Topic', 0));
+});

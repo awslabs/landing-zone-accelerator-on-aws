@@ -14,8 +14,9 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest --coverage",
-    "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'",
-    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'"
+    "testreport": "jest --ci --coverage",
+    "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
+    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
   },
   "devDependencies": {
     "@aws-cdk/assert": "1.102.0",
@@ -30,7 +31,7 @@
     "jest": "^26.4.2",
     "prettier": "^2.3.2",
     "ts-jest": "^26.2.0",
-    "typescript": "~3.9.7"
+    "typescript": "~4.4.2"
   },
   "peerDependencies": {
     "@aws-cdk/core": "1.102.0"

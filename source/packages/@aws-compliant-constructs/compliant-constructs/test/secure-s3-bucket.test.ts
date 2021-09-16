@@ -5,7 +5,7 @@ import * as compliant_constructs from '../lib/index';
 /*
  * Example test
  */
-test('SNS Topic Created', () => {
+test('compliant_constructs.SecureS3Bucket', () => {
   const app = new cdk.App();
   const stack = new cdk.Stack(app, 'TestStack');
   // WHEN

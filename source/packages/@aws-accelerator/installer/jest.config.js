@@ -1,7 +1,6 @@
+const base = require('../../../jest.config.base');
+const packageJson = require('./package.json');
+
 module.exports = {
-  roots: ['<rootDir>/test'],
-  testMatch: ['**/*.test.ts'],
-  transform: {
-    '^.+\\.tsx?$': 'ts-jest'
-  }
+  ...base.getJestJunitConfig(packageJson.name),
 };

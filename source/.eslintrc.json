@@ -1,6 +1,7 @@
 {
   "env": {
-    "es2021": true
+    "es2021": true,
+    "node": true
   },
   "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:prettier/recommended"],
   "parser": "@typescript-eslint/parser",
@@ -12,6 +13,11 @@
   "rules": {
     "no-case-declarations": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
-    "@typescript-eslint/camelcase": "off"
-  }
+    "@typescript-eslint/camelcase": "off",
+    "@typescript-eslint/no-var-requires": 0
+  },
+  "globals": {
+    "require": true
+  },
+  "root": true
 }
