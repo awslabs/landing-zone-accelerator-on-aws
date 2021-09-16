@@ -17,9 +17,10 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest --coverage",
+    "testreport": "jest --ci --coverage",
     "cdk": "cdk",
-    "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'",
-    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'"
+    "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
+    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
   },
   "devDependencies": {
     "@aws-cdk/assert": "1.102.0",
