@@ -2,7 +2,8 @@
   "npmClient": "yarn",
   "useWorkspaces": true,
   "packages": [
-    "./packages/@aws-accelerator/*",
+    "./packages/@aws-compliant-constructs/*",
+    "./packages/@aws-cdk-extensions/*",
     "./packages/@aws-compliant-constructs/*"
   ],
   "rejectCycles": "true",
