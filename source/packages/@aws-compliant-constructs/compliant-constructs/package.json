@@ -6,10 +6,10 @@
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock",
+    "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
     "build": "tsc",
     "watch": "tsc -w",
@@ -19,30 +19,30 @@
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
   },
   "devDependencies": {
-    "@aws-cdk/assert": "1.113.0",
-    "@types/fs-extra": "^9.0.12",
-    "@types/jest": "^26.0.10",
-    "@types/node": "^16.9.1",
-    "eslint": "^7.32.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-config-standard": "^16.0.3",
-    "eslint-plugin-import": "^2.24.2",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "jest": "^26.4.2",
-    "prettier": "^2.3.2",
-    "ts-jest": "^26.2.0",
-    "typescript": "~4.4.3"
+    "@aws-cdk/assert": "1.123.0",
+    "@types/fs-extra": "9.0.12",
+    "@types/jest": "26.0.10",
+    "@types/node": "16.9.1",
+    "eslint": "7.32.0",
+    "eslint-config-prettier": "8.3.0",
+    "eslint-config-standard": "16.0.3",
+    "eslint-plugin-import": "2.24.2",
+    "eslint-plugin-node": "11.1.0",
+    "eslint-plugin-prettier": "4.0.0",
+    "jest": "26.4.2",
+    "prettier": "2.4.1",
+    "ts-jest": "26.2.0",
+    "typescript": "4.4.3"
   },
   "peerDependencies": {
-    "@aws-cdk/core": "1.113.0"
+    "@aws-cdk/core": "1.123.0"
   },
   "dependencies": {
-    "@aws-cdk/aws-iam": "1.113.0",
-    "@aws-cdk/aws-kms": "1.113.0",
-    "@aws-cdk/aws-lambda": "1.113.0",
-    "@aws-cdk/aws-s3": "1.113.0",
-    "@aws-cdk/core": "1.113.0",
-    "fs-extra": "^10.0.0"
+    "@aws-cdk/aws-iam": "1.123.0",
+    "@aws-cdk/aws-kms": "1.123.0",
+    "@aws-cdk/aws-lambda": "1.123.0",
+    "@aws-cdk/aws-s3": "1.123.0",
+    "@aws-cdk/core": "1.123.0",
+    "fs-extra": "10.0.0"
   }
 }

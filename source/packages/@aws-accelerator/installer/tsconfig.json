@@ -3,6 +3,6 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "include": ["lib/**/*"],
+  "include": ["lib/**/*", "bin/**/*", "index.ts"],
   "exclude": ["cdk.out/**/*", "test/**/*"]
 }
