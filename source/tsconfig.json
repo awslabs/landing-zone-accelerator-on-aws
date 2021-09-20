@@ -15,6 +15,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "preserveSymlinks": true,
+    "sourceMap": true,
     "lib": ["ES2019", "ES2020.Promise"],
     "target": "ES2019",
     "composite": false

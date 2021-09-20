@@ -1,6 +1,6 @@
 import { expect as expectCDK, countResources } from '@aws-cdk/assert';
 import * as cdk from '@aws-cdk/core';
-import * as compliant_constructs from '../lib/index';
+import * as compliant_constructs from '../index';
 
 /*
  * Example test

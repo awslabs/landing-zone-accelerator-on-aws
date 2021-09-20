@@ -7,6 +7,7 @@ import * as s3 from '@aws-cdk/aws-s3';
 import * as cdk from '@aws-cdk/core';
 import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
 import * as config_repository from './config-repository';
+import * as accelerator from '@aws-accelerator/accelerator';
 
 export interface AcceleratorPipelineProps {
   readonly sourceRepositoryName: string;
@@ -172,9 +173,10 @@ export class AcceleratorPipeline extends cdk.Construct {
           },
           build: {
             commands: [
+              'env',
               'cd source',
               'cd packages/@aws-accelerator/accelerator',
-              'npx ts-node --transpile-only cdk.ts $CDK_OPTIONS',
+              'npx ts-node --transpile-only cdk.ts $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config',
             ],
           },
         },
@@ -193,25 +195,26 @@ export class AcceleratorPipeline extends cdk.Construct {
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),
     });
 
-    // pipeline.addStage({
-    //   stageName: 'Bootstrap',
-    //   actions: [
-    //     new codepipeline_actions.CodeBuildAction({
-    //       actionName: 'Bootstrap',
-    //       runOrder: 1,
-    //       project: toolkitProject,
-    //       input: buildOutput,
-    //       extraInputs: [configRepoArtifact],
-    //       role: pipelineRole,
-    //       environmentVariables: {
-    //         CDK_OPTIONS: {
-    //           type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-    //           value: `bootstrap --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}`,
-    //         },
-    //       },
-    //     }),
-    //   ],
-    // });
+    pipeline.addStage({
+      stageName: 'Bootstrap',
+      actions: [
+        new codepipeline_actions.CodeBuildAction({
+          actionName: 'Bootstrap',
+          runOrder: 1,
+          project: toolkitProject,
+          input: buildOutput,
+          extraInputs: [configRepoArtifact],
+          role: pipelineRole,
+          environmentVariables: {
+            CDK_OPTIONS: {
+              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+              // TODO: Investigate how to bootstrap using CLI stackless
+              value: `bootstrap --stage ${accelerator.Stage.VALIDATE}`,
+            },
+          },
+        }),
+      ],
+    });
 
     pipeline.addStage({
       stageName: 'Validate',
@@ -226,84 +229,99 @@ export class AcceleratorPipeline extends cdk.Construct {
           environmentVariables: {
             CDK_OPTIONS: {
               type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-              value: `deploy --stage validate --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}`,
+              value: `deploy --stage ${accelerator.Stage.VALIDATE}`,
             },
           },
         }),
       ],
     });
 
-    //     new codepipeline_actions.CodeBuildAction({
-    //       actionName: 'Accounts',
-    //       runOrder: 2,
-    //       project: deployProject,
-    //       input: buildOutput,
-    //       extraInputs: [configRepoArtifact],
-    //       role: pipelineRole,
-    //       environmentVariables: {
-    //         CDK_OPTIONS: {
-    //           type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-    //           value: `deploy --stage accounts --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}`,
-    //         },
-    //       },
-    //     }),
-    //     new codepipeline_actions.CodeBuildAction({
-    //       actionName: 'Dependencies',
-    //       runOrder: 3,
-    //       project: deployProject,
-    //       input: buildOutput,
-    //       extraInputs: [configRepoArtifact],
-    //       role: pipelineRole,
-    //       environmentVariables: {
-    //         CDK_OPTIONS: {
-    //           type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-    //           value: `deploy --stage dependencies --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}`,
-    //         },
-    //       },
-    //     }),
-    //     new codepipeline_actions.CodeBuildAction({
-    //       actionName: 'Security',
-    //       runOrder: 4,
-    //       project: deployProject,
-    //       input: buildOutput,
-    //       extraInputs: [configRepoArtifact],
-    //       role: pipelineRole,
-    //       environmentVariables: {
-    //         CDK_OPTIONS: {
-    //           type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-    //           value: `deploy --stage security --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}`,
-    //         },
-    //       },
-    //     }),
-    //     new codepipeline_actions.CodeBuildAction({
-    //       actionName: 'Operations',
-    //       runOrder: 5,
-    //       project: deployProject,
-    //       input: buildOutput,
-    //       extraInputs: [configRepoArtifact],
-    //       role: pipelineRole,
-    //       environmentVariables: {
-    //         CDK_OPTIONS: {
-    //           type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-    //           value: `deploy --stage operations --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}`,
-    //         },
-    //       },
-    //     }),
-    //     new codepipeline_actions.CodeBuildAction({
-    //       actionName: 'Networking',
-    //       runOrder: 6,
-    //       project: deployProject,
-    //       input: buildOutput,
-    //       extraInputs: [configRepoArtifact],
-    //       role: pipelineRole,
-    //       environmentVariables: {
-    //         CDK_OPTIONS: {
-    //           type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-    //           value: `deploy --stage networking --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}`,
-    //         },
-    //       },
-    //     }),
-    //   ],
-    // });
+    pipeline.addStage({
+      stageName: 'Organization',
+      actions: [
+        new codepipeline_actions.CodeBuildAction({
+          actionName: 'Accounts',
+          runOrder: 2,
+          project: toolkitProject,
+          input: buildOutput,
+          extraInputs: [configRepoArtifact],
+          role: pipelineRole,
+          environmentVariables: {
+            CDK_OPTIONS: {
+              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+              value: `deploy --stage accounts`,
+            },
+          },
+        }),
+      ],
+    });
+
+    pipeline.addStage({
+      stageName: 'Dependencies',
+      actions: [
+        new codepipeline_actions.CodeBuildAction({
+          actionName: 'Dependencies',
+          runOrder: 3,
+          project: toolkitProject,
+          input: buildOutput,
+          extraInputs: [configRepoArtifact],
+          role: pipelineRole,
+          environmentVariables: {
+            CDK_OPTIONS: {
+              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+              value: `deploy --stage dependencies`,
+            },
+          },
+        }),
+      ],
+    });
+
+    pipeline.addStage({
+      stageName: 'Deploy',
+      actions: [
+        new codepipeline_actions.CodeBuildAction({
+          actionName: 'Security',
+          runOrder: 4,
+          project: toolkitProject,
+          input: buildOutput,
+          extraInputs: [configRepoArtifact],
+          role: pipelineRole,
+          environmentVariables: {
+            CDK_OPTIONS: {
+              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+              value: `deploy --stage security`,
+            },
+          },
+        }),
+        new codepipeline_actions.CodeBuildAction({
+          actionName: 'Operations',
+          runOrder: 5,
+          project: toolkitProject,
+          input: buildOutput,
+          extraInputs: [configRepoArtifact],
+          role: pipelineRole,
+          environmentVariables: {
+            CDK_OPTIONS: {
+              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+              value: `deploy --stage operations`,
+            },
+          },
+        }),
+        new codepipeline_actions.CodeBuildAction({
+          actionName: 'Networking',
+          runOrder: 6,
+          project: toolkitProject,
+          input: buildOutput,
+          extraInputs: [configRepoArtifact],
+          role: pipelineRole,
+          environmentVariables: {
+            CDK_OPTIONS: {
+              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+              value: `deploy --stage networking`,
+            },
+          },
+        }),
+      ],
+    });
   }
 }

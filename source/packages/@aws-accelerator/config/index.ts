@@ -11,9 +11,5 @@
  *  and limitations under the License.
  */
 
-import { AcceleratorToolkit } from './lib/accelerator-toolkit';
-
-AcceleratorToolkit.cli().catch(function (err) {
-  console.log(err.message);
-  process.exit(1);
-});
+export * from './lib/common-types';
+export * from './lib/organization-config';

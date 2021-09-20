@@ -11,9 +11,11 @@
  *  and limitations under the License.
  */
 
-import { AcceleratorToolkit } from './lib/accelerator-toolkit';
-
-AcceleratorToolkit.cli().catch(function (err) {
-  console.log(err.message);
-  process.exit(1);
-});
+export * from './lib/accelerator-toolkit';
+export * from './lib/accounts-stack';
+export * from './lib/dependencies-stack';
+export * from './lib/networking-stack';
+export * from './lib/operations-stack';
+export * from './lib/security-stack';
+export * from './lib/stages';
+export * from './lib/validate-stack';

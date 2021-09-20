@@ -5,6 +5,7 @@ package-lock.json
 *.d.ts
 *.tsbuildinfo
 node_modules
+dist
 !source/.typescript/lambda/**/*.js
 !source/lambda/**/*.js
 

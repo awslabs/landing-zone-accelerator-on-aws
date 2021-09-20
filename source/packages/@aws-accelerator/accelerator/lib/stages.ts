@@ -11,8 +11,18 @@
  *  and limitations under the License.
  */
 
+/**
+ * Defines the stages the accelerator supports. Each of the defined stages
+ * correspond to a specific stack
+ */
 export enum Stage {
+  /**
+   * Validate Stage - Verify the configuration files and environment
+   */
   VALIDATE = 'validate',
+  /**
+   * Accounts Stage - Handle all Organization and Accounts actions
+   */
   ACCOUNTS = 'accounts',
   DEPENDENCIES = 'dependencies',
   SECURITY = 'security',
