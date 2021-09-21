@@ -30,15 +30,7 @@ function stringify(v: any): string {
 }
 
 function getContextPath(context: Context): string {
-  return context
-    .map(
-      ({
-        key,
-        // @ts-ignore: TS6133: 'type' is declared but its value is never read.
-        type,
-      }) => key,
-    )
-    .join('/');
+  return context.map(({ key }) => key).join('/');
 }
 
 function getMessage(e: ValidationError): string {

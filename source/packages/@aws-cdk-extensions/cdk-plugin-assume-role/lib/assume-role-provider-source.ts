@@ -13,7 +13,7 @@
 
 import * as aws from 'aws-sdk';
 aws.config.logger = console;
-import { CredentialProviderSource, Mode } from 'aws-cdk/lib/api/aws-auth/credentials';
+import { CredentialProviderSource } from 'aws-cdk/lib/api/aws-auth/credentials';
 import { green } from 'colors/safe';
 import { throttlingBackOff } from './backoff';
 
@@ -33,18 +33,11 @@ export class AssumeRoleProviderSource implements CredentialProviderSource {
     return true;
   }
 
-  async canProvideCredentials(
-    // @ts-ignore: TS6133: 'accountId' is declared but its value is never read.
-    accountId: string,
-  ): Promise<boolean> {
+  async canProvideCredentials(): Promise<boolean> {
     return true;
   }
 
-  async getProvider(
-    accountId: string,
-    // @ts-ignore: TS6133: 'mode' is declared but its value is never read.
-    mode: Mode,
-  ): Promise<aws.Credentials> {
+  async getProvider(accountId: string): Promise<aws.Credentials> {
     if (this.cache[accountId]) {
       return this.cache[accountId];
     }

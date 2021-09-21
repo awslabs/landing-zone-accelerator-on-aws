@@ -15,7 +15,8 @@
     "no-case-declarations": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/camelcase": "off",
-    "@typescript-eslint/no-var-requires": 0
+    "@typescript-eslint/no-var-requires": 0,
+    "@typescript-eslint/ban-ts-comment": "off"
   },
   "globals": {
     "require": true

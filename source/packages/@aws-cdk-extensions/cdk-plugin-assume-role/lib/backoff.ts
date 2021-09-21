@@ -28,8 +28,9 @@ export function throttlingBackOff<T>(
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isThrottlingError = (e: any) =>
+export const isThrottlingError = (
+  e: any, // eslint-disable-line
+): boolean =>
   e.code === 'TooManyRequestsException' ||
   e.code === 'Throttling' ||
   e.code === 'ThrottlingException' ||
