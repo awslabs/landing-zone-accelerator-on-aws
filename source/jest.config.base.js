@@ -16,6 +16,7 @@ module.exports.getJestJunitConfig = packageName => {
           addFileAttribute: 'true',
           suiteNameTemplate: '{filename}',
           classNameTemplate: packageName,
+          titleTemplate: '{title}'
         },
       ],
     ],
