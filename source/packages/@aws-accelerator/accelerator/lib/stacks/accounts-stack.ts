@@ -11,13 +11,8 @@
  *  and limitations under the License.
  */
 
-/**
- * @module
- * Module comment
- */
-
-import * as cdk from '@aws-cdk/core';
 import * as ssm from '@aws-cdk/aws-ssm';
+import * as cdk from '@aws-cdk/core';
 
 export interface AccountsStackProps extends cdk.StackProps {
   stage: string;

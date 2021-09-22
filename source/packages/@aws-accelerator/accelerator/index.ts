@@ -11,11 +11,14 @@
  *  and limitations under the License.
  */
 
-export * from './lib/accelerator-toolkit';
-export * from './lib/accounts-stack';
-export * from './lib/dependencies-stack';
-export * from './lib/networking-stack';
-export * from './lib/operations-stack';
-export * from './lib/security-stack';
-export * from './lib/stages';
-export * from './lib/validate-stack';
+export * from './lib/accelerator';
+export * from './lib/constructs/accelerator-pipeline';
+export * from './lib/constructs/config-repository';
+export * from './lib/stacks/accounts-stack';
+export * from './lib/stacks/dependencies-stack';
+export * from './lib/stacks/networking-stack';
+export * from './lib/stacks/operations-stack';
+export * from './lib/stacks/pipeline-stack';
+export * from './lib/stacks/security-stack';
+export * from './lib/stacks/validate-stack';
+export * from './lib/toolkit';

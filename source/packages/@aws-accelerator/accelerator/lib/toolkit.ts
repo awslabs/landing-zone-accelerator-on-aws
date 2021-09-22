@@ -11,8 +11,6 @@
  *  and limitations under the License.
  */
 
-import * as config from '@aws-accelerator/config';
-import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
 import { SdkProvider } from 'aws-cdk/lib/api/aws-auth';
 import { Bootstrapper, BootstrapSource } from 'aws-cdk/lib/api/bootstrap';
 import { CloudFormationDeployments } from 'aws-cdk/lib/api/cloudformation-deployments';
@@ -21,14 +19,22 @@ import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
 import { execProgram } from 'aws-cdk/lib/api/cxapp/exec';
 import { ToolkitInfo } from 'aws-cdk/lib/api/toolkit-info';
 import { CdkToolkit } from 'aws-cdk/lib/cdk-toolkit';
-import { PluginHost } from 'aws-cdk/lib/plugin';
 import { Command, Configuration } from 'aws-cdk/lib/settings';
 import console from 'console';
-import * as fs from 'fs';
-import mri from 'mri';
 import path from 'path';
-import process from 'process';
-import { Stage } from './stages';
+
+/**
+ *
+ */
+export enum AcceleratorToolkitCommand {
+  BOOTSTRAP = Command.BOOTSTRAP,
+  DEPLOY = Command.DEPLOY,
+  DESTROY = Command.DESTROY,
+  LIST = Command.LIST,
+  LS = Command.LS,
+  SYNTH = Command.SYNTH,
+  SYNTHESIZE = Command.SYNTHESIZE,
+}
 
 /**
  * Wrapper around the CdkToolkit. The Accelerator defines this wrapper to add
@@ -43,110 +49,8 @@ export class AcceleratorToolkit {
    *
    * @returns
    */
-  static async cli(): Promise<void> {
-    const usage = `Usage: cdk.ts <command> --stage STAGE --config-dir CONFIG_DIRECTORY [--account ACCOUNT] [--region REGION] [--parallel]`;
-    const args = mri(process.argv.slice(2), {
-      boolean: ['parallel'],
-      string: ['account'],
-      alias: {
-        c: 'config-dir',
-        s: 'stage',
-        a: 'account',
-        r: 'region',
-      },
-      default: {
-        parallel: false,
-      },
-    });
-
-    const commands = args['_'];
-    // const parallel = args['parallel'];
-    const configDir = args['config-dir'];
-    const stage = args['stage'];
-    const account = args['account'];
-    const region = args['region'];
-
-    //
-    // Validate args: must specify a command
-    //
-    if (commands.length === 0) {
-      console.log('<command> not set');
-      throw new Error(usage);
-    }
-
-    //
-    // Validate args: verify command against our sub-list
-    //
-    const supportedCommands: string[] = [
-      Command.BOOTSTRAP,
-      Command.DEPLOY,
-      Command.DESTROY,
-      Command.LIST,
-      Command.LS,
-      Command.SYNTH,
-      Command.SYNTHESIZE,
-    ];
-    if (!supportedCommands.includes(commands[0])) {
-      throw new Error(`Invalid command: ${commands[0]}`);
-    }
-
-    //
-    // Validate args: verify stage if not bootstrap or list
-    //
-    if (!Object.values(Stage).includes(stage) && commands[0] !== 'bootstrap') {
-      throw new Error(`Invalid stage: ${stage}`);
-    }
-
-    //
-    // Validate args: verify config directory
-    //
-    if (config === undefined || !fs.existsSync(configDir)) {
-      console.log(`Invalid --config ${configDir}`);
-      throw new Error(usage);
-    }
-
-    //
-    // Load Plugins
-    //
-    const assumeRolePlugin = new AssumeProfilePlugin({
-      // TODO: Read this from arg
-      assumeRoleName: 'AWSControlTowerExecution',
-      assumeRoleDuration: 3600,
-    });
-    assumeRolePlugin.init(PluginHost.instance);
-
-    //
-    // When an account and region is specified, execute as single stack
-    //
-    if (account || region) {
-      if (account && region === undefined) {
-        throw new Error(`Account set to ${account}, but region is undefined`);
-      }
-      if (region && account === undefined) {
-        throw new Error(`Region set to ${region}, but region is undefined`);
-      }
-      return await AcceleratorToolkit.execute(commands[0], account, region, stage);
-    }
-
-    //
-    // Read in all Accelerator Configuration files here, then pass the objects
-    // to the stacks that need them
-    //
-    const organizationConfig = await config.loadOrganizationConfig(configDir);
-    console.log(organizationConfig);
-
-    // TODO: And Environment variables to enable debug logs
-
-    //
-    // Loop through all accounts and regions and execute commands
-    //
-    // TODO: Add parallel support
-    // TODO: Change config to not include account numbers, need to pull from orgs
-    for (const account in organizationConfig['accounts']) {
-      for (const region of organizationConfig['enabled-regions']) {
-        await AcceleratorToolkit.execute(commands[0], account, region, stage);
-      }
-    }
+  static isSupportedCommand(command: string): boolean {
+    return Object.values(AcceleratorToolkitCommand).includes(command);
   }
 
   /**

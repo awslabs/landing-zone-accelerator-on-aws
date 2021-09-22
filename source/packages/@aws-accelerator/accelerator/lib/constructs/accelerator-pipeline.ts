@@ -1,3 +1,17 @@
+/**
+ *  Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
+import { AcceleratorStage } from '@aws-accelerator/accelerator';
 import * as codebuild from '@aws-cdk/aws-codebuild';
 import * as codecommit from '@aws-cdk/aws-codecommit';
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
@@ -7,8 +21,10 @@ import * as s3 from '@aws-cdk/aws-s3';
 import * as cdk from '@aws-cdk/core';
 import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
 import * as config_repository from './config-repository';
-import * as accelerator from '@aws-accelerator/accelerator';
 
+/**
+ *
+ */
 export interface AcceleratorPipelineProps {
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
@@ -18,6 +34,13 @@ export interface AcceleratorPipelineProps {
  * AWS Accelerator Pipeline Class, which creates the pipeline for AWS Landing zone
  */
 export class AcceleratorPipeline extends cdk.Construct {
+  private pipelineRole: iam.Role;
+  private toolkitRole: iam.Role;
+  private toolkitProject: codebuild.PipelineProject;
+  private buildOutput: codepipeline.Artifact;
+  private acceleratorRepoArtifact: codepipeline.Artifact;
+  private configRepoArtifact: codepipeline.Artifact;
+
   constructor(scope: cdk.Construct, id: string, props: AcceleratorPipelineProps) {
     super(scope, id);
 
@@ -50,14 +73,14 @@ export class AcceleratorPipeline extends cdk.Construct {
     /**
      * Pipeline
      */
-    const pipelineRole = new iam.Role(this, 'PipelineRole', {
+    this.pipelineRole = new iam.Role(this, 'PipelineRole', {
       assumedBy: new iam.ServicePrincipal('codepipeline.amazonaws.com'),
     });
 
     const pipeline = new codepipeline.Pipeline(this, 'Resource', {
-      pipelineName: 'AWS-Accelerator',
+      pipelineName: 'AWS-Accelerator-Pipeline',
       artifactBucket: bucket.getS3Bucket(),
-      role: pipelineRole,
+      role: this.pipelineRole,
     });
 
     // cfn_nag: Suppress warning related to high SPCM score
@@ -73,8 +96,8 @@ export class AcceleratorPipeline extends cdk.Construct {
       },
     };
 
-    const acceleratorRepoArtifact = new codepipeline.Artifact('Source');
-    const configRepoArtifact = new codepipeline.Artifact('Config');
+    this.acceleratorRepoArtifact = new codepipeline.Artifact('Source');
+    this.configRepoArtifact = new codepipeline.Artifact('Config');
 
     pipeline.addStage({
       stageName: 'Source',
@@ -83,14 +106,14 @@ export class AcceleratorPipeline extends cdk.Construct {
           actionName: 'Source',
           repository: codecommit.Repository.fromRepositoryName(this, 'SourceRepo', props.sourceRepositoryName),
           branch: props.sourceBranchName,
-          output: acceleratorRepoArtifact,
+          output: this.acceleratorRepoArtifact,
           trigger: codepipeline_actions.CodeCommitTrigger.NONE,
         }),
         new codepipeline_actions.CodeCommitSourceAction({
           actionName: 'Configuration',
           repository: configRepository.getRepository(),
           branch: 'main',
-          output: configRepoArtifact,
+          output: this.configRepoArtifact,
           trigger: codepipeline_actions.CodeCommitTrigger.NONE,
         }),
       ],
@@ -137,7 +160,7 @@ export class AcceleratorPipeline extends cdk.Construct {
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),
     });
 
-    const buildOutput = new codepipeline.Artifact('Build');
+    this.buildOutput = new codepipeline.Artifact('Build');
 
     pipeline.addStage({
       stageName: 'Build',
@@ -145,9 +168,9 @@ export class AcceleratorPipeline extends cdk.Construct {
         new codepipeline_actions.CodeBuildAction({
           actionName: 'Build',
           project: buildProject,
-          input: acceleratorRepoArtifact,
-          outputs: [buildOutput],
-          role: pipelineRole,
+          input: this.acceleratorRepoArtifact,
+          outputs: [this.buildOutput],
+          role: this.pipelineRole,
         }),
       ],
     });
@@ -155,14 +178,14 @@ export class AcceleratorPipeline extends cdk.Construct {
     /**
      * Deploy Stage
      */
-    const toolkitRole = new iam.Role(this, 'ToolkitRole', {
+    this.toolkitRole = new iam.Role(this, 'ToolkitRole', {
       assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
       managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
     });
 
-    const toolkitProject = new codebuild.PipelineProject(this, 'ToolkitProject', {
+    this.toolkitProject = new codebuild.PipelineProject(this, 'ToolkitProject', {
       projectName: 'AWS-Accelerator-ToolkitProject',
-      role: toolkitRole,
+      role: this.toolkitRole,
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
         phases: {
@@ -197,131 +220,53 @@ export class AcceleratorPipeline extends cdk.Construct {
 
     pipeline.addStage({
       stageName: 'Bootstrap',
-      actions: [
-        new codepipeline_actions.CodeBuildAction({
-          actionName: 'Bootstrap',
-          runOrder: 1,
-          project: toolkitProject,
-          input: buildOutput,
-          extraInputs: [configRepoArtifact],
-          role: pipelineRole,
-          environmentVariables: {
-            CDK_OPTIONS: {
-              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-              // TODO: Investigate how to bootstrap using CLI stackless
-              value: `bootstrap --stage ${accelerator.Stage.VALIDATE}`,
-            },
-          },
-        }),
-      ],
+      // TODO: Remove need to define a stage (validate)
+      actions: [this.createToolkitStage('Bootstrap', `bootstrap --stage ${AcceleratorStage.VALIDATE}`)],
     });
 
     pipeline.addStage({
       stageName: 'Validate',
-      actions: [
-        new codepipeline_actions.CodeBuildAction({
-          actionName: 'Validate',
-          runOrder: 1,
-          project: toolkitProject,
-          input: buildOutput,
-          extraInputs: [configRepoArtifact],
-          role: pipelineRole,
-          environmentVariables: {
-            CDK_OPTIONS: {
-              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-              value: `deploy --stage ${accelerator.Stage.VALIDATE}`,
-            },
-          },
-        }),
-      ],
+      actions: [this.createToolkitStage('Validate', `deploy --stage ${AcceleratorStage.VALIDATE}`)],
     });
 
     pipeline.addStage({
       stageName: 'Organization',
-      actions: [
-        new codepipeline_actions.CodeBuildAction({
-          actionName: 'Accounts',
-          runOrder: 2,
-          project: toolkitProject,
-          input: buildOutput,
-          extraInputs: [configRepoArtifact],
-          role: pipelineRole,
-          environmentVariables: {
-            CDK_OPTIONS: {
-              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-              value: `deploy --stage accounts`,
-            },
-          },
-        }),
-      ],
+      actions: [this.createToolkitStage('Accounts', `deploy --stage ${AcceleratorStage.ACCOUNTS}`)],
     });
 
     pipeline.addStage({
       stageName: 'Dependencies',
-      actions: [
-        new codepipeline_actions.CodeBuildAction({
-          actionName: 'Dependencies',
-          runOrder: 3,
-          project: toolkitProject,
-          input: buildOutput,
-          extraInputs: [configRepoArtifact],
-          role: pipelineRole,
-          environmentVariables: {
-            CDK_OPTIONS: {
-              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-              value: `deploy --stage dependencies`,
-            },
-          },
-        }),
-      ],
+      actions: [this.createToolkitStage('Dependencies', `deploy --stage ${AcceleratorStage.DEPENDENCIES}`)],
     });
 
     pipeline.addStage({
       stageName: 'Deploy',
       actions: [
-        new codepipeline_actions.CodeBuildAction({
-          actionName: 'Security',
-          runOrder: 4,
-          project: toolkitProject,
-          input: buildOutput,
-          extraInputs: [configRepoArtifact],
-          role: pipelineRole,
-          environmentVariables: {
-            CDK_OPTIONS: {
-              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-              value: `deploy --stage security`,
-            },
-          },
-        }),
-        new codepipeline_actions.CodeBuildAction({
-          actionName: 'Operations',
-          runOrder: 5,
-          project: toolkitProject,
-          input: buildOutput,
-          extraInputs: [configRepoArtifact],
-          role: pipelineRole,
-          environmentVariables: {
-            CDK_OPTIONS: {
-              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-              value: `deploy --stage operations`,
-            },
-          },
-        }),
-        new codepipeline_actions.CodeBuildAction({
-          actionName: 'Networking',
-          runOrder: 6,
-          project: toolkitProject,
-          input: buildOutput,
-          extraInputs: [configRepoArtifact],
-          role: pipelineRole,
-          environmentVariables: {
-            CDK_OPTIONS: {
-              type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-              value: `deploy --stage networking`,
-            },
-          },
-        }),
+        this.createToolkitStage('Security', `deploy --stage ${AcceleratorStage.SECURITY}`, 1),
+        this.createToolkitStage('Networking', `deploy --stage ${AcceleratorStage.NETWORKING}`, 2),
+        this.createToolkitStage('Operations', `deploy --stage ${AcceleratorStage.OPERATIONS}`, 3),
       ],
+    });
+  }
+
+  private createToolkitStage(
+    actionName: string,
+    cdkOptions: string,
+    runOrder?: number,
+  ): codepipeline_actions.CodeBuildAction {
+    return new codepipeline_actions.CodeBuildAction({
+      actionName,
+      runOrder,
+      project: this.toolkitProject,
+      input: this.buildOutput,
+      extraInputs: [this.configRepoArtifact],
+      role: this.pipelineRole,
+      environmentVariables: {
+        CDK_OPTIONS: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: cdkOptions,
+        },
+      },
     });
   }
 }

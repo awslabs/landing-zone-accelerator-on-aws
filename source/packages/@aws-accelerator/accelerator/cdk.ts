@@ -11,9 +11,79 @@
  *  and limitations under the License.
  */
 
-import { AcceleratorToolkit } from './lib/accelerator-toolkit';
+import * as config from '@aws-accelerator/config';
+import * as fs from 'fs';
+import mri from 'mri';
+import process from 'process';
+import { Accelerator, AcceleratorStage } from './lib/accelerator';
+import { AcceleratorToolkit, AcceleratorToolkitCommand } from './lib/toolkit';
 
-AcceleratorToolkit.cli().catch(function (err) {
+const usage = `Usage: cdk.ts <command> --stage STAGE --config-dir CONFIG_DIRECTORY [--account ACCOUNT] [--region REGION] [--parallel]`;
+
+const args = mri(process.argv.slice(2), {
+  boolean: ['parallel'],
+  string: ['account'],
+  alias: {
+    c: 'config-dir',
+    s: 'stage',
+    a: 'account',
+    r: 'region',
+  },
+  default: {
+    parallel: false,
+  },
+});
+
+const commands = args['_'];
+const parallel = args['parallel'];
+const configDirPath = args['config-dir'];
+const stage = args['stage'];
+const account = args['account'];
+const region = args['region'];
+
+//
+// Validate args: must specify a command
+//
+if (commands.length === 0) {
+  console.log('<command> not set');
+  throw new Error(usage);
+}
+
+//
+// Validate args: verify command against our sub-list
+//
+if (!AcceleratorToolkit.isSupportedCommand(commands[0])) {
+  throw new Error(`Invalid command: ${commands[0]}`);
+}
+
+//
+// Validate args: verify stage if not bootstrap
+//
+if (!Accelerator.isSupportedStage(stage) && commands[0] !== String(AcceleratorToolkitCommand.BOOTSTRAP)) {
+  throw new Error(`Invalid stage: ${stage}`);
+}
+
+//
+// Validate args: verify config directory
+//
+if (stage !== AcceleratorStage.PIPELINE) {
+  if (config === undefined || !fs.existsSync(configDirPath)) {
+    console.log(`Invalid --config-dir ${configDirPath}`);
+    throw new Error(usage);
+  }
+}
+
+//
+// Execute the Accelerator engine
+//
+Accelerator.run({
+  command: commands[0],
+  configDirPath,
+  stage,
+  parallel,
+  account,
+  region,
+}).catch(function (err) {
   console.log(err.message);
   process.exit(1);
 });

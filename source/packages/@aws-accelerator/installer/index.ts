@@ -11,6 +11,4 @@
  *  and limitations under the License.
  */
 
-export * from './lib/config-repository';
 export * from './lib/installer-stack';
-export * from './lib/pipeline';
