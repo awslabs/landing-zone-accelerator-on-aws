@@ -16,8 +16,7 @@ import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role'
 import {
   Account,
   DescribeOrganizationCommand,
-  ListAccountsCommand,
-  ListAccountsCommandOutput,
+  paginateListAccounts,
   OrganizationsClient,
 } from '@aws-sdk/client-organizations';
 import { PluginHost } from 'aws-cdk/lib/plugin';
@@ -130,18 +129,9 @@ export class Accelerator {
     // Verify Accounts list matches the definition in the config
     //
     const organizationsAccountList: Account[] = [];
-    let nextToken;
-    do {
-      const response: ListAccountsCommandOutput = await organizationsClient
-        .send(new ListAccountsCommand({ NextToken: nextToken }))
-        .catch(error => {
-          throw new Error(error);
-        });
-      response.Accounts?.forEach(account => {
-        organizationsAccountList.push(account);
-      });
-      nextToken = response.NextToken;
-    } while (nextToken);
+    for await (const page of paginateListAccounts({ client: organizationsClient }, {})) {
+      organizationsAccountList.push(...(page.Accounts ?? []));
+    }
 
     const configurationAccountsList: string[] = [];
     for (const account in organizationConfig.accounts) {
