@@ -11,21 +11,20 @@
  *  and limitations under the License.
  */
 
-/**
- * Defines the stages the accelerator supports. Each of the defined stages
- * correspond to a specific stack
- */
-export enum Stage {
-  /**
-   * Validate Stage - Verify the configuration files and environment
-   */
-  VALIDATE = 'validate',
-  /**
-   * Accounts Stage - Handle all Organization and Accounts actions
-   */
-  ACCOUNTS = 'accounts',
-  DEPENDENCIES = 'dependencies',
-  SECURITY = 'security',
-  OPERATIONS = 'operations',
-  NETWORKING = 'networking',
+import * as cdk from '@aws-cdk/core';
+import * as ssm from '@aws-cdk/aws-ssm';
+
+export interface ValidateStackProps extends cdk.StackProps {
+  stage: string;
+}
+
+export class ValidateStack extends cdk.Stack {
+  constructor(scope: cdk.Construct, id: string, props: ValidateStackProps) {
+    super(scope, id, props);
+
+    new ssm.StringParameter(this, 'Parameter', {
+      parameterName: `/accelerator/validate-stack/${props.stage}`,
+      stringValue: 'value',
+    });
+  }
 }

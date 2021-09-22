@@ -11,24 +11,19 @@
  *  and limitations under the License.
  */
 
-/**
- * @module
- * Module comment
- */
-
 import * as cdk from '@aws-cdk/core';
 import * as ssm from '@aws-cdk/aws-ssm';
 
-export interface OperationsStackProps extends cdk.StackProps {
+export interface NetworkingStackProps extends cdk.StackProps {
   stage: string;
 }
 
-export class OperationsStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props: OperationsStackProps) {
+export class NetworkingStack extends cdk.Stack {
+  constructor(scope: cdk.Construct, id: string, props: NetworkingStackProps) {
     super(scope, id, props);
 
     new ssm.StringParameter(this, 'Parameter', {
-      parameterName: `/accelerator/operations-stack/${props.stage}`,
+      parameterName: `/accelerator/networking-stack/${props.stage}`,
       stringValue: 'value',
     });
   }

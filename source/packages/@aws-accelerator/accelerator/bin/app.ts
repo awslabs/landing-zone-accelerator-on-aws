@@ -15,13 +15,14 @@
 
 import * as cdk from '@aws-cdk/core';
 import 'source-map-support/register';
-import { Stage } from '../lib/stages';
-import { ValidateStack } from '../lib/validate-stack';
-import { AccountsStack } from '../lib/accounts-stack';
-import { DependenciesStack } from '../lib/dependencies-stack';
-import { SecurityStack } from '../lib/security-stack';
-import { OperationsStack } from '../lib/operations-stack';
-import { NetworkingStack } from '../lib/networking-stack';
+import { AcceleratorStage } from '../lib/accelerator';
+import { AccountsStack } from '../lib/stacks/accounts-stack';
+import { DependenciesStack } from '../lib/stacks/dependencies-stack';
+import { NetworkingStack } from '../lib/stacks/networking-stack';
+import { OperationsStack } from '../lib/stacks/operations-stack';
+import { PipelineStack } from '../lib/stacks/pipeline-stack';
+import { SecurityStack } from '../lib/stacks/security-stack';
+import { ValidateStack } from '../lib/stacks/validate-stack';
 
 const app = new cdk.App();
 
@@ -35,23 +36,27 @@ const env = {
 };
 
 switch (stage) {
-  // This stack should only be run in the pipeline account
-  case Stage.VALIDATE:
+  case AcceleratorStage.PIPELINE:
+    new PipelineStack(app, 'AWSAccelerator-PipelineStack', { env, stage });
+    break;
+  case AcceleratorStage.VALIDATE:
     new ValidateStack(app, 'AWSAccelerator-ValidateStack', { env, stage });
     break;
-  case Stage.ACCOUNTS:
+  case AcceleratorStage.ACCOUNTS:
     new AccountsStack(app, 'AWSAccelerator-AccountsStack', { env, stage });
     break;
-  case Stage.DEPENDENCIES:
+  case AcceleratorStage.DEPENDENCIES:
     new DependenciesStack(app, 'AWSAccelerator-DependenciesStack', { env, stage });
     break;
-  case Stage.SECURITY:
+  // LOGGING INIT
+  //
+  case AcceleratorStage.SECURITY:
     new SecurityStack(app, 'AWSAccelerator-SecurityStack', { env, stage });
     break;
-  case Stage.OPERATIONS:
+  case AcceleratorStage.OPERATIONS:
     new OperationsStack(app, 'AWSAccelerator-OperationsStack', { env, stage });
     break;
-  case Stage.NETWORKING:
+  case AcceleratorStage.NETWORKING:
     new NetworkingStack(app, 'AWSAccelerator-NetworkingStack', { env, stage });
     break;
 
