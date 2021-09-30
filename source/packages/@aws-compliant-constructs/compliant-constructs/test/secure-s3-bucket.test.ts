@@ -13,7 +13,6 @@
 
 import { countResources, expect as expectCDK } from '@aws-cdk/assert';
 import * as cdk from '@aws-cdk/core';
-import { test } from '@jest/globals';
 import * as compliant_constructs from '../index';
 
 /*

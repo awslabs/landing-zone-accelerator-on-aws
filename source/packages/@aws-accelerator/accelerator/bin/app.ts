@@ -20,15 +20,27 @@ import { AccountsStack } from '../lib/stacks/accounts-stack';
 import { DependenciesStack } from '../lib/stacks/dependencies-stack';
 import { NetworkingStack } from '../lib/stacks/networking-stack';
 import { OperationsStack } from '../lib/stacks/operations-stack';
+import { OrganizationsStack } from '../lib/stacks/organizations-stack';
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { ValidateStack } from '../lib/stacks/validate-stack';
+import { OrganizationConfig } from '@aws-accelerator/config';
 
 const app = new cdk.App();
 
 const stage = app.node.tryGetContext('stage');
 const account = app.node.tryGetContext('account');
 const region = app.node.tryGetContext('region');
+const configDirPath = app.node.tryGetContext('config-dir');
+
+if (configDirPath === undefined) {
+  throw new Error('config-dir not specified');
+}
+console.log(configDirPath);
+
+// const globalConfig = GlobalConfig.load(props.configDirPath);
+const organizationsConfig = OrganizationConfig.load(configDirPath);
+// const accountsConfig = AccountsConfig.load(props.configDirPath);
 
 const env = {
   account,
@@ -39,6 +51,9 @@ switch (stage) {
   case AcceleratorStage.PIPELINE:
     new PipelineStack(app, 'AWSAccelerator-PipelineStack', { env, stage });
     break;
+  case AcceleratorStage.ORGANIZATIONS:
+    new OrganizationsStack(app, 'Accelerator-OrganizationsStack', { env, stage, organizationsConfig });
+    break;
   case AcceleratorStage.VALIDATE:
     new ValidateStack(app, 'AWSAccelerator-ValidateStack', { env, stage });
     break;
@@ -48,8 +63,6 @@ switch (stage) {
   case AcceleratorStage.DEPENDENCIES:
     new DependenciesStack(app, 'AWSAccelerator-DependenciesStack', { env, stage });
     break;
-  // LOGGING INIT
-  //
   case AcceleratorStage.SECURITY:
     new SecurityStack(app, 'AWSAccelerator-SecurityStack', { env, stage });
     break;

@@ -10,7 +10,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
+    "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist",
     "cleanup:tsc": "tsc --build ./ --clean",
     "build": "tsc",
     "watch": "tsc -w",
@@ -19,15 +19,15 @@
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'"
   },
   "dependencies": {
-    "@typescript-eslint/eslint-plugin": "4.31.1",
-    "@typescript-eslint/parser": "4.31.1",
-    "aws-cdk": "1.123.0",
-    "aws-sdk": "2.944.0",
+    "@typescript-eslint/eslint-plugin": "4.32.0",
+    "@typescript-eslint/parser": "4.32.0",
+    "aws-cdk": "1.125.0",
+    "aws-sdk": "2.998.0",
     "colors": "1.4.0",
     "exponential-backoff": "3.1.0"
   },
   "devDependencies": {
-    "@types/node": "16.9.1",
+    "@types/node": "16.10.2",
     "eslint": "7.32.0",
     "eslint-config-prettier": "8.3.0",
     "eslint-config-standard": "16.0.3",
@@ -36,5 +36,9 @@
     "eslint-plugin-prettier": "4.0.0",
     "prettier": "2.4.1",
     "typescript": "4.4.3"
-  }
+  },
+  "nohoist": [
+    "**/exponential-backoff",
+    "**/exponential-backoff/**"
+  ]
 }

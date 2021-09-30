@@ -10,28 +10,27 @@
   "private": true,
   "dependencies": {
     "fs-extra": "10.0.0",
-    "jest": "26.4.2",
-    "jsii": "1.11.0",
-    "jsii-pacmak": "1.11.0",
-    "tslint": "5.20.1"
+    "jest": "27.2.4",
+    "jsii": "1.35.0",
+    "jsii-pacmak": "1.35.0"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "1.123.0",
-    "@types/jest": "26.0.10",
-    "@types/node": "16.9.1",
-    "@typescript-eslint/eslint-plugin": "4.31.1",
-    "@typescript-eslint/parser": "4.31.1",
-    "aws-cdk": "1.123.0",
+    "@aws-cdk/assert": "1.125.0",
+    "@types/jest": "27.0.2",
+    "@types/node": "16.10.2",
+    "@typescript-eslint/eslint-plugin": "4.32.0",
+    "@typescript-eslint/parser": "4.32.0",
+    "aws-cdk": "1.125.0",
     "eslint-config-prettier": "8.3.0",
-    "eslint-plugin-jest": "24.4.0",
+    "eslint-plugin-jest": "24.5.0",
     "eslint-plugin-prettier": "4.0.0",
     "husky-init": "7.0.0",
-    "jest": "26.4.2",
-    "jest-junit": "12.2.0",
+    "jest": "27.2.4",
+    "jest-junit": "12.3.0",
     "lerna": "4.0.0",
-    "ts-jest": "26.2.0",
+    "ts-jest": "27.0.5",
     "ts-node": "10.2.1",
-    "typedoc": "0.22.3",
+    "typedoc": "0.22.4",
     "typescript": "4.4.3"
   },
   "scripts": {
@@ -40,9 +39,6 @@
     "build": "lerna run build --stream",
     "test": "lerna run test --stream",
     "testreport": "lerna run testreport --stream",
-    "cdk:synth:installer": "yarn build && lerna run cdk --scope=@aws-accelerator/installer -- synth",
-    "cdk:deploy:installer": "yarn build && lerna run cdk --scope=@aws-accelerator/installer -- deploy",
-    "cdk:list:installer": "lerna run cdk --scope=@aws-accelerator/installer -- list",
     "docs": "npx typedoc --entryPointStrategy packages . --name 'AWS Accelerator' --includeVersion --treatWarningsAsErrors --disableSources",
     "prepare": "cd ../ && husky install source/.husky",
     "postinstall": "cd ../ && husky install source/.husky && cd source",
@@ -51,9 +47,15 @@
   },
   "workspaces": {
     "packages": [
-      "./packages/@aws-accelerator/*",
-      "./packages/@aws-compliant-constructs/*",
-      "./packages/@aws-cdk-extensions/*"
+      "./packages/@aws-accelerator/accelerator",
+      "./packages/@aws-accelerator/config",
+      "./packages/@aws-accelerator/constructs",
+      "./packages/@aws-accelerator/constructs/lib/aws-*/*",
+      "./packages/@aws-accelerator/installer",
+      "./packages/@aws-accelerator/utils",
+      "./packages/@aws-cdk-extensions/cdk-extensions",
+      "./packages/@aws-cdk-extensions/cdk-plugin-assume-role",
+      "./packages/@aws-compliant-constructs/compliant-constructs"
     ],
     "nohoist": [
       "**/deepmerge",

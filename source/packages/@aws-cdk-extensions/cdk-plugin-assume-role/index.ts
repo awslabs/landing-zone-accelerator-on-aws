@@ -11,8 +11,5 @@
  *  and limitations under the License.
  */
 
-// import { AssumeProfilePlugin } from './lib/assume-role-plugin';
 export * from './lib/assume-role-plugin';
 export * from './lib/assume-role-provider-source';
-
-// module.exports = new AssumeProfilePlugin();

@@ -14,22 +14,12 @@
 import * as t from './common-types';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as yaml from 'js-yaml';
 
 /**
  * AWS Organizations configuration items.
  */
-export class OrganizationTypes {
-  /**
-   *
-   */
-  static readonly Account = t.interface({
-    'account-name': t.nonEmptyString,
-    description: t.optional(t.nonEmptyString),
-    email: t.nonEmptyString,
-    'organizational-unit': t.nonEmptyString,
-  });
-  static readonly Accounts = t.record(t.nonEmptyString, this.Account);
-
+export abstract class OrganizationConfigTypes {
   /**
    * Defines Organizational Unit (OU) information, utilized in organization.config.
    *
@@ -46,7 +36,7 @@ export class OrganizationTypes {
    * ```
    */
   static readonly OrganizationalUnit = t.interface({
-    description: t.optional(t.nonEmptyString),
+    name: t.nonEmptyString,
     'service-control-policies': t.array(t.nonEmptyString),
   });
 
@@ -80,6 +70,7 @@ export class OrganizationTypes {
     description: t.nonEmptyString,
     name: t.nonEmptyString,
     policy: t.nonEmptyString,
+    type: t.enums('Type', ['aws-managed', 'customer-managed'], 'Value should be a Service Control Policy Type'),
   });
 
   /**
@@ -90,16 +81,12 @@ export class OrganizationTypes {
   static readonly ServiceControlPolicies = t.record(t.nonEmptyString, this.ServiceControlPolicy);
 }
 
-export const ORGANIZATION_CONFIG_FILE = 'organization.config';
-
 /**
  * @see OrganizationConfig
  */
 export const OrganizationConfigType = t.interface({
-  accounts: OrganizationTypes.Accounts,
-  'enabled-regions': t.array(t.nonEmptyString),
-  'organizational-units': OrganizationTypes.OrganizationalUnits,
-  'service-control-policies': OrganizationTypes.ServiceControlPolicies,
+  'organizational-units': OrganizationConfigTypes.OrganizationalUnits,
+  'service-control-policies': OrganizationConfigTypes.ServiceControlPolicies,
 });
 
 /**
@@ -122,46 +109,39 @@ export const OrganizationConfigType = t.interface({
  * ```
  */
 export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigType> {
-  readonly 'accounts': t.TypeOf<typeof OrganizationTypes.Accounts> = {};
-
-  readonly 'enabled-regions' = [];
+  static readonly FILENAME = 'organization-config.yaml';
 
   /**
    * A Record of Organizational Unit configurations
    *
    * @see OrganizationTypes.OrganizationalUnits
    */
-  readonly 'organizational-units': t.TypeOf<typeof OrganizationTypes.OrganizationalUnits> = {};
+  readonly 'organizational-units': t.TypeOf<typeof OrganizationConfigTypes.OrganizationalUnits> = {};
   /**
    * A Record of Service Control Policy configurations
    *
    * @see OrganizationTypes.ServiceControlPolicies
    */
-  readonly 'service-control-policies': t.TypeOf<typeof OrganizationTypes.ServiceControlPolicies> = {};
+  readonly 'service-control-policies': t.TypeOf<typeof OrganizationConfigTypes.ServiceControlPolicies> = {};
 
+  /**
+   *
+   * @param values
+   */
   constructor(values?: t.TypeOf<typeof OrganizationConfigType>) {
     if (values) {
       Object.assign(this, values);
     }
   }
 
-  static fromBuffer(content: Buffer): OrganizationConfig {
-    return this.fromString(content.toString());
-  }
-
-  static fromString(content: string): OrganizationConfig {
-    return this.fromObject(JSON.parse(content));
-  }
-
-  static fromObject<S>(content: S): OrganizationConfig {
-    const values = t.parse(OrganizationConfigType, content);
+  /**
+   *
+   * @param dir
+   * @returns
+   */
+  static load(dir: string): OrganizationConfig {
+    const buffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
+    const values = t.parse(OrganizationConfigType, yaml.load(buffer));
     return new OrganizationConfig(values);
   }
 }
-
-export async function loadOrganizationConfig(dir: string): Promise<OrganizationConfig> {
-  const buffer = fs.readFileSync(path.join(dir, ORGANIZATION_CONFIG_FILE), 'utf8');
-  return OrganizationConfig.fromString(buffer);
-}
-
-// export async function loadConfigurationFile(path: string): OrganizationConfig

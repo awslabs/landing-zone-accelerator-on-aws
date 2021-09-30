@@ -224,6 +224,10 @@ export class AcceleratorPipeline extends cdk.Construct {
       actions: [this.createToolkitStage('Bootstrap', `bootstrap --stage ${AcceleratorStage.VALIDATE}`)],
     });
 
+    /**
+     * The Validate stage is used to verify that all prerequisites have been made and that the
+     * Accelerator can be deployed into the environment
+     */
     pipeline.addStage({
       stageName: 'Validate',
       actions: [this.createToolkitStage('Validate', `deploy --stage ${AcceleratorStage.VALIDATE}`)],

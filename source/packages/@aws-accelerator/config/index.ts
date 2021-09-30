@@ -11,5 +11,7 @@
  *  and limitations under the License.
  */
 
+export * from './lib/accounts-config';
 export * from './lib/common-types';
+export * from './lib/global-config';
 export * from './lib/organization-config';

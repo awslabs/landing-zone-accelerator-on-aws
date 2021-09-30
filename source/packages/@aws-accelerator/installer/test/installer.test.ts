@@ -12,7 +12,6 @@
  */
 
 // import { countResources, expect as expectCDK } from '@aws-cdk/assert';
-import { test } from '@jest/globals';
 
 test('Accelerator', () => {
   // const app = new cdk.App();
