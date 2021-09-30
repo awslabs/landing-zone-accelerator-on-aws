@@ -67,17 +67,25 @@ export class AcceleratorToolkit {
    *
    * @see aws-cdk/packages/aws-cdk/bin/cdk.ts
    */
-  static async execute(command: string, account: string, region: string, stage: string): Promise<void> {
+  static async execute(
+    command: string,
+    account: string,
+    region: string,
+    stage: string,
+    configDirPath: string,
+  ): Promise<void> {
     console.log(`Executing cdk ${command} for aws://${account}/${region}`);
 
     const configuration = new Configuration({
       commandLineArguments: {
-        _: [Command.BOOTSTRAP, ...[]],
-        pathMetadata: false,
-        assetMetadata: false,
+        _: [command as Command, ...[]],
         versionReporting: false,
+        pathMetadata: false,
         output: path.join('cdk.out', account, region),
-        context: [`account=${account}`, `region=${region}`, `stage=${stage}`],
+        assetMetadata: false,
+        staging: false,
+        lookups: false,
+        context: [`account=${account}`, `region=${region}`, `stage=${stage}`, `config-dir=${configDirPath}`],
       },
     });
     await configuration.load();

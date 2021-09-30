@@ -41,7 +41,7 @@ export class ConfigRepository extends cdk.Construct {
 
     // TODO: Convert this to yaml
     fs.writeFileSync(
-      path.join(tempDirPath, config.ORGANIZATION_CONFIG_FILE),
+      path.join(tempDirPath, config.OrganizationConfig.FILENAME),
       JSON.stringify(new config.OrganizationConfig(), null, 2),
       'utf8',
     );

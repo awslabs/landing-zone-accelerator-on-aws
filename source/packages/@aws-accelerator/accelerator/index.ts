@@ -12,12 +12,13 @@
  */
 
 export * from './lib/accelerator';
-export * from './lib/constructs/accelerator-pipeline';
-export * from './lib/constructs/config-repository';
+export * from './lib/config-repository';
+export * from './lib/pipeline';
 export * from './lib/stacks/accounts-stack';
 export * from './lib/stacks/dependencies-stack';
 export * from './lib/stacks/networking-stack';
 export * from './lib/stacks/operations-stack';
+export * from './lib/stacks/organizations-stack';
 export * from './lib/stacks/pipeline-stack';
 export * from './lib/stacks/security-stack';
 export * from './lib/stacks/validate-stack';

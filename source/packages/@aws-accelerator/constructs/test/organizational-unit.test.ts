@@ -12,8 +12,9 @@
  */
 
 // import { countResources, expect as expectCDK } from '@aws-cdk/assert';
+// import * as cdk from '@aws-cdk/core';
 
-test('Organization Config', () => {
+test('Orgs unit test', () => {
   //   // const app = new cdk.App();
   //   // // WHEN
   //   // const stack = new Installer.InstallerStack(app, 'MyTestStack');

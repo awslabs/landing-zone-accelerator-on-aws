@@ -11,9 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
-import * as pipeline from '../constructs/accelerator-pipeline';
 import { InstallerStack } from '@aws-accelerator/installer';
+import * as cdk from '@aws-cdk/core';
+import * as pipeline from '../pipeline';
 
 export interface PipelineStackProps extends cdk.StackProps {
   stage: string;
@@ -32,6 +32,8 @@ export class PipelineStack extends cdk.Stack {
 
   constructor(scope: cdk.Construct, id: string, props: PipelineStackProps) {
     super(scope, id, props);
+
+    // TODO: Add event to launch the Pipeline for new account events
 
     new pipeline.AcceleratorPipeline(this, 'Pipeline', {
       sourceRepositoryName: this.repositoryName.valueAsString,

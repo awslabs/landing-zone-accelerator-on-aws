@@ -10,14 +10,14 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-
-import * as config from '@aws-accelerator/config';
+import { AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
+import { throttlingBackOff } from '@aws-accelerator/utils';
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
 import {
   Account,
   DescribeOrganizationCommand,
-  paginateListAccounts,
   OrganizationsClient,
+  paginateListAccounts,
 } from '@aws-sdk/client-organizations';
 import { PluginHost } from 'aws-cdk/lib/plugin';
 import console from 'console';
@@ -31,6 +31,7 @@ export enum AcceleratorStage {
    * Validate Stage - Verify the configuration files and environment
    */
   VALIDATE = 'validate',
+  ORGANIZATIONS = 'organizations',
   /**
    * Accounts Stage - Handle all Organization and Accounts actions
    */
@@ -61,9 +62,25 @@ export interface AcceleratorProps {
  * - y
  * - z
  */
-export class Accelerator {
+export abstract class Accelerator {
   static isSupportedStage(stage: AcceleratorStage): boolean {
     return Object.values(AcceleratorStage).includes(stage);
+  }
+
+  static getAccountIdFromEmail(organizationsAccountList: Account[], email: string): string {
+    const account = Object.entries(organizationsAccountList).find(
+      ([
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        _,
+        account,
+      ]) => email === account.Email,
+    );
+
+    if (account && account[1].Id) {
+      return account[1].Id;
+    }
+
+    throw new Error(`Account ID not found for ${email}`);
   }
 
   /**
@@ -91,22 +108,35 @@ export class Accelerator {
       if (props.region && props.account === undefined) {
         throw new Error(`Region set to ${props.region}, but region is undefined`);
       }
-      return await AcceleratorToolkit.execute(props.command, props.account, props.region, props.stage);
+      return await AcceleratorToolkit.execute(
+        props.command,
+        props.account,
+        props.region,
+        props.stage,
+        props.configDirPath,
+      );
     }
 
     //
     // Read in all Accelerator Configuration files here, then pass the objects
-    // to the stacks that need them
+    // to the stacks that need them. Exceptions are thrown if any of the
+    // configuration files are malformed.
     //
-    const organizationConfig = await config.loadOrganizationConfig(props.configDirPath);
-    console.log(JSON.stringify(organizationConfig, null, 2));
+    const globalConfig = GlobalConfig.load(props.configDirPath);
+    const organizationsConfig = OrganizationConfig.load(props.configDirPath);
+    const accountsConfig = AccountsConfig.load(props.configDirPath);
 
     //
     // If any of the configurations are empty, consider this a new install and
     // do not take any actions
     //
-    if (_.isEqual(organizationConfig, new config.OrganizationConfig())) {
-      console.log('Config Empty!');
+    if (
+      _.isEqual(globalConfig, new GlobalConfig()) ||
+      _.isEqual(organizationsConfig, new OrganizationConfig()) ||
+      _.isEqual(accountsConfig, new AccountsConfig())
+    ) {
+      console.log('Accelerator has not been configured.');
+      return;
     }
 
     //
@@ -118,36 +148,33 @@ export class Accelerator {
     // Verify AWS Organizations has been enabled
     //
     const organizationsClient = new OrganizationsClient({});
-    await organizationsClient.send(new DescribeOrganizationCommand({})).catch(error => {
-      if (error.name === 'AWSOrganizationsNotInUseException') {
-        throw new Error(error.message);
-      }
-      throw new Error(error);
-    });
+    await throttlingBackOff(() =>
+      organizationsClient.send(new DescribeOrganizationCommand({})).catch(error => {
+        if (error.name === 'AWSOrganizationsNotInUseException') {
+          throw new Error(error.message);
+        }
+        throw new Error(error);
+      }),
+    );
 
     //
-    // Verify Accounts list matches the definition in the config
+    // Verify all Organizations accounts are defined in the configuration
     //
     const organizationsAccountList: Account[] = [];
     for await (const page of paginateListAccounts({ client: organizationsClient }, {})) {
       organizationsAccountList.push(...(page.Accounts ?? []));
     }
-
-    const configurationAccountsList: string[] = [];
-    for (const account in organizationConfig.accounts) {
-      configurationAccountsList.push(organizationConfig.accounts[account].email);
+    const unlistedAccounts: string[] = [];
+    organizationsAccountList.forEach(account => {
+      if (!accountsConfig.containsEmail(account.Email)) {
+        if (account.Email) {
+          unlistedAccounts.push(account.Email);
+        }
+      }
+    });
+    if (unlistedAccounts.length > 0) {
+      throw new Error(`Account(s) are not defined in the accounts configuration: ${unlistedAccounts}`);
     }
-
-    // if (organizationsAccountList.every((item, index) => item.email === configurationAccountsList[index])) {
-    //   console.log('MATCH');
-    // }
-
-    //
-    // Logic to decide what accounts and regions to apply the stage to
-    //
-
-    // const deployToAccounts: string[] = [];
-    // const deployToRegions: string[] = [];
 
     // TODO: Need to decide the mandatory accounts for an accelerator --
     // Control Tower: To start a well-planned OU structure in your landing zone, AWS Control Tower
@@ -156,9 +183,13 @@ export class Accelerator {
     // as the audit account).
 
     switch (props.stage) {
-      // This stack should only be run in the pipeline account home region
       case AcceleratorStage.VALIDATE:
       case AcceleratorStage.ACCOUNTS:
+      case AcceleratorStage.ORGANIZATIONS:
+        const managementAccount = accountsConfig['mandatory-accounts'].management;
+        const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, managementAccount.email);
+        const region = globalConfig['home-region'];
+        await AcceleratorToolkit.execute(props.command, accountId, region, props.stage, props.configDirPath);
         break;
 
       // case AcceleratorStage.LOGGING:
@@ -177,40 +208,6 @@ export class Accelerator {
         break;
       default:
         throw new Error(`Unknown stage: ${props.stage}`);
-    }
-    // console.log(configurationAccountsList);
-
-    // // TODO: Make this more elegant
-    // configurationAccountsList.sort();
-    // organizationsAccountList.sort();
-
-    // console.log(organizationConfig);
-
-    // TODO: And Environment variables to enable debug logs
-
-    //
-    // switch statement logic goes here to determine what stacks to call and how
-    //
-
-    //
-    // Loop through all accounts and regions and execute commands
-    //
-    // TODO: Add parallel support
-    // TODO: Change config to not include account numbers, need to pull from Organizations
-    for (const account in organizationConfig['accounts']) {
-      const email = organizationConfig['accounts'][account].email;
-      // console.log(organizationConfig['accounts'][account].email);
-      // Get the Account IDs from the Organizations List
-      let accountId = '';
-      for (const item in organizationsAccountList) {
-        if (organizationsAccountList[item].Email == email) {
-          accountId = organizationsAccountList[item].Id || '';
-        }
-      }
-      for (const region of organizationConfig['enabled-regions']) {
-        // console.log(`${accountId} ${region}`);
-        await AcceleratorToolkit.execute(props.command, accountId, region, props.stage);
-      }
     }
   }
 }
