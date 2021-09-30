@@ -1,8 +1,6 @@
 {
-  "lerna": "4.0.0",
   "npmClient": "yarn",
   "useWorkspaces": true,
-  "packages": ["./packages/@aws-accelerator/*", "./packages/@aws-compliant-constructs/*"],
   "rejectCycles": "true",
   "version": "2.0.0"
 }

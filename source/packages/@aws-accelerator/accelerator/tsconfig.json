@@ -1,0 +1,9 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "resolveJsonModule": true
+  },
+  "include": ["lib/**/*", "bin/**/*", "cdk.ts", "index.ts"],
+  "exclude": ["cdk.out/**/*", "test/**/*"]
+}

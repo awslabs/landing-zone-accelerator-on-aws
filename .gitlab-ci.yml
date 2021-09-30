@@ -1,0 +1,15 @@
+image: public.ecr.aws/bitnami/node:14
+
+accelerator-test-report:
+  stage: test
+  script:
+    - 'cd source'
+    - 'npm install --global yarn'
+    - 'yarn install'
+    - 'yarn testreport'
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/test-reports/*.xml
+    expire_in: 1 day
