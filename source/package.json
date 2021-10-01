@@ -39,7 +39,7 @@
     "build": "lerna run build --stream",
     "test": "lerna run test --stream",
     "testreport": "lerna run testreport --stream",
-    "docs": "npx typedoc --entryPointStrategy packages . --name 'AWS Accelerator' --includeVersion --treatWarningsAsErrors --disableSources",
+    "docs": "npx typedoc --entryPointStrategy packages './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' './packages/@aws-compliant-constructs/*' --name 'AWS Accelerator' --includeVersion --treatWarningsAsErrors --disableSources --logLevel Verbose",
     "prepare": "cd ../ && husky install source/.husky",
     "postinstall": "cd ../ && husky install source/.husky && cd source",
     "lint": "lerna run lint --stream",
