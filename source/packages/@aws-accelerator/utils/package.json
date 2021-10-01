@@ -7,8 +7,8 @@
     "url": "https://aws.amazon.com"
   },
   "private": true,
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
