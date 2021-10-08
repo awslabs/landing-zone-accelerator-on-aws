@@ -65,6 +65,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           }
         }
       }
+
       // Create the OU if not found
       const response = await throttlingBackOff(() =>
         organizationsClient.send(

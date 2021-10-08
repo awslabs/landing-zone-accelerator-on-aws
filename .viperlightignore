@@ -10,3 +10,5 @@ CONTRIBUTING.md:51
 yarn.lock
 
 source/packages/@aws-accelerator/installer/bin/installer.ts:18
+source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:59
+source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:58

@@ -1,0 +1,10 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Deny",
+      "Action": ["ec2:DeleteFlowLogs", "logs:DeleteLogGroup", "logs:DeleteLogStream"],
+      "Resource": "*"
+    }
+  ]
+}

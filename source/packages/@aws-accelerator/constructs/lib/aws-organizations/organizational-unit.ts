@@ -29,9 +29,14 @@ export interface OrganizationalUnitProps {
  */
 export class OrganizationalUnit extends cdk.Construct {
   public readonly id: string;
+  public readonly name: string;
+  public readonly parentId: string;
 
   constructor(scope: cdk.Construct, id: string, props: OrganizationalUnitProps) {
     super(scope, id);
+
+    this.name = props.name;
+    this.parentId = props.parentId;
 
     const createOrganizationalUnitFunction = cdk.CustomResourceProvider.getOrCreateProvider(
       this,
@@ -57,9 +62,8 @@ export class OrganizationalUnit extends cdk.Construct {
       resourceType: 'Custom::CreateOrganizationalUnit',
       serviceToken: createOrganizationalUnitFunction.serviceToken,
       properties: {
-        name: props.name,
-        parentId: props.parentId,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
+        ...props,
       },
     });
 

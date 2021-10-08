@@ -33,6 +33,7 @@ export const isThrottlingError = (
   e: any,
 ): boolean =>
   e.retryable === true ||
+  // SDKv2 Error Structure
   e.code === 'ConcurrentModificationException' || // Retry for AWS Organizations
   e.code === 'InsufficientDeliveryPolicyException' || // Retry for ConfigService
   e.code === 'NoAvailableDeliveryChannelException' || // Retry for ConfigService
@@ -41,7 +42,17 @@ export const isThrottlingError = (
   e.code === 'Throttling' ||
   e.code === 'ThrottlingException' ||
   e.code === 'InternalErrorException' ||
-  e.code === 'InternalException';
+  e.code === 'InternalException' ||
+  // SDKv3 Error Structure
+  e.name === 'ConcurrentModificationException' || // Retry for AWS Organizations
+  e.name === 'InsufficientDeliveryPolicyException' || // Retry for ConfigService
+  e.name === 'NoAvailableDeliveryChannelException' || // Retry for ConfigService
+  e.name === 'ConcurrentModifications' || // Retry for AssociateHostedZone
+  e.name === 'TooManyRequestsException' ||
+  e.name === 'Throttling' ||
+  e.name === 'ThrottlingException' ||
+  e.name === 'InternalErrorException' ||
+  e.name === 'InternalException';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function delay(ms: number): Promise<any> {

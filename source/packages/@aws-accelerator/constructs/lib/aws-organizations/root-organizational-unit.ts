@@ -19,8 +19,6 @@ export class RootOrganizationalUnit extends cdk.Construct {
   private constructor(scope: cdk.Construct, id: string, props: RootOrganizationalUnitProps) {
     super(scope, id);
 
-    console.log(props.name);
-
     const listRootsFunction = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsListRoots', {
       codeDirectory: path.join(__dirname, 'list-roots/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,

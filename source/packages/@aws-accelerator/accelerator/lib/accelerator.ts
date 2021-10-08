@@ -89,16 +89,6 @@ export abstract class Accelerator {
    */
   static async run(props: AcceleratorProps): Promise<void> {
     //
-    // Load Plugins
-    //
-    const assumeRolePlugin = new AssumeProfilePlugin({
-      // TODO: Read this from arg
-      assumeRoleName: 'AWSControlTowerExecution',
-      assumeRoleDuration: 3600,
-    });
-    assumeRolePlugin.init(PluginHost.instance);
-
-    //
     // When an account and region is specified, execute as single stack
     //
     if (props.account || props.region) {
@@ -138,6 +128,16 @@ export abstract class Accelerator {
       console.log('Accelerator has not been configured.');
       return;
     }
+
+    //
+    // Load Plugins
+    //
+    const assumeRolePlugin = new AssumeProfilePlugin({
+      // TODO: Read this from arg
+      assumeRoleName: organizationsConfig['organizations-access-role'],
+      assumeRoleDuration: 3600,
+    });
+    assumeRolePlugin.init(PluginHost.instance);
 
     //
     // NOTE: We do some early environment validation here before we kick off the
@@ -205,6 +205,16 @@ export abstract class Accelerator {
       case AcceleratorStage.SECURITY:
       case AcceleratorStage.OPERATIONS:
       case AcceleratorStage.NETWORKING:
+        for (const region of globalConfig['enabled-regions']) {
+          for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
+            const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
+            await AcceleratorToolkit.execute(props.command, accountId, region, props.stage, props.configDirPath);
+          }
+          for (const account of Object.values(accountsConfig['workload-accounts'])) {
+            const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
+            await AcceleratorToolkit.execute(props.command, accountId, region, props.stage, props.configDirPath);
+          }
+        }
         break;
       default:
         throw new Error(`Unknown stage: ${props.stage}`);

@@ -1,0 +1,24 @@
+---
+organizations-access-role: 'AWSControlTowerExecution'
+organizational-units:
+  security-ou:
+    name: Security
+  infrastructure-ou:
+    name: Infrastructure
+  devops-ou:
+    name: Devops
+service-control-policies:
+  deny-delete-vpc-flow-logs:
+    description: >
+      This SCP prevents users or roles in any affected account from deleting
+      Amazon Elastic Compute Cloud (Amazon EC2) flow logs or CloudWatch log
+      groups or log streams.
+    name: DenyDeleteVpcFlowLogs
+    policy: deny-delete-vpc-flow-logs.json
+    type: customer-managed
+    organizational-units:
+      - infrastructure-ou
+      - devops-ou
+      - security-ou
+    accounts:
+      - log-archive

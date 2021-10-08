@@ -93,22 +93,21 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigType> {
   }
 
   /**
-   * Returns a list of all the account emails within the configuration
+   * Returns the email address associated to the provided account.
    *
-   * @returns List of account emails in the config as a string[]
+   * @param account
+   * @returns
    */
-  public getEmails(): string[] {
-    const emails: string[] = [];
-    for (const account of Object.entries(this['mandatory-accounts'])) {
-      emails.push(account[1].email);
+  public getEmail(account: string): string {
+    let value = Object.entries(this['mandatory-accounts']).find(entry => entry[0] == account);
+    if (value) {
+      return value[1].email;
     }
-    // emails.push(this['mandatory-accounts'].management.email);
-    if (this['workload-accounts']) {
-      for (const account in this['workload-accounts']) {
-        emails.push(this['workload-accounts'][account].email);
-      }
+    value = Object.entries(this['workload-accounts']).find(entry => entry[0] == account);
+    if (value) {
+      return value[1].email;
     }
-    return emails;
+    throw new Error(`Account email not found for ${account}`);
   }
 
   /**
@@ -121,11 +120,9 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigType> {
     if (Object.entries(this['mandatory-accounts']).find(account => account[1].email === email)) {
       return true;
     }
-
     if (Object.entries(this['workload-accounts']).find(account => account[1].email === email)) {
       return true;
     }
-
     return false;
   }
 
