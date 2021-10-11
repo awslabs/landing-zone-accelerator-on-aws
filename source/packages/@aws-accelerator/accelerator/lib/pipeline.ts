@@ -213,6 +213,10 @@ export class AcceleratorPipeline extends cdk.Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: '1',
           },
+          ACCOUNT_ID: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: cdk.Aws.ACCOUNT_ID,
+          },
           ACCELERATOR_NAME: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: 'aws-accelerator',
@@ -225,7 +229,7 @@ export class AcceleratorPipeline extends cdk.Construct {
     pipeline.addStage({
       stageName: 'Bootstrap',
       // TODO: Remove need to define a stage (validate)
-      actions: [this.createToolkitStage('Bootstrap', `bootstrap --stage ${AcceleratorStage.VALIDATE}`)],
+      actions: [this.createToolkitStage('Bootstrap', `bootstrap`)],
     });
 
     // /**

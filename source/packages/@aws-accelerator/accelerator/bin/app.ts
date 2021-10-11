@@ -17,6 +17,7 @@ import * as cdk from '@aws-cdk/core';
 import 'source-map-support/register';
 import { AcceleratorStage } from '../lib/accelerator';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
+import { DefaultStack } from '../lib/stacks/default-stack';
 import { DependenciesStack } from '../lib/stacks/dependencies-stack';
 import { NetworkingStack } from '../lib/stacks/networking-stack';
 import { OperationsStack } from '../lib/stacks/operations-stack';
@@ -71,5 +72,5 @@ switch (stage) {
     break;
 
   default:
-    throw new Error(`Unknown stage: ${stage}`);
+    new DefaultStack(app, 'AWSAccelerator-ValidateStack', { env });
 }

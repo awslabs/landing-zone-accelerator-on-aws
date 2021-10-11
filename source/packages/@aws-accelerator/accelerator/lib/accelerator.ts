@@ -179,6 +179,28 @@ export abstract class Accelerator {
       throw new Error(`Account(s) are not defined in the accounts configuration: ${unlistedAccounts}`);
     }
 
+    //
+    // Execute Bootstrap stacks for all identified accounts
+    //
+    if (props.command == 'bootstrap') {
+      const trustedAccountId = Accelerator.getAccountIdFromEmail(
+        organizationsAccountList,
+        accountsConfig['mandatory-accounts'].management.email,
+      );
+
+      for (const region of globalConfig['enabled-regions']) {
+        for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
+          const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
+          await AcceleratorToolkit.execute(props.command, accountId, region, trustedAccountId);
+        }
+        for (const account of Object.values(accountsConfig['workload-accounts'])) {
+          const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
+          await AcceleratorToolkit.execute(props.command, accountId, region, trustedAccountId);
+        }
+      }
+      return;
+    }
+
     // TODO: Need to decide the mandatory accounts for an accelerator --
     // Control Tower: To start a well-planned OU structure in your landing zone, AWS Control Tower
     // sets up a Security OU for you. This OU contains three shared accounts: the management

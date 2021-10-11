@@ -72,9 +72,10 @@ export class AcceleratorToolkit {
     command: string,
     account: string,
     region: string,
-    stage: string,
-    configDirPath: string,
-    requireApproval: RequireApproval,
+    stage?: string,
+    configDirPath?: string,
+    requireApproval?: RequireApproval,
+    trustedAccountId?: string,
   ): Promise<void> {
     console.log(`Executing cdk ${command} ${stage} for aws://${account}/${region}`);
 
@@ -122,11 +123,16 @@ export class AcceleratorToolkit {
         const source: BootstrapSource = { source: 'default' };
         const bootstrapper = new Bootstrapper(source);
         const environments = [`aws://${account}/${region}`];
+        const trustedAccounts: string[] = [];
+        if (trustedAccountId && trustedAccountId != account) {
+          trustedAccounts.push(trustedAccountId);
+        }
         await cli.bootstrap(environments, bootstrapper, {
           toolkitStackName,
           parameters: {
             bucketName: configuration.settings.get(['toolkitBucket', 'bucketName']),
             kmsKeyId: configuration.settings.get(['toolkitBucket', 'kmsKeyId']),
+            trustedAccounts,
           },
         });
         break;
