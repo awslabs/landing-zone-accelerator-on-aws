@@ -23,8 +23,6 @@ import { RequireApproval } from 'aws-cdk/lib/diff';
 import { PluginHost } from 'aws-cdk/lib/plugin';
 import { AcceleratorToolkit } from './toolkit';
 
-const _ = require('lodash');
-
 export enum AcceleratorStage {
   PIPELINE = 'pipeline',
   /**
