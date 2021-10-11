@@ -18,6 +18,7 @@ import * as cdk from '@aws-cdk/core';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import * as yaml from 'js-yaml';
 
 export interface ConfigRepositoryProps {
   readonly repositoryName: string;
@@ -39,10 +40,21 @@ export class ConfigRepository extends cdk.Construct {
     //
     const tempDirPath = fs.mkdtempSync(path.join(os.tmpdir(), 'config-assets-'));
 
-    // TODO: Convert this to yaml
+    fs.writeFileSync(
+      path.join(tempDirPath, config.GlobalConfig.FILENAME),
+      yaml.dump(new config.GlobalConfig()),
+      'utf8',
+    );
+
     fs.writeFileSync(
       path.join(tempDirPath, config.OrganizationConfig.FILENAME),
-      JSON.stringify(new config.OrganizationConfig(), null, 2),
+      yaml.dump(new config.OrganizationConfig()),
+      'utf8',
+    );
+
+    fs.writeFileSync(
+      path.join(tempDirPath, config.AccountsConfig.FILENAME),
+      yaml.dump(new config.AccountsConfig()),
       'utf8',
     );
 
