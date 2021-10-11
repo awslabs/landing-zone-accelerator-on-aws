@@ -21,7 +21,6 @@ import {
 } from '@aws-sdk/client-organizations';
 import { RequireApproval } from 'aws-cdk/lib/diff';
 import { PluginHost } from 'aws-cdk/lib/plugin';
-import console from 'console';
 import { AcceleratorToolkit } from './toolkit';
 
 const _ = require('lodash');
@@ -118,19 +117,6 @@ export abstract class Accelerator {
     const globalConfig = GlobalConfig.load(props.configDirPath);
     const organizationsConfig = OrganizationConfig.load(props.configDirPath);
     const accountsConfig = AccountsConfig.load(props.configDirPath);
-
-    //
-    // If any of the configurations are empty, consider this a new install and
-    // do not take any actions
-    //
-    if (
-      _.isEqual(globalConfig, new GlobalConfig()) ||
-      _.isEqual(organizationsConfig, new OrganizationConfig()) ||
-      _.isEqual(accountsConfig, new AccountsConfig())
-    ) {
-      console.log('Accelerator has not been configured.');
-      return;
-    }
 
     //
     // Load Plugins

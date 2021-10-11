@@ -243,7 +243,7 @@ export class AcceleratorPipeline extends cdk.Construct {
 
     pipeline.addStage({
       stageName: 'Organization',
-      actions: [this.createToolkitStage('Accounts', `deploy --stage ${AcceleratorStage.ACCOUNTS}`)],
+      actions: [this.createToolkitStage('Organizations', `deploy --stage ${AcceleratorStage.ORGANIZATIONS}`)],
     });
 
     // pipeline.addStage({
