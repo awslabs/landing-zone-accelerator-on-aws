@@ -199,7 +199,7 @@ export class AcceleratorPipeline extends cdk.Construct {
               'env',
               'cd source',
               'cd packages/@aws-accelerator/accelerator',
-              'npx ts-node --transpile-only cdk.ts $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config',
+              'npx ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config',
             ],
           },
         },

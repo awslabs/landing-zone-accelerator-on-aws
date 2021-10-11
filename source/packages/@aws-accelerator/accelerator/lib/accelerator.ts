@@ -19,6 +19,7 @@ import {
   OrganizationsClient,
   paginateListAccounts,
 } from '@aws-sdk/client-organizations';
+import { RequireApproval } from 'aws-cdk/lib/diff';
 import { PluginHost } from 'aws-cdk/lib/plugin';
 import console from 'console';
 import { AcceleratorToolkit } from './toolkit';
@@ -52,6 +53,7 @@ export interface AcceleratorProps {
   stage: string;
   account: string;
   region: string;
+  requireApproval: RequireApproval;
 }
 
 /**
@@ -104,6 +106,7 @@ export abstract class Accelerator {
         props.region,
         props.stage,
         props.configDirPath,
+        props.requireApproval,
       );
     }
 
@@ -189,7 +192,14 @@ export abstract class Accelerator {
         const managementAccount = accountsConfig['mandatory-accounts'].management;
         const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, managementAccount.email);
         const region = globalConfig['home-region'];
-        await AcceleratorToolkit.execute(props.command, accountId, region, props.stage, props.configDirPath);
+        await AcceleratorToolkit.execute(
+          props.command,
+          accountId,
+          region,
+          props.stage,
+          props.configDirPath,
+          props.requireApproval,
+        );
         break;
 
       // case AcceleratorStage.LOGGING:
@@ -208,11 +218,25 @@ export abstract class Accelerator {
         for (const region of globalConfig['enabled-regions']) {
           for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
             const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
-            await AcceleratorToolkit.execute(props.command, accountId, region, props.stage, props.configDirPath);
+            await AcceleratorToolkit.execute(
+              props.command,
+              accountId,
+              region,
+              props.stage,
+              props.configDirPath,
+              props.requireApproval,
+            );
           }
           for (const account of Object.values(accountsConfig['workload-accounts'])) {
             const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
-            await AcceleratorToolkit.execute(props.command, accountId, region, props.stage, props.configDirPath);
+            await AcceleratorToolkit.execute(
+              props.command,
+              accountId,
+              region,
+              props.stage,
+              props.configDirPath,
+              props.requireApproval,
+            );
           }
         }
         break;

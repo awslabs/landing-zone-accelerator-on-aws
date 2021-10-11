@@ -177,8 +177,7 @@ export class InstallerStack extends cdk.Stack {
               'yarn lerna link',
               'yarn build',
               'cd packages/@aws-accelerator/accelerator',
-              `npx ts-node --transpile-only cdk.ts deploy --stage pipeline \
-              --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}`,
+              `npx ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}`,
             ],
           },
         },
@@ -187,6 +186,12 @@ export class InstallerStack extends cdk.Stack {
         buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
         privileged: true, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.MEDIUM,
+        environmentVariables: {
+          CDK_NEW_BOOTSTRAP: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: '1',
+          },
+        },
       },
     });
 

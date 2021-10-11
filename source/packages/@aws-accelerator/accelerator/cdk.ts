@@ -40,6 +40,7 @@ const configDirPath = args['config-dir'];
 const stage = args['stage'];
 const account = args['account'];
 const region = args['region'];
+const requireApproval = args['require-approval'];
 
 //
 // Validate args: must specify a command
@@ -83,6 +84,7 @@ Accelerator.run({
   parallel,
   account,
   region,
+  requireApproval,
 }).catch(function (err) {
   console.log(err.message);
   process.exit(1);

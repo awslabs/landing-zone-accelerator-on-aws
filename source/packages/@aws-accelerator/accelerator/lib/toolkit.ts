@@ -19,6 +19,7 @@ import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
 import { execProgram } from 'aws-cdk/lib/api/cxapp/exec';
 import { ToolkitInfo } from 'aws-cdk/lib/api/toolkit-info';
 import { CdkToolkit } from 'aws-cdk/lib/cdk-toolkit';
+import { RequireApproval } from 'aws-cdk/lib/diff';
 import { Command, Configuration } from 'aws-cdk/lib/settings';
 import console from 'console';
 import path from 'path';
@@ -73,6 +74,7 @@ export class AcceleratorToolkit {
     region: string,
     stage: string,
     configDirPath: string,
+    requireApproval: RequireApproval,
   ): Promise<void> {
     console.log(`Executing cdk ${command} ${stage} for aws://${account}/${region}`);
 
@@ -132,6 +134,7 @@ export class AcceleratorToolkit {
         await cli.deploy({
           selector,
           toolkitStackName,
+          requireApproval,
         });
         break;
       case Command.DESTROY:
