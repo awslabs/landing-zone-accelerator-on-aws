@@ -138,7 +138,7 @@ export class AcceleratorPipeline extends cdk.Construct {
             },
           },
           build: {
-            commands: ['cd source', 'yarn install', 'yarn lerna bootstrap', 'yarn build'],
+            commands: ['cd source', 'yarn install', 'yarn lerna link', 'yarn build'],
           },
         },
         artifacts: {
@@ -209,6 +209,10 @@ export class AcceleratorPipeline extends cdk.Construct {
         privileged: true, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.MEDIUM,
         environmentVariables: {
+          CDK_NEW_BOOTSTRAP: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: '1',
+          },
           ACCELERATOR_NAME: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: 'aws-accelerator',
@@ -224,33 +228,33 @@ export class AcceleratorPipeline extends cdk.Construct {
       actions: [this.createToolkitStage('Bootstrap', `bootstrap --stage ${AcceleratorStage.VALIDATE}`)],
     });
 
-    /**
-     * The Validate stage is used to verify that all prerequisites have been made and that the
-     * Accelerator can be deployed into the environment
-     */
-    pipeline.addStage({
-      stageName: 'Validate',
-      actions: [this.createToolkitStage('Validate', `deploy --stage ${AcceleratorStage.VALIDATE}`)],
-    });
+    // /**
+    //  * The Validate stage is used to verify that all prerequisites have been made and that the
+    //  * Accelerator can be deployed into the environment
+    //  */
+    // pipeline.addStage({
+    //   stageName: 'Validate',
+    //   actions: [this.createToolkitStage('Validate', `deploy --stage ${AcceleratorStage.VALIDATE}`)],
+    // });
 
     pipeline.addStage({
       stageName: 'Organization',
       actions: [this.createToolkitStage('Accounts', `deploy --stage ${AcceleratorStage.ACCOUNTS}`)],
     });
 
-    pipeline.addStage({
-      stageName: 'Dependencies',
-      actions: [this.createToolkitStage('Dependencies', `deploy --stage ${AcceleratorStage.DEPENDENCIES}`)],
-    });
+    // pipeline.addStage({
+    //   stageName: 'Dependencies',
+    //   actions: [this.createToolkitStage('Dependencies', `deploy --stage ${AcceleratorStage.DEPENDENCIES}`)],
+    // });
 
-    pipeline.addStage({
-      stageName: 'Deploy',
-      actions: [
-        this.createToolkitStage('Security', `deploy --stage ${AcceleratorStage.SECURITY}`, 1),
-        this.createToolkitStage('Networking', `deploy --stage ${AcceleratorStage.NETWORKING}`, 2),
-        this.createToolkitStage('Operations', `deploy --stage ${AcceleratorStage.OPERATIONS}`, 3),
-      ],
-    });
+    // pipeline.addStage({
+    //   stageName: 'Deploy',
+    //   actions: [
+    //     this.createToolkitStage('Security', `deploy --stage ${AcceleratorStage.SECURITY}`, 1),
+    //     this.createToolkitStage('Networking', `deploy --stage ${AcceleratorStage.NETWORKING}`, 2),
+    //     this.createToolkitStage('Operations', `deploy --stage ${AcceleratorStage.OPERATIONS}`, 3),
+    //   ],
+    // });
   }
 
   private createToolkitStage(

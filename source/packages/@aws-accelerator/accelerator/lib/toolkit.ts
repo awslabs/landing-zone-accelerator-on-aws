@@ -74,7 +74,7 @@ export class AcceleratorToolkit {
     stage: string,
     configDirPath: string,
   ): Promise<void> {
-    console.log(`Executing cdk ${command} for aws://${account}/${region}`);
+    console.log(`Executing cdk ${command} ${stage} for aws://${account}/${region}`);
 
     const configuration = new Configuration({
       commandLineArguments: {

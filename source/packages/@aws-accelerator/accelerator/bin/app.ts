@@ -33,14 +33,6 @@ const account = app.node.tryGetContext('account');
 const region = app.node.tryGetContext('region');
 const configDirPath = app.node.tryGetContext('config-dir');
 
-if (configDirPath === undefined) {
-  throw new Error('config-dir not specified');
-}
-
-// const globalConfig = GlobalConfig.load(props.configDirPath);
-const organizationsConfig = OrganizationConfig.load(configDirPath);
-const accountsConfig = AccountsConfig.load(configDirPath);
-
 const env = {
   account,
   region,
@@ -55,8 +47,8 @@ switch (stage) {
       env,
       stage,
       configDirPath,
-      accountsConfig,
-      organizationsConfig,
+      accountsConfig: AccountsConfig.load(configDirPath),
+      organizationsConfig: OrganizationConfig.load(configDirPath),
     });
     break;
   case AcceleratorStage.VALIDATE:
