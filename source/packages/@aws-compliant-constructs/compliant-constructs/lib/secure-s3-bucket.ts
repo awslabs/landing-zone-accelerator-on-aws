@@ -1,6 +1,5 @@
 import * as iam from '@aws-cdk/aws-iam';
 import * as kms from '@aws-cdk/aws-kms';
-import * as lambda from '@aws-cdk/aws-lambda';
 import * as s3 from '@aws-cdk/aws-s3';
 import * as cdk from '@aws-cdk/core';
 
@@ -54,8 +53,7 @@ export class SecureS3Bucket extends cdk.Construct {
     this.bucket = new s3.Bucket(this, 'Resource', {
       encryption: s3.BucketEncryption.KMS,
       encryptionKey: this.cmk,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       bucketName: props.s3BucketName,
       versioned: true,
@@ -89,31 +87,6 @@ export class SecureS3Bucket extends cdk.Construct {
         },
       }),
     );
-
-    // cfn_nag: Suppress warning related to the S3AutoDeleteObjects lambda
-    const cfnS3AutoDeleteObjectsFunction = cdk.Stack.of(this)
-      .node.findChild('Custom::S3AutoDeleteObjectsCustomResourceProvider')
-      .node.findChild('Handler') as lambda.CfnFunction;
-    cfnS3AutoDeleteObjectsFunction.cfnOptions.metadata = {
-      cfn_nag: {
-        rules_to_suppress: [
-          {
-            id: 'W58',
-            reason:
-              'Lambda functions deployed through CDK have the required permission to write CloudWatch Logs. It uses custom policy instead of AWSLambdaBasicExecutionRole with more tighter permissions.',
-          },
-          {
-            id: 'W89',
-            reason: 'This function supports infrastructure deployment and is not deployed inside a VPC.',
-          },
-          {
-            id: 'W92',
-            reason:
-              'This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.',
-          },
-        ],
-      },
-    };
   }
 
   public getS3Bucket(): s3.IBucket {
