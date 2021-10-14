@@ -12,34 +12,33 @@
  */
 
 import * as cdk from '@aws-cdk/core';
-import { SecurityConfig } from '@aws-accelerator/config';
-import { AwsMacie, AwsMacieExportConfigClassification } from '@aws-accelerator/constructs';
+import { AccountsConfig, SecurityConfig } from '@aws-accelerator/config';
+import { AwsMacieMembers, AwsMacie } from '@aws-accelerator/constructs';
 
-/**
- * SecurityStackProps
- */
-export interface SecurityStackProps extends cdk.StackProps {
+export interface SecurityAuditStackProps extends cdk.StackProps {
   stage: string;
+  accountsConfig: AccountsConfig;
   securityConfig: SecurityConfig;
 }
 
-/**
- * Organizational Security Stack, depends on Organizations and Security-Audit Stack
- */
-export class SecurityStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props: SecurityStackProps) {
+export class SecurityAuditStack extends cdk.Stack {
+  constructor(scope: cdk.Construct, id: string, props: SecurityAuditStackProps) {
     super(scope, id, props);
 
     if (props.securityConfig['central-security-services'].macie.enable) {
+      // Delegated account Macie needs to be enabled before adding other account as member
+      // Adding delegated account from management account should enable macie in delegated account
+      // If delegated account macie was disabled for some reason add members will not work
       const macieSession = new AwsMacie(this, 'AwsMacieSession', {
         region: cdk.Stack.of(this).region,
         findingPublishingFrequency:
           props.securityConfig['central-security-services'].macie['policy-findings-publishing-frequency'],
         isSensitiveSh: props.securityConfig['central-security-services'].macie['publish-sensitive-data-findings'],
       });
-      new AwsMacieExportConfigClassification(this, 'AwsMacieUpdateExportConfigClassification', {
+
+      new AwsMacieMembers(this, 'AwsMacieMembers', {
         region: cdk.Stack.of(this).region,
-        S3keyPrefix: 'aws-macie-export-config',
+        adminAccountId: cdk.Stack.of(this).account,
       }).node.addDependency(macieSession);
     }
   }

@@ -6,7 +6,7 @@ accelerator-test-report:
     - 'cd source'
     - 'npm install --global yarn'
     - 'yarn install'
-    - 'yarn testreport'
+    - 'yarn test'
   artifacts:
     when: always
     reports:

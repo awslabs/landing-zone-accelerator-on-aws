@@ -111,6 +111,24 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigType> {
   }
 
   /**
+   * Returns the name of the account.
+   *
+   * @param account
+   * @returns
+   */
+  public accountExists(account: string): boolean {
+    let value = Object.entries(this['mandatory-accounts']).find(entry => entry[0] == account);
+    if (value) {
+      return true;
+    }
+    value = Object.entries(this['workload-accounts']).find(entry => entry[0] == account);
+    if (value) {
+      return true;
+    }
+    throw new Error(`${account} Account not found`);
+  }
+
+  /**
    * Returns true if an account is defined in the config with the specified email
    *
    * @param email

@@ -39,7 +39,7 @@
     "cleanup:tsc": "lerna run cleanup:tsc --stream",
     "build": "lerna run build --stream",
     "test": "lerna run test --stream",
-    "testreport": "lerna run testreport --stream",
+    "test:clean": "rm -f ./test-reports/*.xml",
     "docs": "npx typedoc --entryPointStrategy packages './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' './packages/@aws-compliant-constructs/*' --name 'AWS Accelerator' --includeVersion --treatWarningsAsErrors --disableSources --logLevel Verbose",
     "prepare": "cd ../ && husky install source/.husky",
     "postinstall": "cd ../ && husky install source/.husky && cd source",
