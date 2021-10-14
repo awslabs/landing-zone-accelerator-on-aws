@@ -10,7 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { AccountsConfig, GlobalConfig, OrganizationConfig } from '@aws-accelerator/config';
+import { AccountsConfig, GlobalConfig, OrganizationConfig, SecurityConfig } from '@aws-accelerator/config';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
 import {
@@ -38,6 +38,7 @@ export enum AcceleratorStage {
   SECURITY = 'security',
   OPERATIONS = 'operations',
   NETWORKING = 'networking',
+  'SECURITY-AUDIT' = 'security-audit',
 }
 
 /**
@@ -115,6 +116,7 @@ export abstract class Accelerator {
     const globalConfig = GlobalConfig.load(props.configDirPath);
     const organizationsConfig = OrganizationConfig.load(props.configDirPath);
     const accountsConfig = AccountsConfig.load(props.configDirPath);
+    const securityConfig = SecurityConfig.load(props.configDirPath);
 
     //
     // Load Plugins
@@ -197,15 +199,16 @@ export abstract class Accelerator {
       case AcceleratorStage.ORGANIZATIONS:
         const managementAccount = accountsConfig['mandatory-accounts'].management;
         const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, managementAccount.email);
-        const region = globalConfig['home-region'];
-        await AcceleratorToolkit.execute(
-          props.command,
-          accountId,
-          region,
-          props.stage,
-          props.configDirPath,
-          props.requireApproval,
-        );
+        for (const region of globalConfig['enabled-regions']) {
+          await AcceleratorToolkit.execute(
+            props.command,
+            accountId,
+            region,
+            props.stage,
+            props.configDirPath,
+            props.requireApproval,
+          );
+        }
         break;
 
       // case AcceleratorStage.LOGGING:
@@ -219,6 +222,20 @@ export abstract class Accelerator {
       //
       case AcceleratorStage.DEPENDENCIES:
       case AcceleratorStage.SECURITY:
+        for (const region of globalConfig['enabled-regions'].filter(
+          item => securityConfig.getExcludeRegions()?.indexOf(item) === -1,
+        )) {
+          for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
+            console.log(`${region} to be implemented on for ${account.email} account`);
+            const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
+            await AcceleratorToolkit.execute(props.command, accountId, region, props.stage, props.configDirPath);
+          }
+          for (const account of Object.values(accountsConfig['workload-accounts'])) {
+            const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
+            await AcceleratorToolkit.execute(props.command, accountId, region, props.stage, props.configDirPath);
+          }
+        }
+        break;
       case AcceleratorStage.OPERATIONS:
       case AcceleratorStage.NETWORKING:
         for (const region of globalConfig['enabled-regions']) {
@@ -244,6 +261,20 @@ export abstract class Accelerator {
               props.requireApproval,
             );
           }
+        }
+        break;
+      case AcceleratorStage['SECURITY-AUDIT']:
+        const auditAccountName = securityConfig.getDelegatedAccountName();
+        if (accountsConfig.accountExists(auditAccountName)) {
+          for (const region of globalConfig['enabled-regions'].filter(
+            item => securityConfig.getExcludeRegions()?.indexOf(item) === -1,
+          )) {
+            const auditAccountEmail = accountsConfig.getEmail(auditAccountName);
+            const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, auditAccountEmail);
+            await AcceleratorToolkit.execute(props.command, accountId, region, props.stage, props.configDirPath);
+          }
+        } else {
+          throw new Error(`Security audit delegated account ${auditAccountName} not found.`);
         }
         break;
       default:

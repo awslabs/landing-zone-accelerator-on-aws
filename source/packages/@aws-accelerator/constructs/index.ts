@@ -1,3 +1,7 @@
+export * from './lib/aws-macie/aws-macie';
+export * from './lib/aws-macie/aws-macie-export-config-classification';
+export * from './lib/aws-macie/aws-macie-members';
+export * from './lib/aws-macie/aws-macie-organization-admin-account';
 export * from './lib/aws-organizations/organizational-unit';
 export * from './lib/aws-organizations/organizational-unit-lookup';
 export * from './lib/aws-organizations/policy';

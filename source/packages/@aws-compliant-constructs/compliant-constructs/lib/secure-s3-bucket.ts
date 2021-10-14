@@ -3,6 +3,12 @@ import * as kms from '@aws-cdk/aws-kms';
 import * as s3 from '@aws-cdk/aws-s3';
 import * as cdk from '@aws-cdk/core';
 
+export enum BucketAccessType {
+  READONLY = 'readonly',
+  WRITEONLY = 'writeonly',
+  READWRITE = 'readwrite',
+}
+
 /**
  * Construction properties for a Secure S3 Bucket object.
  */
@@ -31,6 +37,14 @@ export interface SecureS3BucketProps {
    *
    */
   readonly kmsDescription: string;
+
+  /**
+   * @optional
+   * A list of AWS principals and access type the bucket to grant
+   * principal should be a valid AWS resource principal like for AWS Macie it should be macie.amazonaws.com
+   * accessType should be any of these possible values BucketAccessType.READONLY, BucketAccessType.WRITEONLY, & and BucketAccessType.READWRITE
+   */
+  readonly awsPrincipalAccesses?: { principalAccesses: [{ principal: string; accessType: string }] };
 }
 
 /**
@@ -87,6 +101,26 @@ export class SecureS3Bucket extends cdk.Construct {
         },
       }),
     );
+
+    // Add access policy for inputed AWS principal to the bucket
+    // (add a `if` to make TS happy)
+    if (props.awsPrincipalAccesses) {
+      props.awsPrincipalAccesses.principalAccesses.forEach(input => {
+        switch (input.accessType) {
+          case BucketAccessType.READONLY:
+            this.bucket.grantRead(new iam.ServicePrincipal(input.principal));
+            break;
+          case BucketAccessType.WRITEONLY:
+            this.bucket.grantWrite(new iam.ServicePrincipal(input.principal));
+            break;
+          case BucketAccessType.READWRITE:
+            this.bucket.grantReadWrite(new iam.ServicePrincipal(input.principal));
+            break;
+          default:
+            throw new Error(`Invalid Access Type ${input.accessType} for ${input.principal} principal.`);
+        }
+      });
+    }
   }
 
   public getS3Bucket(): s3.IBucket {

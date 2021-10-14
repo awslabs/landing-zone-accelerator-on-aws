@@ -25,7 +25,8 @@ import { OrganizationsStack } from '../lib/stacks/organizations-stack';
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { ValidateStack } from '../lib/stacks/validate-stack';
-import { AccountsConfig, OrganizationConfig } from '@aws-accelerator/config';
+import { AccountsConfig, OrganizationConfig, SecurityConfig, GlobalConfig } from '@aws-accelerator/config';
+import { SecurityAuditStack } from '../lib/stacks/security-audit';
 
 const app = new cdk.App();
 
@@ -50,6 +51,8 @@ switch (stage) {
       configDirPath,
       accountsConfig: AccountsConfig.load(configDirPath),
       organizationsConfig: OrganizationConfig.load(configDirPath),
+      globalConfig: GlobalConfig.load(configDirPath),
+      securityConfig: SecurityConfig.load(configDirPath),
     });
     break;
   case AcceleratorStage.VALIDATE:
@@ -62,13 +65,25 @@ switch (stage) {
     new DependenciesStack(app, 'AWSAccelerator-DependenciesStack', { env, stage });
     break;
   case AcceleratorStage.SECURITY:
-    new SecurityStack(app, 'AWSAccelerator-SecurityStack', { env, stage });
+    new SecurityStack(app, 'AWSAccelerator-SecurityStack', {
+      env,
+      stage,
+      securityConfig: SecurityConfig.load(configDirPath),
+    });
     break;
   case AcceleratorStage.OPERATIONS:
     new OperationsStack(app, 'AWSAccelerator-OperationsStack', { env, stage });
     break;
   case AcceleratorStage.NETWORKING:
     new NetworkingStack(app, 'AWSAccelerator-NetworkingStack', { env, stage });
+    break;
+  case AcceleratorStage['SECURITY-AUDIT']:
+    new SecurityAuditStack(app, 'AWSAccelerator-SecurityAuditStack', {
+      env,
+      stage,
+      accountsConfig: AccountsConfig.load(configDirPath),
+      securityConfig: SecurityConfig.load(configDirPath),
+    });
     break;
 
   default:

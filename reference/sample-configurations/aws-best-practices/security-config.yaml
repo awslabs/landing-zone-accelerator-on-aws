@@ -1,0 +1,11 @@
+---
+# Organization level security service configuration.
+# Each enabled trusted service within organization, will use one delegated admin account in organization.
+# delegated-admin-account value must match be a valid account name from the list of accounts of security_ou
+central-security-services:
+  macie:
+    enable: true
+    delegated-admin-account: audit
+    exclude-regions: ['us-east-1']
+    policy-findings-publishing-frequency: FIFTEEN_MINUTES
+    publish-sensitive-data-findings: true
