@@ -94,20 +94,21 @@ export class SecureS3Bucket extends cdk.Construct {
       objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
       serverAccessLogsBucket: props.serverAccessLogsBucket,
     });
-    this.bucket.addToResourcePolicy(
-      new iam.PolicyStatement({
-        sid: 'deny-non-encrypted-object-uploads',
-        effect: iam.Effect.DENY,
-        actions: ['s3:PutObject'],
-        resources: [this.bucket.arnForObjects('*')],
-        principals: [new iam.AnyPrincipal()],
-        conditions: {
-          StringNotEquals: {
-            's3:x-amz-server-side-encryption': 'aws:kms',
-          },
-        },
-      }),
-    );
+    // Had to be removed to allow CloudTrail access
+    // this.bucket.addToResourcePolicy(
+    //   new iam.PolicyStatement({
+    //     sid: 'deny-non-encrypted-object-uploads',
+    //     effect: iam.Effect.DENY,
+    //     actions: ['s3:PutObject'],
+    //     resources: [this.bucket.arnForObjects('*')],
+    //     principals: [new iam.AnyPrincipal()],
+    //     conditions: {
+    //       StringNotEquals: {
+    //         's3:x-amz-server-side-encryption': 'aws:kms',
+    //       },
+    //     },
+    //   }),
+    // );
     this.bucket.addToResourcePolicy(
       new iam.PolicyStatement({
         sid: 'deny-insecure-connections',

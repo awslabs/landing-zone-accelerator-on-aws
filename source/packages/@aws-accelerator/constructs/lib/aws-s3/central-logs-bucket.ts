@@ -13,8 +13,6 @@
 
 import * as cdk from '@aws-cdk/core';
 import * as iam from '@aws-cdk/aws-iam';
-// import * as s3 from '@aws-cdk/aws-s3';
-// import * as ssm from '@aws-cdk/aws-ssm';
 import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
 
 export interface CentralLogsBucketProps {
@@ -49,106 +47,12 @@ export class CentralLogsBucket extends cdk.Construct {
       }),
     );
 
-    bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
-      new iam.PolicyStatement({
-        sid: 'Allow AWS services to use the encryption key',
-        actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
-        principals: [
-          new iam.ServicePrincipal('ds.amazonaws.com'),
-          new iam.ServicePrincipal('delivery.logs.amazonaws.com'),
-        ],
-        resources: ['*'],
-      }),
-    );
-
-    //
-    // Replicate From
-    //
-    bucket.getS3Bucket().addToResourcePolicy(
-      new iam.PolicyStatement({
-        actions: [
-          's3:GetBucketVersioning',
-          's3:GetObjectVersionTagging',
-          's3:ObjectOwnerOverrideToBucketOwner',
-          's3:PutBucketVersioning',
-          's3:ReplicateDelete',
-          's3:ReplicateObject',
-          's3:ReplicateTags',
-          's3:List*',
-        ],
-        principals: [new iam.AnyPrincipal()],
-        resources: [bucket.getS3Bucket().bucketArn, bucket.getS3Bucket().arnForObjects('*')],
-        conditions: {
-          StringEquals: {
-            'aws:PrincipalOrgID': props.organizationId,
-          },
-          ArnLike: {
-            'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
-          },
-        },
-      }),
-    );
-
-    // Allow the whole organization access to the destination encryption key
-    // The replication role ARN cannot be used here as it would be a cross-account reference
-    bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
-      new iam.PolicyStatement({
-        sid: 'Enable cross account encrypt access for S3 Cross Region Replication',
-        actions: ['kms:Encrypt'],
-        principals: [new iam.AnyPrincipal()],
-        resources: ['*'],
-        conditions: {
-          StringEquals: {
-            'aws:PrincipalOrgID': props.organizationId,
-          },
-        },
-      }),
-    );
-
-    bucket.getS3Bucket().addToResourcePolicy(
-      new iam.PolicyStatement({
-        principals: [new iam.AnyPrincipal()],
-        actions: ['s3:GetEncryptionConfiguration', 's3:PutObject'],
-        resources: [bucket.getS3Bucket().bucketArn, bucket.getS3Bucket().arnForObjects('*')],
-        conditions: {
-          StringEquals: {
-            'aws:PrincipalOrgID': props.organizationId,
-          },
-        },
-      }),
-    );
-
-    // Allow Kinesis access bucket
-    bucket.getS3Bucket().addToResourcePolicy(
-      new iam.PolicyStatement({
-        principals: [new iam.AnyPrincipal()],
-        actions: [
-          's3:AbortMultipartUpload',
-          's3:GetBucketLocation',
-          's3:GetObject',
-          's3:ListBucket',
-          's3:ListBucketMultipartUploads',
-          's3:PutObject',
-          's3:PutObjectAcl',
-        ],
-        resources: [bucket.getS3Bucket().bucketArn, bucket.getS3Bucket().arnForObjects('*')],
-        conditions: {
-          StringEquals: {
-            'aws:PrincipalOrgID': props.organizationId,
-          },
-          ArnLike: {
-            'aws:PrincipalARN': `arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-Kinesis-*`,
-          },
-        },
-      }),
-    );
-
     bucket.getS3Bucket().addToResourcePolicy(
       new iam.PolicyStatement({
         principals: [
-          new iam.ServicePrincipal('delivery.logs.amazonaws.com'),
+          // new iam.ServicePrincipal('delivery.logs.amazonaws.com'),
           new iam.ServicePrincipal('cloudtrail.amazonaws.com'),
-          new iam.ServicePrincipal('config.amazonaws.com'),
+          // new iam.ServicePrincipal('config.amazonaws.com'),
         ],
         actions: ['s3:PutObject'],
         resources: [bucket.getS3Bucket().arnForObjects('*')],
@@ -163,9 +67,9 @@ export class CentralLogsBucket extends cdk.Construct {
     bucket.getS3Bucket().addToResourcePolicy(
       new iam.PolicyStatement({
         principals: [
-          new iam.ServicePrincipal('delivery.logs.amazonaws.com'),
+          // new iam.ServicePrincipal('delivery.logs.amazonaws.com'),
           new iam.ServicePrincipal('cloudtrail.amazonaws.com'),
-          new iam.ServicePrincipal('config.amazonaws.com'),
+          // new iam.ServicePrincipal('config.amazonaws.com'),
         ],
         actions: ['s3:GetBucketAcl', 's3:ListBucket'],
         resources: [bucket.getS3Bucket().bucketArn],
@@ -181,11 +85,65 @@ export class CentralLogsBucket extends cdk.Construct {
       }),
     );
 
-    // Allow cross account encrypt access for logArchive bucket
     bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
       new iam.PolicyStatement({
-        sid: 'Enable cross account encrypt access for S3 Cross Region Replication',
-        actions: ['kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+        sid: 'Allow S3 use of the key',
+        actions: [
+          'kms:Decrypt',
+          'kms:DescribeKey',
+          'kms:Encrypt',
+          'kms:GenerateDataKey',
+          'kms:GenerateDataKeyWithoutPlaintext',
+          'kms:GenerateRandom',
+          'kms:GetKeyPolicy',
+          'kms:GetKeyRotationStatus',
+          'kms:ListAliases',
+          'kms:ListGrants',
+          'kms:ListKeyPolicies',
+          'kms:ListKeys',
+          'kms:ListResourceTags',
+          'kms:ListRetirableGrants',
+          'kms:ReEncryptFrom',
+          'kms:ReEncryptTo',
+        ],
+        principals: [new iam.ServicePrincipal('s3.amazonaws.com')],
+        resources: ['*'],
+      }),
+    );
+
+    bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
+      new iam.PolicyStatement({
+        sid: 'Allow CloudTrail to encrypt and describe logs',
+        actions: [
+          'kms:Decrypt',
+          'kms:DescribeKey',
+          'kms:Encrypt',
+          'kms:GenerateDataKey',
+          'kms:GenerateDataKeyPair',
+          'kms:GenerateDataKeyPairWithoutPlaintext',
+          'kms:GenerateDataKeyWithoutPlaintext',
+          'kms:ReEncryptFrom',
+          'kms:ReEncryptTo',
+        ],
+        principals: [new iam.ServicePrincipal('cloudtrail.amazonaws.com')],
+        resources: ['*'],
+      }),
+    );
+
+    bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
+      new iam.PolicyStatement({
+        sid: 'Allow Organization use of the key',
+        actions: [
+          'kms:Decrypt',
+          'kms:DescribeKey',
+          'kms:Encrypt',
+          'kms:GenerateDataKey',
+          'kms:GenerateDataKeyPair',
+          'kms:GenerateDataKeyPairWithoutPlaintext',
+          'kms:GenerateDataKeyWithoutPlaintext',
+          'kms:ReEncryptFrom',
+          'kms:ReEncryptTo',
+        ],
         principals: [new iam.AnyPrincipal()],
         resources: ['*'],
         conditions: {
@@ -193,30 +151,6 @@ export class CentralLogsBucket extends cdk.Construct {
             'aws:PrincipalOrgID': props.organizationId,
           },
         },
-      }),
-    );
-
-    // Allow only https requests
-    bucket.getS3Bucket().addToResourcePolicy(
-      new iam.PolicyStatement({
-        actions: ['s3:*'],
-        resources: [bucket.getS3Bucket().bucketArn, bucket.getS3Bucket().arnForObjects('*')],
-        principals: [new iam.AnyPrincipal()],
-        conditions: {
-          Bool: {
-            'aws:SecureTransport': 'false',
-          },
-        },
-        effect: iam.Effect.DENY,
-      }),
-    );
-
-    bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
-      new iam.PolicyStatement({
-        sid: 'Allow CloudTrail to encrypt and describe logs',
-        actions: ['kms:GenerateDataKey*', 'kms:DescribeKey'],
-        principals: [new iam.ServicePrincipal('cloudtrail.amazonaws.com')],
-        resources: ['*'],
       }),
     );
   }

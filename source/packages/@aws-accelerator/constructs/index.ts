@@ -6,6 +6,7 @@ export * from './lib/aws-macie/macie-export-config-classification';
 export * from './lib/aws-macie/macie-members';
 export * from './lib/aws-macie/macie-organization-admin-account';
 export * from './lib/aws-macie/macie-session';
+export * from './lib/aws-organizations/enable-aws-service-access';
 export * from './lib/aws-organizations/organization';
 export * from './lib/aws-organizations/organizational-unit';
 export * from './lib/aws-organizations/organizational-unit-lookup';

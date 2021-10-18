@@ -15,25 +15,29 @@ import { AccountsConfig, GlobalConfig, OrganizationConfig, SecurityConfig } from
 import {
   GuardDutyOrganizationAdminAccount,
   MacieOrganizationAdminAccount,
+  EnableAwsServiceAccess,
   OrganizationalUnit,
   Policy,
   PolicyAttachment,
   PolicyType,
   RootOrganizationalUnit,
 } from '@aws-accelerator/constructs';
+import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
+import * as cloudtrail from '@aws-cdk/aws-cloudtrail';
+import * as kms from '@aws-cdk/aws-kms';
+import * as s3 from '@aws-cdk/aws-s3';
 import * as cdk from '@aws-cdk/core';
 import { pascalCase } from 'change-case';
 
 const path = require('path');
 
 export interface OrganizationsStackProps extends cdk.StackProps {
-  stage: string;
+  accountIds: { [name: string]: string };
   configDirPath: string;
   accountsConfig: AccountsConfig;
   organizationsConfig: OrganizationConfig;
   globalConfig: GlobalConfig;
   securityConfig: SecurityConfig;
-  accountIds: { [name: string]: string };
 }
 
 /**
@@ -44,87 +48,123 @@ export class OrganizationsStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props: OrganizationsStackProps) {
     super(scope, id, props);
 
-    //On home region specific
-    if (cdk.Stack.of(this).region === props.globalConfig['home-region']) {
+    //
+    // Obtain the Root
+    //
+    const root = RootOrganizationalUnit.fromName(this, 'RootOu', { name: 'Root' });
+
+    //
+    // Global Organizations actions, only execute in the home region
+    //
+    if (props.globalConfig['home-region'] === cdk.Stack.of(this).region) {
       //
-      // Obtain the Root
+      // Loop through list of organizational-units in the configuration file and
+      // create them. Associate related SCPs
       //
-      const root = RootOrganizationalUnit.fromName(this, 'RootOu', { name: 'Root' });
+      // Note: The Accelerator will only create new Organizational Units if they
+      //       do not already exist. If Organizational Units are found outside of
+      //       those that are listed in the configuration file, they are ignored
+      //       and left in place
+      //
+      const organizationalUnitList: { [key: string]: OrganizationalUnit } = {};
+      for (const [key, organizationalUnit] of Object.entries(props.organizationsConfig['organizational-units'])) {
+        // Create Organizational Unit
+        organizationalUnitList[key] = new OrganizationalUnit(this, pascalCase(organizationalUnit.name), {
+          name: organizationalUnit.name,
+          parentId: root.id,
+        });
+
+        console.log(`adding for ${organizationalUnit.name}`);
+
+        // Add FullAWSAccess SCP
+        new PolicyAttachment(this, pascalCase(`Attach_FullAWSAccess_${organizationalUnit.name}`), {
+          policyId: 'p-FullAWSAccess',
+          targetId: organizationalUnitList[key].id,
+          type: PolicyType.SERVICE_CONTROL_POLICY,
+        });
+      }
 
       //
-      // Global Organizations actions, only execute in the home region
+      // Create Accounts
       //
-      if (props.globalConfig['home-region'] === cdk.Stack.of(this).region) {
-        //
-        // Loop through list of organizational-units in the configuration file and
-        // create them. Associate related SCPs
-        //
-        // Note: The Accelerator will only create new Organizational Units if they
-        //       do not already exist. If Organizational Units are found outside of
-        //       those that are listed in the configuration file, they are ignored
-        //       and left in place
-        //
-        const organizationalUnitList: { [key: string]: OrganizationalUnit } = {};
-        for (const [key, organizationalUnit] of Object.entries(props.organizationsConfig['organizational-units'])) {
-          // Create Organizational Unit
-          organizationalUnitList[key] = new OrganizationalUnit(this, pascalCase(organizationalUnit.name), {
-            name: organizationalUnit.name,
-            parentId: root.id,
-          });
+      for (const account of Object.values(props.accountsConfig['mandatory-accounts'])) {
+        console.log(account['account-name']);
+        // new AwsAccount()
+      }
+      for (const account of Object.values(props.accountsConfig['workload-accounts'])) {
+        console.log(account['account-name']);
+        // new AwsAccount()
+      }
 
-          console.log(`adding for ${organizationalUnit.name}`);
+      // Deploy SCPs
+      for (const serviceControlPolicy of Object.values(props.organizationsConfig['service-control-policies'])) {
+        const scp = new Policy(this, serviceControlPolicy.name, {
+          description: serviceControlPolicy.description,
+          name: serviceControlPolicy.name,
+          path: path.join(props.configDirPath, 'service-control-policies', serviceControlPolicy.policy),
+          type: PolicyType.SERVICE_CONTROL_POLICY,
+        });
 
-          // Add FullAWSAccess SCP
-          new PolicyAttachment(this, pascalCase(`Attach_FullAWSAccess_${organizationalUnit.name}`), {
-            policyId: 'p-FullAWSAccess',
-            targetId: organizationalUnitList[key].id,
+        for (const organizationalUnit of serviceControlPolicy['organizational-units'] ?? []) {
+          let targetId = root.id;
+          if (organizationalUnit !== 'root') {
+            targetId = organizationalUnitList[organizationalUnit].id;
+          }
+
+          new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${organizationalUnit}`), {
+            policyId: scp.id,
+            targetId,
             type: PolicyType.SERVICE_CONTROL_POLICY,
           });
         }
 
-        //
-        // Create Accounts
-        //
-        for (const account of Object.values(props.accountsConfig['mandatory-accounts'])) {
-          console.log(account['account-name']);
-          // new AwsAccount()
-        }
-        for (const account of Object.values(props.accountsConfig['workload-accounts'])) {
-          console.log(account['account-name']);
-          // new AwsAccount()
-        }
-
-        // Deploy SCPs
-        for (const serviceControlPolicy of Object.values(props.organizationsConfig['service-control-policies'])) {
-          const scp = new Policy(this, serviceControlPolicy.name, {
-            description: serviceControlPolicy.description,
-            name: serviceControlPolicy.name,
-            path: path.join(props.configDirPath, 'service-control-policies', serviceControlPolicy.policy),
+        for (const account of serviceControlPolicy.accounts ?? []) {
+          new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${account}`), {
+            policyId: scp.id,
+            email: props.accountsConfig.getEmail(account),
             type: PolicyType.SERVICE_CONTROL_POLICY,
           });
-
-          for (const organizationalUnit of serviceControlPolicy['organizational-units'] ?? []) {
-            let targetId = root.id;
-            if (organizationalUnit !== 'root') {
-              targetId = organizationalUnitList[organizationalUnit].id;
-            }
-
-            new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${organizationalUnit}`), {
-              policyId: scp.id,
-              targetId,
-              type: PolicyType.SERVICE_CONTROL_POLICY,
-            });
-          }
-
-          for (const account of serviceControlPolicy.accounts ?? []) {
-            new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${account}`), {
-              policyId: scp.id,
-              email: props.accountsConfig.getEmail(account),
-              type: PolicyType.SERVICE_CONTROL_POLICY,
-            });
-          }
         }
       }
+
+      //
+      // Configure Organizations Trail
+      //
+      const enableCloudtrailServiceAccess = new EnableAwsServiceAccess(this, 'EnableOrganizationsCloudTrail', {
+        servicePrincipal: 'cloudtrail.amazonaws.com',
+      });
+      const organizationsTrail = new cdk_extensions.Trail(this, 'OrganizationsCloudTrail', {
+        bucket: s3.Bucket.fromBucketName(
+          this,
+          'CentralLogsBucket',
+          `aws-accelerator-central-logs-${
+            props.accountIds[props.accountsConfig['mandatory-accounts']['log-archive'].email]
+          }-${cdk.Stack.of(this).region}`,
+        ),
+        enableFileValidation: true,
+        encryptionKey: kms.Key.fromKeyArn(
+          this,
+          'CentralLogsCmk',
+          `arn:${cdk.Stack.of(this).partition}:kms:${cdk.Stack.of(this).region}:${
+            props.accountIds[props.accountsConfig['mandatory-accounts']['log-archive'].email]
+          }:alias/accelerator/central-logs/s3`,
+        ),
+        includeGlobalServiceEvents: true,
+        isMultiRegionTrail: true,
+        isOrganizationTrail: true,
+        managementEvents: cloudtrail.ReadWriteType.ALL,
+        sendToCloudWatchLogs: true,
+        trailName: 'AWSAccelerator-Organizations-CloudTrail',
+      });
+
+      organizationsTrail.addEventSelector(cloudtrail.DataResourceType.S3_OBJECT, [
+        `arn:${cdk.Stack.of(this).partition}:s3:::`,
+      ]);
+      organizationsTrail.addEventSelector(cloudtrail.DataResourceType.LAMBDA_FUNCTION, [
+        `arn:${cdk.Stack.of(this).partition}:lambda`,
+      ]);
+
+      organizationsTrail.node.addDependency(enableCloudtrailServiceAccess);
     }
 
     // Security Services delegated admin account configuration
@@ -189,10 +229,6 @@ export class OrganizationsStack extends cdk.Stack {
 
     //
     // Move accounts to correct OUs
-    //
-
-    //
-    // Configure Organizations Trail
     //
 
     //

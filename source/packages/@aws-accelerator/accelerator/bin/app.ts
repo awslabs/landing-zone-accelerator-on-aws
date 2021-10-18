@@ -56,9 +56,9 @@ async function main() {
       });
       break;
     case AcceleratorStage.ORGANIZATIONS:
-      new OrganizationsStack(app, 'Accelerator-OrganizationsStack', {
+      new OrganizationsStack(app, 'AWSAccelerator-OrganizationsStack', {
         env,
-        stage,
+        accountIds: await getAccountIds(),
         configDirPath,
         accountsConfig: AccountsConfig.load(configDirPath),
         organizationsConfig: OrganizationConfig.load(configDirPath),
