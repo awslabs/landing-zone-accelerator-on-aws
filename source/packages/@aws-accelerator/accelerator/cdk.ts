@@ -28,6 +28,7 @@ const args = mri(process.argv.slice(2), {
     s: 'stage',
     a: 'account',
     r: 'region',
+    p: 'partition',
   },
   default: {
     parallel: false,
@@ -40,6 +41,7 @@ const configDirPath = args['config-dir'];
 const stage = args['stage'];
 const account = args['account'];
 const region = args['region'];
+const partition = args['partition'];
 const requireApproval = args['require-approval'];
 
 //
@@ -84,6 +86,7 @@ Accelerator.run({
   parallel,
   account,
   region,
+  partition,
   requireApproval,
 }).catch(function (err) {
   console.log(err.message);

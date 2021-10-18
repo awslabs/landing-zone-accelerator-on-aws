@@ -21,8 +21,8 @@
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "4.32.0",
     "@typescript-eslint/parser": "4.32.0",
-    "aws-cdk": "1.125.0",
-    "aws-sdk": "2.998.0",
+    "aws-cdk": "1.128.0",
+    "aws-sdk": "2.1008.0",
     "colors": "1.4.0",
     "exponential-backoff": "3.1.0"
   },

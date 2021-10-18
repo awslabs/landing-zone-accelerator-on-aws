@@ -1,5 +1,5 @@
 {
-  "name": "@aws-compliant-constructs/compliant-constructs",
+  "name": "@aws-accelerator/constructs-aws-s3-put-public-access-block",
   "version": "0.0.0",
   "license": "Apache-2.0",
   "author": {
@@ -12,21 +12,22 @@
   "scripts": {
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest --coverage --ci",
-    "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
-    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
+    "build": "esbuild --minify --bundle --sourcemap --platform=node --target=node14 --external:aws-sdk --outfile=./dist/index.js index.ts",
+    "test": "",
+    "testreport": "",
+    "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
+    "precommit": "eslint --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
   },
   "devDependencies": {
-    "@aws-cdk/assert": "1.128.0",
-    "@types/fs-extra": "9.0.13",
     "@types/jest": "27.0.2",
     "@types/node": "16.10.2",
     "eslint": "7.32.0",
     "eslint-config-prettier": "8.3.0",
     "eslint-config-standard": "16.0.3",
+    "eslint-import-resolver-node": "0.3.6",
+    "eslint-import-resolver-typescript": "2.5.0",
     "eslint-plugin-import": "2.24.2",
+    "eslint-plugin-license-header": "0.2.1",
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-prettier": "4.0.0",
     "jest": "27.2.4",
@@ -34,15 +35,8 @@
     "ts-jest": "27.0.5",
     "typescript": "4.4.3"
   },
-  "peerDependencies": {
-    "@aws-cdk/core": "1.128.0"
-  },
   "dependencies": {
-    "@aws-cdk/aws-iam": "1.128.0",
-    "@aws-cdk/aws-kms": "1.128.0",
-    "@aws-cdk/aws-lambda": "1.128.0",
-    "@aws-cdk/aws-s3": "1.128.0",
-    "@aws-cdk/core": "1.128.0",
-    "fs-extra": "10.0.0"
+    "@aws-accelerator/utils": "^0.0.0",
+    "@aws-sdk/client-s3-control": "3.34.0"
   }
 }

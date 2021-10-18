@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-macie2": "3.35.0",
+    "@aws-sdk/client-macie2": "3.36.1",
     "@aws-sdk/client-organizations": "3.34.0"
   }
 }

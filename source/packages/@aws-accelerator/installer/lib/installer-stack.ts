@@ -117,7 +117,7 @@ export class InstallerStack extends cdk.Stack {
     });
 
     const pipeline = new codepipeline.Pipeline(this, 'Pipeline', {
-      pipelineName: 'AWS-Accelerator-Installer',
+      pipelineName: 'AWSAccelerator-Installer',
       artifactBucket: bucket.getS3Bucket(),
       role: pipelineRole,
     });
@@ -160,7 +160,7 @@ export class InstallerStack extends cdk.Stack {
     });
 
     const installerProject = new codebuild.PipelineProject(this, 'InstallerProject', {
-      projectName: 'AWS-Accelerator-InstallerProject',
+      projectName: 'AWSAccelerator-InstallerProject',
       role: installerRole,
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',

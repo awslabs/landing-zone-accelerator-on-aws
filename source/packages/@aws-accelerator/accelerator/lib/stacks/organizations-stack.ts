@@ -35,6 +35,10 @@ export interface OrganizationsStackProps extends cdk.StackProps {
   securityConfig: SecurityConfig;
 }
 
+/**
+ * The Organizations stack is executed in all enabled regions in the
+ * Organizations Management (Root) account
+ */
 export class OrganizationsStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props: OrganizationsStackProps) {
     super(scope, id, props);
@@ -47,102 +51,110 @@ export class OrganizationsStack extends cdk.Stack {
       const root = RootOrganizationalUnit.fromName(this, 'RootOu', { name: 'Root' });
 
       //
-      // Loop through list of organizational-units in the configuration file and
-      // create them. Associate related SCPs
+      // Global Organizations actions, only execute in the home region
       //
-      // Note: The Accelerator will only create new Organizational Units if they
-      //       do not already exist. If Organizational Units are found outside of
-      //       those that are listed in the configuration file, they are ignored
-      //       and left in place
-      //
-      const organizationalUnitList: { [key: string]: OrganizationalUnit } = {};
-      for (const [key, organizationalUnit] of Object.entries(props.organizationsConfig['organizational-units'])) {
-        // Create Organizational Unit
-        organizationalUnitList[key] = new OrganizationalUnit(this, pascalCase(organizationalUnit.name), {
-          name: organizationalUnit.name,
-          parentId: root.id,
-        });
+      if (props.globalConfig['home-region'] === cdk.Stack.of(this).region) {
+        //
+        // Loop through list of organizational-units in the configuration file and
+        // create them. Associate related SCPs
+        //
+        // Note: The Accelerator will only create new Organizational Units if they
+        //       do not already exist. If Organizational Units are found outside of
+        //       those that are listed in the configuration file, they are ignored
+        //       and left in place
+        //
+        const organizationalUnitList: { [key: string]: OrganizationalUnit } = {};
+        for (const [key, organizationalUnit] of Object.entries(props.organizationsConfig['organizational-units'])) {
+          // Create Organizational Unit
+          organizationalUnitList[key] = new OrganizationalUnit(this, pascalCase(organizationalUnit.name), {
+            name: organizationalUnit.name,
+            parentId: root.id,
+          });
 
-        console.log(`adding for ${organizationalUnit.name}`);
+          console.log(`adding for ${organizationalUnit.name}`);
 
-        // Add FullAWSAccess SCP
-        new PolicyAttachment(this, pascalCase(`Attach_FullAWSAccess_${organizationalUnit.name}`), {
-          policyId: 'p-FullAWSAccess',
-          targetId: organizationalUnitList[key].id,
-          type: PolicyType.SERVICE_CONTROL_POLICY,
-        });
-      }
-
-      //
-      // Create Accounts
-      //
-      for (const account of Object.values(props.accountsConfig['mandatory-accounts'])) {
-        console.log(account['account-name']);
-        // new AwsAccount()
-      }
-      for (const account of Object.values(props.accountsConfig['workload-accounts'])) {
-        console.log(account['account-name']);
-        // new AwsAccount()
-      }
-
-      // Deploy SCPs
-      for (const serviceControlPolicy of Object.values(props.organizationsConfig['service-control-policies'])) {
-        const scp = new Policy(this, serviceControlPolicy.name, {
-          description: serviceControlPolicy.description,
-          name: serviceControlPolicy.name,
-          path: path.join(props.configDirPath, 'service-control-policies', serviceControlPolicy.policy),
-          type: PolicyType.SERVICE_CONTROL_POLICY,
-        });
-
-        for (const organizationalUnit of serviceControlPolicy['organizational-units'] ?? []) {
-          let targetId = root.id;
-          if (organizationalUnit !== 'root') {
-            targetId = organizationalUnitList[organizationalUnit].id;
-          }
-
-          new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${organizationalUnit}`), {
-            policyId: scp.id,
-            targetId,
+          // Add FullAWSAccess SCP
+          new PolicyAttachment(this, pascalCase(`Attach_FullAWSAccess_${organizationalUnit.name}`), {
+            policyId: 'p-FullAWSAccess',
+            targetId: organizationalUnitList[key].id,
             type: PolicyType.SERVICE_CONTROL_POLICY,
           });
         }
 
-        for (const account of serviceControlPolicy.accounts ?? []) {
-          new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${account}`), {
-            policyId: scp.id,
-            email: props.accountsConfig.getEmail(account),
+        //
+        // Create Accounts
+        //
+        for (const account of Object.values(props.accountsConfig['mandatory-accounts'])) {
+          console.log(account['account-name']);
+          // new AwsAccount()
+        }
+        for (const account of Object.values(props.accountsConfig['workload-accounts'])) {
+          console.log(account['account-name']);
+          // new AwsAccount()
+        }
+
+        // Deploy SCPs
+        for (const serviceControlPolicy of Object.values(props.organizationsConfig['service-control-policies'])) {
+          const scp = new Policy(this, serviceControlPolicy.name, {
+            description: serviceControlPolicy.description,
+            name: serviceControlPolicy.name,
+            path: path.join(props.configDirPath, 'service-control-policies', serviceControlPolicy.policy),
             type: PolicyType.SERVICE_CONTROL_POLICY,
           });
+
+          for (const organizationalUnit of serviceControlPolicy['organizational-units'] ?? []) {
+            let targetId = root.id;
+            if (organizationalUnit !== 'root') {
+              targetId = organizationalUnitList[organizationalUnit].id;
+            }
+
+            new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${organizationalUnit}`), {
+              policyId: scp.id,
+              targetId,
+              type: PolicyType.SERVICE_CONTROL_POLICY,
+            });
+          }
+
+          for (const account of serviceControlPolicy.accounts ?? []) {
+            new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${account}`), {
+              policyId: scp.id,
+              email: props.accountsConfig.getEmail(account),
+              type: PolicyType.SERVICE_CONTROL_POLICY,
+            });
+          }
         }
       }
     }
 
-    // Enable Macie admin account only for home region
+    //
+    // AWS Macie - This is region service, the delegated administrator must be
+    // defined in every region. Use the delegated-admin-account defined in the
+    // security-config.yaml macie object.
+    //
     if (props.securityConfig['central-security-services'].macie.enable) {
       if (props.securityConfig.getExcludeRegions()?.indexOf(cdk.Stack.of(this).region) == -1) {
-        console.log(
-          `Starts macie for ${props.accountsConfig['mandatory-accounts'].audit.email} account in ${
-            cdk.Stack.of(this).region
-          } region`,
-        );
-        //Organization management account macie needs to be enabled before delegated account can be created
-        const macieSession = new AwsMacie(this, 'AwsMacieSession', {
+        //
+        // Need to enable macie in the Organization management account before
+        // a delegated account can be defined
+        //
+        const macieSession = new AwsMacie(this, 'MacieSession', {
           region: cdk.Stack.of(this).region,
           findingPublishingFrequency:
             props.securityConfig['central-security-services'].macie['policy-findings-publishing-frequency'],
           isSensitiveSh: props.securityConfig['central-security-services'].macie['publish-sensitive-data-findings'],
         });
 
-        new AwsMacieOrganizationAdminAccount(this, 'EnableAwsMacieForOrganization', {
+        //
+        // Delegate the Organizations administrator account for Macie
+        //
+        new AwsMacieOrganizationAdminAccount(this, 'MacieOrganizationAdminAccount', {
           region: cdk.Stack.of(this).region,
-          adminAccountEmail: props.accountsConfig['mandatory-accounts'].audit.email,
+          adminAccountEmail: props.accountsConfig.getEmail(
+            props.securityConfig['central-security-services'].macie['delegated-admin-account'],
+          ),
         }).node.addDependency(macieSession);
       } else {
-        console.log(
-          `${cdk.Stack.of(this).region} region was in excluded list so ignoring this region for ${
-            props.accountsConfig['mandatory-accounts'].audit.email
-          } account`,
-        );
+        console.log(`${cdk.Stack.of(this).region} region was in excluded list for Macie`);
       }
     }
 
