@@ -13,12 +13,7 @@
 import { AccountsConfig, GlobalConfig, OrganizationConfig, SecurityConfig } from '@aws-accelerator/config';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
-import {
-  Account,
-  DescribeOrganizationCommand,
-  OrganizationsClient,
-  paginateListAccounts,
-} from '@aws-sdk/client-organizations';
+import { DescribeOrganizationCommand, OrganizationsClient, paginateListAccounts } from '@aws-sdk/client-organizations';
 import { RequireApproval } from 'aws-cdk/lib/diff';
 import { PluginHost } from 'aws-cdk/lib/plugin';
 import { AcceleratorToolkit } from './toolkit';
@@ -30,6 +25,7 @@ export enum AcceleratorStage {
    */
   VALIDATE = 'validate',
   ORGANIZATIONS = 'organizations',
+  LOGGING = 'logging',
   /**
    * Accounts Stage - Handle all Organization and Accounts actions
    */
@@ -51,6 +47,7 @@ export interface AcceleratorProps {
   stage: string;
   account: string;
   region: string;
+  partition: string;
   requireApproval: RequireApproval;
 }
 
@@ -65,22 +62,6 @@ export interface AcceleratorProps {
 export abstract class Accelerator {
   static isSupportedStage(stage: AcceleratorStage): boolean {
     return Object.values(AcceleratorStage).includes(stage);
-  }
-
-  static getAccountIdFromEmail(organizationsAccountList: Account[], email: string): string {
-    const account = Object.entries(organizationsAccountList).find(
-      ([
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        _,
-        account,
-      ]) => email === account.Email,
-    );
-
-    if (account && account[1].Id) {
-      return account[1].Id;
-    }
-
-    throw new Error(`Account ID not found for ${email}`);
   }
 
   /**
@@ -98,14 +79,14 @@ export abstract class Accelerator {
       if (props.region && props.account === undefined) {
         throw new Error(`Region set to ${props.region}, but region is undefined`);
       }
-      return await AcceleratorToolkit.execute(
-        props.command,
-        props.account,
-        props.region,
-        props.stage,
-        props.configDirPath,
-        props.requireApproval,
-      );
+      return await AcceleratorToolkit.execute({
+        command: props.command,
+        accountId: props.account,
+        region: props.region,
+        stage: props.stage,
+        configDirPath: props.configDirPath,
+        requireApproval: props.requireApproval,
+      });
     }
 
     //
@@ -147,41 +128,46 @@ export abstract class Accelerator {
     );
 
     //
-    // Verify all Organizations accounts are defined in the configuration
+    // Create a dictionary of all AWS Account IDs.
     //
-    const organizationsAccountList: Account[] = [];
+    // TODO: Add functionality to read in a map from file for disconnected regions
+    //
+    const accountIds: { [name: string]: string } = {};
     for await (const page of paginateListAccounts({ client: organizationsClient }, {})) {
-      organizationsAccountList.push(...(page.Accounts ?? []));
-    }
-    const unlistedAccounts: string[] = [];
-    organizationsAccountList.forEach(account => {
-      if (!accountsConfig.containsEmail(account.Email)) {
-        if (account.Email) {
-          unlistedAccounts.push(account.Email);
+      for (const account of page.Accounts ?? []) {
+        if (account.Email && account.Id) {
+          accountIds[account.Email] = account.Id;
         }
       }
-    });
-    if (unlistedAccounts.length > 0) {
-      throw new Error(`Account(s) are not defined in the accounts configuration: ${unlistedAccounts}`);
     }
 
     //
     // Execute Bootstrap stacks for all identified accounts
     //
     if (props.command == 'bootstrap') {
-      const trustedAccountId = Accelerator.getAccountIdFromEmail(
-        organizationsAccountList,
-        accountsConfig['mandatory-accounts'].management.email,
-      );
-
+      const trustedAccountId = accountIds[accountsConfig['mandatory-accounts'].management.email];
       for (const region of globalConfig['enabled-regions']) {
         for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
-          const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
-          await AcceleratorToolkit.execute(props.command, accountId, region, trustedAccountId);
+          const accountId = accountIds[account.email];
+          await AcceleratorToolkit.execute({
+            command: props.command,
+            accountId,
+            region,
+            partition: props.partition,
+            trustedAccountId,
+            requireApproval: props.requireApproval,
+          });
         }
         for (const account of Object.values(accountsConfig['workload-accounts'])) {
-          const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
-          await AcceleratorToolkit.execute(props.command, accountId, region, trustedAccountId);
+          const accountId = accountIds[account.email];
+          await AcceleratorToolkit.execute({
+            command: props.command,
+            accountId,
+            region,
+            partition: props.partition,
+            trustedAccountId,
+            requireApproval: props.requireApproval,
+          });
         }
       }
       return;
@@ -196,30 +182,26 @@ export abstract class Accelerator {
     switch (props.stage) {
       case AcceleratorStage.VALIDATE:
       case AcceleratorStage.ACCOUNTS:
+        break;
       case AcceleratorStage.ORGANIZATIONS:
         const managementAccount = accountsConfig['mandatory-accounts'].management;
-        const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, managementAccount.email);
         for (const region of globalConfig['enabled-regions']) {
-          await AcceleratorToolkit.execute(
-            props.command,
-            accountId,
-            region,
-            props.stage,
-            props.configDirPath,
-            props.requireApproval,
-          );
+          await AcceleratorToolkit.execute({
+            command: props.command,
+            accountId: accountIds[managementAccount.email],
+            region: region,
+            stage: props.stage,
+            configDirPath: props.configDirPath,
+            requireApproval: props.requireApproval,
+          });
         }
         break;
-
-      // case AcceleratorStage.LOGGING:
-      // case AcceleratorStage.DELEGATED_MANAGEMENT:
-      // case AcceleratorStage.NETWORKING_PRE_DEPLOYMENT:
-      // case AcceleratorStage.NETWORKING_POST_DEPLOYMENT:
 
       //
       // Apply these stacks to all account / regions. The contents of these stacks are dynamically
       // built from the inputted configuration files during stack construction
       //
+      case AcceleratorStage.LOGGING:
       case AcceleratorStage.DEPENDENCIES:
       case AcceleratorStage.SECURITY:
         for (const region of globalConfig['enabled-regions'].filter(
@@ -227,12 +209,26 @@ export abstract class Accelerator {
         )) {
           for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
             console.log(`${region} to be implemented on for ${account.email} account`);
-            const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
-            await AcceleratorToolkit.execute(props.command, accountId, region, props.stage, props.configDirPath);
+            const accountId = accountIds[account.email];
+            await AcceleratorToolkit.execute({
+              command: props.command,
+              accountId,
+              region,
+              stage: props.stage,
+              configDirPath: props.configDirPath,
+              requireApproval: props.requireApproval,
+            });
           }
           for (const account of Object.values(accountsConfig['workload-accounts'])) {
-            const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
-            await AcceleratorToolkit.execute(props.command, accountId, region, props.stage, props.configDirPath);
+            const accountId = accountIds[account.email];
+            await AcceleratorToolkit.execute({
+              command: props.command,
+              accountId,
+              region,
+              stage: props.stage,
+              configDirPath: props.configDirPath,
+              requireApproval: props.requireApproval,
+            });
           }
         }
         break;
@@ -240,26 +236,24 @@ export abstract class Accelerator {
       case AcceleratorStage.NETWORKING:
         for (const region of globalConfig['enabled-regions']) {
           for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
-            const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
-            await AcceleratorToolkit.execute(
-              props.command,
-              accountId,
+            await AcceleratorToolkit.execute({
+              command: props.command,
+              accountId: accountIds[account.email],
               region,
-              props.stage,
-              props.configDirPath,
-              props.requireApproval,
-            );
+              stage: props.stage,
+              configDirPath: props.configDirPath,
+              requireApproval: props.requireApproval,
+            });
           }
           for (const account of Object.values(accountsConfig['workload-accounts'])) {
-            const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, account.email);
-            await AcceleratorToolkit.execute(
-              props.command,
-              accountId,
+            await AcceleratorToolkit.execute({
+              command: props.command,
+              accountId: accountIds[account.email],
               region,
-              props.stage,
-              props.configDirPath,
-              props.requireApproval,
-            );
+              stage: props.stage,
+              configDirPath: props.configDirPath,
+              requireApproval: props.requireApproval,
+            });
           }
         }
         break;
@@ -270,8 +264,15 @@ export abstract class Accelerator {
             item => securityConfig.getExcludeRegions()?.indexOf(item) === -1,
           )) {
             const auditAccountEmail = accountsConfig.getEmail(auditAccountName);
-            const accountId = Accelerator.getAccountIdFromEmail(organizationsAccountList, auditAccountEmail);
-            await AcceleratorToolkit.execute(props.command, accountId, region, props.stage, props.configDirPath);
+            const accountId = accountIds[auditAccountEmail];
+            await AcceleratorToolkit.execute({
+              command: props.command,
+              accountId,
+              region,
+              stage: props.stage,
+              configDirPath: props.configDirPath,
+              requireApproval: props.requireApproval,
+            });
           }
         } else {
           throw new Error(`Security audit delegated account ${auditAccountName} not found.`);

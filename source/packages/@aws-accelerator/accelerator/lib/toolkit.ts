@@ -68,27 +68,33 @@ export class AcceleratorToolkit {
    *
    * @see aws-cdk/packages/aws-cdk/bin/cdk.ts
    */
-  static async execute(
-    command: string,
-    account: string,
-    region: string,
-    stage?: string,
-    configDirPath?: string,
-    requireApproval?: RequireApproval,
-    trustedAccountId?: string,
-  ): Promise<void> {
-    console.log(`Executing cdk ${command} ${stage} for aws://${account}/${region}`);
+  static async execute(options: {
+    command: string;
+    accountId: string;
+    region: string;
+    partition?: string;
+    stage?: string;
+    configDirPath?: string;
+    requireApproval?: RequireApproval;
+    trustedAccountId?: string;
+  }): Promise<void> {
+    console.log(`Executing cdk ${options.command} ${options.stage} for aws://${options.accountId}/${options.region}`);
 
     const configuration = new Configuration({
       commandLineArguments: {
-        _: [command as Command, ...[]],
+        _: [options.command as Command, ...[]],
         versionReporting: false,
         pathMetadata: false,
-        output: path.join('cdk.out', account, region),
+        output: path.join('cdk.out', options.accountId, options.region),
         assetMetadata: false,
         staging: false,
         lookups: false,
-        context: [`account=${account}`, `region=${region}`, `stage=${stage}`, `config-dir=${configDirPath}`],
+        context: [
+          `account=${options.accountId}`,
+          `region=${options.region}`,
+          `stage=${options.stage}`,
+          `config-dir=${options.configDirPath}`,
+        ],
       },
     });
     await configuration.load();
@@ -118,14 +124,14 @@ export class AcceleratorToolkit {
       patterns: [],
     };
 
-    switch (command) {
+    switch (options.command) {
       case Command.BOOTSTRAP:
         const source: BootstrapSource = { source: 'default' };
         const bootstrapper = new Bootstrapper(source);
-        const environments = [`aws://${account}/${region}`];
+        const environments = [`aws://${options.accountId}/${options.region}`];
         const trustedAccounts: string[] = [];
-        if (trustedAccountId && trustedAccountId != account) {
-          trustedAccounts.push(trustedAccountId);
+        if (options.trustedAccountId && options.trustedAccountId != options.accountId) {
+          trustedAccounts.push(options.trustedAccountId);
         }
         await cli.bootstrap(environments, bootstrapper, {
           toolkitStackName,
@@ -133,6 +139,7 @@ export class AcceleratorToolkit {
             bucketName: configuration.settings.get(['toolkitBucket', 'bucketName']),
             kmsKeyId: configuration.settings.get(['toolkitBucket', 'kmsKeyId']),
             trustedAccounts,
+            cloudFormationExecutionPolicies: [`arn:${options.partition}:iam::aws:policy/AdministratorAccess`],
           },
         });
         break;
@@ -140,7 +147,7 @@ export class AcceleratorToolkit {
         await cli.deploy({
           selector,
           toolkitStackName,
-          requireApproval,
+          requireApproval: options.requireApproval,
         });
         break;
       case Command.DESTROY:
@@ -159,7 +166,7 @@ export class AcceleratorToolkit {
         await cli.synth([], false, true);
         break;
       default:
-        throw new Error(`Unsupported command: ${command}`);
+        throw new Error(`Unsupported command: ${options.command}`);
     }
   }
 }

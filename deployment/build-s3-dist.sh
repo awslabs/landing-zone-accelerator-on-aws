@@ -33,7 +33,7 @@ normal=$(tput sgr0)
 # SETTINGS
 #------------------------------------------------------------------------------
 # Important: CDK global version number
-cdk_version=1.125.0 # Note: should match package.json
+cdk_version=1.128.0 # Note: should match package.json
 template_format="json"
 run_helper="true"
 

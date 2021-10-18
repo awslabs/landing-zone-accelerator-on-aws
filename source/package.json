@@ -15,12 +15,12 @@
     "jsii-pacmak": "1.35.0"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "1.125.0",
+    "@aws-cdk/assert": "1.128.0",
     "@types/jest": "27.0.2",
     "@types/node": "16.10.2",
     "@typescript-eslint/eslint-plugin": "4.32.0",
     "@typescript-eslint/parser": "4.32.0",
-    "aws-cdk": "1.125.0",
+    "aws-cdk": "1.128.0",
     "esbuild": "0.13.4",
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-jest": "24.5.0",

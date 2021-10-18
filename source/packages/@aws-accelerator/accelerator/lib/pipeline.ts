@@ -78,7 +78,7 @@ export class AcceleratorPipeline extends cdk.Construct {
     });
 
     const pipeline = new codepipeline.Pipeline(this, 'Resource', {
-      pipelineName: 'AWS-Accelerator-Pipeline',
+      pipelineName: 'AWSAccelerator-Pipeline',
       artifactBucket: bucket.getS3Bucket(),
       role: this.pipelineRole,
     });
@@ -127,7 +127,7 @@ export class AcceleratorPipeline extends cdk.Construct {
     });
 
     const buildProject = new codebuild.PipelineProject(this, 'BuildProject', {
-      projectName: 'AWS-Accelerator-BuildProject',
+      projectName: 'AWSAccelerator-BuildProject',
       role: buildRole,
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
@@ -184,7 +184,7 @@ export class AcceleratorPipeline extends cdk.Construct {
     });
 
     this.toolkitProject = new codebuild.PipelineProject(this, 'ToolkitProject', {
-      projectName: 'AWS-Accelerator-ToolkitProject',
+      projectName: 'AWSAccelerator-ToolkitProject',
       role: this.toolkitRole,
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
@@ -229,7 +229,7 @@ export class AcceleratorPipeline extends cdk.Construct {
     pipeline.addStage({
       stageName: 'Bootstrap',
       // TODO: Remove need to define a stage (validate)
-      actions: [this.createToolkitStage('Bootstrap', `bootstrap`)],
+      actions: [this.createToolkitStage('Bootstrap', `bootstrap --partition ${cdk.Stack.of(this).partition}`)],
     });
 
     // /**
@@ -241,9 +241,27 @@ export class AcceleratorPipeline extends cdk.Construct {
     //   actions: [this.createToolkitStage('Validate', `deploy --stage ${AcceleratorStage.VALIDATE}`)],
     // });
 
+    /**
+     * The Logging stack establishes all the logging assets that are needed in
+     * all the accounts and will configure:
+     *
+     * - An S3 Access Logs bucket for every region in every account
+     * - The Central Logs bucket in the in the log-archive account
+     *
+     */
+    pipeline.addStage({
+      stageName: 'Logging',
+      actions: [this.createToolkitStage('Logging', `deploy --stage ${AcceleratorStage.LOGGING}`)],
+    });
+
     pipeline.addStage({
       stageName: 'Organization',
       actions: [this.createToolkitStage('Organizations', `deploy --stage ${AcceleratorStage.ORGANIZATIONS}`)],
+    });
+
+    pipeline.addStage({
+      stageName: 'SecurityAudit',
+      actions: [this.createToolkitStage('SecurityAudit', `deploy --stage ${AcceleratorStage['SECURITY-AUDIT']}`)],
     });
 
     // pipeline.addStage({
@@ -251,14 +269,14 @@ export class AcceleratorPipeline extends cdk.Construct {
     //   actions: [this.createToolkitStage('Dependencies', `deploy --stage ${AcceleratorStage.DEPENDENCIES}`)],
     // });
 
-    // pipeline.addStage({
-    //   stageName: 'Deploy',
-    //   actions: [
-    //     this.createToolkitStage('Security', `deploy --stage ${AcceleratorStage.SECURITY}`, 1),
-    //     this.createToolkitStage('Networking', `deploy --stage ${AcceleratorStage.NETWORKING}`, 2),
-    //     this.createToolkitStage('Operations', `deploy --stage ${AcceleratorStage.OPERATIONS}`, 3),
-    //   ],
-    // });
+    pipeline.addStage({
+      stageName: 'Deploy',
+      actions: [
+        this.createToolkitStage('Security', `deploy --stage ${AcceleratorStage.SECURITY}`, 1),
+        // this.createToolkitStage('Networking', `deploy --stage ${AcceleratorStage.NETWORKING}`, 2),
+        // this.createToolkitStage('Operations', `deploy --stage ${AcceleratorStage.OPERATIONS}`, 3),
+      ],
+    });
   }
 
   private createToolkitStage(
