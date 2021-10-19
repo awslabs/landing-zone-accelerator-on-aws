@@ -26,16 +26,18 @@ export interface AwsMacieMembersProps {
 
 /**
  /**
- * Class to Aws Macie Members
+ * Class to Aws MacieSession Members
  */
-export class AwsMacieMembers extends cdk.Construct {
+export class MacieMembers extends cdk.Construct {
   public readonly id: string;
 
   constructor(scope: cdk.Construct, id: string, props: AwsMacieMembersProps) {
     super(scope, id);
 
-    const addMembersFunction = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::MacieAddMembers', {
-      codeDirectory: path.join(__dirname, 'add-members/dist'),
+    const MACIE_RESOURCE_TYPE = 'Custom::MacieCreateMember';
+
+    const addMembersFunction = cdk.CustomResourceProvider.getOrCreateProvider(this, MACIE_RESOURCE_TYPE, {
+      codeDirectory: path.join(__dirname, 'create-member/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
       policyStatements: [
         {
@@ -66,7 +68,7 @@ export class AwsMacieMembers extends cdk.Construct {
     });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: 'Custom::AddMembers',
+      resourceType: MACIE_RESOURCE_TYPE,
       serviceToken: addMembersFunction.serviceToken,
       properties: {
         region: props.region,

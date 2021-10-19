@@ -204,9 +204,7 @@ export abstract class Accelerator {
       case AcceleratorStage.LOGGING:
       case AcceleratorStage.DEPENDENCIES:
       case AcceleratorStage.SECURITY:
-        for (const region of globalConfig['enabled-regions'].filter(
-          item => securityConfig.getExcludeRegions()?.indexOf(item) === -1,
-        )) {
+        for (const region of globalConfig['enabled-regions']) {
           for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
             console.log(`${region} to be implemented on for ${account.email} account`);
             const accountId = accountIds[account.email];
@@ -260,22 +258,20 @@ export abstract class Accelerator {
       case AcceleratorStage['SECURITY-AUDIT']:
         const auditAccountName = securityConfig.getDelegatedAccountName();
         if (accountsConfig.accountExists(auditAccountName)) {
-          for (const region of globalConfig['enabled-regions'].filter(
-            item => securityConfig.getExcludeRegions()?.indexOf(item) === -1,
-          )) {
+          for (const region of globalConfig['enabled-regions']) {
             const auditAccountEmail = accountsConfig.getEmail(auditAccountName);
             const accountId = accountIds[auditAccountEmail];
             await AcceleratorToolkit.execute({
               command: props.command,
-              accountId,
-              region,
+              accountId: accountId,
+              region: region,
               stage: props.stage,
               configDirPath: props.configDirPath,
               requireApproval: props.requireApproval,
             });
           }
         } else {
-          throw new Error(`Security audit delegated account ${auditAccountName} not found.`);
+          throw new Error(`Security delegated admin account name "${auditAccountName}" not found.`);
         }
         break;
       default:

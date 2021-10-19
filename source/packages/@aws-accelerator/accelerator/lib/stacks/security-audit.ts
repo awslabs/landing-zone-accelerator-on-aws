@@ -13,7 +13,13 @@
 
 import * as cdk from '@aws-cdk/core';
 import { AccountsConfig, SecurityConfig } from '@aws-accelerator/config';
-import { AwsMacieMembers, AwsMacie } from '@aws-accelerator/constructs';
+import {
+  MacieSession,
+  MacieMembers,
+  GuardDutyDetectorConfig,
+  GuardDutyExportConfigDestinationTypes,
+  GuardDutyMembers,
+} from '@aws-accelerator/constructs';
 
 export interface SecurityAuditStackProps extends cdk.StackProps {
   stage: string;
@@ -25,21 +31,52 @@ export class SecurityAuditStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props: SecurityAuditStackProps) {
     super(scope, id, props);
 
-    if (props.securityConfig['central-security-services'].macie.enable) {
-      // Delegated account Macie needs to be enabled before adding other account as member
+    //MacieSession configuration
+    if (
+      props.securityConfig['central-security-services'].macie.enable &&
+      props.securityConfig['central-security-services'].macie['exclude-regions']!.indexOf(cdk.Stack.of(this).region) ===
+        -1
+    ) {
+      // Delegated account MacieSession needs to be enabled before adding other account as member
       // Adding delegated account from management account should enable macie in delegated account
       // If delegated account macie was disabled for some reason add members will not work
-      const macieSession = new AwsMacie(this, 'AwsMacieSession', {
+      // TODO chack later if eneable is required
+      const macieSession = new MacieSession(this, 'MacieSession', {
         region: cdk.Stack.of(this).region,
         findingPublishingFrequency:
           props.securityConfig['central-security-services'].macie['policy-findings-publishing-frequency'],
         isSensitiveSh: props.securityConfig['central-security-services'].macie['publish-sensitive-data-findings'],
       });
 
-      new AwsMacieMembers(this, 'AwsMacieMembers', {
+      new MacieMembers(this, 'MacieMembers', {
         region: cdk.Stack.of(this).region,
         adminAccountId: cdk.Stack.of(this).account,
       }).node.addDependency(macieSession);
+    }
+
+    //GuardDuty configuration
+    if (
+      props.securityConfig['central-security-services'].guardduty.enable &&
+      props.securityConfig['central-security-services'].guardduty['exclude-regions']!.indexOf(
+        cdk.Stack.of(this).region,
+      ) === -1
+    ) {
+      const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
+        region: cdk.Stack.of(this).region,
+        enableS3Protection: props.securityConfig['central-security-services'].guardduty['s3-protection'].enable,
+      });
+
+      new GuardDutyDetectorConfig(this, 'GuardDutyDetectorConfig', {
+        region: cdk.Stack.of(this).region,
+        isExportConfigEnable:
+          props.securityConfig['central-security-services'].guardduty['export-configuration'].enable &&
+          !props.securityConfig['central-security-services'].guardduty['s3-protection']['exclude-regions']!.includes(
+            cdk.Stack.of(this).region,
+          ),
+        exportDestination: GuardDutyExportConfigDestinationTypes.S3,
+        exportFrequency:
+          props.securityConfig['central-security-services'].guardduty['export-configuration']['export-frequency'],
+      }).node.addDependency(guardDutyMembers);
     }
   }
 }

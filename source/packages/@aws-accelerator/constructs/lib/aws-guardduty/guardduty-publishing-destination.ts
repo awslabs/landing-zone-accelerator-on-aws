@@ -20,27 +20,29 @@ import * as compliant_constructs from '@aws-compliant-constructs/compliant-const
 const path = require('path');
 
 /**
- * Initialized AwsMacieExportConfigClassificationProps properties
+ * Initialized GuardDutyPublishingDestinationProps properties
  */
-export interface AwsMacieExportConfigClassificationProps {
+export interface GuardDutyPublishingDestinationProps {
   readonly region: string;
-  readonly S3keyPrefix: string;
+  readonly exportDestinationType: string;
 }
 
 /**
- * Aws Macie export configuration classification
+ * Class - GuardDutyPublishingDestination
  */
-export class AwsMacieExportConfigClassification extends cdk.Construct {
+export class GuardDutyPublishingDestination extends cdk.Construct {
   public readonly id: string = '';
 
-  constructor(scope: cdk.Construct, id: string, props: AwsMacieExportConfigClassificationProps) {
+  constructor(scope: cdk.Construct, id: string, props: GuardDutyPublishingDestinationProps) {
     super(scope, id);
 
-    // Create Macie export config bucket
-    const bucket = new compliant_constructs.SecureS3Bucket(this, 'AwsMacieExportConfigBucket', {
-      s3BucketName: `aws-accelerator-security-macie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-      kmsAliasName: 'alias/accelerator/security/macie/s3',
-      kmsDescription: 'AWS Accelerator Macie Export Config Bucket CMK',
+    const ENABLE_GUARDDUTY_PUBLISHING_DEST_RESOURCE_TYPE = 'Custom::GuardDutyCreatePublishingDestinationCommand';
+
+    // Create MacieSession export config bucket
+    const bucket = new compliant_constructs.SecureS3Bucket(this, 'GuardDutyPublishingDestinationBucket', {
+      s3BucketName: `aws-accelerator-security-guardduty-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+      kmsAliasName: 'alias/accelerator/security/guardduty/s3',
+      kmsDescription: 'AWS Accelerator GuardDuty Publishing Destination Bucket CMK',
     });
 
     // cfn_nag: Suppress warning related to the accelerator security macie export config S3 bucket
@@ -50,23 +52,30 @@ export class AwsMacieExportConfigClassification extends cdk.Construct {
         rules_to_suppress: [
           {
             id: 'W35',
-            reason: 'S3 Bucket access logging is not enabled for the accelerator security macie export config bucket.',
+            reason:
+              'S3 Bucket access logging is not enabled for the accelerator security guardduty publishing destination bucket.',
           },
         ],
       },
     };
 
-    const maciePutClassificationExportConfigurationFunction = cdk.CustomResourceProvider.getOrCreateProvider(
+    const guardDutyCreatePublishingDestinationCommandFunction = cdk.CustomResourceProvider.getOrCreateProvider(
       this,
-      'Custom::MaciePutClassificationExportConfiguration',
+      ENABLE_GUARDDUTY_PUBLISHING_DEST_RESOURCE_TYPE,
       {
-        codeDirectory: path.join(__dirname, 'put-export-config-classification/dist'),
+        codeDirectory: path.join(__dirname, 'create-publishing-destination/dist'),
         runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
         policyStatements: [
           {
-            Sid: 'MaciePutClassificationExportConfigurationTaskMacieActions',
+            Sid: 'GuardDutyCreatePublishingDestinationCommandTaskGuardDutyActions',
             Effect: 'Allow',
-            Action: ['macie2:PutClassificationExportConfiguration', 'macie2:GetClassificationExportConfiguration'],
+            Action: [
+              'guardDuty:CreateDetector',
+              'guardDuty:CreatePublishingDestination',
+              'guardDuty:DeletePublishingDestination',
+              'guardDuty:ListDetectors',
+              'guardDuty:ListPublishingDestinations',
+            ],
             Resource: '*',
           },
         ],
@@ -76,18 +85,20 @@ export class AwsMacieExportConfigClassification extends cdk.Construct {
     // Update the bucket policy to allow the custom resource to write
     const customLambdaBucketGrant = bucket
       .getS3Bucket()
-      .grantReadWrite(new iam.ArnPrincipal(maciePutClassificationExportConfigurationFunction.roleArn));
+      .grantReadWrite(new iam.ArnPrincipal(guardDutyCreatePublishingDestinationCommandFunction.roleArn));
 
     // Update the bucket policy to allow the custom resource to write
-    const macieBucketGrant = bucket.getS3Bucket().grantReadWrite(new iam.ServicePrincipal('macie.amazonaws.com'));
+    const guardDutyBucketGrant = bucket
+      .getS3Bucket()
+      .grantReadWrite(new iam.ServicePrincipal('guardduty.amazonaws.com'));
 
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: 'Custom::PutClassificationExportConfiguration',
-      serviceToken: maciePutClassificationExportConfigurationFunction.serviceToken,
+      resourceType: ENABLE_GUARDDUTY_PUBLISHING_DEST_RESOURCE_TYPE,
+      serviceToken: guardDutyCreatePublishingDestinationCommandFunction.serviceToken,
       properties: {
         region: props.region,
-        bucketName: bucket.getS3Bucket().bucketName,
-        keyPrefix: props.S3keyPrefix,
+        exportDestinationType: props.exportDestinationType,
+        bucketArn: bucket.getS3Bucket().bucketArn,
         kmsKeyArn: bucket.getS3Bucket().encryptionKey!.keyArn,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
@@ -95,7 +106,7 @@ export class AwsMacieExportConfigClassification extends cdk.Construct {
 
     // Ensure bucket policy is deleted AFTER the custom resource
     resource.node.addDependency(customLambdaBucketGrant);
-    resource.node.addDependency(macieBucketGrant);
+    resource.node.addDependency(guardDutyBucketGrant);
 
     // We also tag the bucket to record the fact that it has access for macie principal.
     cdk.Tags.of(bucket).add('aws-cdk:auto-macie-access-bucket', 'true');

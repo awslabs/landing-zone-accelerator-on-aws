@@ -59,7 +59,7 @@ export interface SecureS3BucketProps {
   /**
    * @optional
    * A list of AWS principals and access type the bucket to grant
-   * principal should be a valid AWS resource principal like for AWS Macie it
+   * principal should be a valid AWS resource principal like for AWS MacieSession it
    * should be macie.amazonaws.com accessType should be any of these possible
    * values BucketAccessType.READONLY, BucketAccessType.WRITEONLY, & and
    * BucketAccessType.READWRITE

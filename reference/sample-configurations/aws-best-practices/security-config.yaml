@@ -3,9 +3,19 @@
 # Each enabled trusted service within organization, will use one delegated admin account in organization.
 # delegated-admin-account value must match be a valid account name from the list of accounts of security_ou
 central-security-services:
+  delegated-admin-account: audit
   macie:
     enable: true
-    delegated-admin-account: audit
-    exclude-regions: ['us-east-1']
+    exclude-regions: []
     policy-findings-publishing-frequency: FIFTEEN_MINUTES
     publish-sensitive-data-findings: true
+  guardduty:
+    enable: true
+    exclude-regions: []
+    s3-protection:
+      enable: true
+      exclude-regions: []
+    export-configuration:
+      enable: true
+      destination-type: S3
+      export-frequency: ONE_HOUR

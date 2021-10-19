@@ -17,59 +17,57 @@ import { v4 as uuidv4 } from 'uuid';
 const path = require('path');
 
 /**
- * Initialized AwsMacieProps properties
+ * Initialized MacieSessionProps properties
  */
-export interface AwsMacieProps {
+export interface MacieSessionProps {
   readonly region: string;
   readonly findingPublishingFrequency: string;
   readonly isSensitiveSh: boolean;
 }
 
 /**
- * Aws Macie class
+ * Aws MacieSession class
  */
-export class AwsMacie extends cdk.Construct {
+export class MacieSession extends cdk.Construct {
   public readonly id: string = '';
 
-  constructor(scope: cdk.Construct, id: string, props: AwsMacieProps) {
+  constructor(scope: cdk.Construct, id: string, props: MacieSessionProps) {
     super(scope, id);
 
-    const macieEnableMacieSessionFunction = cdk.CustomResourceProvider.getOrCreateProvider(
-      this,
-      'Custom::MacieEnableMacieSession',
-      {
-        codeDirectory: path.join(__dirname, 'enable-macie/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-        policyStatements: [
-          {
-            Sid: 'MacieEnableMacieTaskMacieActions',
-            Effect: 'Allow',
-            Action: [
-              'macie2:DisableMacie',
-              'macie2:EnableMacie',
-              'macie2:GetMacieSession',
-              'macie2:PutFindingsPublicationConfiguration',
-              'macie2:UpdateMacieSession',
-            ],
-            Resource: '*',
-          },
-          {
-            Sid: 'MacieEnableMacieTaskIamAction',
-            Effect: 'Allow',
-            Action: ['iam:CreateServiceLinkedRole'],
-            Resource: '*',
-            Condition: {
-              StringLikeIfExists: {
-                'iam:CreateServiceLinkedRole': ['macie.amazonaws.com'],
-              },
+    const MACIE_RESOURCE_TYPE = 'Custom::MacieEnableMacie';
+
+    const macieEnableMacieSessionFunction = cdk.CustomResourceProvider.getOrCreateProvider(this, MACIE_RESOURCE_TYPE, {
+      codeDirectory: path.join(__dirname, 'enable-macie/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      policyStatements: [
+        {
+          Sid: 'MacieEnableMacieTaskMacieActions',
+          Effect: 'Allow',
+          Action: [
+            'macie2:DisableMacie',
+            'macie2:EnableMacie',
+            'macie2:GetMacieSession',
+            'macie2:PutFindingsPublicationConfiguration',
+            'macie2:UpdateMacieSession',
+          ],
+          Resource: '*',
+        },
+        {
+          Sid: 'MacieEnableMacieTaskIamAction',
+          Effect: 'Allow',
+          Action: ['iam:CreateServiceLinkedRole'],
+          Resource: '*',
+          Condition: {
+            StringLikeIfExists: {
+              'iam:CreateServiceLinkedRole': ['macie.amazonaws.com'],
             },
           },
-        ],
-      },
-    );
+        },
+      ],
+    });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: 'Custom::EnableMacieSession',
+      resourceType: MACIE_RESOURCE_TYPE,
       serviceToken: macieEnableMacieSessionFunction.serviceToken,
       properties: {
         region: props.region,

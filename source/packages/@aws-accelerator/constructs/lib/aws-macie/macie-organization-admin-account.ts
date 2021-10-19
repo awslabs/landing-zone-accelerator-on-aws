@@ -17,25 +17,27 @@ import { v4 as uuidv4 } from 'uuid';
 const path = require('path');
 
 /**
- * Initialized AwsMacieOrganizationAdminAccount properties
+ * Initialized MacieOrganizationAdminAccount properties
  */
-export interface AwsMacieOrganizationalAdminAccountProps {
+export interface MacieOrganizationalAdminAccountProps {
   readonly region: string;
-  readonly adminAccountEmail: string;
+  readonly adminAccountId: string;
 }
 
 /**
- * Aws Macie organizational Admin Account
+ * Aws MacieSession organizational Admin Account
  */
-export class AwsMacieOrganizationAdminAccount extends cdk.Construct {
+export class MacieOrganizationAdminAccount extends cdk.Construct {
   public readonly id: string;
 
-  constructor(scope: cdk.Construct, id: string, props: AwsMacieOrganizationalAdminAccountProps) {
+  constructor(scope: cdk.Construct, id: string, props: MacieOrganizationalAdminAccountProps) {
     super(scope, id);
+
+    const MACIE_RESOURCE_TYPE = 'Custom::MacieEnableOrganizationAdminAccount';
 
     const enableOrganizationAdminAccountFunction = cdk.CustomResourceProvider.getOrCreateProvider(
       this,
-      'Custom::MacieEnableOrganizationAdminAccount',
+      MACIE_RESOURCE_TYPE,
       {
         codeDirectory: path.join(__dirname, 'enable-organization-admin-account/dist'),
         runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
@@ -72,7 +74,11 @@ export class AwsMacieOrganizationAdminAccount extends cdk.Construct {
           {
             Sid: 'MacieEnableOrganizationAdminAccountTaskMacieActions',
             Effect: 'Allow',
-            Action: ['macie2:EnableOrganizationAdminAccount', 'macie2:ListOrganizationAdminAccounts'],
+            Action: [
+              'macie2:EnableOrganizationAdminAccount',
+              'macie2:ListOrganizationAdminAccounts',
+              'macie2:DisableOrganizationAdminAccount',
+            ],
             Resource: '*',
           },
         ],
@@ -80,11 +86,11 @@ export class AwsMacieOrganizationAdminAccount extends cdk.Construct {
     );
 
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: 'Custom::EnableOrganizationAdminAccount',
+      resourceType: MACIE_RESOURCE_TYPE,
       serviceToken: enableOrganizationAdminAccountFunction.serviceToken,
       properties: {
         region: props.region,
-        adminAccountEmail: props.adminAccountEmail,
+        adminAccountId: props.adminAccountId,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });

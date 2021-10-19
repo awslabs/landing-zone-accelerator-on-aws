@@ -26,9 +26,9 @@ import { NetworkingStack } from '../lib/stacks/networking-stack';
 import { OperationsStack } from '../lib/stacks/operations-stack';
 import { OrganizationsStack } from '../lib/stacks/organizations-stack';
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
-import { SecurityAuditStack } from '../lib/stacks/security-audit';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { ValidateStack } from '../lib/stacks/validate-stack';
+import { SecurityAuditStack } from '../lib/stacks/security-audit';
 
 async function main() {
   const app = new cdk.App();
@@ -64,6 +64,7 @@ async function main() {
         organizationsConfig: OrganizationConfig.load(configDirPath),
         globalConfig: GlobalConfig.load(configDirPath),
         securityConfig: SecurityConfig.load(configDirPath),
+        accountIds: await getAccountIds(),
       });
       break;
     case AcceleratorStage.VALIDATE:
@@ -79,14 +80,9 @@ async function main() {
       new SecurityStack(app, 'AWSAccelerator-SecurityStack', {
         env,
         stage,
+        accountsConfig: AccountsConfig.load(configDirPath),
         securityConfig: SecurityConfig.load(configDirPath),
       });
-      break;
-    case AcceleratorStage.OPERATIONS:
-      new OperationsStack(app, 'AWSAccelerator-OperationsStack', { env, stage });
-      break;
-    case AcceleratorStage.NETWORKING:
-      new NetworkingStack(app, 'AWSAccelerator-NetworkingStack', { env, stage });
       break;
     case AcceleratorStage['SECURITY-AUDIT']:
       new SecurityAuditStack(app, 'AWSAccelerator-SecurityAuditStack', {
@@ -95,6 +91,12 @@ async function main() {
         accountsConfig: AccountsConfig.load(configDirPath),
         securityConfig: SecurityConfig.load(configDirPath),
       });
+      break;
+    case AcceleratorStage.OPERATIONS:
+      new OperationsStack(app, 'AWSAccelerator-OperationsStack', { env, stage });
+      break;
+    case AcceleratorStage.NETWORKING:
+      new NetworkingStack(app, 'AWSAccelerator-NetworkingStack', { env, stage });
       break;
     default:
       new DefaultStack(app, 'AWSAccelerator-ValidateStack', { env });
