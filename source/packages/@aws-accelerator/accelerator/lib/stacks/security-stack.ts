@@ -14,8 +14,8 @@
 import { AccountsConfig, GlobalConfig, SecurityConfig } from '@aws-accelerator/config';
 import {
   GuardDutyPublishingDestination,
-  // MacieExportConfigClassification,
-  // MacieSession,
+  MacieExportConfigClassification,
+  MacieSession,
 } from '@aws-accelerator/constructs';
 import * as config from '@aws-cdk/aws-config';
 import * as iam from '@aws-cdk/aws-iam';
