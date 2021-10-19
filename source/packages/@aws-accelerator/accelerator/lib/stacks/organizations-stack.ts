@@ -13,9 +13,9 @@
 
 import { AccountsConfig, GlobalConfig, OrganizationConfig, SecurityConfig } from '@aws-accelerator/config';
 import {
+  EnableAwsServiceAccess,
   GuardDutyOrganizationAdminAccount,
   MacieOrganizationAdminAccount,
-  EnableAwsServiceAccess,
   OrganizationalUnit,
   Policy,
   PolicyAttachment,
@@ -24,7 +24,9 @@ import {
 } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 import * as cloudtrail from '@aws-cdk/aws-cloudtrail';
+import * as iam from '@aws-cdk/aws-iam';
 import * as kms from '@aws-cdk/aws-kms';
+import * as logs from '@aws-cdk/aws-logs';
 import * as s3 from '@aws-cdk/aws-s3';
 import * as cdk from '@aws-cdk/core';
 import { pascalCase } from 'change-case';
@@ -130,41 +132,82 @@ export class OrganizationsStack extends cdk.Stack {
       //
       // Configure Organizations Trail
       //
-      const enableCloudtrailServiceAccess = new EnableAwsServiceAccess(this, 'EnableOrganizationsCloudTrail', {
-        servicePrincipal: 'cloudtrail.amazonaws.com',
-      });
-      const organizationsTrail = new cdk_extensions.Trail(this, 'OrganizationsCloudTrail', {
-        bucket: s3.Bucket.fromBucketName(
-          this,
-          'CentralLogsBucket',
-          `aws-accelerator-central-logs-${
-            props.accountIds[props.accountsConfig['mandatory-accounts']['log-archive'].email]
-          }-${cdk.Stack.of(this).region}`,
-        ),
-        enableFileValidation: true,
-        encryptionKey: kms.Key.fromKeyArn(
-          this,
-          'CentralLogsCmk',
-          `arn:${cdk.Stack.of(this).partition}:kms:${cdk.Stack.of(this).region}:${
-            props.accountIds[props.accountsConfig['mandatory-accounts']['log-archive'].email]
-          }:alias/accelerator/central-logs/s3`,
-        ),
-        includeGlobalServiceEvents: true,
-        isMultiRegionTrail: true,
-        isOrganizationTrail: true,
-        managementEvents: cloudtrail.ReadWriteType.ALL,
-        sendToCloudWatchLogs: true,
-        trailName: 'AWSAccelerator-Organizations-CloudTrail',
-      });
 
-      organizationsTrail.addEventSelector(cloudtrail.DataResourceType.S3_OBJECT, [
-        `arn:${cdk.Stack.of(this).partition}:s3:::`,
-      ]);
-      organizationsTrail.addEventSelector(cloudtrail.DataResourceType.LAMBDA_FUNCTION, [
-        `arn:${cdk.Stack.of(this).partition}:lambda`,
-      ]);
+      if (props.globalConfig.logging.cloudtrail.enable && props.globalConfig.logging.cloudtrail['organization-trail']) {
+        const enableCloudtrailServiceAccess = new EnableAwsServiceAccess(this, 'EnableOrganizationsCloudTrail', {
+          servicePrincipal: 'cloudtrail.amazonaws.com',
+        });
 
-      organizationsTrail.node.addDependency(enableCloudtrailServiceAccess);
+        const cloudTrailCloudWatchCmk = new kms.Key(this, 'CloudTrailCloudWatchCmk', {
+          enableKeyRotation: true,
+          description: 'CloudTrail Log Group CMK',
+          alias: 'accelerator/organizations-cloudtrail/log-group/',
+        });
+        cloudTrailCloudWatchCmk.addToResourcePolicy(
+          new iam.PolicyStatement({
+            sid: 'Allow Account use of the key',
+            actions: ['kms:*'],
+            principals: [new iam.AccountRootPrincipal()],
+            resources: ['*'],
+          }),
+        );
+        cloudTrailCloudWatchCmk.addToResourcePolicy(
+          new iam.PolicyStatement({
+            sid: 'Allow logs use of the key',
+            actions: ['kms:*'],
+            principals: [new iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+            resources: ['*'],
+            conditions: {
+              ArnEquals: {
+                'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
+                  cdk.Stack.of(this).region
+                }:${cdk.Stack.of(this).account}:*`,
+              },
+            },
+          }),
+        );
+
+        const cloudTrailCloudWatchCmkLogGroup = new logs.LogGroup(this, 'CloudTrailCloudWatchLogGroup', {
+          retention: logs.RetentionDays.ONE_YEAR,
+          encryptionKey: cloudTrailCloudWatchCmk,
+          logGroupName: 'aws-accelerator-cloudtrail-logs',
+        });
+
+        const organizationsTrail = new cdk_extensions.Trail(this, 'OrganizationsCloudTrail', {
+          bucket: s3.Bucket.fromBucketName(
+            this,
+            'CentralLogsBucket',
+            `aws-accelerator-central-logs-${
+              props.accountIds[props.accountsConfig['mandatory-accounts']['log-archive'].email]
+            }-${cdk.Stack.of(this).region}`,
+          ),
+          cloudWatchLogGroup: cloudTrailCloudWatchCmkLogGroup,
+          cloudWatchLogsRetention: logs.RetentionDays.ONE_MONTH,
+          enableFileValidation: true,
+          encryptionKey: kms.Key.fromKeyArn(
+            this,
+            'CentralLogsCmk',
+            `arn:${cdk.Stack.of(this).partition}:kms:${cdk.Stack.of(this).region}:${
+              props.accountIds[props.accountsConfig['mandatory-accounts']['log-archive'].email]
+            }:alias/accelerator/central-logs/s3`,
+          ),
+          includeGlobalServiceEvents: true,
+          isMultiRegionTrail: true,
+          isOrganizationTrail: true,
+          managementEvents: cloudtrail.ReadWriteType.ALL,
+          sendToCloudWatchLogs: true,
+          trailName: 'AWSAccelerator-Organizations-CloudTrail',
+        });
+
+        organizationsTrail.addEventSelector(cloudtrail.DataResourceType.S3_OBJECT, [
+          `arn:${cdk.Stack.of(this).partition}:s3:::`,
+        ]);
+        organizationsTrail.addEventSelector(cloudtrail.DataResourceType.LAMBDA_FUNCTION, [
+          `arn:${cdk.Stack.of(this).partition}:lambda`,
+        ]);
+
+        organizationsTrail.node.addDependency(enableCloudtrailServiceAccess);
+      }
     }
 
     // Security Services delegated admin account configuration

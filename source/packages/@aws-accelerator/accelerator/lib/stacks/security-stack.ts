@@ -11,21 +11,25 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
-import { AccountsConfig, SecurityConfig } from '@aws-accelerator/config';
+import { AccountsConfig, GlobalConfig, SecurityConfig } from '@aws-accelerator/config';
 import {
-  MacieSession,
-  MacieExportConfigClassification,
   GuardDutyPublishingDestination,
+  // MacieExportConfigClassification,
+  // MacieSession,
 } from '@aws-accelerator/constructs';
+import * as config from '@aws-cdk/aws-config';
+import * as iam from '@aws-cdk/aws-iam';
+import * as cdk from '@aws-cdk/core';
+import { pascalCase } from 'change-case';
 
 /**
  * SecurityStackProps
  */
 export interface SecurityStackProps extends cdk.StackProps {
-  readonly stage: string;
-  readonly accountsConfig: AccountsConfig;
-  readonly securityConfig: SecurityConfig;
+  accountIds: { [name: string]: string };
+  accountsConfig: AccountsConfig;
+  globalConfig: GlobalConfig;
+  securityConfig: SecurityConfig;
 }
 
 /**
@@ -43,7 +47,7 @@ export class SecurityStack extends cdk.Stack {
     ) {
       const auditAccountName = props.securityConfig.getDelegatedAccountName();
       if (props.accountsConfig.accountExists(auditAccountName)) {
-        // TODO chack later if eneable is required, because add members would od this
+        // TODO check later if enable is required, because add members would od this
         const macieSession = new MacieSession(this, 'MacieSession', {
           region: cdk.Stack.of(this).region,
           findingPublishingFrequency:
@@ -75,6 +79,138 @@ export class SecurityStack extends cdk.Stack {
         });
       } else {
         throw new Error(`Guardduty audit delegated admin account name "${auditAccountName}" not found.`);
+      }
+    }
+
+    //
+    // AWS Config - Set up recorder and delivery channel, only if Control Tower
+    // is not being used. Else the Control Tower SCP will block these calls from
+    // member accounts
+    //
+    // An AWS Control Tower preventive guardrail is enforced with AWS
+    // Organizations using Service Control Policies (SCPs) that disallows
+    // configuration changes to AWS Config.
+    //
+    let configRecorder: config.CfnConfigurationRecorder | undefined = undefined;
+    if (!props.globalConfig['control-tower'].enable) {
+      const configRecorderRole = new iam.Role(this, 'ConfigRecorderRole', {
+        assumedBy: new iam.ServicePrincipal('config.amazonaws.com'),
+        managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSConfigRole')],
+      });
+
+      /**
+       * As per the documentation, the config role should have
+       * the s3:PutObject permission to avoid access denied issues
+       * while AWS config tries to check the s3 bucket (in another account) write permissions
+       * https://docs.aws.amazon.com/config/latest/developerguide/s3-bucket-policy.html
+       *
+       */
+      configRecorderRole.addToPrincipalPolicy(
+        new iam.PolicyStatement({
+          actions: ['s3:PutObject'],
+          resources: ['*'],
+        }),
+      );
+
+      configRecorder = new config.CfnConfigurationRecorder(this, 'ConfigRecorder', {
+        roleArn: configRecorderRole.roleArn,
+        recordingGroup: {
+          allSupported: true,
+          includeGlobalResourceTypes: true,
+        },
+      });
+
+      const configDeliveryChannel = new config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
+        s3BucketName: `aws-accelerator-central-logs-${
+          props.accountIds[props.accountsConfig['mandatory-accounts']['log-archive'].email]
+        }-${cdk.Stack.of(this).region}`,
+        configSnapshotDeliveryProperties: {
+          deliveryFrequency: 'One_Hour',
+        },
+      });
+
+      configDeliveryChannel.node.addDependency(configRecorder);
+    }
+    console.log('security-stack: AWS Config');
+    for (const ruleSet of props.securityConfig['aws-config']['rule-sets']) {
+      console.log('security-stack: Handle Rule Set:');
+
+      //
+      // Region exclusion check
+      // TODO: Move this to a util function
+      //
+      if (ruleSet['exclude-regions']?.includes(cdk.Stack.of(this).region)) {
+        console.log(`security-stack: ${cdk.Stack.of(this).region} region excluded`);
+        continue;
+      }
+
+      //
+      // Account exclusion check
+      // TODO: Move this to a util function
+      //
+      let excludeAccount = false;
+      for (const account in ruleSet['exclude-accounts']) {
+        const email = props.accountsConfig.getEmail(account);
+        if (cdk.Stack.of(this).account === props.accountIds[email]) {
+          console.log(`security-stack: ${account} account excluded`);
+          excludeAccount = true;
+          break;
+        }
+      }
+      if (excludeAccount) {
+        continue;
+      }
+
+      let includeAccount = false;
+
+      //
+      // Check Accounts List
+      //
+      for (const account in ruleSet['accounts']) {
+        const email = props.accountsConfig.getEmail(account);
+        if (cdk.Stack.of(this).account === props.accountIds[email]) {
+          includeAccount = true;
+          break;
+        }
+      }
+
+      //
+      // Check OU List
+      //
+      for (const ou of Object.values(ruleSet['organizational-units'] ?? [])) {
+        console.log(`security-stack: Checking ${ou}`);
+        if (ou === 'root-ou') {
+          includeAccount = true;
+          break;
+        }
+      }
+
+      if (includeAccount) {
+        console.log(
+          `security-stack: Account (${cdk.Stack.of(this).account}) should be included, deploying AWS Config Rules`,
+        );
+
+        for (const rule of ruleSet.rules) {
+          console.log(`security-stack: Creating managed rule ${rule.identifier}`);
+
+          const resourceTypes: config.ResourceType[] = [];
+          for (const resourceType of Object.values(rule['compliance-resource-types'] ?? [])) {
+            resourceTypes.push(config.ResourceType.of(resourceType));
+          }
+
+          const configRule = new config.ManagedRule(this, pascalCase(rule.identifier), {
+            configRuleName: rule.name,
+            identifier: rule.identifier,
+            inputParameters: rule['input-parameters'],
+            ruleScope: {
+              resourceTypes,
+            },
+          });
+
+          if (!props.globalConfig['control-tower'].enable && configRecorder) {
+            configRule.node.addDependency(configRecorder);
+          }
+        }
       }
     }
   }

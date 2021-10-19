@@ -49,10 +49,30 @@ export abstract class SecurityConfigTypes {
     macie: SecurityConfigTypes.MacieConfig,
     guardduty: SecurityConfigTypes.GuardDutyConfig,
   });
+
+  static readonly ConfigRule = t.interface({
+    name: t.nonEmptyString,
+    identifier: t.nonEmptyString,
+    'input-parameters': t.optional(t.dictionary(t.nonEmptyString, t.nonEmptyString)),
+    'compliance-resource-types': t.optional(t.array(t.nonEmptyString)),
+  });
+
+  static readonly ConfigRuleSet = t.interface({
+    'exclude-regions': t.optional(t.array(t.nonEmptyString)),
+    'exclude-accounts': t.optional(t.array(t.nonEmptyString)),
+    'organizational-units': t.optional(t.array(t.nonEmptyString)),
+    accounts: t.optional(t.array(t.nonEmptyString)),
+    rules: t.array(SecurityConfigTypes.ConfigRule),
+  });
+
+  static readonly Config = t.interface({
+    'rule-sets': t.array(SecurityConfigTypes.ConfigRuleSet),
+  });
 }
 
 export const SecurityConfigType = t.interface({
   'central-security-services': SecurityConfigTypes.SecurityConfig,
+  'aws-config': SecurityConfigTypes.Config,
 });
 
 export class SecurityConfig implements t.TypeOf<typeof SecurityConfigType> {
@@ -79,6 +99,10 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigType> {
         'export-frequency': 'FIFTEEN_MINUTES',
       },
     },
+  };
+
+  readonly 'aws-config': t.TypeOf<typeof SecurityConfigTypes.Config> = {
+    'rule-sets': [],
   };
 
   constructor(values?: t.TypeOf<typeof SecurityConfigType>) {

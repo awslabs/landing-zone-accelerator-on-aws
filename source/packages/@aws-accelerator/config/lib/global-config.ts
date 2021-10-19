@@ -19,7 +19,21 @@ import * as yaml from 'js-yaml';
 /**
  * Global configuration items.
  */
-export abstract class GlobalConfigTypes {}
+export abstract class GlobalConfigTypes {
+  static readonly ControlTowerConfig = t.interface({
+    enable: t.boolean,
+  });
+
+  static readonly CloudtrailConfig = t.interface({
+    enable: t.boolean,
+    'organization-trail': t.boolean,
+  });
+
+  static readonly LoggingConfig = t.interface({
+    account: t.nonEmptyString,
+    cloudtrail: GlobalConfigTypes.CloudtrailConfig,
+  });
+}
 
 /**
  * @see GlobalConfig
@@ -27,6 +41,8 @@ export abstract class GlobalConfigTypes {}
 export const GlobalConfigType = t.interface({
   'home-region': t.nonEmptyString,
   'enabled-regions': t.array(t.region),
+  'control-tower': GlobalConfigTypes.ControlTowerConfig,
+  logging: GlobalConfigTypes.LoggingConfig,
 });
 
 export class GlobalConfig implements t.TypeOf<typeof GlobalConfigType> {
@@ -41,6 +57,18 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigType> {
    *
    */
   readonly 'enabled-regions' = [];
+
+  readonly 'control-tower' = {
+    enable: true,
+  };
+
+  readonly logging: t.TypeOf<typeof GlobalConfigTypes.LoggingConfig> = {
+    account: 'log-archive',
+    cloudtrail: {
+      enable: true,
+      'organization-trail': true,
+    },
+  };
 
   /**
    *

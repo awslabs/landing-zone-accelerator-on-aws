@@ -228,7 +228,6 @@ export class AcceleratorPipeline extends cdk.Construct {
 
     pipeline.addStage({
       stageName: 'Bootstrap',
-      // TODO: Remove need to define a stage (validate)
       actions: [this.createToolkitStage('Bootstrap', `bootstrap --partition ${cdk.Stack.of(this).partition}`)],
     });
 

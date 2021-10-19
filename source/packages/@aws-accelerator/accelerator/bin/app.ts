@@ -64,7 +64,6 @@ async function main() {
         organizationsConfig: OrganizationConfig.load(configDirPath),
         globalConfig: GlobalConfig.load(configDirPath),
         securityConfig: SecurityConfig.load(configDirPath),
-        accountIds: await getAccountIds(),
       });
       break;
     case AcceleratorStage.VALIDATE:
@@ -79,8 +78,9 @@ async function main() {
     case AcceleratorStage.SECURITY:
       new SecurityStack(app, 'AWSAccelerator-SecurityStack', {
         env,
-        stage,
+        accountIds: await getAccountIds(),
         accountsConfig: AccountsConfig.load(configDirPath),
+        globalConfig: GlobalConfig.load(configDirPath),
         securityConfig: SecurityConfig.load(configDirPath),
       });
       break;
