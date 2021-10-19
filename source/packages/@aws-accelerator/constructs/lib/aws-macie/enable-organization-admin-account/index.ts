@@ -18,8 +18,9 @@ import {
   EnableOrganizationAdminAccountCommand,
   paginateListOrganizationAdminAccounts,
   AdminAccount,
+  AdminStatus,
+  DisableOrganizationAdminAccountCommand,
 } from '@aws-sdk/client-macie2';
-import { OrganizationsClient, paginateListAccounts } from '@aws-sdk/client-organizations';
 
 /**
  * enableOrganizationAdminAccount - lambda handler
@@ -34,45 +35,29 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
-  const adminAccountEmail = event.ResourceProperties['adminAccountEmail'];
+  const adminAccountId = event.ResourceProperties['adminAccountId'];
   const region = event.ResourceProperties['region'];
-  const organizationsClient = new OrganizationsClient({});
   const macie2Client = new Macie2Client({ region: region });
 
-  let existingAdminAccountList: AdminAccount | undefined;
+  const macieDelegatedAccount = await getMacieDelegatedAccount(macie2Client, adminAccountId);
 
   console.log(
-    `Started enableOrganizationAdminAccount function in ${event.ResourceProperties['region']} region for account with email ${adminAccountEmail}`,
+    `Started enableOrganizationAdminAccount function in ${event.ResourceProperties['region']} region for account ${adminAccountId}`,
   );
-
-  for await (const page of paginateListOrganizationAdminAccounts({ client: macie2Client }, {})) {
-    for (const account of page.adminAccounts ?? []) {
-      existingAdminAccountList = account;
-    }
-  }
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      let adminAccountId: string | undefined = undefined;
-
-      for await (const page of paginateListAccounts({ client: organizationsClient }, {})) {
-        for (const account of page.Accounts ?? []) {
-          if (account.Email == adminAccountEmail && account.Id) {
-            adminAccountId = account.Id;
-          }
-        }
-      }
-      if (!adminAccountId) {
-        throw new Error(`No Audit account found with email - ${adminAccountEmail}`);
-      }
-
-      if (existingAdminAccountList) {
-        if (existingAdminAccountList.accountId === adminAccountId) {
+      if (macieDelegatedAccount.status) {
+        if (macieDelegatedAccount.accountId === adminAccountId) {
           console.warn(
-            `Macie admin account ${adminAccountId} is already an admin account as status is ${existingAdminAccountList.status}, in ${region} region. No action needed`,
+            `Macie admin account ${macieDelegatedAccount.accountId} is already an admin account as status is ${macieDelegatedAccount.status}, in ${region} region. No action needed`,
           );
           return { Status: 'Success', StatusCode: 200 };
+        } else {
+          console.warn(
+            `Macie delegated adming is already set to ${macieDelegatedAccount.accountId} account can not assign another delegated account`,
+          );
         }
       } else {
         console.log(`Enabing macie admin account ${adminAccountId} in ${region} region`);
@@ -84,7 +69,38 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
-      // TO DO for Delete
+      if (macieDelegatedAccount.status) {
+        await throttlingBackOff(() =>
+          macie2Client.send(
+            new DisableOrganizationAdminAccountCommand({ adminAccountId: macieDelegatedAccount.accountId }),
+          ),
+        );
+      }
+
       return { Status: 'Success', StatusCode: 200 };
   }
+}
+
+async function getMacieDelegatedAccount(
+  macie2Client: Macie2Client,
+  adminAccountId: string,
+): Promise<{ accountId: string | undefined; status: boolean }> {
+  const adminAccounts: AdminAccount[] = [];
+  for await (const page of paginateListOrganizationAdminAccounts({ client: macie2Client }, {})) {
+    for (const account of page.adminAccounts ?? []) {
+      adminAccounts.push(account);
+    }
+  }
+  if (adminAccounts.length === 0) {
+    return { accountId: undefined, status: false };
+  }
+  if (adminAccounts.length > 1) {
+    throw new Error('Multiple admin accounts for GuardDuty in organization');
+  }
+
+  if (adminAccounts[0].accountId === adminAccountId && adminAccounts[0].status === AdminStatus.DISABLING_IN_PROGRESS) {
+    throw new Error(`Admin account ${adminAccounts[0].accountId} is in ${adminAccounts[0].status}`);
+  }
+
+  return { accountId: adminAccounts[0].accountId, status: true };
 }

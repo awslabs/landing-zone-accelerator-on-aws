@@ -20,6 +20,7 @@ export * from './lib/stacks/networking-stack';
 export * from './lib/stacks/operations-stack';
 export * from './lib/stacks/organizations-stack';
 export * from './lib/stacks/pipeline-stack';
+export * from './lib/stacks/security-audit';
 export * from './lib/stacks/security-stack';
 export * from './lib/stacks/validate-stack';
 export * from './lib/toolkit';

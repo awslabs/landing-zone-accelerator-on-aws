@@ -13,8 +13,8 @@
 
 import { AccountsConfig, GlobalConfig, OrganizationConfig, SecurityConfig } from '@aws-accelerator/config';
 import {
-  AwsMacie,
-  AwsMacieOrganizationAdminAccount,
+  GuardDutyOrganizationAdminAccount,
+  MacieOrganizationAdminAccount,
   OrganizationalUnit,
   Policy,
   PolicyAttachment,
@@ -33,6 +33,7 @@ export interface OrganizationsStackProps extends cdk.StackProps {
   organizationsConfig: OrganizationConfig;
   globalConfig: GlobalConfig;
   securityConfig: SecurityConfig;
+  accountIds: { [name: string]: string };
 }
 
 /**
@@ -126,35 +127,63 @@ export class OrganizationsStack extends cdk.Stack {
       }
     }
 
-    //
-    // AWS Macie - This is region service, the delegated administrator must be
-    // defined in every region. Use the delegated-admin-account defined in the
-    // security-config.yaml macie object.
-    //
-    if (props.securityConfig['central-security-services'].macie.enable) {
-      if (props.securityConfig.getExcludeRegions()?.indexOf(cdk.Stack.of(this).region) == -1) {
-        //
-        // Need to enable macie in the Organization management account before
-        // a delegated account can be defined
-        //
-        const macieSession = new AwsMacie(this, 'MacieSession', {
-          region: cdk.Stack.of(this).region,
-          findingPublishingFrequency:
-            props.securityConfig['central-security-services'].macie['policy-findings-publishing-frequency'],
-          isSensitiveSh: props.securityConfig['central-security-services'].macie['publish-sensitive-data-findings'],
-        });
+    // Security Services delegated admin account configuration
+    // Global decoration for security services
+    const adminAccountId =
+      props.accountIds[
+        props.accountsConfig.getEmail(props.securityConfig['central-security-services']['delegated-admin-account'])
+      ];
 
-        //
-        // Delegate the Organizations administrator account for Macie
-        //
-        new AwsMacieOrganizationAdminAccount(this, 'MacieOrganizationAdminAccount', {
+    // Macie Configuration
+    if (props.securityConfig['central-security-services'].macie.enable) {
+      if (
+        props.securityConfig['central-security-services'].macie['exclude-regions']!.indexOf(
+          cdk.Stack.of(this).region,
+        ) == -1
+      ) {
+        console.log(
+          `Starts macie admin account delegation to the account with email ${
+            props.accountsConfig['mandatory-accounts'].audit.email
+          } account in ${cdk.Stack.of(this).region} region`,
+        );
+        console.log(`Macie Admin Account ID is ${adminAccountId}`);
+        new MacieOrganizationAdminAccount(this, 'MacieOrganizationAdminAccount', {
           region: cdk.Stack.of(this).region,
-          adminAccountEmail: props.accountsConfig.getEmail(
-            props.securityConfig['central-security-services'].macie['delegated-admin-account'],
-          ),
-        }).node.addDependency(macieSession);
+          adminAccountId: adminAccountId,
+        });
       } else {
-        console.log(`${cdk.Stack.of(this).region} region was in excluded list for Macie`);
+        console.log(
+          `${cdk.Stack.of(this).region} region was in macie excluded list so ignoring this region for ${
+            props.accountsConfig['mandatory-accounts'].audit.email
+          } account`,
+        );
+      }
+    }
+
+    //GuardDuty Config
+    if (props.securityConfig['central-security-services'].guardduty.enable) {
+      if (
+        props.securityConfig['central-security-services'].guardduty['exclude-regions']!.indexOf(
+          cdk.Stack.of(this).region,
+        ) == -1
+      ) {
+        console.log(
+          `Starts guardduty admin account delegation to the account with email ${
+            props.accountsConfig['mandatory-accounts'].audit.email
+          } account in ${cdk.Stack.of(this).region} region`,
+        );
+
+        console.log(`Guardduty Admin Account ID is ${adminAccountId}`);
+        new GuardDutyOrganizationAdminAccount(this, 'GuardDutyEnableOrganizationAdminAccount', {
+          region: cdk.Stack.of(this).region,
+          adminAccountId: adminAccountId,
+        });
+      } else {
+        console.log(
+          `${cdk.Stack.of(this).region} region was in guardduty excluded list so ignoring this region for ${
+            props.accountsConfig['mandatory-accounts'].audit.email
+          } account`,
+        );
       }
     }
 
