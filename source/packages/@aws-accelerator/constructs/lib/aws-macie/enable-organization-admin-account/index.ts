@@ -12,15 +12,18 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as console from 'console';
 import {
-  Macie2Client,
-  EnableOrganizationAdminAccountCommand,
-  paginateListOrganizationAdminAccounts,
   AdminAccount,
   AdminStatus,
   DisableOrganizationAdminAccountCommand,
+  EnableMacieCommand,
+  EnableOrganizationAdminAccountCommand,
+  GetMacieSessionCommand,
+  Macie2Client,
+  MacieStatus,
+  paginateListOrganizationAdminAccounts,
 } from '@aws-sdk/client-macie2';
+import * as console from 'console';
 
 /**
  * enableOrganizationAdminAccount - lambda handler
@@ -48,6 +51,25 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
+      // Enable macie in management account required to create delegated admin account
+      let macieStatus = await isMacieEnable(macie2Client);
+      if (!macieStatus) {
+        console.log('start enable of macie');
+        await throttlingBackOff(() =>
+          macie2Client.send(
+            new EnableMacieCommand({
+              status: MacieStatus.ENABLED,
+            }),
+          ),
+        );
+      }
+
+      // macie status do not change immediately causing failure to other processes, so wait till macie enabled
+      while (!macieStatus) {
+        console.log(`checking macie status ${macieStatus}`);
+        macieStatus = await isMacieEnable(macie2Client);
+      }
+
       if (macieDelegatedAccount.status) {
         if (macieDelegatedAccount.accountId === adminAccountId) {
           console.warn(
@@ -56,11 +78,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           return { Status: 'Success', StatusCode: 200 };
         } else {
           console.warn(
-            `Macie delegated adming is already set to ${macieDelegatedAccount.accountId} account can not assign another delegated account`,
+            `Macie delegated admin is already set to ${macieDelegatedAccount.accountId} account can not assign another delegated account`,
           );
         }
       } else {
-        console.log(`Enabing macie admin account ${adminAccountId} in ${region} region`);
+        console.log(`Enabling macie admin account ${adminAccountId} in ${region} region`);
         await throttlingBackOff(() =>
           macie2Client.send(new EnableOrganizationAdminAccountCommand({ adminAccountId: adminAccountId })),
         );
@@ -103,4 +125,18 @@ async function getMacieDelegatedAccount(
   }
 
   return { accountId: adminAccounts[0].accountId, status: true };
+}
+
+async function isMacieEnable(macie2Client: Macie2Client): Promise<boolean> {
+  try {
+    const response = await throttlingBackOff(() => macie2Client.send(new GetMacieSessionCommand({})));
+    return response.status === MacieStatus.ENABLED;
+  } catch (e) {
+    if (`${e}`.includes('Macie is not enabled')) {
+      console.warn('Macie is not enabled');
+      return false;
+    } else {
+      throw e;
+    }
+  }
 }

@@ -78,6 +78,8 @@ export class MacieOrganizationAdminAccount extends cdk.Construct {
               'macie2:EnableOrganizationAdminAccount',
               'macie2:ListOrganizationAdminAccounts',
               'macie2:DisableOrganizationAdminAccount',
+              'macie2:GetMacieSession',
+              'macie2:EnableMacieCommand',
             ],
             Resource: '*',
           },
