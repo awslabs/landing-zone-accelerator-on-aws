@@ -77,6 +77,7 @@ export class AcceleratorToolkit {
     configDirPath?: string;
     requireApproval?: RequireApproval;
     trustedAccountId?: string;
+    qualifier?: string;
   }): Promise<void> {
     console.log(`Executing cdk ${options.command} ${options.stage} for aws://${options.accountId}/${options.region}`);
 
@@ -138,7 +139,7 @@ export class AcceleratorToolkit {
           parameters: {
             bucketName: configuration.settings.get(['toolkitBucket', 'bucketName']),
             kmsKeyId: configuration.settings.get(['toolkitBucket', 'kmsKeyId']),
-            // qualifier:
+            qualifier: options.qualifier,
             trustedAccounts,
             cloudFormationExecutionPolicies: [`arn:${options.partition}:iam::aws:policy/AdministratorAccess`],
           },

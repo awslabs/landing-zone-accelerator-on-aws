@@ -156,6 +156,7 @@ export abstract class Accelerator {
             partition: props.partition,
             trustedAccountId,
             requireApproval: props.requireApproval,
+            qualifier: 'accel',
           });
         }
         for (const account of Object.values(accountsConfig['workload-accounts'])) {
@@ -167,6 +168,7 @@ export abstract class Accelerator {
             partition: props.partition,
             trustedAccountId,
             requireApproval: props.requireApproval,
+            qualifier: 'accel',
           });
         }
       }
