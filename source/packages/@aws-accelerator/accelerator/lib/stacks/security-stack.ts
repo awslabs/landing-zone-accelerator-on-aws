@@ -87,12 +87,18 @@ export class SecurityStack extends cdk.Stack {
     // is not being used. Else the Control Tower SCP will block these calls from
     // member accounts
     //
+    // If Control Tower is enabled, make sure to set up AWS Config in the
+    // management account since this is not enabled by default by Control Tower.
+    //
     // An AWS Control Tower preventive guardrail is enforced with AWS
     // Organizations using Service Control Policies (SCPs) that disallows
     // configuration changes to AWS Config.
     //
     let configRecorder: config.CfnConfigurationRecorder | undefined = undefined;
-    if (!props.globalConfig['control-tower'].enable) {
+    if (
+      !props.globalConfig['control-tower'].enable ||
+      props.accountIds[props.accountsConfig['mandatory-accounts'].management.email] === cdk.Stack.of(this).account
+    ) {
       const configRecorderRole = new iam.Role(this, 'ConfigRecorderRole', {
         assumedBy: new iam.ServicePrincipal('config.amazonaws.com'),
         managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSConfigRole')],
@@ -120,21 +126,18 @@ export class SecurityStack extends cdk.Stack {
         },
       });
 
-      const configDeliveryChannel = new config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
+      new config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
         s3BucketName: `aws-accelerator-central-logs-${
           props.accountIds[props.accountsConfig['mandatory-accounts']['log-archive'].email]
-        }-${cdk.Stack.of(this).region}`,
+        }-${props.globalConfig['home-region']}`,
         configSnapshotDeliveryProperties: {
           deliveryFrequency: 'One_Hour',
         },
       });
-
-      configDeliveryChannel.node.addDependency(configRecorder);
     }
+
     console.log('security-stack: AWS Config');
     for (const ruleSet of props.securityConfig['aws-config']['rule-sets']) {
-      console.log('security-stack: Handle Rule Set:');
-
       //
       // Region exclusion check
       // TODO: Move this to a util function
@@ -207,7 +210,7 @@ export class SecurityStack extends cdk.Stack {
             },
           });
 
-          if (!props.globalConfig['control-tower'].enable && configRecorder) {
+          if (configRecorder) {
             configRule.node.addDependency(configRecorder);
           }
         }
