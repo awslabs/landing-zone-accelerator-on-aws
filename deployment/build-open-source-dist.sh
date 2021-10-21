@@ -1,20 +1,20 @@
 #!/bin/bash
 #
-# This script packages your project into an open-source solution distributable 
+# This script packages your project into an open-source solution distributable
 # that can be published to sites like GitHub.
 #
 # Important notes and prereq's:
 #   1. The initialize-repo.sh script must have been run in order for this script to
 #      function properly.
 #   2. This script should be run from the repo's /deployment folder.
-# 
+#
 # This script will perform the following tasks:
 #   1. Remove any old dist files from previous runs.
 #   2. Package the GitHub contribution and pull request templates (typically
 #      found in the /.github folder).
 #   3. Package the /source folder along with the necessary root-level
 #      open-source artifacts (i.e. CHANGELOG, etc.).
-#   4. Remove any unecessary artifacts from the /open-source folder (i.e. 
+#   4. Remove any unecessary artifacts from the /open-source folder (i.e.
 #      node_modules, package-lock.json, etc.).
 #   5. Zip up the /open-source folder and create the distributable.
 #   6. Remove any temporary files used for staging.
@@ -34,6 +34,7 @@ source_template_dir="$PWD"
 dist_dir="$source_template_dir/open-source"
 source_dir="$source_template_dir/../source"
 github_dir="$source_template_dir/../.github"
+reference_dir="$source_template_dir/../reference"
 
 echo "------------------------------------------------------------------------------"
 echo "[Init] Remove any old dist files from previous runs"
@@ -57,6 +58,13 @@ echo "--------------------------------------------------------------------------
 
 echo "cp -r $source_dir $dist_dir"
 cp -r $source_dir $dist_dir
+
+echo "------------------------------------------------------------------------------"
+echo "[Packing] Reference folder"
+echo "------------------------------------------------------------------------------"
+
+echo "cp -r $reference_dir $dist_dir"
+cp -r $reference_dir $dist_dir
 
 echo "------------------------------------------------------------------------------"
 echo "[Packing] Files from the root level of the project"

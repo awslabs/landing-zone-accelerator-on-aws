@@ -19,20 +19,6 @@ central-security-services:
       enable: true
       destination-type: S3
       export-frequency: ONE_HOUR
-  security-hub:
-    enable: true
-    exclude-regions: []
-    standards:
-      - name: 'AWS Foundational Security Best Practices v1.0.0'
-        controls-to-disable:
-          - 'IAM.1'
-          - 'EC2.10'
-          - 'Lambda.4'
-      - name: 'PCI DSS v3.2.1'
-        controls-to-disable:
-          - 'IAM.1'
-          - 'EC2.10'
-          - 'Lambda.4'
 aws-config:
   rule-sets:
     - exclude-regions: []
