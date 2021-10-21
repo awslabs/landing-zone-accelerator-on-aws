@@ -83,6 +83,17 @@ export class MacieOrganizationAdminAccount extends cdk.Construct {
             ],
             Resource: '*',
           },
+          {
+            Sid: 'MacieEnableMacieTaskIamAction',
+            Effect: 'Allow',
+            Action: ['iam:CreateServiceLinkedRole'],
+            Resource: '*',
+            Condition: {
+              StringLikeIfExists: {
+                'iam:CreateServiceLinkedRole': ['macie.amazonaws.com'],
+              },
+            },
+          },
         ],
       },
     );
