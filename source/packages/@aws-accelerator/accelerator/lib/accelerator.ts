@@ -184,10 +184,12 @@ export abstract class Accelerator {
     switch (props.stage) {
       case AcceleratorStage.VALIDATE:
       case AcceleratorStage.ACCOUNTS:
+      case AcceleratorStage.DEPENDENCIES:
         break;
       case AcceleratorStage.ORGANIZATIONS:
         const managementAccount = accountsConfig['mandatory-accounts'].management;
         for (const region of globalConfig['enabled-regions']) {
+          console.log(`Executing ${props.stage} for ${managementAccount} account in ${region} region.`);
           await AcceleratorToolkit.execute({
             command: props.command,
             accountId: accountIds[managementAccount.email],
@@ -204,41 +206,16 @@ export abstract class Accelerator {
       // built from the inputted configuration files during stack construction
       //
       case AcceleratorStage.LOGGING:
-      case AcceleratorStage.DEPENDENCIES:
       case AcceleratorStage.SECURITY:
-        for (const region of globalConfig['enabled-regions']) {
-          for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
-            console.log(`${region} to be implemented on for ${account.email} account`);
-            const accountId = accountIds[account.email];
-            await AcceleratorToolkit.execute({
-              command: props.command,
-              accountId,
-              region,
-              stage: props.stage,
-              configDirPath: props.configDirPath,
-              requireApproval: props.requireApproval,
-            });
-          }
-          for (const account of Object.values(accountsConfig['workload-accounts'])) {
-            const accountId = accountIds[account.email];
-            await AcceleratorToolkit.execute({
-              command: props.command,
-              accountId,
-              region,
-              stage: props.stage,
-              configDirPath: props.configDirPath,
-              requireApproval: props.requireApproval,
-            });
-          }
-        }
-        break;
       case AcceleratorStage.OPERATIONS:
       case AcceleratorStage.NETWORKING:
         for (const region of globalConfig['enabled-regions']) {
           for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
+            console.log(`Executing ${props.stage} for ${account.email} account in ${region} region.`);
+            const accountId = accountIds[account.email];
             await AcceleratorToolkit.execute({
               command: props.command,
-              accountId: accountIds[account.email],
+              accountId,
               region,
               stage: props.stage,
               configDirPath: props.configDirPath,
@@ -246,9 +223,11 @@ export abstract class Accelerator {
             });
           }
           for (const account of Object.values(accountsConfig['workload-accounts'])) {
+            console.log(`Executing ${props.stage} for ${account.email} account in ${region} region.`);
+            const accountId = accountIds[account.email];
             await AcceleratorToolkit.execute({
               command: props.command,
-              accountId: accountIds[account.email],
+              accountId,
               region,
               stage: props.stage,
               configDirPath: props.configDirPath,
@@ -263,6 +242,7 @@ export abstract class Accelerator {
           for (const region of globalConfig['enabled-regions']) {
             const auditAccountEmail = accountsConfig.getEmail(auditAccountName);
             const accountId = accountIds[auditAccountEmail];
+            console.log(`Executing ${props.stage} for ${auditAccountEmail} account in ${region} region.`);
             await AcceleratorToolkit.execute({
               command: props.command,
               accountId: accountId,

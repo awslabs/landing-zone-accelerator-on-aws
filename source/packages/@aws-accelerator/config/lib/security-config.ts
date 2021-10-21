@@ -91,7 +91,7 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigType> {
       'exclude-regions': [],
       's3-protection': {
         enable: true,
-        'exclude-regions': ['us-west-2'],
+        'exclude-regions': [],
       },
       'export-configuration': {
         enable: true,

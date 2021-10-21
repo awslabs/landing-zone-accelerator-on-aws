@@ -58,6 +58,14 @@ export class ConfigRepository extends cdk.Construct {
       'utf8',
     );
 
+    fs.writeFileSync(
+      path.join(tempDirPath, config.SecurityConfig.FILENAME),
+      yaml.dump(new config.SecurityConfig()),
+      'utf8',
+    );
+
+    fs.writeFileSync(path.join(tempDirPath, config.IamConfig.FILENAME), yaml.dump(new config.IamConfig()), 'utf8');
+
     const configurationDefaultsAssets = new s3_assets.Asset(this, 'ConfigurationDefaultsAssets', {
       path: tempDirPath,
     });

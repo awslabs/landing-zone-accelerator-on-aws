@@ -30,14 +30,13 @@ import * as logs from '@aws-cdk/aws-logs';
 import * as s3 from '@aws-cdk/aws-s3';
 import * as cdk from '@aws-cdk/core';
 import { pascalCase } from 'change-case';
-
-const path = require('path');
+import * as path from 'path';
 
 export interface OrganizationsStackProps extends cdk.StackProps {
   accountIds: { [name: string]: string };
   configDirPath: string;
   accountsConfig: AccountsConfig;
-  organizationsConfig: OrganizationConfig;
+  organizationConfig: OrganizationConfig;
   globalConfig: GlobalConfig;
   securityConfig: SecurityConfig;
 }
@@ -69,7 +68,7 @@ export class OrganizationsStack extends cdk.Stack {
       //       and left in place
       //
       const organizationalUnitList: { [key: string]: OrganizationalUnit } = {};
-      for (const [key, organizationalUnit] of Object.entries(props.organizationsConfig['organizational-units'])) {
+      for (const [key, organizationalUnit] of Object.entries(props.organizationConfig['organizational-units'])) {
         // Create Organizational Unit
         organizationalUnitList[key] = new OrganizationalUnit(this, pascalCase(organizationalUnit.name), {
           name: organizationalUnit.name,
@@ -99,7 +98,7 @@ export class OrganizationsStack extends cdk.Stack {
       }
 
       // Deploy SCPs
-      for (const serviceControlPolicy of Object.values(props.organizationsConfig['service-control-policies'])) {
+      for (const serviceControlPolicy of Object.values(props.organizationConfig['service-control-policies'])) {
         const scp = new Policy(this, serviceControlPolicy.name, {
           description: serviceControlPolicy.description,
           name: serviceControlPolicy.name,

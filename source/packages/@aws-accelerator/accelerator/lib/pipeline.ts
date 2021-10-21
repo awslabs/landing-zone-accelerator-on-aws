@@ -272,8 +272,8 @@ export class AcceleratorPipeline extends cdk.Construct {
       stageName: 'Deploy',
       actions: [
         this.createToolkitStage('Security', `deploy --stage ${AcceleratorStage.SECURITY}`, 1),
-        // this.createToolkitStage('Networking', `deploy --stage ${AcceleratorStage.NETWORKING}`, 2),
-        // this.createToolkitStage('Operations', `deploy --stage ${AcceleratorStage.OPERATIONS}`, 3),
+        // this.createToolkitStage('Networking', `deploy --stage ${AcceleratorStage.NETWORKING}`, 1),
+        this.createToolkitStage('Operations', `deploy --stage ${AcceleratorStage.OPERATIONS}`, 1),
       ],
     });
   }

@@ -13,7 +13,7 @@
  *  and limitations under the License.
  */
 
-import { AccountsConfig, GlobalConfig, OrganizationConfig, SecurityConfig } from '@aws-accelerator/config';
+import { AccountsConfig, GlobalConfig, IamConfig, OrganizationConfig, SecurityConfig } from '@aws-accelerator/config';
 import * as cdk from '@aws-cdk/core';
 import { OrganizationsClient, paginateListAccounts } from '@aws-sdk/client-organizations';
 import 'source-map-support/register';
@@ -26,9 +26,9 @@ import { NetworkingStack } from '../lib/stacks/networking-stack';
 import { OperationsStack } from '../lib/stacks/operations-stack';
 import { OrganizationsStack } from '../lib/stacks/organizations-stack';
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
+import { SecurityAuditStack } from '../lib/stacks/security-audit';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { ValidateStack } from '../lib/stacks/validate-stack';
-import { SecurityAuditStack } from '../lib/stacks/security-audit';
 
 async function main() {
   const app = new cdk.App();
@@ -61,7 +61,7 @@ async function main() {
         accountIds: await getAccountIds(),
         configDirPath,
         accountsConfig: AccountsConfig.load(configDirPath),
-        organizationsConfig: OrganizationConfig.load(configDirPath),
+        organizationConfig: OrganizationConfig.load(configDirPath),
         globalConfig: GlobalConfig.load(configDirPath),
         securityConfig: SecurityConfig.load(configDirPath),
       });
@@ -93,7 +93,15 @@ async function main() {
       });
       break;
     case AcceleratorStage.OPERATIONS:
-      new OperationsStack(app, 'AWSAccelerator-OperationsStack', { env, stage });
+      new OperationsStack(app, 'AWSAccelerator-OperationsStack', {
+        env,
+        accountIds: await getAccountIds(),
+        configDirPath,
+        accountsConfig: AccountsConfig.load(configDirPath),
+        iamConfig: IamConfig.load(configDirPath),
+        globalConfig: GlobalConfig.load(configDirPath),
+        organizationConfig: OrganizationConfig.load(configDirPath),
+      });
       break;
     case AcceleratorStage.NETWORKING:
       new NetworkingStack(app, 'AWSAccelerator-NetworkingStack', { env, stage });

@@ -411,6 +411,10 @@ for d in `find . -mindepth 1 -maxdepth 1 -type d`; do
 
 done
 
+# This solution does not generate any assets, need to make a file to move the
+# pipeline forward
+touch $build_dist_dir/temp-asset.file
+
 # cleanup temporary generated files that are not needed for later stages of the build pipeline
 cleanup_temporary_generted_files
 
