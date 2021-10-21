@@ -66,6 +66,8 @@ export abstract class SecurityConfigTypes {
   });
 
   static readonly Config = t.interface({
+    'enable-configuration-recorder': t.boolean,
+    'enable-delivery-channel': t.boolean,
     'rule-sets': t.array(SecurityConfigTypes.ConfigRuleSet),
   });
 }
@@ -102,6 +104,8 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigType> {
   };
 
   readonly 'aws-config': t.TypeOf<typeof SecurityConfigTypes.Config> = {
+    'enable-configuration-recorder': true,
+    'enable-delivery-channel': true,
     'rule-sets': [],
   };
 

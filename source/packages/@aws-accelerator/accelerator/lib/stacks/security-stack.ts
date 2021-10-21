@@ -99,41 +99,45 @@ export class SecurityStack extends cdk.Stack {
       !props.globalConfig['control-tower'].enable ||
       props.accountIds[props.accountsConfig['mandatory-accounts'].management.email] === cdk.Stack.of(this).account
     ) {
-      const configRecorderRole = new iam.Role(this, 'ConfigRecorderRole', {
-        assumedBy: new iam.ServicePrincipal('config.amazonaws.com'),
-        managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSConfigRole')],
-      });
+      if (props.securityConfig['aws-config']['enable-configuration-recorder']) {
+        const configRecorderRole = new iam.Role(this, 'ConfigRecorderRole', {
+          assumedBy: new iam.ServicePrincipal('config.amazonaws.com'),
+          managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSConfigRole')],
+        });
 
-      /**
-       * As per the documentation, the config role should have
-       * the s3:PutObject permission to avoid access denied issues
-       * while AWS config tries to check the s3 bucket (in another account) write permissions
-       * https://docs.aws.amazon.com/config/latest/developerguide/s3-bucket-policy.html
-       *
-       */
-      configRecorderRole.addToPrincipalPolicy(
-        new iam.PolicyStatement({
-          actions: ['s3:PutObject'],
-          resources: ['*'],
-        }),
-      );
+        /**
+         * As per the documentation, the config role should have
+         * the s3:PutObject permission to avoid access denied issues
+         * while AWS config tries to check the s3 bucket (in another account) write permissions
+         * https://docs.aws.amazon.com/config/latest/developerguide/s3-bucket-policy.html
+         *
+         */
+        configRecorderRole.addToPrincipalPolicy(
+          new iam.PolicyStatement({
+            actions: ['s3:PutObject'],
+            resources: ['*'],
+          }),
+        );
 
-      configRecorder = new config.CfnConfigurationRecorder(this, 'ConfigRecorder', {
-        roleArn: configRecorderRole.roleArn,
-        recordingGroup: {
-          allSupported: true,
-          includeGlobalResourceTypes: true,
-        },
-      });
+        configRecorder = new config.CfnConfigurationRecorder(this, 'ConfigRecorder', {
+          roleArn: configRecorderRole.roleArn,
+          recordingGroup: {
+            allSupported: true,
+            includeGlobalResourceTypes: true,
+          },
+        });
+      }
 
-      new config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
-        s3BucketName: `aws-accelerator-central-logs-${
-          props.accountIds[props.accountsConfig['mandatory-accounts']['log-archive'].email]
-        }-${props.globalConfig['home-region']}`,
-        configSnapshotDeliveryProperties: {
-          deliveryFrequency: 'One_Hour',
-        },
-      });
+      if (props.securityConfig['aws-config']['enable-delivery-channel']) {
+        new config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
+          s3BucketName: `aws-accelerator-central-logs-${
+            props.accountIds[props.accountsConfig['mandatory-accounts']['log-archive'].email]
+          }-${props.globalConfig['home-region']}`,
+          configSnapshotDeliveryProperties: {
+            deliveryFrequency: 'One_Hour',
+          },
+        });
+      }
     }
 
     console.log('security-stack: AWS Config');

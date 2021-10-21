@@ -20,6 +20,8 @@ central-security-services:
       destination-type: S3
       export-frequency: ONE_HOUR
 aws-config:
+  enable-configuration-recorder: true
+  enable-delivery-channel: true
   rule-sets:
     - exclude-regions: []
       exclude-accounts: []
