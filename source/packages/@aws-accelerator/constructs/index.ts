@@ -15,3 +15,6 @@ export * from './lib/aws-organizations/policy-attachment';
 export * from './lib/aws-organizations/root-organizational-unit';
 export * from './lib/aws-s3/central-logs-bucket';
 export * from './lib/aws-s3/public-access-block';
+export * from './lib/aws-securityhub/securityhub-members';
+export * from './lib/aws-securityhub/securityhub-organization-admin-account';
+export * from './lib/aws-securityhub/securityhub-standards';

@@ -17,46 +17,40 @@ import { v4 as uuidv4 } from 'uuid';
 const path = require('path');
 
 /**
- * Export config destination types
+ * Initialized SecurityHubMembersProps properties
  */
-export enum GuardDutyExportConfigDestinationTypes {
-  S3 = 's3',
-}
-
-/**
- * Initialized GuardDutyDetectorConfigProps properties
- */
-export interface GuardDutyDetectorConfigProps {
+export interface SecurityHubStandardsProps {
   readonly region: string;
-  readonly isExportConfigEnable: boolean;
-  readonly exportDestination: string;
-  readonly exportFrequency: string;
+  readonly standards: { name: string; enable: boolean; 'controls-to-disable': string[] | undefined }[];
 }
 
 /**
  /**
- * Class to GuardDuty Detector Members
+ * Class - SecurityHubMembers
  */
-export class GuardDutyDetectorConfig extends cdk.Construct {
+export class SecurityHubStandards extends cdk.Construct {
   public readonly id: string;
 
-  constructor(scope: cdk.Construct, id: string, props: GuardDutyDetectorConfigProps) {
+  constructor(scope: cdk.Construct, id: string, props: SecurityHubStandardsProps) {
     super(scope, id);
 
-    const UPDATE_DETECTOR_RESOURCE_TYPE = 'Custom::GuardDutyUpdateDetector';
+    const CREATE_MEMBERS_RESOURCE_TYPE = 'Custom::SecurityHubBatchEnableStandards';
 
-    const addMembersFunction = cdk.CustomResourceProvider.getOrCreateProvider(this, UPDATE_DETECTOR_RESOURCE_TYPE, {
-      codeDirectory: path.join(__dirname, 'update-detector-config/dist'),
+    const addMembersFunction = cdk.CustomResourceProvider.getOrCreateProvider(this, CREATE_MEMBERS_RESOURCE_TYPE, {
+      codeDirectory: path.join(__dirname, 'batch-enable-standards/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
       policyStatements: [
         {
-          Sid: 'GuardDutyUpdateDetectorTaskGuardDutyActions',
+          Sid: 'SecurityHubCreateMembersTaskSecurityHubActions',
           Effect: 'Allow',
           Action: [
-            'guardduty:ListDetectors',
-            'guardduty:ListMembers',
-            'guardduty:UpdateDetector',
-            'guardduty:UpdateMemberDetectors',
+            'securityhub:BatchDisableStandards',
+            'securityhub:BatchEnableStandards',
+            'securityhub:DescribeStandards',
+            'securityhub:DescribeStandardsControls',
+            'securityhub:EnableSecurityHub',
+            'securityhub:GetEnabledStandards',
+            'securityhub:UpdateStandardsControl',
           ],
           Resource: '*',
         },
@@ -64,13 +58,11 @@ export class GuardDutyDetectorConfig extends cdk.Construct {
     });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: UPDATE_DETECTOR_RESOURCE_TYPE,
+      resourceType: CREATE_MEMBERS_RESOURCE_TYPE,
       serviceToken: addMembersFunction.serviceToken,
       properties: {
         region: props.region,
-        isExportConfigEnable: props.isExportConfigEnable,
-        exportDestination: props.exportDestination,
-        exportFrequency: props.exportFrequency,
+        standards: props.standards,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });

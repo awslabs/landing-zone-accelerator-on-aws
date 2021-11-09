@@ -16,10 +16,10 @@ import * as console from 'console';
 import {
   AdminAccount,
   AdminStatus,
+  DisableOrganizationAdminAccountCommand,
+  EnableOrganizationAdminAccountCommand,
   GuardDutyClient,
   paginateListOrganizationAdminAccounts,
-  EnableOrganizationAdminAccountCommand,
-  DisableOrganizationAdminAccountCommand,
 } from '@aws-sdk/client-guardduty';
 
 /**

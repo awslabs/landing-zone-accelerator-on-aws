@@ -14,11 +14,12 @@
 import * as cdk from '@aws-cdk/core';
 import { AccountsConfig, SecurityConfig } from '@aws-accelerator/config';
 import {
-  MacieSession,
-  MacieMembers,
   GuardDutyDetectorConfig,
   GuardDutyExportConfigDestinationTypes,
   GuardDutyMembers,
+  MacieMembers,
+  MacieSession,
+  SecurityHubMembers,
 } from '@aws-accelerator/constructs';
 
 export interface SecurityAuditStackProps extends cdk.StackProps {
@@ -31,7 +32,7 @@ export class SecurityAuditStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props: SecurityAuditStackProps) {
     super(scope, id, props);
 
-    //MacieSession configuration
+    //Macie configuration
     if (
       props.securityConfig['central-security-services'].macie.enable &&
       props.securityConfig['central-security-services'].macie['exclude-regions']!.indexOf(cdk.Stack.of(this).region) ===
@@ -77,6 +78,18 @@ export class SecurityAuditStack extends cdk.Stack {
         exportFrequency:
           props.securityConfig['central-security-services'].guardduty['export-configuration']['export-frequency'],
       }).node.addDependency(guardDutyMembers);
+    }
+
+    //SecurityHub configuration
+    if (
+      props.securityConfig['central-security-services']['security-hub'].enable &&
+      props.securityConfig['central-security-services']['security-hub']['exclude-regions']!.indexOf(
+        cdk.Stack.of(this).region,
+      ) === -1
+    ) {
+      new SecurityHubMembers(this, 'SecurityHubMembers', {
+        region: cdk.Stack.of(this).region,
+      });
     }
   }
 }

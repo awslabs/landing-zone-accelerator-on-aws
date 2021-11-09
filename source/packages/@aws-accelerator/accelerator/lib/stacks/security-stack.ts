@@ -16,6 +16,7 @@ import {
   GuardDutyPublishingDestination,
   MacieExportConfigClassification,
   MacieSession,
+  SecurityHubStandards,
 } from '@aws-accelerator/constructs';
 import * as config from '@aws-cdk/aws-config';
 import * as iam from '@aws-cdk/aws-iam';
@@ -79,6 +80,24 @@ export class SecurityStack extends cdk.Stack {
         });
       } else {
         throw new Error(`Guardduty audit delegated admin account name "${auditAccountName}" not found.`);
+      }
+    }
+
+    //SecurityHub configuration
+    if (
+      props.securityConfig['central-security-services']['security-hub'].enable &&
+      props.securityConfig['central-security-services']['security-hub']['exclude-regions']!.indexOf(
+        cdk.Stack.of(this).region,
+      ) === -1
+    ) {
+      const auditAccountName = props.securityConfig.getDelegatedAccountName();
+      if (props.accountsConfig.accountExists(auditAccountName)) {
+        new SecurityHubStandards(this, 'SecurityHubStandards', {
+          region: cdk.Stack.of(this).region,
+          standards: props.securityConfig['central-security-services']['security-hub'].standards,
+        });
+      } else {
+        throw new Error(`SecurityHub audit delegated admin account name "${auditAccountName}" not found.`);
       }
     }
 

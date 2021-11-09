@@ -5,7 +5,7 @@ import * as yaml from 'js-yaml';
 
 export abstract class SecurityConfigTypes {
   /**
-   * MacieSession Configuration
+   * MacieConfig Interface
    */
   static readonly MacieConfig = t.interface({
     enable: t.boolean,
@@ -15,7 +15,7 @@ export abstract class SecurityConfigTypes {
   });
 
   /**
-   * GuardDutyS3Protection
+   * GuardDutyS3Protection Interface
    */
   static readonly GuardDutyS3ProtectionConfig = t.interface({
     enable: t.boolean,
@@ -23,7 +23,7 @@ export abstract class SecurityConfigTypes {
   });
 
   /**
-   * GuardDutyS3Protection
+   * GuardDutyExportFindingsConfig Interface
    */
   static readonly GuardDutyExportFindingsConfig = t.interface({
     enable: t.boolean,
@@ -32,7 +32,7 @@ export abstract class SecurityConfigTypes {
   });
 
   /**
-   * GuardDuty Configuration
+   * GuardDutyConfig Interface
    */
   static readonly GuardDutyConfig = t.interface({
     enable: t.boolean,
@@ -42,12 +42,35 @@ export abstract class SecurityConfigTypes {
   });
 
   /**
-   *
+   * SecurityHubStandardConfig Interface
+   */
+  static readonly SecurityHubStandardConfig = t.interface({
+    name: t.enums('ExportFrequencyType', [
+      'AWS Foundational Security Best Practices v1.0.0',
+      'CIS AWS Foundations Benchmark v1.2.0',
+      'PCI DSS v3.2.1',
+    ]),
+    enable: t.boolean,
+    'controls-to-disable': t.optional(t.array(t.nonEmptyString)),
+  });
+
+  /**
+   * SecurityHubConfig Interface
+   */
+  static readonly SecurityHubConfig = t.interface({
+    enable: t.boolean,
+    'exclude-regions': t.optional(t.array(t.nonEmptyString)),
+    standards: t.array(SecurityConfigTypes.SecurityHubStandardConfig),
+  });
+
+  /**
+   * SecurityConfig Interface
    */
   static readonly SecurityConfig = t.interface({
     'delegated-admin-account': t.nonEmptyString,
     macie: SecurityConfigTypes.MacieConfig,
     guardduty: SecurityConfigTypes.GuardDutyConfig,
+    'security-hub': SecurityConfigTypes.SecurityHubConfig,
   });
 
   static readonly ConfigRule = t.interface({
@@ -100,6 +123,22 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigType> {
         'destination-type': 'S3',
         'export-frequency': 'FIFTEEN_MINUTES',
       },
+    },
+    'security-hub': {
+      enable: true,
+      'exclude-regions': [],
+      standards: [
+        {
+          name: 'AWS Foundational Security Best Practices v1.0.0',
+          enable: true,
+          'controls-to-disable': ['IAM.1', 'EC2.10', 'Lambda.4'],
+        },
+        {
+          name: 'PCI DSS v3.2.1',
+          enable: true,
+          'controls-to-disable': ['IAM.1', 'EC2.10', 'Lambda.4'],
+        },
+      ],
     },
   };
 
