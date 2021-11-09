@@ -21,6 +21,7 @@ import {
   PolicyAttachment,
   PolicyType,
   RootOrganizationalUnit,
+  SecurityHubOrganizationAdminAccount,
 } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 import * as cloudtrail from '@aws-cdk/aws-cloudtrail';
@@ -268,6 +269,37 @@ export class OrganizationsStack extends cdk.Stack {
         );
       }
     }
+
+    //SecurityHub Config
+    if (props.securityConfig['central-security-services']['security-hub'].enable) {
+      if (
+        props.securityConfig['central-security-services']['security-hub']['exclude-regions']!.indexOf(
+          cdk.Stack.of(this).region,
+        ) == -1
+      ) {
+        console.log(
+          `Starts SecurityHub admin account delegation to the account with email ${
+            props.accountsConfig['mandatory-accounts'].audit.email
+          } account in ${cdk.Stack.of(this).region} region`,
+        );
+
+        console.log(`SecurityHub Admin Account ID is ${adminAccountId}`);
+        new SecurityHubOrganizationAdminAccount(this, 'SecurityHubOrganizationAdminAccount', {
+          region: cdk.Stack.of(this).region,
+          adminAccountId: adminAccountId,
+        });
+      } else {
+        console.log(
+          `${cdk.Stack.of(this).region} region was in SecurityHub excluded list so ignoring this region for ${
+            props.accountsConfig['mandatory-accounts'].audit.email
+          } account`,
+        );
+      }
+    }
+
+    //
+    // Move accounts to correct OUs
+    //
 
     //
     // Move accounts to correct OUs

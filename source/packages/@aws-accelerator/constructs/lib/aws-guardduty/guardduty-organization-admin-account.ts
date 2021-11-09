@@ -75,9 +75,9 @@ export class GuardDutyOrganizationAdminAccount extends cdk.Construct {
             Sid: 'GuardDutyEnableOrganizationAdminAccountTaskGuardDutyActions',
             Effect: 'Allow',
             Action: [
-              'guardduty:DisableOrganizationAdminAccount',
               'GuardDuty:EnableOrganizationAdminAccount',
               'GuardDuty:ListOrganizationAdminAccounts',
+              'guardduty:DisableOrganizationAdminAccount',
             ],
             Resource: '*',
           },

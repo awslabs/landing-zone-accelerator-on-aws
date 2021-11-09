@@ -15,8 +15,8 @@ import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as console from 'console';
 import {
   GuardDutyClient,
-  UpdateDetectorCommand,
   ListDetectorsCommand,
+  UpdateDetectorCommand,
   UpdateMemberDetectorsCommand,
   paginateListMembers,
 } from '@aws-sdk/client-guardduty';

@@ -14,14 +14,14 @@
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as console from 'console';
 import {
-  Macie2Client,
   CreateMemberCommand,
-  Member,
-  paginateListMembers,
-  DisassociateMemberCommand,
   DeleteMemberCommand,
   DescribeOrganizationConfigurationCommand,
+  DisassociateMemberCommand,
+  Macie2Client,
+  Member,
   UpdateOrganizationConfigurationCommand,
+  paginateListMembers,
 } from '@aws-sdk/client-macie2';
 import { Account, OrganizationsClient, paginateListAccounts } from '@aws-sdk/client-organizations';
 

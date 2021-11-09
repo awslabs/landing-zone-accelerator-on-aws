@@ -14,13 +14,13 @@
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as console from 'console';
 import {
-  Macie2Client,
-  GetMacieSessionCommand,
-  MacieStatus,
-  UpdateMacieSessionCommand,
-  EnableMacieCommand,
   DisableMacieCommand,
+  EnableMacieCommand,
+  GetMacieSessionCommand,
+  Macie2Client,
+  MacieStatus,
   PutFindingsPublicationConfigurationCommand,
+  UpdateMacieSessionCommand,
 } from '@aws-sdk/client-macie2';
 
 /**

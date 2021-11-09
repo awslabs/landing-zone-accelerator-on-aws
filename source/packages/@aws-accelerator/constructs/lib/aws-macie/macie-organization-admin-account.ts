@@ -75,7 +75,10 @@ export class MacieOrganizationAdminAccount extends cdk.Construct {
             Sid: 'MacieEnableOrganizationAdminAccountTaskMacieActions',
             Effect: 'Allow',
             Action: [
+              'macie2:DisableOrganizationAdminAccount',
+              'macie2:EnableMacie',
               'macie2:EnableOrganizationAdminAccount',
+              'macie2:GetMacieSession',
               'macie2:ListOrganizationAdminAccounts',
               'macie2:DisableOrganizationAdminAccount',
               'macie2:GetMacieSession',
