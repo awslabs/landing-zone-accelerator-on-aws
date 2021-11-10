@@ -20,7 +20,7 @@ import * as compliant_constructs from '@aws-compliant-constructs/compliant-const
 import { pascalCase } from 'change-case';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
-export class Network2Stack extends AcceleratorStack {
+export class NetworkVpcStack extends AcceleratorStack {
   constructor(scope: cdk.Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
@@ -28,6 +28,14 @@ export class Network2Stack extends AcceleratorStack {
       parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
       stringValue: cdk.Stack.of(this).stackId,
     });
+
+    //
+    // Delete Default VPCs
+    //
+    if (props.networkConfig.defaultVpc?.delete) {
+      console.log('Add DeleteDefaultVpc');
+      new accelerator_constructs.DeleteDefaultVpc(this, 'DeleteDefaultVpc');
+    }
 
     // Build map of Transit Gateways. We need to know the transit gateway ids so
     // we can create attachments against them. Transit gateways that were

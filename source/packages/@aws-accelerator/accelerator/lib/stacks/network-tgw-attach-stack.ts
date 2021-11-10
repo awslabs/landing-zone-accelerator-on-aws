@@ -17,7 +17,7 @@ import * as cdk from '@aws-cdk/core';
 import { pascalCase } from 'change-case';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
-export class Network3Stack extends AcceleratorStack {
+export class NetworkTgwAttachStack extends AcceleratorStack {
   constructor(scope: cdk.Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 

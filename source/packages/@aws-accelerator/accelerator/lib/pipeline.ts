@@ -279,11 +279,15 @@ export class AcceleratorPipeline extends cdk.Construct {
     pipeline.addStage({
       stageName: 'Deploy',
       actions: [
-        this.createToolkitStage('Networking1', `deploy --stage ${AcceleratorStage.NETWORK_1}`, 1),
+        this.createToolkitStage('Network_TransitGateways', `deploy --stage ${AcceleratorStage.NETWORK_TGW}`, 1),
         this.createToolkitStage('Security', `deploy --stage ${AcceleratorStage.SECURITY}`, 1),
         this.createToolkitStage('Operations', `deploy --stage ${AcceleratorStage.OPERATIONS}`, 1),
-        this.createToolkitStage('Networking2', `deploy --stage ${AcceleratorStage.NETWORK_2}`, 2),
-        this.createToolkitStage('Networking3', `deploy --stage ${AcceleratorStage.NETWORK_3}`, 3),
+        this.createToolkitStage('Network_VPCs', `deploy --stage ${AcceleratorStage.NETWORK_VPC}`, 2),
+        this.createToolkitStage(
+          'Network_TransitGateway_Attachments',
+          `deploy --stage ${AcceleratorStage.NETWORK_TGW_ATTACH}`,
+          3,
+        ),
       ],
     });
   }

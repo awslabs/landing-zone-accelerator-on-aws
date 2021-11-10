@@ -37,9 +37,9 @@ import { AccountsStack } from '../lib/stacks/accounts-stack';
 import { DefaultStack } from '../lib/stacks/default-stack';
 import { DependenciesStack } from '../lib/stacks/dependencies-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
-import { Network1Stack } from '../lib/stacks/network-1-stack';
-import { Network2Stack } from '../lib/stacks/network-2-stack';
-import { Network3Stack } from '../lib/stacks/network-3-stack';
+import { NetworkTgwStack } from '../lib/stacks/network-tgw-stack';
+import { NetworkVpcStack } from '../lib/stacks/network-vpc-stack';
+import { NetworkTgwAttachStack } from '../lib/stacks/network-tgw-attach-stack';
 import { OperationsStack } from '../lib/stacks/operations-stack';
 import { OrganizationsStack } from '../lib/stacks/organizations-stack';
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
@@ -176,20 +176,20 @@ async function main() {
       configDirPath,
       ...props,
     });
-  } else if (stage === AcceleratorStage.NETWORK_1) {
-    new Network1Stack(app, 'AWSAccelerator-Network1Stack', {
+  } else if (stage === AcceleratorStage.NETWORK_TGW) {
+    new NetworkTgwStack(app, 'AWSAccelerator-NetworkTgwStack', {
       env,
       // synthesizer,
       ...props,
     });
-  } else if (stage === AcceleratorStage.NETWORK_2) {
-    new Network2Stack(app, 'AWSAccelerator-Network2Stack', {
+  } else if (stage === AcceleratorStage.NETWORK_VPC) {
+    new NetworkVpcStack(app, 'AWSAccelerator-NetworkVpcStack', {
       env,
       // synthesizer,
       ...props,
     });
-  } else if (stage === AcceleratorStage.NETWORK_3) {
-    new Network3Stack(app, 'AWSAccelerator-Network3Stack', {
+  } else if (stage === AcceleratorStage.NETWORK_TGW_ATTACH) {
+    new NetworkTgwAttachStack(app, 'AWSAccelerator-NetworkTgwAttachStack', {
       env,
       // synthesizer,
       ...props,
