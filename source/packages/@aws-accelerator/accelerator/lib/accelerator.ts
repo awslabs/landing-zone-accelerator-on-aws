@@ -33,9 +33,9 @@ export enum AcceleratorStage {
   DEPENDENCIES = 'dependencies',
   SECURITY = 'security',
   OPERATIONS = 'operations',
-  NETWORK_1 = 'network1',
-  NETWORK_2 = 'network2',
-  NETWORK_3 = 'network3',
+  NETWORK_TGW = 'network-tgw',
+  NETWORK_VPC = 'network-vpc',
+  NETWORK_TGW_ATTACH = 'network-tgw-attach',
   SECURITY_AUDIT = 'security-audit',
 }
 
@@ -250,9 +250,9 @@ export abstract class Accelerator {
       case AcceleratorStage.LOGGING:
       case AcceleratorStage.SECURITY:
       case AcceleratorStage.OPERATIONS:
-      case AcceleratorStage.NETWORK_1:
-      case AcceleratorStage.NETWORK_2:
-      case AcceleratorStage.NETWORK_3:
+      case AcceleratorStage.NETWORK_TGW:
+      case AcceleratorStage.NETWORK_VPC:
+      case AcceleratorStage.NETWORK_TGW_ATTACH:
         for (const region of globalConfig['enabled-regions']) {
           for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
             console.log(`Executing ${props.stage} for ${account.email} account in ${region} region.`);

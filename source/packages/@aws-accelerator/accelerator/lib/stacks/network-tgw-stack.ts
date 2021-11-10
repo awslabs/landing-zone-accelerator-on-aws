@@ -17,7 +17,7 @@ import * as cdk from '@aws-cdk/core';
 import { pascalCase } from 'change-case';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
-export class Network1Stack extends AcceleratorStack {
+export class NetworkTgwStack extends AcceleratorStack {
   constructor(scope: cdk.Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
@@ -25,14 +25,6 @@ export class Network1Stack extends AcceleratorStack {
       parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
       stringValue: cdk.Stack.of(this).stackId,
     });
-
-    //
-    // Delete Default VPCs
-    //
-    if (props.networkConfig.defaultVpc?.delete) {
-      console.log('Add DeleteDefaultVpc');
-      new accelerator_constructs.DeleteDefaultVpc(this, 'DeleteDefaultVpc');
-    }
 
     //
     // Generate Transit Gateways
