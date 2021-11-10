@@ -15,5 +15,6 @@ export * from './lib/accounts-config';
 export * from './lib/common-types';
 export * from './lib/global-config';
 export * from './lib/iam-config';
+export * from './lib/network-config';
 export * from './lib/organization-config';
 export * from './lib/security-config';

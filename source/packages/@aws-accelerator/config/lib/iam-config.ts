@@ -27,7 +27,6 @@ export abstract class IamConfigTypes {
   });
 
   static readonly UserSet = t.interface({
-    'exclude-regions': t.optional(t.array(t.nonEmptyString)),
     'exclude-accounts': t.optional(t.array(t.nonEmptyString)),
     'organizational-units': t.optional(t.array(t.nonEmptyString)),
     accounts: t.optional(t.array(t.nonEmptyString)),
@@ -45,7 +44,6 @@ export abstract class IamConfigTypes {
   });
 
   static readonly GroupSet = t.interface({
-    'exclude-regions': t.optional(t.array(t.nonEmptyString)),
     'exclude-accounts': t.optional(t.array(t.nonEmptyString)),
     'organizational-units': t.optional(t.array(t.nonEmptyString)),
     accounts: t.optional(t.array(t.nonEmptyString)),
@@ -65,7 +63,6 @@ export abstract class IamConfigTypes {
   });
 
   static readonly RoleSet = t.interface({
-    'exclude-regions': t.optional(t.array(t.nonEmptyString)),
     'exclude-accounts': t.optional(t.array(t.nonEmptyString)),
     'organizational-units': t.optional(t.array(t.nonEmptyString)),
     accounts: t.optional(t.array(t.nonEmptyString)),
@@ -78,7 +75,6 @@ export abstract class IamConfigTypes {
   });
 
   static readonly PolicySet = t.interface({
-    'exclude-regions': t.optional(t.array(t.nonEmptyString)),
     'exclude-accounts': t.optional(t.array(t.nonEmptyString)),
     'organizational-units': t.optional(t.array(t.nonEmptyString)),
     accounts: t.optional(t.array(t.nonEmptyString)),
@@ -87,10 +83,10 @@ export abstract class IamConfigTypes {
 }
 
 export const IamConfigType = t.interface({
-  'policy-sets': t.array(IamConfigTypes.PolicySet),
-  'role-sets': t.array(IamConfigTypes.RoleSet),
-  'group-sets': t.array(IamConfigTypes.GroupSet),
-  'user-sets': t.array(IamConfigTypes.UserSet),
+  'policy-sets': t.optional(t.array(IamConfigTypes.PolicySet)),
+  'role-sets': t.optional(t.array(IamConfigTypes.RoleSet)),
+  'group-sets': t.optional(t.array(IamConfigTypes.GroupSet)),
+  'user-sets': t.optional(t.array(IamConfigTypes.UserSet)),
 });
 
 export class IamConfig implements t.TypeOf<typeof IamConfigType> {

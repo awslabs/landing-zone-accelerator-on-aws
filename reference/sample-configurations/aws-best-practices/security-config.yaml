@@ -25,13 +25,13 @@ central-security-services:
     standards:
       - name: AWS Foundational Security Best Practices v1.0.0
         enable: true
-        controls-to-disable: ['Config.1','IAM.1','EC2.10']
+        controls-to-disable: ['Config.1', 'IAM.1', 'EC2.10']
       - name: CIS AWS Foundations Benchmark v1.2.0
         enable: true
-        controls-to-disable: ['CIS.1.16','CIS.1.1','CIS.2.5']
+        controls-to-disable: ['CIS.1.16', 'CIS.1.1', 'CIS.2.5']
       - name: PCI DSS v3.2.1
         enable: true
-        controls-to-disable: ['PCI.CloudTrail.1','PCI.CloudTrail.4','PCI.EC2.4','PCI.IAM.6']
+        controls-to-disable: ['PCI.CloudTrail.1', 'PCI.CloudTrail.4', 'PCI.EC2.4', 'PCI.IAM.6']
 aws-config:
   enable-configuration-recorder: true
   enable-delivery-channel: true

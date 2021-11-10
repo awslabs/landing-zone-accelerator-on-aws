@@ -231,6 +231,14 @@ export class AcceleratorPipeline extends cdk.Construct {
       actions: [this.createToolkitStage('Bootstrap', `bootstrap --partition ${cdk.Stack.of(this).partition}`)],
     });
 
+    /**
+     * Creates the Accounts, OUs, and SCPs
+     */
+    pipeline.addStage({
+      stageName: 'Accounts',
+      actions: [this.createToolkitStage('Accounts', `deploy --stage ${AcceleratorStage.ACCOUNTS}`)],
+    });
+
     // /**
     //  * The Validate stage is used to verify that all prerequisites have been made and that the
     //  * Accelerator can be deployed into the environment
@@ -260,7 +268,7 @@ export class AcceleratorPipeline extends cdk.Construct {
 
     pipeline.addStage({
       stageName: 'SecurityAudit',
-      actions: [this.createToolkitStage('SecurityAudit', `deploy --stage ${AcceleratorStage['SECURITY-AUDIT']}`)],
+      actions: [this.createToolkitStage('SecurityAudit', `deploy --stage ${AcceleratorStage.SECURITY_AUDIT}`)],
     });
 
     // pipeline.addStage({
@@ -271,9 +279,11 @@ export class AcceleratorPipeline extends cdk.Construct {
     pipeline.addStage({
       stageName: 'Deploy',
       actions: [
+        this.createToolkitStage('Networking1', `deploy --stage ${AcceleratorStage.NETWORK_1}`, 1),
         this.createToolkitStage('Security', `deploy --stage ${AcceleratorStage.SECURITY}`, 1),
-        // this.createToolkitStage('Networking', `deploy --stage ${AcceleratorStage.NETWORKING}`, 1),
         this.createToolkitStage('Operations', `deploy --stage ${AcceleratorStage.OPERATIONS}`, 1),
+        this.createToolkitStage('Networking2', `deploy --stage ${AcceleratorStage.NETWORK_2}`, 2),
+        this.createToolkitStage('Networking3', `deploy --stage ${AcceleratorStage.NETWORK_3}`, 3),
       ],
     });
   }

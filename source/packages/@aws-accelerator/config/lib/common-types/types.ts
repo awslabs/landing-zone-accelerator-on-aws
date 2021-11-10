@@ -244,5 +244,8 @@ export const region = enums(
 );
 export type Region = t.TypeOf<typeof region>;
 
+export const enableDisable = enums('EnableDisable', ['enable', 'disable'], 'Value should be enable or disable');
+export type EnableDisable = t.TypeOf<typeof region>;
+
 export const availabilityZone = enums('AvailabilityZone', ['a', 'b', 'c', 'd', 'e', 'f']);
 export type AvailabilityZone = t.TypeOf<typeof availabilityZone>;

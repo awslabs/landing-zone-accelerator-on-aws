@@ -94,6 +94,7 @@ export class AcceleratorToolkit {
           `account=${options.accountId}`,
           `region=${options.region}`,
           `stage=${options.stage}`,
+          `command=${options.command}`,
           `config-dir=${options.configDirPath}`,
         ],
       },
@@ -112,7 +113,7 @@ export class AcceleratorToolkit {
       synthesizer: execProgram,
     });
 
-    const toolkitStackName: string = ToolkitInfo.determineName(configuration.settings.get(['toolkitStackName']));
+    const toolkitStackName: string = ToolkitInfo.determineName('AWSAccelerator-CDKToolkit');
 
     const cli = new CdkToolkit({
       cloudExecutable,

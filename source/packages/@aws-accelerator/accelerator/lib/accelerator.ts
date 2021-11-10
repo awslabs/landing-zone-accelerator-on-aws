@@ -33,8 +33,10 @@ export enum AcceleratorStage {
   DEPENDENCIES = 'dependencies',
   SECURITY = 'security',
   OPERATIONS = 'operations',
-  NETWORKING = 'networking',
-  'SECURITY-AUDIT' = 'security-audit',
+  NETWORK_1 = 'network1',
+  NETWORK_2 = 'network2',
+  NETWORK_3 = 'network3',
+  SECURITY_AUDIT = 'security-audit',
 }
 
 /**
@@ -60,6 +62,8 @@ export interface AcceleratorProps {
  * - z
  */
 export abstract class Accelerator {
+  // private static readonly DEFAULT_MAX_CONCURRENT_STACKS = 20;
+
   static isSupportedStage(stage: AcceleratorStage): boolean {
     return Object.values(AcceleratorStage).includes(stage);
   }
@@ -142,13 +146,20 @@ export abstract class Accelerator {
     }
 
     //
+    // When running parallel, this will be the max concurrent stacks
+    //
+    // const maxStacks = process.env['MAX_CONCURRENT_STACKS'] ?? Accelerator.DEFAULT_MAX_CONCURRENT_STACKS;
+
+    //
     // Execute Bootstrap stacks for all identified accounts
     //
     if (props.command == 'bootstrap') {
+      // const promises: Promise<void>[] = [];
       const trustedAccountId = accountIds[accountsConfig['mandatory-accounts'].management.email];
       for (const region of globalConfig['enabled-regions']) {
         for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
           const accountId = accountIds[account.email];
+          // promises.push(
           await AcceleratorToolkit.execute({
             command: props.command,
             accountId,
@@ -158,9 +169,14 @@ export abstract class Accelerator {
             requireApproval: props.requireApproval,
             qualifier: 'accel',
           });
+          // );
+          // if (promises.length >= maxStacks) {
+          //   await Promise.all(promises);
+          // }
         }
         for (const account of Object.values(accountsConfig['workload-accounts'])) {
           const accountId = accountIds[account.email];
+          // promises.push(
           await AcceleratorToolkit.execute({
             command: props.command,
             accountId,
@@ -170,8 +186,13 @@ export abstract class Accelerator {
             requireApproval: props.requireApproval,
             qualifier: 'accel',
           });
+          // );
+          // if (promises.length >= maxStacks) {
+          //   await Promise.all(promises);
+          // }
         }
       }
+      // await Promise.all(promises);
       return;
     }
 
@@ -181,15 +202,32 @@ export abstract class Accelerator {
     // (primary) account, the log archive account, and the security audit account (also referred to
     // as the audit account).
 
+    // const promises: Promise<void>[] = [];
+    const managementAccount = accountsConfig['mandatory-accounts'].management;
+
     switch (props.stage) {
-      case AcceleratorStage.VALIDATE:
       case AcceleratorStage.ACCOUNTS:
-      case AcceleratorStage.DEPENDENCIES:
+        console.log(`Executing ${props.stage} for ${managementAccount}.`);
+        // promises.push(
+        await AcceleratorToolkit.execute({
+          command: props.command,
+          accountId: accountIds[managementAccount.email],
+          region: globalConfig['home-region'],
+          stage: props.stage,
+          configDirPath: props.configDirPath,
+          requireApproval: props.requireApproval,
+        });
+        // );
+        // if (promises.length >= maxStacks) {
+        //   await Promise.all(promises);
+        // }
+
         break;
+
       case AcceleratorStage.ORGANIZATIONS:
-        const managementAccount = accountsConfig['mandatory-accounts'].management;
         for (const region of globalConfig['enabled-regions']) {
           console.log(`Executing ${props.stage} for ${managementAccount} account in ${region} region.`);
+          // promises.push(
           await AcceleratorToolkit.execute({
             command: props.command,
             accountId: accountIds[managementAccount.email],
@@ -198,6 +236,10 @@ export abstract class Accelerator {
             configDirPath: props.configDirPath,
             requireApproval: props.requireApproval,
           });
+          // );
+          // if (promises.length >= maxStacks) {
+          //   await Promise.all(promises);
+          // }
         }
         break;
 
@@ -208,11 +250,14 @@ export abstract class Accelerator {
       case AcceleratorStage.LOGGING:
       case AcceleratorStage.SECURITY:
       case AcceleratorStage.OPERATIONS:
-      case AcceleratorStage.NETWORKING:
+      case AcceleratorStage.NETWORK_1:
+      case AcceleratorStage.NETWORK_2:
+      case AcceleratorStage.NETWORK_3:
         for (const region of globalConfig['enabled-regions']) {
           for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
             console.log(`Executing ${props.stage} for ${account.email} account in ${region} region.`);
             const accountId = accountIds[account.email];
+            // promises.push(
             await AcceleratorToolkit.execute({
               command: props.command,
               accountId,
@@ -221,10 +266,15 @@ export abstract class Accelerator {
               configDirPath: props.configDirPath,
               requireApproval: props.requireApproval,
             });
+            // );
+            // if (promises.length >= maxStacks) {
+            //   await Promise.all(promises);
+            // }
           }
           for (const account of Object.values(accountsConfig['workload-accounts'])) {
             console.log(`Executing ${props.stage} for ${account.email} account in ${region} region.`);
             const accountId = accountIds[account.email];
+            // promises.push(
             await AcceleratorToolkit.execute({
               command: props.command,
               accountId,
@@ -233,16 +283,21 @@ export abstract class Accelerator {
               configDirPath: props.configDirPath,
               requireApproval: props.requireApproval,
             });
+            // );
+            // if (promises.length >= maxStacks) {
+            //   await Promise.all(promises);
+            // }
           }
         }
         break;
-      case AcceleratorStage['SECURITY-AUDIT']:
+      case AcceleratorStage.SECURITY_AUDIT:
         const auditAccountName = securityConfig.getDelegatedAccountName();
         if (accountsConfig.accountExists(auditAccountName)) {
           for (const region of globalConfig['enabled-regions']) {
             const auditAccountEmail = accountsConfig.getEmail(auditAccountName);
             const accountId = accountIds[auditAccountEmail];
             console.log(`Executing ${props.stage} for ${auditAccountEmail} account in ${region} region.`);
+            // promises.push(
             await AcceleratorToolkit.execute({
               command: props.command,
               accountId: accountId,
@@ -251,6 +306,10 @@ export abstract class Accelerator {
               configDirPath: props.configDirPath,
               requireApproval: props.requireApproval,
             });
+            // );
+            // if (promises.length >= maxStacks) {
+            //   await Promise.all(promises);
+            // }
           }
         } else {
           throw new Error(`Security delegated admin account name "${auditAccountName}" not found.`);
@@ -259,5 +318,7 @@ export abstract class Accelerator {
       default:
         throw new Error(`Unknown stage: ${props.stage}`);
     }
+
+    // await Promise.all(promises);
   }
 }
