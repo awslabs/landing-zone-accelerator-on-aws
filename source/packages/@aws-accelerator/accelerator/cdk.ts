@@ -18,6 +18,12 @@ import process from 'process';
 import { Accelerator, AcceleratorStage } from './lib/accelerator';
 import { AcceleratorToolkit, AcceleratorToolkitCommand } from './lib/toolkit';
 
+process.on('unhandledRejection', (reason, _) => {
+  console.error(reason);
+  // eslint-disable-next-line no-process-exit
+  process.exit(1);
+});
+
 const usage = `Usage: cdk.ts <command> --stage STAGE --config-dir CONFIG_DIRECTORY [--account ACCOUNT] [--region REGION] [--parallel]`;
 
 const args = mri(process.argv.slice(2), {

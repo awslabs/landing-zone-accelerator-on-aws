@@ -31,8 +31,14 @@ export function throttlingBackOff<T>(
 export const isThrottlingError = (
   e: any, // eslint-disable-line
 ): boolean =>
+  e.retryable === true ||
+  // SDKv2 Error Structure
   e.code === 'TooManyRequestsException' ||
   e.code === 'Throttling' ||
   e.code === 'ThrottlingException' ||
-  e.retryable === true ||
-  e.code === 'InternalException';
+  e.code === 'InternalException' ||
+  // SDKv3 Error Structure
+  e.name === 'TooManyRequestsException' ||
+  e.name === 'Throttling' ||
+  e.name === 'ThrottlingException' ||
+  e.name === 'InternalException';

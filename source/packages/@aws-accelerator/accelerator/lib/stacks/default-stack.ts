@@ -11,16 +11,16 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
 import * as ssm from '@aws-cdk/aws-ssm';
+import * as cdk from '@aws-cdk/core';
 
 export class DefaultStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props: cdk.StackProps) {
     super(scope, id, props);
 
-    new ssm.StringParameter(this, 'Parameter', {
-      parameterName: `/accelerator/default-stack`,
-      stringValue: 'default-stack',
+    new ssm.StringParameter(this, 'SsmParamStackId', {
+      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
+      stringValue: cdk.Stack.of(this).stackId,
     });
   }
 }

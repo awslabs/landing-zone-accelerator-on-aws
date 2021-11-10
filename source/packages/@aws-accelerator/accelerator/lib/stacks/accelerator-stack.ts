@@ -11,15 +11,17 @@
  *  and limitations under the License.
  */
 
+import { AccountsConfig, GlobalConfig, IamConfig, NetworkConfig, OrganizationConfig } from '@aws-accelerator/config';
 import * as cdk from '@aws-cdk/core';
-
-import { AccountsConfig, GlobalConfig, OrganizationConfig, IamConfig } from '@aws-accelerator/config';
 
 export interface AcceleratorStackProps extends cdk.StackProps {
   accountIds: { [name: string]: string };
+  organizationsId: string;
+  organizationalUnitIds: { [name: string]: { id: string; arn: string } };
   accountsConfig: AccountsConfig;
-  iamConfig: IamConfig;
   globalConfig: GlobalConfig;
+  iamConfig: IamConfig;
+  networkConfig: NetworkConfig;
   organizationConfig: OrganizationConfig;
 }
 
@@ -63,7 +65,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   protected isOrganizationalUnitIncluded(organizationalUnits: string[]): boolean {
     // If root-ou is specified, return right away
-    if (Object.values(organizationalUnits).includes('root-ou')) {
+    if (Object.values(organizationalUnits ?? []).includes('root-ou')) {
       return true;
     }
 

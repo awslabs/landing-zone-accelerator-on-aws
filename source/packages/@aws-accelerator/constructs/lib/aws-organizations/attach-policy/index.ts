@@ -93,20 +93,32 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       };
 
     case 'Delete':
+      //
       // Detach policy, let CDK manage where it's deployed,
+      //
+
       // do not remove FullAWSAccess
       if (policyId !== 'p-FullAWSAccess') {
-        await throttlingBackOff(() =>
-          organizationsClient.send(
-            new DetachPolicyCommand({
-              PolicyId: policyId,
-              TargetId: targetId,
-            }),
-          ),
-        );
+        // Find the specific policy
+        for await (const page of paginateListPoliciesForTarget(
+          { client: organizationsClient },
+          { Filter: type, TargetId: targetId },
+        )) {
+          for (const policy of page.Policies ?? []) {
+            if (policy.Id === policyId) {
+              await throttlingBackOff(() =>
+                organizationsClient.send(
+                  new DetachPolicyCommand({
+                    PolicyId: policyId,
+                    TargetId: targetId,
+                  }),
+                ),
+              );
+            }
+          }
+        }
       }
 
-      // Do Nothing, we will leave any created SCPs behind
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',
