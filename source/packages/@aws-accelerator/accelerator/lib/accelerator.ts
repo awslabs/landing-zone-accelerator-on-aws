@@ -17,6 +17,7 @@ import { DescribeOrganizationCommand, OrganizationsClient, paginateListAccounts 
 import { RequireApproval } from 'aws-cdk/lib/diff';
 import { PluginHost } from 'aws-cdk/lib/plugin';
 import { AcceleratorToolkit } from './toolkit';
+import { STSClient, AssumeRoleCommand, Credentials } from '@aws-sdk/client-sts';
 
 export enum AcceleratorStage {
   PIPELINE = 'pipeline',
@@ -43,14 +44,14 @@ export enum AcceleratorStage {
  *
  */
 export interface AcceleratorProps {
-  command: string;
-  configDirPath: string;
-  parallel: boolean;
-  stage: string;
-  account: string;
-  region: string;
-  partition: string;
-  requireApproval: RequireApproval;
+  readonly command: string;
+  readonly configDirPath: string;
+  readonly parallel: boolean;
+  readonly stage: string;
+  readonly account: string;
+  readonly region: string;
+  readonly partition: string;
+  readonly requireApproval: RequireApproval;
 }
 
 /**
@@ -83,6 +84,7 @@ export abstract class Accelerator {
       if (props.region && props.account === undefined) {
         throw new Error(`Region set to ${props.region}, but region is undefined`);
       }
+
       return await AcceleratorToolkit.execute({
         command: props.command,
         accountId: props.account,
@@ -103,6 +105,9 @@ export abstract class Accelerator {
     const accountsConfig = AccountsConfig.load(props.configDirPath);
     const securityConfig = SecurityConfig.load(props.configDirPath);
 
+    // Get management account credential when pipeline is executing outside of management account
+    const managementAccountCredentials = await this.getManagementAccountCredentials();
+
     //
     // Load Plugins
     //
@@ -110,6 +115,7 @@ export abstract class Accelerator {
       // TODO: Read this from arg
       assumeRoleName: organizationsConfig['organizations-access-role'],
       assumeRoleDuration: 3600,
+      credentials: managementAccountCredentials,
     });
     assumeRolePlugin.init(PluginHost.instance);
 
@@ -320,5 +326,40 @@ export abstract class Accelerator {
     }
 
     // await Promise.all(promises);
+  }
+
+  private static async getManagementAccountCredentials(): Promise<Credentials | undefined> {
+    console.log('[PlatformAccelerator][INFO] set management account credentials');
+    console.log(`[PlatformAccelerator][INFO] pipeline region => ${process.env['AWS_DEFAULT_REGION']}`);
+    console.log(`[PlatformAccelerator][INFO] pipeline executingAccountId => ${process.env['ACCOUNT_ID']}`);
+    console.log(`[PlatformAccelerator][INFO] managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
+    console.log(
+      `[PlatformAccelerator][INFO] management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`,
+    );
+    if (
+      process.env['MANAGEMENT_ACCOUNT_ID'] &&
+      process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'] &&
+      process.env['ACCOUNT_ID'] !== process.env['MANAGEMENT_ACCOUNT_ID']
+    ) {
+      const roleArn = `arn:aws:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
+      const stsClient = new STSClient({ region: process.env['AWS_REGION'] });
+      console.log(`[PlatformAccelerator][INFO] management account roleArn => ${roleArn}`);
+
+      const assumeRoleCredential = await throttlingBackOff(() =>
+        stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' })),
+      );
+
+      process.env['AWS_ACCESS_KEY_ID'] = assumeRoleCredential.Credentials!.AccessKeyId!;
+      process.env['AWS_ACCESS_KEY'] = assumeRoleCredential.Credentials!.AccessKeyId!;
+
+      process.env['AWS_SECRET_KEY'] = assumeRoleCredential.Credentials!.SecretAccessKey!;
+      process.env['AWS_SECRET_ACCESS_KEY'] = assumeRoleCredential.Credentials!.SecretAccessKey!;
+
+      process.env['AWS_SESSION_TOKEN'] = assumeRoleCredential.Credentials!.SessionToken;
+
+      return assumeRoleCredential.Credentials;
+    } else {
+      return undefined;
+    }
   }
 }

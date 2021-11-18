@@ -11,33 +11,27 @@
  *  and limitations under the License.
  */
 
-import { InstallerStack } from '@aws-accelerator/installer';
 import * as cdk from '@aws-cdk/core';
 import * as pipeline from '../pipeline';
 
 export interface PipelineStackProps extends cdk.StackProps {
-  stage: string;
+  readonly stage: string;
+  readonly sourceRepositoryName: string;
+  readonly sourceBranchName: string;
+  readonly managementAccountId?: string;
+  readonly managementAccountRoleName?: string;
 }
 
 export class PipelineStack extends cdk.Stack {
-  private readonly repositoryName = new cdk.CfnParameter(this, 'RepositoryName', {
-    type: 'AWS::SSM::Parameter::Value<String>',
-    default: InstallerStack.REPOSITORY_NAME,
-  });
-
-  private readonly repositoryBranchName = new cdk.CfnParameter(this, 'RepositoryBranchName', {
-    type: 'AWS::SSM::Parameter::Value<String>',
-    default: InstallerStack.REPOSITORY_BRANCH_NAME,
-  });
-
   constructor(scope: cdk.Construct, id: string, props: PipelineStackProps) {
     super(scope, id, props);
 
     // TODO: Add event to launch the Pipeline for new account events
-
     new pipeline.AcceleratorPipeline(this, 'Pipeline', {
-      sourceRepositoryName: this.repositoryName.valueAsString,
-      sourceBranchName: this.repositoryBranchName.valueAsString,
+      sourceRepositoryName: props.sourceRepositoryName,
+      sourceBranchName: props.sourceBranchName,
+      managementAccountId: props.managementAccountId,
+      managementAccountRoleName: props.managementAccountRoleName,
     });
   }
 }
