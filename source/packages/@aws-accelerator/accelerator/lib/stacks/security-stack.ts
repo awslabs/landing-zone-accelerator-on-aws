@@ -42,9 +42,8 @@ export class SecurityStack extends cdk.Stack {
 
     // MacieSession configuration
     if (
-      props.securityConfig['central-security-services'].macie.enable &&
-      props.securityConfig['central-security-services'].macie['exclude-regions']!.indexOf(cdk.Stack.of(this).region) ===
-        -1
+      props.securityConfig.centralSecurityServices.macie.enable &&
+      props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(cdk.Stack.of(this).region) === -1
     ) {
       const auditAccountName = props.securityConfig.getDelegatedAccountName();
       if (props.accountsConfig.accountExists(auditAccountName)) {
@@ -52,8 +51,8 @@ export class SecurityStack extends cdk.Stack {
         const macieSession = new MacieSession(this, 'MacieSession', {
           region: cdk.Stack.of(this).region,
           findingPublishingFrequency:
-            props.securityConfig['central-security-services'].macie['policy-findings-publishing-frequency'],
-          isSensitiveSh: props.securityConfig['central-security-services'].macie['publish-sensitive-data-findings'],
+            props.securityConfig.centralSecurityServices.macie.policyFindingsPublishingFrequency,
+          isSensitiveSh: props.securityConfig.centralSecurityServices.macie.publishSensitiveDataFindings,
         });
         new MacieExportConfigClassification(this, 'AwsMacieUpdateExportConfigClassification', {
           region: cdk.Stack.of(this).region,
@@ -66,17 +65,15 @@ export class SecurityStack extends cdk.Stack {
 
     //GuardDuty configuration
     if (
-      props.securityConfig['central-security-services'].guardduty.enable &&
-      props.securityConfig['central-security-services'].guardduty['exclude-regions']!.indexOf(
-        cdk.Stack.of(this).region,
-      ) === -1
+      props.securityConfig.centralSecurityServices.guardduty.enable &&
+      props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(cdk.Stack.of(this).region) === -1
     ) {
       const auditAccountName = props.securityConfig.getDelegatedAccountName();
       if (props.accountsConfig.accountExists(auditAccountName)) {
         new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
           region: cdk.Stack.of(this).region,
           exportDestinationType:
-            props.securityConfig['central-security-services'].guardduty['export-configuration']['destination-type'],
+            props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.destinationType,
         });
       } else {
         throw new Error(`Guardduty audit delegated admin account name "${auditAccountName}" not found.`);
@@ -85,16 +82,14 @@ export class SecurityStack extends cdk.Stack {
 
     //SecurityHub configuration
     if (
-      props.securityConfig['central-security-services']['security-hub'].enable &&
-      props.securityConfig['central-security-services']['security-hub']['exclude-regions']!.indexOf(
-        cdk.Stack.of(this).region,
-      ) === -1
+      props.securityConfig.centralSecurityServices.securityHub.enable &&
+      props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(cdk.Stack.of(this).region) === -1
     ) {
       const auditAccountName = props.securityConfig.getDelegatedAccountName();
       if (props.accountsConfig.accountExists(auditAccountName)) {
         new SecurityHubStandards(this, 'SecurityHubStandards', {
           region: cdk.Stack.of(this).region,
-          standards: props.securityConfig['central-security-services']['security-hub'].standards,
+          standards: props.securityConfig.centralSecurityServices.securityHub.standards,
         });
       } else {
         throw new Error(`SecurityHub audit delegated admin account name "${auditAccountName}" not found.`);
@@ -115,10 +110,10 @@ export class SecurityStack extends cdk.Stack {
     //
     let configRecorder: config.CfnConfigurationRecorder | undefined = undefined;
     if (
-      !props.globalConfig['control-tower'].enable ||
-      props.accountIds[props.accountsConfig['mandatory-accounts'].management.email] === cdk.Stack.of(this).account
+      !props.globalConfig.controlTower.enable ||
+      props.accountIds[props.accountsConfig.mandatoryAccounts.management.email] === cdk.Stack.of(this).account
     ) {
-      if (props.securityConfig['aws-config']['enable-configuration-recorder']) {
+      if (props.securityConfig.awsConfig.enableConfigurationRecorder) {
         const configRecorderRole = new iam.Role(this, 'ConfigRecorderRole', {
           assumedBy: new iam.ServicePrincipal('config.amazonaws.com'),
           managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSConfigRole')],
@@ -147,11 +142,11 @@ export class SecurityStack extends cdk.Stack {
         });
       }
 
-      if (props.securityConfig['aws-config']['enable-delivery-channel']) {
+      if (props.securityConfig.awsConfig.enableDeliveryChannel) {
         new config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
           s3BucketName: `aws-accelerator-central-logs-${
-            props.accountIds[props.accountsConfig['mandatory-accounts']['log-archive'].email]
-          }-${props.globalConfig['home-region']}`,
+            props.accountIds[props.accountsConfig.mandatoryAccounts.logArchive.email]
+          }-${props.globalConfig.homeRegion}`,
           configSnapshotDeliveryProperties: {
             deliveryFrequency: 'One_Hour',
           },
@@ -160,12 +155,12 @@ export class SecurityStack extends cdk.Stack {
     }
 
     console.log('security-stack: AWS Config');
-    for (const ruleSet of props.securityConfig['aws-config']['rule-sets']) {
+    for (const ruleSet of props.securityConfig.awsConfig.ruleSets) {
       //
       // Region exclusion check
       // TODO: Move this to a util function
       //
-      if (ruleSet['exclude-regions']?.includes(cdk.Stack.of(this).region)) {
+      if (ruleSet.excludeRegions?.includes(cdk.Stack.of(this).region)) {
         console.log(`security-stack: ${cdk.Stack.of(this).region} region excluded`);
         continue;
       }
@@ -175,7 +170,7 @@ export class SecurityStack extends cdk.Stack {
       // TODO: Move this to a util function
       //
       let excludeAccount = false;
-      for (const account in ruleSet['exclude-accounts']) {
+      for (const account in ruleSet.excludeAccounts) {
         const email = props.accountsConfig.getEmail(account);
         if (cdk.Stack.of(this).account === props.accountIds[email]) {
           console.log(`security-stack: ${account} account excluded`);
@@ -192,7 +187,7 @@ export class SecurityStack extends cdk.Stack {
       //
       // Check Accounts List
       //
-      for (const account in ruleSet['accounts']) {
+      for (const account in ruleSet.accounts) {
         const email = props.accountsConfig.getEmail(account);
         if (cdk.Stack.of(this).account === props.accountIds[email]) {
           includeAccount = true;
@@ -203,7 +198,7 @@ export class SecurityStack extends cdk.Stack {
       //
       // Check OU List
       //
-      for (const ou of Object.values(ruleSet['organizational-units'] ?? [])) {
+      for (const ou of Object.values(ruleSet.organizationalUnits ?? [])) {
         console.log(`security-stack: Checking ${ou}`);
         if (ou === 'root-ou') {
           includeAccount = true;
@@ -227,7 +222,7 @@ export class SecurityStack extends cdk.Stack {
           const configRule = new config.ManagedRule(this, pascalCase(rule.identifier), {
             configRuleName: rule.name,
             identifier: rule.identifier,
-            inputParameters: rule['input-parameters'],
+            inputParameters: rule.inputParameters,
             ruleScope: {
               resourceTypes,
             },

@@ -108,7 +108,7 @@ export abstract class Accelerator {
     //
     const assumeRolePlugin = new AssumeProfilePlugin({
       // TODO: Read this from arg
-      assumeRoleName: organizationsConfig['organizations-access-role'],
+      assumeRoleName: organizationsConfig.organizationsAccessRole,
       assumeRoleDuration: 3600,
     });
     assumeRolePlugin.init(PluginHost.instance);
@@ -155,9 +155,9 @@ export abstract class Accelerator {
     //
     if (props.command == 'bootstrap') {
       // const promises: Promise<void>[] = [];
-      const trustedAccountId = accountIds[accountsConfig['mandatory-accounts'].management.email];
-      for (const region of globalConfig['enabled-regions']) {
-        for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
+      const trustedAccountId = accountIds[accountsConfig.mandatoryAccounts.management.email];
+      for (const region of globalConfig.enabledRegions) {
+        for (const account of Object.values(accountsConfig.mandatoryAccounts)) {
           const accountId = accountIds[account.email];
           // promises.push(
           await AcceleratorToolkit.execute({
@@ -174,7 +174,7 @@ export abstract class Accelerator {
           //   await Promise.all(promises);
           // }
         }
-        for (const account of Object.values(accountsConfig['workload-accounts'])) {
+        for (const account of Object.values(accountsConfig.workloadAccounts)) {
           const accountId = accountIds[account.email];
           // promises.push(
           await AcceleratorToolkit.execute({
@@ -203,7 +203,7 @@ export abstract class Accelerator {
     // as the audit account).
 
     // const promises: Promise<void>[] = [];
-    const managementAccount = accountsConfig['mandatory-accounts'].management;
+    const managementAccount = accountsConfig.mandatoryAccounts.management;
 
     switch (props.stage) {
       case AcceleratorStage.ACCOUNTS:
@@ -212,7 +212,7 @@ export abstract class Accelerator {
         await AcceleratorToolkit.execute({
           command: props.command,
           accountId: accountIds[managementAccount.email],
-          region: globalConfig['home-region'],
+          region: globalConfig.homeRegion,
           stage: props.stage,
           configDirPath: props.configDirPath,
           requireApproval: props.requireApproval,
@@ -225,7 +225,7 @@ export abstract class Accelerator {
         break;
 
       case AcceleratorStage.ORGANIZATIONS:
-        for (const region of globalConfig['enabled-regions']) {
+        for (const region of globalConfig.enabledRegions) {
           console.log(`Executing ${props.stage} for ${managementAccount} account in ${region} region.`);
           // promises.push(
           await AcceleratorToolkit.execute({
@@ -253,8 +253,8 @@ export abstract class Accelerator {
       case AcceleratorStage.NETWORK_TGW:
       case AcceleratorStage.NETWORK_VPC:
       case AcceleratorStage.NETWORK_TGW_ATTACH:
-        for (const region of globalConfig['enabled-regions']) {
-          for (const account of Object.values(accountsConfig['mandatory-accounts'])) {
+        for (const region of globalConfig.enabledRegions) {
+          for (const account of Object.values(accountsConfig.mandatoryAccounts)) {
             console.log(`Executing ${props.stage} for ${account.email} account in ${region} region.`);
             const accountId = accountIds[account.email];
             // promises.push(
@@ -271,7 +271,7 @@ export abstract class Accelerator {
             //   await Promise.all(promises);
             // }
           }
-          for (const account of Object.values(accountsConfig['workload-accounts'])) {
+          for (const account of Object.values(accountsConfig.workloadAccounts)) {
             console.log(`Executing ${props.stage} for ${account.email} account in ${region} region.`);
             const accountId = accountIds[account.email];
             // promises.push(
@@ -293,7 +293,7 @@ export abstract class Accelerator {
       case AcceleratorStage.SECURITY_AUDIT:
         const auditAccountName = securityConfig.getDelegatedAccountName();
         if (accountsConfig.accountExists(auditAccountName)) {
-          for (const region of globalConfig['enabled-regions']) {
+          for (const region of globalConfig.enabledRegions) {
             const auditAccountEmail = accountsConfig.getEmail(auditAccountName);
             const accountId = accountIds[auditAccountEmail];
             console.log(`Executing ${props.stage} for ${auditAccountEmail} account in ${region} region.`);

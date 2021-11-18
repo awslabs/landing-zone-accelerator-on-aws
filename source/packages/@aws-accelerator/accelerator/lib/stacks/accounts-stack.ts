@@ -44,7 +44,7 @@ export class AccountsStack extends cdk.Stack {
     //
     // Global Organizations actions, only execute in the home region
     //
-    if (props.globalConfig['home-region'] === cdk.Stack.of(this).region) {
+    if (props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
       //
       // Loop through list of organizational-units in the configuration file and
       // create them. Associate related SCPs
@@ -55,7 +55,7 @@ export class AccountsStack extends cdk.Stack {
       //       and left in place
       //
       const organizationalUnitList: { [key: string]: OrganizationalUnit } = {};
-      for (const [key, organizationalUnit] of Object.entries(props.organizationConfig['organizational-units'])) {
+      for (const [key, organizationalUnit] of Object.entries(props.organizationConfig.organizationalUnits)) {
         // Create Organizational Unit
         organizationalUnitList[key] = new OrganizationalUnit(this, pascalCase(organizationalUnit.name), {
           name: organizationalUnit.name,
@@ -75,17 +75,17 @@ export class AccountsStack extends cdk.Stack {
       //
       // Create Accounts
       //
-      for (const account of Object.values(props.accountsConfig['mandatory-accounts'])) {
-        console.log(account['account-name']);
+      for (const account of Object.values(props.accountsConfig.mandatoryAccounts)) {
+        console.log(account.accountName);
         // new AwsAccount()
       }
-      for (const account of Object.values(props.accountsConfig['workload-accounts'])) {
-        console.log(account['account-name']);
+      for (const account of Object.values(props.accountsConfig.workloadAccounts)) {
+        console.log(account.accountName);
         // new AwsAccount()
       }
 
       // Deploy SCPs
-      for (const serviceControlPolicy of Object.values(props.organizationConfig['service-control-policies'])) {
+      for (const serviceControlPolicy of Object.values(props.organizationConfig.serviceControlPolicies)) {
         const scp = new Policy(this, serviceControlPolicy.name, {
           description: serviceControlPolicy.description,
           name: serviceControlPolicy.name,
@@ -93,7 +93,7 @@ export class AccountsStack extends cdk.Stack {
           type: PolicyType.SERVICE_CONTROL_POLICY,
         });
 
-        for (const organizationalUnit of serviceControlPolicy['organizational-units'] ?? []) {
+        for (const organizationalUnit of serviceControlPolicy.organizationalUnits ?? []) {
           let targetId = root.id;
           if (organizationalUnit !== 'root') {
             targetId = organizationalUnitList[organizationalUnit].id;

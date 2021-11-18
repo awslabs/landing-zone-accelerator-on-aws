@@ -101,13 +101,13 @@ async function main() {
   // const synthesizer = new cdk.DefaultStackSynthesizer({
   //   qualifier: 'accel',
   //   deployRoleArn:
-  //     'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + props.organizationConfig['organizations-access-role'],
+  //     'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + props.organizationConfig['organizationsAccessRole'],
   //   fileAssetPublishingRoleArn:
-  //     'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + props.organizationConfig['organizations-access-role'],
+  //     'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + props.organizationConfig['organizationsAccessRole'],
   //   imageAssetPublishingRoleArn:
-  //     'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + props.organizationConfig['organizations-access-role'],
+  //     'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + props.organizationConfig['organizationsAccessRole'],
   //   cloudFormationExecutionRole:
-  //     'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + props.organizationConfig['organizations-access-role'],
+  //     'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + props.organizationConfig['organizationsAccessRole'],
   // });
 
   if (stage === AcceleratorStage.LOGGING) {
@@ -263,7 +263,7 @@ async function getOrganizationalUnitIds(
     { ParentId: organizationalUnitIds['root-ou'].id },
   )) {
     for (const ou of page.OrganizationalUnits ?? []) {
-      const entry = Object.entries(organizationConfig['organizational-units']).find(item => item[1].name === ou.Name);
+      const entry = Object.entries(organizationConfig.organizationalUnits).find(item => item[1].name === ou.Name);
       if (entry && ou.Id) {
         organizationalUnitIds[entry[0]] = {
           id: ou.Id ?? '',

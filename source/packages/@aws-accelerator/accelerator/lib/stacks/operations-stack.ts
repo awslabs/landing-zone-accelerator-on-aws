@@ -39,24 +39,24 @@ export class OperationsStack extends AcceleratorStack {
     //
     // Only deploy IAM resources into the home region
     //
-    if (props.globalConfig['home-region'] === cdk.Stack.of(this).region) {
+    if (props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
       //
       // Add Managed Policies
       //
       const policies: { [name: string]: iam.ManagedPolicy } = {};
-      for (const policySet of props.iamConfig['policy-sets']) {
+      for (const policySet of props.iamConfig.policySets ?? []) {
         if (
-          this.isAccountExcluded(policySet['exclude-accounts']) ||
+          this.isAccountExcluded(policySet.excludeAccounts) ||
           !(
-            this.isAccountIncluded(policySet['accounts']) ||
-            this.isOrganizationalUnitIncluded(policySet['organizational-units'])
+            this.isAccountIncluded(policySet.accounts) ||
+            this.isOrganizationalUnitIncluded(policySet.organizationalUnits)
           )
         ) {
           console.log('Item excluded');
           continue;
         }
 
-        for (const policy of Object.values(policySet['policies']) as { name: string; policy: string }[]) {
+        for (const policy of Object.values(policySet.policies) as { name: string; policy: string }[]) {
           console.log(`operations-stack: Creating managed policy ${policy.name}`);
 
           // Read in the policy document which should be properly formatted json
@@ -64,7 +64,7 @@ export class OperationsStack extends AcceleratorStack {
 
           // Create a statements list using the PolicyStatement factory
           const statements: iam.PolicyStatement[] = [];
-          for (const statement of policyDocument['Statement']) {
+          for (const statement of policyDocument.Statement) {
             statements.push(iam.PolicyStatement.fromJson(statement));
           }
 
@@ -80,44 +80,41 @@ export class OperationsStack extends AcceleratorStack {
       // Add Roles
       //
       const roles: { [name: string]: iam.Role } = {};
-      for (const roleSet of props.iamConfig['role-sets']) {
+      for (const roleSet of props.iamConfig.roleSets ?? []) {
         if (
-          this.isAccountExcluded(roleSet['exclude-accounts']) ||
-          !(
-            this.isAccountIncluded(roleSet['accounts']) ||
-            this.isOrganizationalUnitIncluded(roleSet['organizational-units'])
-          )
+          this.isAccountExcluded(roleSet.excludeAccounts) ||
+          !(this.isAccountIncluded(roleSet.accounts) || this.isOrganizationalUnitIncluded(roleSet.organizationalUnits))
         ) {
           console.log('Item excluded');
           continue;
         }
 
-        for (const role of Object.values(roleSet['roles']) as {
+        for (const role of Object.values(roleSet.roles) as {
           name: string;
-          'assumed-by': {
+          assumedBy: {
             type: string;
             principal: string;
           };
           policies: {
-            'aws-managed': string[];
-            'customer-managed': string[];
+            awsManaged: string[];
+            customerManaged: string[];
           };
-          'boundary-policy': string;
+          boundaryPolicy: string;
         }[]) {
           console.log(`operations-stack: Creating role ${role.name}`);
 
           let assumedBy: iam.IPrincipal;
-          if (role['assumed-by'].type === 'service') {
-            assumedBy = new iam.ServicePrincipal(role['assumed-by'].principal);
+          if (role.assumedBy.type === 'service') {
+            assumedBy = new iam.ServicePrincipal(role.assumedBy.principal);
           } else {
-            assumedBy = new iam.AccountPrincipal(role['assumed-by'].principal);
+            assumedBy = new iam.AccountPrincipal(role.assumedBy.principal);
           }
 
           const managedPolicies: iam.IManagedPolicy[] = [];
-          for (const policy of role.policies['aws-managed'] ?? []) {
+          for (const policy of role.policies.awsManaged ?? []) {
             managedPolicies.push(iam.ManagedPolicy.fromAwsManagedPolicyName(policy));
           }
-          for (const policy of role.policies['customer-managed'] ?? []) {
+          for (const policy of role.policies.customerManaged ?? []) {
             managedPolicies.push(policies[policy]);
           }
 
@@ -125,7 +122,7 @@ export class OperationsStack extends AcceleratorStack {
             roleName: role.name,
             assumedBy,
             managedPolicies,
-            permissionsBoundary: policies[role['boundary-policy']],
+            permissionsBoundary: policies[role.boundaryPolicy],
           });
         }
       }
@@ -134,32 +131,31 @@ export class OperationsStack extends AcceleratorStack {
       // Add Groups
       //
       const groups: { [name: string]: iam.Group } = {};
-      for (const groupSet of props.iamConfig['group-sets']) {
+      for (const groupSet of props.iamConfig.groupSets ?? []) {
         if (
-          this.isAccountExcluded(groupSet['exclude-accounts']) ||
+          this.isAccountExcluded(groupSet.excludeAccounts) ||
           !(
-            this.isAccountIncluded(groupSet['accounts']) ||
-            this.isOrganizationalUnitIncluded(groupSet['organizational-units'])
+            this.isAccountIncluded(groupSet.accounts) || this.isOrganizationalUnitIncluded(groupSet.organizationalUnits)
           )
         ) {
           console.log('Item excluded');
           continue;
         }
 
-        for (const group of Object.values(groupSet['groups']) as {
+        for (const group of Object.values(groupSet.groups) as {
           name: string;
           policies: {
-            'aws-managed': string[];
-            'customer-managed': string[];
+            awsManaged: string[];
+            customerManaged: string[];
           };
         }[]) {
           console.log(`operations-stack: Creating group ${group.name}`);
 
           const managedPolicies: iam.IManagedPolicy[] = [];
-          for (const policy of group.policies['aws-managed'] ?? []) {
+          for (const policy of group.policies.awsManaged ?? []) {
             managedPolicies.push(iam.ManagedPolicy.fromAwsManagedPolicyName(policy));
           }
-          for (const policy of group.policies['customer-managed'] ?? []) {
+          for (const policy of group.policies.customerManaged ?? []) {
             managedPolicies.push(policies[policy]);
           }
 
@@ -173,22 +169,19 @@ export class OperationsStack extends AcceleratorStack {
       //
       // Add IAM Users
       //
-      for (const userSet of props.iamConfig['user-sets'] ?? []) {
+      for (const userSet of props.iamConfig.userSets ?? []) {
         if (
-          this.isAccountExcluded(userSet['exclude-accounts']) ||
-          !(
-            this.isAccountIncluded(userSet['accounts']) ||
-            this.isOrganizationalUnitIncluded(userSet['organizational-units'])
-          )
+          this.isAccountExcluded(userSet.excludeAccounts) ||
+          !(this.isAccountIncluded(userSet.accounts) || this.isOrganizationalUnitIncluded(userSet.organizationalUnits))
         ) {
           console.log('Item excluded');
           continue;
         }
 
-        for (const user of Object.values(userSet['users'] ?? []) as {
+        for (const user of Object.values(userSet.users ?? []) as {
           username: string;
           group: string;
-          'boundary-policy': string;
+          boundaryPolicy: string;
         }[]) {
           console.log(`operations-stack: Creating user ${user.username}`);
 
@@ -204,7 +197,7 @@ export class OperationsStack extends AcceleratorStack {
             userName: user.username,
             password: secret.secretValue,
             groups: [groups[user.group]],
-            permissionsBoundary: policies[user['boundary-policy']],
+            permissionsBoundary: policies[user.boundaryPolicy],
           });
         }
       }

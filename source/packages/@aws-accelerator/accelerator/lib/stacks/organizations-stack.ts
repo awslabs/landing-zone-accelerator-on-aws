@@ -47,12 +47,12 @@ export class OrganizationsStack extends cdk.Stack {
     //
     // Global Organizations actions, only execute in the home region
     //
-    if (props.globalConfig['home-region'] === cdk.Stack.of(this).region) {
+    if (props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
       //
       // Configure Organizations Trail
       //
 
-      if (props.globalConfig.logging.cloudtrail.enable && props.globalConfig.logging.cloudtrail['organization-trail']) {
+      if (props.globalConfig.logging.cloudtrail.enable && props.globalConfig.logging.cloudtrail.organizationTrail) {
         const enableCloudtrailServiceAccess = new EnableAwsServiceAccess(this, 'EnableOrganizationsCloudTrail', {
           servicePrincipal: 'cloudtrail.amazonaws.com',
         });
@@ -97,7 +97,7 @@ export class OrganizationsStack extends cdk.Stack {
             this,
             'CentralLogsBucket',
             `aws-accelerator-central-logs-${
-              props.accountIds[props.accountsConfig['mandatory-accounts']['log-archive'].email]
+              props.accountIds[props.accountsConfig.mandatoryAccounts.logArchive.email]
             }-${cdk.Stack.of(this).region}`,
           ),
           cloudWatchLogGroup: cloudTrailCloudWatchCmkLogGroup,
@@ -107,7 +107,7 @@ export class OrganizationsStack extends cdk.Stack {
             this,
             'CentralLogsCmk',
             `arn:${cdk.Stack.of(this).partition}:kms:${cdk.Stack.of(this).region}:${
-              props.accountIds[props.accountsConfig['mandatory-accounts']['log-archive'].email]
+              props.accountIds[props.accountsConfig.mandatoryAccounts.logArchive.email]
             }:alias/accelerator/central-logs/s3`,
           ),
           includeGlobalServiceEvents: true,
@@ -138,19 +138,15 @@ export class OrganizationsStack extends cdk.Stack {
     // Global decoration for security services
     const adminAccountId =
       props.accountIds[
-        props.accountsConfig.getEmail(props.securityConfig['central-security-services']['delegated-admin-account'])
+        props.accountsConfig.getEmail(props.securityConfig.centralSecurityServices.delegatedAdminAccount)
       ];
 
     // Macie Configuration
-    if (props.securityConfig['central-security-services'].macie.enable) {
-      if (
-        props.securityConfig['central-security-services'].macie['exclude-regions']!.indexOf(
-          cdk.Stack.of(this).region,
-        ) == -1
-      ) {
+    if (props.securityConfig.centralSecurityServices.macie.enable) {
+      if (props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(cdk.Stack.of(this).region) == -1) {
         console.log(
           `Starts macie admin account delegation to the account with email ${
-            props.accountsConfig['mandatory-accounts'].audit.email
+            props.accountsConfig.mandatoryAccounts.audit.email
           } account in ${cdk.Stack.of(this).region} region`,
         );
         console.log(`Macie Admin Account ID is ${adminAccountId}`);
@@ -161,22 +157,20 @@ export class OrganizationsStack extends cdk.Stack {
       } else {
         console.log(
           `${cdk.Stack.of(this).region} region was in macie excluded list so ignoring this region for ${
-            props.accountsConfig['mandatory-accounts'].audit.email
+            props.accountsConfig.mandatoryAccounts.audit.email
           } account`,
         );
       }
     }
 
     //GuardDuty Config
-    if (props.securityConfig['central-security-services'].guardduty.enable) {
+    if (props.securityConfig.centralSecurityServices.guardduty.enable) {
       if (
-        props.securityConfig['central-security-services'].guardduty['exclude-regions']!.indexOf(
-          cdk.Stack.of(this).region,
-        ) == -1
+        props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(cdk.Stack.of(this).region) == -1
       ) {
         console.log(
           `Starts guardduty admin account delegation to the account with email ${
-            props.accountsConfig['mandatory-accounts'].audit.email
+            props.accountsConfig.mandatoryAccounts.audit.email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
@@ -188,22 +182,21 @@ export class OrganizationsStack extends cdk.Stack {
       } else {
         console.log(
           `${cdk.Stack.of(this).region} region was in guardduty excluded list so ignoring this region for ${
-            props.accountsConfig['mandatory-accounts'].audit.email
+            props.accountsConfig.mandatoryAccounts.audit.email
           } account`,
         );
       }
     }
 
     //SecurityHub Config
-    if (props.securityConfig['central-security-services']['security-hub'].enable) {
+    if (props.securityConfig.centralSecurityServices.securityHub.enable) {
       if (
-        props.securityConfig['central-security-services']['security-hub']['exclude-regions']!.indexOf(
-          cdk.Stack.of(this).region,
-        ) == -1
+        props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(cdk.Stack.of(this).region) ==
+        -1
       ) {
         console.log(
           `Starts SecurityHub admin account delegation to the account with email ${
-            props.accountsConfig['mandatory-accounts'].audit.email
+            props.accountsConfig.mandatoryAccounts.audit.email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
@@ -215,7 +208,7 @@ export class OrganizationsStack extends cdk.Stack {
       } else {
         console.log(
           `${cdk.Stack.of(this).region} region was in SecurityHub excluded list so ignoring this region for ${
-            props.accountsConfig['mandatory-accounts'].audit.email
+            props.accountsConfig.mandatoryAccounts.audit.email
           } account`,
         );
       }
