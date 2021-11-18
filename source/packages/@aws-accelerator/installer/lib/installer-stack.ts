@@ -17,7 +17,6 @@ import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import * as iam from '@aws-cdk/aws-iam';
 import * as s3 from '@aws-cdk/aws-s3';
-import * as ssm from '@aws-cdk/aws-ssm';
 import * as cdk from '@aws-cdk/core';
 import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
 
@@ -27,17 +26,6 @@ export enum RepositorySources {
 }
 
 export class InstallerStack extends cdk.Stack {
-  /**
-   * SSM Parameter path (output): Accelerator source repository name
-   */
-  static readonly REPOSITORY_NAME = '/accelerator/source/repository-name';
-
-  /**
-   * SSM Parameter path (output): Accelerator source repository branch. This represents a version of
-   * the Accelerator.
-   */
-  static readonly REPOSITORY_BRANCH_NAME = '/accelerator/source/repository-branch-name';
-
   // TODO: Add allowedPattern for all CfnParameter uses
   private readonly repositorySource = new cdk.CfnParameter(this, 'RepositorySource', {
     type: 'String',
@@ -54,6 +42,16 @@ export class InstallerStack extends cdk.Stack {
   private readonly repositoryBranchName = new cdk.CfnParameter(this, 'RepositoryBranchName', {
     type: 'String',
     description: 'The name of the git branch to use for installation',
+  });
+
+  private readonly managementAccountId = new cdk.CfnParameter(this, 'ManagementAccountId', {
+    type: 'String',
+    description: 'Optional - Target management account id',
+  });
+
+  private readonly managementAccountRoleName = new cdk.CfnParameter(this, 'ManagementAccountRoleName', {
+    type: 'String',
+    description: 'Optional - Target management account role name',
   });
 
   // private readonly notificationEmail = new cdk.CfnParameter(this, 'NotificationEmail', {
@@ -80,11 +78,17 @@ export class InstallerStack extends cdk.Stack {
           //   Label: { default: 'Accelerator Configuration' },
           //   Parameters: [this.notificationEmail.logicalId],
           // },
+          {
+            Label: { default: 'Management Account Configuration' },
+            Parameters: [this.managementAccountId.logicalId, this.managementAccountRoleName.logicalId],
+          },
         ],
         ParameterLabels: {
           [this.repositorySource.logicalId]: { default: 'Source' },
           [this.repositoryName.logicalId]: { default: 'Repository Name' },
           [this.repositoryBranchName.logicalId]: { default: 'Branch Name' },
+          [this.managementAccountId.logicalId]: { default: 'Management Account ID' },
+          [this.managementAccountRoleName.logicalId]: { default: 'Management Account Role Name' },
           // [this.notificationEmail.logicalId]: { default: 'Notification Email' },
         },
       },
@@ -191,6 +195,22 @@ export class InstallerStack extends cdk.Stack {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: '1',
           },
+          ACCELERATOR_REPOSITORY_NAME: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.repositoryName.valueAsString,
+          },
+          ACCELERATOR_REPOSITORY_BRANCH_NAME: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.repositoryBranchName.valueAsString,
+          },
+          MANAGEMENT_ACCOUNT_ID: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.managementAccountId.valueAsString,
+          },
+          MANAGEMENT_ACCOUNT_ROLE_NAME: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.managementAccountRoleName.valueAsString,
+          },
         },
       },
     });
@@ -205,16 +225,6 @@ export class InstallerStack extends cdk.Stack {
           role: pipelineRole,
         }),
       ],
-    });
-
-    new ssm.StringParameter(this, 'RepositoryNameParameter', {
-      parameterName: InstallerStack.REPOSITORY_NAME,
-      stringValue: this.repositoryName.valueAsString,
-    });
-
-    new ssm.StringParameter(this, 'RepositoryBranchNameParameter', {
-      parameterName: InstallerStack.REPOSITORY_BRANCH_NAME,
-      stringValue: this.repositoryBranchName.valueAsString,
     });
   }
 }

@@ -28,18 +28,20 @@ import * as config_repository from './config-repository';
 export interface AcceleratorPipelineProps {
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
+  readonly managementAccountId?: string;
+  readonly managementAccountRoleName?: string;
 }
 
 /**
  * AWS Accelerator Pipeline Class, which creates the pipeline for AWS Landing zone
  */
 export class AcceleratorPipeline extends cdk.Construct {
-  private pipelineRole: iam.Role;
-  private toolkitRole: iam.Role;
-  private toolkitProject: codebuild.PipelineProject;
-  private buildOutput: codepipeline.Artifact;
-  private acceleratorRepoArtifact: codepipeline.Artifact;
-  private configRepoArtifact: codepipeline.Artifact;
+  private readonly pipelineRole: iam.Role;
+  private readonly toolkitRole: iam.Role;
+  private readonly toolkitProject: codebuild.PipelineProject;
+  private readonly buildOutput: codepipeline.Artifact;
+  private readonly acceleratorRepoArtifact: codepipeline.Artifact;
+  private readonly configRepoArtifact: codepipeline.Artifact;
 
   constructor(scope: cdk.Construct, id: string, props: AcceleratorPipelineProps) {
     super(scope, id);
@@ -220,6 +222,22 @@ export class AcceleratorPipeline extends cdk.Construct {
           ACCELERATOR_NAME: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: 'aws-accelerator',
+          },
+          ACCELERATOR_REPOSITORY_NAME: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.sourceRepositoryName,
+          },
+          ACCELERATOR_REPOSITORY_BRANCH_NAME: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.sourceBranchName,
+          },
+          MANAGEMENT_ACCOUNT_ID: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.managementAccountId,
+          },
+          MANAGEMENT_ACCOUNT_ROLE_NAME: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.managementAccountRoleName,
           },
         },
       },

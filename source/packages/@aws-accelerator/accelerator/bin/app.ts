@@ -74,7 +74,14 @@ async function main() {
   }
 
   if (stage === AcceleratorStage.PIPELINE) {
-    new PipelineStack(app, 'AWSAccelerator-PipelineStack', { env, stage });
+    new PipelineStack(app, 'AWSAccelerator-PipelineStack', {
+      env,
+      stage,
+      sourceRepositoryName: process.env['ACCELERATOR_REPOSITORY_NAME']!,
+      sourceBranchName: process.env['ACCELERATOR_REPOSITORY_BRANCH_NAME']!,
+      managementAccountId: process.env['MANAGEMENT_ACCOUNT_ID'],
+      managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'],
+    });
     return;
   }
 

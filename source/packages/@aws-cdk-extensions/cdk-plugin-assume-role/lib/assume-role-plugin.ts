@@ -13,16 +13,20 @@
 
 import { Plugin, PluginHost } from 'aws-cdk/lib/plugin';
 import { AssumeRoleProviderSource } from './assume-role-provider-source';
+import { Credentials } from '@aws-sdk/client-sts';
 export class AssumeProfilePlugin implements Plugin {
   readonly version = '1';
 
-  constructor(private readonly props: { assumeRoleName?: string; assumeRoleDuration?: number } = {}) {}
+  constructor(
+    private readonly props: { assumeRoleName?: string; assumeRoleDuration?: number; credentials?: Credentials } = {},
+  ) {}
 
   init(host: PluginHost): void {
     const source = new AssumeRoleProviderSource({
       name: 'cdk-assume-role-plugin',
       assumeRoleName: this.props.assumeRoleName ?? AssumeProfilePlugin.getDefaultAssumeRoleName(),
       assumeRoleDuration: this.props.assumeRoleDuration ?? AssumeProfilePlugin.getDefaultAssumeRoleDuration(),
+      credentials: this.props.credentials,
     });
     host.registerCredentialProviderSource(source);
   }
