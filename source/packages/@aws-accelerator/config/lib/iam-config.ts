@@ -20,103 +20,168 @@ import * as yaml from 'js-yaml';
  * Configuration items.
  */
 export abstract class IamConfigTypes {
-  static readonly User = t.interface({
+  static readonly userConfig = t.interface({
     username: t.nonEmptyString,
     group: t.nonEmptyString,
-    'boundary-policy': t.optional(t.nonEmptyString),
+    boundaryPolicy: t.optional(t.nonEmptyString),
   });
 
-  static readonly UserSet = t.interface({
-    'exclude-accounts': t.optional(t.array(t.nonEmptyString)),
-    'organizational-units': t.optional(t.array(t.nonEmptyString)),
+  static readonly userSetConfig = t.interface({
+    excludeAccounts: t.optional(t.array(t.nonEmptyString)),
+    organizationalUnits: t.optional(t.array(t.nonEmptyString)),
     accounts: t.optional(t.array(t.nonEmptyString)),
-    users: t.array(IamConfigTypes.User),
+    users: t.array(IamConfigTypes.userConfig),
   });
 
-  static readonly Policies = t.interface({
-    'aws-managed': t.optional(t.array(t.nonEmptyString)),
-    'customer-managed': t.optional(t.array(t.nonEmptyString)),
+  static readonly policiesConfig = t.interface({
+    awsManaged: t.optional(t.array(t.nonEmptyString)),
+    customerManaged: t.optional(t.array(t.nonEmptyString)),
   });
 
-  static readonly Group = t.interface({
+  static readonly groupConfig = t.interface({
     name: t.nonEmptyString,
-    policies: t.optional(IamConfigTypes.Policies),
+    policies: t.optional(IamConfigTypes.policiesConfig),
   });
 
-  static readonly GroupSet = t.interface({
-    'exclude-accounts': t.optional(t.array(t.nonEmptyString)),
-    'organizational-units': t.optional(t.array(t.nonEmptyString)),
+  static readonly groupSetConfig = t.interface({
+    excludeAccounts: t.optional(t.array(t.nonEmptyString)),
+    organizationalUnits: t.optional(t.array(t.nonEmptyString)),
     accounts: t.optional(t.array(t.nonEmptyString)),
-    groups: t.array(IamConfigTypes.Group),
+    groups: t.array(IamConfigTypes.groupConfig),
   });
 
-  static readonly AssumedBy = t.interface({
-    type: t.enums('AssumedByType', ['service', 'account']),
+  static readonly assumedByTypeEnum = t.enums('AssumedByConfigType', ['service', 'account']);
+
+  static readonly assumedByConfig = t.interface({
+    type: this.assumedByTypeEnum,
     principal: t.optional(t.nonEmptyString),
   });
 
-  static readonly Role = t.interface({
+  static readonly roleConfig = t.interface({
     name: t.nonEmptyString,
-    'assumed-by': IamConfigTypes.AssumedBy,
-    policies: t.optional(IamConfigTypes.Policies),
-    'boundary-policy': t.optional(t.nonEmptyString),
+    assumedBy: IamConfigTypes.assumedByConfig,
+    policies: t.optional(IamConfigTypes.policiesConfig),
+    boundaryPolicy: t.optional(t.nonEmptyString),
   });
 
-  static readonly RoleSet = t.interface({
-    'exclude-accounts': t.optional(t.array(t.nonEmptyString)),
-    'organizational-units': t.optional(t.array(t.nonEmptyString)),
+  static readonly roleSetConfig = t.interface({
+    excludeAccounts: t.optional(t.array(t.nonEmptyString)),
+    organizationalUnits: t.optional(t.array(t.nonEmptyString)),
     accounts: t.optional(t.array(t.nonEmptyString)),
-    roles: t.array(IamConfigTypes.Role),
+    roles: t.array(IamConfigTypes.roleConfig),
   });
 
-  static readonly Policy = t.interface({
+  static readonly policyConfig = t.interface({
     name: t.nonEmptyString,
     policy: t.nonEmptyString,
   });
 
-  static readonly PolicySet = t.interface({
-    'exclude-accounts': t.optional(t.array(t.nonEmptyString)),
-    'organizational-units': t.optional(t.array(t.nonEmptyString)),
+  static readonly policySetConfig = t.interface({
+    excludeAccounts: t.optional(t.array(t.nonEmptyString)),
+    organizationalUnits: t.optional(t.array(t.nonEmptyString)),
     accounts: t.optional(t.array(t.nonEmptyString)),
-    policies: t.array(IamConfigTypes.Policy),
+    policies: t.array(IamConfigTypes.policyConfig),
+  });
+
+  static readonly iamConfig = t.interface({
+    policySets: t.optional(t.array(IamConfigTypes.policySetConfig || [])),
+    roleSets: t.optional(t.array(IamConfigTypes.roleSetConfig)),
+    groupSets: t.optional(t.array(IamConfigTypes.groupSetConfig)),
+    userSets: t.optional(t.array(IamConfigTypes.userSetConfig)),
   });
 }
 
-export const IamConfigType = t.interface({
-  'policy-sets': t.optional(t.array(IamConfigTypes.PolicySet)),
-  'role-sets': t.optional(t.array(IamConfigTypes.RoleSet)),
-  'group-sets': t.optional(t.array(IamConfigTypes.GroupSet)),
-  'user-sets': t.optional(t.array(IamConfigTypes.UserSet)),
-});
+export abstract class UserConfig implements t.TypeOf<typeof IamConfigTypes.userConfig> {
+  readonly username: string = '';
+  readonly boundaryPolicy: string = '';
+  readonly group: string = '';
+}
 
-export class IamConfig implements t.TypeOf<typeof IamConfigType> {
+export abstract class UserSetConfig implements t.TypeOf<typeof IamConfigTypes.userSetConfig> {
+  readonly accounts: string[] = [];
+  readonly excludeAccounts: string[] = [];
+  readonly organizationalUnits: string[] = [];
+  readonly users: UserConfig[] = [];
+}
+
+export abstract class PoliciesConfig implements t.TypeOf<typeof IamConfigTypes.policiesConfig> {
+  readonly awsManaged: string[] = [];
+  readonly customerManaged: string[] = [];
+}
+
+export abstract class GroupConfig implements t.TypeOf<typeof IamConfigTypes.groupConfig> {
+  readonly name: string = '';
+  readonly policies: PoliciesConfig | undefined = undefined;
+}
+
+export abstract class GroupSetConfig implements t.TypeOf<typeof IamConfigTypes.groupSetConfig> {
+  readonly accounts: string[] = [];
+  readonly excludeAccounts: string[] = [];
+  readonly groups: GroupConfig[] = [];
+  readonly organizationalUnits: string[] = [];
+}
+
+export abstract class AssumedByConfig implements t.TypeOf<typeof IamConfigTypes.assumedByConfig> {
+  readonly principal: string = '';
+  readonly type!: t.TypeOf<typeof IamConfigTypes.assumedByTypeEnum>;
+}
+
+export abstract class RoleConfig implements t.TypeOf<typeof IamConfigTypes.roleConfig> {
+  readonly assumedBy!: AssumedByConfig;
+  readonly boundaryPolicy: string = '';
+  readonly name: string = '';
+  readonly policies: PoliciesConfig | undefined = undefined;
+}
+
+export abstract class RoleSetConfig implements t.TypeOf<typeof IamConfigTypes.roleSetConfig> {
+  readonly accounts: string[] = [];
+  readonly excludeAccounts: string[] = [];
+  readonly organizationalUnits: string[] = [];
+  readonly roles: RoleConfig[] = [];
+}
+
+export abstract class PolicyConfig implements t.TypeOf<typeof IamConfigTypes.policyConfig> {
+  readonly name: string = '';
+  readonly policy: string = '';
+}
+
+export abstract class PolicySetConfig implements t.TypeOf<typeof IamConfigTypes.policySetConfig> {
+  readonly accounts: string[] = [];
+  readonly excludeAccounts: string[] = [];
+  readonly organizationalUnits: string[] = [];
+  readonly policies: PolicyConfig[] = [];
+}
+
+export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
   static readonly FILENAME = 'iam-config.yaml';
 
   /**
    *
    */
-  readonly 'policy-sets': [];
+
+  readonly policySets: PolicySetConfig[] = [];
 
   /**
    *
    */
-  readonly 'role-sets': [];
+
+  readonly roleSets: RoleSetConfig[] = [];
 
   /**
    *
    */
-  readonly 'group-sets': [];
+
+  readonly groupSets: GroupSetConfig[] = [];
 
   /**
    *
    */
-  readonly 'user-sets': [];
-
+  readonly userSets: UserSetConfig[] = [];
   /**
    *
    * @param values
    */
-  constructor(values?: t.TypeOf<typeof IamConfigType>) {
+  constructor(values?: t.TypeOf<typeof IamConfigTypes.iamConfig>) {
     if (values) {
       Object.assign(this, values);
     }
@@ -129,7 +194,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigType> {
    */
   static load(dir: string): IamConfig {
     const buffer = fs.readFileSync(path.join(dir, IamConfig.FILENAME), 'utf8');
-    const values = t.parse(IamConfigType, yaml.load(buffer));
+    const values = t.parse(IamConfigTypes.iamConfig, yaml.load(buffer));
     return new IamConfig(values);
   }
 }

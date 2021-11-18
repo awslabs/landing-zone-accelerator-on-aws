@@ -73,18 +73,18 @@ export abstract class AcceleratorStack extends cdk.Stack {
       const account = Object.entries(this.props.accountIds).find(item => item[1] === cdk.Stack.of(this).account);
       if (account) {
         // Check mandatory accounts
-        let accountEntry = Object.entries(this.props.accountsConfig['mandatory-accounts']).find(
+        let accountEntry = Object.entries(this.props.accountsConfig.mandatoryAccounts).find(
           account => account[1].email === account[0],
         );
-        if (accountEntry?.[1]['organizational-unit'] === organizationalUnit) {
+        if (accountEntry?.[1].organizationalUnit === organizationalUnit) {
           console.log(`${organizationalUnit} organizational unit explicitly included`);
           return true;
         }
         // Check workload accounts
-        accountEntry = Object.entries(this.props.accountsConfig['workload-accounts']).find(
+        accountEntry = Object.entries(this.props.accountsConfig.workloadAccounts).find(
           account => account[1].email === account[0],
         );
-        if (accountEntry?.[1]['organizational-unit'] === organizationalUnit) {
+        if (accountEntry?.[1].organizationalUnit === organizationalUnit) {
           console.log(`${organizationalUnit} organizational unit explicitly included`);
           return true;
         }

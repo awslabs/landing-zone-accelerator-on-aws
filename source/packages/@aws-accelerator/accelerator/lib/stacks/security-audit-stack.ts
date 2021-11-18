@@ -34,9 +34,8 @@ export class SecurityAuditStack extends cdk.Stack {
 
     //Macie configuration
     if (
-      props.securityConfig['central-security-services'].macie.enable &&
-      props.securityConfig['central-security-services'].macie['exclude-regions']!.indexOf(cdk.Stack.of(this).region) ===
-        -1
+      props.securityConfig.centralSecurityServices.macie.enable &&
+      props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(cdk.Stack.of(this).region) === -1
     ) {
       // Delegated account MacieSession needs to be enabled before adding other account as member
       // Adding delegated account from management account should enable macie in delegated account
@@ -45,8 +44,8 @@ export class SecurityAuditStack extends cdk.Stack {
       const macieSession = new MacieSession(this, 'MacieSession', {
         region: cdk.Stack.of(this).region,
         findingPublishingFrequency:
-          props.securityConfig['central-security-services'].macie['policy-findings-publishing-frequency'],
-        isSensitiveSh: props.securityConfig['central-security-services'].macie['publish-sensitive-data-findings'],
+          props.securityConfig.centralSecurityServices.macie.policyFindingsPublishingFrequency,
+        isSensitiveSh: props.securityConfig.centralSecurityServices.macie.publishSensitiveDataFindings,
       });
 
       new MacieMembers(this, 'MacieMembers', {
@@ -57,35 +56,30 @@ export class SecurityAuditStack extends cdk.Stack {
 
     //GuardDuty configuration
     if (
-      props.securityConfig['central-security-services'].guardduty.enable &&
-      props.securityConfig['central-security-services'].guardduty['exclude-regions']!.indexOf(
-        cdk.Stack.of(this).region,
-      ) === -1
+      props.securityConfig.centralSecurityServices.guardduty.enable &&
+      props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(cdk.Stack.of(this).region) === -1
     ) {
       const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
         region: cdk.Stack.of(this).region,
-        enableS3Protection: props.securityConfig['central-security-services'].guardduty['s3-protection'].enable,
+        enableS3Protection: props.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
       });
 
       new GuardDutyDetectorConfig(this, 'GuardDutyDetectorConfig', {
         region: cdk.Stack.of(this).region,
         isExportConfigEnable:
-          props.securityConfig['central-security-services'].guardduty['export-configuration'].enable &&
-          !props.securityConfig['central-security-services'].guardduty['s3-protection']['exclude-regions']!.includes(
+          props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.enable &&
+          !props.securityConfig.centralSecurityServices.guardduty.s3Protection.excludeRegions!.includes(
             cdk.Stack.of(this).region,
           ),
         exportDestination: GuardDutyExportConfigDestinationTypes.S3,
-        exportFrequency:
-          props.securityConfig['central-security-services'].guardduty['export-configuration']['export-frequency'],
+        exportFrequency: props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.exportFrequency,
       }).node.addDependency(guardDutyMembers);
     }
 
     //SecurityHub configuration
     if (
-      props.securityConfig['central-security-services']['security-hub'].enable &&
-      props.securityConfig['central-security-services']['security-hub']['exclude-regions']!.indexOf(
-        cdk.Stack.of(this).region,
-      ) === -1
+      props.securityConfig.centralSecurityServices.securityHub.enable &&
+      props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(cdk.Stack.of(this).region) === -1
     ) {
       new SecurityHubMembers(this, 'SecurityHubMembers', {
         region: cdk.Stack.of(this).region,

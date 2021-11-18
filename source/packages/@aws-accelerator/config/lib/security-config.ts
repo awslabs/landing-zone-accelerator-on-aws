@@ -9,9 +9,9 @@ export abstract class SecurityConfigTypes {
    */
   static readonly MacieConfig = t.interface({
     enable: t.boolean,
-    'exclude-regions': t.optional(t.array(t.nonEmptyString)),
-    'policy-findings-publishing-frequency': t.enums('FrequencyType', ['FIFTEEN_MINUTES', 'ONE_HOUR', 'SIX_HOURS']),
-    'publish-sensitive-data-findings': t.boolean,
+    excludeRegions: t.optional(t.array(t.nonEmptyString)),
+    policyFindingsPublishingFrequency: t.enums('FrequencyType', ['FIFTEEN_MINUTES', 'ONE_HOUR', 'SIX_HOURS']),
+    publishSensitiveDataFindings: t.boolean,
   });
 
   /**
@@ -19,7 +19,7 @@ export abstract class SecurityConfigTypes {
    */
   static readonly GuardDutyS3ProtectionConfig = t.interface({
     enable: t.boolean,
-    'exclude-regions': t.optional(t.array(t.nonEmptyString)),
+    excludeRegions: t.optional(t.array(t.nonEmptyString)),
   });
 
   /**
@@ -27,8 +27,8 @@ export abstract class SecurityConfigTypes {
    */
   static readonly GuardDutyExportFindingsConfig = t.interface({
     enable: t.boolean,
-    'destination-type': t.enums('DestinationType', ['S3']),
-    'export-frequency': t.enums('ExportFrequencyType', ['FIFTEEN_MINUTES', 'ONE_HOUR', 'SIX_HOURS']),
+    destinationType: t.enums('DestinationType', ['S3']),
+    exportFrequency: t.enums('ExportFrequencyType', ['FIFTEEN_MINUTES', 'ONE_HOUR', 'SIX_HOURS']),
   });
 
   /**
@@ -36,9 +36,9 @@ export abstract class SecurityConfigTypes {
    */
   static readonly GuardDutyConfig = t.interface({
     enable: t.boolean,
-    'exclude-regions': t.optional(t.array(t.nonEmptyString)),
-    's3-protection': SecurityConfigTypes.GuardDutyS3ProtectionConfig,
-    'export-configuration': SecurityConfigTypes.GuardDutyExportFindingsConfig,
+    excludeRegions: t.optional(t.array(t.nonEmptyString)),
+    s3Protection: SecurityConfigTypes.GuardDutyS3ProtectionConfig,
+    exportConfiguration: SecurityConfigTypes.GuardDutyExportFindingsConfig,
   });
 
   /**
@@ -51,7 +51,7 @@ export abstract class SecurityConfigTypes {
       'PCI DSS v3.2.1',
     ]),
     enable: t.boolean,
-    'controls-to-disable': t.optional(t.array(t.nonEmptyString)),
+    controlsToDisable: t.optional(t.array(t.nonEmptyString)),
   });
 
   /**
@@ -59,7 +59,7 @@ export abstract class SecurityConfigTypes {
    */
   static readonly SecurityHubConfig = t.interface({
     enable: t.boolean,
-    'exclude-regions': t.optional(t.array(t.nonEmptyString)),
+    excludeRegions: t.optional(t.array(t.nonEmptyString)),
     standards: t.array(SecurityConfigTypes.SecurityHubStandardConfig),
   });
 
@@ -67,85 +67,85 @@ export abstract class SecurityConfigTypes {
    * SecurityConfig Interface
    */
   static readonly SecurityConfig = t.interface({
-    'delegated-admin-account': t.nonEmptyString,
+    delegatedAdminAccount: t.nonEmptyString,
     macie: SecurityConfigTypes.MacieConfig,
     guardduty: SecurityConfigTypes.GuardDutyConfig,
-    'security-hub': SecurityConfigTypes.SecurityHubConfig,
+    securityHub: SecurityConfigTypes.SecurityHubConfig,
   });
 
   static readonly ConfigRule = t.interface({
     name: t.nonEmptyString,
     identifier: t.nonEmptyString,
-    'input-parameters': t.optional(t.dictionary(t.nonEmptyString, t.nonEmptyString)),
+    inputParameters: t.optional(t.dictionary(t.nonEmptyString, t.nonEmptyString)),
     'compliance-resource-types': t.optional(t.array(t.nonEmptyString)),
   });
 
   static readonly ConfigRuleSet = t.interface({
-    'exclude-regions': t.optional(t.array(t.nonEmptyString)),
-    'exclude-accounts': t.optional(t.array(t.nonEmptyString)),
-    'organizational-units': t.optional(t.array(t.nonEmptyString)),
+    excludeRegions: t.optional(t.array(t.nonEmptyString)),
+    excludeAccounts: t.optional(t.array(t.nonEmptyString)),
+    organizationalUnits: t.optional(t.array(t.nonEmptyString)),
     accounts: t.optional(t.array(t.nonEmptyString)),
     rules: t.array(SecurityConfigTypes.ConfigRule),
   });
 
   static readonly Config = t.interface({
-    'enable-configuration-recorder': t.boolean,
-    'enable-delivery-channel': t.boolean,
-    'rule-sets': t.array(SecurityConfigTypes.ConfigRuleSet),
+    enableConfigurationRecorder: t.boolean,
+    enableDeliveryChannel: t.boolean,
+    ruleSets: t.array(SecurityConfigTypes.ConfigRuleSet),
   });
 }
 
 export const SecurityConfigType = t.interface({
-  'central-security-services': SecurityConfigTypes.SecurityConfig,
-  'aws-config': SecurityConfigTypes.Config,
+  centralSecurityServices: SecurityConfigTypes.SecurityConfig,
+  awsConfig: SecurityConfigTypes.Config,
 });
 
 export class SecurityConfig implements t.TypeOf<typeof SecurityConfigType> {
   static readonly FILENAME = 'security-config.yaml';
 
-  readonly 'central-security-services': t.TypeOf<typeof SecurityConfigTypes.SecurityConfig> = {
-    'delegated-admin-account': 'audit',
+  readonly centralSecurityServices: t.TypeOf<typeof SecurityConfigTypes.SecurityConfig> = {
+    delegatedAdminAccount: 'audit',
     macie: {
       enable: true,
-      'exclude-regions': [],
-      'policy-findings-publishing-frequency': 'FIFTEEN_MINUTES',
-      'publish-sensitive-data-findings': true,
+      excludeRegions: [],
+      policyFindingsPublishingFrequency: 'FIFTEEN_MINUTES',
+      publishSensitiveDataFindings: true,
     },
     guardduty: {
       enable: true,
-      'exclude-regions': [],
-      's3-protection': {
+      excludeRegions: [],
+      s3Protection: {
         enable: true,
-        'exclude-regions': [],
+        excludeRegions: [],
       },
-      'export-configuration': {
+      exportConfiguration: {
         enable: true,
-        'destination-type': 'S3',
-        'export-frequency': 'FIFTEEN_MINUTES',
+        destinationType: 'S3',
+        exportFrequency: 'FIFTEEN_MINUTES',
       },
     },
-    'security-hub': {
+    securityHub: {
       enable: true,
-      'exclude-regions': [],
+      excludeRegions: [],
       standards: [
         {
           name: 'AWS Foundational Security Best Practices v1.0.0',
           enable: true,
-          'controls-to-disable': ['IAM.1', 'EC2.10', 'Lambda.4'],
+          controlsToDisable: ['IAM.1', 'EC2.10', 'Lambda.4'],
         },
         {
           name: 'PCI DSS v3.2.1',
           enable: true,
-          'controls-to-disable': ['IAM.1', 'EC2.10', 'Lambda.4'],
+          controlsToDisable: ['IAM.1', 'EC2.10', 'Lambda.4'],
         },
       ],
     },
   };
 
-  readonly 'aws-config': t.TypeOf<typeof SecurityConfigTypes.Config> = {
-    'enable-configuration-recorder': true,
-    'enable-delivery-channel': true,
-    'rule-sets': [],
+  readonly awsConfig: t.TypeOf<typeof SecurityConfigTypes.Config> = {
+    enableConfigurationRecorder: true,
+    enableDeliveryChannel: true,
+    ruleSets: [],
   };
 
   constructor(values?: t.TypeOf<typeof SecurityConfigType>) {
@@ -158,7 +158,7 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigType> {
    * Return delegated-admin-account name
    */
   public getDelegatedAccountName(): string {
-    return this['central-security-services']['delegated-admin-account'];
+    return this.centralSecurityServices.delegatedAdminAccount;
   }
 
   /**

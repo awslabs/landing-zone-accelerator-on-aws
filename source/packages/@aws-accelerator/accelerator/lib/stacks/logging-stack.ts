@@ -33,7 +33,7 @@ export class LoggingStack extends cdk.Stack {
     // Block Public Access; S3 is global, only need to call in home region. This is done in the
     // logging-stack instead of the security-stack since initial buckets are created in this stack.
     //
-    if (cdk.Stack.of(this).region === props.globalConfig['home-region']) {
+    if (cdk.Stack.of(this).region === props.globalConfig.homeRegion) {
       new S3PublicAccessBlock(this, 'S3PublicAccessBlock', {
         blockPublicAcls: true,
         blockPublicPolicy: true,
@@ -71,9 +71,9 @@ export class LoggingStack extends cdk.Stack {
     // Logs. Addition logs can also be sent to this bucket through AWS CloudWatch Logs, such as
     // application logs, OS logs, or server logs.
     //
-    const loggingAccountEmail = props.accountsConfig['mandatory-accounts']['log-archive'].email;
+    const loggingAccountEmail = props.accountsConfig.mandatoryAccounts.logArchive.email;
     if (
-      cdk.Stack.of(this).region === props.globalConfig['home-region'] &&
+      cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
       cdk.Stack.of(this).account === props.accountIds[loggingAccountEmail]
     ) {
       //const CentralLogsBucket =

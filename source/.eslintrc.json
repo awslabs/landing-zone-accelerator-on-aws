@@ -12,6 +12,7 @@
   },
   "plugins": ["@typescript-eslint"],
   "rules": {
+    "dot-notation": "off",
     "no-case-declarations": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/camelcase": "off",

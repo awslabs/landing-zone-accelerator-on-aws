@@ -21,7 +21,7 @@ const path = require('path');
  */
 export interface SecurityHubStandardsProps {
   readonly region: string;
-  readonly standards: { name: string; enable: boolean; 'controls-to-disable': string[] | undefined }[];
+  readonly standards: { name: string; enable: boolean; controlsToDisable: string[] | undefined }[];
 }
 
 /**
