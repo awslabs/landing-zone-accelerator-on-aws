@@ -224,7 +224,7 @@ export class SecurityStack extends cdk.Stack {
             resourceTypes.push(config.ResourceType.of(resourceType));
           }
 
-          const configRule = new config.ManagedRule(this, pascalCase(rule.identifier), {
+          const configRule = new config.ManagedRule(this, pascalCase(rule.name), {
             configRuleName: rule.name,
             identifier: rule.identifier,
             inputParameters: rule['input-parameters'],
