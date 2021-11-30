@@ -26,7 +26,7 @@ export abstract class GlobalConfigTypes {
 
   static readonly CloudtrailConfig = t.interface({
     enable: t.boolean,
-    'organization-trail': t.boolean,
+    organizationTrail: t.boolean,
   });
 
   static readonly LoggingConfig = t.interface({
@@ -39,9 +39,9 @@ export abstract class GlobalConfigTypes {
  * @see GlobalConfig
  */
 export const GlobalConfigType = t.interface({
-  'home-region': t.nonEmptyString,
-  'enabled-regions': t.array(t.region),
-  'control-tower': GlobalConfigTypes.ControlTowerConfig,
+  homeRegion: t.nonEmptyString,
+  enabledRegions: t.array(t.region),
+  controlTower: GlobalConfigTypes.ControlTowerConfig,
   logging: GlobalConfigTypes.LoggingConfig,
 });
 
@@ -51,22 +51,22 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigType> {
   /**
    *
    */
-  readonly 'home-region' = '';
+  readonly homeRegion = '';
 
   /**
    *
    */
-  readonly 'enabled-regions' = [];
+  readonly enabledRegions = [];
 
-  readonly 'control-tower' = {
+  readonly controlTower = {
     enable: true,
   };
 
   readonly logging: t.TypeOf<typeof GlobalConfigTypes.LoggingConfig> = {
-    account: 'log-archive',
+    account: 'logArchive',
     cloudtrail: {
       enable: true,
-      'organization-trail': true,
+      organizationTrail: true,
     },
   };
 

@@ -67,8 +67,8 @@ export abstract class OrganizationConfigTypes {
     description: t.nonEmptyString,
     name: t.nonEmptyString,
     policy: t.nonEmptyString,
-    type: t.enums('Type', ['aws-managed', 'customer-managed'], 'Value should be a Service Control Policy Type'),
-    'organizational-units': t.optional(t.array(t.nonEmptyString)),
+    type: t.enums('Type', ['awsManaged', 'customerManaged'], 'Value should be a Service Control Policy Type'),
+    organizationalUnits: t.optional(t.array(t.nonEmptyString)),
     accounts: t.optional(t.array(t.nonEmptyString)),
   });
 
@@ -84,9 +84,9 @@ export abstract class OrganizationConfigTypes {
  * @see OrganizationConfig
  */
 export const OrganizationConfigType = t.interface({
-  'organizational-units': OrganizationConfigTypes.OrganizationalUnits,
-  'service-control-policies': OrganizationConfigTypes.ServiceControlPolicies,
-  'organizations-access-role': t.nonEmptyString,
+  organizationalUnits: OrganizationConfigTypes.OrganizationalUnits,
+  serviceControlPolicies: OrganizationConfigTypes.ServiceControlPolicies,
+  organizationsAccessRole: t.nonEmptyString,
 });
 
 /**
@@ -116,13 +116,13 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    *
    * @see OrganizationTypes.OrganizationalUnits
    */
-  readonly 'organizational-units': t.TypeOf<typeof OrganizationConfigTypes.OrganizationalUnits> = {};
+  readonly organizationalUnits: t.TypeOf<typeof OrganizationConfigTypes.OrganizationalUnits> = {};
   /**
    * A Record of Service Control Policy configurations
    *
    * @see OrganizationTypes.ServiceControlPolicies
    */
-  readonly 'service-control-policies': t.TypeOf<typeof OrganizationConfigTypes.ServiceControlPolicies> = {};
+  readonly serviceControlPolicies: t.TypeOf<typeof OrganizationConfigTypes.ServiceControlPolicies> = {};
 
   /**
    * This role trusts the management account, allowing users in the management
@@ -134,7 +134,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * - AWSControlTowerExecution
    * - OrganizationAccountAccessRole
    */
-  readonly 'organizations-access-role': '';
+  readonly organizationsAccessRole!: '';
 
   /**
    *

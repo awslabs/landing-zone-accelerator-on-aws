@@ -24,15 +24,15 @@ export abstract class AccountsConfigTypes {
    *
    */
   static readonly Account = t.interface({
-    'account-name': t.nonEmptyString,
+    accountName: t.nonEmptyString,
     description: t.optional(t.nonEmptyString),
     email: t.nonEmptyString,
-    'organizational-unit': t.nonEmptyString,
+    organizationalUnit: t.nonEmptyString,
   });
 
   static readonly MandatoryAccounts = t.interface({
     management: AccountsConfigTypes.Account,
-    'log-archive': AccountsConfigTypes.Account,
+    logArchive: AccountsConfigTypes.Account,
     audit: AccountsConfigTypes.Account,
   });
 
@@ -43,8 +43,8 @@ export abstract class AccountsConfigTypes {
  * @see AccountsConfig
  */
 export const AccountsConfigType = t.interface({
-  'mandatory-accounts': AccountsConfigTypes.MandatoryAccounts,
-  'workload-accounts': AccountsConfigTypes.WorkloadAccounts,
+  mandatoryAccounts: AccountsConfigTypes.MandatoryAccounts,
+  workloadAccounts: AccountsConfigTypes.WorkloadAccounts,
 });
 
 /**
@@ -56,31 +56,31 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigType> {
   /**
    *
    */
-  readonly 'mandatory-accounts': t.TypeOf<typeof AccountsConfigTypes.MandatoryAccounts> = {
+  readonly mandatoryAccounts: t.TypeOf<typeof AccountsConfigTypes.MandatoryAccounts> = {
     management: {
-      'account-name': '',
+      accountName: '',
       description: '',
       email: '',
-      'organizational-unit': '',
+      organizationalUnit: '',
     },
-    'log-archive': {
-      'account-name': '',
+    logArchive: {
+      accountName: '',
       description: '',
       email: '',
-      'organizational-unit': '',
+      organizationalUnit: '',
     },
     audit: {
-      'account-name': '',
+      accountName: '',
       description: '',
       email: '',
-      'organizational-unit': '',
+      organizationalUnit: '',
     },
   };
 
   /**
    *
    */
-  readonly 'workload-accounts': t.TypeOf<typeof AccountsConfigTypes.WorkloadAccounts> = {};
+  readonly workloadAccounts: t.TypeOf<typeof AccountsConfigTypes.WorkloadAccounts> = {};
 
   /**
    *
@@ -99,11 +99,11 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigType> {
    * @returns
    */
   public getEmail(account: string): string {
-    let value = Object.entries(this['mandatory-accounts']).find(entry => entry[0] == account);
+    let value = Object.entries(this.mandatoryAccounts).find(entry => entry[0] == account);
     if (value) {
       return value[1].email;
     }
-    value = Object.entries(this['workload-accounts']).find(entry => entry[0] == account);
+    value = Object.entries(this.workloadAccounts).find(entry => entry[0] == account);
     if (value) {
       return value[1].email;
     }
@@ -117,11 +117,11 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigType> {
    * @returns
    */
   public accountExists(account: string): boolean {
-    let value = Object.entries(this['mandatory-accounts']).find(entry => entry[0] == account);
+    let value = Object.entries(this.mandatoryAccounts).find(entry => entry[0] == account);
     if (value) {
       return true;
     }
-    value = Object.entries(this['workload-accounts']).find(entry => entry[0] == account);
+    value = Object.entries(this.workloadAccounts).find(entry => entry[0] == account);
     if (value) {
       return true;
     }
@@ -135,10 +135,10 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigType> {
    * @returns true if found, false otherwise
    */
   public containsEmail(email: string | unknown): boolean {
-    if (Object.entries(this['mandatory-accounts']).find(account => account[1].email === email)) {
+    if (Object.entries(this.mandatoryAccounts).find(account => account[1].email === email)) {
       return true;
     }
-    if (Object.entries(this['workload-accounts']).find(account => account[1].email === email)) {
+    if (Object.entries(this.workloadAccounts).find(account => account[1].email === email)) {
       return true;
     }
     return false;

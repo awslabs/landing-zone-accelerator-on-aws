@@ -39,7 +39,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const region = event.ResourceProperties['region'];
-  const inputStandards: { name: string; enable: boolean; 'controls-to-disable': string[] | undefined }[] =
+  const inputStandards: { name: string; enable: boolean; controlsToDisable: string[] | undefined }[] =
     event.ResourceProperties['standards'];
 
   const securityHubClient = new SecurityHubClient({ region: region });
@@ -201,7 +201,7 @@ async function getExistingEnabledStandards(securityHubClient: SecurityHubClient)
  */
 async function getControlArnsToModify(
   securityHubClient: SecurityHubClient,
-  inputStandards: { name: string; enable: boolean; 'controls-to-disable': string[] | undefined }[],
+  inputStandards: { name: string; enable: boolean; controlsToDisable: string[] | undefined }[],
   awsSecurityHubStandards: { [name: string]: string }[],
 ): Promise<{ disableStandardControlArns: string[]; enableStandardControlArns: string[] }> {
   const existingEnabledStandards = await getExistingEnabledStandards(securityHubClient);
@@ -249,7 +249,7 @@ async function getControlArnsToModify(
             console.log(standardsControl);
 
             for (const control of standardsControl) {
-              if (inputStandard['controls-to-disable']?.includes(control.ControlId!)) {
+              if (inputStandard.controlsToDisable?.includes(control.ControlId!)) {
                 console.log(control.ControlId!);
                 console.log(inputStandard.name);
                 disableStandardControls.push(control.StandardsControlArn!);
@@ -282,7 +282,7 @@ async function getControlArnsToModify(
  */
 async function getStandardsModificationList(
   securityHubClient: SecurityHubClient,
-  inputStandards: { name: string; enable: boolean; 'controls-to-disable': string[] | undefined }[],
+  inputStandards: { name: string; enable: boolean; controlsToDisable: string[] | undefined }[],
   awsSecurityHubStandards: { [name: string]: string }[],
 ): Promise<{ toEnableStandardRequests: StandardsSubscriptionRequests; toDisableStandardArns: string[] | undefined }> {
   const existingEnabledStandards = await getExistingEnabledStandards(securityHubClient);
