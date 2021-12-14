@@ -11,14 +11,15 @@
  *  and limitations under the License.
  */
 
+import { Construct } from 'constructs';
 import { AcceleratorStage } from '@aws-accelerator/accelerator';
-import * as codebuild from '@aws-cdk/aws-codebuild';
-import * as codecommit from '@aws-cdk/aws-codecommit';
-import * as codepipeline from '@aws-cdk/aws-codepipeline';
-import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
-import * as iam from '@aws-cdk/aws-iam';
-import * as s3 from '@aws-cdk/aws-s3';
-import * as cdk from '@aws-cdk/core';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
+import * as codecommit from 'aws-cdk-lib/aws-codecommit';
+import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
+import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as cdk from 'aws-cdk-lib';
 import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
 import * as config_repository from './config-repository';
 
@@ -35,7 +36,7 @@ export interface AcceleratorPipelineProps {
 /**
  * AWS Accelerator Pipeline Class, which creates the pipeline for AWS Landing zone
  */
-export class AcceleratorPipeline extends cdk.Construct {
+export class AcceleratorPipeline extends Construct {
   private readonly pipelineRole: iam.Role;
   private readonly toolkitRole: iam.Role;
   private readonly toolkitProject: codebuild.PipelineProject;
@@ -43,7 +44,7 @@ export class AcceleratorPipeline extends cdk.Construct {
   private readonly acceleratorRepoArtifact: codepipeline.Artifact;
   private readonly configRepoArtifact: codepipeline.Artifact;
 
-  constructor(scope: cdk.Construct, id: string, props: AcceleratorPipelineProps) {
+  constructor(scope: Construct, id: string, props: AcceleratorPipelineProps) {
     super(scope, id);
 
     const bucket = new compliant_constructs.SecureS3Bucket(this, 'SecureBucket', {

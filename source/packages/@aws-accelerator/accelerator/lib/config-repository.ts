@@ -11,10 +11,10 @@
  *  and limitations under the License.
  */
 
+import { Construct } from 'constructs';
 import * as config from '@aws-accelerator/config';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
-import * as s3_assets from '@aws-cdk/aws-s3-assets';
-import * as cdk from '@aws-cdk/core';
+import * as s3_assets from 'aws-cdk-lib/aws-s3-assets';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -29,10 +29,10 @@ export interface ConfigRepositoryProps {
 /**
  * Class to create AWS accelerator configuration repository and initialize the repository with default configuration
  */
-export class ConfigRepository extends cdk.Construct {
+export class ConfigRepository extends Construct {
   readonly configRepo: cdk_extensions.Repository;
 
-  constructor(scope: cdk.Construct, id: string, props: ConfigRepositoryProps) {
+  constructor(scope: Construct, id: string, props: ConfigRepositoryProps) {
     super(scope, id);
 
     //

@@ -11,8 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -27,10 +28,10 @@ export interface SecurityHubOrganizationalAdminAccountProps {
 /**
  * Class - SecurityHubOrganizationAdminAccount
  */
-export class SecurityHubOrganizationAdminAccount extends cdk.Construct {
+export class SecurityHubOrganizationAdminAccount extends Construct {
   public readonly id: string;
 
-  constructor(scope: cdk.Construct, id: string, props: SecurityHubOrganizationalAdminAccountProps) {
+  constructor(scope: Construct, id: string, props: SecurityHubOrganizationalAdminAccountProps) {
     super(scope, id);
 
     const SECURITYHUB_RESOURCE_TYPE = 'Custom::SecurityHubEnableOrganizationAdminAccount';

@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import { AccountsConfig, SecurityConfig } from '@aws-accelerator/config';
 import {
   GuardDutyDetectorConfig,
@@ -21,6 +21,7 @@ import {
   MacieSession,
   SecurityHubMembers,
 } from '@aws-accelerator/constructs';
+import { Construct } from 'constructs';
 
 export interface SecurityAuditStackProps extends cdk.StackProps {
   stage: string;
@@ -29,7 +30,7 @@ export interface SecurityAuditStackProps extends cdk.StackProps {
 }
 
 export class SecurityAuditStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props: SecurityAuditStackProps) {
+  constructor(scope: Construct, id: string, props: SecurityAuditStackProps) {
     super(scope, id, props);
 
     //Macie configuration

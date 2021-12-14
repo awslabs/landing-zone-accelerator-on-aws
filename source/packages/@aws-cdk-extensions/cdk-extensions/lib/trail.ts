@@ -1,12 +1,12 @@
-import * as cloudtrail from '@aws-cdk/aws-cloudtrail';
-import * as cdk from '@aws-cdk/core';
+import * as cloudtrail from 'aws-cdk-lib/aws-cloudtrail';
+import { Construct } from 'constructs';
 
 export interface TrailProps extends cloudtrail.TrailProps {
   readonly isOrganizationTrail: boolean;
 }
 
 export class Trail extends cloudtrail.Trail {
-  constructor(scope: cdk.Construct, id: string, props: TrailProps) {
+  constructor(scope: Construct, id: string, props: TrailProps) {
     super(scope, id, props);
 
     const cfnRepository = this.node.defaultChild as cloudtrail.CfnTrail;

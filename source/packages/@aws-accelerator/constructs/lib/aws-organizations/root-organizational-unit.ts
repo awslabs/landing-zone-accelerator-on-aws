@@ -1,5 +1,6 @@
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import { OrganizationalUnitLookupOptions } from './organizational-unit-lookup';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -13,10 +14,10 @@ export interface RootOrganizationalUnitProps {
 /**
  * Class to initialize OrganizationalUnit
  */
-export class RootOrganizationalUnit extends cdk.Construct {
+export class RootOrganizationalUnit extends Construct {
   public readonly id: string;
 
-  private constructor(scope: cdk.Construct, id: string, props: RootOrganizationalUnitProps) {
+  private constructor(scope: Construct, id: string, props: RootOrganizationalUnitProps) {
     super(scope, id);
 
     const listRootsFunction = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsListRoots', {
@@ -43,7 +44,7 @@ export class RootOrganizationalUnit extends cdk.Construct {
   }
 
   public static fromName(
-    scope: cdk.Construct,
+    scope: Construct,
     id: string,
     options: OrganizationalUnitLookupOptions,
   ): RootOrganizationalUnit {

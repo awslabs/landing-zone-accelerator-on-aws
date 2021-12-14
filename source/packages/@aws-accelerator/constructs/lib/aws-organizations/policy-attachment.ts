@@ -11,9 +11,10 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
 import { PolicyType } from './policy';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -30,14 +31,14 @@ export interface PolicyAttachmentProps {
 /**
  * Class to attach a Policy to an Organization Unit or Account
  */
-export class PolicyAttachment extends cdk.Construct {
+export class PolicyAttachment extends Construct {
   public readonly id: string;
   public readonly policyId: string;
   public readonly targetId: string | undefined;
   public readonly email: string | undefined;
   public readonly type: PolicyType;
 
-  constructor(scope: cdk.Construct, id: string, props: PolicyAttachmentProps) {
+  constructor(scope: Construct, id: string, props: PolicyAttachmentProps) {
     super(scope, id);
 
     this.policyId = props.policyId;

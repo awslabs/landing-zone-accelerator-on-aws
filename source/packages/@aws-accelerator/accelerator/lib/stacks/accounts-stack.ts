@@ -19,7 +19,8 @@ import {
   PolicyType,
   RootOrganizationalUnit,
 } from '@aws-accelerator/constructs';
-import * as cdk from '@aws-cdk/core';
+import { Construct } from 'constructs';
+import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 import * as path from 'path';
 
@@ -33,7 +34,7 @@ export interface AccountsStackProps extends cdk.StackProps {
 }
 
 export class AccountsStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props: AccountsStackProps) {
+  constructor(scope: Construct, id: string, props: AccountsStackProps) {
     super(scope, id, props);
 
     //

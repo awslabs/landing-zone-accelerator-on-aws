@@ -11,9 +11,10 @@
  *  and limitations under the License.
  */
 
-import * as assets from '@aws-cdk/aws-s3-assets';
-import * as cdk from '@aws-cdk/core';
+import * as assets from 'aws-cdk-lib/aws-s3-assets';
+import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -69,7 +70,7 @@ export interface PolicyProps {
 /**
  * Class to initialize Policy
  */
-export class Policy extends cdk.Construct {
+export class Policy extends Construct {
   public readonly id: string;
   public readonly path: string;
   public readonly name: string;
@@ -77,7 +78,7 @@ export class Policy extends cdk.Construct {
   public readonly type: PolicyType;
   public readonly tags?: Tag[];
 
-  constructor(scope: cdk.Construct, id: string, props: PolicyProps) {
+  constructor(scope: Construct, id: string, props: PolicyProps) {
     super(scope, id);
 
     this.path = props.path;

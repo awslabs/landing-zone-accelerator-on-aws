@@ -11,15 +11,16 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
-import * as ssm from '@aws-cdk/aws-ssm';
+import * as cdk from 'aws-cdk-lib';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import { Construct } from 'constructs';
 
 export interface ValidateStackProps extends cdk.StackProps {
   stage: string;
 }
 
 export class ValidateStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props: ValidateStackProps) {
+  constructor(scope: Construct, id: string, props: ValidateStackProps) {
     super(scope, id, props);
 
     new ssm.StringParameter(this, 'Parameter', {

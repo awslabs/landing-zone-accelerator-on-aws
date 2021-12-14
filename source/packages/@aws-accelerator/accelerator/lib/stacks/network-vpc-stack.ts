@@ -11,17 +11,18 @@
  *  and limitations under the License.
  */
 
+import { Construct } from 'constructs';
 import * as accelerator_constructs from '@aws-accelerator/constructs';
-import * as ec2 from '@aws-cdk/aws-ec2';
-import * as iam from '@aws-cdk/aws-iam';
-import * as ssm from '@aws-cdk/aws-ssm';
-import * as cdk from '@aws-cdk/core';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as cdk from 'aws-cdk-lib';
 import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
 import { pascalCase } from 'change-case';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class NetworkVpcStack extends AcceleratorStack {
-  constructor(scope: cdk.Construct, id: string, props: AcceleratorStackProps) {
+  constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     new ssm.StringParameter(this, 'SsmParamStackId', {

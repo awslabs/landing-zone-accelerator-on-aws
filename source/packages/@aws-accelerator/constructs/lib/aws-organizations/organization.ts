@@ -11,19 +11,20 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
 /**
  * Class to initialize Organization
  */
-export class Organization extends cdk.Construct {
+export class Organization extends Construct {
   private static instance: Organization;
 
   public readonly id: string;
 
-  private constructor(scope: cdk.Construct, id: string) {
+  private constructor(scope: Construct, id: string) {
     super(scope, id);
 
     const describeOrganizationFunction = cdk.CustomResourceProvider.getOrCreateProvider(
@@ -50,7 +51,7 @@ export class Organization extends cdk.Construct {
     this.id = resource.ref;
   }
 
-  public static getInstance(scope: cdk.Construct, id: string): Organization {
+  public static getInstance(scope: Construct, id: string): Organization {
     if (!Organization.instance) {
       Organization.instance = new Organization(scope, id);
     }

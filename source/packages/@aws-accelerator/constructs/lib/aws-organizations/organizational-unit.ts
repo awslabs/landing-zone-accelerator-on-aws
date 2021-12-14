@@ -11,8 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -27,12 +28,12 @@ export interface OrganizationalUnitProps {
 /**
  * Class to initialize OrganizationalUnit
  */
-export class OrganizationalUnit extends cdk.Construct {
+export class OrganizationalUnit extends Construct {
   public readonly id: string;
   public readonly name: string;
   public readonly parentId: string;
 
-  constructor(scope: cdk.Construct, id: string, props: OrganizationalUnitProps) {
+  constructor(scope: Construct, id: string, props: OrganizationalUnitProps) {
     super(scope, id);
 
     this.name = props.name;

@@ -11,8 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -27,10 +28,10 @@ export interface MacieOrganizationalAdminAccountProps {
 /**
  * Aws MacieSession organizational Admin Account
  */
-export class MacieOrganizationAdminAccount extends cdk.Construct {
+export class MacieOrganizationAdminAccount extends Construct {
   public readonly id: string;
 
-  constructor(scope: cdk.Construct, id: string, props: MacieOrganizationalAdminAccountProps) {
+  constructor(scope: Construct, id: string, props: MacieOrganizationalAdminAccountProps) {
     super(scope, id);
 
     const MACIE_RESOURCE_TYPE = 'Custom::MacieEnableOrganizationAdminAccount';

@@ -11,11 +11,12 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
-import * as iam from '@aws-cdk/aws-iam';
-import * as s3 from '@aws-cdk/aws-s3';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -30,10 +31,10 @@ export interface MacieExportConfigClassificationProps {
 /**
  * Aws MacieSession export configuration classification
  */
-export class MacieExportConfigClassification extends cdk.Construct {
+export class MacieExportConfigClassification extends Construct {
   public readonly id: string = '';
 
-  constructor(scope: cdk.Construct, id: string, props: MacieExportConfigClassificationProps) {
+  constructor(scope: Construct, id: string, props: MacieExportConfigClassificationProps) {
     super(scope, id);
 
     const MACIE_RESOURCE_TYPE = 'Custom::MaciePutClassificationExportConfiguration';

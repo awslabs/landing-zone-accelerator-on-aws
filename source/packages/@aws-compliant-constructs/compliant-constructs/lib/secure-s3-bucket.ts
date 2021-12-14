@@ -11,10 +11,11 @@
  *  and limitations under the License.
  */
 
-import * as iam from '@aws-cdk/aws-iam';
-import * as kms from '@aws-cdk/aws-kms';
-import * as s3 from '@aws-cdk/aws-s3';
-import * as cdk from '@aws-cdk/core';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as kms from 'aws-cdk-lib/aws-kms';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
 
 export enum BucketAccessType {
   READONLY = 'readonly',
@@ -71,11 +72,11 @@ export interface SecureS3BucketProps {
  * Defines a Secure S3 Bucket object. By default a KMS CMK is generated and
  * associated to the bucket.
  */
-export class SecureS3Bucket extends cdk.Construct {
+export class SecureS3Bucket extends Construct {
   private readonly bucket: s3.Bucket;
   private readonly cmk: kms.Key;
 
-  constructor(scope: cdk.Construct, id: string, props: SecureS3BucketProps) {
+  constructor(scope: Construct, id: string, props: SecureS3BucketProps) {
     super(scope, id);
 
     this.cmk = new kms.Key(this, 'Cmk', {
@@ -150,7 +151,7 @@ export class SecureS3Bucket extends cdk.Construct {
     return this.cmk;
   }
 
-  protected override validate(): string[] {
+  protected addValidation(): string[] {
     const errors: string[] = [];
 
     return errors;

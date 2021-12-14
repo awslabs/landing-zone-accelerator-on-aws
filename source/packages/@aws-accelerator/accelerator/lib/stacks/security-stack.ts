@@ -18,9 +18,10 @@ import {
   MacieSession,
   SecurityHubStandards,
 } from '@aws-accelerator/constructs';
-import * as config from '@aws-cdk/aws-config';
-import * as iam from '@aws-cdk/aws-iam';
-import * as cdk from '@aws-cdk/core';
+import { Construct } from 'constructs';
+import * as config from 'aws-cdk-lib/aws-config';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 
 /**
@@ -37,7 +38,7 @@ export interface SecurityStackProps extends cdk.StackProps {
  * Organizational Security Stack, depends on Organizations and Security-Audit Stack
  */
 export class SecurityStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props: SecurityStackProps) {
+  constructor(scope: Construct, id: string, props: SecurityStackProps) {
     super(scope, id, props);
 
     // MacieSession configuration

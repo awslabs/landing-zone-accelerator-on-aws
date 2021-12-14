@@ -11,8 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -30,9 +31,9 @@ export interface S3PublicAccessBlockProps {
 /**
  * Class to initialize Policy
  */
-export class S3PublicAccessBlock extends cdk.Construct {
+export class S3PublicAccessBlock extends Construct {
   readonly id: string;
-  constructor(scope: cdk.Construct, id: string, props: S3PublicAccessBlockProps) {
+  constructor(scope: Construct, id: string, props: S3PublicAccessBlockProps) {
     super(scope, id);
 
     //

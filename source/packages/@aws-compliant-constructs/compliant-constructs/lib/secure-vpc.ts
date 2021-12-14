@@ -11,8 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as ec2 from '@aws-cdk/aws-ec2';
-import * as core from '@aws-cdk/core';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as core from 'aws-cdk-lib';
+import { Construct } from 'constructs';
 
 export interface ISecureRouteTable extends core.IResource {
   /**
@@ -40,7 +41,7 @@ export class SecureRouteTable extends core.Resource implements ISecureRouteTable
 
   public readonly vpc: ISecureVpc;
 
-  constructor(scope: core.Construct, id: string, props: SecureRouteTableProps) {
+  constructor(scope: Construct, id: string, props: SecureRouteTableProps) {
     super(scope, id);
 
     this.vpc = props.vpc;
@@ -155,7 +156,7 @@ export class SecureSubnet extends core.Resource implements ISecureSubnet {
   public readonly routeTable: ISecureRouteTable;
   public readonly subnetId: string;
 
-  constructor(scope: core.Construct, id: string, props: SecureSubnetProps) {
+  constructor(scope: Construct, id: string, props: SecureSubnetProps) {
     super(scope, id);
 
     this.subnetName = props.name;
@@ -206,7 +207,7 @@ export class SecureNatGateway extends core.Resource implements ISecureNatGateway
   public readonly natGatewayId: string;
   public readonly natGatewayName: string;
 
-  constructor(scope: core.Construct, id: string, props: SecureNatGatewayProps) {
+  constructor(scope: Construct, id: string, props: SecureNatGatewayProps) {
     super(scope, id);
 
     this.natGatewayName = props.name;
@@ -259,7 +260,7 @@ export class SecureVpc extends core.Resource implements ISecureVpc {
   public readonly secureVpcId: string;
   public readonly internetGatewayId: string | undefined;
 
-  constructor(scope: core.Construct, id: string, props: SecureVpcProps) {
+  constructor(scope: Construct, id: string, props: SecureVpcProps) {
     super(scope, id);
 
     const resource = new ec2.CfnVPC(this, 'Resource', {
