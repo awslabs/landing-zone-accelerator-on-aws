@@ -22,7 +22,7 @@ import {
   SecurityConfig,
 } from '@aws-accelerator/config';
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import {
   DescribeOrganizationCommand,
   OrganizationsClient,

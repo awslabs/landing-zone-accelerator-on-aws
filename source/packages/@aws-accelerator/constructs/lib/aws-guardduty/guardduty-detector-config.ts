@@ -11,8 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -37,10 +38,10 @@ export interface GuardDutyDetectorConfigProps {
  /**
  * Class to GuardDuty Detector Members
  */
-export class GuardDutyDetectorConfig extends cdk.Construct {
+export class GuardDutyDetectorConfig extends Construct {
   public readonly id: string;
 
-  constructor(scope: cdk.Construct, id: string, props: GuardDutyDetectorConfigProps) {
+  constructor(scope: Construct, id: string, props: GuardDutyDetectorConfigProps) {
     super(scope, id);
 
     const UPDATE_DETECTOR_RESOURCE_TYPE = 'Custom::GuardDutyUpdateDetector';

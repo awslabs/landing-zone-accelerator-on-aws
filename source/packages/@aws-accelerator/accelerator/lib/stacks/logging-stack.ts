@@ -13,8 +13,9 @@
 
 import { AccountsConfig, GlobalConfig } from '@aws-accelerator/config';
 import { CentralLogsBucket, Organization, S3PublicAccessBlock } from '@aws-accelerator/constructs';
-import * as s3 from '@aws-cdk/aws-s3';
-import * as cdk from '@aws-cdk/core';
+import { Construct } from 'constructs';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as cdk from 'aws-cdk-lib';
 import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
 
 export interface LoggingStackProps extends cdk.StackProps {
@@ -24,7 +25,7 @@ export interface LoggingStackProps extends cdk.StackProps {
 }
 
 export class LoggingStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props: LoggingStackProps) {
+  constructor(scope: Construct, id: string, props: LoggingStackProps) {
     super(scope, id, props);
 
     const organization = Organization.getInstance(this, 'Organization');

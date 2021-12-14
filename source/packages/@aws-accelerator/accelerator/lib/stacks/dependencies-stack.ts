@@ -11,15 +11,16 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
-import * as ssm from '@aws-cdk/aws-ssm';
+import { Construct } from 'constructs';
+import { StackProps, Stack } from 'aws-cdk-lib';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 
-export interface DependenciesStackProps extends cdk.StackProps {
+export interface DependenciesStackProps extends StackProps {
   stage: string;
 }
 
-export class DependenciesStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props: DependenciesStackProps) {
+export class DependenciesStack extends Stack {
+  constructor(scope: Construct, id: string, props: DependenciesStackProps) {
     super(scope, id, props);
 
     new ssm.StringParameter(this, 'Parameter', {

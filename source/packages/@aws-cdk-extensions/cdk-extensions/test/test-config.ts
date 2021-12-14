@@ -1,4 +1,4 @@
-import { Stack } from '@aws-cdk/core';
+import { Stack } from 'aws-cdk-lib';
 import * as CdkExtensions from '../index';
 
 /**

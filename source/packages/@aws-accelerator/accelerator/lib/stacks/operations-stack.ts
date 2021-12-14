@@ -11,10 +11,11 @@
  *  and limitations under the License.
  */
 
-import * as iam from '@aws-cdk/aws-iam';
-import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
-import * as ssm from '@aws-cdk/aws-ssm';
-import * as cdk from '@aws-cdk/core';
+import { Construct } from 'constructs';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 import * as path from 'path';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
@@ -24,7 +25,7 @@ export interface OperationsStackProps extends AcceleratorStackProps {
 }
 
 export class OperationsStack extends AcceleratorStack {
-  constructor(scope: cdk.Construct, id: string, props: OperationsStackProps) {
+  constructor(scope: Construct, id: string, props: OperationsStackProps) {
     super(scope, id, props);
 
     //

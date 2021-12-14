@@ -11,9 +11,10 @@
  *  and limitations under the License.
  */
 
-import * as ec2 from '@aws-cdk/aws-ec2';
-import * as core from '@aws-cdk/core';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as core from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -31,7 +32,7 @@ export class TransitGatewayRouteTableAssociation extends core.Resource implement
   readonly transitGatewayAttachmentId: string;
   readonly transitGatewayRouteTableId: string;
 
-  constructor(scope: core.Construct, id: string, props: TransitGatewayRouteTableAssociationProps) {
+  constructor(scope: Construct, id: string, props: TransitGatewayRouteTableAssociationProps) {
     super(scope, id);
 
     this.transitGatewayAttachmentId = props.transitGatewayAttachmentId;
@@ -58,7 +59,7 @@ export class TransitGatewayRouteTablePropagation extends core.Resource implement
   readonly transitGatewayAttachmentId: string;
   readonly transitGatewayRouteTableId: string;
 
-  constructor(scope: core.Construct, id: string, props: TransitGatewayRouteTablePropagationProps) {
+  constructor(scope: Construct, id: string, props: TransitGatewayRouteTablePropagationProps) {
     super(scope, id);
 
     this.transitGatewayAttachmentId = props.transitGatewayAttachmentId;
@@ -92,14 +93,14 @@ export interface TransitGatewayAttachmentLookupOptions {
 
 export class TransitGatewayAttachment extends core.Resource implements ITransitGatewayAttachment {
   public static fromLookup(
-    scope: core.Construct,
+    scope: Construct,
     id: string,
     options: TransitGatewayAttachmentLookupOptions,
   ): ITransitGatewayAttachment {
     class Import extends core.Resource implements ITransitGatewayAttachment {
       public readonly transitGatewayAttachmentId: string;
       public readonly transitGatewayAttachmentName = options.name;
-      constructor(scope: core.Construct, id: string) {
+      constructor(scope: Construct, id: string) {
         super(scope, id);
 
         const GET_TRANSIT_GATEWAY_ATTACHMENT = 'Custom::GetTransitGatewayAttachment';
@@ -143,7 +144,7 @@ export class TransitGatewayAttachment extends core.Resource implements ITransitG
   public readonly transitGatewayAttachmentId: string;
   public readonly transitGatewayAttachmentName: string;
 
-  constructor(scope: core.Construct, id: string, props: TransitGatewayAttachmentProps) {
+  constructor(scope: Construct, id: string, props: TransitGatewayAttachmentProps) {
     super(scope, id);
 
     const resource = new ec2.CfnTransitGatewayAttachment(this, 'Resource', {
@@ -241,7 +242,7 @@ export class TransitGateway extends core.Resource implements ITransitGateway {
 
   readonly transitGatewayArn: string;
 
-  constructor(scope: core.Construct, id: string, props: TransitGatewayProps) {
+  constructor(scope: Construct, id: string, props: TransitGatewayProps) {
     super(scope, id);
 
     const resource = new ec2.CfnTransitGateway(this, 'Resource', {

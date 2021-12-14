@@ -1,4 +1,4 @@
-import { Stack } from '@aws-cdk/core';
+import { Stack } from 'aws-cdk-lib';
 import * as compliant_constructs from '../lib/secure-s3-bucket';
 
 /**

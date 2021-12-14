@@ -11,8 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -28,10 +29,10 @@ export interface MacieSessionProps {
 /**
  * Aws MacieSession class
  */
-export class MacieSession extends cdk.Construct {
+export class MacieSession extends Construct {
   public readonly id: string = '';
 
-  constructor(scope: cdk.Construct, id: string, props: MacieSessionProps) {
+  constructor(scope: Construct, id: string, props: MacieSessionProps) {
     super(scope, id);
 
     const MACIE_RESOURCE_TYPE = 'Custom::MacieEnableMacie';

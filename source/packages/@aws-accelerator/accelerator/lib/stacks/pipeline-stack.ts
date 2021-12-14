@@ -11,8 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import * as pipeline from '../pipeline';
+import { Construct } from 'constructs';
 
 export interface PipelineStackProps extends cdk.StackProps {
   readonly stage: string;
@@ -23,7 +24,7 @@ export interface PipelineStackProps extends cdk.StackProps {
 }
 
 export class PipelineStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props: PipelineStackProps) {
+  constructor(scope: Construct, id: string, props: PipelineStackProps) {
     super(scope, id, props);
 
     // TODO: Add event to launch the Pipeline for new account events

@@ -11,8 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -27,10 +28,10 @@ export interface SecurityHubMembersProps {
  /**
  * Class - SecurityHubMembers
  */
-export class SecurityHubMembers extends cdk.Construct {
+export class SecurityHubMembers extends Construct {
   public readonly id: string;
 
-  constructor(scope: cdk.Construct, id: string, props: SecurityHubMembersProps) {
+  constructor(scope: Construct, id: string, props: SecurityHubMembersProps) {
     super(scope, id);
 
     const CREATE_MEMBERS_RESOURCE_TYPE = 'Custom::SecurityHubCreateMembers';

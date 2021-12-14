@@ -11,9 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as ec2 from '@aws-cdk/aws-ec2';
-import * as cdk from '@aws-cdk/core';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import { pascalCase } from 'change-case';
+import { Construct } from 'constructs';
 
 export interface TransitGatewayRouteTableProps {
   /**
@@ -30,10 +30,10 @@ export interface TransitGatewayRouteTableProps {
 /**
  * Creates a Transit Gateway Route Table
  */
-export class TransitGatewayRouteTable extends cdk.Construct {
+export class TransitGatewayRouteTable extends Construct {
   public readonly id: string;
 
-  constructor(scope: cdk.Construct, id: string, props: TransitGatewayRouteTableProps) {
+  constructor(scope: Construct, id: string, props: TransitGatewayRouteTableProps) {
     super(scope, id);
 
     const routeTable = new ec2.CfnTransitGatewayRouteTable(this, pascalCase(`${props.name}TransitGatewayRouteTable`), {

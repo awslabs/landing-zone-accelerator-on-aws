@@ -11,9 +11,9 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
-import * as iam from '@aws-cdk/aws-iam';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
+import { Construct } from 'constructs';
 
 export interface CentralLogsBucketProps {
   s3BucketName: string;
@@ -26,8 +26,8 @@ export interface CentralLogsBucketProps {
 /**
  * Class to initialize Policy
  */
-export class CentralLogsBucket extends cdk.Construct {
-  constructor(scope: cdk.Construct, id: string, props: CentralLogsBucketProps) {
+export class CentralLogsBucket extends Construct {
+  constructor(scope: Construct, id: string, props: CentralLogsBucketProps) {
     super(scope, id);
 
     // Create Central Logs Bucket

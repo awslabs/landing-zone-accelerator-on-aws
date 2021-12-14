@@ -11,14 +11,15 @@
  *  and limitations under the License.
  */
 
+import { Construct } from 'constructs';
 import * as accelerator_constructs from '@aws-accelerator/constructs';
-import * as ssm from '@aws-cdk/aws-ssm';
-import * as cdk from '@aws-cdk/core';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class NetworkTgwAttachStack extends AcceleratorStack {
-  constructor(scope: cdk.Construct, id: string, props: AcceleratorStackProps) {
+  constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     new ssm.StringParameter(this, 'SsmParamStackId', {

@@ -19,13 +19,14 @@ import {
   MacieOrganizationAdminAccount,
   SecurityHubOrganizationAdminAccount,
 } from '@aws-accelerator/constructs';
+import { Construct } from 'constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
-import * as cloudtrail from '@aws-cdk/aws-cloudtrail';
-import * as iam from '@aws-cdk/aws-iam';
-import * as kms from '@aws-cdk/aws-kms';
-import * as logs from '@aws-cdk/aws-logs';
-import * as s3 from '@aws-cdk/aws-s3';
-import * as cdk from '@aws-cdk/core';
+import * as cloudtrail from 'aws-cdk-lib/aws-cloudtrail';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as kms from 'aws-cdk-lib/aws-kms';
+import * as logs from 'aws-cdk-lib/aws-logs';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as cdk from 'aws-cdk-lib';
 
 export interface OrganizationsStackProps extends cdk.StackProps {
   accountIds: { [name: string]: string };
@@ -41,7 +42,7 @@ export interface OrganizationsStackProps extends cdk.StackProps {
  * Organizations Management (Root) account
  */
 export class OrganizationsStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props: OrganizationsStackProps) {
+  constructor(scope: Construct, id: string, props: OrganizationsStackProps) {
     super(scope, id, props);
 
     //

@@ -11,10 +11,11 @@
  *  and limitations under the License.
  */
 
-import * as ram from '@aws-cdk/aws-ram';
-import * as core from '@aws-cdk/core';
+import * as ram from 'aws-cdk-lib/aws-ram';
+import * as core from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 import { v4 as uuidv4 } from 'uuid';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -84,14 +85,10 @@ export abstract class ResourceShareItem extends core.Resource implements IResour
   readonly resourceShareItemId: string = '';
   readonly resourceShareItemType: string = '';
 
-  public static fromLookup(
-    scope: core.Construct,
-    id: string,
-    options: ResourceShareItemLookupOptions,
-  ): IResourceShareItem {
+  public static fromLookup(scope: Construct, id: string, options: ResourceShareItemLookupOptions): IResourceShareItem {
     class Import extends core.Resource implements IResourceShareItem {
       public readonly resourceShareItemId: string;
-      constructor(scope: core.Construct, id: string) {
+      constructor(scope: Construct, id: string) {
         super(scope, id);
 
         console.log(options.resourceShare.resourceShareId);
@@ -131,14 +128,14 @@ export abstract class ResourceShareItem extends core.Resource implements IResour
  * Creates a Resource Share
  */
 export class ResourceShare extends core.Resource implements IResourceShare {
-  public static fromLookup(scope: core.Construct, id: string, options: ResourceShareLookupOptions): IResourceShare {
+  public static fromLookup(scope: Construct, id: string, options: ResourceShareLookupOptions): IResourceShare {
     class Import extends core.Resource implements IResourceShare {
       public readonly resourceShareId: string;
       public readonly resourceShareName = options.resourceShareName;
       public readonly resourceShareOwner = options.resourceShareOwner;
       public readonly resourceShareArn;
 
-      constructor(scope: core.Construct, id: string) {
+      constructor(scope: Construct, id: string) {
         super(scope, id);
         const GET_RESOURCE_SHARE = 'Custom::GetResourceShare';
 
@@ -187,7 +184,7 @@ export class ResourceShare extends core.Resource implements IResourceShare {
   public readonly resourceShareArn: string;
   public readonly resourceShareOwner: ResourceShareOwner;
 
-  constructor(scope: core.Construct, id: string, props: ResourceShareProps) {
+  constructor(scope: Construct, id: string, props: ResourceShareProps) {
     super(scope, id);
 
     const resource = new ram.CfnResourceShare(this, pascalCase(`${props.name}ResourceShare`), {

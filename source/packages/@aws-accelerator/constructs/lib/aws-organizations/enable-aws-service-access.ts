@@ -1,4 +1,5 @@
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
@@ -12,10 +13,10 @@ export interface EnableAwsServiceAccessProps {
 /**
  * Class to Enable AWS Service Access
  */
-export class EnableAwsServiceAccess extends cdk.Construct {
+export class EnableAwsServiceAccess extends Construct {
   public readonly id: string;
 
-  constructor(scope: cdk.Construct, id: string, props: EnableAwsServiceAccessProps) {
+  constructor(scope: Construct, id: string, props: EnableAwsServiceAccessProps) {
     super(scope, id);
 
     const customResource = cdk.CustomResourceProvider.getOrCreateProvider(

@@ -1,5 +1,5 @@
 import { expect as expectCDK, haveResource, SynthUtils } from '@aws-cdk/assert';
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import * as CdkExtensions from '../index';
 import { test, describe, expect } from '@jest/globals';
 

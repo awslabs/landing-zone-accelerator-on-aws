@@ -11,17 +11,18 @@
  *  and limitations under the License.
  */
 
-import * as cdk from '@aws-cdk/core';
+import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
+import { Construct } from 'constructs';
 
 const path = require('path');
 
 /**
  * Class to initialize Policy
  */
-export class EnableSharingWithAwsOrganization extends cdk.Construct {
+export class EnableSharingWithAwsOrganization extends Construct {
   readonly id: string;
-  constructor(scope: cdk.Construct, id: string) {
+  constructor(scope: Construct, id: string) {
     super(scope, id);
 
     const ENABLE_SHARING_WITH_AWS_ORGANIZATION_TYPE = 'Custom::EnableSharingWithAwsOrganization';

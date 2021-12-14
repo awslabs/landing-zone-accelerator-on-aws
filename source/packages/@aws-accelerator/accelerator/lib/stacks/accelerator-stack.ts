@@ -12,7 +12,8 @@
  */
 
 import { AccountsConfig, GlobalConfig, IamConfig, NetworkConfig, OrganizationConfig } from '@aws-accelerator/config';
-import * as cdk from '@aws-cdk/core';
+import { Construct } from 'constructs';
+import * as cdk from 'aws-cdk-lib';
 
 export interface AcceleratorStackProps extends cdk.StackProps {
   accountIds: { [name: string]: string };
@@ -28,7 +29,7 @@ export interface AcceleratorStackProps extends cdk.StackProps {
 export abstract class AcceleratorStack extends cdk.Stack {
   private props: AcceleratorStackProps;
 
-  protected constructor(scope: cdk.Construct, id: string, props: AcceleratorStackProps) {
+  protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
     this.props = props;
   }

@@ -1,5 +1,5 @@
-import * as codecommit from '@aws-cdk/aws-codecommit';
-import * as cdk from '@aws-cdk/core';
+import { Construct } from 'constructs';
+import * as codecommit from 'aws-cdk-lib/aws-codecommit';
 
 /**
  * Initialized Repository properties
@@ -35,7 +35,7 @@ export interface RepositoryProps extends codecommit.RepositoryProps {
  * Class to initialize repository
  */
 export class Repository extends codecommit.Repository {
-  constructor(scope: cdk.Construct, id: string, props: RepositoryProps) {
+  constructor(scope: Construct, id: string, props: RepositoryProps) {
     super(scope, id, props);
 
     const cfnRepository = this.node.defaultChild as codecommit.CfnRepository;
