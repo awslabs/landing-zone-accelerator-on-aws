@@ -11,12 +11,12 @@
  *  and limitations under the License.
  */
 
+import { Bucket } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
-import { v4 as uuidv4 } from 'uuid';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
 import { Construct } from 'constructs';
+import { v4 as uuidv4 } from 'uuid';
 
 const path = require('path');
 
@@ -40,7 +40,7 @@ export class GuardDutyPublishingDestination extends Construct {
     const ENABLE_GUARDDUTY_PUBLISHING_DEST_RESOURCE_TYPE = 'Custom::GuardDutyCreatePublishingDestinationCommand';
 
     // Create MacieSession export config bucket
-    const bucket = new compliant_constructs.SecureS3Bucket(this, 'GuardDutyPublishingDestinationBucket', {
+    const bucket = new Bucket(this, 'GuardDutyPublishingDestinationBucket', {
       s3BucketName: `aws-accelerator-security-guardduty-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
       kmsAliasName: 'alias/accelerator/security/guardduty/s3',
       kmsDescription: 'AWS Accelerator GuardDuty Publishing Destination Bucket CMK',

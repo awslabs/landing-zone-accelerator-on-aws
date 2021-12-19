@@ -22,6 +22,7 @@ import { CdkToolkit } from 'aws-cdk/lib/cdk-toolkit';
 import { RequireApproval } from 'aws-cdk/lib/diff';
 import { Command, Configuration } from 'aws-cdk/lib/settings';
 import path from 'path';
+import { Logger } from './logger';
 
 /**
  *
@@ -78,7 +79,9 @@ export class AcceleratorToolkit {
     trustedAccountId?: string;
     qualifier?: string;
   }): Promise<void> {
-    console.log(`Executing cdk ${options.command} ${options.stage} for aws://${options.accountId}/${options.region}`);
+    Logger.info(
+      `[toolkit] Executing cdk ${options.command} ${options.stage} for aws://${options.accountId}/${options.region}`,
+    );
 
     const configuration = new Configuration({
       commandLineArguments: {

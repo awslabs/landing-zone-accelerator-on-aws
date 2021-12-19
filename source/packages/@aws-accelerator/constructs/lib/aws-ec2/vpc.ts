@@ -15,43 +15,43 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as core from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
-export interface ISecureRouteTable extends core.IResource {
+export interface IRouteTable extends core.IResource {
   /**
    * The identifier of the route table
    *
    * @attribute
    */
-  readonly secureRouteTableId: string;
+  readonly routeTableId: string;
 
   /**
    * The VPC associated with the route table
    *
    * @attribute
    */
-  readonly vpc: ISecureVpc;
+  readonly vpc: IVpc;
 }
 
-export interface SecureRouteTableProps {
+export interface RouteTableProps {
   readonly name: string;
-  readonly vpc: ISecureVpc;
+  readonly vpc: IVpc;
 }
 
-export class SecureRouteTable extends core.Resource implements ISecureRouteTable {
-  public readonly secureRouteTableId: string;
+export class RouteTable extends core.Resource implements IRouteTable {
+  public readonly routeTableId: string;
 
-  public readonly vpc: ISecureVpc;
+  public readonly vpc: IVpc;
 
-  constructor(scope: Construct, id: string, props: SecureRouteTableProps) {
+  constructor(scope: Construct, id: string, props: RouteTableProps) {
     super(scope, id);
 
     this.vpc = props.vpc;
 
     const resource = new ec2.CfnRouteTable(this, 'Resource', {
-      vpcId: props.vpc.secureVpcId,
+      vpcId: props.vpc.vpcId,
       tags: [{ key: 'Name', value: props.name }],
     });
 
-    this.secureRouteTableId = resource.ref;
+    this.routeTableId = resource.ref;
   }
 
   public addTransitGatewayRoute(
@@ -61,7 +61,7 @@ export class SecureRouteTable extends core.Resource implements ISecureRouteTable
     transitGatewayAttachment: core.CfnResource,
   ): void {
     const route = new ec2.CfnRoute(this, id, {
-      routeTableId: this.secureRouteTableId,
+      routeTableId: this.routeTableId,
       destinationCidrBlock: destination,
       transitGatewayId: transitGatewayId,
     });
@@ -70,7 +70,7 @@ export class SecureRouteTable extends core.Resource implements ISecureRouteTable
 
   public addNatGatewayRoute(id: string, destination: string, natGatewayId: string): void {
     new ec2.CfnRoute(this, id, {
-      routeTableId: this.secureRouteTableId,
+      routeTableId: this.routeTableId,
       destinationCidrBlock: destination,
       natGatewayId: natGatewayId,
     });
@@ -82,14 +82,14 @@ export class SecureRouteTable extends core.Resource implements ISecureRouteTable
     }
 
     new ec2.CfnRoute(this, id, {
-      routeTableId: this.secureRouteTableId,
+      routeTableId: this.routeTableId,
       destinationCidrBlock: destination,
       gatewayId: this.vpc.internetGatewayId,
     });
   }
 }
 
-export interface ISecureSubnet extends core.IResource {
+export interface ISubnet extends core.IResource {
   /**
    * The identifier of the subnet
    *
@@ -116,7 +116,7 @@ export interface ISecureSubnet extends core.IResource {
   //  *
   //  * @attribute
   //  */
-  // readonly routeTable: ISecureRouteTable;
+  // readonly routeTable: IRouteTable;
 
   //  /**
   //   * The route table for this subnet
@@ -138,25 +138,25 @@ export interface ISecureSubnet extends core.IResource {
   //  readonly mapPublicIpOnLaunch: boolean;
 }
 
-export interface SecureSubnetProps {
+export interface SubnetProps {
   readonly name: string;
   readonly availabilityZone: string;
   readonly ipv4CidrBlock: string;
   readonly mapPublicIpOnLaunch?: boolean;
-  readonly routeTable: ISecureRouteTable;
-  readonly vpc: ISecureVpc;
-  // readonly nacl: ISecureNacl;
+  readonly routeTable: IRouteTable;
+  readonly vpc: IVpc;
+  // readonly nacl: INacl;
 }
 
-export class SecureSubnet extends core.Resource implements ISecureSubnet {
+export class Subnet extends core.Resource implements ISubnet {
   public readonly subnetName: string;
   public readonly availabilityZone: string;
   public readonly ipv4CidrBlock: string;
   public readonly mapPublicIpOnLaunch?: boolean;
-  public readonly routeTable: ISecureRouteTable;
+  public readonly routeTable: IRouteTable;
   public readonly subnetId: string;
 
-  constructor(scope: Construct, id: string, props: SecureSubnetProps) {
+  constructor(scope: Construct, id: string, props: SubnetProps) {
     super(scope, id);
 
     this.subnetName = props.name;
@@ -166,7 +166,7 @@ export class SecureSubnet extends core.Resource implements ISecureSubnet {
     this.routeTable = props.routeTable;
 
     const resource = new ec2.CfnSubnet(this, 'Resource', {
-      vpcId: props.vpc.secureVpcId,
+      vpcId: props.vpc.vpcId,
       cidrBlock: props.ipv4CidrBlock,
       availabilityZone: props.availabilityZone,
       mapPublicIpOnLaunch: props.mapPublicIpOnLaunch,
@@ -177,12 +177,12 @@ export class SecureSubnet extends core.Resource implements ISecureSubnet {
 
     new ec2.CfnSubnetRouteTableAssociation(this, 'RouteTableAssociation', {
       subnetId: this.subnetId,
-      routeTableId: props.routeTable.secureRouteTableId,
+      routeTableId: props.routeTable.routeTableId,
     });
   }
 }
 
-export interface ISecureNatGateway extends core.IResource {
+export interface INatGateway extends core.IResource {
   /**
    * The identifier of the NAT Gateway
    *
@@ -198,16 +198,16 @@ export interface ISecureNatGateway extends core.IResource {
   readonly natGatewayName: string;
 }
 
-export interface SecureNatGatewayProps {
+export interface NatGatewayProps {
   readonly name: string;
-  readonly subnet: ISecureSubnet;
+  readonly subnet: ISubnet;
 }
 
-export class SecureNatGateway extends core.Resource implements ISecureNatGateway {
+export class NatGateway extends core.Resource implements INatGateway {
   public readonly natGatewayId: string;
   public readonly natGatewayName: string;
 
-  constructor(scope: Construct, id: string, props: SecureNatGatewayProps) {
+  constructor(scope: Construct, id: string, props: NatGatewayProps) {
     super(scope, id);
 
     this.natGatewayName = props.name;
@@ -224,13 +224,13 @@ export class SecureNatGateway extends core.Resource implements ISecureNatGateway
   }
 }
 
-export interface ISecureVpc extends core.IResource {
+export interface IVpc extends core.IResource {
   /**
    * The identifier of the vpc
    *
    * @attribute
    */
-  readonly secureVpcId: string;
+  readonly vpcId: string;
 
   /**
    * The Internet Gateway Id
@@ -239,28 +239,28 @@ export interface ISecureVpc extends core.IResource {
 }
 
 /**
- * Construction properties for a Secure VPC object.
+ * Construction properties for a  VPC object.
  */
-export interface SecureVpcProps {
+export interface VpcProps {
   readonly name: string;
   readonly ipv4CidrBlock: string;
   readonly enableDnsHostnames?: boolean;
   readonly enableDnsSupport?: boolean;
-  readonly instanceTenancy?: ec2.DefaultInstanceTenancy;
+  readonly instanceTenancy?: 'default' | 'dedicated';
   readonly internetGateway?: boolean;
 }
 
 /**
- * Defines a Secure S3 Bucket object. By default a KMS CMK is generated and
+ * Defines a  S3 Bucket object. By default a KMS CMK is generated and
  * associated to the bucket.
  */
-export class SecureVpc extends core.Resource implements ISecureVpc {
+export class Vpc extends core.Resource implements IVpc {
   // private readonly vpc: ec2.CfnVPC;
 
-  public readonly secureVpcId: string;
+  public readonly vpcId: string;
   public readonly internetGatewayId: string | undefined;
 
-  constructor(scope: Construct, id: string, props: SecureVpcProps) {
+  constructor(scope: Construct, id: string, props: VpcProps) {
     super(scope, id);
 
     const resource = new ec2.CfnVPC(this, 'Resource', {
@@ -271,14 +271,14 @@ export class SecureVpc extends core.Resource implements ISecureVpc {
       tags: [{ key: 'Name', value: props.name }],
     });
 
-    this.secureVpcId = resource.ref;
+    this.vpcId = resource.ref;
 
     if (props.internetGateway) {
       const igw = new ec2.CfnInternetGateway(this, 'InternetGateway', {});
 
       new ec2.CfnVPCGatewayAttachment(this, 'InternetGatewayAttachment', {
         internetGatewayId: igw.ref,
-        vpcId: this.secureVpcId,
+        vpcId: this.vpcId,
       });
 
       this.internetGatewayId = igw.ref;
@@ -289,7 +289,7 @@ export class SecureVpc extends core.Resource implements ISecureVpc {
     // const gwService = ;
     new ec2.CfnVPCEndpoint(this, id, {
       serviceName: new ec2.GatewayVpcEndpointAwsService(service).name,
-      vpcId: this.secureVpcId,
+      vpcId: this.vpcId,
       routeTableIds,
     });
   }

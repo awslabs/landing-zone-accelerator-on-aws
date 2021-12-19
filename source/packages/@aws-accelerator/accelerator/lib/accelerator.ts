@@ -14,31 +14,12 @@ import { AccountsConfig, GlobalConfig, OrganizationConfig, SecurityConfig } from
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
 import { DescribeOrganizationCommand, OrganizationsClient, paginateListAccounts } from '@aws-sdk/client-organizations';
+import { AssumeRoleCommand, Credentials, STSClient } from '@aws-sdk/client-sts';
 import { RequireApproval } from 'aws-cdk/lib/diff';
 import { PluginHost } from 'aws-cdk/lib/plugin';
+import { AcceleratorStage } from './accelerator-stage';
+import { Logger } from './logger';
 import { AcceleratorToolkit } from './toolkit';
-import { STSClient, AssumeRoleCommand, Credentials } from '@aws-sdk/client-sts';
-
-export enum AcceleratorStage {
-  PIPELINE = 'pipeline',
-  /**
-   * Validate Stage - Verify the configuration files and environment
-   */
-  VALIDATE = 'validate',
-  ORGANIZATIONS = 'organizations',
-  LOGGING = 'logging',
-  /**
-   * Accounts Stage - Handle all Organization and Accounts actions
-   */
-  ACCOUNTS = 'accounts',
-  DEPENDENCIES = 'dependencies',
-  SECURITY = 'security',
-  OPERATIONS = 'operations',
-  NETWORK_TGW = 'network-tgw',
-  NETWORK_VPC = 'network-vpc',
-  NETWORK_TGW_ATTACH = 'network-tgw-attach',
-  SECURITY_AUDIT = 'security-audit',
-}
 
 /**
  *
@@ -161,9 +142,10 @@ export abstract class Accelerator {
     //
     if (props.command == 'bootstrap') {
       // const promises: Promise<void>[] = [];
-      const trustedAccountId = accountIds[accountsConfig.mandatoryAccounts.management.email];
+      const managementAccountEmail = accountsConfig.getManagementAccount().email;
+      const trustedAccountId = accountIds[managementAccountEmail];
       for (const region of globalConfig.enabledRegions) {
-        for (const account of Object.values(accountsConfig.mandatoryAccounts)) {
+        for (const account of accountsConfig.mandatoryAccounts) {
           const accountId = accountIds[account.email];
           // promises.push(
           await AcceleratorToolkit.execute({
@@ -180,7 +162,7 @@ export abstract class Accelerator {
           //   await Promise.all(promises);
           // }
         }
-        for (const account of Object.values(accountsConfig.workloadAccounts)) {
+        for (const account of accountsConfig.workloadAccounts) {
           const accountId = accountIds[account.email];
           // promises.push(
           await AcceleratorToolkit.execute({
@@ -209,15 +191,16 @@ export abstract class Accelerator {
     // as the audit account).
 
     // const promises: Promise<void>[] = [];
-    const managementAccount = accountsConfig.mandatoryAccounts.management;
+    const managementAccountEmail = accountsConfig.getEmail('Management');
 
     switch (props.stage) {
       case AcceleratorStage.ACCOUNTS:
-        console.log(`Executing ${props.stage} for ${managementAccount}.`);
+        Logger.info(`[accelerator] Executing ${props.stage} for ${managementAccountEmail}.`);
+
         // promises.push(
         await AcceleratorToolkit.execute({
           command: props.command,
-          accountId: accountIds[managementAccount.email],
+          accountId: accountIds[managementAccountEmail],
           region: globalConfig.homeRegion,
           stage: props.stage,
           configDirPath: props.configDirPath,
@@ -232,11 +215,13 @@ export abstract class Accelerator {
 
       case AcceleratorStage.ORGANIZATIONS:
         for (const region of globalConfig.enabledRegions) {
-          console.log(`Executing ${props.stage} for ${managementAccount} account in ${region} region.`);
+          Logger.info(
+            `[accelerator] Executing ${props.stage} for ${managementAccountEmail} account in ${region} region.`,
+          );
           // promises.push(
           await AcceleratorToolkit.execute({
             command: props.command,
-            accountId: accountIds[managementAccount.email],
+            accountId: accountIds[managementAccountEmail],
             region: region,
             stage: props.stage,
             configDirPath: props.configDirPath,
@@ -260,8 +245,8 @@ export abstract class Accelerator {
       case AcceleratorStage.NETWORK_VPC:
       case AcceleratorStage.NETWORK_TGW_ATTACH:
         for (const region of globalConfig.enabledRegions) {
-          for (const account of Object.values(accountsConfig.mandatoryAccounts)) {
-            console.log(`Executing ${props.stage} for ${account.email} account in ${region} region.`);
+          for (const account of accountsConfig.mandatoryAccounts) {
+            Logger.info(`[accelerator] Executing ${props.stage} for ${account.email} account in ${region} region.`);
             const accountId = accountIds[account.email];
             // promises.push(
             await AcceleratorToolkit.execute({
@@ -277,8 +262,8 @@ export abstract class Accelerator {
             //   await Promise.all(promises);
             // }
           }
-          for (const account of Object.values(accountsConfig.workloadAccounts)) {
-            console.log(`Executing ${props.stage} for ${account.email} account in ${region} region.`);
+          for (const account of accountsConfig.workloadAccounts) {
+            Logger.info(`[accelerator] Executing ${props.stage} for ${account.email} account in ${region} region.`);
             const accountId = accountIds[account.email];
             // promises.push(
             await AcceleratorToolkit.execute({
@@ -298,11 +283,11 @@ export abstract class Accelerator {
         break;
       case AcceleratorStage.SECURITY_AUDIT:
         const auditAccountName = securityConfig.getDelegatedAccountName();
-        if (accountsConfig.accountExists(auditAccountName)) {
+        if (accountsConfig.containsAccount(auditAccountName)) {
           for (const region of globalConfig.enabledRegions) {
             const auditAccountEmail = accountsConfig.getEmail(auditAccountName);
             const accountId = accountIds[auditAccountEmail];
-            console.log(`Executing ${props.stage} for ${auditAccountEmail} account in ${region} region.`);
+            Logger.info(`[accelerator] Executing ${props.stage} for ${auditAccountEmail} account in ${region} region.`);
             // promises.push(
             await AcceleratorToolkit.execute({
               command: props.command,
@@ -329,11 +314,15 @@ export abstract class Accelerator {
   }
 
   private static async getManagementAccountCredentials(): Promise<Credentials | undefined> {
-    console.log('[PlatformAccelerator][INFO] set management account credentials');
-    console.log(`[PlatformAccelerator][INFO] pipeline region => ${process.env['AWS_DEFAULT_REGION']}`);
-    console.log(`[PlatformAccelerator][INFO] pipeline executingAccountId => ${process.env['ACCOUNT_ID']}`);
-    console.log(`[PlatformAccelerator][INFO] managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
-    console.log(
+    Logger.info('[PlatformAccelerator][INFO] set management account credentials');
+    Logger.info(`[accelerator] [PlatformAccelerator][INFO] pipeline region => ${process.env['AWS_DEFAULT_REGION']}`);
+    Logger.info(
+      `[accelerator] [PlatformAccelerator][INFO] pipeline executingAccountId => ${process.env['ACCOUNT_ID']}`,
+    );
+    Logger.info(
+      `[accelerator] [PlatformAccelerator][INFO] managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`,
+    );
+    Logger.info(
       `[PlatformAccelerator][INFO] management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`,
     );
     if (
@@ -343,7 +332,7 @@ export abstract class Accelerator {
     ) {
       const roleArn = `arn:aws:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
       const stsClient = new STSClient({ region: process.env['AWS_REGION'] });
-      console.log(`[PlatformAccelerator][INFO] management account roleArn => ${roleArn}`);
+      Logger.info(`[accelerator] [PlatformAccelerator][INFO] management account roleArn => ${roleArn}`);
 
       const assumeRoleCredential = await throttlingBackOff(() =>
         stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' })),

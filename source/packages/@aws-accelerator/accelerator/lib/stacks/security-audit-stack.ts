@@ -11,8 +11,7 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
-import { AccountsConfig, SecurityConfig } from '@aws-accelerator/config';
+import { AccountsConfig, Region, SecurityConfig } from '@aws-accelerator/config';
 import {
   GuardDutyDetectorConfig,
   GuardDutyExportConfigDestinationTypes,
@@ -21,7 +20,9 @@ import {
   MacieSession,
   SecurityHubMembers,
 } from '@aws-accelerator/constructs';
+import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { Logger } from '../logger';
 
 export interface SecurityAuditStackProps extends cdk.StackProps {
   stage: string;
@@ -34,14 +35,21 @@ export class SecurityAuditStack extends cdk.Stack {
     super(scope, id, props);
 
     //Macie configuration
+    Logger.debug(
+      `[security-audit-stack] centralSecurityServices.macie.enable: ${props.securityConfig.centralSecurityServices.macie.enable}`,
+    );
     if (
       props.securityConfig.centralSecurityServices.macie.enable &&
-      props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(cdk.Stack.of(this).region) === -1
+      props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
+        cdk.Stack.of(this).region as Region,
+      ) === -1
     ) {
+      Logger.info('[security-audit-stack] Adding Macie');
+
       // Delegated account MacieSession needs to be enabled before adding other account as member
       // Adding delegated account from management account should enable macie in delegated account
       // If delegated account macie was disabled for some reason add members will not work
-      // TODO chack later if eneable is required
+      // TODO check later if enable is required
       const macieSession = new MacieSession(this, 'MacieSession', {
         region: cdk.Stack.of(this).region,
         findingPublishingFrequency:
@@ -56,10 +64,17 @@ export class SecurityAuditStack extends cdk.Stack {
     }
 
     //GuardDuty configuration
+    Logger.debug(
+      `[security-audit-stack] centralSecurityServices.guardduty.enable: ${props.securityConfig.centralSecurityServices.guardduty.enable}`,
+    );
     if (
       props.securityConfig.centralSecurityServices.guardduty.enable &&
-      props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(cdk.Stack.of(this).region) === -1
+      props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
+        cdk.Stack.of(this).region as Region,
+      ) === -1
     ) {
+      Logger.info('[security-audit-stack] Adding GuardDuty ');
+
       const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
         region: cdk.Stack.of(this).region,
         enableS3Protection: props.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
@@ -70,7 +85,7 @@ export class SecurityAuditStack extends cdk.Stack {
         isExportConfigEnable:
           props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.enable &&
           !props.securityConfig.centralSecurityServices.guardduty.s3Protection.excludeRegions!.includes(
-            cdk.Stack.of(this).region,
+            cdk.Stack.of(this).region as Region,
           ),
         exportDestination: GuardDutyExportConfigDestinationTypes.S3,
         exportFrequency: props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.exportFrequency,
@@ -78,10 +93,17 @@ export class SecurityAuditStack extends cdk.Stack {
     }
 
     //SecurityHub configuration
+    Logger.debug(
+      `[security-audit-stack] centralSecurityServices.securityHub.enable: ${props.securityConfig.centralSecurityServices.securityHub.enable}`,
+    );
     if (
       props.securityConfig.centralSecurityServices.securityHub.enable &&
-      props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(cdk.Stack.of(this).region) === -1
+      props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(
+        cdk.Stack.of(this).region as Region,
+      ) === -1
     ) {
+      Logger.info('[security-audit-stack] Adding SecurityHub ');
+
       new SecurityHubMembers(this, 'SecurityHubMembers', {
         region: cdk.Stack.of(this).region,
       });

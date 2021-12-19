@@ -59,13 +59,6 @@ repo is an actively developed project. As the accelerator team identifies
 missing features of the CDK, those features will be initially developed locally
 within this repo and submitted to the CDK project as a pull request.
 
-### @aws-compliant-constructs/compliant-constructs
-
-Contains L2/L3 constructs that are secure by default. These constructs are built
-to comply with our Customer Compliance Guides and global compliance frameworks.
-Examples include a SecureBucket that includes a CMK, rotation policies,
-versioning, etc. by default.
-
 ---
 
 ## Included Features

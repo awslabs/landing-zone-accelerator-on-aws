@@ -33,8 +33,9 @@ export abstract class OrganizationConfigTypes {
    *     name: Core
    * ```
    */
-  static readonly OrganizationalUnit = t.interface({
+  static readonly organizationalUnitConfig = t.interface({
     name: t.nonEmptyString,
+    parent: t.nonEmptyString,
   });
 
   /**
@@ -42,7 +43,6 @@ export abstract class OrganizationConfigTypes {
    *
    * @see OrganizationTypes.OrganizationalUnit
    */
-  static readonly OrganizationalUnits = t.record(t.nonEmptyString, this.OrganizationalUnit);
 
   /**
    * Defines Service Control Policy (SCP) information, utilized in
@@ -63,13 +63,12 @@ export abstract class OrganizationConfigTypes {
    *     policy: Accelerator-Common-SCP.json
    * ```
    */
-  static readonly ServiceControlPolicy = t.interface({
-    description: t.nonEmptyString,
+  static readonly serviceControlPolicyConfig = t.interface({
     name: t.nonEmptyString,
+    description: t.nonEmptyString,
     policy: t.nonEmptyString,
     type: t.enums('Type', ['awsManaged', 'customerManaged'], 'Value should be a Service Control Policy Type'),
-    organizationalUnits: t.optional(t.array(t.nonEmptyString)),
-    accounts: t.optional(t.array(t.nonEmptyString)),
+    deploymentTargets: t.deploymentTargets,
   });
 
   /**
@@ -77,17 +76,30 @@ export abstract class OrganizationConfigTypes {
    *
    * @see OrganizationTypes.ServiceControlPolicy
    */
-  static readonly ServiceControlPolicies = t.record(t.nonEmptyString, this.ServiceControlPolicy);
+
+  static readonly organizationConfig = t.interface({
+    organizationsAccessRole: t.nonEmptyString,
+    organizationalUnits: t.array(this.organizationalUnitConfig),
+    serviceControlPolicies: t.array(this.serviceControlPolicyConfig),
+  });
 }
 
-/**
- * @see OrganizationConfig
- */
-export const OrganizationConfigType = t.interface({
-  organizationalUnits: OrganizationConfigTypes.OrganizationalUnits,
-  serviceControlPolicies: OrganizationConfigTypes.ServiceControlPolicies,
-  organizationsAccessRole: t.nonEmptyString,
-});
+export abstract class OrganizationalUnitConfig
+  implements t.TypeOf<typeof OrganizationConfigTypes.organizationalUnitConfig>
+{
+  readonly name: string = '';
+  readonly parent: string = '';
+}
+
+export abstract class ServiceControlPolicyConfig
+  implements t.TypeOf<typeof OrganizationConfigTypes.serviceControlPolicyConfig>
+{
+  readonly name: string = '';
+  readonly description: string = '';
+  readonly policy: string = '';
+  readonly type: string = 'customerManaged';
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
 
 /**
  * Defines the organizations.config
@@ -108,22 +120,8 @@ export const OrganizationConfigType = t.interface({
  *       - "Accelerator-Common-SCP"
  * ```
  */
-export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigType> {
+export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTypes.organizationConfig> {
   static readonly FILENAME = 'organization-config.yaml';
-
-  /**
-   * A Record of Organizational Unit configurations
-   *
-   * @see OrganizationTypes.OrganizationalUnits
-   */
-  readonly organizationalUnits: t.TypeOf<typeof OrganizationConfigTypes.OrganizationalUnits> = {};
-  /**
-   * A Record of Service Control Policy configurations
-   *
-   * @see OrganizationTypes.ServiceControlPolicies
-   */
-  readonly serviceControlPolicies: t.TypeOf<typeof OrganizationConfigTypes.ServiceControlPolicies> = {};
-
   /**
    * This role trusts the management account, allowing users in the management
    * account to assume the role, as permitted by the management account
@@ -134,13 +132,26 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * - AWSControlTowerExecution
    * - OrganizationAccountAccessRole
    */
-  readonly organizationsAccessRole!: '';
+  readonly organizationsAccessRole = 'AWSControlTowerExecution';
+
+  /**
+   * A Record of Organizational Unit configurations
+   *
+   * @see OrganizationalUnitConfig
+   */
+  readonly organizationalUnits: OrganizationalUnitConfig[] = [];
+  /**
+   * A Record of Service Control Policy configurations
+   *
+   * @see ServiceControlPolicyConfig
+   */
+  readonly serviceControlPolicies: ServiceControlPolicyConfig[] = [];
 
   /**
    *
    * @param values
    */
-  constructor(values?: t.TypeOf<typeof OrganizationConfigType>) {
+  constructor(values?: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>) {
     if (values) {
       Object.assign(this, values);
     }
@@ -153,7 +164,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    */
   static load(dir: string): OrganizationConfig {
     const buffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
-    const values = t.parse(OrganizationConfigType, yaml.load(buffer));
+    const values = t.parse(OrganizationConfigTypes.organizationConfig, yaml.load(buffer));
     return new OrganizationConfig(values);
   }
 }

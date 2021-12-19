@@ -11,9 +11,16 @@
  *  and limitations under the License.
  */
 
-import { AccountsConfig, GlobalConfig, IamConfig, NetworkConfig, OrganizationConfig } from '@aws-accelerator/config';
-import { Construct } from 'constructs';
+import {
+  AccountsConfig,
+  DeploymentTargets,
+  GlobalConfig,
+  IamConfig,
+  NetworkConfig,
+  OrganizationConfig,
+} from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
 
 export interface AcceleratorStackProps extends cdk.StackProps {
   accountIds: { [name: string]: string };
@@ -32,6 +39,27 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
     this.props = props;
+  }
+
+  protected isIncluded(deploymentTargets: DeploymentTargets): boolean {
+    // Explicit Denies
+    if (
+      this.isRegionExcluded(deploymentTargets.excludedRegions) ||
+      this.isAccountExcluded(deploymentTargets.excludedAccounts)
+    ) {
+      return false;
+    }
+
+    // Explicit Allows
+    if (
+      this.isAccountIncluded(deploymentTargets.accounts) ||
+      this.isOrganizationalUnitIncluded(deploymentTargets.organizationalUnits)
+    ) {
+      return true;
+    }
+
+    // Implicit Deny
+    return false;
   }
 
   protected isRegionExcluded(regions: string[]): boolean {
@@ -65,27 +93,21 @@ export abstract class AcceleratorStack extends cdk.Stack {
   }
 
   protected isOrganizationalUnitIncluded(organizationalUnits: string[]): boolean {
-    // If root-ou is specified, return right away
-    if (Object.values(organizationalUnits ?? []).includes('root-ou')) {
+    // If Root is specified, return right away
+    if (organizationalUnits?.includes('Root')) {
       return true;
     }
 
     for (const organizationalUnit of organizationalUnits ?? []) {
       const account = Object.entries(this.props.accountIds).find(item => item[1] === cdk.Stack.of(this).account);
       if (account) {
-        // Check mandatory accounts
-        let accountEntry = Object.entries(this.props.accountsConfig.mandatoryAccounts).find(
-          account => account[1].email === account[0],
-        );
-        if (accountEntry?.[1].organizationalUnit === organizationalUnit) {
-          console.log(`${organizationalUnit} organizational unit explicitly included`);
-          return true;
-        }
-        // Check workload accounts
-        accountEntry = Object.entries(this.props.accountsConfig.workloadAccounts).find(
-          account => account[1].email === account[0],
-        );
-        if (accountEntry?.[1].organizationalUnit === organizationalUnit) {
+        const accounts = [
+          ...this.props.accountsConfig.mandatoryAccounts,
+          ...this.props.accountsConfig.workloadAccounts,
+        ];
+        // Check accounts
+        const accountEntry = accounts.find(item => item.email === account[0]);
+        if (accountEntry?.organizationalUnit === organizationalUnit) {
           console.log(`${organizationalUnit} organizational unit explicitly included`);
           return true;
         }

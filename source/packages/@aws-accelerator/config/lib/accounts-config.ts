@@ -19,129 +19,108 @@ import * as yaml from 'js-yaml';
 /**
  * AWS Organizations configuration items.
  */
-export abstract class AccountsConfigTypes {
+export class AccountsConfigTypes {
   /**
    *
    */
-  static readonly Account = t.interface({
-    accountName: t.nonEmptyString,
+  static readonly accountConfig = t.interface({
+    name: t.nonEmptyString,
     description: t.optional(t.nonEmptyString),
     email: t.nonEmptyString,
     organizationalUnit: t.nonEmptyString,
   });
 
-  static readonly MandatoryAccounts = t.interface({
-    management: AccountsConfigTypes.Account,
-    logArchive: AccountsConfigTypes.Account,
-    audit: AccountsConfigTypes.Account,
+  static readonly accountsConfig = t.interface({
+    mandatoryAccounts: t.array(this.accountConfig),
+    workloadAccounts: t.array(this.accountConfig),
   });
-
-  static readonly WorkloadAccounts = t.record(t.nonEmptyString, this.Account);
 }
 
-/**
- * @see AccountsConfig
- */
-export const AccountsConfigType = t.interface({
-  mandatoryAccounts: AccountsConfigTypes.MandatoryAccounts,
-  workloadAccounts: AccountsConfigTypes.WorkloadAccounts,
-});
-
+export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accountConfig> {
+  readonly name: string = '';
+  readonly description: string = '';
+  readonly email: string = '';
+  readonly organizationalUnit: string = '';
+}
 /**
  *
  */
-export class AccountsConfig implements t.TypeOf<typeof AccountsConfigType> {
+export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accountsConfig> {
   static readonly FILENAME = 'accounts-config.yaml';
 
-  /**
-   *
-   */
-  readonly mandatoryAccounts: t.TypeOf<typeof AccountsConfigTypes.MandatoryAccounts> = {
-    management: {
-      accountName: '',
-      description: '',
-      email: '',
-      organizationalUnit: '',
+  readonly mandatoryAccounts: AccountConfig[] = [
+    {
+      name: 'Management',
+      description: 'The management (primary) account',
+      email: '<management-account>@example.com <----- UPDATE EMAIL ADDRESS',
+      organizationalUnit: 'Root',
     },
-    logArchive: {
-      accountName: '',
-      description: '',
-      email: '',
-      organizationalUnit: '',
+    {
+      name: 'Log Archive',
+      description: 'The log archive account',
+      email: '<log-archive>@example.com  <----- UPDATE EMAIL ADDRESS',
+      organizationalUnit: 'Security',
     },
-    audit: {
-      accountName: '',
-      description: '',
-      email: '',
-      organizationalUnit: '',
+    {
+      name: 'Audit',
+      description: 'The security audit account (also referred to as the audit account)',
+      email: '<audit>@example.com  <----- UPDATE EMAIL ADDRESS',
+      organizationalUnit: 'Security',
     },
-  };
+  ];
 
-  /**
-   *
-   */
-  readonly workloadAccounts: t.TypeOf<typeof AccountsConfigTypes.WorkloadAccounts> = {};
+  readonly workloadAccounts: AccountConfig[] = [];
 
   /**
    *
    * @param values
    */
-  constructor(values?: t.TypeOf<typeof AccountsConfigType>) {
+  constructor(values?: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>) {
     if (values) {
       Object.assign(this, values);
     }
   }
 
-  /**
-   * Returns the email address associated to the provided account.
-   *
-   * @param account
-   * @returns
-   */
-  public getEmail(account: string): string {
-    let value = Object.entries(this.mandatoryAccounts).find(entry => entry[0] == account);
+  public getEmail(name: string): string {
+    const value = [...this.mandatoryAccounts, ...this.workloadAccounts].find(value => value.name == name);
     if (value) {
-      return value[1].email;
+      return value.email;
     }
-    value = Object.entries(this.workloadAccounts).find(entry => entry[0] == account);
-    if (value) {
-      return value[1].email;
-    }
-    throw new Error(`Account email not found for ${account}`);
+
+    throw new Error(`Account email not found for ${name}`);
   }
 
-  /**
-   * Returns the name of the account.
-   *
-   * @param account
-   * @returns
-   */
-  public accountExists(account: string): boolean {
-    let value = Object.entries(this.mandatoryAccounts).find(entry => entry[0] == account);
+  public containsAccount(name: string): boolean {
+    const value = [...this.mandatoryAccounts, ...this.workloadAccounts].find(value => value.name == name);
     if (value) {
       return true;
     }
-    value = Object.entries(this.workloadAccounts).find(entry => entry[0] == account);
-    if (value) {
-      return true;
-    }
-    throw new Error(`${account} Account not found`);
-  }
 
-  /**
-   * Returns true if an account is defined in the config with the specified email
-   *
-   * @param email
-   * @returns true if found, false otherwise
-   */
-  public containsEmail(email: string | unknown): boolean {
-    if (Object.entries(this.mandatoryAccounts).find(account => account[1].email === email)) {
-      return true;
-    }
-    if (Object.entries(this.workloadAccounts).find(account => account[1].email === email)) {
-      return true;
-    }
     return false;
+  }
+
+  public getManagementAccount(): AccountConfig {
+    const value = this.mandatoryAccounts.find(value => value.name == 'Management');
+    if (value) {
+      return value;
+    }
+    throw new Error(`Management account not defined`);
+  }
+
+  public getLogArchiveAccount(): AccountConfig {
+    const value = this.mandatoryAccounts.find(value => value.name == 'Log Archive');
+    if (value) {
+      return value;
+    }
+    throw new Error(`Log Archive account not defined`);
+  }
+
+  public getAuditAccount(): AccountConfig {
+    const value = this.mandatoryAccounts.find(value => value.name == 'Audit');
+    if (value) {
+      return value;
+    }
+    throw new Error(`Audit account not defined`);
   }
 
   /**
@@ -151,7 +130,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigType> {
    */
   static load(dir: string): AccountsConfig {
     const buffer = fs.readFileSync(path.join(dir, AccountsConfig.FILENAME), 'utf8');
-    const values = t.parse(AccountsConfigType, yaml.load(buffer));
+    const values = t.parse(AccountsConfigTypes.accountsConfig, yaml.load(buffer));
     return new AccountsConfig(values);
   }
 }

@@ -46,18 +46,12 @@ export class OperationsStack extends AcceleratorStack {
       //
       const policies: { [name: string]: iam.ManagedPolicy } = {};
       for (const policySet of props.iamConfig.policySets ?? []) {
-        if (
-          this.isAccountExcluded(policySet.excludeAccounts) ||
-          !(
-            this.isAccountIncluded(policySet.accounts) ||
-            this.isOrganizationalUnitIncluded(policySet.organizationalUnits)
-          )
-        ) {
+        if (!this.isIncluded(policySet.deploymentTargets)) {
           console.log('Item excluded');
           continue;
         }
 
-        for (const policy of Object.values(policySet.policies) as { name: string; policy: string }[]) {
+        for (const policy of policySet.policies) {
           console.log(`operations-stack: Creating managed policy ${policy.name}`);
 
           // Read in the policy document which should be properly formatted json
@@ -82,26 +76,12 @@ export class OperationsStack extends AcceleratorStack {
       //
       const roles: { [name: string]: iam.Role } = {};
       for (const roleSet of props.iamConfig.roleSets ?? []) {
-        if (
-          this.isAccountExcluded(roleSet.excludeAccounts) ||
-          !(this.isAccountIncluded(roleSet.accounts) || this.isOrganizationalUnitIncluded(roleSet.organizationalUnits))
-        ) {
+        if (!this.isIncluded(roleSet.deploymentTargets)) {
           console.log('Item excluded');
           continue;
         }
 
-        for (const role of Object.values(roleSet.roles) as {
-          name: string;
-          assumedBy: {
-            type: string;
-            principal: string;
-          };
-          policies: {
-            awsManaged: string[];
-            customerManaged: string[];
-          };
-          boundaryPolicy: string;
-        }[]) {
+        for (const role of roleSet.roles) {
           console.log(`operations-stack: Creating role ${role.name}`);
 
           let assumedBy: iam.IPrincipal;
@@ -112,10 +92,10 @@ export class OperationsStack extends AcceleratorStack {
           }
 
           const managedPolicies: iam.IManagedPolicy[] = [];
-          for (const policy of role.policies.awsManaged ?? []) {
+          for (const policy of role.policies?.awsManaged ?? []) {
             managedPolicies.push(iam.ManagedPolicy.fromAwsManagedPolicyName(policy));
           }
-          for (const policy of role.policies.customerManaged ?? []) {
+          for (const policy of role.policies?.customerManaged ?? []) {
             managedPolicies.push(policies[policy]);
           }
 
@@ -133,30 +113,19 @@ export class OperationsStack extends AcceleratorStack {
       //
       const groups: { [name: string]: iam.Group } = {};
       for (const groupSet of props.iamConfig.groupSets ?? []) {
-        if (
-          this.isAccountExcluded(groupSet.excludeAccounts) ||
-          !(
-            this.isAccountIncluded(groupSet.accounts) || this.isOrganizationalUnitIncluded(groupSet.organizationalUnits)
-          )
-        ) {
+        if (!this.isIncluded(groupSet.deploymentTargets)) {
           console.log('Item excluded');
           continue;
         }
 
-        for (const group of Object.values(groupSet.groups) as {
-          name: string;
-          policies: {
-            awsManaged: string[];
-            customerManaged: string[];
-          };
-        }[]) {
+        for (const group of groupSet.groups) {
           console.log(`operations-stack: Creating group ${group.name}`);
 
           const managedPolicies: iam.IManagedPolicy[] = [];
-          for (const policy of group.policies.awsManaged ?? []) {
+          for (const policy of group.policies?.awsManaged ?? []) {
             managedPolicies.push(iam.ManagedPolicy.fromAwsManagedPolicyName(policy));
           }
-          for (const policy of group.policies.customerManaged ?? []) {
+          for (const policy of group.policies?.customerManaged ?? []) {
             managedPolicies.push(policies[policy]);
           }
 
@@ -171,19 +140,12 @@ export class OperationsStack extends AcceleratorStack {
       // Add IAM Users
       //
       for (const userSet of props.iamConfig.userSets ?? []) {
-        if (
-          this.isAccountExcluded(userSet.excludeAccounts) ||
-          !(this.isAccountIncluded(userSet.accounts) || this.isOrganizationalUnitIncluded(userSet.organizationalUnits))
-        ) {
+        if (!this.isIncluded(userSet.deploymentTargets)) {
           console.log('Item excluded');
           continue;
         }
 
-        for (const user of Object.values(userSet.users ?? []) as {
-          username: string;
-          group: string;
-          boundaryPolicy: string;
-        }[]) {
+        for (const user of userSet.users ?? []) {
           console.log(`operations-stack: Creating user ${user.username}`);
 
           const secret = new secretsmanager.Secret(this, pascalCase(`${user.username}Secret`), {

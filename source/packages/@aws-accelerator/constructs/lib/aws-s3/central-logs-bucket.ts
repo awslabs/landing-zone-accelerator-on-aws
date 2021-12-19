@@ -11,15 +11,15 @@
  *  and limitations under the License.
  */
 
+import { Bucket } from '@aws-accelerator/constructs';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
 import { Construct } from 'constructs';
 
 export interface CentralLogsBucketProps {
   s3BucketName: string;
   kmsAliasName: string;
   kmsDescription: string;
-  serverAccessLogsBucket: compliant_constructs.SecureS3Bucket;
+  serverAccessLogsBucket: Bucket;
   organizationId: string;
 }
 
@@ -31,7 +31,7 @@ export class CentralLogsBucket extends Construct {
     super(scope, id);
 
     // Create Central Logs Bucket
-    const bucket = new compliant_constructs.SecureS3Bucket(this, 'Resource', {
+    const bucket = new Bucket(this, 'Resource', {
       s3BucketName: props.s3BucketName,
       kmsAliasName: props.kmsAliasName,
       kmsDescription: props.kmsDescription,

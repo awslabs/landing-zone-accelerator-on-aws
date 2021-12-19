@@ -11,14 +11,23 @@
  *  and limitations under the License.
  */
 
-import { Construct } from 'constructs';
-import * as accelerator_constructs from '@aws-accelerator/constructs';
+import {
+  DeleteDefaultVpc,
+  NatGateway,
+  ResourceShare,
+  ResourceShareItem,
+  ResourceShareOwner,
+  RouteTable,
+  Subnet,
+  TransitGatewayAttachment,
+  Vpc,
+} from '@aws-accelerator/constructs';
+import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
-import * as cdk from 'aws-cdk-lib';
-import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
 import { pascalCase } from 'change-case';
+import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class NetworkVpcStack extends AcceleratorStack {
@@ -35,7 +44,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     //
     if (props.networkConfig.defaultVpc?.delete) {
       console.log('Add DeleteDefaultVpc');
-      new accelerator_constructs.DeleteDefaultVpc(this, 'DeleteDefaultVpc');
+      new DeleteDefaultVpc(this, 'DeleteDefaultVpc');
     }
 
     // Build map of Transit Gateways. We need to know the transit gateway ids so
@@ -52,27 +61,27 @@ export class NetworkVpcStack extends AcceleratorStack {
       // Only care about VPCs to be created in the current account and region
       if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
         for (const attachment of vpcItem.transitGatewayAttachments ?? []) {
-          console.log(`Evaluating Transit Gateway key ${attachment.transitGatewayName}`);
+          console.log(`Evaluating Transit Gateway key ${attachment.transitGateway.name}`);
 
           // Keep looking if already entered
-          if (transitGatewayIds.has(attachment.transitGatewayName)) {
-            console.log(`Transit Gateway ${attachment.transitGatewayName} already in dictionary`);
+          if (transitGatewayIds.has(attachment.transitGateway.name)) {
+            console.log(`Transit Gateway ${attachment.transitGateway.name} already in dictionary`);
             continue;
           }
 
-          console.log(`Transit Gateway key ${attachment.transitGatewayName} is not in map, add resources to look up`);
-          const owningAccountId = props.accountIds[props.accountsConfig.getEmail(attachment.accountName)];
+          console.log(`Transit Gateway key ${attachment.transitGateway.name} is not in map, add resources to look up`);
+          const owningAccountId = props.accountIds[props.accountsConfig.getEmail(attachment.transitGateway.account)];
 
           // If owning account is this account, transit gateway id can be
           // retrieved from ssm parameter store
           if (owningAccountId === cdk.Stack.of(this).account) {
             const transitGatewayId = ssm.StringParameter.valueForStringParameter(
               this,
-              `/accelerator/network/transitGateways/${attachment.transitGatewayName}/id`,
+              `/accelerator/network/transitGateways/${attachment.transitGateway.name}/id`,
             );
 
-            console.log(`Adding [${attachment.transitGatewayName}]: ${transitGatewayId} to transitGatewayIds Map`);
-            transitGatewayIds.set(attachment.transitGatewayName, transitGatewayId);
+            console.log(`Adding [${attachment.transitGateway.name}]: ${transitGatewayId} to transitGatewayIds Map`);
+            transitGatewayIds.set(attachment.transitGateway.name, transitGatewayId);
           }
           // Else, need to get the transit gateway from the resource shares
           else {
@@ -83,21 +92,21 @@ export class NetworkVpcStack extends AcceleratorStack {
             }
 
             // Get the resource share related to the transit gateway
-            const resourceShare = accelerator_constructs.ResourceShare.fromLookup(
+            const resourceShare = ResourceShare.fromLookup(
               this,
-              pascalCase(`${attachment.transitGatewayName}TransitGatewayShare`),
+              pascalCase(`${attachment.transitGateway.name}TransitGatewayShare`),
               {
-                resourceShareOwner: accelerator_constructs.ResourceShareOwner.OTHER_ACCOUNTS,
-                resourceShareName: pascalCase(`${attachment.transitGatewayName}TransitGatewayShare`),
+                resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
+                resourceShareName: pascalCase(`${attachment.transitGateway.name}TransitGatewayShare`),
                 owningAccountId,
               },
             );
             console.log(resourceShare.resourceShareId);
 
             // Represents the transit gateway resource
-            const tgw = accelerator_constructs.ResourceShareItem.fromLookup(
+            const tgw = ResourceShareItem.fromLookup(
               this,
-              pascalCase(`${attachment.transitGatewayName}TransitGateway`),
+              pascalCase(`${attachment.transitGateway.name}TransitGateway`),
               {
                 resourceShare,
                 resourceShareItemType: 'ec2:TransitGateway',
@@ -105,9 +114,9 @@ export class NetworkVpcStack extends AcceleratorStack {
             );
 
             console.log(
-              `Adding [${attachment.transitGatewayName}]: ${tgw.resourceShareItemId} to transitGatewayIds Map`,
+              `Adding [${attachment.transitGateway.name}]: ${tgw.resourceShareItemId} to transitGatewayIds Map`,
             );
-            transitGatewayIds.set(attachment.transitGatewayName, tgw.resourceShareItemId);
+            transitGatewayIds.set(attachment.transitGateway.name, tgw.resourceShareItemId);
           }
         }
       }
@@ -150,14 +159,17 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         // Create the VPC
         //
-        const vpc = new compliant_constructs.SecureVpc(this, pascalCase(`${vpcItem.name}Vpc`), {
+        const vpc = new Vpc(this, pascalCase(`${vpcItem.name}Vpc`), {
           name: vpcItem.name,
           ipv4CidrBlock: vpcItem.cidrs[0],
           internetGateway: vpcItem.internetGateway,
+          enableDnsHostnames: vpcItem.enableDnsHostnames ?? false,
+          enableDnsSupport: vpcItem.enableDnsSupport ?? true,
+          instanceTenancy: vpcItem.instanceTenancy ?? 'default',
         });
         new ssm.StringParameter(this, pascalCase(`SsmParam${pascalCase(vpcItem.name)}VpcId`), {
           parameterName: `/accelerator/network/vpc/${vpcItem.name}/id`,
-          stringValue: vpc.secureVpcId,
+          stringValue: vpc.vpcId,
         });
 
         // TODO: DHCP OptionSets
@@ -167,9 +179,9 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         // Create Route Tables
         //
-        const routeTableMap = new Map<string, compliant_constructs.SecureRouteTable>();
+        const routeTableMap = new Map<string, RouteTable>();
         for (const routeTableItem of vpcItem.routeTables ?? []) {
-          const routeTable = new compliant_constructs.SecureRouteTable(
+          const routeTable = new RouteTable(
             this,
             pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${routeTableItem.name}RouteTable`),
             {
@@ -183,7 +195,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(routeTableItem.name)}RouteTableId`),
             {
               parameterName: `/accelerator/network/vpc/${vpcItem.name}/routeTable/${routeTableItem.name}/id`,
-              stringValue: routeTable.secureRouteTableId,
+              stringValue: routeTable.routeTableId,
             },
           );
         }
@@ -195,7 +207,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         // Create Subnets
         //
-        const subnetMap = new Map<string, compliant_constructs.SecureSubnet>();
+        const subnetMap = new Map<string, Subnet>();
         for (const subnetItem of vpcItem.subnets ?? []) {
           console.log(`Adding subnet ${subnetItem.name}`);
 
@@ -204,18 +216,14 @@ export class NetworkVpcStack extends AcceleratorStack {
             throw new Error(`Route table ${subnetItem.routeTable} not defined`);
           }
 
-          const subnet = new compliant_constructs.SecureSubnet(
-            this,
-            pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`),
-            {
-              name: subnetItem.name,
-              availabilityZone: `${cdk.Stack.of(this).region}${subnetItem.availabilityZone}`,
-              ipv4CidrBlock: subnetItem.ipv4CidrBlock,
-              mapPublicIpOnLaunch: subnetItem.mapPublicIpOnLaunch,
-              routeTable,
-              vpc,
-            },
-          );
+          const subnet = new Subnet(this, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`), {
+            name: subnetItem.name,
+            availabilityZone: `${cdk.Stack.of(this).region}${subnetItem.availabilityZone}`,
+            ipv4CidrBlock: subnetItem.ipv4CidrBlock,
+            mapPublicIpOnLaunch: subnetItem.mapPublicIpOnLaunch,
+            routeTable,
+            vpc,
+          });
           subnetMap.set(subnetItem.name, subnet);
           new ssm.StringParameter(
             this,
@@ -230,7 +238,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         // Create NAT Gateways
         //
-        const natGatewayMap = new Map<string, compliant_constructs.SecureNatGateway>();
+        const natGatewayMap = new Map<string, NatGateway>();
         for (const natGatewayItem of vpcItem.natGateways ?? []) {
           console.log(`Adding NAT Gateway ${natGatewayItem.name}`);
 
@@ -239,7 +247,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             throw new Error(`Subnet ${natGatewayItem.subnet} not defined`);
           }
 
-          const natGateway = new compliant_constructs.SecureNatGateway(
+          const natGateway = new NatGateway(
             this,
             pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${natGatewayItem.name}NatGateway`),
             {
@@ -261,13 +269,13 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         // Create Transit Gateway Attachments
         //
-        const transitGatewayAttachments = new Map<string, accelerator_constructs.TransitGatewayAttachment>();
+        const transitGatewayAttachments = new Map<string, TransitGatewayAttachment>();
         for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
-          console.log(`Adding Transit Gateway Attachment for ${tgwAttachmentItem.transitGatewayName}`);
+          console.log(`Adding Transit Gateway Attachment for ${tgwAttachmentItem.transitGateway.name}`);
 
-          const transitGatewayId = transitGatewayIds.get(tgwAttachmentItem.transitGatewayName);
+          const transitGatewayId = transitGatewayIds.get(tgwAttachmentItem.transitGateway.name);
           if (transitGatewayId === undefined) {
-            throw new Error(`Transit Gateway ${tgwAttachmentItem.transitGatewayName} not found`);
+            throw new Error(`Transit Gateway ${tgwAttachmentItem.transitGateway.name} not found`);
           }
 
           const subnetIds: string[] = [];
@@ -279,17 +287,17 @@ export class NetworkVpcStack extends AcceleratorStack {
             subnetIds.push(subnet.subnetId);
           }
 
-          const attachment = new accelerator_constructs.TransitGatewayAttachment(
+          const attachment = new TransitGatewayAttachment(
             this,
             pascalCase(`${tgwAttachmentItem.name}VpcTransitGatewayAttachment`),
             {
               name: tgwAttachmentItem.name,
               transitGatewayId,
               subnetIds,
-              vpcId: vpc.secureVpcId,
+              vpcId: vpc.vpcId,
             },
           );
-          transitGatewayAttachments.set(tgwAttachmentItem.transitGatewayName, attachment);
+          transitGatewayAttachments.set(tgwAttachmentItem.transitGateway.name, attachment);
           new ssm.StringParameter(
             this,
             pascalCase(
@@ -354,12 +362,12 @@ export class NetworkVpcStack extends AcceleratorStack {
               console.log(`Adding Internet Gateway Route Table Entry ${routeTableEntryItem.name}`);
               routeTable.addInternetGatewayRoute(id, routeTableEntryItem.destination);
             } else if (routeTableEntryItem.target === 's3') {
-              if (s3EndpointRouteTables.indexOf(routeTable.secureRouteTableId) == -1) {
-                s3EndpointRouteTables.push(routeTable.secureRouteTableId);
+              if (s3EndpointRouteTables.indexOf(routeTable.routeTableId) == -1) {
+                s3EndpointRouteTables.push(routeTable.routeTableId);
               }
             } else if (routeTableEntryItem.target === 'dynamodb') {
-              if (dynamodbEndpointRouteTables.indexOf(routeTable.secureRouteTableId) == -1) {
-                dynamodbEndpointRouteTables.push(routeTable.secureRouteTableId);
+              if (dynamodbEndpointRouteTables.indexOf(routeTable.routeTableId) == -1) {
+                dynamodbEndpointRouteTables.push(routeTable.routeTableId);
               }
             }
           }

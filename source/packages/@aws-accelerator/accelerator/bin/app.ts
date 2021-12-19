@@ -22,7 +22,6 @@ import {
   SecurityConfig,
 } from '@aws-accelerator/config';
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as cdk from 'aws-cdk-lib';
 import {
   DescribeOrganizationCommand,
   OrganizationsClient,
@@ -30,16 +29,18 @@ import {
   paginateListOrganizationalUnitsForParent,
   paginateListRoots,
 } from '@aws-sdk/client-organizations';
+import * as cdk from 'aws-cdk-lib';
 import 'source-map-support/register';
-import { AcceleratorStage } from '../lib/accelerator';
+import { AcceleratorStage } from '../lib/accelerator-stage';
+import { Logger } from '../lib/logger';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
 import { DefaultStack } from '../lib/stacks/default-stack';
 import { DependenciesStack } from '../lib/stacks/dependencies-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
+import { NetworkTgwAttachStack } from '../lib/stacks/network-tgw-attach-stack';
 import { NetworkTgwStack } from '../lib/stacks/network-tgw-stack';
 import { NetworkVpcStack } from '../lib/stacks/network-vpc-stack';
-import { NetworkTgwAttachStack } from '../lib/stacks/network-tgw-attach-stack';
 import { OperationsStack } from '../lib/stacks/operations-stack';
 import { OrganizationsStack } from '../lib/stacks/organizations-stack';
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
@@ -54,6 +55,7 @@ process.on('unhandledRejection', (reason, _) => {
 });
 
 async function main() {
+  Logger.info('[app] Begin Platform Accelerator');
   const app = new cdk.App();
 
   const stage = app.node.tryGetContext('stage');
@@ -256,7 +258,7 @@ async function getOrganizationalUnitIds(
   for await (const page of paginateListRoots({ client: organizationsClient }, {})) {
     for (const root of page.Roots ?? []) {
       if (root.Name === 'Root') {
-        organizationalUnitIds['root-ou'] = {
+        organizationalUnitIds['Root'] = {
           id: root.Id ?? '',
           arn: root.Arn ?? '',
         };
@@ -267,12 +269,12 @@ async function getOrganizationalUnitIds(
   // Add all top level OUs
   for await (const page of paginateListOrganizationalUnitsForParent(
     { client: organizationsClient },
-    { ParentId: organizationalUnitIds['root-ou'].id },
+    { ParentId: organizationalUnitIds['Root'].id },
   )) {
     for (const ou of page.OrganizationalUnits ?? []) {
-      const entry = Object.entries(organizationConfig.organizationalUnits).find(item => item[1].name === ou.Name);
+      const entry = organizationConfig.organizationalUnits.find(item => item.name === ou.Name);
       if (entry && ou.Id) {
-        organizationalUnitIds[entry[0]] = {
+        organizationalUnitIds[entry.name] = {
           id: ou.Id ?? '',
           arn: ou.Arn ?? '',
         };

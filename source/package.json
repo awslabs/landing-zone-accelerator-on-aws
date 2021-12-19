@@ -38,7 +38,7 @@
     "eslint": "8.4.1"
   },
   "scripts": {
-    "cleanup": "lerna run cleanup --stream && rm -rf node_modules && rm -rf yarn.lock",
+    "cleanup": "lerna run cleanup --stream && rm -rf node_modules",
     "cleanup:tsc": "lerna run cleanup:tsc --stream",
     "build": "lerna run build --stream",
     "test": "lerna run test --stream",
@@ -58,8 +58,7 @@
       "./packages/@aws-accelerator/installer",
       "./packages/@aws-accelerator/utils",
       "./packages/@aws-cdk-extensions/cdk-extensions",
-      "./packages/@aws-cdk-extensions/cdk-plugin-assume-role",
-      "./packages/@aws-compliant-constructs/compliant-constructs"
+      "./packages/@aws-cdk-extensions/cdk-plugin-assume-role"
     ],
     "nohoist": [
       "**/deepmerge",

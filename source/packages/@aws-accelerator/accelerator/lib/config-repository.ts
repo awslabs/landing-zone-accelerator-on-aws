@@ -11,14 +11,21 @@
  *  and limitations under the License.
  */
 
-import { Construct } from 'constructs';
-import * as config from '@aws-accelerator/config';
+import {
+  AccountsConfig,
+  GlobalConfig,
+  IamConfig,
+  NetworkConfig,
+  OrganizationConfig,
+  SecurityConfig,
+} from '@aws-accelerator/config';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 import * as s3_assets from 'aws-cdk-lib/aws-s3-assets';
+import { Construct } from 'constructs';
 import * as fs from 'fs';
+import * as yaml from 'js-yaml';
 import * as os from 'os';
 import * as path from 'path';
-import * as yaml from 'js-yaml';
 
 export interface ConfigRepositoryProps {
   readonly repositoryName: string;
@@ -40,31 +47,12 @@ export class ConfigRepository extends Construct {
     //
     const tempDirPath = fs.mkdtempSync(path.join(os.tmpdir(), 'config-assets-'));
 
-    fs.writeFileSync(
-      path.join(tempDirPath, config.GlobalConfig.FILENAME),
-      yaml.dump(new config.GlobalConfig()),
-      'utf8',
-    );
-
-    fs.writeFileSync(
-      path.join(tempDirPath, config.OrganizationConfig.FILENAME),
-      yaml.dump(new config.OrganizationConfig()),
-      'utf8',
-    );
-
-    fs.writeFileSync(
-      path.join(tempDirPath, config.AccountsConfig.FILENAME),
-      yaml.dump(new config.AccountsConfig()),
-      'utf8',
-    );
-
-    fs.writeFileSync(
-      path.join(tempDirPath, config.SecurityConfig.FILENAME),
-      yaml.dump(new config.SecurityConfig()),
-      'utf8',
-    );
-
-    fs.writeFileSync(path.join(tempDirPath, config.IamConfig.FILENAME), yaml.dump(new config.IamConfig()), 'utf8');
+    fs.writeFileSync(path.join(tempDirPath, AccountsConfig.FILENAME), yaml.dump(new AccountsConfig()), 'utf8');
+    fs.writeFileSync(path.join(tempDirPath, GlobalConfig.FILENAME), yaml.dump(new GlobalConfig()), 'utf8');
+    fs.writeFileSync(path.join(tempDirPath, IamConfig.FILENAME), yaml.dump(new IamConfig()), 'utf8');
+    fs.writeFileSync(path.join(tempDirPath, NetworkConfig.FILENAME), yaml.dump(new NetworkConfig()), 'utf8');
+    fs.writeFileSync(path.join(tempDirPath, OrganizationConfig.FILENAME), yaml.dump(new OrganizationConfig()), 'utf8');
+    fs.writeFileSync(path.join(tempDirPath, SecurityConfig.FILENAME), yaml.dump(new SecurityConfig()), 'utf8');
 
     const configurationDefaultsAssets = new s3_assets.Asset(this, 'ConfigurationDefaultsAssets', {
       path: tempDirPath,

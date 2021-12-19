@@ -12,11 +12,10 @@
  */
 
 import { AccountsConfig, GlobalConfig } from '@aws-accelerator/config';
-import { CentralLogsBucket, Organization, S3PublicAccessBlock } from '@aws-accelerator/constructs';
+import { Bucket, CentralLogsBucket, Organization, S3PublicAccessBlock } from '@aws-accelerator/constructs';
 import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cdk from 'aws-cdk-lib';
-import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
 
 export interface LoggingStackProps extends cdk.StackProps {
   accountIds: { [name: string]: string };
@@ -47,7 +46,7 @@ export class LoggingStack extends cdk.Stack {
     //
     // Create S3 Bucket for Access Logs - this is required
     //
-    const serverAccessLogsBucket = new compliant_constructs.SecureS3Bucket(this, 'AccessLogsBucket', {
+    const serverAccessLogsBucket = new Bucket(this, 'AccessLogsBucket', {
       s3BucketName: `aws-accelerator-s3-access-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
       kmsAliasName: 'alias/accelerator/s3-access-logs/s3',
       kmsDescription: 'AWS Accelerator S3 Access Logs Bucket CMK',
@@ -72,7 +71,7 @@ export class LoggingStack extends cdk.Stack {
     // Logs. Addition logs can also be sent to this bucket through AWS CloudWatch Logs, such as
     // application logs, OS logs, or server logs.
     //
-    const loggingAccountEmail = props.accountsConfig.mandatoryAccounts.logArchive.email;
+    const loggingAccountEmail = props.accountsConfig.getLogArchiveAccount().email;
     if (
       cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
       cdk.Stack.of(this).account === props.accountIds[loggingAccountEmail]
