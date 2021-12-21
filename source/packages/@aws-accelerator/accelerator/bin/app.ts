@@ -92,6 +92,7 @@ async function main() {
   const globalConfig = GlobalConfig.load(configDirPath);
   const organizationConfig = OrganizationConfig.load(configDirPath);
   const networkConfig = NetworkConfig.load(configDirPath);
+  const securityConfig = SecurityConfig.load(configDirPath);
   const accountIds = await getAccountIds();
   const organizationsId = await getOrganizationsId();
   const organizationalUnitIds = await getOrganizationalUnitIds(organizationConfig);
@@ -105,32 +106,20 @@ async function main() {
     globalConfig,
     organizationConfig,
     networkConfig,
+    securityConfig,
   };
-
-  // const synthesizer = new cdk.DefaultStackSynthesizer({
-  //   qualifier: 'accel',
-  //   deployRoleArn:
-  //     'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + props.organizationConfig['organizationsAccessRole'],
-  //   fileAssetPublishingRoleArn:
-  //     'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + props.organizationConfig['organizationsAccessRole'],
-  //   imageAssetPublishingRoleArn:
-  //     'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + props.organizationConfig['organizationsAccessRole'],
-  //   cloudFormationExecutionRole:
-  //     'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/' + props.organizationConfig['organizationsAccessRole'],
-  // });
 
   if (stage === AcceleratorStage.LOGGING) {
     new LoggingStack(app, 'AWSAccelerator-LoggingStack', {
       env,
-      // synthesizer,
       accountIds: await getAccountIds(),
       accountsConfig: AccountsConfig.load(configDirPath),
       globalConfig: GlobalConfig.load(configDirPath),
     });
-  } else if (stage === AcceleratorStage.ACCOUNTS) {
+  }
+  if (stage === AcceleratorStage.ACCOUNTS) {
     new AccountsStack(app, 'AWSAccelerator-AccountsStack', {
       env,
-      // synthesizer,
       accountIds: await getAccountIds(),
       configDirPath,
       accountsConfig: AccountsConfig.load(configDirPath),
@@ -138,10 +127,10 @@ async function main() {
       globalConfig: GlobalConfig.load(configDirPath),
       securityConfig: SecurityConfig.load(configDirPath),
     });
-  } else if (stage === AcceleratorStage.ORGANIZATIONS) {
+  }
+  if (stage === AcceleratorStage.ORGANIZATIONS) {
     new OrganizationsStack(app, 'AWSAccelerator-OrganizationsStack', {
       env,
-      // synthesizer,
       accountIds: await getAccountIds(),
       configDirPath,
       accountsConfig: AccountsConfig.load(configDirPath),
@@ -149,58 +138,55 @@ async function main() {
       globalConfig: GlobalConfig.load(configDirPath),
       securityConfig: SecurityConfig.load(configDirPath),
     });
-  } else if (stage === AcceleratorStage.VALIDATE) {
+  }
+  if (stage === AcceleratorStage.VALIDATE) {
     new ValidateStack(app, 'AWSAccelerator-ValidateStack', {
       env,
-      //synthesizer,
       stage,
     });
-  } else if (stage === AcceleratorStage.DEPENDENCIES) {
+  }
+  if (stage === AcceleratorStage.DEPENDENCIES) {
     new DependenciesStack(app, 'AWSAccelerator-DependenciesStack', {
       env,
-      //synthesizer,
       stage,
     });
-  } else if (stage === AcceleratorStage.SECURITY) {
+  }
+  if (stage === AcceleratorStage.SECURITY) {
     new SecurityStack(app, 'AWSAccelerator-SecurityStack', {
       env,
-      // synthesizer,
-      accountIds: await getAccountIds(),
-      accountsConfig: AccountsConfig.load(configDirPath),
-      globalConfig: GlobalConfig.load(configDirPath),
-      securityConfig: SecurityConfig.load(configDirPath),
+      ...props,
     });
-  } else if (stage === AcceleratorStage.SECURITY_AUDIT) {
+  }
+  if (stage === AcceleratorStage.SECURITY_AUDIT) {
     new SecurityAuditStack(app, 'AWSAccelerator-SecurityAuditStack', {
       env,
-      // synthesizer,
       stage,
       accountsConfig: AccountsConfig.load(configDirPath),
       securityConfig: SecurityConfig.load(configDirPath),
     });
-  } else if (stage === AcceleratorStage.OPERATIONS) {
+  }
+  if (stage === AcceleratorStage.OPERATIONS) {
     new OperationsStack(app, 'AWSAccelerator-OperationsStack', {
       env,
-      // synthesizer,
       configDirPath,
       ...props,
     });
-  } else if (stage === AcceleratorStage.NETWORK_TGW) {
+  }
+  if (stage === AcceleratorStage.NETWORK_TGW) {
     new NetworkTgwStack(app, 'AWSAccelerator-NetworkTgwStack', {
       env,
-      // synthesizer,
       ...props,
     });
-  } else if (stage === AcceleratorStage.NETWORK_VPC) {
+  }
+  if (stage === AcceleratorStage.NETWORK_VPC) {
     new NetworkVpcStack(app, 'AWSAccelerator-NetworkVpcStack', {
       env,
-      // synthesizer,
       ...props,
     });
-  } else if (stage === AcceleratorStage.NETWORK_TGW_ATTACH) {
+  }
+  if (stage === AcceleratorStage.NETWORK_TGW_ATTACH) {
     new NetworkTgwAttachStack(app, 'AWSAccelerator-NetworkTgwAttachStack', {
       env,
-      // synthesizer,
       ...props,
     });
   }

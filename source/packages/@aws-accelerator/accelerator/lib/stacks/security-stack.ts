@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { AccountsConfig, GlobalConfig, Region, SecurityConfig } from '@aws-accelerator/config';
+import { Region } from '@aws-accelerator/config';
 import {
   GuardDutyPublishingDestination,
   MacieExportConfigClassification,
@@ -23,22 +23,14 @@ import * as config from 'aws-cdk-lib/aws-config';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
-
-/**
- * SecurityStackProps
- */
-export interface SecurityStackProps extends cdk.StackProps {
-  accountIds: { [name: string]: string };
-  accountsConfig: AccountsConfig;
-  globalConfig: GlobalConfig;
-  securityConfig: SecurityConfig;
-}
+import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { Logger } from '../logger';
 
 /**
  * Organizational Security Stack, depends on Organizations and Security-Audit Stack
  */
-export class SecurityStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: SecurityStackProps) {
+export class SecurityStack extends AcceleratorStack {
+  constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     // MacieSession configuration
@@ -161,83 +153,36 @@ export class SecurityStack extends cdk.Stack {
       }
     }
 
-    console.log('security-stack: AWS Config');
+    Logger.info('[security-stack] Evaluating AWS Config rule sets');
     for (const ruleSet of props.securityConfig.awsConfig.ruleSets) {
-      //
-      // Region exclusion check
-      // TODO: Move this to a util function
-      //
-      if (ruleSet.excludeRegions?.includes(cdk.Stack.of(this).region)) {
-        console.log(`security-stack: ${cdk.Stack.of(this).region} region excluded`);
+      if (!this.isIncluded(ruleSet.deploymentTargets)) {
+        Logger.info('[security-stack] Item excluded');
         continue;
       }
 
-      //
-      // Account exclusion check
-      // TODO: Move this to a util function
-      //
-      let excludeAccount = false;
-      for (const account in ruleSet.excludeAccounts) {
-        const email = props.accountsConfig.getEmail(account);
-        if (cdk.Stack.of(this).account === props.accountIds[email]) {
-          console.log(`security-stack: ${account} account excluded`);
-          excludeAccount = true;
-          break;
+      Logger.info(
+        `[security-stack] Account (${cdk.Stack.of(this).account}) should be included, deploying AWS Config Rules`,
+      );
+
+      for (const rule of ruleSet.rules) {
+        Logger.info(`[security-stack] Creating managed rule ${rule.name}`);
+
+        const resourceTypes: config.ResourceType[] = [];
+        for (const resourceType of rule.complianceResourceTypes ?? []) {
+          resourceTypes.push(config.ResourceType.of(resourceType));
         }
-      }
-      if (excludeAccount) {
-        continue;
-      }
 
-      let includeAccount = false;
+        const configRule = new config.ManagedRule(this, pascalCase(rule.name), {
+          configRuleName: rule.name,
+          identifier: rule.identifier,
+          inputParameters: rule.inputParameters,
+          ruleScope: {
+            resourceTypes,
+          },
+        });
 
-      //
-      // Check Accounts List
-      //
-      for (const account in ruleSet.accounts) {
-        const email = props.accountsConfig.getEmail(account);
-        if (cdk.Stack.of(this).account === props.accountIds[email]) {
-          includeAccount = true;
-          break;
-        }
-      }
-
-      //
-      // Check OU List
-      //
-      for (const ou of ruleSet.organizationalUnits ?? []) {
-        console.log(`security-stack: Checking ${ou}`);
-        if (ou === 'Root') {
-          includeAccount = true;
-          break;
-        }
-      }
-
-      if (includeAccount) {
-        console.log(
-          `security-stack: Account (${cdk.Stack.of(this).account}) should be included, deploying AWS Config Rules`,
-        );
-
-        for (const rule of ruleSet.rules) {
-          console.log(`security-stack: Creating managed rule ${rule.identifier}`);
-
-          const resourceTypes: config.ResourceType[] = [];
-          for (const resourceType of rule.complianceResourceTypes ?? []) {
-            resourceTypes.push(config.ResourceType.of(resourceType));
-          }
-
-          const configRule = new config.ManagedRule(this, pascalCase(rule.name), {
-            configRuleName: rule.name,
-            identifier: rule.identifier,
-            inputParameters: rule.inputParameters,
-            ruleScope: {
-              resourceTypes,
-            },
-          });
-
-          if (configRecorder) {
-            configRule.node.addDependency(configRecorder);
-          }
+        if (configRecorder) {
+          configRule.node.addDependency(configRecorder);
         }
       }
     }

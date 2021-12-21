@@ -32,14 +32,12 @@ centralSecurityServices:
           - EC2.10
           - Lambda.4
 awsConfig:
-  enableConfigurationRecorder: true
-  enableDeliveryChannel: true
-  ruleSets: 
-    - excludeRegions: []
-      exclude-accounts: []
-      organizational-units:
-        - Root
-      accounts: []
+  enableConfigurationRecorder: false
+  enableDeliveryChannel: false
+  ruleSets:
+    - deploymentTargets:
+        organizationalUnits:
+          - Root
       rules:
         - name: accelerator-iam-user-group-membership-check
           complianceResourceTypes:

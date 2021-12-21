@@ -81,10 +81,7 @@ export class SecurityConfigTypes {
   });
 
   static readonly awsConfigRuleSet = t.interface({
-    excludeRegions: t.optional(t.array(t.nonEmptyString)),
-    excludeAccounts: t.optional(t.array(t.nonEmptyString)),
-    organizationalUnits: t.optional(t.array(t.nonEmptyString)),
-    accounts: t.optional(t.array(t.nonEmptyString)),
+    deploymentTargets: t.deploymentTargets,
     rules: t.array(SecurityConfigTypes.configRule),
   });
 
@@ -155,10 +152,7 @@ export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRul
 }
 
 export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet> {
-  readonly excludeRegions: string[] = [];
-  readonly excludeAccounts: string[] = [];
-  readonly organizationalUnits: string[] = [];
-  readonly accounts: string[] = [];
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   readonly rules: ConfigRule[] = [];
 }
 

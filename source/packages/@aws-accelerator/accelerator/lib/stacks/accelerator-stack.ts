@@ -18,6 +18,7 @@ import {
   IamConfig,
   NetworkConfig,
   OrganizationConfig,
+  SecurityConfig,
 } from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
@@ -31,6 +32,7 @@ export interface AcceleratorStackProps extends cdk.StackProps {
   iamConfig: IamConfig;
   networkConfig: NetworkConfig;
   organizationConfig: OrganizationConfig;
+  securityConfig: SecurityConfig;
 }
 
 export abstract class AcceleratorStack extends cdk.Stack {
