@@ -157,8 +157,8 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
 }
 
 export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig> {
-  readonly enableConfigurationRecorder = false;
-  readonly enableDeliveryChannel = false;
+  readonly enableConfigurationRecorder = true;
+  readonly enableDeliveryChannel = true;
   readonly ruleSets: AwsConfigRuleSet[] = [];
 }
 

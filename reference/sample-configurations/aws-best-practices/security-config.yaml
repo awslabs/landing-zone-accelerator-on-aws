@@ -32,8 +32,8 @@ centralSecurityServices:
           - EC2.10
           - Lambda.4
 awsConfig:
-  enableConfigurationRecorder: false
-  enableDeliveryChannel: false
+  enableConfigurationRecorder: true
+  enableDeliveryChannel: true
   ruleSets:
     - deploymentTargets:
         organizationalUnits:
