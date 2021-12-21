@@ -35,6 +35,7 @@ export const isThrottlingError = (
   e.retryable === true ||
   // SDKv2 Error Structure
   e.code === 'ConcurrentModificationException' || // Retry for AWS Organizations
+  e.code === 'ResourceConflictException' || // Retry for Security Hub
   e.code === 'InsufficientDeliveryPolicyException' || // Retry for ConfigService
   e.code === 'NoAvailableDeliveryChannelException' || // Retry for ConfigService
   e.code === 'ConcurrentModifications' || // Retry for AssociateHostedZone
@@ -45,6 +46,7 @@ export const isThrottlingError = (
   e.code === 'InternalException' ||
   // SDKv3 Error Structure
   e.name === 'ConcurrentModificationException' || // Retry for AWS Organizations
+  e.name === 'ResourceConflictException' || // Retry for Security Hub
   e.name === 'InsufficientDeliveryPolicyException' || // Retry for ConfigService
   e.name === 'NoAvailableDeliveryChannelException' || // Retry for ConfigService
   e.name === 'ConcurrentModifications' || // Retry for AssociateHostedZone
