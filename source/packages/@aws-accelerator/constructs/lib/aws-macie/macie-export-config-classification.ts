@@ -11,12 +11,12 @@
  *  and limitations under the License.
  */
 
+import { Bucket } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
-import { v4 as uuidv4 } from 'uuid';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
 import { Construct } from 'constructs';
+import { v4 as uuidv4 } from 'uuid';
 
 const path = require('path');
 
@@ -40,7 +40,7 @@ export class MacieExportConfigClassification extends Construct {
     const MACIE_RESOURCE_TYPE = 'Custom::MaciePutClassificationExportConfiguration';
 
     // Create MacieSession export config bucket
-    const bucket = new compliant_constructs.SecureS3Bucket(this, 'AwsMacieExportConfigBucket', {
+    const bucket = new Bucket(this, 'AwsMacieExportConfigBucket', {
       s3BucketName: `aws-accelerator-security-macie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
       kmsAliasName: 'alias/accelerator/security/macie/s3',
       kmsDescription: 'AWS Accelerator MacieSession Export Config Bucket CMK',

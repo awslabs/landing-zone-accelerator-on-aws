@@ -20,61 +20,55 @@ import * as yaml from 'js-yaml';
  * Global configuration items.
  */
 export abstract class GlobalConfigTypes {
-  static readonly ControlTowerConfig = t.interface({
+  static readonly controlTowerConfig = t.interface({
     enable: t.boolean,
   });
 
-  static readonly CloudtrailConfig = t.interface({
+  static readonly cloudtrailConfig = t.interface({
     enable: t.boolean,
     organizationTrail: t.boolean,
   });
 
-  static readonly LoggingConfig = t.interface({
+  static readonly loggingConfig = t.interface({
     account: t.nonEmptyString,
-    cloudtrail: GlobalConfigTypes.CloudtrailConfig,
+    cloudtrail: GlobalConfigTypes.cloudtrailConfig,
+  });
+
+  static readonly globalConfig = t.interface({
+    homeRegion: t.nonEmptyString,
+    enabledRegions: t.array(t.region),
+    controlTower: GlobalConfigTypes.controlTowerConfig,
+    logging: GlobalConfigTypes.loggingConfig,
   });
 }
 
-/**
- * @see GlobalConfig
- */
-export const GlobalConfigType = t.interface({
-  homeRegion: t.nonEmptyString,
-  enabledRegions: t.array(t.region),
-  controlTower: GlobalConfigTypes.ControlTowerConfig,
-  logging: GlobalConfigTypes.LoggingConfig,
-});
+export class ControlTowerConfig implements t.TypeOf<typeof GlobalConfigTypes.controlTowerConfig> {
+  readonly enable = true;
+}
 
-export class GlobalConfig implements t.TypeOf<typeof GlobalConfigType> {
+export class CloudtrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloudtrailConfig> {
+  readonly enable = true;
+  readonly organizationTrail = false;
+}
+
+export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingConfig> {
+  readonly account = 'Log Archive';
+  readonly cloudtrail: CloudtrailConfig = new CloudtrailConfig();
+}
+
+export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalConfig> {
   static readonly FILENAME = 'global-config.yaml';
 
-  /**
-   *
-   */
   readonly homeRegion = '';
-
-  /**
-   *
-   */
   readonly enabledRegions = [];
-
-  readonly controlTower = {
-    enable: true,
-  };
-
-  readonly logging: t.TypeOf<typeof GlobalConfigTypes.LoggingConfig> = {
-    account: 'logArchive',
-    cloudtrail: {
-      enable: true,
-      organizationTrail: true,
-    },
-  };
+  readonly controlTower: ControlTowerConfig = new ControlTowerConfig();
+  readonly logging: LoggingConfig = new LoggingConfig();
 
   /**
    *
    * @param values
    */
-  constructor(values?: t.TypeOf<typeof GlobalConfigType>) {
+  constructor(values?: t.TypeOf<typeof GlobalConfigTypes.globalConfig>) {
     if (values) {
       Object.assign(this, values);
     }
@@ -87,7 +81,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigType> {
    */
   static load(dir: string): GlobalConfig {
     const buffer = fs.readFileSync(path.join(dir, GlobalConfig.FILENAME), 'utf8');
-    const values = t.parse(GlobalConfigType, yaml.load(buffer));
+    const values = t.parse(GlobalConfigTypes.globalConfig, yaml.load(buffer));
     return new GlobalConfig(values);
   }
 }

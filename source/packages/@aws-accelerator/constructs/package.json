@@ -44,7 +44,6 @@
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
     "aws-cdk-lib": "2.1.0",
-    "@aws-compliant-constructs/compliant-constructs": "^0.0.0",
     "@types/uuid": "8.3.3"
   }
 }

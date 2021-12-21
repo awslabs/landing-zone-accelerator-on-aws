@@ -11,11 +11,15 @@
  *  and limitations under the License.
  */
 
-import { Construct } from 'constructs';
-import * as accelerator_constructs from '@aws-accelerator/constructs';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
+import {
+  TransitGatewayAttachment,
+  TransitGatewayRouteTableAssociation,
+  TransitGatewayRouteTablePropagation,
+} from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { pascalCase } from 'change-case';
+import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class NetworkTgwAttachStack extends AcceleratorStack {
@@ -53,14 +57,14 @@ export class NetworkTgwAttachStack extends AcceleratorStack {
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
       if (vpcItem.region == cdk.Stack.of(this).region) {
         for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
-          const accountId = props.accountIds[props.accountsConfig.getEmail(tgwAttachmentItem.accountName)];
+          const accountId = props.accountIds[props.accountsConfig.getEmail(tgwAttachmentItem.transitGateway.account)];
           if (accountId === cdk.Stack.of(this).account) {
             const owningAccountId = props.accountIds[props.accountsConfig.getEmail(vpcItem.account)];
 
             // Get the Transit Gateway ID
-            const transitGatewayId = transitGateways.get(tgwAttachmentItem.transitGatewayName);
+            const transitGatewayId = transitGateways.get(tgwAttachmentItem.transitGateway.name);
             if (transitGatewayId === undefined) {
-              throw new Error(`Transit Gateway ${tgwAttachmentItem.transitGatewayName} not found`);
+              throw new Error(`Transit Gateway ${tgwAttachmentItem.transitGateway.name} not found`);
             }
 
             // Get the Transit Gateway Attachment ID
@@ -78,7 +82,7 @@ export class NetworkTgwAttachStack extends AcceleratorStack {
                 `Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
               );
 
-              const transitGatewayAttachment = accelerator_constructs.TransitGatewayAttachment.fromLookup(
+              const transitGatewayAttachment = TransitGatewayAttachment.fromLookup(
                 this,
                 pascalCase(`${tgwAttachmentItem.name}VpcTransitGatewayAttachment`),
                 {
@@ -93,14 +97,14 @@ export class NetworkTgwAttachStack extends AcceleratorStack {
 
             // Evaluate Route Table Associations
             for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
-              const key = `${tgwAttachmentItem.transitGatewayName}_${routeTableItem}`;
+              const key = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
 
               const transitGatewayRouteTableId = transitGatewayRouteTables.get(key);
               if (transitGatewayRouteTableId === undefined) {
                 throw new Error(`Transit Gateway Route Table ${key} not found`);
               }
 
-              new accelerator_constructs.TransitGatewayRouteTableAssociation(
+              new TransitGatewayRouteTableAssociation(
                 this,
                 `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Association`,
                 {
@@ -112,14 +116,14 @@ export class NetworkTgwAttachStack extends AcceleratorStack {
 
             // Evaluate Route Table Propagations
             for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
-              const key = `${tgwAttachmentItem.transitGatewayName}_${routeTableItem}`;
+              const key = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
 
               const transitGatewayRouteTableId = transitGatewayRouteTables.get(key);
               if (transitGatewayRouteTableId === undefined) {
                 throw new Error(`Transit Gateway Route Table ${key} not found`);
               }
 
-              new accelerator_constructs.TransitGatewayRouteTablePropagation(
+              new TransitGatewayRouteTablePropagation(
                 this,
                 `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Propagation`,
                 {

@@ -3,25 +3,21 @@
 # AWS Control Tower sets up a Security OU for you. This OU contains three
 # shared accounts: the management (primary) account, the log archive account,
 # and the security audit account (also referred to as the audit account).
-mandatory-accounts:
-  management:
-    account-name: Management
+mandatoryAccounts:
+  - name: Management
     description: The management (primary) account
     email: <management-account>@example.com <----- UPDATE EMAIL ADDRESS
-    organizational-unit: root-ou
-  log-archive:
-    account-name: Log Archive
+    organizationalUnit: Root
+  - name: Log Archive
     description: The log archive account
     email: <log-archive>@example.com  <----- UPDATE EMAIL ADDRESS
-    organizational-unit: security-ou
-  audit:
-    account-name: Audit
+    organizationalUnit: Security
+  - name: Audit
     description: The security audit account (also referred to as the audit account)
     email: <audit>@example.com  <----- UPDATE EMAIL ADDRESS
-    organizational-unit: security-ou
-workload-accounts:
-  shared-network:
-    account-name: Shared Network
+    organizationalUnit: Security
+workloadAccounts:
+  - name: Shared Network
     description: The shared network account (example)
     email: <shared-network>@example.com  <----- UPDATE EMAIL ADDRESS
-    organizational-unit: infrastructure-ou
+    organizationalUnit: Infrastructure

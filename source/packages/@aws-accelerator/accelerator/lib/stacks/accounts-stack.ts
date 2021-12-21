@@ -19,10 +19,11 @@ import {
   PolicyType,
   RootOrganizationalUnit,
 } from '@aws-accelerator/constructs';
-import { Construct } from 'constructs';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
+import { Construct } from 'constructs';
 import * as path from 'path';
+import { Logger } from '../logger';
 
 export interface AccountsStackProps extends cdk.StackProps {
   accountIds: { [name: string]: string };
@@ -36,6 +37,8 @@ export interface AccountsStackProps extends cdk.StackProps {
 export class AccountsStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: AccountsStackProps) {
     super(scope, id, props);
+
+    Logger.debug(`[accounts-stack] homeRegion: ${props.globalConfig.homeRegion}`);
 
     //
     // Obtain the Root
@@ -56,37 +59,46 @@ export class AccountsStack extends cdk.Stack {
       //       and left in place
       //
       const organizationalUnitList: { [key: string]: OrganizationalUnit } = {};
-      for (const [key, organizationalUnit] of Object.entries(props.organizationConfig.organizationalUnits)) {
+      for (const organizationalUnit of props.organizationConfig.organizationalUnits) {
+        const name = organizationalUnit.name;
+
+        Logger.info(`[accounts-stack] Adding organizational unit (${name}) with parent (${organizationalUnit.parent})`);
+
         // Create Organizational Unit
-        organizationalUnitList[key] = new OrganizationalUnit(this, pascalCase(organizationalUnit.name), {
-          name: organizationalUnit.name,
+        organizationalUnitList[name] = new OrganizationalUnit(this, pascalCase(name), {
+          name,
           parentId: root.id,
         });
 
-        console.log(`adding for ${organizationalUnit.name}`);
+        // Add FullAWSAccess SCP, skip Root
+        if (name !== 'Root') {
+          Logger.info(
+            `[accounts-stack] Attaching FullAWSAccess service control policy to organizational unit (${name})`,
+          );
+          new PolicyAttachment(this, pascalCase(`Attach_FullAWSAccess_${name}`), {
+            policyId: 'p-FullAWSAccess',
+            targetId: organizationalUnitList[name].id,
+            type: PolicyType.SERVICE_CONTROL_POLICY,
+          });
+        }
+      }
 
-        // Add FullAWSAccess SCP
-        new PolicyAttachment(this, pascalCase(`Attach_FullAWSAccess_${organizationalUnit.name}`), {
+      //
+      // Attach FullAWSAccess SCP to all accounts
+      //
+      for (const account of [...props.accountsConfig.mandatoryAccounts, ...props.accountsConfig.workloadAccounts]) {
+        Logger.info(`[accounts-stack] Attaching FullAWSAccess service control policy to account (${account.name})`);
+        new PolicyAttachment(this, pascalCase(`Attach_FullAWSAccess_${account.name}`), {
           policyId: 'p-FullAWSAccess',
-          targetId: organizationalUnitList[key].id,
+          targetId: props.accountIds[account.email],
           type: PolicyType.SERVICE_CONTROL_POLICY,
         });
       }
 
-      //
-      // Create Accounts
-      //
-      for (const account of Object.values(props.accountsConfig.mandatoryAccounts)) {
-        console.log(account.accountName);
-        // new AwsAccount()
-      }
-      for (const account of Object.values(props.accountsConfig.workloadAccounts)) {
-        console.log(account.accountName);
-        // new AwsAccount()
-      }
-
       // Deploy SCPs
-      for (const serviceControlPolicy of Object.values(props.organizationConfig.serviceControlPolicies)) {
+      for (const serviceControlPolicy of props.organizationConfig.serviceControlPolicies) {
+        Logger.info(`[accounts-stack] Adding service control policy (${serviceControlPolicy.name})`);
+
         const scp = new Policy(this, serviceControlPolicy.name, {
           description: serviceControlPolicy.description,
           name: serviceControlPolicy.name,
@@ -94,9 +106,17 @@ export class AccountsStack extends cdk.Stack {
           type: PolicyType.SERVICE_CONTROL_POLICY,
         });
 
-        for (const organizationalUnit of serviceControlPolicy.organizationalUnits ?? []) {
+        for (const organizationalUnit of serviceControlPolicy.deploymentTargets.organizationalUnits ?? []) {
+          Logger.info(
+            `[accounts-stack] Attaching service control policy (${serviceControlPolicy.name}) to organizational unit (${organizationalUnit})`,
+          );
+
+          if (organizationalUnit === 'Root') {
+            Logger.error(`[accounts-stack] Attempting to add an SCP to the Root OU`);
+            throw new Error(`Attempting to add an SCP to the Root OU`);
+          }
           let targetId = root.id;
-          if (organizationalUnit !== 'root') {
+          if (organizationalUnit !== 'Root') {
             targetId = organizationalUnitList[organizationalUnit].id;
           }
 
@@ -107,7 +127,7 @@ export class AccountsStack extends cdk.Stack {
           });
         }
 
-        for (const account of serviceControlPolicy.accounts ?? []) {
+        for (const account of serviceControlPolicy.deploymentTargets.accounts ?? []) {
           new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${account}`), {
             policyId: scp.id,
             email: props.accountsConfig.getEmail(account),

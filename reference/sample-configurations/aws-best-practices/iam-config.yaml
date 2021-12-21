@@ -1,38 +1,42 @@
-policy-sets:
-  - organizational-units:
-      - root-ou
+policySets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
     policies:
       - name: Default-Boundary-Policy
         policy: boundary-policy.json
-role-sets:
-  - organizational-units:
-      - root-ou
+roleSets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
     roles:
       - name: EC2-Default-SSM-AD-Role
-        assumed-by:
+        assumedBy:
           type: service
           principal: ec2.amazonaws.com
         policies:
-          aws-managed:
+          awsManaged:
             - AmazonSSMManagedInstanceCore
             - AmazonSSMDirectoryServiceAccess
             - CloudWatchAgentServerPolicy
-        boundary-policy: Default-Boundary-Policy
-group-sets:
-  - organizational-units:
-      - root-ou
+        boundaryPolicy: Default-Boundary-Policy
+groupSets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
     groups:
       - name: Administrators
         policies:
-          aws-managed:
+          awsManaged:
             - AdministratorAccess
-user-sets:
-  - accounts:
-      - management
+userSets:
+  - deploymentTargets:
+      accounts:
+        - Management
     users:
       - username: breakGlassUser01
         group: Administrators
-        boundary-policy: Default-Boundary-Policy
+        boundaryPolicy: Default-Boundary-Policy
       - username: breakGlassUser02
         group: Administrators
-        boundary-policy: Default-Boundary-Policy
+        boundaryPolicy: Default-Boundary-Policy

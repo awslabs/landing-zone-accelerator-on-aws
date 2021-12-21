@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { AccountsConfig, GlobalConfig, OrganizationConfig, SecurityConfig } from '@aws-accelerator/config';
+import { AccountsConfig, GlobalConfig, OrganizationConfig, Region, SecurityConfig } from '@aws-accelerator/config';
 import {
   EnableAwsServiceAccess,
   EnableSharingWithAwsOrganization,
@@ -19,14 +19,15 @@ import {
   MacieOrganizationAdminAccount,
   SecurityHubOrganizationAdminAccount,
 } from '@aws-accelerator/constructs';
-import { Construct } from 'constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
+import * as cdk from 'aws-cdk-lib';
 import * as cloudtrail from 'aws-cdk-lib/aws-cloudtrail';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import { Logger } from '../logger';
 
 export interface OrganizationsStackProps extends cdk.StackProps {
   accountIds: { [name: string]: string };
@@ -45,6 +46,8 @@ export class OrganizationsStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: OrganizationsStackProps) {
     super(scope, id, props);
 
+    Logger.debug(`[organizations-stack] homeRegion: ${props.globalConfig.homeRegion}`);
+
     //
     // Global Organizations actions, only execute in the home region
     //
@@ -52,8 +55,14 @@ export class OrganizationsStack extends cdk.Stack {
       //
       // Configure Organizations Trail
       //
+      Logger.debug(`[organizations-stack] logging.cloudtrail.enable: ${props.globalConfig.logging.cloudtrail.enable}`);
+      Logger.debug(
+        `[organizations-stack] logging.cloudtrail.organizationTrail: ${props.globalConfig.logging.cloudtrail.organizationTrail}`,
+      );
 
       if (props.globalConfig.logging.cloudtrail.enable && props.globalConfig.logging.cloudtrail.organizationTrail) {
+        Logger.info('[organizations-stack] Adding Organizations CloudTrail');
+
         const enableCloudtrailServiceAccess = new EnableAwsServiceAccess(this, 'EnableOrganizationsCloudTrail', {
           servicePrincipal: 'cloudtrail.amazonaws.com',
         });
@@ -97,9 +106,9 @@ export class OrganizationsStack extends cdk.Stack {
           bucket: s3.Bucket.fromBucketName(
             this,
             'CentralLogsBucket',
-            `aws-accelerator-central-logs-${
-              props.accountIds[props.accountsConfig.mandatoryAccounts.logArchive.email]
-            }-${cdk.Stack.of(this).region}`,
+            `aws-accelerator-central-logs-${props.accountIds[props.accountsConfig.getLogArchiveAccount().email]}-${
+              cdk.Stack.of(this).region
+            }`,
           ),
           cloudWatchLogGroup: cloudTrailCloudWatchCmkLogGroup,
           cloudWatchLogsRetention: logs.RetentionDays.ONE_MONTH,
@@ -108,7 +117,7 @@ export class OrganizationsStack extends cdk.Stack {
             this,
             'CentralLogsCmk',
             `arn:${cdk.Stack.of(this).partition}:kms:${cdk.Stack.of(this).region}:${
-              props.accountIds[props.accountsConfig.mandatoryAccounts.logArchive.email]
+              props.accountIds[props.accountsConfig.getLogArchiveAccount().email]
             }:alias/accelerator/central-logs/s3`,
           ),
           includeGlobalServiceEvents: true,
@@ -144,10 +153,14 @@ export class OrganizationsStack extends cdk.Stack {
 
     // Macie Configuration
     if (props.securityConfig.centralSecurityServices.macie.enable) {
-      if (props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(cdk.Stack.of(this).region) == -1) {
+      if (
+        props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
+          cdk.Stack.of(this).region as Region,
+        ) == -1
+      ) {
         console.log(
           `Starts macie admin account delegation to the account with email ${
-            props.accountsConfig.mandatoryAccounts.audit.email
+            props.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
         console.log(`Macie Admin Account ID is ${adminAccountId}`);
@@ -158,7 +171,7 @@ export class OrganizationsStack extends cdk.Stack {
       } else {
         console.log(
           `${cdk.Stack.of(this).region} region was in macie excluded list so ignoring this region for ${
-            props.accountsConfig.mandatoryAccounts.audit.email
+            props.accountsConfig.getAuditAccount().email
           } account`,
         );
       }
@@ -167,11 +180,13 @@ export class OrganizationsStack extends cdk.Stack {
     //GuardDuty Config
     if (props.securityConfig.centralSecurityServices.guardduty.enable) {
       if (
-        props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(cdk.Stack.of(this).region) == -1
+        props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
+          cdk.Stack.of(this).region as Region,
+        ) == -1
       ) {
         console.log(
           `Starts guardduty admin account delegation to the account with email ${
-            props.accountsConfig.mandatoryAccounts.audit.email
+            props.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
@@ -183,7 +198,7 @@ export class OrganizationsStack extends cdk.Stack {
       } else {
         console.log(
           `${cdk.Stack.of(this).region} region was in guardduty excluded list so ignoring this region for ${
-            props.accountsConfig.mandatoryAccounts.audit.email
+            props.accountsConfig.getAuditAccount().email
           } account`,
         );
       }
@@ -192,12 +207,13 @@ export class OrganizationsStack extends cdk.Stack {
     //SecurityHub Config
     if (props.securityConfig.centralSecurityServices.securityHub.enable) {
       if (
-        props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(cdk.Stack.of(this).region) ==
-        -1
+        props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(
+          cdk.Stack.of(this).region as Region,
+        ) == -1
       ) {
         console.log(
           `Starts SecurityHub admin account delegation to the account with email ${
-            props.accountsConfig.mandatoryAccounts.audit.email
+            props.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
@@ -209,7 +225,7 @@ export class OrganizationsStack extends cdk.Stack {
       } else {
         console.log(
           `${cdk.Stack.of(this).region} region was in SecurityHub excluded list so ignoring this region for ${
-            props.accountsConfig.mandatoryAccounts.audit.email
+            props.accountsConfig.getAuditAccount().email
           } account`,
         );
       }

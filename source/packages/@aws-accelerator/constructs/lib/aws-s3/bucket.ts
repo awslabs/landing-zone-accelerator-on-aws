@@ -24,9 +24,9 @@ export enum BucketAccessType {
 }
 
 /**
- * Construction properties for a Secure S3 Bucket object.
+ * Construction properties for an S3 Bucket object.
  */
-export interface SecureS3BucketProps {
+export interface BucketProps {
   /**
    * Physical name of this bucket.
    *
@@ -72,11 +72,11 @@ export interface SecureS3BucketProps {
  * Defines a Secure S3 Bucket object. By default a KMS CMK is generated and
  * associated to the bucket.
  */
-export class SecureS3Bucket extends Construct {
+export class Bucket extends Construct {
   private readonly bucket: s3.Bucket;
   private readonly cmk: kms.Key;
 
-  constructor(scope: Construct, id: string, props: SecureS3BucketProps) {
+  constructor(scope: Construct, id: string, props: BucketProps) {
     super(scope, id);
 
     this.cmk = new kms.Key(this, 'Cmk', {

@@ -19,7 +19,7 @@ import * as yaml from 'js-yaml';
 /**
  * Configuration items.
  */
-export abstract class IamConfigTypes {
+export class IamConfigTypes {
   static readonly userConfig = t.interface({
     username: t.nonEmptyString,
     group: t.nonEmptyString,
@@ -27,9 +27,7 @@ export abstract class IamConfigTypes {
   });
 
   static readonly userSetConfig = t.interface({
-    excludeAccounts: t.optional(t.array(t.nonEmptyString)),
-    organizationalUnits: t.optional(t.array(t.nonEmptyString)),
-    accounts: t.optional(t.array(t.nonEmptyString)),
+    deploymentTargets: t.deploymentTargets,
     users: t.array(IamConfigTypes.userConfig),
   });
 
@@ -44,9 +42,7 @@ export abstract class IamConfigTypes {
   });
 
   static readonly groupSetConfig = t.interface({
-    excludeAccounts: t.optional(t.array(t.nonEmptyString)),
-    organizationalUnits: t.optional(t.array(t.nonEmptyString)),
-    accounts: t.optional(t.array(t.nonEmptyString)),
+    deploymentTargets: t.deploymentTargets,
     groups: t.array(IamConfigTypes.groupConfig),
   });
 
@@ -65,9 +61,7 @@ export abstract class IamConfigTypes {
   });
 
   static readonly roleSetConfig = t.interface({
-    excludeAccounts: t.optional(t.array(t.nonEmptyString)),
-    organizationalUnits: t.optional(t.array(t.nonEmptyString)),
-    accounts: t.optional(t.array(t.nonEmptyString)),
+    deploymentTargets: t.deploymentTargets,
     roles: t.array(IamConfigTypes.roleConfig),
   });
 
@@ -77,9 +71,7 @@ export abstract class IamConfigTypes {
   });
 
   static readonly policySetConfig = t.interface({
-    excludeAccounts: t.optional(t.array(t.nonEmptyString)),
-    organizationalUnits: t.optional(t.array(t.nonEmptyString)),
-    accounts: t.optional(t.array(t.nonEmptyString)),
+    deploymentTargets: t.deploymentTargets,
     policies: t.array(IamConfigTypes.policyConfig),
   });
 
@@ -91,64 +83,56 @@ export abstract class IamConfigTypes {
   });
 }
 
-export abstract class UserConfig implements t.TypeOf<typeof IamConfigTypes.userConfig> {
+export class UserConfig implements t.TypeOf<typeof IamConfigTypes.userConfig> {
   readonly username: string = '';
   readonly boundaryPolicy: string = '';
   readonly group: string = '';
 }
 
-export abstract class UserSetConfig implements t.TypeOf<typeof IamConfigTypes.userSetConfig> {
-  readonly accounts: string[] = [];
-  readonly excludeAccounts: string[] = [];
-  readonly organizationalUnits: string[] = [];
+export class UserSetConfig implements t.TypeOf<typeof IamConfigTypes.userSetConfig> {
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   readonly users: UserConfig[] = [];
 }
 
-export abstract class PoliciesConfig implements t.TypeOf<typeof IamConfigTypes.policiesConfig> {
+export class PoliciesConfig implements t.TypeOf<typeof IamConfigTypes.policiesConfig> {
   readonly awsManaged: string[] = [];
   readonly customerManaged: string[] = [];
 }
 
-export abstract class GroupConfig implements t.TypeOf<typeof IamConfigTypes.groupConfig> {
+export class GroupConfig implements t.TypeOf<typeof IamConfigTypes.groupConfig> {
   readonly name: string = '';
   readonly policies: PoliciesConfig | undefined = undefined;
 }
 
-export abstract class GroupSetConfig implements t.TypeOf<typeof IamConfigTypes.groupSetConfig> {
-  readonly accounts: string[] = [];
-  readonly excludeAccounts: string[] = [];
+export class GroupSetConfig implements t.TypeOf<typeof IamConfigTypes.groupSetConfig> {
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   readonly groups: GroupConfig[] = [];
-  readonly organizationalUnits: string[] = [];
 }
 
-export abstract class AssumedByConfig implements t.TypeOf<typeof IamConfigTypes.assumedByConfig> {
+export class AssumedByConfig implements t.TypeOf<typeof IamConfigTypes.assumedByConfig> {
   readonly principal: string = '';
   readonly type!: t.TypeOf<typeof IamConfigTypes.assumedByTypeEnum>;
 }
 
-export abstract class RoleConfig implements t.TypeOf<typeof IamConfigTypes.roleConfig> {
+export class RoleConfig implements t.TypeOf<typeof IamConfigTypes.roleConfig> {
   readonly assumedBy!: AssumedByConfig;
   readonly boundaryPolicy: string = '';
   readonly name: string = '';
   readonly policies: PoliciesConfig | undefined = undefined;
 }
 
-export abstract class RoleSetConfig implements t.TypeOf<typeof IamConfigTypes.roleSetConfig> {
-  readonly accounts: string[] = [];
-  readonly excludeAccounts: string[] = [];
-  readonly organizationalUnits: string[] = [];
+export class RoleSetConfig implements t.TypeOf<typeof IamConfigTypes.roleSetConfig> {
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   readonly roles: RoleConfig[] = [];
 }
 
-export abstract class PolicyConfig implements t.TypeOf<typeof IamConfigTypes.policyConfig> {
+export class PolicyConfig implements t.TypeOf<typeof IamConfigTypes.policyConfig> {
   readonly name: string = '';
   readonly policy: string = '';
 }
 
-export abstract class PolicySetConfig implements t.TypeOf<typeof IamConfigTypes.policySetConfig> {
-  readonly accounts: string[] = [];
-  readonly excludeAccounts: string[] = [];
-  readonly organizationalUnits: string[] = [];
+export class PolicySetConfig implements t.TypeOf<typeof IamConfigTypes.policySetConfig> {
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   readonly policies: PolicyConfig[] = [];
 }
 

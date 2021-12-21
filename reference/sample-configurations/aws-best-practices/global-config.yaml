@@ -1,17 +1,10 @@
-home-region: &HOME_REGION us-east-1
-enabled-regions:
+homeRegion: &HOME_REGION us-east-1
+enabledRegions:
   - *HOME_REGION
-control-tower:
+controlTower:
   enable: true
 logging:
-  account: log-archive
-  s3-access-logs:
-    enable: true
-    exclude-regions: []
-    exclude-accounts: []
-    organizational-units:
-      - Root
-    accounts: []
+  account: Log Archive
   cloudtrail:
-    enable: true
-    organization-trail: true
+    enable: false
+    organization-trail: false

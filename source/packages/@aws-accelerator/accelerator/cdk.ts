@@ -15,7 +15,8 @@ import * as config from '@aws-accelerator/config';
 import * as fs from 'fs';
 import mri from 'mri';
 import process from 'process';
-import { Accelerator, AcceleratorStage } from './lib/accelerator';
+import { Accelerator } from './lib/accelerator';
+import { AcceleratorStage } from './lib/accelerator-stage';
 import { AcceleratorToolkit, AcceleratorToolkitCommand } from './lib/toolkit';
 
 process.on('unhandledRejection', (reason, _) => {

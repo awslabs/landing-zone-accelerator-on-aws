@@ -3,13 +3,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 
-export abstract class SecurityConfigTypes {
+export class SecurityConfigTypes {
   /**
    * MacieConfig Interface
    */
-  static readonly MacieConfig = t.interface({
+  static readonly macieConfig = t.interface({
     enable: t.boolean,
-    excludeRegions: t.optional(t.array(t.nonEmptyString)),
+    excludeRegions: t.optional(t.array(t.region)),
     policyFindingsPublishingFrequency: t.enums('FrequencyType', ['FIFTEEN_MINUTES', 'ONE_HOUR', 'SIX_HOURS']),
     publishSensitiveDataFindings: t.boolean,
   });
@@ -17,15 +17,15 @@ export abstract class SecurityConfigTypes {
   /**
    * GuardDutyS3Protection Interface
    */
-  static readonly GuardDutyS3ProtectionConfig = t.interface({
+  static readonly guardDutyS3ProtectionConfig = t.interface({
     enable: t.boolean,
-    excludeRegions: t.optional(t.array(t.nonEmptyString)),
+    excludeRegions: t.optional(t.array(t.region)),
   });
 
   /**
    * GuardDutyExportFindingsConfig Interface
    */
-  static readonly GuardDutyExportFindingsConfig = t.interface({
+  static readonly guardDutyExportFindingsConfig = t.interface({
     enable: t.boolean,
     destinationType: t.enums('DestinationType', ['S3']),
     exportFrequency: t.enums('ExportFrequencyType', ['FIFTEEN_MINUTES', 'ONE_HOUR', 'SIX_HOURS']),
@@ -34,17 +34,17 @@ export abstract class SecurityConfigTypes {
   /**
    * GuardDutyConfig Interface
    */
-  static readonly GuardDutyConfig = t.interface({
+  static readonly guardDutyConfig = t.interface({
     enable: t.boolean,
-    excludeRegions: t.optional(t.array(t.nonEmptyString)),
-    s3Protection: SecurityConfigTypes.GuardDutyS3ProtectionConfig,
-    exportConfiguration: SecurityConfigTypes.GuardDutyExportFindingsConfig,
+    excludeRegions: t.optional(t.array(t.region)),
+    s3Protection: SecurityConfigTypes.guardDutyS3ProtectionConfig,
+    exportConfiguration: SecurityConfigTypes.guardDutyExportFindingsConfig,
   });
 
   /**
    * SecurityHubStandardConfig Interface
    */
-  static readonly SecurityHubStandardConfig = t.interface({
+  static readonly securityHubStandardConfig = t.interface({
     name: t.enums('ExportFrequencyType', [
       'AWS Foundational Security Best Practices v1.0.0',
       'CIS AWS Foundations Benchmark v1.2.0',
@@ -57,98 +57,124 @@ export abstract class SecurityConfigTypes {
   /**
    * SecurityHubConfig Interface
    */
-  static readonly SecurityHubConfig = t.interface({
+  static readonly securityHubConfig = t.interface({
     enable: t.boolean,
-    excludeRegions: t.optional(t.array(t.nonEmptyString)),
-    standards: t.array(SecurityConfigTypes.SecurityHubStandardConfig),
+    excludeRegions: t.optional(t.array(t.region)),
+    standards: t.array(SecurityConfigTypes.securityHubStandardConfig),
   });
 
   /**
    * SecurityConfig Interface
    */
-  static readonly SecurityConfig = t.interface({
+  static readonly centralSecurityServicesConfig = t.interface({
     delegatedAdminAccount: t.nonEmptyString,
-    macie: SecurityConfigTypes.MacieConfig,
-    guardduty: SecurityConfigTypes.GuardDutyConfig,
-    securityHub: SecurityConfigTypes.SecurityHubConfig,
+    macie: SecurityConfigTypes.macieConfig,
+    guardduty: SecurityConfigTypes.guardDutyConfig,
+    securityHub: SecurityConfigTypes.securityHubConfig,
   });
 
-  static readonly ConfigRule = t.interface({
+  static readonly configRule = t.interface({
     name: t.nonEmptyString,
     identifier: t.nonEmptyString,
     inputParameters: t.optional(t.dictionary(t.nonEmptyString, t.nonEmptyString)),
-    'compliance-resource-types': t.optional(t.array(t.nonEmptyString)),
+    complianceResourceTypes: t.optional(t.array(t.nonEmptyString)),
   });
 
-  static readonly ConfigRuleSet = t.interface({
+  static readonly awsConfigRuleSet = t.interface({
     excludeRegions: t.optional(t.array(t.nonEmptyString)),
     excludeAccounts: t.optional(t.array(t.nonEmptyString)),
     organizationalUnits: t.optional(t.array(t.nonEmptyString)),
     accounts: t.optional(t.array(t.nonEmptyString)),
-    rules: t.array(SecurityConfigTypes.ConfigRule),
+    rules: t.array(SecurityConfigTypes.configRule),
   });
 
-  static readonly Config = t.interface({
+  static readonly awsConfig = t.interface({
     enableConfigurationRecorder: t.boolean,
     enableDeliveryChannel: t.boolean,
-    ruleSets: t.array(SecurityConfigTypes.ConfigRuleSet),
+    ruleSets: t.array(SecurityConfigTypes.awsConfigRuleSet),
+  });
+
+  static readonly securityConfig = t.interface({
+    centralSecurityServices: SecurityConfigTypes.centralSecurityServicesConfig,
+    awsConfig: SecurityConfigTypes.awsConfig,
   });
 }
 
-export const SecurityConfigType = t.interface({
-  centralSecurityServices: SecurityConfigTypes.SecurityConfig,
-  awsConfig: SecurityConfigTypes.Config,
-});
+export class MacieConfig implements t.TypeOf<typeof SecurityConfigTypes.macieConfig> {
+  readonly enable = true;
+  readonly excludeRegions: t.Region[] = [];
+  readonly policyFindingsPublishingFrequency = 'FIFTEEN_MINUTES';
+  readonly publishSensitiveDataFindings = true;
+}
 
-export class SecurityConfig implements t.TypeOf<typeof SecurityConfigType> {
+export class GuardDutyS3ProtectionConfig implements t.TypeOf<typeof SecurityConfigTypes.guardDutyS3ProtectionConfig> {
+  readonly enable = true;
+  readonly excludeRegions: t.Region[] = [];
+}
+
+export class GuardDutyExportFindingsConfig
+  implements t.TypeOf<typeof SecurityConfigTypes.guardDutyExportFindingsConfig>
+{
+  readonly enable = true;
+  readonly destinationType = 'S3';
+  readonly exportFrequency = 'FIFTEEN_MINUTES';
+}
+
+export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guardDutyConfig> {
+  readonly enable = true;
+  readonly excludeRegions: t.Region[] = [];
+  readonly s3Protection: GuardDutyS3ProtectionConfig = new GuardDutyS3ProtectionConfig();
+  readonly exportConfiguration: GuardDutyExportFindingsConfig = new GuardDutyExportFindingsConfig();
+}
+export class SecurityHubStandardConfig implements t.TypeOf<typeof SecurityConfigTypes.securityHubStandardConfig> {
+  readonly name = '';
+  readonly enable = true;
+  readonly controlsToDisable: string[] = [];
+}
+
+export class SecurityHubConfig implements t.TypeOf<typeof SecurityConfigTypes.securityHubConfig> {
+  readonly enable = true;
+  readonly excludeRegions: t.Region[] = [];
+  readonly standards: SecurityHubStandardConfig[] = [];
+}
+
+export class CentralSecurityServicesConfig
+  implements t.TypeOf<typeof SecurityConfigTypes.centralSecurityServicesConfig>
+{
+  readonly delegatedAdminAccount = 'Audit';
+  readonly macie: MacieConfig = new MacieConfig();
+  readonly guardduty: GuardDutyConfig = new GuardDutyConfig();
+  readonly securityHub: SecurityHubConfig = new SecurityHubConfig();
+}
+
+export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRule> {
+  readonly name = '';
+  readonly identifier = '';
+  readonly inputParameters = {};
+  readonly complianceResourceTypes: string[] = [];
+}
+
+export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet> {
+  readonly excludeRegions: string[] = [];
+  readonly excludeAccounts: string[] = [];
+  readonly organizationalUnits: string[] = [];
+  readonly accounts: string[] = [];
+  readonly rules: ConfigRule[] = [];
+}
+
+export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig> {
+  readonly enableConfigurationRecorder = false;
+  readonly enableDeliveryChannel = false;
+  readonly ruleSets: AwsConfigRuleSet[] = [];
+}
+
+export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.securityConfig> {
   static readonly FILENAME = 'security-config.yaml';
 
-  readonly centralSecurityServices: t.TypeOf<typeof SecurityConfigTypes.SecurityConfig> = {
-    delegatedAdminAccount: 'audit',
-    macie: {
-      enable: true,
-      excludeRegions: [],
-      policyFindingsPublishingFrequency: 'FIFTEEN_MINUTES',
-      publishSensitiveDataFindings: true,
-    },
-    guardduty: {
-      enable: true,
-      excludeRegions: [],
-      s3Protection: {
-        enable: true,
-        excludeRegions: [],
-      },
-      exportConfiguration: {
-        enable: true,
-        destinationType: 'S3',
-        exportFrequency: 'FIFTEEN_MINUTES',
-      },
-    },
-    securityHub: {
-      enable: true,
-      excludeRegions: [],
-      standards: [
-        {
-          name: 'AWS Foundational Security Best Practices v1.0.0',
-          enable: true,
-          controlsToDisable: ['IAM.1', 'EC2.10', 'Lambda.4'],
-        },
-        {
-          name: 'PCI DSS v3.2.1',
-          enable: true,
-          controlsToDisable: ['IAM.1', 'EC2.10', 'Lambda.4'],
-        },
-      ],
-    },
-  };
+  readonly centralSecurityServices: CentralSecurityServicesConfig = new CentralSecurityServicesConfig();
+  readonly awsConfig: AwsConfig = new AwsConfig();
 
-  readonly awsConfig: t.TypeOf<typeof SecurityConfigTypes.Config> = {
-    enableConfigurationRecorder: true,
-    enableDeliveryChannel: true,
-    ruleSets: [],
-  };
-
-  constructor(values?: t.TypeOf<typeof SecurityConfigType>) {
+  constructor(values?: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
     if (values) {
       Object.assign(this, values);
     }
@@ -168,7 +194,7 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigType> {
    */
   static load(dir: string): SecurityConfig {
     const buffer = fs.readFileSync(path.join(dir, SecurityConfig.FILENAME), 'utf8');
-    const values = t.parse(SecurityConfigType, yaml.load(buffer));
+    const values = t.parse(SecurityConfigTypes.securityConfig, yaml.load(buffer));
     return new SecurityConfig(values);
   }
 }

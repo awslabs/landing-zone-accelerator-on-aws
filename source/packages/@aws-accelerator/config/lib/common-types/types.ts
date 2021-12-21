@@ -244,6 +244,28 @@ export const region = enums(
 );
 export type Region = t.TypeOf<typeof region>;
 
+export const deploymentTargets = t.interface({
+  organizationalUnits: optional(t.array(nonEmptyString)),
+  accounts: optional(t.array(nonEmptyString)),
+  excludedRegions: optional(t.array(nonEmptyString)),
+  excludedAccounts: optional(t.array(nonEmptyString)),
+});
+export class DeploymentTargets implements t.TypeOf<typeof deploymentTargets> {
+  readonly organizationalUnits: string[] = [];
+  readonly accounts: string[] = [];
+  readonly excludedRegions: Region[] = [];
+  readonly excludedAccounts: string[] = [];
+}
+
+export const shareTargets = t.interface({
+  organizationalUnits: optional(t.array(nonEmptyString)),
+  accounts: optional(t.array(nonEmptyString)),
+});
+export class ShareTargets implements t.TypeOf<typeof shareTargets> {
+  readonly organizationalUnits: string[] = [];
+  readonly accounts: string[] = [];
+}
+
 export const enableDisable = enums('EnableDisable', ['enable', 'disable'], 'Value should be enable or disable');
 export type EnableDisable = t.TypeOf<typeof region>;
 

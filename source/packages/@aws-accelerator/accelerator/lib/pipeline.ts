@@ -11,16 +11,16 @@
  *  and limitations under the License.
  */
 
-import { Construct } from 'constructs';
-import { AcceleratorStage } from '@aws-accelerator/accelerator';
+import { Bucket } from '@aws-accelerator/constructs';
+import * as cdk from 'aws-cdk-lib';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codecommit from 'aws-cdk-lib/aws-codecommit';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as cdk from 'aws-cdk-lib';
-import * as compliant_constructs from '@aws-compliant-constructs/compliant-constructs';
+import { Construct } from 'constructs';
+import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
 
 /**
@@ -47,7 +47,7 @@ export class AcceleratorPipeline extends Construct {
   constructor(scope: Construct, id: string, props: AcceleratorPipelineProps) {
     super(scope, id);
 
-    const bucket = new compliant_constructs.SecureS3Bucket(this, 'SecureBucket', {
+    const bucket = new Bucket(this, 'SecureBucket', {
       s3BucketName: `aws-accelerator-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
       kmsAliasName: 'alias/accelerator/pipeline/s3',
       kmsDescription: 'AWS Accelerator Pipeline Bucket CMK',
@@ -234,11 +234,11 @@ export class AcceleratorPipeline extends Construct {
           },
           MANAGEMENT_ACCOUNT_ID: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: props.managementAccountId,
+            value: props.managementAccountId ?? '',
           },
           MANAGEMENT_ACCOUNT_ROLE_NAME: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: props.managementAccountRoleName,
+            value: props.managementAccountRoleName ?? '',
           },
         },
       },

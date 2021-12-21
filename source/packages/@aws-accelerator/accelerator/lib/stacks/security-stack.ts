@@ -11,18 +11,18 @@
  *  and limitations under the License.
  */
 
-import { AccountsConfig, GlobalConfig, SecurityConfig } from '@aws-accelerator/config';
+import { AccountsConfig, GlobalConfig, Region, SecurityConfig } from '@aws-accelerator/config';
 import {
   GuardDutyPublishingDestination,
   MacieExportConfigClassification,
   MacieSession,
   SecurityHubStandards,
 } from '@aws-accelerator/constructs';
-import { Construct } from 'constructs';
+import * as cdk from 'aws-cdk-lib';
 import * as config from 'aws-cdk-lib/aws-config';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
+import { Construct } from 'constructs';
 
 /**
  * SecurityStackProps
@@ -44,10 +44,12 @@ export class SecurityStack extends cdk.Stack {
     // MacieSession configuration
     if (
       props.securityConfig.centralSecurityServices.macie.enable &&
-      props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(cdk.Stack.of(this).region) === -1
+      props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
+        cdk.Stack.of(this).region as Region,
+      ) === -1
     ) {
       const auditAccountName = props.securityConfig.getDelegatedAccountName();
-      if (props.accountsConfig.accountExists(auditAccountName)) {
+      if (props.accountsConfig.containsAccount(auditAccountName)) {
         // TODO check later if enable is required, because add members would od this
         const macieSession = new MacieSession(this, 'MacieSession', {
           region: cdk.Stack.of(this).region,
@@ -67,10 +69,12 @@ export class SecurityStack extends cdk.Stack {
     //GuardDuty configuration
     if (
       props.securityConfig.centralSecurityServices.guardduty.enable &&
-      props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(cdk.Stack.of(this).region) === -1
+      props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
+        cdk.Stack.of(this).region as Region,
+      ) === -1
     ) {
       const auditAccountName = props.securityConfig.getDelegatedAccountName();
-      if (props.accountsConfig.accountExists(auditAccountName)) {
+      if (props.accountsConfig.containsAccount(auditAccountName)) {
         new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
           region: cdk.Stack.of(this).region,
           exportDestinationType:
@@ -84,10 +88,12 @@ export class SecurityStack extends cdk.Stack {
     //SecurityHub configuration
     if (
       props.securityConfig.centralSecurityServices.securityHub.enable &&
-      props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(cdk.Stack.of(this).region) === -1
+      props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(
+        cdk.Stack.of(this).region as Region,
+      ) === -1
     ) {
       const auditAccountName = props.securityConfig.getDelegatedAccountName();
-      if (props.accountsConfig.accountExists(auditAccountName)) {
+      if (props.accountsConfig.containsAccount(auditAccountName)) {
         new SecurityHubStandards(this, 'SecurityHubStandards', {
           region: cdk.Stack.of(this).region,
           standards: props.securityConfig.centralSecurityServices.securityHub.standards,
@@ -112,7 +118,7 @@ export class SecurityStack extends cdk.Stack {
     let configRecorder: config.CfnConfigurationRecorder | undefined = undefined;
     if (
       !props.globalConfig.controlTower.enable ||
-      props.accountIds[props.accountsConfig.mandatoryAccounts.management.email] === cdk.Stack.of(this).account
+      props.accountIds[props.accountsConfig.getManagementAccount().email] === cdk.Stack.of(this).account
     ) {
       if (props.securityConfig.awsConfig.enableConfigurationRecorder) {
         const configRecorderRole = new iam.Role(this, 'ConfigRecorderRole', {
@@ -146,7 +152,7 @@ export class SecurityStack extends cdk.Stack {
       if (props.securityConfig.awsConfig.enableDeliveryChannel) {
         new config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
           s3BucketName: `aws-accelerator-central-logs-${
-            props.accountIds[props.accountsConfig.mandatoryAccounts.logArchive.email]
+            props.accountIds[props.accountsConfig.getLogArchiveAccount().email]
           }-${props.globalConfig.homeRegion}`,
           configSnapshotDeliveryProperties: {
             deliveryFrequency: 'One_Hour',
@@ -199,9 +205,9 @@ export class SecurityStack extends cdk.Stack {
       //
       // Check OU List
       //
-      for (const ou of Object.values(ruleSet.organizationalUnits ?? [])) {
+      for (const ou of ruleSet.organizationalUnits ?? []) {
         console.log(`security-stack: Checking ${ou}`);
-        if (ou === 'root-ou') {
+        if (ou === 'Root') {
           includeAccount = true;
           break;
         }
@@ -216,7 +222,7 @@ export class SecurityStack extends cdk.Stack {
           console.log(`security-stack: Creating managed rule ${rule.identifier}`);
 
           const resourceTypes: config.ResourceType[] = [];
-          for (const resourceType of Object.values(rule['compliance-resource-types'] ?? [])) {
+          for (const resourceType of rule.complianceResourceTypes ?? []) {
             resourceTypes.push(config.ResourceType.of(resourceType));
           }
 
