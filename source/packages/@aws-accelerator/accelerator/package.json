@@ -45,6 +45,7 @@
     "pascal-case": "3.1.2",
     "semver": "7.3.5",
     "tempy": "2.0.0",
+    "winston": "3.3.3",
     "yargs": "17.3.0"
   },
   "devDependencies": {
