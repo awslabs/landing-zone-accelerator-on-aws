@@ -10,7 +10,7 @@ serviceControlPolicies:
       This SCP prevents users or roles in any affected account from deleting
       Amazon Elastic Compute Cloud (Amazon EC2) flow logs or CloudWatch log
       groups or log streams.
-    policy: deny-delete-vpc-flow-logs.json
+    policy: service-control-policies/deny-delete-vpc-flow-logs.json
     type: customerManaged
     deploymentTargets:
       organizationalUnits:

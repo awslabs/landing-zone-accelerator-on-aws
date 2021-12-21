@@ -102,7 +102,7 @@ export class AccountsStack extends cdk.Stack {
         const scp = new Policy(this, serviceControlPolicy.name, {
           description: serviceControlPolicy.description,
           name: serviceControlPolicy.name,
-          path: path.join(props.configDirPath, 'service-control-policies', serviceControlPolicy.policy),
+          path: path.join(props.configDirPath, serviceControlPolicy.policy),
           type: PolicyType.SERVICE_CONTROL_POLICY,
         });
 

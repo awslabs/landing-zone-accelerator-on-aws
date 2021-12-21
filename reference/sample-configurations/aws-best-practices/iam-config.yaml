@@ -4,7 +4,7 @@ policySets:
         - Root
     policies:
       - name: Default-Boundary-Policy
-        policy: boundary-policy.json
+        policy: iam-policies/boundary-policy.json
 roleSets:
   - deploymentTargets:
       organizationalUnits:

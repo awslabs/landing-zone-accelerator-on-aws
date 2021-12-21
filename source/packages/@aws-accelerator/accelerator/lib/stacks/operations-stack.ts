@@ -55,7 +55,7 @@ export class OperationsStack extends AcceleratorStack {
           console.log(`operations-stack: Creating managed policy ${policy.name}`);
 
           // Read in the policy document which should be properly formatted json
-          const policyDocument = require(path.join(props.configDirPath, 'iam-policies', policy.policy));
+          const policyDocument = require(path.join(props.configDirPath, policy.policy));
 
           // Create a statements list using the PolicyStatement factory
           const statements: iam.PolicyStatement[] = [];
