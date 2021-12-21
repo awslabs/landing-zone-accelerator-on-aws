@@ -47,7 +47,7 @@ export class ControlTowerConfig implements t.TypeOf<typeof GlobalConfigTypes.con
 }
 
 export class CloudtrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloudtrailConfig> {
-  readonly enable = true;
+  readonly enable = false;
   readonly organizationTrail = false;
 }
 

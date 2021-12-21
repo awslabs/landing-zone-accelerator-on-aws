@@ -7,4 +7,4 @@ logging:
   account: Log Archive
   cloudtrail:
     enable: false
-    organization-trail: false
+    organizationTrail: false

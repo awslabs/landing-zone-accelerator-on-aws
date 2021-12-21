@@ -14,11 +14,6 @@ export const Logger = winston.createLogger({
     new winston.transports.File({
       filename: 'combined.log',
     }),
-  ],
-});
-
-if (process.env['NODE_ENV'] !== 'production') {
-  Logger.add(
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
@@ -27,7 +22,7 @@ if (process.env['NODE_ENV'] !== 'production') {
         printf,
       ),
     }),
-  );
-}
+  ],
+});
 
 winston.add(Logger);
