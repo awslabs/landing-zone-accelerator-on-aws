@@ -129,8 +129,8 @@ export class NetworkConfigTypes {
     tcpPorts: t.optional(t.array(t.number)),
     udpPorts: t.optional(t.array(t.number)),
     port: t.optional(t.number),
-    toPort: t.optional(t.number),
     fromPort: t.optional(t.number),
+    toPort: t.optional(t.number),
     sources: t.array(t.union([t.nonEmptyString, this.subnetSourceConfig, this.securityGroupSourceConfig])),
   });
 
@@ -147,6 +147,37 @@ export class NetworkConfigTypes {
     'Value should be an instance tenancy type',
   );
 
+  static readonly networkAclSubnetSelection = t.interface({
+    account: t.optional(t.nonEmptyString),
+    vpc: t.nonEmptyString,
+    subnet: t.nonEmptyString,
+  });
+
+  static readonly networkAclInboundRuleConfig = t.interface({
+    rule: t.number,
+    protocol: t.number,
+    fromPort: t.number,
+    toPort: t.number,
+    action: t.allowDeny,
+    source: t.union([t.nonEmptyString, this.networkAclSubnetSelection]),
+  });
+
+  static readonly networkAclOutboundRuleConfig = t.interface({
+    rule: t.number,
+    protocol: t.number,
+    fromPort: t.number,
+    toPort: t.number,
+    action: t.allowDeny,
+    destination: t.union([t.nonEmptyString, this.networkAclSubnetSelection]),
+  });
+
+  static readonly networkAclConfig = t.interface({
+    name: t.nonEmptyString,
+    subnetAssociations: t.array(t.nonEmptyString),
+    inboundRules: t.optional(t.array(this.networkAclInboundRuleConfig)),
+    outboundRules: t.optional(t.array(this.networkAclOutboundRuleConfig)),
+  });
+
   static readonly vpcConfig = t.interface({
     name: t.nonEmptyString,
     account: t.nonEmptyString,
@@ -162,6 +193,7 @@ export class NetworkConfigTypes {
     transitGatewayAttachments: t.optional(t.array(this.transitGatewayAttachmentConfig)),
     gatewayEndpoints: t.optional(t.array(this.gatewayEndpointEnum)),
     securityGroups: t.optional(t.array(this.securityGroupConfig)),
+    networkAcls: t.optional(t.array(this.networkAclConfig)),
   });
 
   static readonly trafficTypeEnum = t.enums(
@@ -275,8 +307,8 @@ export class SecurityGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTyp
   readonly tcpPorts = [];
   readonly udpPorts = [];
   readonly port = undefined;
-  readonly toPort = undefined;
   readonly fromPort = undefined;
+  readonly toPort = undefined;
   readonly sources: string[] | SecurityGroupSourceConfig[] | SubnetSourceConfig[] = [];
 }
 
@@ -285,6 +317,36 @@ export class SecurityGroupConfig implements t.TypeOf<typeof NetworkConfigTypes.s
   readonly description = '';
   readonly inboundRules: SecurityGroupRuleConfig[] = [];
   readonly outboundRules: SecurityGroupRuleConfig[] = [];
+}
+
+export class NetworkAclSubnetSelection implements t.TypeOf<typeof NetworkConfigTypes.networkAclSubnetSelection> {
+  readonly account = '';
+  readonly vpc = '';
+  readonly subnet = '';
+}
+export class NetworkAclInboundRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.networkAclInboundRuleConfig> {
+  readonly rule = 100;
+  readonly protocol = -1;
+  readonly fromPort = -1;
+  readonly toPort = -1;
+  readonly action = 'allow';
+  readonly source: string | NetworkAclSubnetSelection = '';
+}
+
+export class NetworkAclOutboundRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.networkAclOutboundRuleConfig> {
+  readonly rule = 100;
+  readonly protocol = -1;
+  readonly fromPort = -1;
+  readonly toPort = -1;
+  readonly action = 'allow';
+  readonly destination: string | NetworkAclSubnetSelection = '';
+}
+
+export class NetworkAclConfig implements t.TypeOf<typeof NetworkConfigTypes.networkAclConfig> {
+  readonly name = '';
+  readonly subnetAssociations: string[] = [];
+  readonly inboundRules: NetworkAclInboundRuleConfig[] | undefined = undefined;
+  readonly outboundRules: NetworkAclOutboundRuleConfig[] | undefined = undefined;
 }
 
 export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> {
@@ -311,17 +373,19 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
 
   readonly instanceTenancy: t.TypeOf<typeof NetworkConfigTypes.instanceTenancyTypeEnum> | undefined = 'default';
 
-  readonly routeTables: RouteTableConfig[] = [];
+  readonly routeTables: RouteTableConfig[] | undefined = undefined;
 
-  readonly subnets: SubnetConfig[] = [];
+  readonly subnets: SubnetConfig[] | undefined = undefined;
 
-  readonly natGateways: NatGatewayConfig[] = [];
+  readonly natGateways: NatGatewayConfig[] | undefined = undefined;
 
-  readonly transitGatewayAttachments: TransitGatewayAttachmentConfig[] = [];
+  readonly transitGatewayAttachments: TransitGatewayAttachmentConfig[] | undefined = undefined;
 
-  readonly gatewayEndpoints: t.TypeOf<typeof NetworkConfigTypes.gatewayEndpointEnum>[] = [];
+  readonly gatewayEndpoints: t.TypeOf<typeof NetworkConfigTypes.gatewayEndpointEnum>[] | undefined = undefined;
 
-  readonly securityGroups: SecurityGroupConfig[] = [];
+  readonly securityGroups: SecurityGroupConfig[] | undefined = undefined;
+
+  readonly networkAcls: NetworkAclConfig[] | undefined = undefined;
 }
 
 export class VpcFlowLogsConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcFlowLogsConfig> {

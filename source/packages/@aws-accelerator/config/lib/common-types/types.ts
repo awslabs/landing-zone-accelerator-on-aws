@@ -266,8 +266,11 @@ export class ShareTargets implements t.TypeOf<typeof shareTargets> {
   readonly accounts: string[] = [];
 }
 
+export const allowDeny = enums('AllowDeny', ['allow', 'deny'], 'Value should be allow or deny');
+export type AllowDeny = t.TypeOf<typeof allowDeny>;
+
 export const enableDisable = enums('EnableDisable', ['enable', 'disable'], 'Value should be enable or disable');
-export type EnableDisable = t.TypeOf<typeof region>;
+export type EnableDisable = t.TypeOf<typeof enableDisable>;
 
 export const availabilityZone = enums('AvailabilityZone', ['a', 'b', 'c', 'd', 'e', 'f']);
 export type AvailabilityZone = t.TypeOf<typeof availabilityZone>;
