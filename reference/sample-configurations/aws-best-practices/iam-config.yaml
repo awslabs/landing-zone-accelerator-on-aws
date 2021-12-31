@@ -12,8 +12,8 @@ roleSets:
     roles:
       - name: EC2-Default-SSM-AD-Role
         assumedBy:
-          type: service
-          principal: ec2.amazonaws.com
+          - type: service
+            principal: ec2.amazonaws.com
         policies:
           awsManaged:
             - AmazonSSMManagedInstanceCore

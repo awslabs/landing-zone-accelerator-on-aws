@@ -73,7 +73,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     // Delete Default VPCs
     //
     if (props.networkConfig.defaultVpc?.delete) {
-      console.log('Add DeleteDefaultVpc');
+      Logger.info('[network-vpc-stack] Add DeleteDefaultVpc');
       new DeleteDefaultVpc(this, 'DeleteDefaultVpc');
     }
 
