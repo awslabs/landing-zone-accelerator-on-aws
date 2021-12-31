@@ -202,7 +202,9 @@ export class AcceleratorPipeline extends Construct {
               'env',
               'cd source',
               'cd packages/@aws-accelerator/accelerator',
-              'npx ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config',
+              `npx ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${
+                cdk.Stack.of(this).partition
+              }`,
             ],
           },
         },
@@ -247,7 +249,7 @@ export class AcceleratorPipeline extends Construct {
 
     pipeline.addStage({
       stageName: 'Bootstrap',
-      actions: [this.createToolkitStage('Bootstrap', `bootstrap --partition ${cdk.Stack.of(this).partition}`)],
+      actions: [this.createToolkitStage('Bootstrap', `bootstrap`)],
     });
 
     /**

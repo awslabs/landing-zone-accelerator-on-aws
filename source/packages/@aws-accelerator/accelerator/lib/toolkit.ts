@@ -72,7 +72,7 @@ export class AcceleratorToolkit {
     command: string;
     accountId: string;
     region: string;
-    partition?: string;
+    partition: string;
     stage?: string;
     configDirPath?: string;
     requireApproval?: RequireApproval;
@@ -95,6 +95,7 @@ export class AcceleratorToolkit {
         context: [
           `account=${options.accountId}`,
           `region=${options.region}`,
+          `partition=${options.partition}`,
           `stage=${options.stage}`,
           `command=${options.command}`,
           `config-dir=${options.configDirPath}`,

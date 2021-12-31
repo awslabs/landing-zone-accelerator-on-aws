@@ -18,7 +18,12 @@ export class AssumeProfilePlugin implements Plugin {
   readonly version = '1';
 
   constructor(
-    private readonly props: { assumeRoleName?: string; assumeRoleDuration?: number; credentials?: Credentials } = {},
+    private readonly props: {
+      assumeRoleName?: string;
+      assumeRoleDuration?: number;
+      credentials?: Credentials;
+      partition?: string;
+    } = {},
   ) {}
 
   init(host: PluginHost): void {
@@ -27,6 +32,7 @@ export class AssumeProfilePlugin implements Plugin {
       assumeRoleName: this.props.assumeRoleName ?? AssumeProfilePlugin.getDefaultAssumeRoleName(),
       assumeRoleDuration: this.props.assumeRoleDuration ?? AssumeProfilePlugin.getDefaultAssumeRoleDuration(),
       credentials: this.props.credentials,
+      partition: this.props.partition,
     });
     host.registerCredentialProviderSource(source);
   }

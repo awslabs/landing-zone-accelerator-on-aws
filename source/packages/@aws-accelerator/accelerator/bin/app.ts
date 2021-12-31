@@ -13,8 +13,6 @@
  *  and limitations under the License.
  */
 
-import 'source-map-support/register';
-
 import {
   AccountsConfig,
   GlobalConfig,
@@ -24,6 +22,8 @@ import {
   SecurityConfig,
 } from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
+import { IConstruct } from 'constructs';
+import 'source-map-support/register';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { Logger } from '../lib/logger';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
@@ -53,6 +53,14 @@ process.on(
   },
 );
 
+export class GovCloudOverrides implements cdk.IAspect {
+  public visit(node: IConstruct): void {
+    if (node instanceof cdk.aws_logs.CfnLogGroup) {
+      node.addPropertyDeletionOverride('KmsKeyId');
+    }
+  }
+}
+
 async function main() {
   Logger.info('[app] Begin Platform Accelerator CDK App');
   const app = new cdk.App();
@@ -63,8 +71,13 @@ async function main() {
   const stage = app.node.tryGetContext('stage');
   const account = app.node.tryGetContext('account');
   const region = app.node.tryGetContext('region');
+  const partition = app.node.tryGetContext('partition');
   const configDirPath = app.node.tryGetContext('config-dir');
   const command = app.node.tryGetContext('command');
+
+  if (partition === 'aws-us-gov') {
+    cdk.Aspects.of(app).add(new GovCloudOverrides());
+  }
 
   const env = {
     account,

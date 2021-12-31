@@ -1,3 +1,4 @@
+enable: true
 organizationalUnits:
   - name: Security
     parent: Root

@@ -62,7 +62,7 @@ export class SecurityHubOrganizationAdminAccount extends Construct {
           {
             Effect: 'Allow',
             Action: ['organizations:RegisterDelegatedAdministrator', 'organizations:DeregisterDelegatedAdministrator'],
-            Resource: 'arn:aws:organizations::*:account/o-*/*',
+            Resource: `arn:${cdk.Stack.of(this).partition}:organizations::*:account/o-*/*`,
             Condition: {
               StringEquals: {
                 'organizations:ServicePrincipal': 'securityhub.amazonaws.com',
