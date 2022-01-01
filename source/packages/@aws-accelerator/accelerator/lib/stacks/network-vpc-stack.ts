@@ -131,7 +131,7 @@ export class NetworkVpcStack extends AcceleratorStack {
               pascalCase(`${attachment.transitGateway.name}TransitGatewayShare`),
               {
                 resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
-                resourceShareName: pascalCase(`${attachment.transitGateway.name}TransitGatewayShare`),
+                resourceShareName: `${attachment.transitGateway.name}_TransitGatewayShare`,
                 owningAccountId,
               },
             );
@@ -328,6 +328,36 @@ export class NetworkVpcStack extends AcceleratorStack {
               stringValue: subnet.subnetId,
             },
           );
+
+          if (subnetItem.shareTargets) {
+            Logger.info(`[network-vpc-stack] Share subnet`);
+
+            // Build a list of principals to share to
+            const principals: string[] = [];
+
+            // Loop through all the defined OUs
+            for (const ouItem of subnetItem.shareTargets.organizationalUnits ?? []) {
+              const ouArn = props.organizationConfig.getOrganizationalUnitArn(ouItem);
+              Logger.info(
+                `[network-vpc-stack] Share Subnet ${subnetItem.name} with Organizational Unit ${ouItem}: ${ouArn}`,
+              );
+              principals.push(ouArn);
+            }
+
+            // Loop through all the defined accounts
+            for (const account of subnetItem.shareTargets.accounts ?? []) {
+              const accountId = props.accountsConfig.getAccountId(account);
+              Logger.info(`[network-vpc-stack] Share Subnet ${subnetItem.name} with Account ${account}: ${accountId}`);
+              principals.push(accountId);
+            }
+
+            // Create the Resource Share
+            new ResourceShare(this, `${pascalCase(subnetItem.name)}SubnetShare`, {
+              name: `${subnetItem.name}_SubnetShare`,
+              principals,
+              resourceArns: [subnet.subnetArn],
+            });
+          }
         }
 
         //

@@ -20,6 +20,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
+import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class NetworkTgwAttachStack extends AcceleratorStack {
@@ -70,16 +71,16 @@ export class NetworkTgwAttachStack extends AcceleratorStack {
             // Get the Transit Gateway Attachment ID
             let transitGatewayAttachmentId;
             if (accountId === owningAccountId) {
-              console.log(
-                `Update route tables for attachment ${tgwAttachmentItem.name} from local account ${owningAccountId}`,
+              Logger.info(
+                `[network-tgw-attach-stack] Update route tables for attachment ${tgwAttachmentItem.name} from local account ${owningAccountId}`,
               );
               transitGatewayAttachmentId = ssm.StringParameter.valueForStringParameter(
                 this,
                 `/accelerator/network/vpc/${vpcItem.name}/transitGatewayAttachment/${tgwAttachmentItem.name}/id`,
               );
             } else {
-              console.log(
-                `Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
+              Logger.info(
+                `[network-tgw-attach-stack] Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
               );
 
               const transitGatewayAttachment = TransitGatewayAttachment.fromLookup(

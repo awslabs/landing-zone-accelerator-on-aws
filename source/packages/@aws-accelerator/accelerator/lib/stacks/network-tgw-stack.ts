@@ -16,6 +16,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
+import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class NetworkTgwStack extends AcceleratorStack {
@@ -33,7 +34,8 @@ export class NetworkTgwStack extends AcceleratorStack {
     for (const tgwItem of props.networkConfig.transitGateways ?? []) {
       const accountId = props.accountsConfig.getAccountId(tgwItem.account);
       if (accountId === cdk.Stack.of(this).account && tgwItem.region == cdk.Stack.of(this).region) {
-        console.log('Add Transit Gateway');
+        Logger.info(`[network-tgw-stack] Add Transit Gateway ${tgwItem.name}`);
+
         const tgw = new TransitGateway(this, pascalCase(`${tgwItem.name}TransitGateway`), {
           name: tgwItem.name,
           amazonSideAsn: tgwItem.asn,
@@ -49,9 +51,8 @@ export class NetworkTgwStack extends AcceleratorStack {
           stringValue: tgw.transitGatewayId,
         });
 
-        console.log('Add Transit Gateway Route Tables');
         for (const routeTableItem of tgwItem.routeTables ?? []) {
-          console.log(`Adding Transit Gateway Route Table: ${routeTableItem.name}`);
+          Logger.info(`[network-tgw-stack] Add Transit Gateway Route Tables ${routeTableItem.name}`);
 
           const routeTable = new TransitGatewayRouteTable(
             this,
@@ -72,28 +73,31 @@ export class NetworkTgwStack extends AcceleratorStack {
           );
         }
 
-        console.log('Share Transit Gateway');
         if (tgwItem.shareTargets) {
+          Logger.info(`[network-tgw-stack] Share transit gateway`);
+
           // Build a list of principals to share to
           const principals: string[] = [];
 
           // Loop through all the defined OUs
           for (const ouItem of tgwItem.shareTargets.organizationalUnits ?? []) {
             const ouArn = props.organizationConfig.getOrganizationalUnitArn(ouItem);
-            console.log(`Share Transit Gateway ${tgwItem.name} with Organizational Unit ${ouItem}: ${ouArn}`);
+            Logger.info(
+              `[network-tgw-stack] Share Transit Gateway ${tgwItem.name} with Organizational Unit ${ouItem}: ${ouArn}`,
+            );
             principals.push(ouArn);
           }
 
           // Loop through all the defined accounts
           for (const account of tgwItem.shareTargets.accounts ?? []) {
             const accountId = props.accountsConfig.getAccountId(account);
-            console.log(`Share Transit Gateway ${tgwItem.name} with Account ${account}: ${accountId}`);
+            Logger.info(`[network-tgw-stack] Share Subnet ${tgwItem.name} with Account ${account}: ${accountId}`);
             principals.push(accountId);
           }
 
           // Create the Resource Share
-          new ResourceShare(this, pascalCase(`${tgwItem.name}TransitGatewayShare`), {
-            name: `${tgwItem.name}TransitGatewayShare`,
+          new ResourceShare(this, `${pascalCase(tgwItem.name)}TransitGatewayShare`, {
+            name: `${tgwItem.name}_TransitGatewayShare`,
             principals,
             resourceArns: [tgw.transitGatewayArn],
           });
