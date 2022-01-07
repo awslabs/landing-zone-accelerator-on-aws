@@ -11,13 +11,14 @@
  *  and limitations under the License.
  */
 
-import { Construct } from 'constructs';
+import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
-import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
+import { Construct } from 'constructs';
 import * as path from 'path';
+import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export interface OperationsStackProps extends AcceleratorStackProps {
@@ -42,17 +43,31 @@ export class OperationsStack extends AcceleratorStack {
     //
     if (props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
       //
+      // Add Providers
+      //
+      const providers: { [name: string]: iam.SamlProvider } = {};
+      for (const provider of props.iamConfig.providers ?? []) {
+        Logger.info(`[operations-stack] Add Provider ${provider.name}`);
+        providers[provider.name] = new iam.SamlProvider(this, `${pascalCase(provider.name)}SamlProvider`, {
+          name: provider.name,
+          metadataDocument: iam.SamlMetadataDocument.fromFile(
+            path.join(props.configDirPath, provider.metadataDocument),
+          ),
+        });
+      }
+
+      //
       // Add Managed Policies
       //
       const policies: { [name: string]: iam.ManagedPolicy } = {};
       for (const policySet of props.iamConfig.policySets ?? []) {
         if (!this.isIncluded(policySet.deploymentTargets)) {
-          console.log('Item excluded');
+          Logger.info(`[operations-stack] Item excluded`);
           continue;
         }
 
         for (const policy of policySet.policies) {
-          console.log(`operations-stack: Creating managed policy ${policy.name}`);
+          Logger.info(`[operations-stack] Add customer managed policy ${policy.name}`);
 
           // Read in the policy document which should be properly formatted json
           const policyDocument = require(path.join(props.configDirPath, policy.policy));
@@ -77,26 +92,53 @@ export class OperationsStack extends AcceleratorStack {
       const roles: { [name: string]: iam.Role } = {};
       for (const roleSet of props.iamConfig.roleSets ?? []) {
         if (!this.isIncluded(roleSet.deploymentTargets)) {
-          console.log('Item excluded');
+          Logger.info(`[operations-stack] Item excluded`);
           continue;
         }
 
         for (const role of roleSet.roles) {
-          console.log(`operations-stack: Creating role ${role.name}`);
+          Logger.info(`[operations-stack] Add role ${role.name}`);
 
-          let assumedBy: iam.IPrincipal;
-          if (role.assumedBy.type === 'service') {
-            assumedBy = new iam.ServicePrincipal(role.assumedBy.principal);
-          } else {
-            assumedBy = new iam.AccountPrincipal(role.assumedBy.principal);
+          const principals: iam.PrincipalBase[] = [];
+
+          for (const assumedByItem of role.assumedBy ?? []) {
+            Logger.info(
+              `[operations-stack] Role - assumed by type(${assumedByItem.type}) principal(${assumedByItem.principal})`,
+            );
+
+            if (assumedByItem.type === 'service') {
+              principals.push(new iam.ServicePrincipal(assumedByItem.principal));
+            }
+
+            if (assumedByItem.type === 'account') {
+              principals.push(new iam.AccountPrincipal(assumedByItem.principal));
+            }
+
+            if (assumedByItem.type === 'provider') {
+              principals.push(new iam.SamlConsolePrincipal(providers[assumedByItem.principal]));
+            }
           }
 
           const managedPolicies: iam.IManagedPolicy[] = [];
           for (const policy of role.policies?.awsManaged ?? []) {
+            Logger.info(`[operations-stack] Role - aws managed policy ${policy}`);
             managedPolicies.push(iam.ManagedPolicy.fromAwsManagedPolicyName(policy));
           }
           for (const policy of role.policies?.customerManaged ?? []) {
+            Logger.info(`[operations-stack] Role - customer managed policy ${policy}`);
             managedPolicies.push(policies[policy]);
+          }
+
+          let assumedBy: cdk.aws_iam.IPrincipal;
+          if (role.assumedBy.find(item => item.type === 'provider')) {
+            // Since a SamlConsolePrincipal creates conditions, we can not
+            // use the CompositePrincipal. Verify that it is alone
+            if (principals.length > 1) {
+              throw new Error('More than one principal found when adding provider');
+            }
+            assumedBy = principals[0];
+          } else {
+            assumedBy = new iam.CompositePrincipal(...principals);
           }
 
           roles[role.name] = new iam.Role(this, pascalCase(role.name), {
@@ -114,18 +156,20 @@ export class OperationsStack extends AcceleratorStack {
       const groups: { [name: string]: iam.Group } = {};
       for (const groupSet of props.iamConfig.groupSets ?? []) {
         if (!this.isIncluded(groupSet.deploymentTargets)) {
-          console.log('Item excluded');
+          Logger.info(`[operations-stack] Item excluded`);
           continue;
         }
 
         for (const group of groupSet.groups) {
-          console.log(`operations-stack: Creating group ${group.name}`);
+          Logger.info(`[operations-stack] Add group ${group.name}`);
 
           const managedPolicies: iam.IManagedPolicy[] = [];
           for (const policy of group.policies?.awsManaged ?? []) {
+            Logger.info(`[operations-stack] Group - aws managed policy ${policy}`);
             managedPolicies.push(iam.ManagedPolicy.fromAwsManagedPolicyName(policy));
           }
           for (const policy of group.policies?.customerManaged ?? []) {
+            Logger.info(`[operations-stack] Group - customer managed policy ${policy}`);
             managedPolicies.push(policies[policy]);
           }
 
@@ -141,12 +185,12 @@ export class OperationsStack extends AcceleratorStack {
       //
       for (const userSet of props.iamConfig.userSets ?? []) {
         if (!this.isIncluded(userSet.deploymentTargets)) {
-          console.log('Item excluded');
+          Logger.info(`[operations-stack] Item excluded`);
           continue;
         }
 
         for (const user of userSet.users ?? []) {
-          console.log(`operations-stack: Creating user ${user.username}`);
+          Logger.info(`[operations-stack] Add user ${user.username}`);
 
           const secret = new secretsmanager.Secret(this, pascalCase(`${user.username}Secret`), {
             generateSecretString: {
@@ -155,6 +199,8 @@ export class OperationsStack extends AcceleratorStack {
             },
             secretName: `/accelerator/${user.username}`,
           });
+
+          Logger.info(`[operations-stack] User - password stored to /accelerator/${user.username}`);
 
           new iam.User(this, pascalCase(user.username), {
             userName: user.username,

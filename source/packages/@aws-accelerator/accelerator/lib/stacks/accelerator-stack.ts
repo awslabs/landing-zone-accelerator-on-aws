@@ -22,6 +22,7 @@ import {
 } from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { Logger } from '../logger';
 
 export interface AcceleratorStackProps extends cdk.StackProps {
   readonly configDirPath: string;
@@ -64,7 +65,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   protected isRegionExcluded(regions: string[]): boolean {
     if (regions?.includes(cdk.Stack.of(this).region)) {
-      console.log(`${cdk.Stack.of(this).region} region explicitly excluded`);
+      Logger.info(`[accelerator-stack] ${cdk.Stack.of(this).region} region explicitly excluded`);
       return true;
     }
     return false;
@@ -73,7 +74,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected isAccountExcluded(accounts: string[]): boolean {
     for (const account of accounts ?? []) {
       if (cdk.Stack.of(this).account === this.props.accountsConfig.getAccountId(account)) {
-        console.log(`${account} account explicitly excluded`);
+        Logger.info(`[accelerator-stack] ${account} account explicitly excluded`);
         return true;
       }
     }
@@ -83,7 +84,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected isAccountIncluded(accounts: string[]): boolean {
     for (const account of accounts ?? []) {
       if (cdk.Stack.of(this).account === this.props.accountsConfig.getAccountId(account)) {
-        console.log(`${account} region explicitly included`);
+        Logger.info(`[accelerator-stack] ${account} region explicitly included`);
         return true;
       }
     }
@@ -107,7 +108,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
       if (account) {
         if (organizationalUnits.indexOf(account.organizationalUnit) != -1) {
-          console.log(`${account.organizationalUnit} organizational unit explicitly included`);
+          Logger.info(`[accelerator-stack] ${account.organizationalUnit} organizational unit explicitly included`);
           return true;
         }
       }

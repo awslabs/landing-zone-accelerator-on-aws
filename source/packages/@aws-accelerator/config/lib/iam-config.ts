@@ -20,6 +20,11 @@ import * as yaml from 'js-yaml';
  * Configuration items.
  */
 export class IamConfigTypes {
+  static readonly samlProviderConfig = t.interface({
+    name: t.nonEmptyString,
+    metadataDocument: t.nonEmptyString,
+  });
+
   static readonly userConfig = t.interface({
     username: t.nonEmptyString,
     group: t.nonEmptyString,
@@ -28,7 +33,7 @@ export class IamConfigTypes {
 
   static readonly userSetConfig = t.interface({
     deploymentTargets: t.deploymentTargets,
-    users: t.array(IamConfigTypes.userConfig),
+    users: t.array(this.userConfig),
   });
 
   static readonly policiesConfig = t.interface({
@@ -38,15 +43,15 @@ export class IamConfigTypes {
 
   static readonly groupConfig = t.interface({
     name: t.nonEmptyString,
-    policies: t.optional(IamConfigTypes.policiesConfig),
+    policies: t.optional(this.policiesConfig),
   });
 
   static readonly groupSetConfig = t.interface({
     deploymentTargets: t.deploymentTargets,
-    groups: t.array(IamConfigTypes.groupConfig),
+    groups: t.array(this.groupConfig),
   });
 
-  static readonly assumedByTypeEnum = t.enums('AssumedByConfigType', ['service', 'account']);
+  static readonly assumedByTypeEnum = t.enums('AssumedByConfigType', ['service', 'account', 'provider']);
 
   static readonly assumedByConfig = t.interface({
     type: this.assumedByTypeEnum,
@@ -55,14 +60,14 @@ export class IamConfigTypes {
 
   static readonly roleConfig = t.interface({
     name: t.nonEmptyString,
-    assumedBy: IamConfigTypes.assumedByConfig,
-    policies: t.optional(IamConfigTypes.policiesConfig),
+    assumedBy: t.array(this.assumedByConfig),
+    policies: t.optional(this.policiesConfig),
     boundaryPolicy: t.optional(t.nonEmptyString),
   });
 
   static readonly roleSetConfig = t.interface({
     deploymentTargets: t.deploymentTargets,
-    roles: t.array(IamConfigTypes.roleConfig),
+    roles: t.array(this.roleConfig),
   });
 
   static readonly policyConfig = t.interface({
@@ -72,15 +77,21 @@ export class IamConfigTypes {
 
   static readonly policySetConfig = t.interface({
     deploymentTargets: t.deploymentTargets,
-    policies: t.array(IamConfigTypes.policyConfig),
+    policies: t.array(this.policyConfig),
   });
 
   static readonly iamConfig = t.interface({
-    policySets: t.optional(t.array(IamConfigTypes.policySetConfig || [])),
-    roleSets: t.optional(t.array(IamConfigTypes.roleSetConfig)),
-    groupSets: t.optional(t.array(IamConfigTypes.groupSetConfig)),
-    userSets: t.optional(t.array(IamConfigTypes.userSetConfig)),
+    providers: t.optional(t.array(this.samlProviderConfig)),
+    policySets: t.optional(t.array(this.policySetConfig || [])),
+    roleSets: t.optional(t.array(this.roleSetConfig)),
+    groupSets: t.optional(t.array(this.groupSetConfig)),
+    userSets: t.optional(t.array(this.userSetConfig)),
   });
+}
+
+export class SamlProviderConfig implements t.TypeOf<typeof IamConfigTypes.samlProviderConfig> {
+  readonly name: string = '';
+  readonly metadataDocument: string = '';
 }
 
 export class UserConfig implements t.TypeOf<typeof IamConfigTypes.userConfig> {
@@ -115,7 +126,7 @@ export class AssumedByConfig implements t.TypeOf<typeof IamConfigTypes.assumedBy
 }
 
 export class RoleConfig implements t.TypeOf<typeof IamConfigTypes.roleConfig> {
-  readonly assumedBy!: AssumedByConfig;
+  readonly assumedBy: AssumedByConfig[] = [];
   readonly boundaryPolicy: string = '';
   readonly name: string = '';
   readonly policies: PoliciesConfig | undefined = undefined;
@@ -142,19 +153,21 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
   /**
    *
    */
+  readonly providers: SamlProviderConfig[] = [];
 
+  /**
+   *
+   */
   readonly policySets: PolicySetConfig[] = [];
 
   /**
    *
    */
-
   readonly roleSets: RoleSetConfig[] = [];
 
   /**
    *
    */
-
   readonly groupSets: GroupSetConfig[] = [];
 
   /**
