@@ -213,9 +213,8 @@ export abstract class Accelerator {
       case AcceleratorStage.NETWORK_VPC:
       case AcceleratorStage.NETWORK_TGW_ATTACH:
         for (const region of globalConfig.enabledRegions) {
-          for (const account of accountsConfig.mandatoryAccounts) {
+          for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
             Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
-            // promises.push(
             await AcceleratorToolkit.execute({
               command: props.command,
               accountId: accountsConfig.getAccountId(account.name),
@@ -224,26 +223,6 @@ export abstract class Accelerator {
               configDirPath: props.configDirPath,
               requireApproval: props.requireApproval,
             });
-            // );
-            // if (promises.length >= maxStacks) {
-            //   await Promise.all(promises);
-            // }
-          }
-          for (const account of accountsConfig.workloadAccounts) {
-            Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
-            // promises.push(
-            await AcceleratorToolkit.execute({
-              command: props.command,
-              accountId: accountsConfig.getAccountId(account.name),
-              region,
-              stage: props.stage,
-              configDirPath: props.configDirPath,
-              requireApproval: props.requireApproval,
-            });
-            // );
-            // if (promises.length >= maxStacks) {
-            //   await Promise.all(promises);
-            // }
           }
         }
         break;

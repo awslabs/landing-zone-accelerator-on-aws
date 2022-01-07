@@ -4,7 +4,12 @@
     {
       "Effect": "Deny",
       "Action": ["ec2:DeleteFlowLogs", "logs:DeleteLogGroup", "logs:DeleteLogStream"],
-      "Resource": "*"
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalArn": ["arn:aws:iam::*:role/cdk-accel-*"]
+        }
+      }
     }
   ]
 }

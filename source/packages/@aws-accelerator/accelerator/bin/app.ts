@@ -12,7 +12,9 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
+
 import 'source-map-support/register';
+
 import {
   AccountsConfig,
   GlobalConfig,
@@ -38,11 +40,18 @@ import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { ValidateStack } from '../lib/stacks/validate-stack';
 
-process.on('unhandledRejection', (reason, _) => {
-  console.error(reason);
-  // eslint-disable-next-line no-process-exit
-  process.exit(1);
-});
+process.on(
+  'unhandledRejection',
+  (
+    reason,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _,
+  ) => {
+    console.error(reason);
+    // eslint-disable-next-line no-process-exit
+    process.exit(1);
+  },
+);
 
 async function main() {
   Logger.info('[app] Begin Platform Accelerator CDK App');
