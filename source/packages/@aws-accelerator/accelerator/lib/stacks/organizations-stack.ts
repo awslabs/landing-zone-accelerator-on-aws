@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { AccountsConfig, GlobalConfig, OrganizationConfig, Region, SecurityConfig } from '@aws-accelerator/config';
+import { Region } from '@aws-accelerator/config';
 import {
   EnableAwsServiceAccess,
   EnableSharingWithAwsOrganization,
@@ -28,21 +28,17 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { Logger } from '../logger';
+import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
-export interface OrganizationsStackProps extends cdk.StackProps {
-  accountIds: { [name: string]: string };
+export interface OrganizationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
-  accountsConfig: AccountsConfig;
-  organizationConfig: OrganizationConfig;
-  globalConfig: GlobalConfig;
-  securityConfig: SecurityConfig;
 }
 
 /**
  * The Organizations stack is executed in all enabled regions in the
  * Organizations Management (Root) account
  */
-export class OrganizationsStack extends cdk.Stack {
+export class OrganizationsStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: OrganizationsStackProps) {
     super(scope, id, props);
 
@@ -106,7 +102,7 @@ export class OrganizationsStack extends cdk.Stack {
           bucket: s3.Bucket.fromBucketName(
             this,
             'CentralLogsBucket',
-            `aws-accelerator-central-logs-${props.accountIds[props.accountsConfig.getLogArchiveAccount().email]}-${
+            `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
               cdk.Stack.of(this).region
             }`,
           ),
@@ -116,9 +112,9 @@ export class OrganizationsStack extends cdk.Stack {
           encryptionKey: kms.Key.fromKeyArn(
             this,
             'CentralLogsCmk',
-            `arn:${cdk.Stack.of(this).partition}:kms:${cdk.Stack.of(this).region}:${
-              props.accountIds[props.accountsConfig.getLogArchiveAccount().email]
-            }:alias/accelerator/central-logs/s3`,
+            `arn:${cdk.Stack.of(this).partition}:kms:${
+              cdk.Stack.of(this).region
+            }:${props.accountsConfig.getLogArchiveAccountId()}:alias/accelerator/central-logs/s3`,
           ),
           includeGlobalServiceEvents: true,
           isMultiRegionTrail: true,
@@ -146,10 +142,8 @@ export class OrganizationsStack extends cdk.Stack {
 
     // Security Services delegated admin account configuration
     // Global decoration for security services
-    const adminAccountId =
-      props.accountIds[
-        props.accountsConfig.getEmail(props.securityConfig.centralSecurityServices.delegatedAdminAccount)
-      ];
+    const delegatedAdminAccount = props.securityConfig.centralSecurityServices.delegatedAdminAccount;
+    const adminAccountId = props.accountsConfig.getAccountId(delegatedAdminAccount);
 
     // Macie Configuration
     if (props.securityConfig.centralSecurityServices.macie.enable) {

@@ -11,10 +11,11 @@
  *  and limitations under the License.
  */
 
-import * as t from './common-types';
+import { OrganizationsClient, paginateListAccounts } from '@aws-sdk/client-organizations';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as yaml from 'js-yaml';
+import * as path from 'path';
+import * as t from './common-types';
 
 /**
  * AWS Organizations configuration items.
@@ -27,13 +28,24 @@ export class AccountsConfigTypes {
     name: t.nonEmptyString,
     description: t.optional(t.nonEmptyString),
     email: t.nonEmptyString,
-    organizationalUnit: t.nonEmptyString,
+    organizationalUnit: t.optional(t.nonEmptyString),
+  });
+
+  static readonly accountIdConfig = t.interface({
+    email: t.nonEmptyString,
+    accountId: t.nonEmptyString,
   });
 
   static readonly accountsConfig = t.interface({
     mandatoryAccounts: t.array(this.accountConfig),
     workloadAccounts: t.array(this.accountConfig),
+    accountIds: t.optional(t.array(this.accountIdConfig)),
   });
+}
+
+export class AccountIdConfig implements t.TypeOf<typeof AccountsConfigTypes.accountIdConfig> {
+  readonly email: string = '';
+  readonly accountId: string = '';
 }
 
 export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accountConfig> {
@@ -47,22 +59,25 @@ export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accoun
  */
 export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accountsConfig> {
   static readonly FILENAME = 'accounts-config.yaml';
+  static readonly MANAGEMENT_ACCOUNT = 'Management';
+  static readonly LOG_ARCHIVE_ACCOUNT = 'Log Archive';
+  static readonly AUDIT_ACCOUNT = 'Audit';
 
   readonly mandatoryAccounts: AccountConfig[] = [
     {
-      name: 'Management',
+      name: AccountsConfig.MANAGEMENT_ACCOUNT,
       description: 'The management (primary) account',
       email: '<management-account>@example.com <----- UPDATE EMAIL ADDRESS',
       organizationalUnit: 'Root',
     },
     {
-      name: 'Log Archive',
+      name: AccountsConfig.LOG_ARCHIVE_ACCOUNT,
       description: 'The log archive account',
       email: '<log-archive>@example.com  <----- UPDATE EMAIL ADDRESS',
       organizationalUnit: 'Security',
     },
     {
-      name: 'Audit',
+      name: AccountsConfig.AUDIT_ACCOUNT,
       description: 'The security audit account (also referred to as the audit account)',
       email: '<audit>@example.com  <----- UPDATE EMAIL ADDRESS',
       organizationalUnit: 'Security',
@@ -70,6 +85,13 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   ];
 
   readonly workloadAccounts: AccountConfig[] = [];
+
+  /**
+   * Optionally provide a list of AWS Account IDs to bypass the usage of the
+   * AWS Organizations Client lookup. This is not a readonly member since we
+   * will initialize it with values if it is not provided
+   */
+  public accountIds: AccountIdConfig[] | undefined = undefined;
 
   /**
    *
@@ -81,13 +103,52 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     }
   }
 
-  public getEmail(name: string): string {
+  /**
+   *
+   * @param dir
+   * @returns
+   */
+  static load(dir: string): AccountsConfig {
+    const buffer = fs.readFileSync(path.join(dir, AccountsConfig.FILENAME), 'utf8');
+    const values = t.parse(AccountsConfigTypes.accountsConfig, yaml.load(buffer));
+    return new AccountsConfig(values);
+  }
+
+  /**
+   * Loads account ids by utilizing the organizations client if account ids are
+   * not provided in the config.
+   */
+  public async loadAccountIds(): Promise<void> {
+    if (this.accountIds === undefined) {
+      this.accountIds = [];
+    }
+    if (this.accountIds.length == 0) {
+      const organizationsClient = new OrganizationsClient({});
+      for await (const page of paginateListAccounts({ client: organizationsClient }, {})) {
+        page.Accounts?.forEach(item => {
+          if (item.Email && item.Id) {
+            this.accountIds?.push({ email: item.Email, accountId: item.Id });
+          }
+        });
+      }
+    }
+  }
+
+  public getAccountId(name: string): string {
+    const email = this.getAccount(name).email;
+    const accountId = this.accountIds?.find(item => item.email === email)?.accountId;
+    if (accountId) {
+      return accountId;
+    }
+    throw new Error(`name(${name}) not found`);
+  }
+
+  public getAccount(name: string): AccountConfig {
     const value = [...this.mandatoryAccounts, ...this.workloadAccounts].find(value => value.name == name);
     if (value) {
-      return value.email;
+      return value;
     }
-
-    throw new Error(`Account email not found for ${name}`);
+    throw new Error(`Account not found for ${name}`);
   }
 
   public containsAccount(name: string): boolean {
@@ -100,37 +161,26 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   }
 
   public getManagementAccount(): AccountConfig {
-    const value = this.mandatoryAccounts.find(value => value.name == 'Management');
-    if (value) {
-      return value;
-    }
-    throw new Error(`Management account not defined`);
+    return this.getAccount(AccountsConfig.MANAGEMENT_ACCOUNT);
   }
 
   public getLogArchiveAccount(): AccountConfig {
-    const value = this.mandatoryAccounts.find(value => value.name == 'Log Archive');
-    if (value) {
-      return value;
-    }
-    throw new Error(`Log Archive account not defined`);
+    return this.getAccount(AccountsConfig.LOG_ARCHIVE_ACCOUNT);
   }
 
   public getAuditAccount(): AccountConfig {
-    const value = this.mandatoryAccounts.find(value => value.name == 'Audit');
-    if (value) {
-      return value;
-    }
-    throw new Error(`Audit account not defined`);
+    return this.getAccount(AccountsConfig.AUDIT_ACCOUNT);
   }
 
-  /**
-   *
-   * @param dir
-   * @returns
-   */
-  static load(dir: string): AccountsConfig {
-    const buffer = fs.readFileSync(path.join(dir, AccountsConfig.FILENAME), 'utf8');
-    const values = t.parse(AccountsConfigTypes.accountsConfig, yaml.load(buffer));
-    return new AccountsConfig(values);
+  public getManagementAccountId(): string {
+    return this.getAccountId(AccountsConfig.MANAGEMENT_ACCOUNT);
+  }
+
+  public getLogArchiveAccountId(): string {
+    return this.getAccountId(AccountsConfig.LOG_ARCHIVE_ACCOUNT);
+  }
+
+  public getAuditAccountId(): string {
+    return this.getAccountId(AccountsConfig.AUDIT_ACCOUNT);
   }
 }

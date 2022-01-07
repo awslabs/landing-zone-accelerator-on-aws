@@ -10,10 +10,9 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { AccountsConfig, GlobalConfig, OrganizationConfig, SecurityConfig } from '@aws-accelerator/config';
+import { AccountsConfig, GlobalConfig, SecurityConfig } from '@aws-accelerator/config';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
-import { DescribeOrganizationCommand, OrganizationsClient, paginateListAccounts } from '@aws-sdk/client-organizations';
 import { AssumeRoleCommand, Credentials, STSClient } from '@aws-sdk/client-sts';
 import { RequireApproval } from 'aws-cdk/lib/diff';
 import { PluginHost } from 'aws-cdk/lib/plugin';
@@ -82,8 +81,15 @@ export abstract class Accelerator {
     // configuration files are malformed.
     //
     const globalConfig = GlobalConfig.load(props.configDirPath);
-    const organizationsConfig = OrganizationConfig.load(props.configDirPath);
     const accountsConfig = AccountsConfig.load(props.configDirPath);
+
+    //
+    // Will load in account IDs using the Organizations client if not provided
+    // as inputs in accountsConfig
+    //
+    await accountsConfig.loadAccountIds();
+
+    // TODO: Deprecate securityConfig.getDelegatedAccountName, use accountsConfig.getAuditAccountId()
     const securityConfig = SecurityConfig.load(props.configDirPath);
 
     // Get management account credential when pipeline is executing outside of management account
@@ -94,43 +100,11 @@ export abstract class Accelerator {
     //
     const assumeRolePlugin = new AssumeProfilePlugin({
       // TODO: Read this from arg
-      assumeRoleName: organizationsConfig.organizationsAccessRole,
+      assumeRoleName: globalConfig.managementAccountAccessRole,
       assumeRoleDuration: 3600,
       credentials: managementAccountCredentials,
     });
     assumeRolePlugin.init(PluginHost.instance);
-
-    //
-    // NOTE: We do some early environment validation here before we kick off the
-    //       CodePipeline that has a built in validation-stack
-    //
-
-    //
-    // Verify AWS Organizations has been enabled
-    //
-    const organizationsClient = new OrganizationsClient({});
-    await throttlingBackOff(() =>
-      organizationsClient.send(new DescribeOrganizationCommand({})).catch(error => {
-        if (error.name === 'AWSOrganizationsNotInUseException') {
-          throw new Error(error.message);
-        }
-        throw new Error(error);
-      }),
-    );
-
-    //
-    // Create a dictionary of all AWS Account IDs.
-    //
-    // TODO: Add functionality to read in a map from file for disconnected regions
-    //
-    const accountIds: { [name: string]: string } = {};
-    for await (const page of paginateListAccounts({ client: organizationsClient }, {})) {
-      for (const account of page.Accounts ?? []) {
-        if (account.Email && account.Id) {
-          accountIds[account.Email] = account.Id;
-        }
-      }
-    }
 
     //
     // When running parallel, this will be the max concurrent stacks
@@ -142,15 +116,13 @@ export abstract class Accelerator {
     //
     if (props.command == 'bootstrap') {
       // const promises: Promise<void>[] = [];
-      const managementAccountEmail = accountsConfig.getManagementAccount().email;
-      const trustedAccountId = accountIds[managementAccountEmail];
+      const trustedAccountId = accountsConfig.getManagementAccountId();
       for (const region of globalConfig.enabledRegions) {
         for (const account of accountsConfig.mandatoryAccounts) {
-          const accountId = accountIds[account.email];
           // promises.push(
           await AcceleratorToolkit.execute({
             command: props.command,
-            accountId,
+            accountId: accountsConfig.getAccountId(account.name),
             region,
             partition: props.partition,
             trustedAccountId,
@@ -163,11 +135,10 @@ export abstract class Accelerator {
           // }
         }
         for (const account of accountsConfig.workloadAccounts) {
-          const accountId = accountIds[account.email];
           // promises.push(
           await AcceleratorToolkit.execute({
             command: props.command,
-            accountId,
+            accountId: accountsConfig.getAccountId(account.name),
             region,
             partition: props.partition,
             trustedAccountId,
@@ -191,16 +162,15 @@ export abstract class Accelerator {
     // as the audit account).
 
     // const promises: Promise<void>[] = [];
-    const managementAccountEmail = accountsConfig.getEmail('Management');
 
     switch (props.stage) {
       case AcceleratorStage.ACCOUNTS:
-        Logger.info(`[accelerator] Executing ${props.stage} for ${managementAccountEmail}.`);
+        Logger.info(`[accelerator] Executing ${props.stage} for Management account.`);
 
         // promises.push(
         await AcceleratorToolkit.execute({
           command: props.command,
-          accountId: accountIds[managementAccountEmail],
+          accountId: accountsConfig.getManagementAccountId(),
           region: globalConfig.homeRegion,
           stage: props.stage,
           configDirPath: props.configDirPath,
@@ -215,13 +185,11 @@ export abstract class Accelerator {
 
       case AcceleratorStage.ORGANIZATIONS:
         for (const region of globalConfig.enabledRegions) {
-          Logger.info(
-            `[accelerator] Executing ${props.stage} for ${managementAccountEmail} account in ${region} region.`,
-          );
+          Logger.info(`[accelerator] Executing ${props.stage} for Management account in ${region} region.`);
           // promises.push(
           await AcceleratorToolkit.execute({
             command: props.command,
-            accountId: accountIds[managementAccountEmail],
+            accountId: accountsConfig.getManagementAccountId(),
             region: region,
             stage: props.stage,
             configDirPath: props.configDirPath,
@@ -246,12 +214,11 @@ export abstract class Accelerator {
       case AcceleratorStage.NETWORK_TGW_ATTACH:
         for (const region of globalConfig.enabledRegions) {
           for (const account of accountsConfig.mandatoryAccounts) {
-            Logger.info(`[accelerator] Executing ${props.stage} for ${account.email} account in ${region} region.`);
-            const accountId = accountIds[account.email];
+            Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
             // promises.push(
             await AcceleratorToolkit.execute({
               command: props.command,
-              accountId,
+              accountId: accountsConfig.getAccountId(account.name),
               region,
               stage: props.stage,
               configDirPath: props.configDirPath,
@@ -263,12 +230,11 @@ export abstract class Accelerator {
             // }
           }
           for (const account of accountsConfig.workloadAccounts) {
-            Logger.info(`[accelerator] Executing ${props.stage} for ${account.email} account in ${region} region.`);
-            const accountId = accountIds[account.email];
+            Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
             // promises.push(
             await AcceleratorToolkit.execute({
               command: props.command,
-              accountId,
+              accountId: accountsConfig.getAccountId(account.name),
               region,
               stage: props.stage,
               configDirPath: props.configDirPath,
@@ -283,15 +249,14 @@ export abstract class Accelerator {
         break;
       case AcceleratorStage.SECURITY_AUDIT:
         const auditAccountName = securityConfig.getDelegatedAccountName();
+        Logger.info(`Configuring the security-audit stack for account ${auditAccountName}`);
         if (accountsConfig.containsAccount(auditAccountName)) {
           for (const region of globalConfig.enabledRegions) {
-            const auditAccountEmail = accountsConfig.getEmail(auditAccountName);
-            const accountId = accountIds[auditAccountEmail];
-            Logger.info(`[accelerator] Executing ${props.stage} for ${auditAccountEmail} account in ${region} region.`);
+            Logger.info(`[accelerator] Executing ${props.stage} for ${auditAccountName} account in ${region} region.`);
             // promises.push(
             await AcceleratorToolkit.execute({
               command: props.command,
-              accountId: accountId,
+              accountId: accountsConfig.getAccountId(auditAccountName),
               region: region,
               stage: props.stage,
               configDirPath: props.configDirPath,

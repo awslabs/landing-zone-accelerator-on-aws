@@ -31,7 +31,7 @@ export class NetworkTgwStack extends AcceleratorStack {
     // Generate Transit Gateways
     //
     for (const tgwItem of props.networkConfig.transitGateways ?? []) {
-      const accountId = props.accountIds[props.accountsConfig.getEmail(tgwItem.account)];
+      const accountId = props.accountsConfig.getAccountId(tgwItem.account);
       if (accountId === cdk.Stack.of(this).account && tgwItem.region == cdk.Stack.of(this).region) {
         console.log('Add Transit Gateway');
         const tgw = new TransitGateway(this, pascalCase(`${tgwItem.name}TransitGateway`), {
@@ -78,15 +78,15 @@ export class NetworkTgwStack extends AcceleratorStack {
           const principals: string[] = [];
 
           // Loop through all the defined OUs
-          for (const ou of tgwItem.shareTargets.organizationalUnits ?? []) {
-            const arn = props.organizationalUnitIds[ou].arn;
-            console.log(`Share Transit Gateway ${tgwItem.name} with Organizational Unit ${ou}: ${arn}`);
-            principals.push(arn);
+          for (const ouItem of tgwItem.shareTargets.organizationalUnits ?? []) {
+            const ouArn = props.organizationConfig.getOrganizationalUnitArn(ouItem);
+            console.log(`Share Transit Gateway ${tgwItem.name} with Organizational Unit ${ouItem}: ${ouArn}`);
+            principals.push(ouArn);
           }
 
           // Loop through all the defined accounts
           for (const account of tgwItem.shareTargets.accounts ?? []) {
-            const accountId = props.accountIds[props.accountsConfig.getEmail(account)];
+            const accountId = props.accountsConfig.getAccountId(account);
             console.log(`Share Transit Gateway ${tgwItem.name} with Account ${account}: ${accountId}`);
             principals.push(accountId);
           }

@@ -88,7 +88,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     // the generated transit gateway attachments
     const transitGatewayAccountIds: string[] = [];
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = props.accountIds[props.accountsConfig.getEmail(vpcItem.account)];
+      const accountId = props.accountsConfig.getAccountId(vpcItem.account);
       // Only care about VPCs to be created in the current account and region
       if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
         for (const attachment of vpcItem.transitGatewayAttachments ?? []) {
@@ -103,7 +103,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           Logger.info(
             `[network-vpc-stack] Transit Gateway key ${attachment.transitGateway.name} is not in map, add resources to look up`,
           );
-          const owningAccountId = props.accountIds[props.accountsConfig.getEmail(attachment.transitGateway.account)];
+          const owningAccountId = props.accountsConfig.getAccountId(attachment.transitGateway.account);
 
           // If owning account is this account, transit gateway id can be
           // retrieved from ssm parameter store
@@ -186,7 +186,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     // Evaluate VPC entries
     //
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = props.accountIds[props.accountsConfig.getEmail(vpcItem.account)];
+      const accountId = props.accountsConfig.getAccountId(vpcItem.account);
       if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
         Logger.info(`[network-vpc-stack] Adding VPC ${vpcItem.name}`);
 

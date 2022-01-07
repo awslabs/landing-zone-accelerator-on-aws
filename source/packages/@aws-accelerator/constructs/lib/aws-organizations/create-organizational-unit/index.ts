@@ -16,6 +16,7 @@ import {
   CreateOrganizationalUnitCommand,
   OrganizationsClient,
   paginateListOrganizationalUnitsForParent,
+  paginateListRoots,
   UpdateOrganizationalUnitCommand,
 } from '@aws-sdk/client-organizations';
 
@@ -28,18 +29,51 @@ import {
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
   | {
       PhysicalResourceId: string | undefined;
+      Data: {
+        Arn: string | undefined;
+      };
+      Status: string;
+    }
+  | {
+      PhysicalResourceId: string | undefined;
       Status: string;
     }
   | undefined
 > {
   const name: string = event.ResourceProperties['name'];
-  const parentId: string = event.ResourceProperties['parentId'];
-
-  const organizationsClient = new OrganizationsClient({});
+  const path: string = event.ResourceProperties['path'];
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
+      const organizationsClient = new OrganizationsClient({});
+
+      let rootId = '';
+      for await (const page of paginateListRoots({ client: organizationsClient }, {})) {
+        for (const item of page.Roots ?? []) {
+          if (item.Name === 'Root' && item.Id && item.Arn) {
+            rootId = item.Id;
+          }
+        }
+      }
+
+      let parentId = rootId;
+
+      for (const parent of path.split('/')) {
+        if (parent) {
+          for await (const page of paginateListOrganizationalUnitsForParent(
+            { client: organizationsClient },
+            { ParentId: parentId },
+          )) {
+            for (const ou of page.OrganizationalUnits ?? []) {
+              if (ou.Name === parent && ou.Id) {
+                parentId = ou.Id;
+              }
+            }
+          }
+        }
+      }
+
       // Check if OU already exists for the specified parent, update
       // and return the ID
       for await (const page of paginateListOrganizationalUnitsForParent(
@@ -60,6 +94,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             console.log(response.OrganizationalUnit?.Id);
             return {
               PhysicalResourceId: response.OrganizationalUnit?.Id,
+              Data: {
+                Arn: response.OrganizationalUnit?.Arn,
+              },
               Status: 'SUCCESS',
             };
           }
@@ -78,6 +115,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       console.log(response.OrganizationalUnit?.Id);
       return {
         PhysicalResourceId: response.OrganizationalUnit?.Id,
+        Data: {
+          Arn: response.OrganizationalUnit?.Arn,
+        },
         Status: 'SUCCESS',
       };
 

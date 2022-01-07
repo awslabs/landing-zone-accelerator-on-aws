@@ -11,20 +11,14 @@
  *  and limitations under the License.
  */
 
-import { AccountsConfig, GlobalConfig } from '@aws-accelerator/config';
 import { Bucket, CentralLogsBucket, Organization, S3PublicAccessBlock } from '@aws-accelerator/constructs';
-import { Construct } from 'constructs';
-import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cdk from 'aws-cdk-lib';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import { Construct } from 'constructs';
+import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
-export interface LoggingStackProps extends cdk.StackProps {
-  accountIds: { [name: string]: string };
-  accountsConfig: AccountsConfig;
-  globalConfig: GlobalConfig;
-}
-
-export class LoggingStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: LoggingStackProps) {
+export class LoggingStack extends AcceleratorStack {
+  constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     const organization = Organization.getInstance(this, 'Organization');
@@ -71,10 +65,9 @@ export class LoggingStack extends cdk.Stack {
     // Logs. Addition logs can also be sent to this bucket through AWS CloudWatch Logs, such as
     // application logs, OS logs, or server logs.
     //
-    const loggingAccountEmail = props.accountsConfig.getLogArchiveAccount().email;
     if (
       cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
-      cdk.Stack.of(this).account === props.accountIds[loggingAccountEmail]
+      cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()
     ) {
       //const CentralLogsBucket =
       new CentralLogsBucket(this, 'CentralLogsBucket', {

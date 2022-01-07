@@ -110,7 +110,7 @@ export class SecurityStack extends AcceleratorStack {
     let configRecorder: config.CfnConfigurationRecorder | undefined = undefined;
     if (
       !props.globalConfig.controlTower.enable ||
-      props.accountIds[props.accountsConfig.getManagementAccount().email] === cdk.Stack.of(this).account
+      props.accountsConfig.getManagementAccountId() === cdk.Stack.of(this).account
     ) {
       if (props.securityConfig.awsConfig.enableConfigurationRecorder) {
         const configRecorderRole = new iam.Role(this, 'ConfigRecorderRole', {
@@ -143,9 +143,9 @@ export class SecurityStack extends AcceleratorStack {
 
       if (props.securityConfig.awsConfig.enableDeliveryChannel) {
         new config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
-          s3BucketName: `aws-accelerator-central-logs-${
-            props.accountIds[props.accountsConfig.getLogArchiveAccount().email]
-          }-${props.globalConfig.homeRegion}`,
+          s3BucketName: `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
+            props.globalConfig.homeRegion
+          }`,
           configSnapshotDeliveryProperties: {
             deliveryFrequency: 'One_Hour',
           },

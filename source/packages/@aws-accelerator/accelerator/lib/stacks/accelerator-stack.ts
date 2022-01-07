@@ -24,15 +24,13 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 export interface AcceleratorStackProps extends cdk.StackProps {
-  accountIds: { [name: string]: string };
-  organizationsId: string;
-  organizationalUnitIds: { [name: string]: { id: string; arn: string } };
-  accountsConfig: AccountsConfig;
-  globalConfig: GlobalConfig;
-  iamConfig: IamConfig;
-  networkConfig: NetworkConfig;
-  organizationConfig: OrganizationConfig;
-  securityConfig: SecurityConfig;
+  readonly configDirPath: string;
+  readonly accountsConfig: AccountsConfig;
+  readonly globalConfig: GlobalConfig;
+  readonly iamConfig: IamConfig;
+  readonly networkConfig: NetworkConfig;
+  readonly organizationConfig: OrganizationConfig;
+  readonly securityConfig: SecurityConfig;
 }
 
 export abstract class AcceleratorStack extends cdk.Stack {
@@ -74,8 +72,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   protected isAccountExcluded(accounts: string[]): boolean {
     for (const account of accounts ?? []) {
-      const email = this.props.accountsConfig.getEmail(account);
-      if (cdk.Stack.of(this).account === this.props.accountIds[email]) {
+      if (cdk.Stack.of(this).account === this.props.accountsConfig.getAccountId(account)) {
         console.log(`${account} account explicitly excluded`);
         return true;
       }
@@ -85,8 +82,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   protected isAccountIncluded(accounts: string[]): boolean {
     for (const account of accounts ?? []) {
-      const email = this.props.accountsConfig.getEmail(account);
-      if (cdk.Stack.of(this).account === this.props.accountIds[email]) {
+      if (cdk.Stack.of(this).account === this.props.accountsConfig.getAccountId(account)) {
         console.log(`${account} region explicitly included`);
         return true;
       }
@@ -95,22 +91,23 @@ export abstract class AcceleratorStack extends cdk.Stack {
   }
 
   protected isOrganizationalUnitIncluded(organizationalUnits: string[]): boolean {
-    // If Root is specified, return right away
-    if (organizationalUnits?.includes('Root')) {
-      return true;
-    }
+    if (organizationalUnits) {
+      // If Root is specified, return right away
+      if (organizationalUnits.includes('Root')) {
+        return true;
+      }
 
-    for (const organizationalUnit of organizationalUnits ?? []) {
-      const account = Object.entries(this.props.accountIds).find(item => item[1] === cdk.Stack.of(this).account);
+      // Full list of all accounts
+      const accounts = [...this.props.accountsConfig.mandatoryAccounts, ...this.props.accountsConfig.workloadAccounts];
+
+      // Find the account with the matching ID
+      const account = accounts.find(
+        item => this.props.accountsConfig.getAccountId(item.name) === cdk.Stack.of(this).account,
+      );
+
       if (account) {
-        const accounts = [
-          ...this.props.accountsConfig.mandatoryAccounts,
-          ...this.props.accountsConfig.workloadAccounts,
-        ];
-        // Check accounts
-        const accountEntry = accounts.find(item => item.email === account[0]);
-        if (accountEntry?.organizationalUnit === organizationalUnit) {
-          console.log(`${organizationalUnit} organizational unit explicitly included`);
+        if (organizationalUnits.indexOf(account.organizationalUnit) != -1) {
+          console.log(`${account.organizationalUnit} organizational unit explicitly included`);
           return true;
         }
       }

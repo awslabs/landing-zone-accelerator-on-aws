@@ -37,6 +37,7 @@ export abstract class GlobalConfigTypes {
   static readonly globalConfig = t.interface({
     homeRegion: t.nonEmptyString,
     enabledRegions: t.array(t.region),
+    managementAccountAccessRole: t.nonEmptyString,
     controlTower: GlobalConfigTypes.controlTowerConfig,
     logging: GlobalConfigTypes.loggingConfig,
   });
@@ -61,6 +62,19 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
 
   readonly homeRegion = '';
   readonly enabledRegions = [];
+
+  /**
+   * This role trusts the management account, allowing users in the management
+   * account to assume the role, as permitted by the management account
+   * administrator. The role has administrator permissions in the new member
+   * account.
+   *
+   * Examples:
+   * - AWSControlTowerExecution
+   * - OrganizationAccountAccessRole
+   */
+  readonly managementAccountAccessRole = 'AWSControlTowerExecution';
+
   readonly controlTower: ControlTowerConfig = new ControlTowerConfig();
   readonly logging: LoggingConfig = new LoggingConfig();
 

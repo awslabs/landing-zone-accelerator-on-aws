@@ -11,20 +11,16 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
+import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
-export interface ValidateStackProps extends cdk.StackProps {
-  stage: string;
-}
-
-export class ValidateStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: ValidateStackProps) {
+export class ValidateStack extends AcceleratorStack {
+  constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     new ssm.StringParameter(this, 'Parameter', {
-      parameterName: `/accelerator/validate-stack/${props.stage}`,
+      parameterName: `/accelerator/validate-stack/validate`,
       stringValue: 'value',
     });
   }
