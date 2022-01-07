@@ -23,6 +23,7 @@ export interface AssumeRoleProviderSourceProps {
   assumeRoleName: string;
   assumeRoleDuration: number;
   credentials?: Credentials;
+  partition?: string;
 }
 
 export class AssumeRoleProviderSource implements CredentialProviderSource {
@@ -64,7 +65,7 @@ export class AssumeRoleProviderSource implements CredentialProviderSource {
   }
 
   protected async assumeRole(accountId: string, duration: number): Promise<aws.STS.AssumeRoleResponse> {
-    const roleArn = `arn:aws:iam::${accountId}:role/${this.props.assumeRoleName}`;
+    const roleArn = `arn:${this.props.partition ?? 'aws'}:iam::${accountId}:role/${this.props.assumeRoleName}`;
     console.log(`Assuming role ${green(roleArn)} for ${duration} seconds`);
 
     let sts: aws.STS;

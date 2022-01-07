@@ -69,6 +69,7 @@ export abstract class Accelerator {
         command: props.command,
         accountId: props.account,
         region: props.region,
+        partition: props.partition,
         stage: props.stage,
         configDirPath: props.configDirPath,
         requireApproval: props.requireApproval,
@@ -103,6 +104,7 @@ export abstract class Accelerator {
       assumeRoleName: globalConfig.managementAccountAccessRole,
       assumeRoleDuration: 3600,
       credentials: managementAccountCredentials,
+      partition: props.partition,
     });
     assumeRolePlugin.init(PluginHost.instance);
 
@@ -115,11 +117,9 @@ export abstract class Accelerator {
     // Execute Bootstrap stacks for all identified accounts
     //
     if (props.command == 'bootstrap') {
-      // const promises: Promise<void>[] = [];
       const trustedAccountId = accountsConfig.getManagementAccountId();
       for (const region of globalConfig.enabledRegions) {
-        for (const account of accountsConfig.mandatoryAccounts) {
-          // promises.push(
+        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
           await AcceleratorToolkit.execute({
             command: props.command,
             accountId: accountsConfig.getAccountId(account.name),
@@ -129,29 +129,8 @@ export abstract class Accelerator {
             requireApproval: props.requireApproval,
             qualifier: 'accel',
           });
-          // );
-          // if (promises.length >= maxStacks) {
-          //   await Promise.all(promises);
-          // }
-        }
-        for (const account of accountsConfig.workloadAccounts) {
-          // promises.push(
-          await AcceleratorToolkit.execute({
-            command: props.command,
-            accountId: accountsConfig.getAccountId(account.name),
-            region,
-            partition: props.partition,
-            trustedAccountId,
-            requireApproval: props.requireApproval,
-            qualifier: 'accel',
-          });
-          // );
-          // if (promises.length >= maxStacks) {
-          //   await Promise.all(promises);
-          // }
         }
       }
-      // await Promise.all(promises);
       return;
     }
 
@@ -172,6 +151,7 @@ export abstract class Accelerator {
           command: props.command,
           accountId: accountsConfig.getManagementAccountId(),
           region: globalConfig.homeRegion,
+          partition: props.partition,
           stage: props.stage,
           configDirPath: props.configDirPath,
           requireApproval: props.requireApproval,
@@ -191,6 +171,7 @@ export abstract class Accelerator {
             command: props.command,
             accountId: accountsConfig.getManagementAccountId(),
             region: region,
+            partition: props.partition,
             stage: props.stage,
             configDirPath: props.configDirPath,
             requireApproval: props.requireApproval,
@@ -219,6 +200,7 @@ export abstract class Accelerator {
               command: props.command,
               accountId: accountsConfig.getAccountId(account.name),
               region,
+              partition: props.partition,
               stage: props.stage,
               configDirPath: props.configDirPath,
               requireApproval: props.requireApproval,
@@ -237,6 +219,7 @@ export abstract class Accelerator {
               command: props.command,
               accountId: accountsConfig.getAccountId(auditAccountName),
               region: region,
+              partition: props.partition,
               stage: props.stage,
               configDirPath: props.configDirPath,
               requireApproval: props.requireApproval,

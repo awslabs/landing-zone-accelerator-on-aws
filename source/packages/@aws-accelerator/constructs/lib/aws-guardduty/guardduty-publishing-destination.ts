@@ -76,6 +76,7 @@ export class GuardDutyPublishingDestination extends Construct {
               'guardDuty:DeletePublishingDestination',
               'guardDuty:ListDetectors',
               'guardDuty:ListPublishingDestinations',
+              'iam:CreateServiceLinkedRole',
             ],
             Resource: '*',
           },

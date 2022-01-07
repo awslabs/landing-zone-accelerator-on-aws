@@ -45,6 +45,7 @@ export abstract class OrganizationConfigTypes {
   });
 
   static readonly organizationConfig = t.interface({
+    enable: t.boolean,
     organizationalUnits: t.array(this.organizationalUnitConfig),
     organizationalUnitIds: t.optional(t.array(this.organizationalUnitIdConfig)),
     serviceControlPolicies: t.array(this.serviceControlPolicyConfig),
@@ -78,6 +79,8 @@ export abstract class ServiceControlPolicyConfig
 
 export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTypes.organizationConfig> {
   static readonly FILENAME = 'organization-config.yaml';
+
+  readonly enable = true;
 
   /**
    * A Record of Organizational Unit configurations
