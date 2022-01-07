@@ -69,9 +69,10 @@ export class LoggingStack extends AcceleratorStack {
       cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
       cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()
     ) {
-      //const CentralLogsBucket =
       new CentralLogsBucket(this, 'CentralLogsBucket', {
-        s3BucketName: `aws-accelerator-central-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
+        s3BucketName: `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
+          props.globalConfig.homeRegion
+        }`,
         serverAccessLogsBucket: serverAccessLogsBucket,
         kmsAliasName: 'alias/accelerator/central-logs/s3',
         kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',

@@ -88,13 +88,12 @@ vpcs:
         subnets:
           - tgw-attach-a
           - tgw-attach-b
-    flowLogs: BOTH
     dnsResolverLogging: true
     useCentralEndpoints: false
     gatewayEndpoints:
       - s3
       - dynamodb
-   securityGroups:
+    securityGroups:
       - name: Management
         description: Management Security Group
         inboundRules:
@@ -105,7 +104,14 @@ vpcs:
               - 10.0.0.0/8
               - 100.96.252.0/23
               - 100.96.250.0/23
-          - description: Management RDP Traffic Inbound
+              - account: Audit
+                vpc: Test
+                subnets:
+                  - tgw-attach-a
+                  - tgw-attach-b
+              - securityGroups:
+                  - Management
+          - description: Management SSH Traffic Inbound
             types:
               - SSH
             sources:
@@ -118,3 +124,38 @@ vpcs:
               - ALL
             sources:
               - 0.0.0.0/0
+vpcFlowLogs:
+  trafficType: ALL
+  maxAggregationInterval: 60
+  destinations:
+    - s3
+    - cloud-watch-logs
+  defaultFormat: false
+  customFields:
+    - version
+    - account-id
+    - interface-id
+    - srcaddr
+    - dstaddr
+    - srcport
+    - dstport
+    - protocol
+    - packets
+    - bytes
+    - start
+    - end
+    - action
+    - log-status
+    - vpc-id
+    - subnet-id
+    - instance-id
+    - tcp-flags
+    - type
+    - pkt-srcaddr
+    - pkt-dstaddr
+    - region
+    - az-id
+    - pkt-src-aws-service
+    - pkt-dst-aws-service
+    - flow-direction
+    - traffic-path

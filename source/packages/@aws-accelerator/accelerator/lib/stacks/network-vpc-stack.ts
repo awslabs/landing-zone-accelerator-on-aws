@@ -31,9 +31,6 @@ import {
   Vpc,
 } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import { Logger } from '../logger';
@@ -65,7 +62,7 @@ export class NetworkVpcStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    new ssm.StringParameter(this, 'SsmParamStackId', {
+    new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
       parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
       stringValue: cdk.Stack.of(this).stackId,
     });
@@ -108,7 +105,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           // If owning account is this account, transit gateway id can be
           // retrieved from ssm parameter store
           if (owningAccountId === cdk.Stack.of(this).account) {
-            const transitGatewayId = ssm.StringParameter.valueForStringParameter(
+            const transitGatewayId = cdk.aws_ssm.StringParameter.valueForStringParameter(
               this,
               `/accelerator/network/transitGateways/${attachment.transitGateway.name}/id`,
             );
@@ -161,18 +158,18 @@ export class NetworkVpcStack extends AcceleratorStack {
     if (transitGatewayAccountIds.length > 0) {
       Logger.info(`[network-vpc-stack] Create IAM Cross Account Access Role`);
 
-      const principals: iam.PrincipalBase[] = [];
+      const principals: cdk.aws_iam.PrincipalBase[] = [];
       transitGatewayAccountIds.forEach(accountId => {
-        principals.push(new iam.AccountPrincipal(accountId));
+        principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
       });
-      new iam.Role(this, 'DescribeTransitGatewaysAttachmentsRole', {
+      new cdk.aws_iam.Role(this, 'DescribeTransitGatewaysAttachmentsRole', {
         roleName: 'AWSAccelerator-DescribeTransitGatewayAttachmentsRole',
-        assumedBy: new iam.CompositePrincipal(...principals),
+        assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
         inlinePolicies: {
-          default: new iam.PolicyDocument({
+          default: new cdk.aws_iam.PolicyDocument({
             statements: [
-              new iam.PolicyStatement({
-                effect: iam.Effect.ALLOW,
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
                 actions: ['ec2:DescribeTransitGatewayAttachments'],
                 resources: ['*'],
               }),
@@ -180,6 +177,57 @@ export class NetworkVpcStack extends AcceleratorStack {
           }),
         },
       });
+    }
+
+    // Get the CentralLogsBucket, if needed to send vpc flow logs to
+    let centralLogsBucketArn: string | undefined = undefined;
+    if (props.networkConfig.vpcFlowLogs.destinations.includes('s3')) {
+      Logger.info(`[network-vpc-stack] S3 destination for VPC flow log detected, obtain the CentralLogsBucket`);
+
+      const centralLogsBucket = cdk.aws_s3.Bucket.fromBucketName(
+        this,
+        'CentralLogsBucket',
+        `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
+          props.globalConfig.homeRegion
+        }`,
+      );
+      centralLogsBucketArn = centralLogsBucket.bucketArn;
+    }
+
+    let flowLogsCmk: cdk.aws_kms.Key | undefined = undefined;
+    if (props.networkConfig.vpcFlowLogs.destinations.includes('cloud-watch-logs')) {
+      Logger.info(`[network-vpc-stack] cwl destination for VPC flow log detected, create a cmk to be used by cwl`);
+
+      flowLogsCmk = new cdk.aws_kms.Key(this, 'FlowLogsCmk', {
+        enableKeyRotation: true,
+        description: 'AWS Accelerator Cloud Watch Logs CMK for VPC Flow Logs',
+        alias: 'accelerator/vpc-flow-logs/cloud-watch-logs',
+      });
+
+      flowLogsCmk.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Enable IAM User Permissions',
+          principals: [new cdk.aws_iam.AccountRootPrincipal()],
+          actions: ['kms:*'],
+          resources: ['*'],
+        }),
+      );
+
+      flowLogsCmk.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow Cloud Watch Logs access',
+          principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+          actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
+          resources: ['*'],
+          conditions: {
+            ArnLike: {
+              'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
+                cdk.Stack.of(this).region
+              }:${cdk.Stack.of(this).account}:*`,
+            },
+          },
+        }),
+      );
     }
 
     //
@@ -201,14 +249,29 @@ export class NetworkVpcStack extends AcceleratorStack {
           enableDnsSupport: vpcItem.enableDnsSupport ?? true,
           instanceTenancy: vpcItem.instanceTenancy ?? 'default',
         });
-        new ssm.StringParameter(this, pascalCase(`SsmParam${pascalCase(vpcItem.name)}VpcId`), {
+        new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${pascalCase(vpcItem.name)}VpcId`), {
           parameterName: `/accelerator/network/vpc/${vpcItem.name}/id`,
           stringValue: vpc.vpcId,
         });
 
         // TODO: DHCP OptionSets
 
-        // TODO: VPC FlowLogs
+        //
+        // Create VPC Flow Log
+        //
+        let logFormat: string | undefined = undefined;
+        if (!props.networkConfig.vpcFlowLogs.defaultFormat) {
+          logFormat = props.networkConfig.vpcFlowLogs.customFields.map(c => `$\{${c}}`).join(' ');
+        }
+
+        vpc.addFlowLogs({
+          destinations: props.networkConfig.vpcFlowLogs.destinations,
+          trafficType: props.networkConfig.vpcFlowLogs.trafficType,
+          maxAggregationInterval: props.networkConfig.vpcFlowLogs.maxAggregationInterval,
+          logFormat,
+          encryptionKey: flowLogsCmk,
+          bucketArn: centralLogsBucketArn,
+        });
 
         //
         // Create Route Tables
@@ -224,7 +287,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             },
           );
           routeTableMap.set(routeTableItem.name, routeTable);
-          new ssm.StringParameter(
+          new cdk.aws_ssm.StringParameter(
             this,
             pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(routeTableItem.name)}RouteTableId`),
             {
@@ -259,7 +322,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             vpc,
           });
           subnetMap.set(subnetItem.name, subnet);
-          new ssm.StringParameter(
+          new cdk.aws_ssm.StringParameter(
             this,
             pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(subnetItem.name)}SubnetId`),
             {
@@ -290,7 +353,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             },
           );
           natGatewayMap.set(natGatewayItem.name, natGateway);
-          new ssm.StringParameter(
+          new cdk.aws_ssm.StringParameter(
             this,
             pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(natGatewayItem.name)}NatGatewayId`),
             {
@@ -334,7 +397,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             },
           );
           transitGatewayAttachments.set(tgwAttachmentItem.transitGateway.name, attachment);
-          new ssm.StringParameter(
+          new cdk.aws_ssm.StringParameter(
             this,
             pascalCase(
               `SsmParam${pascalCase(vpcItem.name) + pascalCase(tgwAttachmentItem.name)}TransitGatewayAttachmentId`,
@@ -384,7 +447,7 @@ export class NetworkVpcStack extends AcceleratorStack {
                 routeTableEntryItem.destination,
                 transitGatewayId,
                 // TODO: Implement correct dependency relationships without need for escape hatch
-                transitGatewayAttachment.node.defaultChild as ec2.CfnTransitGatewayAttachment,
+                transitGatewayAttachment.node.defaultChild as cdk.aws_ec2.CfnTransitGatewayAttachment,
               );
             }
 
@@ -463,7 +526,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           );
           securityGroupMap.set(securityGroupItem.name, securityGroup);
 
-          new ssm.StringParameter(
+          new cdk.aws_ssm.StringParameter(
             this,
             pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`),
             {
@@ -540,7 +603,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         Logger.debug(`[network-vpc-stack] Adding TCP port ${port}`);
         rules.push(
           ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, {
-            ipProtocol: ec2.Protocol.TCP,
+            ipProtocol: cdk.aws_ec2.Protocol.TCP,
             fromPort: port,
             toPort: port,
             description: item.description,
@@ -552,7 +615,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         Logger.debug(`[network-vpc-stack] Adding UDP port ${port}`);
         rules.push(
           ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, {
-            ipProtocol: ec2.Protocol.UDP,
+            ipProtocol: cdk.aws_ec2.Protocol.UDP,
             fromPort: port,
             toPort: port,
             description: item.description,
@@ -566,14 +629,14 @@ export class NetworkVpcStack extends AcceleratorStack {
       if (type === 'ALL') {
         rules.push(
           ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, {
-            ipProtocol: ec2.Protocol.ALL,
+            ipProtocol: cdk.aws_ec2.Protocol.ALL,
             description: item.description,
           }),
         );
       } else if (Object.keys(TCP_PROTOCOLS_PORT).includes(type)) {
         rules.push(
           ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, {
-            ipProtocol: ec2.Protocol.TCP,
+            ipProtocol: cdk.aws_ec2.Protocol.TCP,
             fromPort: TCP_PROTOCOLS_PORT[type],
             toPort: TCP_PROTOCOLS_PORT[type],
             description: item.description,

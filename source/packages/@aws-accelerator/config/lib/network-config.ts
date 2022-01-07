@@ -164,10 +164,31 @@ export class NetworkConfigTypes {
     securityGroups: t.optional(t.array(this.securityGroupConfig)),
   });
 
+  static readonly trafficTypeEnum = t.enums(
+    'Flow LogTrafficType',
+    ['ALL', 'ACCEPT', 'REJECT'],
+    'Value should be a flow log traffic type',
+  );
+
+  static readonly logDestinationTypeEnum = t.enums(
+    'LogDestinationTypes',
+    ['s3', 'cloud-watch-logs'],
+    'Value should be a log destination type',
+  );
+
+  static readonly vpcFlowLogsConfig = t.interface({
+    trafficType: this.trafficTypeEnum,
+    maxAggregationInterval: t.number,
+    destinations: t.array(this.logDestinationTypeEnum),
+    defaultFormat: t.boolean,
+    customFields: t.optional(t.array(t.nonEmptyString)),
+  });
+
   static readonly networkConfig = t.interface({
-    defaultVpc: t.optional(this.defaultVpcsConfig),
+    defaultVpc: this.defaultVpcsConfig,
     transitGateways: t.array(this.transitGatewayConfig),
     vpcs: t.array(this.vpcConfig),
+    vpcFlowLogs: this.vpcFlowLogsConfig,
   });
 }
 
@@ -303,13 +324,49 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
   readonly securityGroups: SecurityGroupConfig[] = [];
 }
 
+export class VpcFlowLogsConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcFlowLogsConfig> {
+  readonly trafficType = 'ALL';
+  readonly maxAggregationInterval: number = 600;
+  readonly destinations: t.TypeOf<typeof NetworkConfigTypes.logDestinationTypeEnum>[] = ['s3', 'cloud-watch-logs'];
+  readonly defaultFormat = false;
+  readonly customFields = [
+    'version',
+    'account-id',
+    'interface-id',
+    'srcaddr',
+    'dstaddr',
+    'srcport',
+    'dstport',
+    'protocol',
+    'packets',
+    'bytes',
+    'start',
+    'end',
+    'action',
+    'log-status',
+    'vpc-id',
+    'subnet-id',
+    'instance-id',
+    'tcp-flags',
+    'type',
+    'pkt-srcaddr',
+    'pkt-dstaddr',
+    'region',
+    'az-id',
+    'pkt-src-aws-service',
+    'pkt-dst-aws-service',
+    'flow-direction',
+    'traffic-path',
+  ];
+}
+
 export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.networkConfig> {
   static readonly FILENAME = 'network-config.yaml';
 
   /**
    *
    */
-  readonly defaultVpc: DefaultVpcsConfig | undefined;
+  readonly defaultVpc: DefaultVpcsConfig = new DefaultVpcsConfig();
 
   /**
    *
@@ -322,6 +379,8 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * @see VpcConfig
    */
   readonly vpcs: VpcConfig[] = [];
+
+  readonly vpcFlowLogs: VpcFlowLogsConfig = new VpcFlowLogsConfig();
 
   /**
    *
