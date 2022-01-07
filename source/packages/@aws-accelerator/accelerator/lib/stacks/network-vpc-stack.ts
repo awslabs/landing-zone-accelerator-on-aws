@@ -17,10 +17,12 @@ import {
   SecurityGroupRuleConfig,
   SecurityGroupSourceConfig,
   SubnetSourceConfig,
+  NetworkAclSubnetSelection,
 } from '@aws-accelerator/config';
 import {
   DeleteDefaultVpc,
   NatGateway,
+  NetworkAcl,
   ResourceShare,
   ResourceShareItem,
   ResourceShareOwner,
@@ -298,10 +300,6 @@ export class NetworkVpcStack extends AcceleratorStack {
         }
 
         //
-        // TODO: Create NACLs
-        //
-
-        //
         // Create Subnets
         //
         const subnetMap = new Map<string, Subnet>();
@@ -517,7 +515,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           Logger.info(`[network-vpc-stack] Adding Security Group ${securityGroupItem.name}`);
           const securityGroup = new SecurityGroup(
             this,
-            pascalCase(`${vpcItem.name}Vpc`) + pascalCase(securityGroupItem.name),
+            pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${securityGroupItem.name}Sg`),
             {
               securityGroupName: securityGroupItem.name,
               description: securityGroupItem.description,
@@ -583,10 +581,136 @@ export class NetworkVpcStack extends AcceleratorStack {
         }
 
         //
+        // Create NACLs
+        //
+        for (const naclItem of vpcItem.networkAcls ?? []) {
+          Logger.info(`[network-vpc-stack] Adding Network ACL ${naclItem.name}`);
+
+          const networkAcl = new NetworkAcl(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}Nacl`, {
+            networkAclName: naclItem.name,
+            vpc,
+          });
+
+          new cdk.aws_ssm.StringParameter(
+            this,
+            pascalCase(`SsmParam${pascalCase(vpcItem.name)}${pascalCase(naclItem.name)}Nacl`),
+            {
+              parameterName: `/accelerator/network/vpc/${vpcItem.name}/networkAcl/${naclItem.name}/id`,
+              stringValue: networkAcl.networkAclId,
+            },
+          );
+
+          for (const subnetItem of naclItem.subnetAssociations) {
+            Logger.info(`[network-vpc-stack] Associate ${naclItem.name} to subnet ${subnetItem}`);
+            const subnet = subnetMap.get(subnetItem);
+            if (subnet === undefined) {
+              throw new Error(`Subnet ${subnetItem} not defined`);
+            }
+            networkAcl.associateSubnet(
+              `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}NaclAssociate${pascalCase(subnetItem)}`,
+              {
+                subnet,
+              },
+            );
+          }
+
+          for (const inboundRuleItem of naclItem.inboundRules ?? []) {
+            Logger.info(`[network-vpc-stack] Adding inbound rule ${inboundRuleItem.rule} to ${naclItem.name}`);
+            const props: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
+              inboundRuleItem.source,
+            );
+
+            Logger.info(`[network-vpc-stack] Adding inbound entries`);
+            networkAcl.addEntry(
+              `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}-Inbound-${inboundRuleItem.rule}`,
+              {
+                egress: false,
+                protocol: inboundRuleItem.protocol,
+                ruleAction: inboundRuleItem.action,
+                ruleNumber: inboundRuleItem.rule,
+                portRange: {
+                  from: inboundRuleItem.fromPort,
+                  to: inboundRuleItem.toPort,
+                },
+                ...props,
+              },
+            );
+          }
+
+          for (const outboundRuleItem of naclItem.outboundRules ?? []) {
+            Logger.info(`[network-vpc-stack] Adding outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`);
+            const props: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
+              outboundRuleItem.destination,
+            );
+
+            Logger.info(`[network-vpc-stack] Adding outbound entries`);
+            networkAcl.addEntry(
+              `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}-Outbound-${outboundRuleItem.rule}`,
+              {
+                egress: false,
+                protocol: outboundRuleItem.protocol,
+                ruleAction: outboundRuleItem.action,
+                ruleNumber: outboundRuleItem.rule,
+                portRange: {
+                  from: outboundRuleItem.fromPort,
+                  to: outboundRuleItem.toPort,
+                },
+                ...props,
+              },
+            );
+          }
+        }
+
+        //
         // TODO: Service Endpoints (local eni ssm.amazonaws.com)
         //
       }
     }
+  }
+
+  private processNetworkAclTarget(target: string | NetworkAclSubnetSelection): {
+    cidrBlock?: string;
+    ipv6CidrBlock?: string;
+  } {
+    Logger.info(`[network-vpc-stack] processNetworkAclRules`);
+
+    //
+    // IP target
+    //
+    if (nonEmptyString.is(target)) {
+      Logger.info(`[network-vpc-stack] Evaluate IP Target ${target}`);
+      if (target.includes('::')) {
+        return { ipv6CidrBlock: target };
+      } else {
+        return { cidrBlock: target };
+      }
+    }
+
+    //
+    // Subnet Source target
+    //
+    if (NetworkConfigTypes.networkAclSubnetSelection.is(target)) {
+      Logger.info(
+        `[network-vpc-stack] Evaluate Subnet Source account:${target.account} vpc:${target.vpc} subnets:[${target.subnet}]`,
+      );
+
+      // Locate the VPC
+      const vpcItem = this.props.networkConfig.vpcs?.find(
+        item => item.account === target.account && item.name === target.vpc,
+      );
+      if (vpcItem === undefined) {
+        throw new Error(`Specified VPC ${target.vpc} not defined`);
+      }
+
+      // Locate the Subnet
+      const subnetItem = vpcItem.subnets?.find(item => item.name === target.subnet);
+      if (subnetItem === undefined) {
+        throw new Error(`Specified subnet ${target.subnet} not defined`);
+      }
+      return { cidrBlock: subnetItem.ipv4CidrBlock };
+    }
+
+    throw new Error(`Invalid input to processNetworkAclTargets`);
   }
 
   private processSecurityGroupRules(
@@ -709,9 +833,9 @@ export class NetworkVpcStack extends AcceleratorStack {
         // Loop through all subnets to add
         for (const subnet of source.subnets) {
           // Locate the Subnet
-          const subnetItem = vpcItem.subnets.find(item => item.name === subnet);
+          const subnetItem = vpcItem.subnets?.find(item => item.name === subnet);
           if (subnetItem === undefined) {
-            throw new Error(`Specified VPC ${subnet} not defined`);
+            throw new Error(`Specified subnet ${subnet} not defined`);
           }
           rules.push({
             // TODO: Add support for dynamic IP lookup

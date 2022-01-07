@@ -293,6 +293,10 @@ export class SecurityGroup extends cdk.Resource implements ISecurityGroup {
       vpcId: props.vpc.vpcId,
     });
 
+    if (props.securityGroupName) {
+      cdk.Tags.of(this.securityGroup).add('Name', props.securityGroupName);
+    }
+
     this.securityGroupId = this.securityGroup.ref;
   }
 
@@ -321,6 +325,123 @@ export class SecurityGroup extends cdk.Resource implements ISecurityGroup {
       destinationSecurityGroupId: props.destinationSecurityGroup?.securityGroupId,
       fromPort: props.fromPort,
       toPort: props.toPort,
+    });
+  }
+}
+
+/**
+ * A NetworkAcl
+ *
+ *
+ */
+export interface INetworkAcl extends cdk.IResource {
+  /**
+   * ID for the current Network ACL
+   * @attribute
+   */
+  readonly networkAclId: string;
+
+  /**
+   * ID for the current Network ACL
+   * @attribute
+   */
+  readonly networkAclName: string;
+}
+
+/**
+ * A NetworkAclBase that is not created in this template
+ */
+abstract class NetworkAclBase extends cdk.Resource implements INetworkAcl {
+  public abstract readonly networkAclId: string;
+  public abstract readonly networkAclName: string;
+}
+
+/**
+ * Properties to create NetworkAcl
+ */
+export interface NetworkAclProps {
+  /**
+   * The name of the NetworkAcl.
+   */
+  readonly networkAclName: string;
+
+  /**
+   * The VPC in which to create the NetworkACL.
+   */
+  readonly vpc: IVpc;
+}
+
+/**
+ * Define a new custom network ACL
+ *
+ * By default, will deny all inbound and outbound traffic unless entries are
+ * added explicitly allowing it.
+ */
+export class NetworkAcl extends NetworkAclBase {
+  /**
+   * The ID of the NetworkACL
+   *
+   * @attribute
+   */
+  public readonly networkAclId: string;
+
+  /**
+   * The Name of the NetworkACL
+   *
+   * @attribute
+   */
+  public readonly networkAclName: string;
+
+  /**
+   * The VPC ID for this NetworkACL
+   *
+   * @attribute
+   */
+  public readonly networkAclVpcId: string;
+
+  constructor(scope: Construct, id: string, props: NetworkAclProps) {
+    super(scope, id);
+
+    this.networkAclName = props.networkAclName;
+
+    const resource = new cdk.aws_ec2.CfnNetworkAcl(this, 'Resource', {
+      vpcId: props.vpc.vpcId,
+      tags: [{ key: 'Name', value: props.networkAclName }],
+    });
+
+    this.networkAclId = resource.ref;
+    this.networkAclVpcId = resource.vpcId;
+  }
+
+  public associateSubnet(id: string, props: { subnet: ISubnet }) {
+    new cdk.aws_ec2.CfnSubnetNetworkAclAssociation(this, id, {
+      networkAclId: this.networkAclId,
+      subnetId: props.subnet.subnetId,
+    });
+  }
+
+  public addEntry(
+    id: string,
+    props: {
+      ruleNumber: number;
+      protocol: number;
+      ruleAction: 'allow' | 'deny';
+      egress: boolean;
+      cidrBlock?: string;
+      icmp?: {
+        code?: number;
+        type?: number;
+      };
+      ipv6CidrBlock?: string;
+      portRange?: {
+        from: number;
+        to: number;
+      };
+    },
+  ) {
+    new cdk.aws_ec2.CfnNetworkAclEntry(this, id, {
+      networkAclId: this.networkAclId,
+      ...props,
     });
   }
 }
