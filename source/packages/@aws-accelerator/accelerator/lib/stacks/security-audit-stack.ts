@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { AccountsConfig, Region, SecurityConfig } from '@aws-accelerator/config';
+import { Region } from '@aws-accelerator/config';
 import {
   GuardDutyDetectorConfig,
   GuardDutyExportConfigDestinationTypes,
@@ -23,15 +23,10 @@ import {
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Logger } from '../logger';
+import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
-export interface SecurityAuditStackProps extends cdk.StackProps {
-  stage: string;
-  accountsConfig: AccountsConfig;
-  securityConfig: SecurityConfig;
-}
-
-export class SecurityAuditStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: SecurityAuditStackProps) {
+export class SecurityAuditStack extends AcceleratorStack {
+  constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     //Macie configuration

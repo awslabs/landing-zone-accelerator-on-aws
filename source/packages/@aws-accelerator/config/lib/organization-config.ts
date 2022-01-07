@@ -15,54 +15,27 @@ import * as t from './common-types';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
+import {
+  OrganizationsClient,
+  paginateListRoots,
+  paginateListOrganizationalUnitsForParent,
+} from '@aws-sdk/client-organizations';
 
 /**
  * AWS Organizations configuration items.
  */
 export abstract class OrganizationConfigTypes {
-  /**
-   * Defines Organizational Unit (OU) information, utilized in organization.config.
-   *
-   * - description: (optional) Describes the purpose of the OU
-   * - service-control-policies: A list of SCPs to apply to the OU
-   *
-   * Example usage in organization.config:
-   * ```
-   * organizational-units:
-   *   core-ou:
-   *     name: Core
-   * ```
-   */
   static readonly organizationalUnitConfig = t.interface({
     name: t.nonEmptyString,
-    parent: t.nonEmptyString,
+    path: t.nonEmptyString,
   });
 
-  /**
-   *  A Record of `OrganizationTypes.OrganizationalUnit`.
-   *
-   * @see OrganizationTypes.OrganizationalUnit
-   */
+  static readonly organizationalUnitIdConfig = t.interface({
+    name: t.nonEmptyString,
+    id: t.nonEmptyString,
+    arn: t.nonEmptyString,
+  });
 
-  /**
-   * Defines Service Control Policy (SCP) information, utilized in
-   * organization.config.
-   *
-   * - description: Describes the purpose of the SCP
-   * - name: Name to apply to the SCP object in AWS Organizations
-   * - policy: Name of the policy file to associate with the SCP. Policy files
-   * are located in the accelerator-config repository.
-   *
-   * Example usage in organization.config:
-   *
-   * ```
-   * service-control-policies:
-   *   accelerator-common-scp:
-   *     description: Common SCP to apply to all OUs
-   *     name: Accelerator-Common-SCP
-   *     policy: Accelerator-Common-SCP.json
-   * ```
-   */
   static readonly serviceControlPolicyConfig = t.interface({
     name: t.nonEmptyString,
     description: t.nonEmptyString,
@@ -71,15 +44,9 @@ export abstract class OrganizationConfigTypes {
     deploymentTargets: t.deploymentTargets,
   });
 
-  /**
-   * A Record of `OrganizationTypes.ServiceControlPolicy`.
-   *
-   * @see OrganizationTypes.ServiceControlPolicy
-   */
-
   static readonly organizationConfig = t.interface({
-    organizationsAccessRole: t.nonEmptyString,
     organizationalUnits: t.array(this.organizationalUnitConfig),
+    organizationalUnitIds: t.optional(t.array(this.organizationalUnitIdConfig)),
     serviceControlPolicies: t.array(this.serviceControlPolicyConfig),
   });
 }
@@ -88,7 +55,15 @@ export abstract class OrganizationalUnitConfig
   implements t.TypeOf<typeof OrganizationConfigTypes.organizationalUnitConfig>
 {
   readonly name: string = '';
-  readonly parent: string = '';
+  readonly path: string = '/';
+}
+
+export abstract class OrganizationalUnitIdConfig
+  implements t.TypeOf<typeof OrganizationConfigTypes.organizationalUnitIdConfig>
+{
+  readonly name: string = '';
+  readonly id: string = '';
+  readonly arn: string = '';
 }
 
 export abstract class ServiceControlPolicyConfig
@@ -101,45 +76,32 @@ export abstract class ServiceControlPolicyConfig
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
 
-/**
- * Defines the organizations.config
- *
- *
- * Example usage in organization.config:
- *
- * ```
- * service-control-policies:
- *   accelerator-common-scp:
- *     description: Common SCP to apply to all OUs
- *     name: Accelerator-Common-SCP
- *     policy: Accelerator-Common-SCP.json
- * organizational-units:
- *   core-ou:
- *     description: Contains the core accelerator accounts
- *     service-control-policies:
- *       - "Accelerator-Common-SCP"
- * ```
- */
 export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTypes.organizationConfig> {
   static readonly FILENAME = 'organization-config.yaml';
-  /**
-   * This role trusts the management account, allowing users in the management
-   * account to assume the role, as permitted by the management account
-   * administrator. The role has administrator permissions in the new member
-   * account.
-   *
-   * Examples:
-   * - AWSControlTowerExecution
-   * - OrganizationAccountAccessRole
-   */
-  readonly organizationsAccessRole = 'AWSControlTowerExecution';
 
   /**
    * A Record of Organizational Unit configurations
    *
    * @see OrganizationalUnitConfig
    */
-  readonly organizationalUnits: OrganizationalUnitConfig[] = [];
+  readonly organizationalUnits: OrganizationalUnitConfig[] = [
+    {
+      name: 'Security',
+      path: '/',
+    },
+    {
+      name: 'Sandbox',
+      path: '/',
+    },
+  ];
+
+  /**
+   * Optionally provide a list of Organizational Unit IDs to bypass the usage of the
+   * AWS Organizations Client lookup. This is not a readonly member since we
+   * will initialize it with values if it is not provided
+   */
+  public organizationalUnitIds: OrganizationalUnitIdConfig[] | undefined = undefined;
+
   /**
    * A Record of Service Control Policy configurations
    *
@@ -166,5 +128,82 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
     const buffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
     const values = t.parse(OrganizationConfigTypes.organizationConfig, yaml.load(buffer));
     return new OrganizationConfig(values);
+  }
+
+  public async loadOrganizationalUnitIds(): Promise<void> {
+    if (this.organizationalUnitIds === undefined) {
+      this.organizationalUnitIds = [];
+    }
+    if (this.organizationalUnitIds.length == 0) {
+      const organizationsClient = new OrganizationsClient({});
+
+      let rootId = '';
+      for await (const page of paginateListRoots({ client: organizationsClient }, {})) {
+        for (const item of page.Roots ?? []) {
+          if (item.Name === 'Root' && item.Id && item.Arn) {
+            this.organizationalUnitIds?.push({ name: item.Name, id: item.Id, arn: item.Arn });
+            rootId = item.Id;
+          }
+        }
+      }
+
+      for (const item of this.organizationalUnits) {
+        let parentId = rootId;
+
+        for (const parent of item.path.split('/')) {
+          if (parent) {
+            for await (const page of paginateListOrganizationalUnitsForParent(
+              { client: organizationsClient },
+              { ParentId: parentId },
+            )) {
+              for (const ou of page.OrganizationalUnits ?? []) {
+                if (ou.Name === parent && ou.Id) {
+                  parentId = ou.Id;
+                }
+              }
+            }
+          }
+        }
+
+        for await (const page of paginateListOrganizationalUnitsForParent(
+          { client: organizationsClient },
+          { ParentId: parentId },
+        )) {
+          for (const ou of page.OrganizationalUnits ?? []) {
+            if (ou.Name === item.name && ou.Id && ou.Arn) {
+              this.organizationalUnitIds?.push({ name: item.name, id: ou.Id, arn: ou.Arn });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  public getOrganizationalUnitId(name: string): string {
+    if (this.organizationalUnitIds) {
+      const ou = this.organizationalUnitIds.find(item => item.name === name);
+      if (ou) {
+        return ou.id;
+      }
+    }
+    throw new Error(`OU ${name} not found`);
+  }
+
+  public getOrganizationalUnitArn(name: string): string {
+    if (this.organizationalUnitIds) {
+      const ou = this.organizationalUnitIds.find(item => item.name === name);
+      if (ou) {
+        return ou.arn;
+      }
+    }
+    throw new Error(`OU ${name} not found`);
+  }
+
+  public getPath(name: string): string {
+    const ou = this.organizationalUnits.find(item => item.name === name);
+    if (ou) {
+      return ou.path;
+    }
+    throw new Error(`OU ${name} not found`);
   }
 }

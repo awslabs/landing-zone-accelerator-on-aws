@@ -16,7 +16,6 @@ import {
   AttachPolicyCommand,
   DetachPolicyCommand,
   OrganizationsClient,
-  paginateListAccounts,
   paginateListPoliciesForTarget,
 } from '@aws-sdk/client-organizations';
 
@@ -34,25 +33,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const policyId: string = event.ResourceProperties['policyId'];
-  const email: string = event.ResourceProperties['email'] ?? undefined;
-  let targetId: string = event.ResourceProperties['targetId'] ?? undefined;
+  const targetId: string = event.ResourceProperties['targetId'] ?? undefined;
   const type: string = event.ResourceProperties['type'];
 
   const organizationsClient = new OrganizationsClient({});
-
-  if (email) {
-    for await (const page of paginateListAccounts({ client: organizationsClient }, {})) {
-      for (const account of page.Accounts ?? []) {
-        if (account.Email == email && account.Id) {
-          targetId = account.Id;
-        }
-      }
-    }
-
-    if (targetId === undefined) {
-      throw new Error(`Account ID not found for ${email}`);
-    }
-  }
 
   switch (event.RequestType) {
     case 'Create':

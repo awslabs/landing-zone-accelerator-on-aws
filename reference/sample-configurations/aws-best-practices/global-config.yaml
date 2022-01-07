@@ -1,6 +1,7 @@
 homeRegion: &HOME_REGION us-east-1
 enabledRegions:
   - *HOME_REGION
+managementAccountAccessRole: 'AWSControlTowerExecution'
 controlTower:
   enable: true
 logging:

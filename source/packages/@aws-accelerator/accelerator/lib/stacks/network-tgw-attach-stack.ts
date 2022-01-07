@@ -35,7 +35,7 @@ export class NetworkTgwAttachStack extends AcceleratorStack {
     const transitGateways = new Map<string, string>();
     const transitGatewayRouteTables = new Map<string, string>();
     for (const tgwItem of props.networkConfig.transitGateways ?? []) {
-      const accountId = props.accountIds[props.accountsConfig.getEmail(tgwItem.account)];
+      const accountId = props.accountsConfig.getAccountId(tgwItem.account);
       if (accountId === cdk.Stack.of(this).account && tgwItem.region == cdk.Stack.of(this).region) {
         const transitGatewayId = ssm.StringParameter.valueForStringParameter(
           this,
@@ -57,9 +57,9 @@ export class NetworkTgwAttachStack extends AcceleratorStack {
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
       if (vpcItem.region == cdk.Stack.of(this).region) {
         for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
-          const accountId = props.accountIds[props.accountsConfig.getEmail(tgwAttachmentItem.transitGateway.account)];
+          const accountId = props.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
           if (accountId === cdk.Stack.of(this).account) {
-            const owningAccountId = props.accountIds[props.accountsConfig.getEmail(vpcItem.account)];
+            const owningAccountId = props.accountsConfig.getAccountId(vpcItem.account);
 
             // Get the Transit Gateway ID
             const transitGatewayId = transitGateways.get(tgwAttachmentItem.transitGateway.name);

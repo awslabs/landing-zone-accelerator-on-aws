@@ -24,7 +24,6 @@ const path = require('path');
 export interface PolicyAttachmentProps {
   readonly policyId: string;
   readonly targetId?: string;
-  readonly email?: string;
   readonly type: PolicyType;
 }
 
@@ -35,20 +34,14 @@ export class PolicyAttachment extends Construct {
   public readonly id: string;
   public readonly policyId: string;
   public readonly targetId: string | undefined;
-  public readonly email: string | undefined;
   public readonly type: PolicyType;
 
   constructor(scope: Construct, id: string, props: PolicyAttachmentProps) {
     super(scope, id);
 
     this.policyId = props.policyId;
-    this.email = props.email;
     this.targetId = props.targetId;
     this.type = props.type;
-
-    if (this.email && this.targetId) {
-      throw new Error('email and targetId are both defined');
-    }
 
     //
     // Function definition for the custom resource
@@ -59,12 +52,7 @@ export class PolicyAttachment extends Construct {
       policyStatements: [
         {
           Effect: 'Allow',
-          Action: [
-            'organizations:AttachPolicy',
-            'organizations:DetachPolicy',
-            'organizations:ListAccounts',
-            'organizations:ListPoliciesForTarget',
-          ],
+          Action: ['organizations:AttachPolicy', 'organizations:DetachPolicy', 'organizations:ListPoliciesForTarget'],
           Resource: '*',
         },
       ],

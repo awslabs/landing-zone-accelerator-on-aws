@@ -9,6 +9,9 @@ dist
 !source/.typescript/lambda/**/*.js
 !source/lambda/**/*.js
 
+### log files
+*.log
+
 # CDK asset staging directory
 .cdk.staging
 cdk.out

@@ -1,4 +1,3 @@
-organizationsAccessRole: 'AWSControlTowerExecution'
 organizationalUnits:
   - name: Security
     parent: Root
