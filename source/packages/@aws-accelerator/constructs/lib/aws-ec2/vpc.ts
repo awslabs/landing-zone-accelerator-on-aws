@@ -97,6 +97,13 @@ export interface ISubnet extends cdk.IResource {
   readonly subnetId: string;
 
   /**
+   * The identifier of the subnet
+   *
+   * @attribute
+   */
+  readonly subnetArn: string;
+
+  /**
    * The name of the subnet
    *
    * @attribute
@@ -154,6 +161,7 @@ export class Subnet extends cdk.Resource implements ISubnet {
   public readonly mapPublicIpOnLaunch?: boolean;
   public readonly routeTable: IRouteTable;
   public readonly subnetId: string;
+  public readonly subnetArn: string;
 
   constructor(scope: Construct, id: string, props: SubnetProps) {
     super(scope, id);
@@ -173,6 +181,12 @@ export class Subnet extends cdk.Resource implements ISubnet {
     });
 
     this.subnetId = resource.ref;
+    this.subnetArn = cdk.Stack.of(this).formatArn({
+      service: 'ec2',
+      resource: 'subnet',
+      arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
+      resourceName: resource.ref,
+    });
 
     new cdk.aws_ec2.CfnSubnetRouteTableAssociation(this, 'RouteTableAssociation', {
       subnetId: this.subnetId,
