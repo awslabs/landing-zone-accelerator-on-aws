@@ -1,9 +1,9 @@
 enable: true
 organizationalUnits:
   - name: Security
-    parent: Root
+    path: /
   - name: Sandbox
-    parent: Root
+    path: /
 serviceControlPolicies:
   - name: DenyDeleteVpcFlowLogs
     description: >
