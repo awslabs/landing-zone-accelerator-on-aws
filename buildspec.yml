@@ -31,10 +31,10 @@ phases:
 
 artifacts:
   files:
-      - deployment/**/*
-      - source/**/*
-      - .gitignore
-      - sonar-project.properties
-      - buildspec.yml
-      - CHANGELOG.md
-      - .cfnnag_*
+    - deployment/**/*
+    - source/**/*
+    - .gitignore
+    - sonar-project.properties
+    - buildspec.yml
+    - CHANGELOG.md
+    - .cfnnag_*
