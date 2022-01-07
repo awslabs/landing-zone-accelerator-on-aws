@@ -241,22 +241,23 @@ export abstract class Accelerator {
   }
 
   private static async getManagementAccountCredentials(): Promise<Credentials | undefined> {
-    Logger.info('[PlatformAccelerator][INFO] set management account credentials');
-    Logger.info(`[accelerator] [PlatformAccelerator][INFO] pipeline region => ${process.env['AWS_DEFAULT_REGION']}`);
-    Logger.info(
-      `[accelerator] [PlatformAccelerator][INFO] pipeline executingAccountId => ${process.env['ACCOUNT_ID']}`,
-    );
-    Logger.info(
-      `[accelerator] [PlatformAccelerator][INFO] managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`,
-    );
-    Logger.info(
-      `[PlatformAccelerator][INFO] management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`,
-    );
     if (
       process.env['MANAGEMENT_ACCOUNT_ID'] &&
       process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'] &&
       process.env['ACCOUNT_ID'] !== process.env['MANAGEMENT_ACCOUNT_ID']
     ) {
+      Logger.info('[PlatformAccelerator][INFO] set management account credentials');
+      Logger.info(`[accelerator] [PlatformAccelerator][INFO] pipeline region => ${process.env['AWS_DEFAULT_REGION']}`);
+      Logger.info(
+        `[accelerator] [PlatformAccelerator][INFO] pipeline executingAccountId => ${process.env['ACCOUNT_ID']}`,
+      );
+      Logger.info(
+        `[accelerator] [PlatformAccelerator][INFO] managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`,
+      );
+      Logger.info(
+        `[PlatformAccelerator][INFO] management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`,
+      );
+
       const roleArn = `arn:aws:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
       const stsClient = new STSClient({ region: process.env['AWS_REGION'] });
       Logger.info(`[accelerator] [PlatformAccelerator][INFO] management account roleArn => ${roleArn}`);
