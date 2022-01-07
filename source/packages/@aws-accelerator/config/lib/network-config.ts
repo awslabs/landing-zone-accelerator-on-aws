@@ -93,17 +93,53 @@ export class NetworkConfigTypes {
     'Value should be a gateway endpoint type',
   );
 
-  // static readonly securityGroupRuleConfig = t.interface({
-  //   description: t.nonEmptyString,
-  //   type: t.string,
-  //   source: t.array(t.nonEmptyString),
-  // });
+  static readonly securityGroupRuleTypeEnum = t.enums(
+    'SecurityGroupRuleType',
+    [
+      'RDP',
+      'SSH',
+      'HTTP',
+      'HTTPS',
+      'MYSQL',
+      'MYSQL/AURORA',
+      'REDSHIFT',
+      'POSTGRESQL',
+      'ORACLE-RDS',
+      'TCP',
+      'UDP',
+      'ICMP',
+      'ALL',
+    ],
+    'Value should be a security group rule type',
+  );
 
-  // static readonly securityGroupConfig = t.interface({
-  //   name: t.nonEmptyString,
-  //   inboundRules: t.optional(t.array(this.securityGroupRuleConfig)),
-  //   outboundRules: t.optional(t.array(this.securityGroupRuleConfig)),
-  // });
+  static readonly subnetSourceConfig = t.interface({
+    account: t.optional(t.nonEmptyString),
+    vpc: t.nonEmptyString,
+    subnets: t.array(t.nonEmptyString),
+  });
+
+  static readonly securityGroupSourceConfig = t.interface({
+    securityGroups: t.array(t.nonEmptyString),
+  });
+
+  static readonly securityGroupRuleConfig = t.interface({
+    description: t.nonEmptyString,
+    types: t.optional(t.array(this.securityGroupRuleTypeEnum)),
+    tcpPorts: t.optional(t.array(t.number)),
+    udpPorts: t.optional(t.array(t.number)),
+    port: t.optional(t.number),
+    toPort: t.optional(t.number),
+    fromPort: t.optional(t.number),
+    sources: t.array(t.union([t.nonEmptyString, this.subnetSourceConfig, this.securityGroupSourceConfig])),
+  });
+
+  static readonly securityGroupConfig = t.interface({
+    name: t.nonEmptyString,
+    description: t.optional(t.nonEmptyString),
+    inboundRules: t.optional(t.array(this.securityGroupRuleConfig)),
+    outboundRules: t.optional(t.array(this.securityGroupRuleConfig)),
+  });
 
   static readonly instanceTenancyTypeEnum = t.enums(
     'InstanceTenancy',
@@ -125,7 +161,7 @@ export class NetworkConfigTypes {
     natGateways: t.optional(t.array(this.natGatewayConfig)),
     transitGatewayAttachments: t.optional(t.array(this.transitGatewayAttachmentConfig)),
     gatewayEndpoints: t.optional(t.array(this.gatewayEndpointEnum)),
-    // securityGroups: t.optional(t.array(this.securityGroupConfig)),
+    securityGroups: t.optional(t.array(this.securityGroupConfig)),
   });
 
   static readonly networkConfig = t.interface({
@@ -202,17 +238,33 @@ export class TransitGatewayAttachmentConfig
   readonly routeTablePropagations: string[] = [];
 }
 
-// export class SecurityGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.securityGroupRuleConfig> {
-//   readonly description = '';
-//   readonly type = '';
-//   readonly source: string[] = [];
-// }
+export class SubnetSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetSourceConfig> {
+  readonly account = '';
+  readonly vpc = '';
+  readonly subnets: string[] = [];
+}
 
-// export class SecurityGroupConfig implements t.TypeOf<typeof NetworkConfigTypes.securityGroupConfig> {
-//   readonly name = '';
-//   readonly inboundRules: SecurityGroupRuleConfig[] = [];
-//   readonly outboundRules: SecurityGroupRuleConfig[] = [];
-// }
+export class SecurityGroupSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.securityGroupSourceConfig> {
+  readonly securityGroups: string[] = [];
+}
+
+export class SecurityGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.securityGroupRuleConfig> {
+  readonly description = '';
+  readonly types = [];
+  readonly tcpPorts = [];
+  readonly udpPorts = [];
+  readonly port = undefined;
+  readonly toPort = undefined;
+  readonly fromPort = undefined;
+  readonly sources: string[] | SecurityGroupSourceConfig[] | SubnetSourceConfig[] = [];
+}
+
+export class SecurityGroupConfig implements t.TypeOf<typeof NetworkConfigTypes.securityGroupConfig> {
+  readonly name = '';
+  readonly description = '';
+  readonly inboundRules: SecurityGroupRuleConfig[] = [];
+  readonly outboundRules: SecurityGroupRuleConfig[] = [];
+}
 
 export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> {
   /**
@@ -248,7 +300,7 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
 
   readonly gatewayEndpoints: t.TypeOf<typeof NetworkConfigTypes.gatewayEndpointEnum>[] = [];
 
-  // readonly securityGroups: SecurityGroupConfig[] = [];
+  readonly securityGroups: SecurityGroupConfig[] = [];
 }
 
 export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.networkConfig> {

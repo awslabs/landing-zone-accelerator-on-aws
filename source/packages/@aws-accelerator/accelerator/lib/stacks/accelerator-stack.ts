@@ -36,7 +36,7 @@ export interface AcceleratorStackProps extends cdk.StackProps {
 }
 
 export abstract class AcceleratorStack extends cdk.Stack {
-  private props: AcceleratorStackProps;
+  protected props: AcceleratorStackProps;
 
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);

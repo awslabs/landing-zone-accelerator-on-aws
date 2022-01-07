@@ -12,12 +12,20 @@
  */
 
 import {
+  NetworkConfigTypes,
+  nonEmptyString,
+  SecurityGroupRuleConfig,
+  SecurityGroupSourceConfig,
+  SubnetSourceConfig,
+} from '@aws-accelerator/config';
+import {
   DeleteDefaultVpc,
   NatGateway,
   ResourceShare,
   ResourceShareItem,
   ResourceShareOwner,
   RouteTable,
+  SecurityGroup,
   Subnet,
   TransitGatewayAttachment,
   Vpc,
@@ -28,7 +36,30 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
+import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+
+interface SecurityGroupRuleProps {
+  ipProtocol: string;
+  cidrIp?: string;
+  cidrIpv6?: string;
+  fromPort?: number;
+  toPort?: number;
+  targetSecurityGroup?: SecurityGroup;
+  description?: string;
+}
+
+const TCP_PROTOCOLS_PORT: { [key: string]: number } = {
+  RDP: 3389,
+  SSH: 22,
+  HTTP: 80,
+  HTTPS: 443,
+  MSSQL: 1433,
+  'MYSQL/AURORA': 3306,
+  REDSHIFT: 5439,
+  POSTGRESQL: 5432,
+  'ORACLE-RDS': 1521,
+};
 
 export class NetworkVpcStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -61,15 +92,17 @@ export class NetworkVpcStack extends AcceleratorStack {
       // Only care about VPCs to be created in the current account and region
       if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
         for (const attachment of vpcItem.transitGatewayAttachments ?? []) {
-          console.log(`Evaluating Transit Gateway key ${attachment.transitGateway.name}`);
+          Logger.info(`[network-vpc-stack] Evaluating Transit Gateway key ${attachment.transitGateway.name}`);
 
           // Keep looking if already entered
           if (transitGatewayIds.has(attachment.transitGateway.name)) {
-            console.log(`Transit Gateway ${attachment.transitGateway.name} already in dictionary`);
+            Logger.info(`[network-vpc-stack] Transit Gateway ${attachment.transitGateway.name} already in dictionary`);
             continue;
           }
 
-          console.log(`Transit Gateway key ${attachment.transitGateway.name} is not in map, add resources to look up`);
+          Logger.info(
+            `[network-vpc-stack] Transit Gateway key ${attachment.transitGateway.name} is not in map, add resources to look up`,
+          );
           const owningAccountId = props.accountIds[props.accountsConfig.getEmail(attachment.transitGateway.account)];
 
           // If owning account is this account, transit gateway id can be
@@ -80,7 +113,9 @@ export class NetworkVpcStack extends AcceleratorStack {
               `/accelerator/network/transitGateways/${attachment.transitGateway.name}/id`,
             );
 
-            console.log(`Adding [${attachment.transitGateway.name}]: ${transitGatewayId} to transitGatewayIds Map`);
+            Logger.info(
+              `[network-vpc-stack] Adding [${attachment.transitGateway.name}]: ${transitGatewayId} to transitGatewayIds Map`,
+            );
             transitGatewayIds.set(attachment.transitGateway.name, transitGatewayId);
           }
           // Else, need to get the transit gateway from the resource shares
@@ -101,7 +136,6 @@ export class NetworkVpcStack extends AcceleratorStack {
                 owningAccountId,
               },
             );
-            console.log(resourceShare.resourceShareId);
 
             // Represents the transit gateway resource
             const tgw = ResourceShareItem.fromLookup(
@@ -113,8 +147,8 @@ export class NetworkVpcStack extends AcceleratorStack {
               },
             );
 
-            console.log(
-              `Adding [${attachment.transitGateway.name}]: ${tgw.resourceShareItemId} to transitGatewayIds Map`,
+            Logger.info(
+              `[network-vpc-stack] Adding [${attachment.transitGateway.name}]: ${tgw.resourceShareItemId} to transitGatewayIds Map`,
             );
             transitGatewayIds.set(attachment.transitGateway.name, tgw.resourceShareItemId);
           }
@@ -125,7 +159,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     // Create cross account access role to read transit gateway attachments if
     // there are other accounts in the list
     if (transitGatewayAccountIds.length > 0) {
-      console.log(`Create IAM Cross Account Access Role`);
+      Logger.info(`[network-vpc-stack] Create IAM Cross Account Access Role`);
 
       const principals: iam.PrincipalBase[] = [];
       transitGatewayAccountIds.forEach(accountId => {
@@ -154,7 +188,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
       const accountId = props.accountIds[props.accountsConfig.getEmail(vpcItem.account)];
       if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
-        console.log(`Adding VPC ${vpcItem.name}`);
+        Logger.info(`[network-vpc-stack] Adding VPC ${vpcItem.name}`);
 
         //
         // Create the VPC
@@ -209,7 +243,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         const subnetMap = new Map<string, Subnet>();
         for (const subnetItem of vpcItem.subnets ?? []) {
-          console.log(`Adding subnet ${subnetItem.name}`);
+          Logger.info(`[network-vpc-stack] Adding subnet ${subnetItem.name}`);
 
           const routeTable = routeTableMap.get(subnetItem.routeTable);
           if (routeTable === undefined) {
@@ -240,7 +274,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         const natGatewayMap = new Map<string, NatGateway>();
         for (const natGatewayItem of vpcItem.natGateways ?? []) {
-          console.log(`Adding NAT Gateway ${natGatewayItem.name}`);
+          Logger.info(`[network-vpc-stack] Adding NAT Gateway ${natGatewayItem.name}`);
 
           const subnet = subnetMap.get(natGatewayItem.subnet);
           if (subnet === undefined) {
@@ -271,7 +305,9 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         const transitGatewayAttachments = new Map<string, TransitGatewayAttachment>();
         for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
-          console.log(`Adding Transit Gateway Attachment for ${tgwAttachmentItem.transitGateway.name}`);
+          Logger.info(
+            `[network-vpc-stack] Adding Transit Gateway Attachment for ${tgwAttachmentItem.transitGateway.name}`,
+          );
 
           const transitGatewayId = transitGatewayIds.get(tgwAttachmentItem.transitGateway.name);
           if (transitGatewayId === undefined) {
@@ -329,8 +365,9 @@ export class NetworkVpcStack extends AcceleratorStack {
               pascalCase(`${routeTableItem.name}RouteTable`) +
               pascalCase(routeTableEntryItem.name);
 
+            // Route: Transit Gateway
             if (routeTableEntryItem.type === 'transitGateway') {
-              console.log(`Adding Transit Gateway Route Table Entry ${routeTableEntryItem.name}`);
+              Logger.info(`[network-vpc-stack] Adding Transit Gateway Route Table Entry ${routeTableEntryItem.name}`);
 
               const transitGatewayId = transitGatewayIds.get(routeTableEntryItem.target);
               if (transitGatewayId === undefined) {
@@ -349,8 +386,11 @@ export class NetworkVpcStack extends AcceleratorStack {
                 // TODO: Implement correct dependency relationships without need for escape hatch
                 transitGatewayAttachment.node.defaultChild as ec2.CfnTransitGatewayAttachment,
               );
-            } else if (routeTableEntryItem.type === 'natGateway') {
-              console.log(`Adding NAT Gateway Route Table Entry ${routeTableEntryItem.name}`);
+            }
+
+            // Route: NAT Gateway
+            if (routeTableEntryItem.type === 'natGateway') {
+              Logger.info(`[network-vpc-stack] Adding NAT Gateway Route Table Entry ${routeTableEntryItem.name}`);
 
               const natGateway = natGatewayMap.get(routeTableEntryItem.target);
               if (natGateway === undefined) {
@@ -358,14 +398,23 @@ export class NetworkVpcStack extends AcceleratorStack {
               }
 
               routeTable.addNatGatewayRoute(id, routeTableEntryItem.destination, natGateway.natGatewayId);
-            } else if (routeTableEntryItem.type === 'internetGateway') {
-              console.log(`Adding Internet Gateway Route Table Entry ${routeTableEntryItem.name}`);
+            }
+
+            // Route: Internet Gateway
+            if (routeTableEntryItem.type === 'internetGateway') {
+              Logger.info(`[network-vpc-stack] Adding Internet Gateway Route Table Entry ${routeTableEntryItem.name}`);
               routeTable.addInternetGatewayRoute(id, routeTableEntryItem.destination);
-            } else if (routeTableEntryItem.target === 's3') {
+            }
+
+            // Route: S3 Gateway Endpoint
+            if (routeTableEntryItem.target === 's3') {
               if (s3EndpointRouteTables.indexOf(routeTable.routeTableId) == -1) {
                 s3EndpointRouteTables.push(routeTable.routeTableId);
               }
-            } else if (routeTableEntryItem.target === 'dynamodb') {
+            }
+
+            // Route: DynamoDb Gateway Endpoint
+            if (routeTableEntryItem.target === 'dynamodb') {
               if (dynamodbEndpointRouteTables.indexOf(routeTable.routeTableId) == -1) {
                 dynamodbEndpointRouteTables.push(routeTable.routeTableId);
               }
@@ -377,7 +426,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         // Add Gateway Endpoints (AWS Services)
         //
         for (const gatewayEndpointItem of vpcItem.gatewayEndpoints ?? []) {
-          console.log(`Adding Gateway Endpoint for ${gatewayEndpointItem}`);
+          Logger.info(`[network-vpc-stack] Adding Gateway Endpoint for ${gatewayEndpointItem}`);
 
           if (gatewayEndpointItem === 's3') {
             vpc.addGatewayVpcEndpoint(
@@ -395,13 +444,239 @@ export class NetworkVpcStack extends AcceleratorStack {
         }
 
         //
-        // TODO: Add Security Groups
+        // Add Security Groups
         //
+        const securityGroupMap = new Map<string, SecurityGroup>();
+
+        // Build all security groups first, then add rules so we can reference
+        // the created security groups by id
+        for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+          Logger.info(`[network-vpc-stack] Adding Security Group ${securityGroupItem.name}`);
+          const securityGroup = new SecurityGroup(
+            this,
+            pascalCase(`${vpcItem.name}Vpc`) + pascalCase(securityGroupItem.name),
+            {
+              securityGroupName: securityGroupItem.name,
+              description: securityGroupItem.description,
+              vpc,
+            },
+          );
+          securityGroupMap.set(securityGroupItem.name, securityGroup);
+
+          new ssm.StringParameter(
+            this,
+            pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`),
+            {
+              parameterName: `/accelerator/network/vpc/${vpcItem.name}/securityGroup/${securityGroupItem.name}/id`,
+              stringValue: securityGroup.securityGroupId,
+            },
+          );
+        }
+
+        for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+          const securityGroup = securityGroupMap.get(securityGroupItem.name);
+          if (!securityGroup) {
+            throw new Error(`${securityGroupItem.name} not in map`);
+          }
+          Logger.info(`[network-vpc-stack] Adding rules to ${securityGroupItem.name}`);
+
+          // Add ingress rules
+          for (const [ruleId, ingressRuleItem] of securityGroupItem.inboundRules.entries() ?? []) {
+            Logger.info(`[network-vpc-stack] Adding ingress rule ${ruleId} to ${securityGroupItem.name}`);
+
+            const ingressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
+              ingressRuleItem,
+              securityGroupMap,
+            );
+
+            Logger.info(`[network-vpc-stack] Adding ${ingressRules.length} ingress rules`);
+
+            for (const [index, ingressRule] of ingressRules.entries()) {
+              securityGroup.addIngressRule(`${securityGroupItem.name}-Ingress-${ruleId}-${index}`, {
+                sourceSecurityGroup: ingressRule.targetSecurityGroup,
+                ...ingressRule,
+              });
+            }
+          }
+
+          // Add egress rules
+          for (const [ruleId, egressRuleItem] of securityGroupItem.outboundRules.entries() ?? []) {
+            Logger.info(`[network-vpc-stack] Adding egress rule ${ruleId} to ${securityGroupItem.name}`);
+
+            const egressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
+              egressRuleItem,
+              securityGroupMap,
+            );
+
+            Logger.info(`[network-vpc-stack] Adding ${egressRules.length} egress rules`);
+
+            for (const [index, egressRule] of egressRules.entries()) {
+              securityGroup.addEgressRule(`${securityGroupItem.name}-Egress-${ruleId}-${index}`, {
+                destinationSecurityGroup: egressRule.targetSecurityGroup,
+                ...egressRule,
+              });
+            }
+          }
+        }
 
         //
         // TODO: Service Endpoints (local eni ssm.amazonaws.com)
         //
       }
     }
+  }
+
+  private processSecurityGroupRules(
+    item: SecurityGroupRuleConfig,
+    securityGroupMap: Map<string, SecurityGroup>,
+  ): SecurityGroupRuleProps[] {
+    const rules: SecurityGroupRuleProps[] = [];
+
+    Logger.info(`[network-vpc-stack] processSecurityGroupRules`);
+
+    if (!item.types) {
+      Logger.info(`[network-vpc-stack] types not defined, expecting tcpPorts and udpPorts to be set`);
+      for (const port of item.tcpPorts ?? []) {
+        Logger.debug(`[network-vpc-stack] Adding TCP port ${port}`);
+        rules.push(
+          ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, {
+            ipProtocol: ec2.Protocol.TCP,
+            fromPort: port,
+            toPort: port,
+            description: item.description,
+          }),
+        );
+      }
+
+      for (const port of item.udpPorts ?? []) {
+        Logger.debug(`[network-vpc-stack] Adding UDP port ${port}`);
+        rules.push(
+          ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, {
+            ipProtocol: ec2.Protocol.UDP,
+            fromPort: port,
+            toPort: port,
+            description: item.description,
+          }),
+        );
+      }
+    }
+
+    for (const type of item.types) {
+      Logger.info(`[network-vpc-stack] Adding type ${type}`);
+      if (type === 'ALL') {
+        rules.push(
+          ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, {
+            ipProtocol: ec2.Protocol.ALL,
+            description: item.description,
+          }),
+        );
+      } else if (Object.keys(TCP_PROTOCOLS_PORT).includes(type)) {
+        rules.push(
+          ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, {
+            ipProtocol: ec2.Protocol.TCP,
+            fromPort: TCP_PROTOCOLS_PORT[type],
+            toPort: TCP_PROTOCOLS_PORT[type],
+            description: item.description,
+          }),
+        );
+      } else {
+        rules.push(
+          ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, {
+            ipProtocol: type,
+            fromPort: item.fromPort,
+            toPort: item.toPort,
+            description: item.description,
+          }),
+        );
+      }
+    }
+
+    return rules;
+  }
+
+  private processSecurityGroupRuleSources(
+    sources: string[] | SecurityGroupSourceConfig[] | SubnetSourceConfig[],
+    securityGroupMap: Map<string, SecurityGroup>,
+    props: {
+      ipProtocol: string;
+      fromPort?: number;
+      toPort?: number;
+      description?: string;
+    },
+  ): SecurityGroupRuleProps[] {
+    const rules: SecurityGroupRuleProps[] = [];
+
+    Logger.info(`[network-vpc-stack] processSecurityGroupRuleSources`);
+
+    for (const source of sources ?? []) {
+      //
+      // IP source
+      //
+      if (nonEmptyString.is(source)) {
+        Logger.info(`[network-vpc-stack] Evaluate IP Source ${source}`);
+        if (source.includes('::')) {
+          rules.push({
+            cidrIpv6: source,
+            ...props,
+          });
+        } else {
+          rules.push({
+            cidrIp: source,
+            ...props,
+          });
+        }
+      }
+
+      //
+      // Subnet source
+      //
+      if (NetworkConfigTypes.subnetSourceConfig.is(source)) {
+        Logger.info(
+          `[network-vpc-stack] Evaluate Subnet Source account:${source.account} vpc:${source.vpc} subnets:[${source.subnets}]`,
+        );
+
+        // Locate the VPC
+        const vpcItem = this.props.networkConfig.vpcs?.find(
+          item => item.account === source.account && item.name === source.vpc,
+        );
+        if (vpcItem === undefined) {
+          throw new Error(`Specified VPC ${source.vpc} not defined`);
+        }
+
+        // Loop through all subnets to add
+        for (const subnet of source.subnets) {
+          // Locate the Subnet
+          const subnetItem = vpcItem.subnets.find(item => item.name === subnet);
+          if (subnetItem === undefined) {
+            throw new Error(`Specified VPC ${subnet} not defined`);
+          }
+          rules.push({
+            // TODO: Add support for dynamic IP lookup
+            cidrIp: subnetItem.ipv4CidrBlock,
+            ...props,
+          });
+        }
+      }
+
+      //
+      // Security Group Source
+      //
+      if (NetworkConfigTypes.securityGroupSourceConfig.is(source)) {
+        Logger.info(`[network-vpc-stack] Evaluate Security Group Source securityGroups:[${source.securityGroups}]`);
+
+        for (const securityGroup of source.securityGroups ?? []) {
+          const targetSecurityGroup = securityGroupMap.get(securityGroup);
+          if (targetSecurityGroup === undefined) {
+            throw new Error(`Specified Security Group ${securityGroup} not defined`);
+          }
+          rules.push({
+            targetSecurityGroup,
+            ...props,
+          });
+        }
+      }
+    }
+
+    return rules;
   }
 }

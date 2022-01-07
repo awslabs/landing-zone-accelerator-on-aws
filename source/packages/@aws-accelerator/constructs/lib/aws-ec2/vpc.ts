@@ -224,6 +224,108 @@ export class NatGateway extends core.Resource implements INatGateway {
   }
 }
 
+export interface ISecurityGroup extends core.IResource {
+  /**
+   * ID for the current security group
+   * @attribute
+   */
+  readonly securityGroupId: string;
+}
+
+export interface SecurityGroupProps {
+  /**
+   * The name of the security group. For valid values, see the GroupName
+   * parameter of the CreateSecurityGroup action in the Amazon EC2 API
+   * Reference.
+   *
+   * It is not recommended to use an explicit group name.
+   *
+   * @default If you don't specify a GroupName, AWS CloudFormation generates a
+   * unique physical ID and uses that ID for the group name.
+   */
+  readonly securityGroupName?: string;
+
+  /**
+   * A description of the security group.
+   *
+   * @default The default name will be the construct's CDK path.
+   */
+  readonly description?: string;
+
+  /**
+   * The VPC in which to create the security group.
+   */
+  readonly vpc: IVpc;
+}
+
+export interface SecurityGroupIngressRuleProps {
+  readonly ipProtocol: string;
+  readonly description?: string;
+  readonly cidrIp?: string;
+  readonly cidrIpv6?: string;
+  readonly sourcePrefixListId?: string;
+  readonly sourceSecurityGroup?: ISecurityGroup;
+  readonly fromPort?: number;
+  readonly toPort?: number;
+}
+
+export interface SecurityGroupEgressRuleProps {
+  readonly ipProtocol: string;
+  readonly description?: string;
+  readonly cidrIp?: string;
+  readonly cidrIpv6?: string;
+  readonly destinationPrefixListId?: string;
+  readonly destinationSecurityGroup?: ISecurityGroup;
+  readonly fromPort?: number;
+  readonly toPort?: number;
+}
+
+export class SecurityGroup extends core.Resource implements ISecurityGroup {
+  public readonly securityGroupId: string;
+
+  private readonly securityGroup: ec2.CfnSecurityGroup;
+
+  constructor(scope: Construct, id: string, props: SecurityGroupProps) {
+    super(scope, id);
+
+    this.securityGroup = new ec2.CfnSecurityGroup(this, 'Resource', {
+      groupDescription: props.description ?? '',
+      groupName: props.securityGroupName,
+      vpcId: props.vpc.vpcId,
+    });
+
+    this.securityGroupId = this.securityGroup.ref;
+  }
+
+  public addIngressRule(id: string, props: SecurityGroupIngressRuleProps) {
+    new ec2.CfnSecurityGroupIngress(this, id, {
+      groupId: this.securityGroupId,
+      ipProtocol: props.ipProtocol,
+      description: props.description,
+      cidrIp: props.cidrIp,
+      cidrIpv6: props.cidrIpv6,
+      sourcePrefixListId: props.sourcePrefixListId,
+      sourceSecurityGroupId: props.sourceSecurityGroup?.securityGroupId,
+      fromPort: props.fromPort,
+      toPort: props.toPort,
+    });
+  }
+
+  public addEgressRule(id: string, props: SecurityGroupEgressRuleProps) {
+    new ec2.CfnSecurityGroupEgress(this, id, {
+      groupId: this.securityGroupId,
+      ipProtocol: props.ipProtocol,
+      description: props.description,
+      cidrIp: props.cidrIp,
+      cidrIpv6: props.cidrIpv6,
+      destinationPrefixListId: props.destinationPrefixListId,
+      destinationSecurityGroupId: props.destinationSecurityGroup?.securityGroupId,
+      fromPort: props.fromPort,
+      toPort: props.toPort,
+    });
+  }
+}
+
 export interface IVpc extends core.IResource {
   /**
    * The identifier of the vpc
@@ -251,8 +353,7 @@ export interface VpcProps {
 }
 
 /**
- * Defines a  S3 Bucket object. By default a KMS CMK is generated and
- * associated to the bucket.
+ * Defines a  VPC object
  */
 export class Vpc extends core.Resource implements IVpc {
   // private readonly vpc: ec2.CfnVPC;

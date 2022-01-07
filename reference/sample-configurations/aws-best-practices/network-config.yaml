@@ -1,0 +1,120 @@
+homeRegion: &HOME_REGION us-east-1
+defaultVpc:
+  delete: true
+transitGateways:
+  - name: Main
+    account: Management
+    region: *HOME_REGION
+    shareTargets:
+      organizationalUnits:
+        - Sandbox
+      accounts:
+        - Audit
+    asn: 65521
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    routeTables:
+      - name: core
+      - name: segregated
+      - name: shared
+      - name: standalone
+vpcs:
+  - name: Test
+    account: Audit
+    region: *HOME_REGION
+    cidrs:
+      - 10.0.0.0/16
+    internetGateway: true
+    enableDnsHostnames: false
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: CentralVpc_Common
+        routes:
+          - name: TgwRoute
+            destination: 10.0.0.0/8
+            type: transitGateway
+            target: Main
+          - name: NatRoute
+            destination: 192.168.0.0/16
+            type: natGateway
+            target: Web-A
+          - name: IgwRoute
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+          - name: s3
+            target: s3
+          - name: dynamodb
+            target: dynamodb
+    subnets:
+      - name: public-a
+        availabilityZone: a
+        mapPublicIpOnLaunch: true
+        routeTable: CentralVpc_Common
+        ipv4CidrBlock: 10.0.0.0/24
+      - name: public-b
+        availabilityZone: b
+        mapPublicIpOnLaunch: true
+        routeTable: CentralVpc_Common
+        ipv4CidrBlock: 10.0.1.0/24
+      - name: tgw-attach-a
+        availabilityZone: a
+        routeTable: CentralVpc_Common
+        ipv4CidrBlock: 10.0.2.0/24
+      - name: tgw-attach-b
+        availabilityZone: b
+        routeTable: CentralVpc_Common
+        ipv4CidrBlock: 10.0.3.0/24
+    natGateways:
+      - name: Web-A
+        subnet: public-a
+      - name: Web-B
+        subnet: public-b
+    transitGatewayAttachments:
+      - name: Test
+        transitGateway:
+          name: Main
+          account: Management
+        routeTableAssociations:
+          - shared
+        routeTablePropagations:
+          - core
+          - shared
+          - segregated
+        subnets:
+          - tgw-attach-a
+          - tgw-attach-b
+    flowLogs: BOTH
+    dnsResolverLogging: true
+    useCentralEndpoints: false
+    gatewayEndpoints:
+      - s3
+      - dynamodb
+   securityGroups:
+      - name: Management
+        description: Management Security Group
+        inboundRules:
+          - description: Management RDP Traffic Inbound
+            types:
+              - RDP
+            sources:
+              - 10.0.0.0/8
+              - 100.96.252.0/23
+              - 100.96.250.0/23
+          - description: Management RDP Traffic Inbound
+            types:
+              - SSH
+            sources:
+              - 10.0.0.0/8
+              - 100.96.252.0/23
+              - 100.96.250.0/23
+        outboundRules:
+          - description: All Outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
