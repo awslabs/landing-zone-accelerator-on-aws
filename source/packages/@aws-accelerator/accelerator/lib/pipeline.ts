@@ -202,7 +202,7 @@ export class AcceleratorPipeline extends Construct {
               'env',
               'cd source',
               'cd packages/@aws-accelerator/accelerator',
-              `npx --no-install ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${
+              `yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${
                 cdk.Stack.of(this).partition
               }`,
             ],
