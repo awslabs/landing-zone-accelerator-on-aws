@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "aws-cdk-lib": "2.1.0",
+    "aws-cdk": "2.1.0",
     "constructs": "10.0.12",
     "@types/jest": "27.0.3",
     "@types/node": "16.11.12",
@@ -39,6 +40,7 @@
   },
   "dependencies": {
     "@aws-cdk-extensions/cdk-extensions": "^0.0.0",
-    "aws-cdk-lib": "2.1.0"
+    "aws-cdk-lib": "2.1.0",
+    "aws-cdk": "2.1.0"
   }
 }
