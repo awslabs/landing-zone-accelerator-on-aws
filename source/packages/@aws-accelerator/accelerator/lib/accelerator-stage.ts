@@ -25,8 +25,8 @@ export enum AcceleratorStage {
   DEPENDENCIES = 'dependencies',
   SECURITY = 'security',
   OPERATIONS = 'operations',
-  NETWORK_TGW = 'network-tgw',
+  NETWORK_PREP = 'network-prep',
   NETWORK_VPC = 'network-vpc',
-  NETWORK_TGW_ATTACH = 'network-tgw-attach',
+  NETWORK_ASSOCIATIONS = 'network-associations',
   SECURITY_AUDIT = 'security-audit',
 }

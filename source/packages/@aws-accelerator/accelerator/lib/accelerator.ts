@@ -25,15 +25,16 @@ import { AcceleratorToolkit } from './toolkit';
  */
 export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.VALIDATE]: 'AWSAccelerator-ValidateStack',
+  [AcceleratorStage.PIPELINE]: 'AWSAccelerator-PipelineStack',
   [AcceleratorStage.ORGANIZATIONS]: 'AWSAccelerator-OrganizationsStack',
   [AcceleratorStage.LOGGING]: 'AWSAccelerator-LoggingStack',
   [AcceleratorStage.ACCOUNTS]: 'AWSAccelerator-AccountsStack',
   [AcceleratorStage.DEPENDENCIES]: 'AWSAccelerator-DependenciesStack',
   [AcceleratorStage.SECURITY]: 'AWSAccelerator-SecurityStack',
   [AcceleratorStage.OPERATIONS]: 'AWSAccelerator-OperationsStack',
-  [AcceleratorStage.NETWORK_TGW]: 'AWSAccelerator-NetworkTgwStack',
+  [AcceleratorStage.NETWORK_PREP]: 'AWSAccelerator-NetworkPrepStack',
   [AcceleratorStage.NETWORK_VPC]: 'AWSAccelerator-NetworkVpcStack',
-  [AcceleratorStage.NETWORK_TGW_ATTACH]: 'AWSAccelerator-NetworkTgwAttachStack',
+  [AcceleratorStage.NETWORK_ASSOCIATIONS]: 'AWSAccelerator-NetworkAssociationsStack',
   [AcceleratorStage.SECURITY_AUDIT]: 'AWSAccelerator-SecurityAuditStack',
 };
 
@@ -207,9 +208,9 @@ export abstract class Accelerator {
       case AcceleratorStage.LOGGING:
       case AcceleratorStage.SECURITY:
       case AcceleratorStage.OPERATIONS:
-      case AcceleratorStage.NETWORK_TGW:
+      case AcceleratorStage.NETWORK_PREP:
       case AcceleratorStage.NETWORK_VPC:
-      case AcceleratorStage.NETWORK_TGW_ATTACH:
+      case AcceleratorStage.NETWORK_ASSOCIATIONS:
         for (const region of globalConfig.enabledRegions) {
           for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
             Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
