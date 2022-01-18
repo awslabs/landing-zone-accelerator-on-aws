@@ -22,6 +22,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
+import { pascalCase } from 'change-case';
 
 /**
  *
@@ -29,6 +30,7 @@ import * as config_repository from './config-repository';
 export interface AcceleratorPipelineProps {
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
+  readonly qualifier: string;
   readonly managementAccountId?: string;
   readonly managementAccountRoleName?: string;
 }
@@ -47,9 +49,28 @@ export class AcceleratorPipeline extends Construct {
   constructor(scope: Construct, id: string, props: AcceleratorPipelineProps) {
     super(scope, id);
 
+    const qualifierInPascalCase = pascalCase(props.qualifier)
+      .split('_')
+      .join('-')
+      .replace(/AwsAccelerator/gi, 'AWSAccelerator');
+    let pipelineAccountEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
+
+    if (props.managementAccountId && props.managementAccountRoleName) {
+      pipelineAccountEnvVariables = {
+        MANAGEMENT_ACCOUNT_ID: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: props.managementAccountId,
+        },
+        MANAGEMENT_ACCOUNT_ROLE_NAME: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: props.managementAccountRoleName,
+        },
+      };
+    }
+
     const bucket = new Bucket(this, 'SecureBucket', {
-      s3BucketName: `aws-accelerator-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
-      kmsAliasName: 'alias/accelerator/pipeline/s3',
+      s3BucketName: `${props.qualifier}-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
+      kmsAliasName: `alias/${props.qualifier}/pipeline/s3`,
       kmsDescription: 'AWS Accelerator Pipeline Bucket CMK',
     });
 
@@ -67,7 +88,7 @@ export class AcceleratorPipeline extends Construct {
     };
 
     const configRepository = new config_repository.ConfigRepository(this, 'ConfigRepository', {
-      repositoryName: 'accelerator-config',
+      repositoryName: `${props.qualifier}-config`,
       repositoryBranchName: 'main',
       description:
         'AWS Accelerator configuration repository, created and initialized with default config file by pipeline',
@@ -81,7 +102,7 @@ export class AcceleratorPipeline extends Construct {
     });
 
     const pipeline = new codepipeline.Pipeline(this, 'Resource', {
-      pipelineName: 'AWSAccelerator-Pipeline',
+      pipelineName: `${qualifierInPascalCase}-Pipeline`,
       artifactBucket: bucket.getS3Bucket(),
       role: this.pipelineRole,
     });
@@ -130,7 +151,7 @@ export class AcceleratorPipeline extends Construct {
     });
 
     const buildProject = new codebuild.PipelineProject(this, 'BuildProject', {
-      projectName: 'AWSAccelerator-BuildProject',
+      projectName: `${qualifierInPascalCase}-BuildProject`,
       role: buildRole,
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
@@ -153,12 +174,6 @@ export class AcceleratorPipeline extends Construct {
         buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
         privileged: true, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.MEDIUM,
-        environmentVariables: {
-          ACCELERATOR_NAME: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: 'aws-accelerator',
-          },
-        },
       },
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),
     });
@@ -187,7 +202,7 @@ export class AcceleratorPipeline extends Construct {
     });
 
     this.toolkitProject = new codebuild.PipelineProject(this, 'ToolkitProject', {
-      projectName: 'AWSAccelerator-ToolkitProject',
+      projectName: `${qualifierInPascalCase}-ToolkitProject`,
       role: this.toolkitRole,
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
@@ -222,26 +237,7 @@ export class AcceleratorPipeline extends Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: cdk.Aws.ACCOUNT_ID,
           },
-          ACCELERATOR_NAME: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: 'aws-accelerator',
-          },
-          ACCELERATOR_REPOSITORY_NAME: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: props.sourceRepositoryName,
-          },
-          ACCELERATOR_REPOSITORY_BRANCH_NAME: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: props.sourceBranchName,
-          },
-          MANAGEMENT_ACCOUNT_ID: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: props.managementAccountId ?? '',
-          },
-          MANAGEMENT_ACCOUNT_ROLE_NAME: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: props.managementAccountRoleName ?? '',
-          },
+          ...pipelineAccountEnvVariables,
         },
       },
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),

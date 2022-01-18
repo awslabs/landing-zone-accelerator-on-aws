@@ -46,7 +46,11 @@ export class SecurityHubOrganizationAdminAccount extends Construct {
           {
             Sid: 'SecurityHubEnableOrganizationAdminAccountTaskOrganizationActions',
             Effect: 'Allow',
-            Action: ['organizations:ListAccounts', 'organizations:DescribeOrganization'],
+            Action: [
+              'organizations:DescribeOrganization',
+              'organizations:ListAccounts',
+              'organizations:ListDelegatedAdministrators',
+            ],
             Resource: '*',
           },
           {

@@ -13,7 +13,13 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as console from 'console';
-import { Macie2Client, PutClassificationExportConfigurationCommand } from '@aws-sdk/client-macie2';
+import {
+  EnableMacieCommand,
+  GetMacieSessionCommand,
+  Macie2Client,
+  MacieStatus,
+  PutClassificationExportConfigurationCommand,
+} from '@aws-sdk/client-macie2';
 
 /**
  * maciePutClassificationExportConfigurationFunction - lambda handler
@@ -39,6 +45,17 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Create':
     case 'Update':
       console.log('Started update');
+      if (!(await isMacieEnable(macie2Client))) {
+        console.log('start enable of macie');
+        await throttlingBackOff(() =>
+          macie2Client.send(
+            new EnableMacieCommand({
+              status: MacieStatus.ENABLED,
+            }),
+          ),
+        );
+      }
+
       await throttlingBackOff(() =>
         macie2Client.send(
           new PutClassificationExportConfigurationCommand({
@@ -56,5 +73,23 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
     case 'Delete':
       return { Status: 'Success', StatusCode: 200 };
+  }
+}
+
+/**
+ * Function to check if macie is enabled
+ * @param macie2Client
+ */
+async function isMacieEnable(macie2Client: Macie2Client): Promise<boolean> {
+  try {
+    const response = await throttlingBackOff(() => macie2Client.send(new GetMacieSessionCommand({})));
+    return response.status === MacieStatus.ENABLED;
+  } catch (e) {
+    if (`${e}`.includes('Macie is not enabled')) {
+      console.warn('Macie is not enabled');
+      return false;
+    } else {
+      throw e;
+    }
   }
 }

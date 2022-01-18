@@ -56,6 +56,7 @@
       "./packages/@aws-accelerator/constructs",
       "./packages/@aws-accelerator/constructs/lib/aws-*/*",
       "./packages/@aws-accelerator/installer",
+      "./packages/@aws-accelerator/tools",
       "./packages/@aws-accelerator/utils",
       "./packages/@aws-cdk-extensions/cdk-extensions",
       "./packages/@aws-cdk-extensions/cdk-plugin-assume-role"

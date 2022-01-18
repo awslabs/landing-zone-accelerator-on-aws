@@ -21,6 +21,23 @@ import { Logger } from './logger';
 import { AcceleratorToolkit } from './toolkit';
 
 /**
+ * constant maintaining cloudformation stack names
+ */
+export const AcceleratorStackNames: Record<string, string> = {
+  [AcceleratorStage.VALIDATE]: 'AWSAccelerator-ValidateStack',
+  [AcceleratorStage.ORGANIZATIONS]: 'AWSAccelerator-OrganizationsStack',
+  [AcceleratorStage.LOGGING]: 'AWSAccelerator-LoggingStack',
+  [AcceleratorStage.ACCOUNTS]: 'AWSAccelerator-AccountsStack',
+  [AcceleratorStage.DEPENDENCIES]: 'AWSAccelerator-DependenciesStack',
+  [AcceleratorStage.SECURITY]: 'AWSAccelerator-SecurityStack',
+  [AcceleratorStage.OPERATIONS]: 'AWSAccelerator-OperationsStack',
+  [AcceleratorStage.NETWORK_TGW]: 'AWSAccelerator-NetworkTgwStack',
+  [AcceleratorStage.NETWORK_VPC]: 'AWSAccelerator-NetworkVpcStack',
+  [AcceleratorStage.NETWORK_TGW_ATTACH]: 'AWSAccelerator-NetworkTgwAttachStack',
+  [AcceleratorStage.SECURITY_AUDIT]: 'AWSAccelerator-SecurityAuditStack',
+};
+
+/**
  *
  */
 export interface AcceleratorProps {
@@ -76,6 +93,9 @@ export abstract class Accelerator {
       });
     }
 
+    // Get management account credential when pipeline is executing outside of management account
+    const managementAccountCredentials = await this.getManagementAccountCredentials(props.partition);
+
     //
     // Read in all Accelerator Configuration files here, then pass the objects
     // to the stacks that need them. Exceptions are thrown if any of the
@@ -92,9 +112,6 @@ export abstract class Accelerator {
 
     // TODO: Deprecate securityConfig.getDelegatedAccountName, use accountsConfig.getAuditAccountId()
     const securityConfig = SecurityConfig.load(props.configDirPath);
-
-    // Get management account credential when pipeline is executing outside of management account
-    const managementAccountCredentials = await this.getManagementAccountCredentials();
 
     //
     // Load Plugins
@@ -210,7 +227,7 @@ export abstract class Accelerator {
         break;
       case AcceleratorStage.SECURITY_AUDIT:
         const auditAccountName = securityConfig.getDelegatedAccountName();
-        Logger.info(`Configuring the security-audit stack for account ${auditAccountName}`);
+        Logger.info(`[accelerator] Configuring the security-audit stack for account ${auditAccountName}`);
         if (accountsConfig.containsAccount(auditAccountName)) {
           for (const region of globalConfig.enabledRegions) {
             Logger.info(`[accelerator] Executing ${props.stage} for ${auditAccountName} account in ${region} region.`);
@@ -240,25 +257,19 @@ export abstract class Accelerator {
     // await Promise.all(promises);
   }
 
-  private static async getManagementAccountCredentials(): Promise<Credentials | undefined> {
+  private static async getManagementAccountCredentials(partition: string): Promise<Credentials | undefined> {
     if (
       process.env['MANAGEMENT_ACCOUNT_ID'] &&
       process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'] &&
       process.env['ACCOUNT_ID'] !== process.env['MANAGEMENT_ACCOUNT_ID']
     ) {
-      Logger.info('[PlatformAccelerator][INFO] set management account credentials');
-      Logger.info(`[accelerator] [PlatformAccelerator][INFO] pipeline region => ${process.env['AWS_DEFAULT_REGION']}`);
-      Logger.info(
-        `[accelerator] [PlatformAccelerator][INFO] pipeline executingAccountId => ${process.env['ACCOUNT_ID']}`,
-      );
-      Logger.info(
-        `[accelerator] [PlatformAccelerator][INFO] managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`,
-      );
-      Logger.info(
-        `[PlatformAccelerator][INFO] management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`,
-      );
+      Logger.info('[accelerator] set management account credentials');
+      Logger.info(`[accelerator] pipeline region => ${process.env['AWS_DEFAULT_REGION']}`);
+      Logger.info(`[accelerator] pipeline executingAccountId => ${process.env['ACCOUNT_ID']}`);
+      Logger.info(`[accelerator] managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
+      Logger.info(`[accelerator] management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
 
-      const roleArn = `arn:aws:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
+      const roleArn = `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
       const stsClient = new STSClient({ region: process.env['AWS_REGION'] });
       Logger.info(`[accelerator] [PlatformAccelerator][INFO] management account roleArn => ${roleArn}`);
 

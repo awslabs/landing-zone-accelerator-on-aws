@@ -15,7 +15,6 @@ import { Region } from '@aws-accelerator/config';
 import {
   GuardDutyPublishingDestination,
   MacieExportConfigClassification,
-  MacieSession,
   SecurityHubStandards,
 } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
@@ -42,17 +41,10 @@ export class SecurityStack extends AcceleratorStack {
     ) {
       const auditAccountName = props.securityConfig.getDelegatedAccountName();
       if (props.accountsConfig.containsAccount(auditAccountName)) {
-        // TODO check later if enable is required, because add members would od this
-        const macieSession = new MacieSession(this, 'MacieSession', {
-          region: cdk.Stack.of(this).region,
-          findingPublishingFrequency:
-            props.securityConfig.centralSecurityServices.macie.policyFindingsPublishingFrequency,
-          isSensitiveSh: props.securityConfig.centralSecurityServices.macie.publishSensitiveDataFindings,
-        });
         new MacieExportConfigClassification(this, 'AwsMacieUpdateExportConfigClassification', {
           region: cdk.Stack.of(this).region,
           S3keyPrefix: 'aws-macie-export-config',
-        }).node.addDependency(macieSession);
+        });
       } else {
         throw new Error(`Macie audit delegated admin account name "${auditAccountName}" not found.`);
       }

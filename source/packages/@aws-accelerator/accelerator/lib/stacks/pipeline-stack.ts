@@ -19,6 +19,7 @@ export interface PipelineStackProps extends cdk.StackProps {
   readonly stage: string;
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
+  readonly qualifier: string;
   readonly managementAccountId?: string;
   readonly managementAccountRoleName?: string;
 }
@@ -31,6 +32,7 @@ export class PipelineStack extends cdk.Stack {
     new pipeline.AcceleratorPipeline(this, 'Pipeline', {
       sourceRepositoryName: props.sourceRepositoryName,
       sourceBranchName: props.sourceBranchName,
+      qualifier: props.qualifier,
       managementAccountId: props.managementAccountId,
       managementAccountRoleName: props.managementAccountRoleName,
     });
