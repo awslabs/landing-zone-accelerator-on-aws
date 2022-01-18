@@ -1,7 +1,9 @@
 # Ignore Config used with code.amazon.com
+
 Config
 
 # Use of opensource-codeofconduct email for amazon is expected
+
 CODE_OF_CONDUCT.md:4
 CONTRIBUTING.md:51
 
@@ -12,3 +14,9 @@ yarn.lock
 source/packages/@aws-accelerator/installer/bin/installer.ts:18
 source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:59
 source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:58
+
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:828
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1110
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1119
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1128
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1137
