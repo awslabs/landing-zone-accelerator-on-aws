@@ -22,16 +22,18 @@ import {
   SecurityConfig,
 } from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
+import { pascalCase } from 'change-case';
 import { IConstruct } from 'constructs';
 import 'source-map-support/register';
+import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { Logger } from '../lib/logger';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
 import { DefaultStack } from '../lib/stacks/default-stack';
 import { DependenciesStack } from '../lib/stacks/dependencies-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
-import { NetworkTgwAttachStack } from '../lib/stacks/network-tgw-attach-stack';
-import { NetworkTgwStack } from '../lib/stacks/network-tgw-stack';
+import { NetworkAssociationsStack } from '../lib/stacks/network-associations-stack';
+import { NetworkPrepStack } from '../lib/stacks/network-prep-stack';
 import { NetworkVpcStack } from '../lib/stacks/network-vpc-stack';
 import { OperationsStack } from '../lib/stacks/operations-stack';
 import { OrganizationsStack } from '../lib/stacks/organizations-stack';
@@ -39,8 +41,6 @@ import { PipelineStack } from '../lib/stacks/pipeline-stack';
 import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { ValidateStack } from '../lib/stacks/validate-stack';
-import { AcceleratorStackNames } from '../lib/accelerator';
-import { pascalCase } from 'change-case';
 
 process.on(
   'unhandledRejection',
@@ -101,11 +101,11 @@ async function main() {
   if (stage === AcceleratorStage.PIPELINE) {
     const qualifier = process.env['ACCELERATOR_QUALIFIER'] ?? 'aws-accelerator';
     const stackName = process.env['ACCELERATOR_QUALIFIER']
-      ? `${pascalCase(process.env['ACCELERATOR_QUALIFIER'])}-PipelineStack`
+      ? `${pascalCase(process.env['ACCELERATOR_QUALIFIER'])}-PipelineStack-${account}-${region}`
           .split('_')
           .join('-')
           .replace(/AwsAccelerator/gi, 'AWSAccelerator')
-      : 'AWSAccelerator-PipelineStack';
+      : `${AcceleratorStackNames[AcceleratorStage.PIPELINE]}-${account}-${region}`;
 
     new PipelineStack(app, stackName, {
       env,
@@ -149,47 +149,55 @@ async function main() {
   // AcceleratorStack types
   //
   if (stage === AcceleratorStage.LOGGING) {
-    new LoggingStack(app, AcceleratorStackNames[AcceleratorStage.LOGGING], props);
+    new LoggingStack(app, `${AcceleratorStackNames[AcceleratorStage.LOGGING]}-${account}-${region}`, props);
   }
 
   if (stage === AcceleratorStage.ACCOUNTS) {
-    new AccountsStack(app, AcceleratorStackNames[AcceleratorStage.ACCOUNTS], props);
+    new AccountsStack(app, `${AcceleratorStackNames[AcceleratorStage.ACCOUNTS]}-${account}-${region}`, props);
   }
 
   if (stage === AcceleratorStage.ORGANIZATIONS) {
-    new OrganizationsStack(app, AcceleratorStackNames[AcceleratorStage.ORGANIZATIONS], props);
+    new OrganizationsStack(app, `${AcceleratorStackNames[AcceleratorStage.ORGANIZATIONS]}-${account}-${region}`, props);
   }
 
   if (stage === AcceleratorStage.VALIDATE) {
-    new ValidateStack(app, AcceleratorStackNames[AcceleratorStage.VALIDATE], props);
+    new ValidateStack(app, `${AcceleratorStackNames[AcceleratorStage.VALIDATE]}-${account}-${region}`, props);
   }
 
   if (stage === AcceleratorStage.DEPENDENCIES) {
-    new DependenciesStack(app, AcceleratorStackNames[AcceleratorStage.DEPENDENCIES], props);
+    new DependenciesStack(app, `${AcceleratorStackNames[AcceleratorStage.DEPENDENCIES]}-${account}-${region}`, props);
   }
 
   if (stage === AcceleratorStage.SECURITY) {
-    new SecurityStack(app, AcceleratorStackNames[AcceleratorStage.SECURITY], props);
+    new SecurityStack(app, `${AcceleratorStackNames[AcceleratorStage.SECURITY]}-${account}-${region}`, props);
   }
 
   if (stage === AcceleratorStage.SECURITY_AUDIT) {
-    new SecurityAuditStack(app, AcceleratorStackNames[AcceleratorStage.SECURITY_AUDIT], props);
+    new SecurityAuditStack(
+      app,
+      `${AcceleratorStackNames[AcceleratorStage.SECURITY_AUDIT]}-${account}-${region}`,
+      props,
+    );
   }
 
   if (stage === AcceleratorStage.OPERATIONS) {
-    new OperationsStack(app, AcceleratorStackNames[AcceleratorStage.OPERATIONS], props);
+    new OperationsStack(app, `${AcceleratorStackNames[AcceleratorStage.OPERATIONS]}-${account}-${region}`, props);
   }
 
-  if (stage === AcceleratorStage.NETWORK_TGW) {
-    new NetworkTgwStack(app, AcceleratorStackNames[AcceleratorStage.NETWORK_TGW], props);
+  if (stage === AcceleratorStage.NETWORK_PREP) {
+    new NetworkPrepStack(app, `${AcceleratorStackNames[AcceleratorStage.NETWORK_PREP]}-${account}-${region}`, props);
   }
 
   if (stage === AcceleratorStage.NETWORK_VPC) {
-    new NetworkVpcStack(app, AcceleratorStackNames[AcceleratorStage.NETWORK_VPC], props);
+    new NetworkVpcStack(app, `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC]}-${account}-${region}`, props);
   }
 
-  if (stage === AcceleratorStage.NETWORK_TGW_ATTACH) {
-    new NetworkTgwAttachStack(app, AcceleratorStackNames[AcceleratorStage.NETWORK_TGW_ATTACH], props);
+  if (stage === AcceleratorStage.NETWORK_ASSOCIATIONS) {
+    new NetworkAssociationsStack(
+      app,
+      `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]}-${account}-${region}`,
+      props,
+    );
   }
 
   Logger.info('[app] End Platform Accelerator CDK App');

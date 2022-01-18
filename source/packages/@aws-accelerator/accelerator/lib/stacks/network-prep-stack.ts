@@ -19,7 +19,7 @@ import { Construct } from 'constructs';
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
-export class NetworkTgwStack extends AcceleratorStack {
+export class NetworkPrepStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
