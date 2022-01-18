@@ -22,7 +22,11 @@ import {
   SecurityHubClient,
   paginateListOrganizationAdminAccounts,
 } from '@aws-sdk/client-securityhub';
-import { OrganizationsClient, DeregisterDelegatedAdministratorCommand } from '@aws-sdk/client-organizations';
+import {
+  OrganizationsClient,
+  DeregisterDelegatedAdministratorCommand,
+  ListDelegatedAdministratorsCommand,
+} from '@aws-sdk/client-organizations';
 
 /**
  * enable-guardduty - lambda handler
@@ -73,21 +77,32 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
               }),
             ),
           );
-          await throttlingBackOff(() =>
+          const response = await throttlingBackOff(() =>
             organizationsClient.send(
-              new DeregisterDelegatedAdministratorCommand({
-                AccountId: adminAccountId,
+              new ListDelegatedAdministratorsCommand({
                 ServicePrincipal: 'securityhub.amazonaws.com',
               }),
             ),
           );
+
+          if (response.DelegatedAdministrators!.length > 0) {
+            await throttlingBackOff(() =>
+              organizationsClient.send(
+                new DeregisterDelegatedAdministratorCommand({
+                  AccountId: adminAccountId,
+                  ServicePrincipal: 'securityhub.amazonaws.com',
+                }),
+              ),
+            );
+          } else {
+            console.warn(`Account ${adminAccount.accountId} is not registered as delegated administrator account`);
+          }
         }
       } else {
-        console.log(
+        console.warn(
           `SecurityHub delegation is not configured for account ${adminAccount.accountId}, no action performed`,
         );
       }
-
       return { Status: 'Success', StatusCode: 200 };
   }
 }

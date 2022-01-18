@@ -89,7 +89,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   }
 
   /**
-   *
+   * Load from file in given directory
    * @param dir
    * @returns
    */
@@ -97,5 +97,20 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     const buffer = fs.readFileSync(path.join(dir, GlobalConfig.FILENAME), 'utf8');
     const values = t.parse(GlobalConfigTypes.globalConfig, yaml.load(buffer));
     return new GlobalConfig(values);
+  }
+
+  /**
+   * Load from string content
+   * @param content
+   */
+  static loadFromString(content: string): GlobalConfig | undefined {
+    try {
+      const values = t.parse(GlobalConfigTypes.globalConfig, yaml.load(content));
+      return new GlobalConfig(values);
+    } catch (e) {
+      console.log('[global-config] Error parsing input, global config undefined');
+      console.log(`${e}`);
+      return undefined;
+    }
   }
 }

@@ -26,6 +26,13 @@ export enum RepositorySources {
   CODECOMMIT = 'codecommit',
 }
 
+export interface InstallerStackProps extends cdk.StackProps {
+  /**
+   * External Pipeline Account usage flag
+   */
+  readonly useExternalPipelineAccount: boolean;
+}
+
 export class InstallerStack extends cdk.Stack {
   // TODO: Add allowedPattern for all CfnParameter uses
   private readonly repositorySource = new cdk.CfnParameter(this, 'RepositorySource', {
@@ -45,61 +52,115 @@ export class InstallerStack extends cdk.Stack {
     description: 'The name of the git branch to use for installation',
   });
 
-  private readonly managementAccountId = new cdk.CfnParameter(this, 'ManagementAccountId', {
-    type: 'String',
-    description: 'Optional - Target management account id',
-    default: '',
-  });
+  /**
+   * Management Account ID Parameter
+   * @private
+   */
+  private readonly managementAccountId: cdk.CfnParameter | undefined;
 
-  private readonly managementAccountRoleName = new cdk.CfnParameter(this, 'ManagementAccountRoleName', {
-    type: 'String',
-    description: 'Optional - Target management account role name',
-    default: '',
-  });
+  /**
+   * Management Account Role Name Parameter
+   * @private
+   */
+  private readonly managementAccountRoleName: cdk.CfnParameter | undefined;
 
-  // private readonly notificationEmail = new cdk.CfnParameter(this, 'NotificationEmail', {
-  //   type: 'String',
-  //   description: 'The notification email that will get Accelerator State Machine execution notifications.',
-  // });
+  /**
+   * Installer Qualifier parameter
+   * @private
+   */
+  private readonly installerQualifier: cdk.CfnParameter | undefined;
 
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: InstallerStackProps) {
     super(scope, id, props);
+
+    const parameterGroups: { Label: { default: string }; Parameters: string[] }[] = [
+      {
+        Label: { default: 'Git Repository Configuration' },
+        Parameters: [
+          this.repositorySource.logicalId,
+          this.repositoryName.logicalId,
+          this.repositoryBranchName.logicalId,
+        ],
+      },
+    ];
+
+    const repositoryParameterLabels: { [p: string]: { default: string } } = {
+      [this.repositorySource.logicalId]: { default: 'Source' },
+      [this.repositoryName.logicalId]: { default: 'Repository Name' },
+      [this.repositoryBranchName.logicalId]: { default: 'Branch Name' },
+    };
+
+    let lowerCaseQualifier = 'aws-accelerator';
+    let pascalCaseQualifier = 'aws-accelerator';
+
+    let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
+    let targetAcceleratorEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
+
+    if (props.useExternalPipelineAccount) {
+      this.installerQualifier = new cdk.CfnParameter(this, 'Qualifier', {
+        type: 'String',
+        description: 'Installer assets arn qualifier',
+        allowedPattern: '^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$',
+        // allowedPattern: '^[A-Za-z]+[A-Za-z0-9-]{1,61}[A-Za-z0-9]+$',
+      });
+
+      this.managementAccountId = new cdk.CfnParameter(this, 'ManagementAccountId', {
+        type: 'String',
+        description: 'Optional - Target management account id',
+      });
+
+      this.managementAccountRoleName = new cdk.CfnParameter(this, 'ManagementAccountRoleName', {
+        type: 'String',
+        description: 'Organization management account role name',
+      });
+
+      parameterGroups.push({
+        Label: { default: 'Target Environment Configuration' },
+        Parameters: [
+          this.installerQualifier.logicalId,
+          this.managementAccountId.logicalId,
+          this.managementAccountRoleName.logicalId,
+        ],
+      });
+
+      targetAcceleratorParameterLabels = {
+        [this.installerQualifier.logicalId]: { default: 'Accelerator Qualifier' },
+        [this.managementAccountId.logicalId]: { default: 'Management Account ID' },
+        [this.managementAccountRoleName.logicalId]: { default: 'Management Account Role Name' },
+      };
+
+      targetAcceleratorEnvVariables = {
+        MANAGEMENT_ACCOUNT_ID: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: this.managementAccountId.valueAsString,
+        },
+        MANAGEMENT_ACCOUNT_ROLE_NAME: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: this.managementAccountRoleName.valueAsString,
+        },
+        ACCELERATOR_QUALIFIER: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: this.installerQualifier.valueAsString,
+        },
+      };
+
+      lowerCaseQualifier = pascalCaseQualifier = this.installerQualifier.valueAsString;
+    } else {
+      pascalCaseQualifier = 'AWSAccelerator';
+    }
 
     // Parameter Metadata
     this.templateOptions.metadata = {
       'AWS::CloudFormation::Interface': {
-        ParameterGroups: [
-          {
-            Label: { default: 'Git Repository Configuration' },
-            Parameters: [
-              this.repositorySource.logicalId,
-              this.repositoryName.logicalId,
-              this.repositoryBranchName.logicalId,
-            ],
-          },
-          // {
-          //   Label: { default: 'Accelerator Configuration' },
-          //   Parameters: [this.notificationEmail.logicalId],
-          // },
-          {
-            Label: { default: 'Management Account Configuration' },
-            Parameters: [this.managementAccountId.logicalId, this.managementAccountRoleName.logicalId],
-          },
-        ],
-        ParameterLabels: {
-          [this.repositorySource.logicalId]: { default: 'Source' },
-          [this.repositoryName.logicalId]: { default: 'Repository Name' },
-          [this.repositoryBranchName.logicalId]: { default: 'Branch Name' },
-          [this.managementAccountId.logicalId]: { default: 'Management Account ID' },
-          [this.managementAccountRoleName.logicalId]: { default: 'Management Account Role Name' },
-          // [this.notificationEmail.logicalId]: { default: 'Notification Email' },
-        },
+        ParameterGroups: parameterGroups,
+        ParameterLabels: { ...repositoryParameterLabels, ...targetAcceleratorParameterLabels },
       },
     };
 
     const bucket = new Bucket(this, 'SecureBucket', {
-      s3BucketName: `aws-accelerator-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-      kmsAliasName: 'alias/accelerator/installer/s3',
+      // s3BucketName: `accelerator-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
+      s3BucketName: `${lowerCaseQualifier}-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
+      kmsAliasName: `alias/${lowerCaseQualifier}/installer/s3`,
       kmsDescription: 'AWS Accelerator Installer Bucket CMK',
     });
 
@@ -124,7 +185,7 @@ export class InstallerStack extends cdk.Stack {
     });
 
     const pipeline = new codepipeline.Pipeline(this, 'Pipeline', {
-      pipelineName: 'AWSAccelerator-Installer',
+      pipelineName: `${pascalCaseQualifier}-Installer`,
       artifactBucket: bucket.getS3Bucket(),
       role: pipelineRole,
     });
@@ -167,7 +228,7 @@ export class InstallerStack extends cdk.Stack {
     });
 
     const installerProject = new codebuild.PipelineProject(this, 'InstallerProject', {
-      projectName: 'AWSAccelerator-InstallerProject',
+      projectName: `${pascalCaseQualifier}-InstallerProject`,
       role: installerRole,
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
@@ -208,14 +269,7 @@ export class InstallerStack extends cdk.Stack {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.repositoryBranchName.valueAsString,
           },
-          MANAGEMENT_ACCOUNT_ID: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: this.managementAccountId.valueAsString,
-          },
-          MANAGEMENT_ACCOUNT_ROLE_NAME: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: this.managementAccountRoleName.valueAsString,
-          },
+          ...targetAcceleratorEnvVariables,
         },
       },
     });
@@ -231,5 +285,25 @@ export class InstallerStack extends cdk.Stack {
         }),
       ],
     });
+
+    if (props.useExternalPipelineAccount) {
+      // Asset ARN qualifier
+      new cdk.CfnOutput(this, 'Installer-Qualifier', {
+        value: this.installerQualifier!.valueAsString,
+        description: 'Installer Assets ARN Qualifier',
+      });
+
+      // Organization Management Account
+      new cdk.CfnOutput(this, 'Management-Account-Id', {
+        value: this.managementAccountId!.valueAsString,
+        description: 'Organization Management Account Id',
+      });
+
+      // Organization Management Account Role Name
+      new cdk.CfnOutput(this, 'Management-Account-Role-Name', {
+        value: this.managementAccountRoleName!.valueAsString,
+        description: 'Organization Management Account Role Name',
+      });
+    }
   }
 }

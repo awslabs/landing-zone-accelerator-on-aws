@@ -14,12 +14,15 @@
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as console from 'console';
 import {
+  EnableMacieCommand,
+  GetMacieSessionCommand,
   CreateMemberCommand,
   DeleteMemberCommand,
   DescribeOrganizationConfigurationCommand,
   DisassociateMemberCommand,
   Macie2Client,
   Member,
+  MacieStatus,
   UpdateOrganizationConfigurationCommand,
   paginateListMembers,
 } from '@aws-sdk/client-macie2';
@@ -62,6 +65,17 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
+      if (!(await isMacieEnable(macie2Client))) {
+        console.log('start enable of macie');
+        await throttlingBackOff(() =>
+          macie2Client.send(
+            new EnableMacieCommand({
+              status: MacieStatus.ENABLED,
+            }),
+          ),
+        );
+      }
+
       for (const account of allAccounts.filter(account => account.Id !== adminAccountId) ?? []) {
         if (!existingMembers!.find(member => member.accountId !== account.Id)) {
           console.log(`OU account - ${account.Id} macie membership status is "not a macie member", adding as a member`);
@@ -115,8 +129,31 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       return { Status: 'Success', StatusCode: 200 };
   }
 }
+
+/**
+ * Checking is organization auto enabled for new account
+ * @param macie2Clinet
+ */
 async function isOrganizationAutoEnabled(macie2Clinet: Macie2Client): Promise<boolean> {
   console.log('calling isOrganizationAutoEnabled');
   const response = await throttlingBackOff(() => macie2Clinet.send(new DescribeOrganizationConfigurationCommand({})));
   return response.autoEnable ?? false;
+}
+
+/**
+ * Checking Macie is enable or disabled
+ * @param macie2Client
+ */
+async function isMacieEnable(macie2Client: Macie2Client): Promise<boolean> {
+  try {
+    const response = await throttlingBackOff(() => macie2Client.send(new GetMacieSessionCommand({})));
+    return response.status === MacieStatus.ENABLED;
+  } catch (e) {
+    if (`${e}`.includes('Macie is not enabled')) {
+      console.warn('Macie is not enabled');
+      return false;
+    } else {
+      throw e;
+    }
+  }
 }

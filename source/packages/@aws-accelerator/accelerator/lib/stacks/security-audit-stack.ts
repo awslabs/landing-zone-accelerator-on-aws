@@ -17,7 +17,6 @@ import {
   GuardDutyExportConfigDestinationTypes,
   GuardDutyMembers,
   MacieMembers,
-  MacieSession,
   SecurityHubMembers,
 } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
@@ -41,21 +40,10 @@ export class SecurityAuditStack extends AcceleratorStack {
     ) {
       Logger.info('[security-audit-stack] Adding Macie');
 
-      // Delegated account MacieSession needs to be enabled before adding other account as member
-      // Adding delegated account from management account should enable macie in delegated account
-      // If delegated account macie was disabled for some reason add members will not work
-      // TODO check later if enable is required
-      const macieSession = new MacieSession(this, 'MacieSession', {
-        region: cdk.Stack.of(this).region,
-        findingPublishingFrequency:
-          props.securityConfig.centralSecurityServices.macie.policyFindingsPublishingFrequency,
-        isSensitiveSh: props.securityConfig.centralSecurityServices.macie.publishSensitiveDataFindings,
-      });
-
       new MacieMembers(this, 'MacieMembers', {
         region: cdk.Stack.of(this).region,
         adminAccountId: cdk.Stack.of(this).account,
-      }).node.addDependency(macieSession);
+      });
     }
 
     //GuardDuty configuration

@@ -47,3 +47,6 @@ docs
 ### Exclude Jest test report directory
 test-reports
 source/lerna-debug.log
+
+###Logger files
+*.log

@@ -60,6 +60,8 @@ export class MacieMembers extends Construct {
             'macie2:DeleteMember',
             'macie2:DescribeOrganizationConfiguration',
             'macie2:DisassociateMember',
+            'macie2:EnableMacie',
+            'macie2:GetMacieSession',
             'macie2:ListMembers',
             'macie2:UpdateOrganizationConfiguration',
           ],

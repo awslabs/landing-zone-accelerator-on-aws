@@ -13,11 +13,8 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import {
-  DescribeOrganizationCommand,
-  EnablePolicyTypeCommand,
   InviteAccountToOrganizationCommand,
   OrganizationsClient,
-  paginateListRoots,
   paginateListAccounts,
   AcceptHandshakeCommand,
 } from '@aws-sdk/client-organizations';

@@ -9,4 +9,5 @@ new installer.InstallerStack(app, 'AWSAccelerator-InstallerStack', {
   synthesizer: new cdk.DefaultStackSynthesizer({
     generateBootstrapVersionRule: false,
   }),
+  useExternalPipelineAccount: app.node.tryGetContext('use-external-pipeline-account') === 'true',
 });

@@ -69,7 +69,12 @@ export class MacieExportConfigClassification extends Construct {
           {
             Sid: 'MaciePutClassificationExportConfigurationTaskMacieActions',
             Effect: 'Allow',
-            Action: ['macie2:PutClassificationExportConfiguration', 'macie2:GetClassificationExportConfiguration'],
+            Action: [
+              'macie2:EnableMacie',
+              'macie2:GetClassificationExportConfiguration',
+              'macie2:GetMacieSession',
+              'macie2:PutClassificationExportConfiguration',
+            ],
             Resource: '*',
           },
         ],

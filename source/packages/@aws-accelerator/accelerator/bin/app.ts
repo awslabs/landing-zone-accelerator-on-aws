@@ -39,6 +39,8 @@ import { PipelineStack } from '../lib/stacks/pipeline-stack';
 import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { ValidateStack } from '../lib/stacks/validate-stack';
+import { AcceleratorStackNames } from '../lib/accelerator';
+import { pascalCase } from 'change-case';
 
 process.on(
   'unhandledRejection',
@@ -97,13 +99,22 @@ async function main() {
   // Pipeline Stack
   //
   if (stage === AcceleratorStage.PIPELINE) {
-    new PipelineStack(app, 'AWSAccelerator-PipelineStack', {
+    const qualifier = process.env['ACCELERATOR_QUALIFIER'] ?? 'aws-accelerator';
+    const stackName = process.env['ACCELERATOR_QUALIFIER']
+      ? `${pascalCase(process.env['ACCELERATOR_QUALIFIER'])}-PipelineStack`
+          .split('_')
+          .join('-')
+          .replace(/AwsAccelerator/gi, 'AWSAccelerator')
+      : 'AWSAccelerator-PipelineStack';
+
+    new PipelineStack(app, stackName, {
       env,
       stage,
       sourceRepositoryName: process.env['ACCELERATOR_REPOSITORY_NAME']!,
       sourceBranchName: process.env['ACCELERATOR_REPOSITORY_BRANCH_NAME']!,
-      managementAccountId: process.env['MANAGEMENT_ACCOUNT_ID'],
-      managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'],
+      qualifier: qualifier,
+      managementAccountId: process.env['MANAGEMENT_ACCOUNT_ID']!,
+      managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']!,
     });
     return;
   }
@@ -138,37 +149,47 @@ async function main() {
   // AcceleratorStack types
   //
   if (stage === AcceleratorStage.LOGGING) {
-    new LoggingStack(app, 'AWSAccelerator-LoggingStack', props);
+    new LoggingStack(app, AcceleratorStackNames[AcceleratorStage.LOGGING], props);
   }
+
   if (stage === AcceleratorStage.ACCOUNTS) {
-    new AccountsStack(app, 'AWSAccelerator-AccountsStack', props);
+    new AccountsStack(app, AcceleratorStackNames[AcceleratorStage.ACCOUNTS], props);
   }
+
   if (stage === AcceleratorStage.ORGANIZATIONS) {
-    new OrganizationsStack(app, 'AWSAccelerator-OrganizationsStack', props);
+    new OrganizationsStack(app, AcceleratorStackNames[AcceleratorStage.ORGANIZATIONS], props);
   }
+
   if (stage === AcceleratorStage.VALIDATE) {
-    new ValidateStack(app, 'AWSAccelerator-ValidateStack', props);
+    new ValidateStack(app, AcceleratorStackNames[AcceleratorStage.VALIDATE], props);
   }
+
   if (stage === AcceleratorStage.DEPENDENCIES) {
-    new DependenciesStack(app, 'AWSAccelerator-DependenciesStack', props);
+    new DependenciesStack(app, AcceleratorStackNames[AcceleratorStage.DEPENDENCIES], props);
   }
+
   if (stage === AcceleratorStage.SECURITY) {
-    new SecurityStack(app, 'AWSAccelerator-SecurityStack', props);
+    new SecurityStack(app, AcceleratorStackNames[AcceleratorStage.SECURITY], props);
   }
+
   if (stage === AcceleratorStage.SECURITY_AUDIT) {
-    new SecurityAuditStack(app, 'AWSAccelerator-SecurityAuditStack', props);
+    new SecurityAuditStack(app, AcceleratorStackNames[AcceleratorStage.SECURITY_AUDIT], props);
   }
+
   if (stage === AcceleratorStage.OPERATIONS) {
-    new OperationsStack(app, 'AWSAccelerator-OperationsStack', props);
+    new OperationsStack(app, AcceleratorStackNames[AcceleratorStage.OPERATIONS], props);
   }
+
   if (stage === AcceleratorStage.NETWORK_TGW) {
-    new NetworkTgwStack(app, 'AWSAccelerator-NetworkTgwStack', props);
+    new NetworkTgwStack(app, AcceleratorStackNames[AcceleratorStage.NETWORK_TGW], props);
   }
+
   if (stage === AcceleratorStage.NETWORK_VPC) {
-    new NetworkVpcStack(app, 'AWSAccelerator-NetworkVpcStack', props);
+    new NetworkVpcStack(app, AcceleratorStackNames[AcceleratorStage.NETWORK_VPC], props);
   }
+
   if (stage === AcceleratorStage.NETWORK_TGW_ATTACH) {
-    new NetworkTgwAttachStack(app, 'AWSAccelerator-NetworkTgwAttachStack', props);
+    new NetworkTgwAttachStack(app, AcceleratorStackNames[AcceleratorStage.NETWORK_TGW_ATTACH], props);
   }
 
   Logger.info('[app] End Platform Accelerator CDK App');

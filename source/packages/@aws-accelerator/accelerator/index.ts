@@ -13,13 +13,14 @@
 
 export * from './lib/accelerator';
 export * from './lib/config-repository';
+export * from './lib/logger';
 export * from './lib/pipeline';
 export * from './lib/stacks/accounts-stack';
 export * from './lib/stacks/default-stack';
 export * from './lib/stacks/dependencies-stack';
+export * from './lib/stacks/network-tgw-attach-stack';
 export * from './lib/stacks/network-tgw-stack';
 export * from './lib/stacks/network-vpc-stack';
-export * from './lib/stacks/network-tgw-attach-stack';
 export * from './lib/stacks/operations-stack';
 export * from './lib/stacks/organizations-stack';
 export * from './lib/stacks/pipeline-stack';
