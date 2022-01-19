@@ -162,10 +162,13 @@ export class AcceleratorTool {
   private pipelineManagementAccount: ManagementAccountType = undefined;
 
   /**
-   * Flag indicates if external pipeline account used
+   * externalPipelineAccount object
    * @private
    */
-  private useExternalPipelineAccount = false;
+  private externalPipelineAccount: { isUsed: boolean; accountId: string | undefined } = {
+    isUsed: false,
+    accountId: undefined,
+  };
 
   /**
    * acceleratorCloudFormationStacks
@@ -251,8 +254,8 @@ export class AcceleratorTool {
 
     for (const pipelinePostfix of acceleratorPipelinePostfix) {
       if (this.acceleratorToolProps.deletePipelines) {
-        // Delete Accelerator Pipeline(s)
-        await this.deletePipeline(qualifierInPascalCase, `${qualifierInPascalCase}-${pipelinePostfix}`);
+        // Delete Accelerator Pipeline stack and resources
+        await this.deletePipelineStack(qualifierInPascalCase, pipelinePostfix);
       }
     }
 
@@ -326,7 +329,16 @@ export class AcceleratorTool {
     AcceleratorTool.resetCredentialEnvironment();
     const cloudFormationClient = new CloudFormationClient({});
 
-    if (!(await this.isStackDeletable(cloudFormationClient, installerStackName))) {
+    if (
+      !(await this.isStackDeletable(
+        cloudFormationClient,
+        installerStackName,
+        this.externalPipelineAccount.isUsed
+          ? this.externalPipelineAccount.accountId!
+          : this.pipelineManagementAccount!.accountId,
+        this.globalConfig?.homeRegion,
+      ))
+    ) {
       return true;
     }
 
@@ -571,6 +583,9 @@ export class AcceleratorTool {
       // Order the stacks in delete order
       this.acceleratorCloudFormationStacks = this.getPipelineCloudFormationStacks();
 
+      // console.log(this.acceleratorCloudFormationStacks);
+      // process.exit(1);
+
       return true;
     } catch (e) {
       console.log(e);
@@ -579,14 +594,26 @@ export class AcceleratorTool {
   }
 
   /**
-   * Function to delete accelerator pipeline
+   * Function to delete accelerator pipeline stack and it's resources
    * @private
    */
-  private async deletePipeline(qualifierInPascalCase: string, pipelineName: string): Promise<boolean> {
+  private async deletePipelineStack(qualifierInPascalCase: string, pipelinePostfix: string): Promise<boolean> {
+    const pipelineName = `${qualifierInPascalCase}-${pipelinePostfix}`;
+    const pipelineStackPostfix = 'PipelineStack';
+    // if (pipelinePostfix === 'Pipeline'){
+    //   pipelineStackPostfix
+    // }
     const cloudFormationClient = new CloudFormationClient({});
-    if (!(await this.isStackDeletable(cloudFormationClient, `${qualifierInPascalCase}-PipelineStack`))) {
+    const fullyQualifiedStackName = `${qualifierInPascalCase}-${pipelineStackPostfix}-${
+      this.externalPipelineAccount.isUsed
+        ? this.externalPipelineAccount.accountId!
+        : this.pipelineManagementAccount!.accountId
+    }-${this.globalConfig?.homeRegion}`;
+
+    if (!(await this.isStackDeletable(cloudFormationClient, fullyQualifiedStackName))) {
       return true;
     }
+
     const codeBuildClient = new CodeBuildClient({});
     const codeCommitClient = new CodeCommitClient({});
 
@@ -616,30 +643,28 @@ export class AcceleratorTool {
       await throttlingBackOff(() => codeBuildClient.send(new DeleteProjectCommand({ name: project })));
     }
 
-    // const acceleratorPipelineStackNamePrefix = pascalCase(qualifierInPascalCase).split('_').join('-');
-
     if (this.acceleratorToolProps.deleteData) {
       // Delete Installer stack persistent data
       await this.deleteStackPersistentData(
         cloudFormationClient,
-        `${qualifierInPascalCase}-PipelineStack`,
+        fullyQualifiedStackName,
         new KMSClient({}),
         new CloudWatchLogsClient({}),
         new S3Client({}),
       );
     }
 
-    Logger.info(`[accelerator-tool] Deleting stack ${qualifierInPascalCase}-PipelineStack`);
+    Logger.info(`[accelerator-tool] Deleting stack ${fullyQualifiedStackName}`);
     await throttlingBackOff(() =>
-      cloudFormationClient.send(new DeleteStackCommand({ StackName: `${qualifierInPascalCase}-PipelineStack` })),
+      cloudFormationClient.send(new DeleteStackCommand({ StackName: `${fullyQualifiedStackName}` })),
     );
 
-    Logger.info(`[accelerator-tool] Waiting until stack ${qualifierInPascalCase}-PipelineStack deletion completed`);
-    while (!(await this.isStackDeletionCompleted(cloudFormationClient, `${qualifierInPascalCase}-PipelineStack`))) {
+    Logger.info(`[accelerator-tool] Waiting until stack ${fullyQualifiedStackName} deletion completed`);
+    while (!(await this.isStackDeletionCompleted(cloudFormationClient, fullyQualifiedStackName))) {
       // Wait before checking again
       await new Promise(func => setTimeout(func, 1000));
     }
-    Logger.info(`[accelerator-tool] Stack ${qualifierInPascalCase}-PipelineStack deleted successfully`);
+    Logger.info(`[accelerator-tool] Stack ${fullyQualifiedStackName} deleted successfully`);
     return true;
   }
 
@@ -691,13 +716,14 @@ export class AcceleratorTool {
         managementAccountId!,
         managementAccountRoleName,
       );
-      this.useExternalPipelineAccount = true;
+      this.externalPipelineAccount = { isUsed: true, accountId: executingAccountId! };
       return {
         accountId: managementAccountId,
         assumeRoleName: managementAccountRoleName,
         credentials: managementAccountCredentials,
       };
     } else {
+      this.externalPipelineAccount = { isUsed: false, accountId: managementAccountId };
       return {
         accountId: executingAccountId!,
         assumeRoleName: undefined,
@@ -851,7 +877,6 @@ export class AcceleratorTool {
         }
       }
     }
-
     return true;
   }
 
@@ -1072,7 +1097,7 @@ export class AcceleratorTool {
   }
 
   /**
-   * Function to delete cloudformation stacks
+   * Function to delete cloudformation stack
    * @param accountStack
    * @private
    */
@@ -1146,15 +1171,17 @@ export class AcceleratorTool {
           cloudWatchLogsClient = new CloudWatchLogsClient({ region: region });
         }
 
+        const fullyQualifiedStackName = `${resource.stackName}-${resource.accountId}-${region}`;
+
         try {
           const response = await throttlingBackOff(() =>
-            cloudFormationClient.send(new DescribeStacksCommand({ StackName: resource.stackName })),
+            cloudFormationClient.send(new DescribeStacksCommand({ StackName: fullyQualifiedStackName })),
           );
           cloudFormationStack = response.Stacks![0];
         } catch (error) {
-          if (`${error}`.includes(`Stack with id ${resource.stackName} does not exist`)) {
+          if (`${error}`.includes(`Stack with id ${fullyQualifiedStackName} does not exist`)) {
             Logger.warn(
-              `[accelerator-tool] Stack with id ${resource.stackName} does not exist in ${resource.accountId} account in ${region} region`,
+              `[accelerator-tool] Stack with id ${fullyQualifiedStackName} does not exist in ${resource.accountId} account in ${region} region`,
             );
             cloudFormationStack = undefined;
           }
@@ -1167,7 +1194,7 @@ export class AcceleratorTool {
         // 4. When stack is part of management account
         if (
           cloudFormationStack &&
-          !this.useExternalPipelineAccount &&
+          !this.externalPipelineAccount.isUsed &&
           this.globalConfig?.homeRegion === region &&
           cloudFormationStack?.StackName === 'AWSAccelerator-CDKToolkit' &&
           this.pipelineManagementAccount!.accountId === resource.accountId &&
@@ -1212,14 +1239,14 @@ export class AcceleratorTool {
           }
 
           deleteStackStartedPromises.push(
-            cloudFormationClient.send(new DeleteStackCommand({ StackName: resource.stackName })),
+            cloudFormationClient.send(new DeleteStackCommand({ StackName: cloudFormationStack!.StackName! })),
           );
 
           // This is required to make sure stacks are deleted before moving to next stage of stack deletion
           deleteStackCompletedPromises.push(
             waitUntilStackDeleteComplete(
               { client: cloudFormationClient, maxWaitTime: 3600 }, // waitTime is in second
-              { StackName: resource.stackName },
+              { StackName: cloudFormationStack!.StackName! },
             ),
           );
         }

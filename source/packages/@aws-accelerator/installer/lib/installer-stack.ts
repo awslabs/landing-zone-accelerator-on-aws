@@ -65,10 +65,10 @@ export class InstallerStack extends cdk.Stack {
   private readonly managementAccountRoleName: cdk.CfnParameter | undefined;
 
   /**
-   * Installer Qualifier parameter
+   * Accelerator Qualifier parameter
    * @private
    */
-  private readonly installerQualifier: cdk.CfnParameter | undefined;
+  private readonly acceleratorQualifier: cdk.CfnParameter | undefined;
 
   constructor(scope: Construct, id: string, props: InstallerStackProps) {
     super(scope, id, props);
@@ -97,34 +97,34 @@ export class InstallerStack extends cdk.Stack {
     let targetAcceleratorEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
 
     if (props.useExternalPipelineAccount) {
-      this.installerQualifier = new cdk.CfnParameter(this, 'Qualifier', {
+      this.acceleratorQualifier = new cdk.CfnParameter(this, 'AcceleratorQualifier', {
         type: 'String',
-        description: 'Installer assets arn qualifier',
+        description: 'Accelerator assets arn qualifier',
         allowedPattern: '^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$',
         // allowedPattern: '^[A-Za-z]+[A-Za-z0-9-]{1,61}[A-Za-z0-9]+$',
       });
 
       this.managementAccountId = new cdk.CfnParameter(this, 'ManagementAccountId', {
         type: 'String',
-        description: 'Optional - Target management account id',
+        description: 'Target management account id',
       });
 
       this.managementAccountRoleName = new cdk.CfnParameter(this, 'ManagementAccountRoleName', {
         type: 'String',
-        description: 'Organization management account role name',
+        description: 'Target management account role name',
       });
 
       parameterGroups.push({
         Label: { default: 'Target Environment Configuration' },
         Parameters: [
-          this.installerQualifier.logicalId,
+          this.acceleratorQualifier.logicalId,
           this.managementAccountId.logicalId,
           this.managementAccountRoleName.logicalId,
         ],
       });
 
       targetAcceleratorParameterLabels = {
-        [this.installerQualifier.logicalId]: { default: 'Accelerator Qualifier' },
+        [this.acceleratorQualifier.logicalId]: { default: 'Accelerator Qualifier' },
         [this.managementAccountId.logicalId]: { default: 'Management Account ID' },
         [this.managementAccountRoleName.logicalId]: { default: 'Management Account Role Name' },
       };
@@ -140,11 +140,11 @@ export class InstallerStack extends cdk.Stack {
         },
         ACCELERATOR_QUALIFIER: {
           type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-          value: this.installerQualifier.valueAsString,
+          value: this.acceleratorQualifier.valueAsString,
         },
       };
 
-      lowerCaseQualifier = pascalCaseQualifier = this.installerQualifier.valueAsString;
+      lowerCaseQualifier = pascalCaseQualifier = this.acceleratorQualifier.valueAsString;
     } else {
       pascalCaseQualifier = 'AWSAccelerator';
     }
@@ -288,21 +288,21 @@ export class InstallerStack extends cdk.Stack {
 
     if (props.useExternalPipelineAccount) {
       // Asset ARN qualifier
-      new cdk.CfnOutput(this, 'Installer-Qualifier', {
-        value: this.installerQualifier!.valueAsString,
-        description: 'Installer Assets ARN Qualifier',
+      new cdk.CfnOutput(this, 'AcceleratorQualifierOutput', {
+        value: this.acceleratorQualifier!.valueAsString,
+        description: 'Accelerator assets ARN qualifier',
       });
 
-      // Organization Management Account
-      new cdk.CfnOutput(this, 'Management-Account-Id', {
+      //Management Account
+      new cdk.CfnOutput(this, 'ManagementAccountIdOutput', {
         value: this.managementAccountId!.valueAsString,
-        description: 'Organization Management Account Id',
+        description: 'Management account id',
       });
 
-      // Organization Management Account Role Name
-      new cdk.CfnOutput(this, 'Management-Account-Role-Name', {
+      //Management Account Role Name
+      new cdk.CfnOutput(this, 'ManagementAccountRoleNameOutput', {
         value: this.managementAccountRoleName!.valueAsString,
-        description: 'Organization Management Account Role Name',
+        description: 'Management account role name',
       });
     }
   }
