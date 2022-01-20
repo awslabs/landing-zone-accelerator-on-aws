@@ -12,7 +12,7 @@
  */
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { AcceleratorTool } from './classes/accelerator-tool';
+import { AcceleratorTool } from './lib/classes/accelerator-tool';
 /**
  * AWS Platform Accelerator Uninstaller tool entry point.
  * Script Options:
