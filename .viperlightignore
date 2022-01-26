@@ -15,8 +15,8 @@ source/packages/@aws-accelerator/installer/bin/installer.ts:18
 source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:59
 source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:58
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:828
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1110
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1119
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1128
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1137
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:854
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1135
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1144
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1153
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1162
