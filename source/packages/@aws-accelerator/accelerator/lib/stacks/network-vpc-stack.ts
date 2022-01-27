@@ -165,7 +165,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
       });
       new cdk.aws_iam.Role(this, 'DescribeTransitGatewaysAttachmentsRole', {
-        roleName: 'AWSAccelerator-DescribeTransitGatewayAttachmentsRole',
+        roleName: `AWSAccelerator-DescribeTransitGatewayAttachmentsRole-${cdk.Stack.of(this).region}`,
         assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
@@ -337,7 +337,12 @@ export class NetworkVpcStack extends AcceleratorStack {
 
             // Loop through all the defined OUs
             for (const ouItem of subnetItem.shareTargets.organizationalUnits ?? []) {
-              const ouArn = props.organizationConfig.getOrganizationalUnitArn(ouItem);
+              let ouArn = props.organizationConfig.getOrganizationalUnitArn(ouItem);
+              // AWS::RAM::ResourceShare expects the organizations ARN if
+              // sharing with the entire org (Root)
+              if (ouItem === 'Root') {
+                ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
+              }
               Logger.info(
                 `[network-vpc-stack] Share Subnet ${subnetItem.name} with Organizational Unit ${ouItem}: ${ouArn}`,
               );

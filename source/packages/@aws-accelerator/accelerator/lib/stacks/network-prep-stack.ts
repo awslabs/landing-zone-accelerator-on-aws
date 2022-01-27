@@ -81,7 +81,12 @@ export class NetworkPrepStack extends AcceleratorStack {
 
           // Loop through all the defined OUs
           for (const ouItem of tgwItem.shareTargets.organizationalUnits ?? []) {
-            const ouArn = props.organizationConfig.getOrganizationalUnitArn(ouItem);
+            let ouArn = props.organizationConfig.getOrganizationalUnitArn(ouItem);
+            // AWS::RAM::ResourceShare expects the organizations ARN if
+            // sharing with the entire org (Root)
+            if (ouItem === 'Root') {
+              ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
+            }
             Logger.info(
               `[network-tgw-stack] Share Transit Gateway ${tgwItem.name} with Organizational Unit ${ouItem}: ${ouArn}`,
             );

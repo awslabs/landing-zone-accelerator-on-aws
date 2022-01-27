@@ -90,7 +90,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                   name: tgwAttachmentItem.name,
                   owningAccountId,
                   transitGatewayId,
-                  roleName: 'AWSAccelerator-DescribeTransitGatewayAttachmentsRole',
+                  roleName: `AWSAccelerator-DescribeTransitGatewayAttachmentsRole-${cdk.Stack.of(this).region}`,
                 },
               );
               transitGatewayAttachmentId = transitGatewayAttachment.transitGatewayAttachmentId;
