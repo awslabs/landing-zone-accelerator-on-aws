@@ -20,3 +20,7 @@ source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1135
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1144
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1153
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1162
+
+source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:68
+source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:82
+source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:92

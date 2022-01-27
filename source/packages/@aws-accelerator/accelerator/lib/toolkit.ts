@@ -59,14 +59,7 @@ export class AcceleratorToolkit {
    * aws-cdk/packages/aws-cdk/bin/cdk.ts
    *
    *
-   * @param command
-   * @param account
-   * @param region
-   * @param stage
-   *
-   * @return Promise<void>
-   *
-   * @see aws-cdk/packages/aws-cdk/bin/cdk.ts
+   * @param options
    */
   static async execute(options: {
     command: string;

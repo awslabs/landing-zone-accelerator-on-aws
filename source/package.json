@@ -56,6 +56,8 @@
       "./packages/@aws-accelerator/constructs",
       "./packages/@aws-accelerator/constructs/lib/aws-*/*",
       "./packages/@aws-accelerator/installer",
+      "./packages/@aws-accelerator/tester",
+      "./packages/@aws-accelerator/tester/lambdas",
       "./packages/@aws-accelerator/tools",
       "./packages/@aws-accelerator/utils",
       "./packages/@aws-cdk-extensions/cdk-extensions",

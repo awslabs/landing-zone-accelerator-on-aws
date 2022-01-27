@@ -76,7 +76,7 @@ if (!Accelerator.isSupportedStage(stage) && commands[0] !== String(AcceleratorTo
 //
 // Validate args: verify config directory
 //
-if (stage !== AcceleratorStage.PIPELINE) {
+if (stage !== AcceleratorStage.PIPELINE && stage !== AcceleratorStage.TESTER_PIPELINE) {
   if (config === undefined || !fs.existsSync(configDirPath)) {
     console.log(`Invalid --config-dir ${configDirPath}`);
     throw new Error(usage);

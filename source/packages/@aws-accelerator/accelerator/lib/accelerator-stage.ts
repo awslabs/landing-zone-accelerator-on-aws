@@ -13,6 +13,10 @@
 export enum AcceleratorStage {
   PIPELINE = 'pipeline',
   /**
+   * Aceelerator Tester Pipeline
+   */
+  TESTER_PIPELINE = 'tester-pipeline',
+  /**
    * Validate Stage - Verify the configuration files and environment
    */
   VALIDATE = 'validate',

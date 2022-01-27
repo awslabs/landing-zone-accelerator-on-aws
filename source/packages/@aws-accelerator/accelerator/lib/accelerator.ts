@@ -26,6 +26,7 @@ import { AcceleratorToolkit } from './toolkit';
 export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.VALIDATE]: 'AWSAccelerator-ValidateStack',
   [AcceleratorStage.PIPELINE]: 'AWSAccelerator-PipelineStack',
+  [AcceleratorStage.TESTER_PIPELINE]: 'AWSAccelerator-TesterPipelineStack',
   [AcceleratorStage.ORGANIZATIONS]: 'AWSAccelerator-OrganizationsStack',
   [AcceleratorStage.LOGGING]: 'AWSAccelerator-LoggingStack',
   [AcceleratorStage.ACCOUNTS]: 'AWSAccelerator-AccountsStack',
