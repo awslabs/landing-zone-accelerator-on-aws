@@ -31,6 +31,15 @@ export interface InstallerStackProps extends cdk.StackProps {
    * External Pipeline Account usage flag
    */
   readonly useExternalPipelineAccount: boolean;
+  /**
+   * Enable tester flag
+   */
+  readonly enableTester: boolean;
+
+  /**
+   * Management Cross account role name
+   */
+  readonly managementCrossAccountRoleName?: string;
 }
 
 export class InstallerStack extends cdk.Stack {
@@ -149,6 +158,20 @@ export class InstallerStack extends cdk.Stack {
       pascalCaseQualifier = 'AWSAccelerator';
     }
 
+    let targetAcceleratorTestEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
+    if (props.enableTester) {
+      targetAcceleratorTestEnvVariables = {
+        ENABLE_TESTER: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: props.enableTester,
+        },
+        MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME: {
+          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          value: props.managementCrossAccountRoleName,
+        },
+      };
+    }
+
     // Parameter Metadata
     this.templateOptions.metadata = {
       'AWS::CloudFormation::Interface': {
@@ -230,7 +253,7 @@ export class InstallerStack extends cdk.Stack {
     const installerProject = new codebuild.PipelineProject(this, 'InstallerProject', {
       projectName: `${pascalCaseQualifier}-InstallerProject`,
       role: installerRole,
-      buildSpec: codebuild.BuildSpec.fromObject({
+      buildSpec: codebuild.BuildSpec.fromObjectToYaml({
         version: '0.2',
         phases: {
           install: {
@@ -248,6 +271,7 @@ export class InstallerStack extends cdk.Stack {
               `yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel`,
               'cd ../accelerator',
               `yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}`,
+              `if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}; fi`,
             ],
           },
         },
@@ -270,6 +294,7 @@ export class InstallerStack extends cdk.Stack {
             value: this.repositoryBranchName.valueAsString,
           },
           ...targetAcceleratorEnvVariables,
+          ...targetAcceleratorTestEnvVariables,
         },
       },
     });
@@ -285,25 +310,5 @@ export class InstallerStack extends cdk.Stack {
         }),
       ],
     });
-
-    if (props.useExternalPipelineAccount) {
-      // Asset ARN qualifier
-      new cdk.CfnOutput(this, 'AcceleratorQualifierOutput', {
-        value: this.acceleratorQualifier!.valueAsString,
-        description: 'Accelerator assets ARN qualifier',
-      });
-
-      //Management Account
-      new cdk.CfnOutput(this, 'ManagementAccountIdOutput', {
-        value: this.managementAccountId!.valueAsString,
-        description: 'Management account id',
-      });
-
-      //Management Account Role Name
-      new cdk.CfnOutput(this, 'ManagementAccountRoleNameOutput', {
-        value: this.managementAccountRoleName!.valueAsString,
-        description: 'Management account role name',
-      });
-    }
   }
 }

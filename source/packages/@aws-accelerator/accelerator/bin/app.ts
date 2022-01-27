@@ -40,6 +40,7 @@ import { OrganizationsStack } from '../lib/stacks/organizations-stack';
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
 import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
+import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
 import { ValidateStack } from '../lib/stacks/validate-stack';
 
 process.on(
@@ -86,6 +87,8 @@ async function main() {
     region,
   };
 
+  const qualifier = process.env['ACCELERATOR_QUALIFIER'] ?? 'aws-accelerator';
+
   //
   // Bootstrap Stack
   //
@@ -99,7 +102,6 @@ async function main() {
   // Pipeline Stack
   //
   if (stage === AcceleratorStage.PIPELINE) {
-    const qualifier = process.env['ACCELERATOR_QUALIFIER'] ?? 'aws-accelerator';
     const stackName = process.env['ACCELERATOR_QUALIFIER']
       ? `${pascalCase(process.env['ACCELERATOR_QUALIFIER'])}-PipelineStack-${account}-${region}`
           .split('_')
@@ -113,6 +115,29 @@ async function main() {
       sourceRepositoryName: process.env['ACCELERATOR_REPOSITORY_NAME']!,
       sourceBranchName: process.env['ACCELERATOR_REPOSITORY_BRANCH_NAME']!,
       qualifier: qualifier,
+      managementAccountId: process.env['MANAGEMENT_ACCOUNT_ID']!,
+      managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']!,
+    });
+    return;
+  }
+
+  //
+  // Tester Pipeline Stack
+  //
+  if (stage === AcceleratorStage.TESTER_PIPELINE) {
+    const stackName = process.env['ACCELERATOR_QUALIFIER']
+      ? `${pascalCase(process.env['ACCELERATOR_QUALIFIER'])}-TesterPipelineStack-${account}-${region}`
+          .split('_')
+          .join('-')
+          .replace(/AwsAccelerator/gi, 'AWSAccelerator')
+      : `${AcceleratorStackNames[AcceleratorStage.TESTER_PIPELINE]}-${account}-${region}`;
+
+    new TesterPipelineStack(app, stackName, {
+      env: env,
+      sourceRepositoryName: process.env['ACCELERATOR_REPOSITORY_NAME']!,
+      sourceBranchName: process.env['ACCELERATOR_REPOSITORY_BRANCH_NAME']!,
+      qualifier: qualifier,
+      managementCrossAccountRoleName: process.env['MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME']!,
       managementAccountId: process.env['MANAGEMENT_ACCOUNT_ID']!,
       managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']!,
     });
