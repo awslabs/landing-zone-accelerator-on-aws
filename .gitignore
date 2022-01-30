@@ -12,7 +12,7 @@ dist
 ### log files
 *.log
 
-# CDK asset staging directory
+### CDK asset staging directory
 .cdk.staging
 cdk.out
 
@@ -22,14 +22,14 @@ deployment/global-s3-assets
 deployment/regional-s3-assets
 open-source/
 
-# Temporary folders
+### Temporary folders
 tmp/
 temp/
 
-# yarn files
+### yarn files
 yarn-error.log
 
-# jest coverage folder
+### jest coverage folder
 coverage/
 
 ### VisualStudioCode ###
@@ -48,5 +48,9 @@ docs
 test-reports
 source/lerna-debug.log
 
-###Logger files
+### Logger files
 *.log
+
+### Debugging 
+development
+.vscode

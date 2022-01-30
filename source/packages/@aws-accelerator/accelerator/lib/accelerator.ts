@@ -19,6 +19,7 @@ import { PluginHost } from 'aws-cdk/lib/plugin';
 import { AcceleratorStage } from './accelerator-stage';
 import { Logger } from './logger';
 import { AcceleratorToolkit } from './toolkit';
+import * as fs from 'fs';
 
 /**
  * constant maintaining cloudformation stack names
@@ -260,6 +261,16 @@ export abstract class Accelerator {
   }
 
   private static async getManagementAccountCredentials(partition: string): Promise<Credentials | undefined> {
+    if (process.env['CREDENTIALS_PATH'] && fs.existsSync(process.env['CREDENTIALS_PATH'])) {
+      Logger.info('Detected Debugging environment. Loading temporary credentials.');
+
+      const credentialsString = fs.readFileSync(process.env['CREDENTIALS_PATH']).toString();
+      const credentials = JSON.parse(credentialsString);
+      process.env['AWS_ACCESS_KEY_ID'] = credentials.AccessKeyId;
+      process.env['AWS_SECRET_KEY'] = credentials.SecretAccessKey;
+      process.env['AWS_SECRET_ACCESS_KEY'] = credentials.SecretAccessKey;
+      process.env['AWS_SESSION_TOKEN'] = credentials.SessionToken;
+    }
     if (
       process.env['MANAGEMENT_ACCOUNT_ID'] &&
       process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'] &&
