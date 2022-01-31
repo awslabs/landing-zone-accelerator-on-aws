@@ -60,6 +60,7 @@ export class IamConfigTypes {
 
   static readonly roleConfig = t.interface({
     name: t.nonEmptyString,
+    instanceProfile: t.optional(t.boolean),
     assumedBy: t.array(this.assumedByConfig),
     policies: t.optional(this.policiesConfig),
     boundaryPolicy: t.optional(t.nonEmptyString),
@@ -127,6 +128,7 @@ export class AssumedByConfig implements t.TypeOf<typeof IamConfigTypes.assumedBy
 
 export class RoleConfig implements t.TypeOf<typeof IamConfigTypes.roleConfig> {
   readonly assumedBy: AssumedByConfig[] = [];
+  readonly instanceProfile: boolean | undefined = undefined;
   readonly boundaryPolicy: string = '';
   readonly name: string = '';
   readonly policies: PoliciesConfig | undefined = undefined;
