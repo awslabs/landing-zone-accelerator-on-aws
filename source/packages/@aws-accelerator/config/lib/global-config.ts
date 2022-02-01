@@ -34,12 +34,32 @@ export abstract class GlobalConfigTypes {
     cloudtrail: GlobalConfigTypes.cloudtrailConfig,
   });
 
+  static readonly identityPerimeterConfig = t.interface({
+    enable: t.boolean,
+  });
+
+  static readonly resourcePerimeterConfig = t.interface({
+    enable: t.boolean,
+  });
+
+  static readonly networkPerimeterConfig = t.interface({
+    enable: t.boolean,
+  });
+
+  static readonly dataProtectionConfig = t.interface({
+    enable: t.boolean,
+    identityPerimeter: this.identityPerimeterConfig,
+    resourcePerimeter: this.resourcePerimeterConfig,
+    networkPerimeter: this.networkPerimeterConfig,
+  });
+
   static readonly globalConfig = t.interface({
     homeRegion: t.nonEmptyString,
     enabledRegions: t.array(t.region),
     managementAccountAccessRole: t.nonEmptyString,
     controlTower: GlobalConfigTypes.controlTowerConfig,
     logging: GlobalConfigTypes.loggingConfig,
+    dataProtection: t.optional(GlobalConfigTypes.dataProtectionConfig),
   });
 }
 
@@ -55,6 +75,25 @@ export class CloudtrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloud
 export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingConfig> {
   readonly account = 'Log Archive';
   readonly cloudtrail: CloudtrailConfig = new CloudtrailConfig();
+}
+
+export class IdentityPerimeterConfig implements t.TypeOf<typeof GlobalConfigTypes.identityPerimeterConfig> {
+  readonly enable = true;
+}
+
+export class ResourcePerimeterConfig implements t.TypeOf<typeof GlobalConfigTypes.resourcePerimeterConfig> {
+  readonly enable = true;
+}
+
+export class NetworkPerimeterConfig implements t.TypeOf<typeof GlobalConfigTypes.networkPerimeterConfig> {
+  readonly enable = true;
+}
+
+export class DataProtectionConfig implements t.TypeOf<typeof GlobalConfigTypes.dataProtectionConfig> {
+  readonly enable = true;
+  readonly identityPerimeter = new IdentityPerimeterConfig();
+  readonly resourcePerimeter = new ResourcePerimeterConfig();
+  readonly networkPerimeter = new NetworkPerimeterConfig();
 }
 
 export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalConfig> {
@@ -77,6 +116,8 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
 
   readonly controlTower: ControlTowerConfig = new ControlTowerConfig();
   readonly logging: LoggingConfig = new LoggingConfig();
+
+  readonly dataProtection: DataProtectionConfig | undefined = undefined;
 
   /**
    *

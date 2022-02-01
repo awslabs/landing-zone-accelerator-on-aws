@@ -2,7 +2,19 @@ enable: true
 organizationalUnits:
   - name: Security
     path: /
+  - name: Infrastructure
+    path: /
+  - name: Policy Staging
+    path: /
+  - name: Suspended
+    path: /
   - name: Sandbox
+    path: /
+  - name: Dev
+    path: /
+  - name: Test
+    path: /
+  - name: Prod
     path: /
 serviceControlPolicies:
   - name: DenyDeleteVpcFlowLogs
@@ -14,4 +26,4 @@ serviceControlPolicies:
     type: customerManaged
     deploymentTargets:
       organizationalUnits:
-        - Security
+        - Root

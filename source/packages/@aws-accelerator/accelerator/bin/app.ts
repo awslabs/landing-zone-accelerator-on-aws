@@ -111,7 +111,6 @@ async function main() {
 
     new PipelineStack(app, stackName, {
       env,
-      stage,
       sourceRepositoryName: process.env['ACCELERATOR_REPOSITORY_NAME']!,
       sourceBranchName: process.env['ACCELERATOR_REPOSITORY_BRANCH_NAME']!,
       qualifier: qualifier,

@@ -12,17 +12,21 @@
  */
 
 import {
+  NetworkAclSubnetSelection,
   NetworkConfigTypes,
   nonEmptyString,
   SecurityGroupRuleConfig,
   SecurityGroupSourceConfig,
   SubnetSourceConfig,
-  NetworkAclSubnetSelection,
+  VpcConfig,
 } from '@aws-accelerator/config';
 import {
   DeleteDefaultVpc,
+  HostedZone,
   NatGateway,
   NetworkAcl,
+  Organization,
+  RecordSet,
   ResourceShare,
   ResourceShareItem,
   ResourceShareOwner,
@@ -31,6 +35,7 @@ import {
   Subnet,
   TransitGatewayAttachment,
   Vpc,
+  VpcEndpoint,
 } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
@@ -68,6 +73,9 @@ export class NetworkVpcStack extends AcceleratorStack {
       parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
       stringValue: cdk.Stack.of(this).stackId,
     });
+
+    // Get the organization object, used by Data Protection
+    const organization = Organization.getInstance(this, 'Organization');
 
     //
     // Delete Default VPCs
@@ -233,6 +241,71 @@ export class NetworkVpcStack extends AcceleratorStack {
     }
 
     //
+    // Check to see if useCentralEndpoints is enabled for any other VPC within
+    // this account and region. If so, we will need to create a cross account
+    // access role (if we're in a different account)
+    //
+    let useCentralEndpoints = false;
+    for (const vpcItem of props.networkConfig.vpcs ?? []) {
+      const accountId = props.accountsConfig.getAccountId(vpcItem.account);
+      if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
+        if (vpcItem.useCentralEndpoints) {
+          useCentralEndpoints = true;
+        }
+      }
+    }
+
+    //
+    // Find and validate the central endpoints vpc
+    //
+    let centralEndpointVpc = undefined;
+    if (useCentralEndpoints) {
+      Logger.info('[network-vpc-stack] VPC found in this account with useCentralEndpoints set to true');
+
+      // Find the central endpoints vpc (should only be one)
+      const centralEndpointVpcs = props.networkConfig.vpcs.filter(
+        item => item.interfaceEndpoints?.central && item.region === cdk.Stack.of(this).region,
+      );
+      if (centralEndpointVpcs.length === 0) {
+        throw new Error('useCentralEndpoints set to true, but no central endpoint vpc detected, should be exactly one');
+      }
+      if (centralEndpointVpcs.length > 1) {
+        throw new Error(
+          'useCentralEndpoints set to true, but multiple central endpoint vpcs detected, should only be one',
+        );
+      }
+      centralEndpointVpc = centralEndpointVpcs[0];
+    }
+
+    //
+    // Using central endpoints, create a cross account access role, if in
+    // external account
+    //
+    if (centralEndpointVpc) {
+      const centralEndpointVpcAccountId = props.accountsConfig.getAccountId(centralEndpointVpc.account);
+      if (centralEndpointVpcAccountId !== cdk.Stack.of(this).account) {
+        Logger.info(
+          '[network-vpc-stack] Central Endpoints VPC is in an external account, create a role to enable central endpoints',
+        );
+        new cdk.aws_iam.Role(this, 'EnableCentralEndpointsRole', {
+          roleName: `AWSAccelerator-EnableCentralEndpointsRole-${cdk.Stack.of(this).region}`,
+          assumedBy: new cdk.aws_iam.AccountPrincipal(centralEndpointVpcAccountId),
+          inlinePolicies: {
+            default: new cdk.aws_iam.PolicyDocument({
+              statements: [
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ec2:DescribeVpcs', 'route53:AssociateVPCWithHostedZone'],
+                  resources: ['*'],
+                }),
+              ],
+            }),
+          },
+        });
+      }
+    }
+
+    //
     // Evaluate VPC entries
     //
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
@@ -247,7 +320,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           name: vpcItem.name,
           ipv4CidrBlock: vpcItem.cidrs[0],
           internetGateway: vpcItem.internetGateway,
-          enableDnsHostnames: vpcItem.enableDnsHostnames ?? false,
+          enableDnsHostnames: vpcItem.enableDnsHostnames ?? true,
           enableDnsSupport: vpcItem.enableDnsSupport ?? true,
           instanceTenancy: vpcItem.instanceTenancy ?? 'default',
         });
@@ -255,6 +328,22 @@ export class NetworkVpcStack extends AcceleratorStack {
           parameterName: `/accelerator/network/vpc/${vpcItem.name}/id`,
           stringValue: vpc.vpcId,
         });
+
+        //
+        // Tag the VPC if central endpoints are enabled. These tags are used to
+        // identify which VPCs in a target account to create private hosted zone
+        // associations for.
+        //
+        if (vpcItem.useCentralEndpoints) {
+          if (centralEndpointVpc === undefined) {
+            throw new Error('Attempting to use central endpoints with no Central Endpoints defined');
+          }
+          cdk.Tags.of(vpc).add('accelerator:use-central-endpoints', 'true');
+          cdk.Tags.of(vpc).add(
+            'accelerator:central-endpoints-account-id',
+            props.accountsConfig.getAccountId(centralEndpointVpc.account),
+          );
+        }
 
         // TODO: DHCP OptionSets
 
@@ -265,7 +354,6 @@ export class NetworkVpcStack extends AcceleratorStack {
         if (!props.networkConfig.vpcFlowLogs.defaultFormat) {
           logFormat = props.networkConfig.vpcFlowLogs.customFields.map(c => `$\{${c}}`).join(' ');
         }
-
         vpc.addFlowLogs({
           destinations: props.networkConfig.vpcFlowLogs.destinations,
           trafficType: props.networkConfig.vpcFlowLogs.trafficType,
@@ -443,11 +531,8 @@ export class NetworkVpcStack extends AcceleratorStack {
         }
 
         //
-        // Create Route Table Entries. Also keep track of gateway endpoint
-        // service targets to pass when making the Gateway VPC Endpoints
+        // Create Route Table Entries.
         //
-        const s3EndpointRouteTables: string[] = [];
-        const dynamodbEndpointRouteTables: string[] = [];
         for (const routeTableItem of vpcItem.routeTables ?? []) {
           const routeTable = routeTableMap.get(routeTableItem.name);
 
@@ -501,43 +586,18 @@ export class NetworkVpcStack extends AcceleratorStack {
               Logger.info(`[network-vpc-stack] Adding Internet Gateway Route Table Entry ${routeTableEntryItem.name}`);
               routeTable.addInternetGatewayRoute(id, routeTableEntryItem.destination);
             }
-
-            // Route: S3 Gateway Endpoint
-            if (routeTableEntryItem.target === 's3') {
-              if (s3EndpointRouteTables.indexOf(routeTable.routeTableId) == -1) {
-                s3EndpointRouteTables.push(routeTable.routeTableId);
-              }
-            }
-
-            // Route: DynamoDb Gateway Endpoint
-            if (routeTableEntryItem.target === 'dynamodb') {
-              if (dynamodbEndpointRouteTables.indexOf(routeTable.routeTableId) == -1) {
-                dynamodbEndpointRouteTables.push(routeTable.routeTableId);
-              }
-            }
           }
         }
 
         //
         // Add Gateway Endpoints (AWS Services)
         //
-        for (const gatewayEndpointItem of vpcItem.gatewayEndpoints ?? []) {
-          Logger.info(`[network-vpc-stack] Adding Gateway Endpoint for ${gatewayEndpointItem}`);
+        this.createGatewayEndpoints(vpcItem, vpc, routeTableMap, organization.id);
 
-          if (gatewayEndpointItem === 's3') {
-            vpc.addGatewayVpcEndpoint(
-              pascalCase(`${vpcItem.name}Vpc`) + pascalCase(gatewayEndpointItem),
-              gatewayEndpointItem,
-              s3EndpointRouteTables,
-            );
-          } else if (gatewayEndpointItem === 'dynamodb') {
-            vpc.addGatewayVpcEndpoint(
-              pascalCase(`${vpcItem.name}Vpc`) + pascalCase(gatewayEndpointItem),
-              gatewayEndpointItem,
-              dynamodbEndpointRouteTables,
-            );
-          }
-        }
+        //
+        // Create Interface Endpoints (AWS Services)
+        //
+        this.createInterfaceEndpoints(vpcItem, vpc, subnetMap, organization.id);
 
         //
         // Add Security Groups
@@ -695,10 +755,6 @@ export class NetworkVpcStack extends AcceleratorStack {
             );
           }
         }
-
-        //
-        // TODO: Service Endpoints (local eni ssm.amazonaws.com)
-        //
       }
     }
   }
@@ -900,5 +956,232 @@ export class NetworkVpcStack extends AcceleratorStack {
     }
 
     return rules;
+  }
+
+  /**
+   * Creates a cdk.aws_iam.PolicyDocument for the given endpoint.
+   * @param service
+   * @param organizationId
+   * @returns
+   */
+  private createVpcEndpointPolicy(service: string, organizationId: string): cdk.aws_iam.PolicyDocument | undefined {
+    // Identify if data protection is specified, create policy
+    let policyDocument: cdk.aws_iam.PolicyDocument | undefined = undefined;
+    if (this.props.globalConfig.dataProtection?.enable) {
+      Logger.info(`[network-vpc-stack] Data protection enabled, update default VPCE policies`);
+
+      // Apply the Identity Perimeter controls for VPC Endpoints
+      policyDocument = new cdk.aws_iam.PolicyDocument({
+        statements: [
+          new cdk.aws_iam.PolicyStatement({
+            sid: 'AccessToTrustedPrincipalsAndResources',
+            actions: ['*'],
+            effect: cdk.aws_iam.Effect.ALLOW,
+            resources: ['*'],
+            principals: [new cdk.aws_iam.AnyPrincipal()],
+            conditions: {
+              StringEquals: {
+                'aws:PrincipalOrgID': [organizationId],
+              },
+            },
+          }),
+        ],
+      });
+
+      if (service in ['s3']) {
+        policyDocument.addStatements(
+          new cdk.aws_iam.PolicyStatement({
+            sid: 'AccessToAWSServicePrincipals',
+            actions: ['s3:*'],
+            effect: cdk.aws_iam.Effect.ALLOW,
+            resources: ['*'],
+            principals: [new cdk.aws_iam.AnyPrincipal()],
+          }),
+        );
+      }
+    }
+
+    return policyDocument;
+  }
+
+  /**
+   *
+   * @param vpcItem
+   * @param vpc
+   * @param routeTableMap
+   * @param organizationId
+   */
+  private createGatewayEndpoints(
+    vpcItem: VpcConfig,
+    vpc: Vpc,
+    routeTableMap: Map<string, RouteTable>,
+    organizationId: string,
+  ) {
+    // Create a list of related route tables that will need to be updated with the gateway routes
+    const s3EndpointRouteTables: RouteTable[] = [];
+    const dynamodbEndpointRouteTables: RouteTable[] = [];
+    for (const routeTableItem of vpcItem.routeTables ?? []) {
+      const routeTable = routeTableMap.get(routeTableItem.name);
+
+      if (routeTable === undefined) {
+        throw new Error(`Route Table ${routeTableItem.name} not found`);
+      }
+
+      for (const routeTableEntryItem of routeTableItem.routes ?? []) {
+        // Route: S3 Gateway Endpoint
+        if (routeTableEntryItem.target === 's3') {
+          if (s3EndpointRouteTables.find(item => item.routeTableId === routeTable.routeTableId) === undefined) {
+            s3EndpointRouteTables.push(routeTable);
+          }
+        }
+
+        // Route: DynamoDb Gateway Endpoint
+        if (routeTableEntryItem.target === 'dynamodb') {
+          if (dynamodbEndpointRouteTables.find(item => item.routeTableId === routeTable.routeTableId) === undefined) {
+            dynamodbEndpointRouteTables.push(routeTable);
+          }
+        }
+      }
+    }
+
+    //
+    // Add Gateway Endpoints (AWS Services)
+    //
+    for (const gatewayEndpointItem of vpcItem.gatewayEndpoints ?? []) {
+      Logger.info(`[network-vpc-stack] Adding Gateway Endpoint for ${gatewayEndpointItem}`);
+
+      if (gatewayEndpointItem === 's3') {
+        new VpcEndpoint(this, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(gatewayEndpointItem), {
+          vpc,
+          vpcEndpointType: cdk.aws_ec2.VpcEndpointType.GATEWAY,
+          service: gatewayEndpointItem,
+          routeTables: s3EndpointRouteTables,
+          policyDocument: this.createVpcEndpointPolicy(gatewayEndpointItem, organizationId),
+        });
+      }
+      if (gatewayEndpointItem === 'dynamodb') {
+        new VpcEndpoint(this, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(gatewayEndpointItem), {
+          vpc,
+          vpcEndpointType: cdk.aws_ec2.VpcEndpointType.GATEWAY,
+          service: gatewayEndpointItem,
+          routeTables: dynamodbEndpointRouteTables,
+          policyDocument: this.createVpcEndpointPolicy(gatewayEndpointItem, organizationId),
+        });
+      }
+    }
+  }
+
+  /**
+   *
+   * @param vpcItem
+   * @param vpc
+   * @param subnetMap
+   * @param route53QueryLogGroup
+   */
+  private createInterfaceEndpoints(
+    vpcItem: VpcConfig,
+    vpc: Vpc,
+    subnetMap: Map<string, Subnet>,
+    organizationId: string,
+  ) {
+    //
+    // Add Interface Endpoints (AWS Services)
+    //
+    if (vpcItem.interfaceEndpoints) {
+      // Create list of subnet IDs for each interface endpoint
+      const subnets: Subnet[] = [];
+      for (const subnetItem of vpcItem.interfaceEndpoints.subnets ?? []) {
+        const subnet = subnetMap.get(subnetItem);
+        if (subnet) {
+          subnets.push(subnet);
+        } else {
+          throw new Error(`Attempting to add interface endpoints to subnet that does not exist (${subnetItem})`);
+        }
+      }
+
+      // Create the interface endpoint
+      for (const endpointItem of vpcItem.interfaceEndpoints.endpoints ?? []) {
+        Logger.info(`[network-vpc-stack] Adding Interface Endpoint for ${endpointItem}`);
+
+        let ingressRuleIndex = 0; // Used increment ingressRule id
+
+        // Create Security Group for each interfaceEndpoint
+        Logger.info(`[network-vpc-stack] Adding Security Group for interface endpoint ${endpointItem}`);
+        const securityGroup = new SecurityGroup(
+          this,
+          pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${endpointItem}EpSecurityGroup`),
+          {
+            securityGroupName: `ep_${endpointItem}_sg`,
+            description: `AWS Private Endpoint Zone - ${endpointItem}`,
+            vpc,
+          },
+        );
+
+        for (const ingressCidr of vpcItem.interfaceEndpoints.allowedCidrs || ['0.0.0.0/0']) {
+          let port = 443;
+          if (endpointItem === 'cassandra') {
+            port = 9142;
+          }
+
+          const ingressRuleId = `ep_${endpointItem}_sg-Ingress-${ingressRuleIndex++}`;
+          Logger.info(`[network-vpc-stack] Adding ingress cidr ${ingressCidr} TPC:${port} to ${ingressRuleId}`);
+          securityGroup.addIngressRule(ingressRuleId, {
+            ipProtocol: cdk.aws_ec2.Protocol.TCP,
+            fromPort: port,
+            toPort: port,
+            cidrIp: ingressCidr,
+          });
+        }
+
+        // Adding Egress '127.0.0.1/32' to avoid default Egress rule
+        securityGroup.addEgressRule(`ep_${endpointItem}_sg-Egress`, {
+          ipProtocol: cdk.aws_ec2.Protocol.ALL,
+          cidrIp: '127.0.0.1/32',
+        });
+
+        // Create the interface endpoint
+        const endpoint = new VpcEndpoint(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem)}Ep`, {
+          vpc,
+          vpcEndpointType: cdk.aws_ec2.VpcEndpointType.INTERFACE,
+          service: endpointItem,
+          subnets,
+          securityGroups: [securityGroup],
+          privateDnsEnabled: false,
+          policyDocument: this.createVpcEndpointPolicy(endpointItem, organizationId),
+        });
+
+        // Create the private hosted zone
+        const hostedZoneName = HostedZone.getHostedZoneNameForService(endpointItem, cdk.Stack.of(this).region);
+        const hostedZone = new HostedZone(
+          this,
+          `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem)}EpHostedZone`,
+          {
+            hostedZoneName,
+            vpc,
+          },
+        );
+        new cdk.aws_ssm.StringParameter(
+          this,
+          `SsmParam${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem)}EpHostedZone`,
+          {
+            parameterName: `/accelerator/network/vpc/${vpcItem.name}/route53/hostedZone/${endpointItem}/id`,
+            stringValue: hostedZone.hostedZoneId,
+          },
+        );
+
+        // Create the record set
+        let recordSetName = hostedZoneName;
+        if (endpointItem in ['ecr.dkr']) {
+          recordSetName = `*.${hostedZoneName}`;
+        }
+        new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem)}EpRecordSet`, {
+          type: 'A',
+          name: recordSetName,
+          hostedZone: hostedZone,
+          dnsName: endpoint.dnsName,
+          hostedZoneId: endpoint.hostedZoneId,
+        });
+      }
+    }
   }
 }

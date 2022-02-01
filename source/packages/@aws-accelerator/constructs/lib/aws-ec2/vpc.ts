@@ -14,79 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
-export interface IRouteTable extends cdk.IResource {
-  /**
-   * The identifier of the route table
-   *
-   * @attribute
-   */
-  readonly routeTableId: string;
-
-  /**
-   * The VPC associated with the route table
-   *
-   * @attribute
-   */
-  readonly vpc: IVpc;
-}
-
-export interface RouteTableProps {
-  readonly name: string;
-  readonly vpc: IVpc;
-}
-
-export class RouteTable extends cdk.Resource implements IRouteTable {
-  public readonly routeTableId: string;
-
-  public readonly vpc: IVpc;
-
-  constructor(scope: Construct, id: string, props: RouteTableProps) {
-    super(scope, id);
-
-    this.vpc = props.vpc;
-
-    const resource = new cdk.aws_ec2.CfnRouteTable(this, 'Resource', {
-      vpcId: props.vpc.vpcId,
-      tags: [{ key: 'Name', value: props.name }],
-    });
-
-    this.routeTableId = resource.ref;
-  }
-
-  public addTransitGatewayRoute(
-    id: string,
-    destination: string,
-    transitGatewayId: string,
-    transitGatewayAttachment: cdk.CfnResource,
-  ): void {
-    const route = new cdk.aws_ec2.CfnRoute(this, id, {
-      routeTableId: this.routeTableId,
-      destinationCidrBlock: destination,
-      transitGatewayId: transitGatewayId,
-    });
-    route.addDependsOn(transitGatewayAttachment);
-  }
-
-  public addNatGatewayRoute(id: string, destination: string, natGatewayId: string): void {
-    new cdk.aws_ec2.CfnRoute(this, id, {
-      routeTableId: this.routeTableId,
-      destinationCidrBlock: destination,
-      natGatewayId: natGatewayId,
-    });
-  }
-
-  public addInternetGatewayRoute(id: string, destination: string): void {
-    if (!this.vpc.internetGatewayId) {
-      throw new Error('Attempting to add Internet Gateway route without an IGW defined.');
-    }
-
-    new cdk.aws_ec2.CfnRoute(this, id, {
-      routeTableId: this.routeTableId,
-      destinationCidrBlock: destination,
-      gatewayId: this.vpc.internetGatewayId,
-    });
-  }
-}
+import { IRouteTable } from './route-table';
 
 export interface ISubnet extends cdk.IResource {
   /**
@@ -116,32 +44,6 @@ export interface ISubnet extends cdk.IResource {
    * @attribute
    */
   readonly availabilityZone: string;
-
-  // /**
-  //  * The VPC associated with the subnet
-  //  *
-  //  * @attribute
-  //  */
-  // readonly routeTable: IRouteTable;
-
-  //  /**
-  //   * The route table for this subnet
-  //   */
-  //  readonly routeTable: IRouteTable;
-
-  //  /**
-  //   * Associate a Network ACL with this subnet
-  //   *
-  //   * @param acl The Network ACL to associate
-  //   */
-  //  associateNetworkAcl(id: string, acl: INetworkAcl): void;
-
-  // /**
-  //  * The IPv4 CIDR block for this subnet
-  //  */
-  //  readonly ipv4CidrBlock: string;
-
-  //  readonly mapPublicIpOnLaunch: boolean;
 }
 
 export interface SubnetProps {
@@ -467,11 +369,6 @@ export interface IVpc extends cdk.IResource {
    * @attribute
    */
   readonly vpcId: string;
-
-  /**
-   * The Internet Gateway Id
-   */
-  readonly internetGatewayId?: string;
 }
 
 /**
@@ -491,7 +388,8 @@ export interface VpcProps {
  */
 export class Vpc extends cdk.Resource implements IVpc {
   public readonly vpcId: string;
-  public readonly internetGatewayId: string | undefined;
+  public readonly internetGateway: cdk.aws_ec2.CfnInternetGateway | undefined;
+  public readonly internetGatewayAttachment: cdk.aws_ec2.CfnVPCGatewayAttachment | undefined;
 
   constructor(scope: Construct, id: string, props: VpcProps) {
     super(scope, id);
@@ -507,26 +405,16 @@ export class Vpc extends cdk.Resource implements IVpc {
     this.vpcId = resource.ref;
 
     if (props.internetGateway) {
-      const igw = new cdk.aws_ec2.CfnInternetGateway(this, 'InternetGateway', {});
+      this.internetGateway = new cdk.aws_ec2.CfnInternetGateway(this, 'InternetGateway', {});
 
-      new cdk.aws_ec2.CfnVPCGatewayAttachment(this, 'InternetGatewayAttachment', {
-        internetGatewayId: igw.ref,
+      this.internetGatewayAttachment = new cdk.aws_ec2.CfnVPCGatewayAttachment(this, 'InternetGatewayAttachment', {
+        internetGatewayId: this.internetGateway.ref,
         vpcId: this.vpcId,
       });
-
-      this.internetGatewayId = igw.ref;
     }
   }
 
-  public addGatewayVpcEndpoint(id: string, service: string, routeTableIds: string[]): void {
-    new cdk.aws_ec2.CfnVPCEndpoint(this, id, {
-      serviceName: new cdk.aws_ec2.GatewayVpcEndpointAwsService(service).name,
-      vpcId: this.vpcId,
-      routeTableIds,
-    });
-  }
-
-  public addFlowLogs(props: {
+  public addFlowLogs(options: {
     destinations: ('s3' | 'cloud-watch-logs')[];
     trafficType: 'ALL' | 'REJECT' | 'ACCEPT';
     maxAggregationInterval: number;
@@ -535,19 +423,19 @@ export class Vpc extends cdk.Resource implements IVpc {
     bucketArn?: string;
   }) {
     // Validate maxAggregationInterval
-    const maxAggregationInterval = props.maxAggregationInterval;
+    const maxAggregationInterval = options.maxAggregationInterval;
     if (maxAggregationInterval != 60 && maxAggregationInterval != 600) {
       throw new Error(`Invalid maxAggregationInterval (${maxAggregationInterval}) - must be 60 or 600 seconds`);
     }
 
     // Destination: CloudWatch Logs
-    if (props.destinations.includes('cloud-watch-logs')) {
-      if (props.encryptionKey === undefined) {
+    if (options.destinations.includes('cloud-watch-logs')) {
+      if (options.encryptionKey === undefined) {
         throw new Error('encryptionKey not provided for cwl flow log');
       }
 
       const logGroup = new cdk.aws_logs.LogGroup(this, 'FlowLogsGroup', {
-        encryptionKey: props.encryptionKey,
+        encryptionKey: options.encryptionKey,
       });
 
       const role = new cdk.aws_iam.Role(this, 'FlowLogsRole', {
@@ -575,22 +463,22 @@ export class Vpc extends cdk.Resource implements IVpc {
         logDestination: logGroup.logGroupArn,
         resourceId: this.vpcId,
         resourceType: 'VPC',
-        trafficType: props.trafficType,
+        trafficType: options.trafficType,
         maxAggregationInterval,
-        logFormat: props.logFormat,
+        logFormat: options.logFormat,
       });
     }
 
     // Destination: S3
-    if (props.destinations.includes('s3')) {
+    if (options.destinations.includes('s3')) {
       new cdk.aws_ec2.CfnFlowLog(this, 'S3FlowLog', {
         logDestinationType: 's3',
-        logDestination: props.bucketArn,
+        logDestination: options.bucketArn,
         resourceId: this.vpcId,
         resourceType: 'VPC',
-        trafficType: props.trafficType,
+        trafficType: options.trafficType,
         maxAggregationInterval,
-        logFormat: props.logFormat,
+        logFormat: options.logFormat,
       });
     }
   }

@@ -12,6 +12,7 @@
  */
 
 import {
+  AssociateHostedZones,
   TransitGatewayAttachment,
   TransitGatewayRouteTableAssociation,
   TransitGatewayRouteTablePropagation,
@@ -136,6 +137,65 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           }
         }
       }
+    }
+
+    //
+    // Get the Central Endpoints VPC, there should only be one.
+    // Only care if the VPC is defined within this account and region
+    //
+    let centralEndpointVpc = undefined;
+    const centralEndpointVpcs = props.networkConfig.vpcs.filter(
+      item =>
+        item.interfaceEndpoints?.central &&
+        props.accountsConfig.getAccountId(item.account) === cdk.Stack.of(this).account &&
+        item.region === cdk.Stack.of(this).region,
+    );
+    if (centralEndpointVpcs.length > 1) {
+      throw new Error(`multiple (${centralEndpointVpcs.length}) central endpoint vpcs detected, should only be one`);
+    }
+    centralEndpointVpc = centralEndpointVpcs[0];
+
+    if (centralEndpointVpc) {
+      Logger.info('[network-vpc-stack] Central endpoints VPC detected, share private hosted zone with member VPCs');
+
+      // Generate list of accounts with VPCs that needed to set up share
+      const accountIds: string[] = [];
+      for (const vpcItem of props.networkConfig.vpcs ?? []) {
+        if (vpcItem.region == cdk.Stack.of(this).region) {
+          const accountId = props.accountsConfig.getAccountId(vpcItem.account);
+          if (!accountIds.includes(accountId)) {
+            accountIds.push(accountId);
+          }
+        }
+      }
+
+      // Create list of hosted zone ids from SSM Params
+      const hostedZoneIds: string[] = [];
+      for (const endpointItem of centralEndpointVpc.interfaceEndpoints?.endpoints ?? []) {
+        const hostedZoneId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          `/accelerator/network/vpc/${centralEndpointVpc.name}/route53/hostedZone/${endpointItem}/id`,
+        );
+        hostedZoneIds.push(hostedZoneId);
+      }
+
+      // Custom resource to associate hosted zones
+      new AssociateHostedZones(this, 'AssociateHostedZones', {
+        accountIds,
+        hostedZoneIds,
+        hostedZoneAccountId: cdk.Stack.of(this).account,
+        roleName: `AWSAccelerator-EnableCentralEndpointsRole-${cdk.Stack.of(this).region}`,
+        tagFilters: [
+          {
+            key: 'accelerator:use-central-endpoints',
+            value: 'true',
+          },
+          {
+            key: 'accelerator:central-endpoints-account-id',
+            value: props.accountsConfig.getAccountId(centralEndpointVpc.account),
+          },
+        ],
+      });
     }
   }
 }
