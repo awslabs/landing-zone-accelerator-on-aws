@@ -39,9 +39,9 @@ import {
 
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
   | {
-    PhysicalResourceId: string | undefined;
-    Status: string;
-  }
+      PhysicalResourceId: string | undefined;
+      Status: string;
+    }
   | undefined
 > {
   // Retrieve operating region that stack is ran
