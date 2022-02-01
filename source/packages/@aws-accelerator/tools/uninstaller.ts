@@ -10,6 +10,7 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
+import { Logger } from '@aws-accelerator/accelerator';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { AcceleratorTool } from './lib/classes/accelerator-tool';
@@ -17,37 +18,41 @@ import { AcceleratorTool } from './lib/classes/accelerator-tool';
  * AWS Platform Accelerator Uninstaller tool entry point.
  * Script Options:
  * <ul>
- * <li>--installer-stack-name The name of the installer cloudformation stack
- * <li>--keep-bootstraps to keep CDK bootstrap within every account of landing zone, default delete bootstrap (optional)
- * <li>--delete-data To delete data stored in S3 bucket, cloudwatch log group etc. default do not delete (optional)
- * <li>--delete-pipelines To delete accelerator pipelines and installer pipeline. default do not delete (optional)
+ * <li>--installerStackName The name of the installer cloudformation stack
+ * <li>--keepBootstraps(optional) When this flag used CDK bootstrap stacks will be deleted
+ * <li>--deleteData(optional) When this flag used S3 buckets, cloudwatch log groups etc. will be deleted.
+ * <li>--deleteConfigRepo(optional) When this flag used configuration repository will be deleted.
+ * <li>--deletePipelines(optional) When this flag used pipelined will be deleted.
+ * <li>--ignoreTerminationProtection(optional) When this flag used termination protected stacks will be deleted.
  * </ul>
  * @example
  * ts-node uninstaller.ts --installer-stack-name <value> --keep-bootstraps --delete-data --delete-pipelines
  */
 async function main(): Promise<string> {
   const start = new Date().getTime();
+  const usage =
+    '** Script Usage ** ts-node uninstaller.ts --installerStackName <value> [--partition] [--keepBootstraps] [--deleteData] [--deleteConfigRepo] [--deletePipelines] [--ignoreTerminationProtection]';
+
   const argv = yargs(hideBin(process.argv)).argv;
-  if (!argv['installer-stack-name']) {
-    console.warn('[PlatformAccelerator][Cleanup][ERROR] Missing required arguments!!!');
-    console.warn(
-      '[PlatformAccelerator][Cleanup][INFO] ** Script Usage ** ts-node uninstaller.ts --installer-stack-name <value> [--partition] [--keep-bootstraps] [--delete-data] [--delete-pipelines] [--ignore-termination-protection]',
-    );
-    process.exit(1);
+  const installerStackName = argv['installerStackName'] as string;
+  if (installerStackName === undefined) {
+    Logger.warn(`[uninstaller] Invalid --installerStackName ${installerStackName}`);
+    throw new Error(usage);
   }
 
-  const installerStackName = argv['installer-stack-name'] as string;
   const partition = (argv['partition'] as string) ?? 'aws';
-  const keepBootstraps = (argv['keep-bootstraps'] as boolean) ?? false;
-  const deleteData = (argv['delete-data'] as boolean) ?? false;
-  const deletePipelines = (argv['delete-pipelines'] as boolean) ?? false;
-  const ignoreTerminationProtection = (argv['ignore-termination-protection'] as boolean) ?? false;
+  const keepBootstraps = (argv['keepBootstraps'] as boolean) ?? false;
+  const deleteData = (argv['deleteData'] as boolean) ?? false;
+  const deleteConfigRepo = (argv['deleteConfigRepo'] as boolean) ?? false;
+  const deletePipelines = (argv['deletePipelines'] as boolean) ?? false;
+  const ignoreTerminationProtection = (argv['ignoreTerminationProtection'] as boolean) ?? false;
 
   const acceleratorTool = new AcceleratorTool({
     installerStackName: installerStackName,
     partition: partition,
     keepBootstraps: keepBootstraps,
     deleteData: deleteData,
+    deleteConfigRepo: deleteConfigRepo,
     deletePipelines: deletePipelines,
     ignoreTerminationProtection: ignoreTerminationProtection,
   });
@@ -56,13 +61,19 @@ async function main(): Promise<string> {
   const elapsed = Math.round((new Date().getTime() - start) / 60000);
 
   return status
-    ? `[PlatformAccelerator][Cleanup][INFO] Uninstallation completed successfully for installer stack "${installerStackName}". Elapsed time ~${elapsed} minutes`
-    : `[PlatformAccelerator][Cleanup][ERROR] Uninstallation failed for installer stack "${installerStackName}". Elapsed time ~${elapsed} minutes`;
+    ? `[uninstaller] Uninstallation completed successfully for installer stack "${installerStackName}". Elapsed time ~${elapsed} minutes`
+    : `[uninstaller] Uninstallation failed for installer stack "${installerStackName}". Elapsed time ~${elapsed} minutes`;
 }
 
+process.on('unhandledRejection', (reason, _) => {
+  console.error(reason);
+  // eslint-disable-next-line no-process-exit
+  process.exit(1);
+});
+
 /**
- * Main function
+ * Call Main function
  */
 main().then(data => {
-  console.log(data);
+  Logger.info(data);
 });
