@@ -16,7 +16,6 @@ import * as pipeline from '../pipeline';
 import { Construct } from 'constructs';
 
 export interface PipelineStackProps extends cdk.StackProps {
-  readonly stage: string;
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
   readonly qualifier: string;

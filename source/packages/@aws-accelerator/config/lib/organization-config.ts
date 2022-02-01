@@ -93,7 +93,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
       path: '/',
     },
     {
-      name: 'Sandbox',
+      name: 'Infrastructure',
       path: '/',
     },
   ];

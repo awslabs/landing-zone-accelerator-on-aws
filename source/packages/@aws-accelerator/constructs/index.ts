@@ -12,9 +12,11 @@
  */
 
 export * from './lib/aws-ec2/delete-default-vpc';
+export * from './lib/aws-ec2/route-table';
 export * from './lib/aws-ec2/transit-gateway';
 export * from './lib/aws-ec2/transit-gateway-route-table';
 export * from './lib/aws-ec2/vpc';
+export * from './lib/aws-ec2/vpc-endpoint';
 export * from './lib/aws-guardduty/guardduty-detector-config';
 export * from './lib/aws-guardduty/guardduty-members';
 export * from './lib/aws-guardduty/guardduty-organization-admin-account';
@@ -33,6 +35,9 @@ export * from './lib/aws-organizations/policy-attachment';
 export * from './lib/aws-organizations/validate-organization-accounts';
 export * from './lib/aws-ram/enable-sharing-with-aws-organization';
 export * from './lib/aws-ram/resource-share';
+export * from './lib/aws-route-53/associate-hosted-zones';
+export * from './lib/aws-route-53/hosted-zone';
+export * from './lib/aws-route-53/record-set';
 export * from './lib/aws-s3/bucket';
 export * from './lib/aws-s3/central-logs-bucket';
 export * from './lib/aws-s3/public-access-block';

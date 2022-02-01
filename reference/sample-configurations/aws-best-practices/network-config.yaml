@@ -2,14 +2,15 @@ homeRegion: &HOME_REGION us-east-1
 defaultVpc:
   delete: true
 transitGateways:
-  - name: Main
-    account: Management
+  - name: Network-Main
+    account: Network
     region: *HOME_REGION
     shareTargets:
       organizationalUnits:
-        - Sandbox
-      accounts:
-        - Audit
+        - Infrastructure
+        - Dev
+        - Test
+        - Prod
     asn: 65521
     dnsSupport: enable
     vpnEcmpSupport: enable
@@ -17,113 +18,322 @@ transitGateways:
     defaultRouteTablePropagation: disable
     autoAcceptSharingAttachments: enable
     routeTables:
-      - name: core
-      - name: segregated
-      - name: shared
-      - name: standalone
+      - name: Network-Main-Core
+      - name: Network-Main-Segregated
+      - name: Network-Main-Shared
+      - name: Network-Main-Standalone
 vpcs:
-  - name: Test
-    account: Audit
+  - name: Network-Endpoints
+    account: Network
     region: *HOME_REGION
     cidrs:
-      - 10.0.0.0/16
-    internetGateway: true
-    enableDnsHostnames: false
+      - 10.1.0.0/22
+    internetGateway: false
+    enableDnsHostnames: true
     enableDnsSupport: true
     instanceTenancy: default
     routeTables:
-      - name: CentralVpc_Common
+      - name: Network-Endpoints-Default
         routes:
           - name: TgwRoute
-            destination: 10.0.0.0/8
-            type: transitGateway
-            target: Main
-          - name: NatRoute
-            destination: 192.168.0.0/16
-            type: natGateway
-            target: Web-A
-          - name: IgwRoute
             destination: 0.0.0.0/0
-            type: internetGateway
-            target: IGW
-          - name: s3
-            target: s3
-          - name: dynamodb
-            target: dynamodb
+            type: transitGateway
+            target: Network-Main
     subnets:
-      - name: public-a
+      - name: Network-Endpoints-A
         availabilityZone: a
-        mapPublicIpOnLaunch: true
-        routeTable: CentralVpc_Common
-        ipv4CidrBlock: 10.0.0.0/24
-      - name: public-b
+        routeTable: Network-Endpoints-Default
+        ipv4CidrBlock: 10.1.0.0/24
+      - name: Network-Endpoints-B
         availabilityZone: b
-        mapPublicIpOnLaunch: true
-        routeTable: CentralVpc_Common
-        ipv4CidrBlock: 10.0.1.0/24
-      - name: tgw-attach-a
+        routeTable: Network-Endpoints-Default
+        ipv4CidrBlock: 10.1.1.0/24
+      - name: Network-EndpointsTgwAttach-A
         availabilityZone: a
-        routeTable: CentralVpc_Common
-        ipv4CidrBlock: 10.0.2.0/24
-      - name: tgw-attach-b
+        routeTable: Network-Endpoints-Default
+        ipv4CidrBlock: 10.1.3.208/28
+      - name: Network-EndpointsTgwAttach-B
         availabilityZone: b
-        routeTable: CentralVpc_Common
-        ipv4CidrBlock: 10.0.3.0/24
-    natGateways:
-      - name: Web-A
-        subnet: public-a
-      - name: Web-B
-        subnet: public-b
+        routeTable: Network-Endpoints-Default
+        ipv4CidrBlock: 10.1.3.224/28
     transitGatewayAttachments:
-      - name: Test
+      - name: Network-Endpoints
         transitGateway:
-          name: Main
-          account: Management
+          name: Network-Main
+          account: Network
         routeTableAssociations:
-          - shared
+          - Network-Main-Shared
         routeTablePropagations:
-          - core
-          - shared
-          - segregated
+          - Network-Main-Core
+          - Network-Main-Shared
+          - Network-Main-Segregated
         subnets:
-          - tgw-attach-a
-          - tgw-attach-b
-    dnsResolverLogging: true
-    useCentralEndpoints: false
+          - Network-EndpointsTgwAttach-A
+          - Network-EndpointsTgwAttach-B
     gatewayEndpoints:
       - s3
       - dynamodb
-    securityGroups:
-      - name: Management
-        description: Management Security Group
-        inboundRules:
-          - description: Management RDP Traffic Inbound
-            types:
-              - RDP
-            sources:
-              - 10.0.0.0/8
-              - 100.96.252.0/23
-              - 100.96.250.0/23
-              - account: Audit
-                vpc: Test
-                subnets:
-                  - tgw-attach-a
-                  - tgw-attach-b
-              - securityGroups:
-                  - Management
-          - description: Management SSH Traffic Inbound
-            types:
-              - SSH
-            sources:
-              - 10.0.0.0/8
-              - 100.96.252.0/23
-              - 100.96.250.0/23
-        outboundRules:
-          - description: All Outbound
-            types:
-              - ALL
-            sources:
-              - 0.0.0.0/0
+    interfaceEndpoints:
+      central: true
+      subnets:
+        - Network-Endpoints-A
+        - Network-Endpoints-B
+      endpoints:
+        - ec2
+        - ec2messages
+        - ssm
+        - ssmmessages
+        - secretsmanager
+        - cloudformation
+        - access-analyzer
+        - application-autoscaling
+        - appmesh-envoy-management
+        - athena
+        - autoscaling
+        - autoscaling-plans
+        - clouddirectory
+        - cloudtrail
+        - codebuild
+        - codecommit
+        - codepipeline
+        - config
+        - datasync
+        - ecr.dkr
+        - ecs
+        - ecs-agent
+        - ecs-telemetry
+        - elasticfilesystem
+        - elasticloadbalancing
+        - elasticmapreduce
+        - events
+        - execute-api
+        - git-codecommit
+        - glue
+        - kinesis-streams
+        - kms
+        - logs
+        - monitoring
+        - sagemaker.api
+        - sagemaker.runtime
+        - servicecatalog
+        - sms
+        - sns
+        - sqs
+        - storagegateway
+        - sts
+        - transfer
+        - workspaces
+        - awsconnector
+        - ecr.api
+        - kinesis-firehose
+        - states
+        - acm-pca
+        - cassandra
+        - ebs
+        - elasticbeanstalk
+        - elasticbeanstalk-health
+        - email-smtp
+        - license-manager
+        - macie2
+        - notebook
+        - synthetics
+        - transfer.server
+  - name: Network-Inspection
+    account: Network
+    region: *HOME_REGION
+    cidrs:
+      - 10.2.0.0/22
+    routeTables:
+      - name: Network-Inspection-Default
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+    subnets:
+      - name: Network-Inspection-A
+        availabilityZone: a
+        routeTable: Network-Inspection-Default
+        ipv4CidrBlock: 10.2.0.0/24
+      - name: Network-Inspection-B
+        availabilityZone: b
+        routeTable: Network-Inspection-Default
+        ipv4CidrBlock: 10.2.1.0/24
+      - name: Network-InspectionTgwAttach-A
+        availabilityZone: a
+        routeTable: Network-Inspection-Default
+        ipv4CidrBlock: 10.2.3.208/28
+      - name: Network-InspectionTgwAttach-B
+        availabilityZone: b
+        routeTable: Network-Inspection-Default
+        ipv4CidrBlock: 10.2.3.224/28
+    transitGatewayAttachments:
+      - name: Network-Inspection
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+          - Network-Main-Segregated
+        subnets:
+          - Network-InspectionTgwAttach-A
+          - Network-InspectionTgwAttach-B
+    gatewayEndpoints:
+      - s3
+      - dynamodb
+    useCentralEndpoints: true
+  - name: SharedServices-Main
+    account: Shared Services
+    region: *HOME_REGION
+    cidrs:
+      - 10.4.0.0/16
+    routeTables:
+      - name: SharedServices-Main-Default
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+    subnets:
+      - name: SharedServices-App-A
+        availabilityZone: a
+        routeTable: SharedServices-Main-Default
+        ipv4CidrBlock: 10.4.0.0/24
+      - name: ShareServices-App-B
+        availabilityZone: b
+        routeTable: SharedServices-Main-Default
+        ipv4CidrBlock: 10.4.1.0/24
+      - name: SharedServices-MainTgwAttach-A
+        availabilityZone: a
+        routeTable: SharedServices-Main-Default
+        ipv4CidrBlock: 10.4.255.208/28
+      - name: SharedServices-MainTgwAttach-B
+        availabilityZone: b
+        routeTable: SharedServices-Main-Default
+        ipv4CidrBlock: 10.4.255.224/28
+    transitGatewayAttachments:
+      - name: SharedServices-Main
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+          - Network-Main-Segregated
+        subnets:
+          - SharedServices-MainTgwAttach-A
+          - SharedServices-MainTgwAttach-B
+    gatewayEndpoints:
+      - s3
+      - dynamodb
+    useCentralEndpoints: true
+  # - name: Test
+  #   account: Audit
+  #   region: *HOME_REGION
+  #   cidrs:
+  #     - 10.0.0.0/16
+  #   internetGateway: true
+  #   enableDnsHostnames: false
+  #   enableDnsSupport: true
+  #   instanceTenancy: default
+  #   routeTables:
+  #     - name: CentralVpc_Common
+  #       routes:
+  #         - name: TgwRoute
+  #           destination: 10.0.0.0/8
+  #           type: transitGateway
+  #           target: Main
+  #         - name: NatRoute
+  #           destination: 192.168.0.0/16
+  #           type: natGateway
+  #           target: Web-A
+  #         - name: IgwRoute
+  #           destination: 0.0.0.0/0
+  #           type: internetGateway
+  #           target: IGW
+  #         - name: s3
+  #           target: s3
+  #         - name: dynamodb
+  #           target: dynamodb
+  #   subnets:
+  #     - name: public-a
+  #       availabilityZone: a
+  #       mapPublicIpOnLaunch: true
+  #       routeTable: CentralVpc_Common
+  #       ipv4CidrBlock: 10.0.0.0/24
+  #     - name: public-b
+  #       availabilityZone: b
+  #       mapPublicIpOnLaunch: true
+  #       routeTable: CentralVpc_Common
+  #       ipv4CidrBlock: 10.0.1.0/24
+  #     - name: tgw-attach-a
+  #       availabilityZone: a
+  #       routeTable: CentralVpc_Common
+  #       ipv4CidrBlock: 10.0.2.0/24
+  #     - name: tgw-attach-b
+  #       availabilityZone: b
+  #       routeTable: CentralVpc_Common
+  #       ipv4CidrBlock: 10.0.3.0/24
+  #   natGateways:
+  #     - name: Web-A
+  #       subnet: public-a
+  #     - name: Web-B
+  #       subnet: public-b
+  #   transitGatewayAttachments:
+  #     - name: Test
+  #       transitGateway:
+  #         name: Main
+  #         account: Management
+  #       routeTableAssociations:
+  #         - shared
+  #       routeTablePropagations:
+  #         - core
+  #         - shared
+  #         - segregated
+  #       subnets:
+  #         - tgw-attach-a
+  #         - tgw-attach-b
+  #   dnsResolverLogging: true
+  #   useCentralEndpoints: false
+  #   gatewayEndpoints:
+  #     - s3
+  #     - dynamodb
+  #   securityGroups:
+  #     - name: Management
+  #       description: Management Security Group
+  #       inboundRules:
+  #         - description: Management RDP Traffic Inbound
+  #           types:
+  #             - RDP
+  #           sources:
+  #             - 10.0.0.0/8
+  #             - 100.96.252.0/23
+  #             - 100.96.250.0/23
+  #             - account: Audit
+  #               vpc: Test
+  #               subnets:
+  #                 - tgw-attach-a
+  #                 - tgw-attach-b
+  #             - securityGroups:
+  #                 - Management
+  #         - description: Management SSH Traffic Inbound
+  #           types:
+  #             - SSH
+  #           sources:
+  #             - 10.0.0.0/8
+  #             - 100.96.252.0/23
+  #             - 100.96.250.0/23
+  #       outboundRules:
+  #         - description: All Outbound
+  #           types:
+  #             - ALL
+  #           sources:
+  #             - 0.0.0.0/0
 vpcFlowLogs:
   trafficType: ALL
   maxAggregationInterval: 60

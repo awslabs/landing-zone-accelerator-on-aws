@@ -12,7 +12,11 @@ mandatoryAccounts:
     email: <audit>@example.com  <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Security
 workloadAccounts:
-  - name: Shared Network
-    description: The shared network account (example)
-    email: <shared-network>@example.com  <----- UPDATE EMAIL ADDRESS
+  - name: Shared Services
+    description: The Shared Services account
+    email: <shared-services>@example.com  <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Infrastructure
+  - name: Network
+    description: The Network account
+    email: <network>@example.com  <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Infrastructure

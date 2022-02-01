@@ -93,6 +93,13 @@ export class NetworkConfigTypes {
     'Value should be a gateway endpoint type',
   );
 
+  static readonly interfaceEndpointConfig = t.interface({
+    central: t.optional(t.boolean),
+    allowedCidrs: t.optional(t.array(t.nonEmptyString)),
+    subnets: t.array(t.nonEmptyString),
+    endpoints: t.array(t.nonEmptyString),
+  });
+
   static readonly securityGroupRuleTypeEnum = t.enums(
     'SecurityGroupRuleType',
     [
@@ -192,6 +199,8 @@ export class NetworkConfigTypes {
     natGateways: t.optional(t.array(this.natGatewayConfig)),
     transitGatewayAttachments: t.optional(t.array(this.transitGatewayAttachmentConfig)),
     gatewayEndpoints: t.optional(t.array(this.gatewayEndpointEnum)),
+    interfaceEndpoints: t.optional(this.interfaceEndpointConfig),
+    useCentralEndpoints: t.optional(t.boolean),
     securityGroups: t.optional(t.array(this.securityGroupConfig)),
     networkAcls: t.optional(t.array(this.networkAclConfig)),
   });
@@ -291,6 +300,13 @@ export class TransitGatewayAttachmentConfig
   readonly routeTablePropagations: string[] = [];
 }
 
+export class InterfaceEndpointConfig implements t.TypeOf<typeof NetworkConfigTypes.interfaceEndpointConfig> {
+  readonly central: boolean = false;
+  readonly allowedCidrs: string[] | undefined = undefined;
+  readonly subnets: string[] = [];
+  readonly endpoints: string[] = [];
+}
+
 export class SubnetSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetSourceConfig> {
   readonly account = '';
   readonly vpc = '';
@@ -342,32 +358,65 @@ export class NetworkAclOutboundRuleConfig implements t.TypeOf<typeof NetworkConf
   readonly destination: string | NetworkAclSubnetSelection = '';
 }
 
+/**
+ * Defines the properties to configure a Network Access Control List (ACL)
+ */
 export class NetworkAclConfig implements t.TypeOf<typeof NetworkConfigTypes.networkAclConfig> {
+  /**
+   * The name of the Network ACL.
+   *
+   * The value of this property will be utilized as the logical id for this
+   * resource. Any references to this object should specify this value.
+   */
   readonly name = '';
+
+  /**
+   * A list of subnets to associate with the Network ACL
+   */
   readonly subnetAssociations: string[] = [];
+
+  /**
+   * A list of inbound rules to define for the Network ACL
+   */
   readonly inboundRules: NetworkAclInboundRuleConfig[] | undefined = undefined;
+
+  /**
+   * A list of outbound rules to define for the Network ACL
+   */
   readonly outboundRules: NetworkAclOutboundRuleConfig[] | undefined = undefined;
 }
 
 export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> {
   /**
-   * The name of the VPC. A 'name' tag will be added to the generated VPC using
-   * the specified value
+   * The name of the VPC.
+   *
+   * The value of this property will be utilized as the logical id for this
+   * resource. Any references to this object should specify this value.
    */
   readonly name = '';
 
   /**
-   * The accountName
+   * The logical name of the account to deploy the VPC to
    */
   readonly account = '';
 
+  /**
+   * The AWS region to deploy the VPC to
+   */
   readonly region = 'us-east-1';
 
+  /**
+   * A list of CIDRs to associate with the VPC. At least one CIDR should be
+   * provided.
+   */
   readonly cidrs: string[] = [];
 
+  /**
+   * Defines if an internet gateway should be added to the VPC
+   */
   readonly internetGateway: boolean | undefined = undefined;
 
-  readonly enableDnsHostnames: boolean | undefined = false;
+  readonly enableDnsHostnames: boolean | undefined = true;
 
   readonly enableDnsSupport: boolean | undefined = true;
 
@@ -383,8 +432,33 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
 
   readonly gatewayEndpoints: t.TypeOf<typeof NetworkConfigTypes.gatewayEndpointEnum>[] | undefined = undefined;
 
+  /**
+   * A list of VPC
+   */
+  readonly interfaceEndpoints: InterfaceEndpointConfig | undefined = undefined;
+
+  /**
+   * When set to true, this VPC will be configured to utilize centralized
+   * endpoints. This includes having the Route 53 Private Hosted Zone
+   * associated with this VPC. Centralized endpoints are configured per
+   * region, and can span to spoke accounts
+   *
+   * @default true
+   */
+  readonly useCentralEndpoints: boolean | undefined = true;
+
+  /**
+   * A list of Security Groups to deploy for this VPC
+   *
+   * @default undefined
+   */
   readonly securityGroups: SecurityGroupConfig[] | undefined = undefined;
 
+  /**
+   * A list of Network Access Control Lists (ACLs) to deploy for this VPC
+   *
+   * @default undefined
+   */
   readonly networkAcls: NetworkAclConfig[] | undefined = undefined;
 }
 
