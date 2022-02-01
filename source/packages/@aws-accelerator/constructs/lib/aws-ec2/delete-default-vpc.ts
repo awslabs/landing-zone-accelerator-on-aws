@@ -36,7 +36,21 @@ export class DeleteDefaultVpc extends Construct {
       policyStatements: [
         {
           Effect: 'Allow',
-          Action: ['s3:PutAccountPublicAccessBlock'],
+          Action: [
+            'ec2:DeleteInternetGateway',
+            'ec2:DetachInternetGateway',
+            'ec2:DeleteNetworkAcl',
+            'ec2:DeleteRoute',
+            'ec2:DeleteSecurityGroup',
+            'ec2:DeleteSubnet',
+            'ec2:DeleteVpc',
+            'ec2DescribeInternetGateways',
+            'ec2DescribeNetworkAcls',
+            'ec2DescribeRouteTables',
+            'ec2DescribeSecurityGroups',
+            'ec2DescribeSubnets',
+            'ec2DescribeVpcs',
+          ],
           Resource: '*',
         },
       ],
