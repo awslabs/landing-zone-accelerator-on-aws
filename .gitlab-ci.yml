@@ -13,3 +13,4 @@ accelerator-test-report:
       junit:
         - source/test-reports/*.xml
     expire_in: 1 day
+    

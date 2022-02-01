@@ -15,7 +15,6 @@ import {
   BatchDeleteBuildsCommand,
   BatchGetProjectsCommand,
   CodeBuildClient,
-  DeleteProjectCommand,
   paginateListBuildsForProject,
 } from '@aws-sdk/client-codebuild';
 import { OrganizationsClient, paginateListAccounts } from '@aws-sdk/client-organizations';
@@ -92,6 +91,7 @@ export interface AcceleratorToolProps {
   readonly partition: string;
   readonly keepBootstraps: boolean;
   readonly deleteData: boolean;
+  readonly deleteConfigRepo: boolean;
   readonly deletePipelines: boolean;
   readonly ignoreTerminationProtection: boolean;
 }
@@ -117,12 +117,6 @@ export class AcceleratorTool {
    * @private
    */
   private pipelineConfigSourceRepo: { repositoryName: string; branch: string; provider: string } | undefined;
-
-  /**
-   * codePipelineClient
-   * @private
-   */
-  private readonly codePipelineClient: CodePipelineClient;
 
   /**
    * bootstrapBuildEnvironmentVariables
@@ -185,7 +179,6 @@ export class AcceleratorTool {
 
   constructor(props: AcceleratorToolProps) {
     this.acceleratorToolProps = props;
-    this.codePipelineClient = new CodePipelineClient({});
   }
 
   /**
@@ -199,20 +192,18 @@ export class AcceleratorTool {
    * <li>CodeCommit Repository
    * <li>CodePipeline
    * </ul>
-   * @param installerStackName {string}
+   * @param installerStackName
    * The name of the installer cloudformation stack
    */
   public async uninstallAccelerator(installerStackName: string): Promise<boolean> {
-    const DEFAULT_QUALIFIER = 'aws-accelerator';
     const installerPipeline = await AcceleratorTool.getPipelineNameFromCloudFormationStack(installerStackName);
     if (!installerPipeline.status) {
-      // console.error(`[PlatformAccelerator][Cleanup][ERROR] ${installerPipeline.pipelineName}`);
       Logger.debug(`[accelerator-tool] ${installerPipeline.pipelineName}`);
       return false;
     }
 
     const getPipelineNameResponse = await throttlingBackOff(() =>
-      this.codePipelineClient.send(new GetPipelineCommand({ name: installerPipeline!.pipelineName })),
+      new CodePipelineClient({}).send(new GetPipelineCommand({ name: installerPipeline!.pipelineName })),
     );
 
     const installerCodeBuildProjectName =
@@ -222,7 +213,7 @@ export class AcceleratorTool {
       new CodeBuildClient({}).send(new BatchGetProjectsCommand({ names: [installerCodeBuildProjectName] })),
     );
 
-    let installerQualifier = DEFAULT_QUALIFIER;
+    let installerQualifier = 'aws-accelerator';
     let qualifierInPascalCase = 'AWSAccelerator';
 
     for (const envVariable of batchGetProjectsCommandResponse.projects![0].environment!.environmentVariables!) {
@@ -235,69 +226,37 @@ export class AcceleratorTool {
         break;
       }
     }
+    //Delete accelerator target cloudformation stacks
+    await this.deleteAcceleratorTargetCloudFormationStacks(qualifierInPascalCase);
 
-    // List of Accelerator Pipelines post fix to identify different pipelines
-    const acceleratorPipelinePostfix: string[] = ['Pipeline'];
-
-    for (const pipelinePostfix of acceleratorPipelinePostfix) {
-      //Delete Accelerator Pipeline Cloudformation Stacks
-      await this.deletePipelineCloudFormationStacks(`${qualifierInPascalCase}-${pipelinePostfix}`);
-    }
-
-    // Cleanup any pending resources in all accounts
-    if (this.acceleratorToolProps.ignoreTerminationProtection) {
-      await this.cleanRemainingResourcesInOrganizationAccounts(installerQualifier!);
-    }
-
-    // Installer stack resource cleanup takes place in pipeline or management account, so reset the credential settings
+    // Installer and Tester stack resource cleanup takes place in pipeline or management account, so reset the credential settings
     AcceleratorTool.resetCredentialEnvironment();
 
-    for (const pipelinePostfix of acceleratorPipelinePostfix) {
-      if (this.acceleratorToolProps.deletePipelines) {
-        // Delete Accelerator Pipeline stack and resources
-        await this.deletePipelineStack(qualifierInPascalCase, pipelinePostfix);
-      }
-    }
+    // Delete tester stack
+    await this.deleteTesterStack(qualifierInPascalCase);
 
-    //Delete Installer Stack resources, this is to be executed from pipeline account or management account
-    await this.deleteInstallerResources(
-      installerStackName,
-      installerPipeline.pipelineName,
-      installerCodeBuildProjectName,
-    );
+    // Delete tester pipeline stack
+    await this.deleteTesterPipelineStack(installerQualifier, qualifierInPascalCase);
+
+    // Delete Accelerator Pipeline stack
+    await this.deleteAcceleratorPipelineStack(qualifierInPascalCase);
+
+    //Delete Installer Stack
+    await this.deleteAcceleratorInstallerStack(installerStackName);
+
+    // Cleanup any remaining resources in all accounts, this is required because,
+    // during deletion of custom resources creates cloudwatch logs which is required to clean
+    // Only when full cleanup was intended this this cleanup should take place
+    if (this.acceleratorToolProps.ignoreTerminationProtection) {
+      await this.deleteAcceleratorRemainingResourcesInAllAccounts(installerQualifier);
+    }
 
     //TODO Delete bootstrap stack for management account home region after pipeline deleted only when pipeline management account is not used
     // Delete bootstrap stack from home region for management or pipeline account as last step of cleanups
     if (!this.acceleratorToolProps.keepBootstraps) {
-      const cloudFormationClient = new CloudFormationClient({ region: this.globalConfig?.homeRegion });
-      // If delete-data flag is on perform deletion, before stack deletion
-      if (this.acceleratorToolProps.deleteData) {
-        Logger.info('[accelerator-tool] delete-data flag is ON !!!');
-
-        await this.deleteStackPersistentData(
-          cloudFormationClient,
-          'AWSAccelerator-CDKToolkit',
-          new KMSClient({ region: this.globalConfig?.homeRegion }),
-          new CloudWatchLogsClient({ region: this.globalConfig?.homeRegion }),
-          new S3Client({ region: this.globalConfig?.homeRegion }),
-        );
-      }
-
-      Logger.info(
-        '[accelerator-tool] Deleting bootstrap stack for home region in management account "AWSAccelerator-CDKToolkit"',
-      );
-      await throttlingBackOff(() =>
-        cloudFormationClient.send(new DeleteStackCommand({ StackName: 'AWSAccelerator-CDKToolkit' })),
-      );
-
-      Logger.info(`[accelerator-tool] Waiting until stack AWSAccelerator-CDKToolkit deletion completed`);
-      while (!(await this.isStackDeletionCompleted(cloudFormationClient, 'AWSAccelerator-CDKToolkit'))) {
-        // Wait before checking again
-        await new Promise(func => setTimeout(func, 1000));
-      }
-      Logger.info(`[accelerator-tool] Stack AWSAccelerator-CDKToolkit deleted successfully`);
+      AcceleratorTool.resetCredentialEnvironment();
+      await this.deleteStack(new CloudFormationClient({}), 'AWSAccelerator-CDKToolkit');
     }
-
     return true;
   }
 
@@ -317,91 +276,36 @@ export class AcceleratorTool {
   /**
    * Delete installer stack and resources like installer stack, installer pipeline code build projects etc.
    * @param installerStackName
-   * @param installerPipelineName
-   * @param installerCodeBuildProject
    * @private
    */
-  private async deleteInstallerResources(
-    installerStackName: string,
-    installerPipelineName: string,
-    installerCodeBuildProject: string,
-  ): Promise<boolean> {
-    AcceleratorTool.resetCredentialEnvironment();
-    const cloudFormationClient = new CloudFormationClient({});
-
-    if (
-      !(await this.isStackDeletable(
-        cloudFormationClient,
-        installerStackName,
-        this.externalPipelineAccount.isUsed
-          ? this.externalPipelineAccount.accountId!
-          : this.pipelineManagementAccount!.accountId,
-        this.globalConfig?.homeRegion,
-      ))
-    ) {
-      return true;
-    }
-
+  private async deleteAcceleratorInstallerStack(installerStackName: string): Promise<boolean> {
     if (!this.acceleratorToolProps.deletePipelines) {
       return true;
     }
 
-    if (this.acceleratorToolProps.deleteData) {
-      // Delete Installer stack persistent data
-      await this.deleteStackPersistentData(
-        cloudFormationClient,
-        installerStackName,
-        new KMSClient({}),
-        new CloudWatchLogsClient({}),
-        new S3Client({}),
-      );
-    }
+    const installerPipeline = await AcceleratorTool.getPipelineNameFromCloudFormationStack(installerStackName);
 
-    // cleanup installer pipeline code build projects and build history
-    const codeBuildClient = new CodeBuildClient({});
-    const buildIds: string[] = [];
-    for await (const page of paginateListBuildsForProject(
-      { client: codeBuildClient },
-      { projectName: installerCodeBuildProject },
-    )) {
-      for (const id of page.ids!) {
-        buildIds.push(id);
+    if (installerPipeline.status) {
+      const codeBuildClient = new CodeBuildClient({});
+      const response = await throttlingBackOff(() =>
+        codeBuildClient.send(new BatchGetProjectsCommand({ names: [installerPipeline.pipelineName] })),
+      );
+      for (const project of response.projects ?? []) {
+        await this.deleteCodeBuilds(codeBuildClient, project.name!);
       }
     }
-    Logger.info(
-      `[accelerator-tool] Deleting build ids for the project ${installerCodeBuildProject} used in pipeline ${installerPipelineName}`,
-    );
-
-    await throttlingBackOff(() => codeBuildClient.send(new BatchDeleteBuildsCommand({ ids: buildIds })));
-
-    Logger.info(
-      `[accelerator-tool] Deleting Codebuild project ${installerCodeBuildProject} used in pipeline ${installerPipelineName}`,
-    );
-    await throttlingBackOff(() => codeBuildClient.send(new DeleteProjectCommand({ name: installerCodeBuildProject })));
-
-    // Delete Installer Stack
-    Logger.info(`[accelerator-tool] Deleting stack ${installerStackName}`);
-    await throttlingBackOff(() => cloudFormationClient.send(new DeleteStackCommand({ StackName: installerStackName })));
-
-    // Wait till installer stack deletion completed
-    Logger.info(`[accelerator-tool] Waiting until stack ${installerStackName} deletion completed`);
-    while (!(await this.isStackDeletionCompleted(cloudFormationClient, installerStackName))) {
-      // Wait before checking again
-      await new Promise(func => setTimeout(func, 1000));
-    }
-    Logger.info(`[accelerator-tool] Stack ${installerStackName} deleted successfully`);
+    await this.deleteStack(new CloudFormationClient({}), installerStackName);
 
     return true;
   }
 
   /**
-   * Function to delete cloudformation stacks created for the given pipeline
-   * @param pipelineName {string}
-   * The name of the pipeline.
-   * The stack name prefix
+   * Function to delete cloudformation stacks created by accelerator
+   * @param qualifierInPascalCase
    * @private
    */
-  private async deletePipelineCloudFormationStacks(pipelineName: string): Promise<boolean> {
+  private async deleteAcceleratorTargetCloudFormationStacks(qualifierInPascalCase: string): Promise<boolean> {
+    const pipelineName = `${qualifierInPascalCase}-Pipeline`;
     if (await this.initPipeline(pipelineName)) {
       const groupBy = (array: pipelineStackType[], key1: string, key2: string) => {
         return array.reduce((accumulator, currentValue) => {
@@ -460,7 +364,7 @@ export class AcceleratorTool {
   private async initPipeline(pipelineName: string): Promise<boolean> {
     try {
       const response = await throttlingBackOff(() =>
-        this.codePipelineClient.send(new GetPipelineCommand({ name: pipelineName })),
+        new CodePipelineClient({}).send(new GetPipelineCommand({ name: pipelineName })),
       );
 
       let orderCounter = 0;
@@ -597,74 +501,39 @@ export class AcceleratorTool {
    * Function to delete accelerator pipeline stack and it's resources
    * @private
    */
-  private async deletePipelineStack(qualifierInPascalCase: string, pipelinePostfix: string): Promise<boolean> {
-    const pipelineName = `${qualifierInPascalCase}-${pipelinePostfix}`;
-    const pipelineStackPostfix = 'PipelineStack';
-    // if (pipelinePostfix === 'Pipeline'){
-    //   pipelineStackPostfix
-    // }
-    const cloudFormationClient = new CloudFormationClient({});
-    const fullyQualifiedStackName = `${qualifierInPascalCase}-${pipelineStackPostfix}-${
+  private async deleteAcceleratorPipelineStack(qualifierInPascalCase: string): Promise<boolean> {
+    if (!this.acceleratorToolProps.deletePipelines) {
+      return true;
+    }
+    const acceleratorPipelineStackName = `${qualifierInPascalCase}-PipelineStack-${
       this.externalPipelineAccount.isUsed
         ? this.externalPipelineAccount.accountId!
         : this.pipelineManagementAccount!.accountId
     }-${this.globalConfig?.homeRegion}`;
 
-    if (!(await this.isStackDeletable(cloudFormationClient, fullyQualifiedStackName))) {
-      return true;
-    }
-
-    const codeBuildClient = new CodeBuildClient({});
-    const codeCommitClient = new CodeCommitClient({});
-
-    //delete code commit repository created by the accelerator pipeline
-    if (this.pipelineConfigSourceRepo?.provider === 'CodeCommit') {
-      //Delete config repository
-      Logger.info(`[accelerator-tool] Deleting config repository ${this.pipelineConfigSourceRepo?.repositoryName}`);
-      await throttlingBackOff(() =>
-        codeCommitClient.send(
-          new DeleteRepositoryCommand({ repositoryName: this.pipelineConfigSourceRepo?.repositoryName }),
-        ),
-      );
-    }
-
-    //delete code build projects before deleting pipeline
-    for (const project of this.acceleratorCodeBuildProjects) {
-      const buildIds: string[] = [];
-      for await (const page of paginateListBuildsForProject({ client: codeBuildClient }, { projectName: project })) {
-        for (const id of page.ids!) {
-          buildIds.push(id);
-        }
-      }
-      Logger.info(`[accelerator-tool] Deleting build ids for the project ${project} used in pipeline ${pipelineName}`);
-      await throttlingBackOff(() => codeBuildClient.send(new BatchDeleteBuildsCommand({ ids: buildIds })));
-
-      Logger.info(`[accelerator-tool] Codebuild project ${project} used in pipeline ${pipelineName}`);
-      await throttlingBackOff(() => codeBuildClient.send(new DeleteProjectCommand({ name: project })));
-    }
-
-    if (this.acceleratorToolProps.deleteData) {
-      // Delete Installer stack persistent data
-      await this.deleteStackPersistentData(
-        cloudFormationClient,
-        fullyQualifiedStackName,
-        new KMSClient({}),
-        new CloudWatchLogsClient({}),
-        new S3Client({}),
-      );
-    }
-
-    Logger.info(`[accelerator-tool] Deleting stack ${fullyQualifiedStackName}`);
-    await throttlingBackOff(() =>
-      cloudFormationClient.send(new DeleteStackCommand({ StackName: `${fullyQualifiedStackName}` })),
+    const acceleratorPipeline = await AcceleratorTool.getPipelineNameFromCloudFormationStack(
+      acceleratorPipelineStackName,
     );
 
-    Logger.info(`[accelerator-tool] Waiting until stack ${fullyQualifiedStackName} deletion completed`);
-    while (!(await this.isStackDeletionCompleted(cloudFormationClient, fullyQualifiedStackName))) {
-      // Wait before checking again
-      await new Promise(func => setTimeout(func, 1000));
+    if (acceleratorPipeline.status) {
+      if (this.acceleratorToolProps.deleteConfigRepo) {
+        await this.deleteCodecommitRepository(
+          new CodeCommitClient({}),
+          `${this.pipelineConfigSourceRepo?.repositoryName}`,
+        );
+      }
+
+      const codeBuildClient = new CodeBuildClient({});
+      const response = await throttlingBackOff(() =>
+        codeBuildClient.send(new BatchGetProjectsCommand({ names: [acceleratorPipeline.pipelineName] })),
+      );
+      for (const project of response.projects ?? []) {
+        await this.deleteCodeBuilds(codeBuildClient, project.name!);
+      }
     }
-    Logger.info(`[accelerator-tool] Stack ${fullyQualifiedStackName} deleted successfully`);
+
+    await this.deleteStack(new CloudFormationClient({}), acceleratorPipelineStackName);
+
     return true;
   }
 
@@ -802,7 +671,7 @@ export class AcceleratorTool {
 
     const stsClient = new STSClient({});
 
-    Logger.info(`[accelerator-tool] management account roleArn => ${roleArn}`);
+    // Logger.info(`[accelerator-tool] management account roleArn => ${roleArn}`);
 
     const assumeRoleCredential = await throttlingBackOff(() =>
       stsClient.send(
@@ -831,7 +700,15 @@ export class AcceleratorTool {
    * @param installerQualifier
    * @private
    */
-  private async cleanRemainingResourcesInOrganizationAccounts(installerQualifier: string): Promise<boolean> {
+  private async deleteAcceleratorRemainingResourcesInAllAccounts(installerQualifier: string): Promise<boolean> {
+    if (this.pipelineManagementAccount!.credentials) {
+      process.env['AWS_ACCESS_KEY_ID'] = this.pipelineManagementAccount!.credentials.AccessKeyId!;
+      process.env['AWS_ACCESS_KEY'] = this.pipelineManagementAccount!.credentials.AccessKeyId!;
+      process.env['AWS_SECRET_KEY'] = this.pipelineManagementAccount!.credentials.SecretAccessKey!;
+      process.env['AWS_SECRET_ACCESS_KEY'] = this.pipelineManagementAccount!.credentials.SecretAccessKey!;
+      process.env['AWS_SESSION_TOKEN'] = this.pipelineManagementAccount!.credentials.SessionToken;
+    }
+
     const assumeRoleName = 'AWSControlTowerExecution';
     let cloudWatchLogsClient: CloudWatchLogsClient;
     for (const region of this.globalConfig!.enabledRegions) {
@@ -1266,6 +1143,15 @@ export class AcceleratorTool {
     return true;
   }
 
+  /**
+   * Function to see is cloudformation stack is deletable
+   * If stack termination protection is ON and uninstaller flag to ignore termination protection is on then it is considered to be deletable
+   * @param cloudFormationClient
+   * @param stackName
+   * @param accountId
+   * @param region
+   * @private
+   */
   private async isStackDeletable(
     cloudFormationClient: CloudFormationClient,
     stackName: string,
@@ -1315,5 +1201,147 @@ export class AcceleratorTool {
     } else {
       return true;
     }
+  }
+
+  /**
+   * Function to delete accelerator tester stack
+   * @param qualifierInPascalCase
+   * @private
+   */
+  private async deleteTesterStack(qualifierInPascalCase: string): Promise<boolean> {
+    const cloudFormationClient = new CloudFormationClient({});
+    const testerStackName = `${qualifierInPascalCase}-TesterStack-${
+      this.externalPipelineAccount.isUsed
+        ? this.externalPipelineAccount.accountId!
+        : this.pipelineManagementAccount!.accountId
+    }-${this.globalConfig?.homeRegion}`;
+
+    await this.deleteStack(cloudFormationClient, testerStackName);
+    return true;
+  }
+
+  /**
+   * Function to delete accelerator tester pipeline stack
+   * @param qualifier
+   * @param qualifierInPascalCase
+   * @private
+   */
+  private async deleteTesterPipelineStack(qualifier: string, qualifierInPascalCase: string): Promise<boolean> {
+    const cloudFormationClient = new CloudFormationClient({});
+
+    if (!this.acceleratorToolProps.deletePipelines) {
+      return true;
+    }
+
+    const testerPipelineStackName = `${qualifierInPascalCase}-TesterPipelineStack-${
+      this.externalPipelineAccount.isUsed
+        ? this.externalPipelineAccount.accountId!
+        : this.pipelineManagementAccount!.accountId
+    }-${this.globalConfig?.homeRegion}`;
+
+    if (this.acceleratorToolProps.deleteConfigRepo) {
+      await this.deleteCodecommitRepository(new CodeCommitClient({}), `${qualifier}-test-config`);
+    }
+
+    const testerPipeline = await AcceleratorTool.getPipelineNameFromCloudFormationStack(testerPipelineStackName);
+
+    if (testerPipeline.status) {
+      const codeBuildClient = new CodeBuildClient({});
+      const response = await throttlingBackOff(() =>
+        codeBuildClient.send(new BatchGetProjectsCommand({ names: [testerPipeline.pipelineName] })),
+      );
+      for (const project of response.projects ?? []) {
+        await this.deleteCodeBuilds(codeBuildClient, project.name!);
+      }
+    }
+
+    await this.deleteStack(cloudFormationClient, testerPipelineStackName);
+
+    return true;
+  }
+
+  /**
+   * Function to delete cloudformation stack
+   * @param cloudFormationClient
+   * @param stackName
+   * @private
+   */
+  private async deleteStack(cloudFormationClient: CloudFormationClient, stackName: string): Promise<boolean> {
+    try {
+      await throttlingBackOff(() => cloudFormationClient.send(new DescribeStacksCommand({ StackName: stackName })));
+      // cloudFormationStack = response.Stacks![0].StackName;
+    } catch (error) {
+      if (`${error}`.includes(`Stack with id ${stackName} does not exist`)) {
+        Logger.warn(`[accelerator-tool] Stack with id ${stackName} does not exist`);
+        return true;
+      }
+    }
+
+    if (!(await this.isStackDeletable(cloudFormationClient, stackName))) {
+      return true;
+    }
+
+    if (this.acceleratorToolProps.deleteData) {
+      // Delete Installer stack persistent data
+      await this.deleteStackPersistentData(
+        cloudFormationClient,
+        stackName,
+        new KMSClient({}),
+        new CloudWatchLogsClient({}),
+        new S3Client({}),
+      );
+    }
+
+    Logger.info(`[accelerator-tool] Deleting stack ${stackName}`);
+    await throttlingBackOff(() => cloudFormationClient.send(new DeleteStackCommand({ StackName: `${stackName}` })));
+
+    Logger.info(`[accelerator-tool] Waiting until stack ${stackName} deletion completes`);
+    while (!(await this.isStackDeletionCompleted(cloudFormationClient, stackName))) {
+      // Wait before checking again
+      await new Promise(func => setTimeout(func, 1000));
+    }
+    Logger.info(`[accelerator-tool] Stack ${stackName} deleted successfully`);
+    return true;
+  }
+
+  /**
+   * Function to delete code commit repository
+   * @param codeCommitClient
+   * @param repositoryName
+   * @private
+   */
+  private async deleteCodecommitRepository(
+    codeCommitClient: CodeCommitClient,
+    repositoryName: string,
+  ): Promise<boolean> {
+    //Delete config repository
+    Logger.info(`[accelerator-tool] Deleting code commit repository ${repositoryName}`);
+    await throttlingBackOff(() =>
+      codeCommitClient.send(new DeleteRepositoryCommand({ repositoryName: repositoryName })),
+    );
+
+    return true;
+  }
+
+  /**
+   * Function to delete build ids for code build project
+   * @param codeBuildClient
+   * @param buildProjectName
+   * @private
+   */
+  private async deleteCodeBuilds(codeBuildClient: CodeBuildClient, buildProjectName: string): Promise<boolean> {
+    //delete code build projects before deleting pipeline
+    const buildIds: string[] = [];
+    for await (const page of paginateListBuildsForProject(
+      { client: codeBuildClient },
+      { projectName: buildProjectName },
+    )) {
+      for (const id of page.ids!) {
+        buildIds.push(id);
+      }
+    }
+    Logger.info(`[accelerator-tool] Deleting build ids for the project ${buildProjectName}`);
+    await throttlingBackOff(() => codeBuildClient.send(new BatchDeleteBuildsCommand({ ids: buildIds })));
+    return true;
   }
 }

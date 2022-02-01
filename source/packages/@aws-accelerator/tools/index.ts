@@ -12,3 +12,4 @@
  */
 
 export * from './lib/classes/accelerator-tool';
+export * from './uninstaller';
