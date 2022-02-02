@@ -28,7 +28,9 @@ export class SecurityAuditStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    //Macie configuration
+    //
+    // Macie configuration
+    //
     Logger.debug(
       `[security-audit-stack] centralSecurityServices.macie.enable: ${props.securityConfig.centralSecurityServices.macie.enable}`,
     );
@@ -46,7 +48,9 @@ export class SecurityAuditStack extends AcceleratorStack {
       });
     }
 
-    //GuardDuty configuration
+    //
+    // GuardDuty configuration
+    //
     Logger.debug(
       `[security-audit-stack] centralSecurityServices.guardduty.enable: ${props.securityConfig.centralSecurityServices.guardduty.enable}`,
     );
@@ -75,7 +79,9 @@ export class SecurityAuditStack extends AcceleratorStack {
       }).node.addDependency(guardDutyMembers);
     }
 
-    //SecurityHub configuration
+    //
+    // SecurityHub configuration
+    //
     Logger.debug(
       `[security-audit-stack] centralSecurityServices.securityHub.enable: ${props.securityConfig.centralSecurityServices.securityHub.enable}`,
     );
@@ -89,6 +95,22 @@ export class SecurityAuditStack extends AcceleratorStack {
 
       new SecurityHubMembers(this, 'SecurityHubMembers', {
         region: cdk.Stack.of(this).region,
+      });
+    }
+
+    //
+    // IAM Access Analyzer (Does not have a native service enabler)
+    //
+    Logger.debug(
+      `[security-audit-stack] centralSecurityServices.accessAnalyzer.enable: ${props.securityConfig.centralSecurityServices.accessAnalyzer.enable}`,
+    );
+    if (
+      props.securityConfig.centralSecurityServices.accessAnalyzer.enable &&
+      props.globalConfig.homeRegion === cdk.Stack.of(this).region
+    ) {
+      Logger.info('[security-audit-stack] Adding IAM Access Analyzer ');
+      new cdk.aws_accessanalyzer.CfnAnalyzer(this, 'AccessAnalyzer', {
+        type: 'ORGANIZATION',
       });
     }
   }

@@ -1,5 +1,5 @@
 {
-  "name": "@aws-accelerator/constructs-aws-organizations-enable-aws-service-access",
+  "name": "@aws-accelerator/constructs-aws-organizations-register-delegated-administrator",
   "version": "0.0.0",
   "license": "Apache-2.0",
   "author": {

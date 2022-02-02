@@ -13,13 +13,13 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import {
-  DisableAWSServiceAccessCommand,
-  EnableAWSServiceAccessCommand,
+  DeregisterDelegatedAdministratorCommand,
   OrganizationsClient,
+  RegisterDelegatedAdministratorCommand,
 } from '@aws-sdk/client-organizations';
 
 /**
- * enable-aws-service-access - lambda handler
+ * register-delegated-administrator - lambda handler
  *
  * @param event
  * @returns
@@ -32,6 +32,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const servicePrincipal: string = event.ResourceProperties['servicePrincipal'];
+  const accountId: string = event.ResourceProperties['accountId'];
 
   const organizationsClient = new OrganizationsClient({});
 
@@ -40,8 +41,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Update':
       await throttlingBackOff(() =>
         organizationsClient.send(
-          new EnableAWSServiceAccessCommand({
+          new RegisterDelegatedAdministratorCommand({
             ServicePrincipal: servicePrincipal,
+            AccountId: accountId,
           }),
         ),
       );
@@ -54,11 +56,13 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Delete':
       await throttlingBackOff(() =>
         organizationsClient.send(
-          new DisableAWSServiceAccessCommand({
+          new DeregisterDelegatedAdministratorCommand({
             ServicePrincipal: servicePrincipal,
+            AccountId: accountId,
           }),
         ),
       );
+
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',

@@ -64,6 +64,13 @@ export class SecurityConfigTypes {
   });
 
   /**
+   * AccessAnalyzer Interface
+   */
+  static readonly accessAnalyzerConfig = t.interface({
+    enable: t.boolean,
+  });
+
+  /**
    * SecurityConfig Interface
    */
   static readonly centralSecurityServicesConfig = t.interface({
@@ -71,6 +78,7 @@ export class SecurityConfigTypes {
     macie: SecurityConfigTypes.macieConfig,
     guardduty: SecurityConfigTypes.guardDutyConfig,
     securityHub: SecurityConfigTypes.securityHubConfig,
+    accessAnalyzer: SecurityConfigTypes.accessAnalyzerConfig,
   });
 
   static readonly configRule = t.interface({
@@ -135,6 +143,10 @@ export class SecurityHubConfig implements t.TypeOf<typeof SecurityConfigTypes.se
   readonly standards: SecurityHubStandardConfig[] = [];
 }
 
+export class AccessAnalyzerConfig implements t.TypeOf<typeof SecurityConfigTypes.accessAnalyzerConfig> {
+  readonly enable = true;
+}
+
 export class CentralSecurityServicesConfig
   implements t.TypeOf<typeof SecurityConfigTypes.centralSecurityServicesConfig>
 {
@@ -142,6 +154,7 @@ export class CentralSecurityServicesConfig
   readonly macie: MacieConfig = new MacieConfig();
   readonly guardduty: GuardDutyConfig = new GuardDutyConfig();
   readonly securityHub: SecurityHubConfig = new SecurityHubConfig();
+  readonly accessAnalyzer: AccessAnalyzerConfig = new AccessAnalyzerConfig();
 }
 
 export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRule> {

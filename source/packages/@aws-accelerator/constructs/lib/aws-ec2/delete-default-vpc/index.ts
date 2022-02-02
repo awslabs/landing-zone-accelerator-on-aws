@@ -12,15 +12,14 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as console from 'console';
 import {
   DeleteInternetGatewayCommand,
-  DetachInternetGatewayCommand,
   DeleteNetworkAclCommand,
   DeleteRouteCommand,
   DeleteSecurityGroupCommand,
   DeleteSubnetCommand,
   DeleteVpcCommand,
+  DetachInternetGatewayCommand,
   EC2Client,
   paginateDescribeInternetGateways,
   paginateDescribeNetworkAcls,
@@ -29,6 +28,7 @@ import {
   paginateDescribeSubnets,
   paginateDescribeVpcs,
 } from '@aws-sdk/client-ec2';
+import * as console from 'console';
 
 /**
  * delete-default-vpc - lambda handler

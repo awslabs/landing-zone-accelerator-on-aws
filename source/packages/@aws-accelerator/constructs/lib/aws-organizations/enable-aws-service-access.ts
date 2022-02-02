@@ -28,7 +28,7 @@ export class EnableAwsServiceAccess extends Construct {
         policyStatements: [
           {
             Effect: 'Allow',
-            Action: ['organizations:EnableAwsServiceAccess'],
+            Action: ['organizations:DisableAWSServiceAccess', 'organizations:EnableAwsServiceAccess'],
             Resource: '*',
           },
         ],

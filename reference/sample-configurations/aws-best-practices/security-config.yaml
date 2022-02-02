@@ -28,9 +28,18 @@ centralSecurityServices:
       - name: PCI DSS v3.2.1
         enable: true
         controlsToDisable:
-          - IAM.1
-          - EC2.10
-          - Lambda.4
+          - PCI.IAM.3
+          - PCI.S3.3
+          - PCI.EC2.3
+          - PCI.Lambda.2
+      - name: CIS AWS Foundations Benchmark v1.2.0
+        enable: true
+        controlsToDisable:
+          - CIS.1.20
+          - CIS.1.22
+          - CIS.2.6
+  accessAnalyzer:
+    enable: true
 awsConfig:
   enableConfigurationRecorder: true
   enableDeliveryChannel: true
@@ -55,14 +64,14 @@ awsConfig:
           complianceResourceTypes:
             - AWS::CloudWatch::Alarm
           inputParameters:
-            alarmActionRequired: 'TRUE'
-            insufficientDataActionRequired: 'TRUE'
-            okActionRequired: 'FALSE'
+            alarmActionRequired: "TRUE"
+            insufficientDataActionRequired: "TRUE"
+            okActionRequired: "FALSE"
           identifier: CLOUDWATCH_ALARM_ACTION_CHECK
         - name: accelerator-redshift-cluster-configuration-check
           inputParameters:
-            clusterDbEncrypted: 'TRUE'
-            loggingEnabled: 'TRUE'
+            clusterDbEncrypted: "TRUE"
+            loggingEnabled: "TRUE"
           complianceResourceTypes:
             - AWS::Redshift::Cluster
           identifier: REDSHIFT_CLUSTER_CONFIGURATION_CHECK
@@ -88,8 +97,8 @@ awsConfig:
           identifier: INSTANCES_IN_VPC
         - name: accelerator-vpc-sg-open-only-to-authorized-ports
           inputParameters:
-            authorizedTcpPorts: '443'
-            authorizedUdpPorts: '1020-1025'
+            authorizedTcpPorts: "443"
+            authorizedUdpPorts: "1020-1025"
           complianceResourceTypes:
             - AWS::EC2::SecurityGroup
           identifier: VPC_SG_OPEN_ONLY_TO_AUTHORIZED_PORTS
@@ -140,7 +149,7 @@ awsConfig:
           identifier: EC2_INSTANCE_DETAILED_MONITORING_ENABLED
         - name: accelerator-ec2-volume-inuse-check
           inputParameters:
-            deleteOnTermination: 'TRUE'
+            deleteOnTermination: "TRUE"
           complianceResourceTypes:
             - AWS::EC2::Volume
           identifier: EC2_VOLUME_INUSE_CHECK
@@ -168,9 +177,9 @@ awsConfig:
           identifier: IAM_USER_MFA_ENABLED
         - name: accelerator-guardduty-non-archived-findings
           inputParameters:
-            daysHighSev: '1'
-            daysLowSev: '30'
-            daysMediumSev: '7'
+            daysHighSev: "1"
+            daysLowSev: "30"
+            daysMediumSev: "7"
           identifier: GUARDDUTY_NON_ARCHIVED_FINDINGS
         - name: accelerator-elasticsearch-node-to-node-encryption-check
           complianceResourceTypes:

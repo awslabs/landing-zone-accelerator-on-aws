@@ -17,6 +17,7 @@ import {
   EnableSharingWithAwsOrganization,
   GuardDutyOrganizationAdminAccount,
   MacieOrganizationAdminAccount,
+  RegisterDelegatedAdministrator,
   SecurityHubOrganizationAdminAccount,
 } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
@@ -135,6 +136,23 @@ export class OrganizationsStack extends AcceleratorStack {
       }
 
       //
+      // IAM Access Analyzer (Does not have a native service enabler)
+      //
+      if (props.securityConfig.centralSecurityServices.accessAnalyzer.enable) {
+        Logger.debug('[organizations-stack] Enable Service Access for access-analyzer.amazonaws.com');
+        new EnableAwsServiceAccess(this, 'EnableAccessAnalyzer', {
+          servicePrincipal: 'access-analyzer.amazonaws.com',
+        });
+        new iam.CfnServiceLinkedRole(this, 'AccessAnalyzerServiceLinkedRole', {
+          awsServiceName: 'access-analyzer.amazonaws.com',
+        });
+        new RegisterDelegatedAdministrator(this, 'RegisterDelegatedAdministratorAccessAnalyzer', {
+          accountId: props.accountsConfig.getAuditAccountId(),
+          servicePrincipal: 'access-analyzer.amazonaws.com',
+        });
+      }
+
+      //
       // Enable RAM organization sharing
       //
       new EnableSharingWithAwsOrganization(this, 'EnableSharingWithAwsOrganization');
@@ -152,19 +170,22 @@ export class OrganizationsStack extends AcceleratorStack {
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
-        console.log(
-          `Starts macie admin account delegation to the account with email ${
+        Logger.debug(
+          `[organizations-stack] Starts macie admin account delegation to the account with email ${
             props.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
-        console.log(`Macie Admin Account ID is ${adminAccountId}`);
+
+        Logger.debug(`[organizations-stack] Macie Admin Account ID is ${adminAccountId}`);
         new MacieOrganizationAdminAccount(this, 'MacieOrganizationAdminAccount', {
           region: cdk.Stack.of(this).region,
           adminAccountId: adminAccountId,
         });
       } else {
-        console.log(
-          `${cdk.Stack.of(this).region} region was in macie excluded list so ignoring this region for ${
+        Logger.debug(
+          `[organizations-stack] ${
+            cdk.Stack.of(this).region
+          } region was in macie excluded list so ignoring this region for ${
             props.accountsConfig.getAuditAccount().email
           } account`,
         );
@@ -178,20 +199,22 @@ export class OrganizationsStack extends AcceleratorStack {
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
-        console.log(
-          `Starts guardduty admin account delegation to the account with email ${
+        Logger.debug(
+          `[organizations-stack] Starts guardduty admin account delegation to the account with email ${
             props.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
-        console.log(`Guardduty Admin Account ID is ${adminAccountId}`);
+        Logger.debug(`[organizations-stack] Guardduty Admin Account ID is ${adminAccountId}`);
         new GuardDutyOrganizationAdminAccount(this, 'GuardDutyEnableOrganizationAdminAccount', {
           region: cdk.Stack.of(this).region,
           adminAccountId: adminAccountId,
         });
       } else {
-        console.log(
-          `${cdk.Stack.of(this).region} region was in guardduty excluded list so ignoring this region for ${
+        Logger.debug(
+          `[organizations-stack] ${
+            cdk.Stack.of(this).region
+          } region was in guardduty excluded list so ignoring this region for ${
             props.accountsConfig.getAuditAccount().email
           } account`,
         );
@@ -205,20 +228,22 @@ export class OrganizationsStack extends AcceleratorStack {
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
-        console.log(
-          `Starts SecurityHub admin account delegation to the account with email ${
+        Logger.debug(
+          `[organizations-stack] Starts SecurityHub admin account delegation to the account with email ${
             props.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
-        console.log(`SecurityHub Admin Account ID is ${adminAccountId}`);
+        Logger.debug(`[organizations-stack] SecurityHub Admin Account ID is ${adminAccountId}`);
         new SecurityHubOrganizationAdminAccount(this, 'SecurityHubOrganizationAdminAccount', {
           region: cdk.Stack.of(this).region,
           adminAccountId: adminAccountId,
         });
       } else {
-        console.log(
-          `${cdk.Stack.of(this).region} region was in SecurityHub excluded list so ignoring this region for ${
+        Logger.debug(
+          `[organizations-stack] ${
+            cdk.Stack.of(this).region
+          } region was in SecurityHub excluded list so ignoring this region for ${
             props.accountsConfig.getAuditAccount().email
           } account`,
         );
