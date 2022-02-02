@@ -82,10 +82,18 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
       throw new Error('Attempting to add Internet Gateway route without an IGW defined.');
     }
 
-    new cdk.aws_ec2.CfnRoute(this, id, {
+    if (!this.vpc.internetGatewayAttachment) {
+      throw new Error('Attempting to add Internet Gateway route without an IGW attached.');
+    }
+
+    const route = new cdk.aws_ec2.CfnRoute(this, id, {
       routeTableId: this.routeTableId,
       destinationCidrBlock: destination,
       gatewayId: this.vpc.internetGateway.ref,
     });
+
+    // Need to add depends on for the attachment, as IGW needs to be part of
+    // the network (vpc)
+    route.addDependsOn(this.vpc.internetGatewayAttachment);
   }
 }
