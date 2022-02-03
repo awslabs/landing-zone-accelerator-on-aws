@@ -21,6 +21,7 @@ import {
 } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { pascalCase } from 'pascal-case';
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
@@ -112,6 +113,91 @@ export class SecurityAuditStack extends AcceleratorStack {
       new cdk.aws_accessanalyzer.CfnAnalyzer(this, 'AccessAnalyzer', {
         type: 'ORGANIZATION',
       });
+    }
+
+    //
+    // SNS Notification Topics and Subscriptions
+    //
+    Logger.info(`[security-audit-stack] Create SNS Topics and Subscriptions`);
+
+    // Create CMK for topic
+    // TODO: replace this with the single Accelerator key
+    const topicCmk = new cdk.aws_kms.Key(this, 'TopicCmk', {
+      enableKeyRotation: true,
+      description: 'AWS Accelerator SNS Topic CMK',
+    });
+    topicCmk.addAlias('accelerator/sns/topic');
+    topicCmk.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'Allow Organization use of the key',
+        actions: [
+          'kms:Decrypt',
+          'kms:DescribeKey',
+          'kms:Encrypt',
+          'kms:GenerateDataKey',
+          'kms:GenerateDataKeyPair',
+          'kms:GenerateDataKeyPairWithoutPlaintext',
+          'kms:GenerateDataKeyWithoutPlaintext',
+          'kms:ReEncryptFrom',
+          'kms:ReEncryptTo',
+        ],
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'aws:PrincipalOrgID': props.organizationConfig.organizationId,
+          },
+        },
+      }),
+    );
+    topicCmk.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'Allow AWS Services to encrypt and describe logs',
+        actions: [
+          'kms:Decrypt',
+          'kms:DescribeKey',
+          'kms:Encrypt',
+          'kms:GenerateDataKey',
+          'kms:GenerateDataKeyPair',
+          'kms:GenerateDataKeyPairWithoutPlaintext',
+          'kms:GenerateDataKeyWithoutPlaintext',
+          'kms:ReEncryptFrom',
+          'kms:ReEncryptTo',
+        ],
+        principals: [
+          new cdk.aws_iam.ServicePrincipal('cloudwatch.amazonaws.com'),
+          new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
+        ],
+        resources: ['*'],
+      }),
+    );
+
+    // Loop through all the subscription entries
+    for (const snsSubscriptionItem of props.securityConfig.centralSecurityServices.snsSubscriptions ?? []) {
+      Logger.info(`[security-audit-stack] Create SNS Topic: ${snsSubscriptionItem.level}`);
+      const topic = new cdk.aws_sns.Topic(this, `${pascalCase(snsSubscriptionItem.level)}SnsTopic`, {
+        displayName: `AWS Accelerator - ${snsSubscriptionItem.level} Notifications`,
+        topicName: `aws-accelerator-${snsSubscriptionItem.level}Notifications`,
+        masterKey: topicCmk,
+      });
+
+      // Allowing Publish from CloudWatch Service form any account
+      topic.grantPublish({
+        grantPrincipal: new cdk.aws_iam.ServicePrincipal('cloudwatch.amazonaws.com'),
+      });
+
+      // Allowing Publish from Lambda Service form any account
+      topic.grantPublish({
+        grantPrincipal: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
+      });
+
+      // Allowing Publish from Organization
+      topic.grantPublish({
+        grantPrincipal: new cdk.aws_iam.OrganizationPrincipal(props.organizationConfig.organizationId),
+      });
+
+      Logger.info(`[security-audit-stack] Create SNS Subscription: ${snsSubscriptionItem.email}`);
+      topic.addSubscription(new cdk.aws_sns_subscriptions.EmailSubscription(snsSubscriptionItem.email));
     }
   }
 }

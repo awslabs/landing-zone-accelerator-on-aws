@@ -198,5 +198,127 @@ export class SecurityStack extends AcceleratorStack {
         ...props.securityConfig.centralSecurityServices.iamPasswordPolicy,
       });
     }
+
+    //
+    // CloudWatch Metrics
+    //
+    for (const metricSetItem of props.securityConfig.cloudWatch.metricSets ?? []) {
+      if (!metricSetItem.regions?.includes(cdk.Stack.of(this).region)) {
+        Logger.info(`[security-stack] Current region not explicity specified for metric item, skip`);
+        continue;
+      }
+
+      if (!this.isIncluded(metricSetItem.deploymentTargets)) {
+        Logger.info(`[security-stack] Item excluded`);
+        continue;
+      }
+
+      for (const metricItem of metricSetItem.metrics ?? []) {
+        Logger.info(`[security-stack] Creating CloudWatch metric filter ${metricItem.filterName}`);
+
+        new cdk.aws_logs.MetricFilter(this, pascalCase(metricItem.filterName), {
+          logGroup: cdk.aws_logs.LogGroup.fromLogGroupName(
+            this,
+            `${pascalCase(metricItem.filterName)}_${pascalCase(metricItem.logGroupName)}`,
+            metricItem.logGroupName,
+          ),
+          metricNamespace: metricItem.metricNamespace,
+          metricName: metricItem.metricName,
+          filterPattern: cdk.aws_logs.FilterPattern.literal(metricItem.filterPattern),
+          metricValue: metricItem.metricValue,
+        });
+      }
+    }
+
+    //
+    // CloudWatch Alarms
+    //
+    for (const alarmSetItem of props.securityConfig.cloudWatch.alarmSets ?? []) {
+      if (!alarmSetItem.regions?.includes(cdk.Stack.of(this).region)) {
+        Logger.info(`[security-stack] Current region not explicity specified for alarm item, skip`);
+        continue;
+      }
+
+      if (!this.isIncluded(alarmSetItem.deploymentTargets)) {
+        Logger.info(`[security-stack] Item excluded`);
+        continue;
+      }
+
+      for (const alarmItem of alarmSetItem.alarms ?? []) {
+        Logger.info(`[security-stack] Creating CloudWatch alarm ${alarmItem.alarmName}`);
+
+        const alarm = new cdk.aws_cloudwatch.Alarm(this, pascalCase(alarmItem.alarmName), {
+          alarmName: alarmItem.alarmName,
+          alarmDescription: alarmItem.alarmDescription,
+          metric: new cdk.aws_cloudwatch.Metric({
+            metricName: alarmItem.metricName,
+            namespace: alarmItem.namespace,
+            period: cdk.Duration.seconds(alarmItem.period),
+            statistic: alarmItem.statistic,
+          }),
+          comparisonOperator: this.getComparisonOperator(alarmItem.comparisonOperator),
+          evaluationPeriods: alarmItem.evaluationPeriods,
+          threshold: alarmItem.threshold,
+          treatMissingData: this.getTreatMissingData(alarmItem.treatMissingData),
+        });
+
+        alarm.addAlarmAction(
+          new cdk.aws_cloudwatch_actions.SnsAction(
+            cdk.aws_sns.Topic.fromTopicArn(
+              this,
+              `${pascalCase(alarmItem.alarmName)}Topic`,
+              cdk.Stack.of(this).formatArn({
+                service: 'sns',
+                region: cdk.Stack.of(this).region,
+                account: props.accountsConfig.getAuditAccountId(),
+                resource: `aws-accelerator-${alarmItem.snsAlertLevel}Notifications`,
+                arnFormat: cdk.ArnFormat.NO_RESOURCE_NAME,
+              }),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  private getComparisonOperator(comparisonOperator: string): cdk.aws_cloudwatch.ComparisonOperator {
+    if (comparisonOperator === 'GreaterThanOrEqualToThreshold') {
+      return cdk.aws_cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD;
+    }
+    if (comparisonOperator === 'GreaterThanThreshold') {
+      return cdk.aws_cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD;
+    }
+    if (comparisonOperator === 'LessThanThreshold') {
+      return cdk.aws_cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD;
+    }
+    if (comparisonOperator === 'LessThanOrEqualToThreshold') {
+      return cdk.aws_cloudwatch.ComparisonOperator.LESS_THAN_OR_EQUAL_TO_THRESHOLD;
+    }
+    if (comparisonOperator === 'LessThanLowerOrGreaterThanUpperThreshold') {
+      return cdk.aws_cloudwatch.ComparisonOperator.LESS_THAN_LOWER_OR_GREATER_THAN_UPPER_THRESHOLD;
+    }
+    if (comparisonOperator === 'GreaterThanUpperThreshold') {
+      return cdk.aws_cloudwatch.ComparisonOperator.GREATER_THAN_UPPER_THRESHOLD;
+    }
+    if (comparisonOperator === 'LessThanLowerThreshold') {
+      return cdk.aws_cloudwatch.ComparisonOperator.LESS_THAN_LOWER_THRESHOLD;
+    }
+    return cdk.aws_cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD;
+  }
+
+  private getTreatMissingData(treatMissingData: string): cdk.aws_cloudwatch.TreatMissingData {
+    if (treatMissingData === 'breaching') {
+      return cdk.aws_cloudwatch.TreatMissingData.BREACHING;
+    }
+    if (treatMissingData === 'notBreaching') {
+      return cdk.aws_cloudwatch.TreatMissingData.NOT_BREACHING;
+    }
+    if (treatMissingData === 'ignore') {
+      return cdk.aws_cloudwatch.TreatMissingData.IGNORE;
+    }
+    if (treatMissingData === 'missing') {
+      return cdk.aws_cloudwatch.TreatMissingData.MISSING;
+    }
+    return cdk.aws_cloudwatch.TreatMissingData.NOT_BREACHING;
   }
 }

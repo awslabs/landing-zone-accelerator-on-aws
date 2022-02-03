@@ -4,9 +4,11 @@ import * as path from 'path';
 import * as yaml from 'js-yaml';
 
 export class SecurityConfigTypes {
-  /**
-   * MacieConfig Interface
-   */
+  static readonly snsSubscriptionConfig = t.interface({
+    level: t.nonEmptyString,
+    email: t.nonEmptyString,
+  });
+
   static readonly macieConfig = t.interface({
     enable: t.boolean,
     excludeRegions: t.optional(t.array(t.region)),
@@ -14,36 +16,24 @@ export class SecurityConfigTypes {
     publishSensitiveDataFindings: t.boolean,
   });
 
-  /**
-   * GuardDutyS3Protection Interface
-   */
   static readonly guardDutyS3ProtectionConfig = t.interface({
     enable: t.boolean,
     excludeRegions: t.optional(t.array(t.region)),
   });
 
-  /**
-   * GuardDutyExportFindingsConfig Interface
-   */
   static readonly guardDutyExportFindingsConfig = t.interface({
     enable: t.boolean,
     destinationType: t.enums('DestinationType', ['S3']),
     exportFrequency: t.enums('ExportFrequencyType', ['FIFTEEN_MINUTES', 'ONE_HOUR', 'SIX_HOURS']),
   });
 
-  /**
-   * GuardDutyConfig Interface
-   */
   static readonly guardDutyConfig = t.interface({
     enable: t.boolean,
     excludeRegions: t.optional(t.array(t.region)),
-    s3Protection: SecurityConfigTypes.guardDutyS3ProtectionConfig,
-    exportConfiguration: SecurityConfigTypes.guardDutyExportFindingsConfig,
+    s3Protection: this.guardDutyS3ProtectionConfig,
+    exportConfiguration: this.guardDutyExportFindingsConfig,
   });
 
-  /**
-   * SecurityHubStandardConfig Interface
-   */
   static readonly securityHubStandardConfig = t.interface({
     name: t.enums('ExportFrequencyType', [
       'AWS Foundational Security Best Practices v1.0.0',
@@ -54,25 +44,16 @@ export class SecurityConfigTypes {
     controlsToDisable: t.optional(t.array(t.nonEmptyString)),
   });
 
-  /**
-   * SecurityHubConfig Interface
-   */
   static readonly securityHubConfig = t.interface({
     enable: t.boolean,
     excludeRegions: t.optional(t.array(t.region)),
-    standards: t.array(SecurityConfigTypes.securityHubStandardConfig),
+    standards: t.array(this.securityHubStandardConfig),
   });
 
-  /**
-   * AccessAnalyzer Interface
-   */
   static readonly accessAnalyzerConfig = t.interface({
     enable: t.boolean,
   });
 
-  /*
-   * IAM Password Policies
-   */
   static readonly iamPasswordPolicyConfig = t.interface({
     allowUsersToChangePassword: t.boolean,
     hardExpiry: t.boolean,
@@ -85,9 +66,6 @@ export class SecurityConfigTypes {
     maxPasswordAge: t.number,
   });
 
-  /**
-   * SecurityConfig Interface
-   */
   static readonly centralSecurityServicesConfig = t.interface({
     delegatedAdminAccount: t.nonEmptyString,
     macie: SecurityConfigTypes.macieConfig,
@@ -106,18 +84,59 @@ export class SecurityConfigTypes {
 
   static readonly awsConfigRuleSet = t.interface({
     deploymentTargets: t.deploymentTargets,
-    rules: t.array(SecurityConfigTypes.configRule),
+    rules: t.array(this.configRule),
   });
 
   static readonly awsConfig = t.interface({
     enableConfigurationRecorder: t.boolean,
     enableDeliveryChannel: t.boolean,
-    ruleSets: t.array(SecurityConfigTypes.awsConfigRuleSet),
+    ruleSets: t.array(this.awsConfigRuleSet),
+  });
+
+  static readonly metricConfig = t.interface({
+    filterName: t.nonEmptyString,
+    logGroupName: t.nonEmptyString,
+    filterPattern: t.nonEmptyString,
+    metricNamespace: t.nonEmptyString,
+    metricName: t.nonEmptyString,
+    metricValue: t.nonEmptyString,
+  });
+
+  static readonly metricSetConfig = t.interface({
+    regions: t.optional(t.array(t.nonEmptyString)),
+    deploymentTargets: t.deploymentTargets,
+    metrics: t.array(this.metricConfig),
+  });
+
+  static readonly alarmConfig = t.interface({
+    alarmName: t.nonEmptyString,
+    alarmDescription: t.nonEmptyString,
+    snsAlertLevel: t.nonEmptyString,
+    metricName: t.nonEmptyString,
+    namespace: t.nonEmptyString,
+    comparisonOperator: t.nonEmptyString,
+    evaluationPeriods: t.number,
+    period: t.number,
+    statistic: t.nonEmptyString,
+    threshold: t.number,
+    treatMissingData: t.nonEmptyString,
+  });
+
+  static readonly alarmSetConfig = t.interface({
+    regions: t.optional(t.array(t.nonEmptyString)),
+    deploymentTargets: t.deploymentTargets,
+    alarms: t.array(this.alarmConfig),
+  });
+
+  static readonly cloudWatchConfig = t.interface({
+    metricSets: t.array(this.metricSetConfig),
+    alarmSets: t.array(this.alarmSetConfig),
   });
 
   static readonly securityConfig = t.interface({
-    centralSecurityServices: SecurityConfigTypes.centralSecurityServicesConfig,
-    awsConfig: SecurityConfigTypes.awsConfig,
+    centralSecurityServices: this.centralSecurityServicesConfig,
+    awsConfig: this.awsConfig,
+    cloudWatch: this.cloudWatchConfig,
   });
 }
 
@@ -175,10 +194,16 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
   readonly maxPasswordAge = 90;
 }
 
+export class SnsSubscriptionConfig implements t.TypeOf<typeof SecurityConfigTypes.snsSubscriptionConfig> {
+  readonly level: string = '';
+  readonly email: string = '';
+}
+
 export class CentralSecurityServicesConfig
   implements t.TypeOf<typeof SecurityConfigTypes.centralSecurityServicesConfig>
 {
   readonly delegatedAdminAccount = 'Audit';
+  readonly snsSubscriptions: SnsSubscriptionConfig[] = [];
   readonly macie: MacieConfig = new MacieConfig();
   readonly guardduty: GuardDutyConfig = new GuardDutyConfig();
   readonly securityHub: SecurityHubConfig = new SecurityHubConfig();
@@ -204,11 +229,53 @@ export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig>
   readonly ruleSets: AwsConfigRuleSet[] = [];
 }
 
+export class MetricConfig implements t.TypeOf<typeof SecurityConfigTypes.metricConfig> {
+  readonly filterName: string = '';
+  readonly logGroupName: string = '';
+  readonly filterPattern: string = '';
+  readonly metricNamespace: string = '';
+  readonly metricName: string = '';
+  readonly metricValue: string = '';
+  readonly treatMissingData: string | undefined = undefined;
+}
+
+export class MetricSetConfig implements t.TypeOf<typeof SecurityConfigTypes.metricSetConfig> {
+  readonly regions: string[] | undefined = undefined;
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+  readonly metrics: MetricConfig[] = [];
+}
+
+export class AlarmConfig implements t.TypeOf<typeof SecurityConfigTypes.alarmConfig> {
+  readonly alarmName: string = '';
+  readonly alarmDescription: string = '';
+  readonly snsAlertLevel: string = '';
+  readonly metricName: string = '';
+  readonly namespace: string = '';
+  readonly comparisonOperator: string = '';
+  readonly evaluationPeriods: number = 1;
+  readonly period: number = 300;
+  readonly statistic: string = '';
+  readonly threshold: number = 1;
+  readonly treatMissingData: string = '';
+}
+
+export class AlarmSetConfig implements t.TypeOf<typeof SecurityConfigTypes.alarmSetConfig> {
+  readonly regions: string[] | undefined = undefined;
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+  readonly alarms: AlarmConfig[] = [];
+}
+
+export class CloudWatchConfig implements t.TypeOf<typeof SecurityConfigTypes.cloudWatchConfig> {
+  readonly metricSets: MetricSetConfig[] = [];
+  readonly alarmSets: AlarmSetConfig[] = [];
+}
+
 export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.securityConfig> {
   static readonly FILENAME = 'security-config.yaml';
 
   readonly centralSecurityServices: CentralSecurityServicesConfig = new CentralSecurityServicesConfig();
   readonly awsConfig: AwsConfig = new AwsConfig();
+  readonly cloudWatch: CloudWatchConfig = new CloudWatchConfig();
 
   constructor(values?: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
     if (values) {
