@@ -40,6 +40,16 @@ centralSecurityServices:
           - CIS.2.6
   accessAnalyzer:
     enable: true
+  iamPasswordPolicy:
+    allowUsersToChangePassword: true
+    hardExpiry: false
+    requireUppercaseCharacters: true
+    requireLowercaseCharacters: true
+    requireSymbols: true
+    requireNumbers: true
+    minimumPasswordLength: 14
+    passwordReusePrevention: 24
+    maxPasswordAge: 90
 awsConfig:
   enableConfigurationRecorder: true
   enableDeliveryChannel: true

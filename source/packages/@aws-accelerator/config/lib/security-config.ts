@@ -70,6 +70,21 @@ export class SecurityConfigTypes {
     enable: t.boolean,
   });
 
+  /*
+   * IAM Password Policies
+   */
+  static readonly iamPasswordPolicyConfig = t.interface({
+    allowUsersToChangePassword: t.boolean,
+    hardExpiry: t.boolean,
+    requireUppercaseCharacters: t.boolean,
+    requireLowercaseCharacters: t.boolean,
+    requireSymbols: t.boolean,
+    requireNumbers: t.boolean,
+    minimumPasswordLength: t.number,
+    passwordReusePrevention: t.number,
+    maxPasswordAge: t.number,
+  });
+
   /**
    * SecurityConfig Interface
    */
@@ -79,6 +94,7 @@ export class SecurityConfigTypes {
     guardduty: SecurityConfigTypes.guardDutyConfig,
     securityHub: SecurityConfigTypes.securityHubConfig,
     accessAnalyzer: SecurityConfigTypes.accessAnalyzerConfig,
+    iamPasswordPolicy: SecurityConfigTypes.iamPasswordPolicyConfig,
   });
 
   static readonly configRule = t.interface({
@@ -147,6 +163,18 @@ export class AccessAnalyzerConfig implements t.TypeOf<typeof SecurityConfigTypes
   readonly enable = true;
 }
 
+export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTypes.iamPasswordPolicyConfig> {
+  readonly allowUsersToChangePassword = true;
+  readonly hardExpiry = false;
+  readonly requireUppercaseCharacters = true;
+  readonly requireLowercaseCharacters = true;
+  readonly requireSymbols = true;
+  readonly requireNumbers = true;
+  readonly minimumPasswordLength = 14;
+  readonly passwordReusePrevention = 24;
+  readonly maxPasswordAge = 90;
+}
+
 export class CentralSecurityServicesConfig
   implements t.TypeOf<typeof SecurityConfigTypes.centralSecurityServicesConfig>
 {
@@ -155,6 +183,7 @@ export class CentralSecurityServicesConfig
   readonly guardduty: GuardDutyConfig = new GuardDutyConfig();
   readonly securityHub: SecurityHubConfig = new SecurityHubConfig();
   readonly accessAnalyzer: AccessAnalyzerConfig = new AccessAnalyzerConfig();
+  readonly iamPasswordPolicy: IamPasswordPolicyConfig = new IamPasswordPolicyConfig();
 }
 
 export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRule> {

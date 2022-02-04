@@ -16,6 +16,7 @@ import {
   GuardDutyPublishingDestination,
   MacieExportConfigClassification,
   SecurityHubStandards,
+  PasswordPolicy,
 } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import * as config from 'aws-cdk-lib/aws-config';
@@ -26,13 +27,15 @@ import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { Logger } from '../logger';
 
 /**
- * Organizational Security Stack, depends on Organizations and Security-Audit Stack
+ * Security Stack, configures local account security services
  */
 export class SecurityStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
+    //
     // MacieSession configuration
+    //
     if (
       props.securityConfig.centralSecurityServices.macie.enable &&
       props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
@@ -50,7 +53,9 @@ export class SecurityStack extends AcceleratorStack {
       }
     }
 
-    //GuardDuty configuration
+    //
+    // GuardDuty configuration
+    //
     if (
       props.securityConfig.centralSecurityServices.guardduty.enable &&
       props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
@@ -69,7 +74,9 @@ export class SecurityStack extends AcceleratorStack {
       }
     }
 
-    //SecurityHub configuration
+    //
+    // SecurityHub configuration
+    //
     if (
       props.securityConfig.centralSecurityServices.securityHub.enable &&
       props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(
@@ -145,6 +152,9 @@ export class SecurityStack extends AcceleratorStack {
       }
     }
 
+    //
+    // Config Rules
+    //
     Logger.info('[security-stack] Evaluating AWS Config rule sets');
     for (const ruleSet of props.securityConfig.awsConfig.ruleSets) {
       if (!this.isIncluded(ruleSet.deploymentTargets)) {
@@ -177,6 +187,16 @@ export class SecurityStack extends AcceleratorStack {
           configRule.node.addDependency(configRecorder);
         }
       }
+    }
+
+    //
+    // Update IAM Password Policy
+    //
+    if (props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
+      Logger.info(`[security-stack] Setting the IAM Password policy`);
+      new PasswordPolicy(this, 'IamPasswordPolicy', {
+        ...props.securityConfig.centralSecurityServices.iamPasswordPolicy,
+      });
     }
   }
 }
