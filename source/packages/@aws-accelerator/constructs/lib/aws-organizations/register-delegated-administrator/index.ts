@@ -39,14 +39,24 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      await throttlingBackOff(() =>
-        organizationsClient.send(
-          new RegisterDelegatedAdministratorCommand({
-            ServicePrincipal: servicePrincipal,
-            AccountId: accountId,
-          }),
-        ),
-      );
+      try {
+        await throttlingBackOff(() =>
+          organizationsClient.send(
+            new RegisterDelegatedAdministratorCommand({
+              ServicePrincipal: servicePrincipal,
+              AccountId: accountId,
+            }),
+          ),
+        );
+      } catch (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        e: any
+      ) {
+        if (e.name === 'AccountAlreadyRegisteredException') {
+          console.warn(e.name + ': ' + e.message);
+          return;
+        }
+      }
 
       return {
         PhysicalResourceId: servicePrincipal,
