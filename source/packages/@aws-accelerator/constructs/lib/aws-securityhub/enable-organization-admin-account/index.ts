@@ -12,7 +12,6 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as console from 'console';
 import {
   AdminAccount,
   AdminStatus,
@@ -29,7 +28,7 @@ import {
 } from '@aws-sdk/client-organizations';
 
 /**
- * enable-guardduty - lambda handler
+ * SecurityHubOrganizationAdminAccount - lambda handler
  *
  * @param event
  * @returns
@@ -47,14 +46,15 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const organizationsClient = new OrganizationsClient({});
   const securityHubClient = new SecurityHubClient({ region: region });
 
-  // Enable security hub is master account before creating delegation admin account
-  await enableSecurityHub(securityHubClient);
   const adminAccount = await getSecurityHubDelegatedAccount(securityHubClient, adminAccountId);
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       if (!adminAccount.accountId) {
+        // Enable security hub in management account before creating delegation admin account
+        await enableSecurityHub(securityHubClient);
+
         console.log('start - EnableOrganizationAdminAccountCommand');
         await throttlingBackOff(() =>
           securityHubClient.send(new EnableOrganizationAdminAccountCommand({ AdminAccountId: adminAccountId })),
@@ -107,37 +107,48 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
 }
 
+/**
+ * Find SecurityHub delegated account Id
+ * @param securityHubClient
+ * @param adminAccountId
+ */
 async function getSecurityHubDelegatedAccount(
   securityHubClient: SecurityHubClient,
   adminAccountId: string,
-): Promise<{ accountId: string | undefined; status: boolean }> {
+): Promise<{ accountId: string | undefined; status: string | undefined }> {
   const adminAccounts: AdminAccount[] = [];
   for await (const page of paginateListOrganizationAdminAccounts({ client: securityHubClient }, {})) {
     for (const account of page.AdminAccounts ?? []) {
       adminAccounts.push(account);
     }
   }
+
   if (adminAccounts.length === 0) {
-    return { accountId: undefined, status: false };
+    return { accountId: undefined, status: undefined };
   }
   if (adminAccounts.length > 1) {
-    throw new Error('Multiple admin accounts for GuardDuty in organization');
+    throw new Error('Multiple admin accounts for SecurityHub in organization');
   }
 
   if (adminAccounts[0].AccountId === adminAccountId && adminAccounts[0].Status === AdminStatus.DISABLE_IN_PROGRESS) {
     throw new Error(`Admin account ${adminAccounts[0].AccountId} is in ${adminAccounts[0].Status}`);
   }
 
-  return { accountId: adminAccounts[0].AccountId, status: true };
+  return { accountId: adminAccounts[0].AccountId, status: adminAccounts[0].Status };
 }
 
+/**
+ * Enable SecurityHub
+ * @param securityHubClient
+ */
 async function enableSecurityHub(securityHubClient: SecurityHubClient): Promise<void> {
   try {
     await throttlingBackOff(() =>
       securityHubClient.send(new EnableSecurityHubCommand({ EnableDefaultStandards: false })),
     );
-  } catch (e) {
-    if (`${e}`.includes('Account is already subscribed to Security Hub')) {
+  } catch (e: any) {
+    if (e.name === 'ResourceConflictException') {
+      console.warn(e.name + ': ' + e.message);
       return;
     }
     throw new Error(`SecurityHub enable issue error message - ${e}`);
