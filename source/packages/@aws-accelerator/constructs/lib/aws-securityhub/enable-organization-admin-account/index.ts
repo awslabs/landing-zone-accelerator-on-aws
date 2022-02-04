@@ -146,7 +146,10 @@ async function enableSecurityHub(securityHubClient: SecurityHubClient): Promise<
     await throttlingBackOff(() =>
       securityHubClient.send(new EnableSecurityHubCommand({ EnableDefaultStandards: false })),
     );
-  } catch (e: any) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    e: any
+  ) {
     if (e.name === 'ResourceConflictException') {
       console.warn(e.name + ': ' + e.message);
       return;

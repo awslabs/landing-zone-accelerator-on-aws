@@ -50,6 +50,13 @@ export class SecurityConfigTypes {
     standards: t.array(this.securityHubStandardConfig),
   });
 
+  static readonly centralSecurityServicesConfig = t.interface({
+    delegatedAdminAccount: t.nonEmptyString,
+    macie: SecurityConfigTypes.macieConfig,
+    guardduty: SecurityConfigTypes.guardDutyConfig,
+    securityHub: SecurityConfigTypes.securityHubConfig,
+  });
+
   static readonly accessAnalyzerConfig = t.interface({
     enable: t.boolean,
   });
@@ -64,15 +71,6 @@ export class SecurityConfigTypes {
     minimumPasswordLength: t.number,
     passwordReusePrevention: t.number,
     maxPasswordAge: t.number,
-  });
-
-  static readonly centralSecurityServicesConfig = t.interface({
-    delegatedAdminAccount: t.nonEmptyString,
-    macie: SecurityConfigTypes.macieConfig,
-    guardduty: SecurityConfigTypes.guardDutyConfig,
-    securityHub: SecurityConfigTypes.securityHubConfig,
-    accessAnalyzer: SecurityConfigTypes.accessAnalyzerConfig,
-    iamPasswordPolicy: SecurityConfigTypes.iamPasswordPolicyConfig,
   });
 
   static readonly configRule = t.interface({
@@ -135,6 +133,8 @@ export class SecurityConfigTypes {
 
   static readonly securityConfig = t.interface({
     centralSecurityServices: this.centralSecurityServicesConfig,
+    accessAnalyzer: this.accessAnalyzerConfig,
+    iamPasswordPolicy: this.iamPasswordPolicyConfig,
     awsConfig: this.awsConfig,
     cloudWatch: this.cloudWatchConfig,
   });
@@ -178,6 +178,21 @@ export class SecurityHubConfig implements t.TypeOf<typeof SecurityConfigTypes.se
   readonly standards: SecurityHubStandardConfig[] = [];
 }
 
+export class SnsSubscriptionConfig implements t.TypeOf<typeof SecurityConfigTypes.snsSubscriptionConfig> {
+  readonly level: string = '';
+  readonly email: string = '';
+}
+
+export class CentralSecurityServicesConfig
+  implements t.TypeOf<typeof SecurityConfigTypes.centralSecurityServicesConfig>
+{
+  readonly delegatedAdminAccount = 'Audit';
+  readonly snsSubscriptions: SnsSubscriptionConfig[] = [];
+  readonly macie: MacieConfig = new MacieConfig();
+  readonly guardduty: GuardDutyConfig = new GuardDutyConfig();
+  readonly securityHub: SecurityHubConfig = new SecurityHubConfig();
+}
+
 export class AccessAnalyzerConfig implements t.TypeOf<typeof SecurityConfigTypes.accessAnalyzerConfig> {
   readonly enable = true;
 }
@@ -192,23 +207,6 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
   readonly minimumPasswordLength = 14;
   readonly passwordReusePrevention = 24;
   readonly maxPasswordAge = 90;
-}
-
-export class SnsSubscriptionConfig implements t.TypeOf<typeof SecurityConfigTypes.snsSubscriptionConfig> {
-  readonly level: string = '';
-  readonly email: string = '';
-}
-
-export class CentralSecurityServicesConfig
-  implements t.TypeOf<typeof SecurityConfigTypes.centralSecurityServicesConfig>
-{
-  readonly delegatedAdminAccount = 'Audit';
-  readonly snsSubscriptions: SnsSubscriptionConfig[] = [];
-  readonly macie: MacieConfig = new MacieConfig();
-  readonly guardduty: GuardDutyConfig = new GuardDutyConfig();
-  readonly securityHub: SecurityHubConfig = new SecurityHubConfig();
-  readonly accessAnalyzer: AccessAnalyzerConfig = new AccessAnalyzerConfig();
-  readonly iamPasswordPolicy: IamPasswordPolicyConfig = new IamPasswordPolicyConfig();
 }
 
 export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRule> {
@@ -274,6 +272,8 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
   static readonly FILENAME = 'security-config.yaml';
 
   readonly centralSecurityServices: CentralSecurityServicesConfig = new CentralSecurityServicesConfig();
+  readonly accessAnalyzer: AccessAnalyzerConfig = new AccessAnalyzerConfig();
+  readonly iamPasswordPolicy: IamPasswordPolicyConfig = new IamPasswordPolicyConfig();
   readonly awsConfig: AwsConfig = new AwsConfig();
   readonly cloudWatch: CloudWatchConfig = new CloudWatchConfig();
 

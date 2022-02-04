@@ -195,7 +195,7 @@ export class SecurityStack extends AcceleratorStack {
     if (props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
       Logger.info(`[security-stack] Setting the IAM Password policy`);
       new PasswordPolicy(this, 'IamPasswordPolicy', {
-        ...props.securityConfig.centralSecurityServices.iamPasswordPolicy,
+        ...props.securityConfig.iamPasswordPolicy,
       });
     }
 

@@ -138,7 +138,7 @@ export class OrganizationsStack extends AcceleratorStack {
       //
       // IAM Access Analyzer (Does not have a native service enabler)
       //
-      if (props.securityConfig.centralSecurityServices.accessAnalyzer.enable) {
+      if (props.securityConfig.accessAnalyzer.enable) {
         Logger.debug('[organizations-stack] Enable Service Access for access-analyzer.amazonaws.com');
         new EnableAwsServiceAccess(this, 'EnableAccessAnalyzer', {
           servicePrincipal: 'access-analyzer.amazonaws.com',

@@ -102,13 +102,8 @@ export class SecurityAuditStack extends AcceleratorStack {
     //
     // IAM Access Analyzer (Does not have a native service enabler)
     //
-    Logger.debug(
-      `[security-audit-stack] centralSecurityServices.accessAnalyzer.enable: ${props.securityConfig.centralSecurityServices.accessAnalyzer.enable}`,
-    );
-    if (
-      props.securityConfig.centralSecurityServices.accessAnalyzer.enable &&
-      props.globalConfig.homeRegion === cdk.Stack.of(this).region
-    ) {
+    Logger.debug(`[security-audit-stack] accessAnalyzer.enable: ${props.securityConfig.accessAnalyzer.enable}`);
+    if (props.securityConfig.accessAnalyzer.enable && props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
       Logger.info('[security-audit-stack] Adding IAM Access Analyzer ');
       new cdk.aws_accessanalyzer.CfnAnalyzer(this, 'AccessAnalyzer', {
         type: 'ORGANIZATION',
