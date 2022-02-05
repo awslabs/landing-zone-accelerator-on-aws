@@ -18,6 +18,7 @@ import {
   GuardDutyMembers,
   MacieMembers,
   SecurityHubMembers,
+  Organization,
 } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
@@ -28,6 +29,8 @@ import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 export class SecurityAuditStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    const organization = Organization.getInstance(this, 'Organization');
 
     //
     // Macie configuration
@@ -140,7 +143,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         resources: ['*'],
         conditions: {
           StringEquals: {
-            'aws:PrincipalOrgID': props.organizationConfig.organizationId,
+            'aws:PrincipalOrgID': organization.id,
           },
         },
       }),
@@ -188,7 +191,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
       // Allowing Publish from Organization
       topic.grantPublish({
-        grantPrincipal: new cdk.aws_iam.OrganizationPrincipal(props.organizationConfig.organizationId),
+        grantPrincipal: new cdk.aws_iam.OrganizationPrincipal(organization.id),
       });
 
       Logger.info(`[security-audit-stack] Create SNS Subscription: ${snsSubscriptionItem.email}`);
