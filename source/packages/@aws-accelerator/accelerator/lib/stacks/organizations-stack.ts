@@ -140,16 +140,27 @@ export class OrganizationsStack extends AcceleratorStack {
       //
       if (props.securityConfig.accessAnalyzer.enable) {
         Logger.debug('[organizations-stack] Enable Service Access for access-analyzer.amazonaws.com');
-        new EnableAwsServiceAccess(this, 'EnableAccessAnalyzer', {
-          servicePrincipal: 'access-analyzer.amazonaws.com',
-        });
-        new iam.CfnServiceLinkedRole(this, 'AccessAnalyzerServiceLinkedRole', {
+
+        const role = new iam.CfnServiceLinkedRole(this, 'AccessAnalyzerServiceLinkedRole', {
           awsServiceName: 'access-analyzer.amazonaws.com',
         });
-        new RegisterDelegatedAdministrator(this, 'RegisterDelegatedAdministratorAccessAnalyzer', {
-          accountId: props.accountsConfig.getAuditAccountId(),
+
+        const enableAccessAnalyzer = new EnableAwsServiceAccess(this, 'EnableAccessAnalyzer', {
           servicePrincipal: 'access-analyzer.amazonaws.com',
         });
+
+        enableAccessAnalyzer.node.addDependency(role);
+
+        const registerDelegatedAdministratorAccessAnalyzer = new RegisterDelegatedAdministrator(
+          this,
+          'RegisterDelegatedAdministratorAccessAnalyzer',
+          {
+            accountId: props.accountsConfig.getAuditAccountId(),
+            servicePrincipal: 'access-analyzer.amazonaws.com',
+          },
+        );
+
+        registerDelegatedAdministratorAccessAnalyzer.node.addDependency(enableAccessAnalyzer);
       }
 
       //
