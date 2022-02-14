@@ -12,7 +12,7 @@
   "scripts": {
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
-    "build": "esbuild --minify --bundle --sourcemap --platform=node --target=node14 --external:aws-sdk --outfile=./dist/index.js index.ts",
+    "build": "esbuild --minify --bundle --outfile=./dist/index.js --platform=node --target=node14 --external:aws-sdk index.ts",
     "test": "",
     "testreport": "",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
@@ -21,6 +21,7 @@
   "devDependencies": {
     "@types/jest": "27.0.3",
     "@types/node": "16.11.12",
+    "esbuild": "0.14.2",
     "eslint": "8.4.1",
     "eslint-config-prettier": "8.3.0",
     "eslint-config-standard": "16.0.3",
@@ -37,6 +38,6 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-s3-control": "3.43.0"
+    "aws-sdk": "2.944.0"
   }
 }

@@ -66,6 +66,7 @@ export class ValidateOrganizationAccounts extends Construct {
       properties: {
         tableName: props.table.tableName,
         accounts: props.accounts,
+        partition: cdk.Aws.PARTITION,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });

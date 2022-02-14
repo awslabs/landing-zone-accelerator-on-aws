@@ -12,15 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import {
-  CreatePolicyCommand,
-  OrganizationsClient,
-  paginateListPolicies,
-  Tag,
-  UpdatePolicyCommand,
-} from '@aws-sdk/client-organizations';
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { Readable } from 'stream';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * create-policy - lambda handler
@@ -40,48 +33,35 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const name: string = event.ResourceProperties['name'];
   const description = event.ResourceProperties['description'] || '';
   const type: string = event.ResourceProperties['type'];
-  const tags: Tag[] = event.ResourceProperties['tags'] || [];
+  const tags: AWS.Organizations.Tag[] = event.ResourceProperties['tags'] || [];
+  const partition: string = event.ResourceProperties['partition'];
 
-  const organizationsClient = new OrganizationsClient({});
-  const s3Client = new S3Client({});
+  let organizationsClient: AWS.Organizations;
+  if (partition === 'aws-us-gov') {
+    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+  } else {
+    organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+  }
+  const s3Client = new AWS.S3({});
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       //
-      // Create a helper function to convert a ReadableStream to a string.
-      //
-      const streamToString = (stream: Readable) =>
-        new Promise((resolve, reject) => {
-          const chunks: Uint8Array[] = [];
-          stream.on('data', chunk => chunks.push(chunk));
-          stream.on('error', reject);
-          stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-        });
-
-      //
       // Read in the policy content from the specified S3 location
       //
-      const s3Object = await throttlingBackOff(() =>
-        s3Client.send(
-          new GetObjectCommand({
-            Bucket: bucket,
-            Key: key,
-          }),
-        ),
-      );
-
-      //
-      // Stream in the content
-      //
-      const content = (await streamToString(s3Object.Body as Readable)) as string;
-
+      const s3Object = await throttlingBackOff(() => s3Client.getObject({ Bucket: bucket, Key: key }).promise());
+      const content = s3Object.Body!.toString();
       console.log(content);
 
       //
       // Check if already exists, update and return the ID
       //
-      for await (const page of paginateListPolicies({ client: organizationsClient }, { Filter: type })) {
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() =>
+          organizationsClient.listPolicies({ Filter: type, NextToken: nextToken }).promise(),
+        );
         for (const policy of page.Policies ?? []) {
           if (policy.Name === name) {
             console.log('Existing Policy found');
@@ -94,14 +74,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             }
 
             const response = await throttlingBackOff(() =>
-              organizationsClient.send(
-                new UpdatePolicyCommand({
-                  Name: name,
-                  Content: content,
-                  Description: description,
-                  PolicyId: policy.Id,
-                }),
-              ),
+              organizationsClient
+                .updatePolicy({ Name: name, Content: content, Description: description, PolicyId: policy.Id! })
+                .promise(),
             );
 
             console.log(response.Policy?.PolicySummary?.Id);
@@ -112,21 +87,16 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             };
           }
         }
-      }
+        nextToken = page.NextToken;
+      } while (nextToken);
 
       //
       // Create if not found
       //
       const response = await throttlingBackOff(() =>
-        organizationsClient.send(
-          new CreatePolicyCommand({
-            Content: content,
-            Description: description,
-            Name: name,
-            Tags: tags,
-            Type: type,
-          }),
-        ),
+        organizationsClient
+          .createPolicy({ Content: content, Description: description, Name: name, Tags: tags, Type: type })
+          .promise(),
       );
 
       console.log(response.Policy?.PolicySummary?.Id);
@@ -137,7 +107,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       };
 
     case 'Delete':
-      // Do Nothing, we will leave any created SCPs behind
+      // Do Nothing
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',

@@ -12,16 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as console from 'console';
-import {
-  DisableMacieCommand,
-  EnableMacieCommand,
-  GetMacieSessionCommand,
-  Macie2Client,
-  MacieStatus,
-  PutFindingsPublicationConfigurationCommand,
-  UpdateMacieSessionCommand,
-} from '@aws-sdk/client-macie2';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * add-macie-members - lambda handler
@@ -38,9 +30,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const region = event.ResourceProperties['region'];
   const findingPublishingFrequency = event.ResourceProperties['findingPublishingFrequency'];
-  const isSensitiveSh = event.ResourceProperties['isSensitiveSh'];
+  const isSensitiveSh = event.ResourceProperties['isSensitiveSh'] === 'true';
 
-  const macie2Client = new Macie2Client({ region: region });
+  const macie2Client = new AWS.Macie2({ region: region });
 
   switch (event.RequestType) {
     case 'Create':
@@ -49,22 +41,22 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       if (!macieStatus) {
         console.log('start enable of macie');
         await throttlingBackOff(() =>
-          macie2Client.send(
-            new EnableMacieCommand({
+          macie2Client
+            .enableMacie({
               findingPublishingFrequency: findingPublishingFrequency,
-              status: MacieStatus.ENABLED,
-            }),
-          ),
+              status: 'ENABLED',
+            })
+            .promise(),
         );
       }
       console.log('start update of macie');
       await throttlingBackOff(() =>
-        macie2Client.send(
-          new UpdateMacieSessionCommand({
+        macie2Client
+          .updateMacieSession({
             findingPublishingFrequency: findingPublishingFrequency,
-            status: MacieStatus.ENABLED,
-          }),
-        ),
+            status: 'ENABLED',
+          })
+          .promise(),
       );
 
       // macie status do not change immediately causing failure to other processes, so wait till macie enabled
@@ -74,14 +66,14 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       }
 
       await throttlingBackOff(() =>
-        macie2Client.send(
-          new PutFindingsPublicationConfigurationCommand({
+        macie2Client
+          .putFindingsPublicationConfiguration({
             securityHubConfiguration: {
               publishClassificationFindings: isSensitiveSh,
               publishPolicyFindings: true,
             },
-          }),
-        ),
+          })
+          .promise(),
       );
 
       return { Status: 'Success', StatusCode: 200 };
@@ -89,21 +81,21 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Delete':
       if (await isMacieEnable(macie2Client)) {
         await throttlingBackOff(() =>
-          macie2Client.send(
-            new DisableMacieCommand({
+          macie2Client
+            .disableMacie({
               findingPublishingFrequency: findingPublishingFrequency,
-              status: MacieStatus.ENABLED,
-            }),
-          ),
+              status: 'ENABLED',
+            })
+            .promise(),
         );
       }
       return { Status: 'Success', StatusCode: 200 };
   }
 }
-async function isMacieEnable(macie2Client: Macie2Client): Promise<boolean> {
+async function isMacieEnable(macie2Client: AWS.Macie2): Promise<boolean> {
   try {
-    const response = await throttlingBackOff(() => macie2Client.send(new GetMacieSessionCommand({})));
-    return response.status === MacieStatus.ENABLED;
+    const response = await throttlingBackOff(() => macie2Client.getMacieSession({}).promise());
+    return response.status === 'ENABLED';
   } catch (e) {
     if (`${e}`.includes('Macie is not enabled')) {
       console.warn('Macie is not enabled');

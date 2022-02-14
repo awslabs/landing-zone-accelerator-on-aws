@@ -30,7 +30,7 @@ export class SecurityAuditStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    const organization = Organization.getInstance(this, 'Organization');
+    const organization = new Organization(this, 'Organization');
 
     //
     // Macie configuration

@@ -41,6 +41,7 @@ export class RegisterDelegatedAdministrator extends Construct {
       resourceType: RESOURCE_TYPE,
       serviceToken: cr.serviceToken,
       properties: {
+        partition: cdk.Aws.PARTITION,
         ...props,
       },
     });

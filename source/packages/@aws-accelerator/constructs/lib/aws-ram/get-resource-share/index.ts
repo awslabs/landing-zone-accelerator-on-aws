@@ -11,7 +11,9 @@
  *  and limitations under the License.
  */
 
-import { RAMClient, paginateGetResourceShares } from '@aws-sdk/client-ram';
+import { throttlingBackOff } from '@aws-accelerator/utils';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * get-resource-share - lambda handler
@@ -26,7 +28,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
-  const ramClient = new RAMClient({});
+  const ramClient = new AWS.RAM({});
 
   switch (event.RequestType) {
     case 'Create':
@@ -35,16 +37,12 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       const owningAccountId = event.ResourceProperties['owningAccountId'];
       const name = event.ResourceProperties['name'];
 
-      for await (const page of paginateGetResourceShares(
-        { client: ramClient },
-        {
-          resourceOwner,
-        },
-      )) {
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() => ramClient.getResourceShares({ resourceOwner, nextToken }).promise());
         for (const resourceShare of page.resourceShares ?? []) {
           if (resourceShare.owningAccountId == owningAccountId && resourceShare.name === name) {
             console.log(resourceShare);
-
             if (resourceShare.resourceShareArn) {
               return {
                 PhysicalResourceId: resourceShare.resourceShareArn.split('/')[1],
@@ -53,7 +51,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             }
           }
         }
-      }
+        nextToken = page.nextToken;
+      } while (nextToken);
 
       throw new Error(`Resource share ${name} not found`);
 

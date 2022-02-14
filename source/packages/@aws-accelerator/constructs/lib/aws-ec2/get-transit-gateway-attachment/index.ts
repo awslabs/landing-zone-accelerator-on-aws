@@ -12,8 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import { EC2Client, paginateDescribeTransitGatewayAttachments } from '@aws-sdk/client-ec2';
-import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * get-transit-gateway-attachment - lambda handler
@@ -35,18 +35,18 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const stsClient = new STSClient({});
+      const stsClient = new AWS.STS({});
 
       const assumeRoleResponse = await throttlingBackOff(() =>
-        stsClient.send(
-          new AssumeRoleCommand({
+        stsClient
+          .assumeRole({
             RoleArn: roleArn,
             RoleSessionName: 'GetTransitGatewayAttachmentSession',
-          }),
-        ),
+          })
+          .promise(),
       );
 
-      const ec2Client = new EC2Client({
+      const ec2Client = new AWS.EC2({
         credentials: {
           accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
           secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
@@ -54,7 +54,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         },
       });
 
-      for await (const page of paginateDescribeTransitGatewayAttachments({ client: ec2Client }, {})) {
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() =>
+          ec2Client.describeTransitGatewayAttachments({ NextToken: nextToken }).promise(),
+        );
         for (const attachment of page.TransitGatewayAttachments ?? []) {
           if (attachment.TransitGatewayId === transitGatewayId) {
             const nameTag = attachment.Tags?.find(t => t.Key === 'Name');
@@ -67,7 +71,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             }
           }
         }
-      }
+        nextToken = page.NextToken;
+      } while (nextToken);
 
       throw new Error(`Attachment ${name} for ${transitGatewayId} not found`);
 

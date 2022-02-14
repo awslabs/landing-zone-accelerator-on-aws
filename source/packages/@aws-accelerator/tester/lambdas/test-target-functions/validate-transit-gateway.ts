@@ -10,15 +10,10 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import {
-  EC2Client,
-  paginateDescribeTransitGatewayRouteTables,
-  paginateDescribeTransitGatewayAttachments,
-  paginateDescribeTransitGateways,
-  TransitGateway,
-} from '@aws-sdk/client-ec2';
+
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import { AssumeRoleCommand, Credentials, STSClient } from '@aws-sdk/client-sts';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * Config rule compliance value enum
@@ -42,7 +37,7 @@ const enum ComplianceType {
  */
 export async function validateTransitGateway(
   configRegion: string,
-  managementAccount: { partition: string; id: string; crossAccountRoleName: string; credential: Credentials },
+  managementAccount: { partition: string; id: string; crossAccountRoleName: string; credential: AWS.STS.Credentials },
   parameters: string,
 ): Promise<{ complianceResourceType: string; complianceResourceId: string; complianceType: string }> {
   const transitGatewayName = parameters['name'];
@@ -57,42 +52,42 @@ export async function validateTransitGateway(
   const routeTableNames = parameters['routeTableNames'];
   const shareTargetAccountIds = parameters['shareTargetAccountIds'];
 
-  let eC2Client: EC2Client;
+  let ec2Client: AWS.EC2;
 
   // Assume role when transit gateway to be evaluated in other account than config account
   if (managementAccount.id !== transitGatewayAccountId) {
     const roleArn = `arn:${managementAccount.partition}:iam::${transitGatewayAccountId}:role/${managementAccount.crossAccountRoleName}`;
-    const stsClient = new STSClient({
+    const stsClient = new AWS.STS({
       region: configRegion,
       credentials: {
         accessKeyId: managementAccount.credential.AccessKeyId!,
         secretAccessKey: managementAccount.credential.SecretAccessKey!,
         sessionToken: managementAccount.credential.SessionToken,
-        expiration: managementAccount.credential.Expiration,
+        expireTime: managementAccount.credential.Expiration,
       },
     });
 
     const response = await throttlingBackOff(() =>
-      stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' })),
+      stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' }).promise(),
     );
 
-    eC2Client = new EC2Client({
+    ec2Client = new AWS.EC2({
       region: transitGatewayRegion,
       credentials: {
         accessKeyId: response.Credentials!.AccessKeyId!,
         secretAccessKey: response.Credentials!.SecretAccessKey!,
-        expiration: response.Credentials!.Expiration,
         sessionToken: response.Credentials!.SessionToken,
+        expireTime: response.Credentials!.Expiration,
       },
     });
   } else {
-    eC2Client = new EC2Client({
+    ec2Client = new AWS.EC2({
       region: transitGatewayRegion,
       credentials: {
         accessKeyId: managementAccount.credential.AccessKeyId!,
         secretAccessKey: managementAccount.credential.SecretAccessKey!,
         sessionToken: managementAccount.credential.SessionToken,
-        expiration: managementAccount.credential.Expiration,
+        expireTime: managementAccount.credential.Expiration,
       },
     });
   }
@@ -101,8 +96,10 @@ export async function validateTransitGateway(
   let complianceResourceId = transitGatewayAccountId;
   let complianceType = ComplianceType.Non_Compliant;
 
-  for await (const tgwPage of paginateDescribeTransitGateways({ client: eC2Client }, {})) {
-    for (const transitGateway of tgwPage.TransitGateways ?? []) {
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() => ec2Client.describeTransitGateways({ NextToken: nextToken }).promise());
+    for (const transitGateway of page.TransitGateways ?? []) {
       if (
         await transitGatewayExists(
           transitGateway,
@@ -118,14 +115,14 @@ export async function validateTransitGateway(
         complianceResourceId = transitGateway.TransitGatewayId!;
         if (
           (await isRouteTablesValid(
-            eC2Client,
+            ec2Client,
             transitGateway.TransitGatewayId!,
             defaultRouteTableAssociation,
             defaultRouteTablePropagation,
             routeTableNames ?? [],
           )) &&
           (await isTransitGatewayAttachmentsValid(
-            eC2Client,
+            ec2Client,
             transitGateway.TransitGatewayId!,
             shareTargetAccountIds ?? [],
           ))
@@ -135,7 +132,8 @@ export async function validateTransitGateway(
         }
       }
     }
-  }
+    nextToken = page.NextToken;
+  } while (nextToken);
   return {
     complianceResourceType: complianceResourceType,
     complianceResourceId: complianceResourceId,
@@ -169,7 +167,7 @@ function areArraysEqual(first: string[], second: string[]) {
  * @param defaultRouteTablePropagation
  */
 async function transitGatewayExists(
-  transitGateway: TransitGateway,
+  transitGateway: AWS.EC2.TransitGateway,
   validatingTransitGatewayName: string,
   amazonSideAsn: number,
   dnsSupport: string | undefined,
@@ -201,21 +199,26 @@ async function transitGatewayExists(
 
 /**
  * Function to validate transit gateway route tables
- * @param eC2Client
+ * @param ec2Client
  * @param transitGatewayId
  * @param defaultRouteTableAssociation
  * @param defaultRouteTablePropagation
  * @param validatingRouteTableNames
  */
 async function isRouteTablesValid(
-  eC2Client: EC2Client,
+  ec2Client: AWS.EC2,
   transitGatewayId: string,
   defaultRouteTableAssociation: string | undefined,
   defaultRouteTablePropagation: string | undefined,
   validatingRouteTableNames: string[],
 ): Promise<boolean> {
   const presentRouteTableNames: string[] = [];
-  for await (const page of paginateDescribeTransitGatewayRouteTables({ client: eC2Client }, {})) {
+
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      ec2Client.describeTransitGatewayRouteTables({ NextToken: nextToken }).promise(),
+    );
     for (const transitGatewayRouteTable of page.TransitGatewayRouteTables ?? []) {
       if (
         transitGatewayRouteTable.TransitGatewayId === transitGatewayId &&
@@ -232,7 +235,9 @@ async function isRouteTablesValid(
         }
       }
     }
-  }
+    nextToken = page.NextToken;
+  } while (nextToken);
+
   return validatingRouteTableNames.length === 0
     ? true
     : areArraysEqual(validatingRouteTableNames.sort(), presentRouteTableNames.sort());
@@ -240,17 +245,22 @@ async function isRouteTablesValid(
 
 /**
  * Function to validate transit gateway attachments
- * @param eC2Client
+ * @param ec2Client
  * @param transitGatewayId
  * @param shareTargetAccountIds
  */
 async function isTransitGatewayAttachmentsValid(
-  eC2Client: EC2Client,
+  ec2Client: AWS.EC2,
   transitGatewayId: string,
   shareTargetAccountIds: string[],
 ): Promise<boolean> {
   const resourceOwnerIds: string[] = [];
-  for await (const page of paginateDescribeTransitGatewayAttachments({ client: eC2Client }, {})) {
+
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      ec2Client.describeTransitGatewayAttachments({ NextToken: nextToken }).promise(),
+    );
     for (const transitGatewayAttachment of page.TransitGatewayAttachments ?? []) {
       if (
         transitGatewayAttachment.TransitGatewayId === transitGatewayId &&
@@ -259,7 +269,8 @@ async function isTransitGatewayAttachmentsValid(
         resourceOwnerIds.push(transitGatewayAttachment.ResourceOwnerId!);
       }
     }
-  }
+    nextToken = page.NextToken;
+  } while (nextToken);
   return shareTargetAccountIds.length === 0
     ? true
     : areArraysEqual(shareTargetAccountIds.sort(), resourceOwnerIds.sort());

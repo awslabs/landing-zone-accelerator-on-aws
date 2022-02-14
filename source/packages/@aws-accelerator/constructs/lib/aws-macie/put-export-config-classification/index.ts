@@ -12,14 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as console from 'console';
-import {
-  EnableMacieCommand,
-  GetMacieSessionCommand,
-  Macie2Client,
-  MacieStatus,
-  PutClassificationExportConfigurationCommand,
-} from '@aws-sdk/client-macie2';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * maciePutClassificationExportConfigurationFunction - lambda handler
@@ -39,7 +33,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const keyPrefix = event.ResourceProperties['keyPrefix'];
   const kmsKeyArn = event.ResourceProperties['kmsKeyArn'];
 
-  const macie2Client = new Macie2Client({ region: region });
+  const macie2Client = new AWS.Macie2({ region: region });
 
   switch (event.RequestType) {
     case 'Create':
@@ -47,18 +41,12 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       console.log('Started update');
       if (!(await isMacieEnable(macie2Client))) {
         console.log('start enable of macie');
-        await throttlingBackOff(() =>
-          macie2Client.send(
-            new EnableMacieCommand({
-              status: MacieStatus.ENABLED,
-            }),
-          ),
-        );
+        await throttlingBackOff(() => macie2Client.enableMacie({ status: 'ENABLED' }).promise());
       }
 
       await throttlingBackOff(() =>
-        macie2Client.send(
-          new PutClassificationExportConfigurationCommand({
+        macie2Client
+          .putClassificationExportConfiguration({
             configuration: {
               s3Destination: {
                 bucketName: bucketName,
@@ -66,8 +54,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
                 kmsKeyArn: kmsKeyArn,
               },
             },
-          }),
-        ),
+          })
+          .promise(),
       );
       return { Status: 'Success', StatusCode: 200 };
 
@@ -80,10 +68,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
  * Function to check if macie is enabled
  * @param macie2Client
  */
-async function isMacieEnable(macie2Client: Macie2Client): Promise<boolean> {
+async function isMacieEnable(macie2Client: AWS.Macie2): Promise<boolean> {
   try {
-    const response = await throttlingBackOff(() => macie2Client.send(new GetMacieSessionCommand({})));
-    return response.status === MacieStatus.ENABLED;
+    const response = await throttlingBackOff(() => macie2Client.getMacieSession({}).promise());
+    return response.status === 'ENABLED';
   } catch (e) {
     if (`${e}`.includes('Macie is not enabled')) {
       console.warn('Macie is not enabled');

@@ -1,7 +1,7 @@
 {
-  "name": "aws-compliance-accelerator",
-  "version": "2.0.0",
-  "description": "AWS Compliance Accelerator",
+  "name": "aws-platform-accelerator",
+  "version": "0.6.0-rc001",
+  "description": "AWS Platform Accelerator",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",

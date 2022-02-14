@@ -12,13 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import {
-  InviteAccountToOrganizationCommand,
-  OrganizationsClient,
-  paginateListAccounts,
-  AcceptHandshakeCommand,
-} from '@aws-sdk/client-organizations';
-import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * invite-account-to-organization - lambda handler
@@ -38,13 +33,23 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Update':
       const accountId = event.ResourceProperties['accountId'];
       const roleArn = event.ResourceProperties['roleArn'];
+      const partition = event.ResourceProperties['partition'];
 
       //
       // Obtain an Organizations client
       //
-      let organizationsClient: OrganizationsClient = new OrganizationsClient({});
+      let organizationsClient: AWS.Organizations;
+      if (partition === 'aws-us-gov') {
+        organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+      } else {
+        organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+      }
 
-      for await (const page of paginateListAccounts({ client: organizationsClient }, {})) {
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() =>
+          organizationsClient.listAccounts({ NextToken: nextToken }).promise(),
+        );
         for (const item of page.Accounts ?? []) {
           if (item.Id === accountId) {
             console.log(`Account ${accountId} already added to organization`);
@@ -55,49 +60,45 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
               };
           }
         }
-      }
+        nextToken = page.NextToken;
+      } while (nextToken);
 
       // Account was not found, invite it
       console.log('InviteAccountToOrganizationCommand');
       const invite = await throttlingBackOff(() =>
-        organizationsClient.send(
-          new InviteAccountToOrganizationCommand({
-            Target: {
-              Type: 'ACCOUNT',
-              Id: accountId,
-            },
-          }),
-        ),
+        organizationsClient.inviteAccountToOrganization({ Target: { Type: 'ACCOUNT', Id: accountId } }).promise(),
       );
       console.log(invite);
       console.log(`Invite handshake id: ${invite.Handshake?.Id}`);
 
-      const stsClient = new STSClient({});
+      const stsClient = new AWS.STS({});
 
       const assumeRoleResponse = await throttlingBackOff(() =>
-        stsClient.send(
-          new AssumeRoleCommand({
-            RoleArn: roleArn,
-            RoleSessionName: 'AcceptHandshakeSession',
-          }),
-        ),
+        stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: 'AcceptHandshakeSession' }).promise(),
       );
 
-      organizationsClient = new OrganizationsClient({
-        credentials: {
-          accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
-          secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
-          sessionToken: assumeRoleResponse.Credentials?.SessionToken,
-        },
-      });
+      if (partition === 'aws-us-gov') {
+        organizationsClient = new AWS.Organizations({
+          credentials: {
+            accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
+            secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
+            sessionToken: assumeRoleResponse.Credentials?.SessionToken,
+          },
+        });
+      } else {
+        organizationsClient = new AWS.Organizations({
+          credentials: {
+            accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
+            secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
+            sessionToken: assumeRoleResponse.Credentials?.SessionToken,
+          },
+          region: 'us-east-1',
+        });
+      }
 
       console.log('AcceptHandshakeCommand');
       const response = await throttlingBackOff(() =>
-        organizationsClient.send(
-          new AcceptHandshakeCommand({
-            HandshakeId: invite.Handshake?.Id,
-          }),
-        ),
+        organizationsClient.acceptHandshake({ HandshakeId: invite.Handshake!.Id! }).promise(),
       );
       console.log(response);
 

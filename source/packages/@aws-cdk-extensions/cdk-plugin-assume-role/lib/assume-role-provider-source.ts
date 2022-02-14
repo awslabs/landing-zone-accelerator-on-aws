@@ -11,10 +11,8 @@
  *  and limitations under the License.
  */
 
-import * as aws from 'aws-sdk';
-aws.config.logger = console;
 import { CredentialProviderSource } from 'aws-cdk/lib/api/aws-auth/credentials';
-import { Credentials } from '@aws-sdk/client-sts';
+import * as AWS from 'aws-sdk';
 import { green } from 'colors/safe';
 import { throttlingBackOff } from './backoff';
 
@@ -22,13 +20,13 @@ export interface AssumeRoleProviderSourceProps {
   name: string;
   assumeRoleName: string;
   assumeRoleDuration: number;
-  credentials?: Credentials;
+  credentials?: AWS.STS.Credentials;
   partition?: string;
 }
 
 export class AssumeRoleProviderSource implements CredentialProviderSource {
   readonly name = this.props.name;
-  private readonly cache: { [accountId: string]: aws.Credentials } = {};
+  private readonly cache: { [accountId: string]: AWS.Credentials } = {};
 
   constructor(private readonly props: AssumeRoleProviderSourceProps) {}
 
@@ -40,7 +38,7 @@ export class AssumeRoleProviderSource implements CredentialProviderSource {
     return true;
   }
 
-  async getProvider(accountId: string): Promise<aws.Credentials> {
+  async getProvider(accountId: string): Promise<AWS.Credentials> {
     if (this.cache[accountId]) {
       return this.cache[accountId];
     }
@@ -57,26 +55,26 @@ export class AssumeRoleProviderSource implements CredentialProviderSource {
     }
 
     const credentials = assumeRole.Credentials!;
-    return (this.cache[accountId] = new aws.Credentials({
+    return (this.cache[accountId] = new AWS.Credentials({
       accessKeyId: credentials.AccessKeyId,
       secretAccessKey: credentials.SecretAccessKey,
       sessionToken: credentials.SessionToken,
     }));
   }
 
-  protected async assumeRole(accountId: string, duration: number): Promise<aws.STS.AssumeRoleResponse> {
+  protected async assumeRole(accountId: string, duration: number): Promise<AWS.STS.AssumeRoleResponse> {
     const roleArn = `arn:${this.props.partition ?? 'aws'}:iam::${accountId}:role/${this.props.assumeRoleName}`;
     console.log(`Assuming role ${green(roleArn)} for ${duration} seconds`);
 
-    let sts: aws.STS;
+    let sts: AWS.STS;
     if (this.props.credentials) {
-      sts = new aws.STS({
+      sts = new AWS.STS({
         accessKeyId: this.props.credentials.AccessKeyId,
         secretAccessKey: this.props.credentials.SecretAccessKey,
         sessionToken: this.props.credentials.SessionToken,
       });
     } else {
-      sts = new aws.STS();
+      sts = new AWS.STS();
     }
 
     return throttlingBackOff(() =>

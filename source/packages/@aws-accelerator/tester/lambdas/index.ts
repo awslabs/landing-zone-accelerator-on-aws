@@ -10,10 +10,11 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { AssumeRoleCommand, Credentials, STSClient } from '@aws-sdk/client-sts';
-import { ConfigServiceClient, PutEvaluationsCommand } from '@aws-sdk/client-config-service';
+
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import * as AWS from 'aws-sdk';
 import { validateTransitGateway } from './test-target-functions/validate-transit-gateway';
+AWS.config.logger = console;
 
 /**
  * AWS Config custom config lambda handler
@@ -41,23 +42,23 @@ export async function handler(event): Promise<{
   const invokingEvent = JSON.parse(event['invokingEvent']);
   const invokingAwsAccountId = invokingEvent['awsAccountId'];
 
-  const stsClient = new STSClient({});
-  let managementAccountCredential: Credentials;
+  const stsClient = new AWS.STS({});
+  let managementAccountCredential: AWS.STS.Credentials;
 
   // Create management account credential when invoking account is not management account
   if (invokingAwsAccountId !== managementAccountId) {
     const roleArn = `arn:${partition}:iam::${managementAccountId}:role/${managementAccountRoleName}`;
     const response = await throttlingBackOff(() =>
-      stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' })),
+      stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' }).promise(),
     );
     managementAccountCredential = response.Credentials!;
   } else {
-    const credentials = await stsClient.config.credentials();
+    const credentials = stsClient.config.credentials as AWS.Credentials;
     managementAccountCredential = {
-      AccessKeyId: credentials.accessKeyId,
-      SecretAccessKey: credentials.secretAccessKey,
-      SessionToken: credentials.sessionToken,
-      Expiration: credentials.expiration,
+      AccessKeyId: credentials!.accessKeyId,
+      SecretAccessKey: credentials!.secretAccessKey,
+      SessionToken: credentials!.sessionToken!,
+      Expiration: credentials!.expireTime,
     };
   }
 
@@ -97,10 +98,10 @@ async function putEvaluations(
   result: { complianceResourceType: string; complianceResourceId: string; complianceType: string },
 ): Promise<void> {
   //Put Evaluation
-  const configServiceClient = new ConfigServiceClient({ region: configRegion });
+  const configServiceClient = new AWS.ConfigService({ region: configRegion });
   await throttlingBackOff(() =>
-    configServiceClient.send(
-      new PutEvaluationsCommand({
+    configServiceClient
+      .putEvaluations({
         Evaluations: [
           {
             Annotation: 'Verified by custom lambda function',
@@ -111,7 +112,7 @@ async function putEvaluations(
           },
         ],
         ResultToken: resultToken,
-      }),
-    ),
+      })
+      .promise(),
   );
 }

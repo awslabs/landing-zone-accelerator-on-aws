@@ -10,8 +10,9 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-
-import { RAMClient, paginateListResources } from '@aws-sdk/client-ram';
+import { throttlingBackOff } from '@aws-accelerator/utils';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * get-resource-share-item - lambda handler
@@ -26,7 +27,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
-  const ramClient = new RAMClient({});
+  const ramClient = new AWS.RAM({});
 
   switch (event.RequestType) {
     case 'Create':
@@ -35,14 +36,13 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       const resourceShareArn = event.ResourceProperties['resourceShareArn'];
       const resourceType = event.ResourceProperties['resourceType'];
 
-      for await (const page of paginateListResources(
-        { client: ramClient },
-        {
-          resourceShareArns: [resourceShareArn],
-          resourceType,
-          resourceOwner,
-        },
-      )) {
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() =>
+          ramClient
+            .listResources({ resourceShareArns: [resourceShareArn], resourceType, resourceOwner, nextToken })
+            .promise(),
+        );
         // Return the first item found with the specified filters
         if (page.resources && page.resources.length > 0) {
           const item = page.resources[0];
@@ -54,7 +54,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             };
           }
         }
-      }
+        nextToken = page.nextToken;
+      } while (nextToken);
 
       throw new Error(`Resource share item not found`);
 

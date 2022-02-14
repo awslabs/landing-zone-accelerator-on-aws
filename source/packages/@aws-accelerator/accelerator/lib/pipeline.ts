@@ -19,10 +19,11 @@ import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
-import { pascalCase } from 'change-case';
+import { AcceleratorToolkitCommand } from './toolkit';
 
 /**
  *
@@ -30,6 +31,7 @@ import { pascalCase } from 'change-case';
 export interface AcceleratorPipelineProps {
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
+  readonly enableApprovalStage: boolean;
   readonly qualifier: string;
   readonly managementAccountId?: string;
   readonly managementAccountRoleName?: string;
@@ -162,7 +164,7 @@ export class AcceleratorPipeline extends Construct {
             },
           },
           build: {
-            commands: ['cd source', 'yarn install', 'yarn lerna link', 'yarn build'],
+            commands: ['env', 'cd source', 'yarn install', 'yarn lerna link', 'yarn build'],
           },
         },
         artifacts: {
@@ -174,6 +176,12 @@ export class AcceleratorPipeline extends Construct {
         buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
         privileged: true, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.MEDIUM,
+        environmentVariables: {
+          NODE_OPTIONS: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: '--max_old_space_size=4096',
+          },
+        },
       },
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),
     });
@@ -187,6 +195,7 @@ export class AcceleratorPipeline extends Construct {
           actionName: 'Build',
           project: buildProject,
           input: this.acceleratorRepoArtifact,
+          extraInputs: [this.configRepoArtifact],
           outputs: [this.buildOutput],
           role: this.pipelineRole,
         }),
@@ -217,9 +226,9 @@ export class AcceleratorPipeline extends Construct {
               'env',
               'cd source',
               'cd packages/@aws-accelerator/accelerator',
-              `yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${
-                cdk.Stack.of(this).partition
-              }`,
+              `if [ -z "\${ACCELERATOR_STAGE}" ]; then yarn run ts-node --transpile-only cdk.ts synth --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION}; fi`,
+              `if [ ! -z "\${ACCELERATOR_STAGE}" ]; then yarn run ts-node --transpile-only cdk.ts synth --stage $ACCELERATOR_STAGE --require-approval never --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION}; fi`,
+              `yarn run ts-node --transpile-only cdk.ts --require-approval never $CDK_OPTIONS --config-dir $CODEBUILD_SRC_DIR_Config --partition ${cdk.Aws.PARTITION} --app cdk.out`,
             ],
           },
         },
@@ -229,6 +238,10 @@ export class AcceleratorPipeline extends Construct {
         privileged: true, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.MEDIUM,
         environmentVariables: {
+          NODE_OPTIONS: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: '--max_old_space_size=4096',
+          },
           CDK_NEW_BOOTSTRAP: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: '1',
@@ -245,15 +258,32 @@ export class AcceleratorPipeline extends Construct {
 
     pipeline.addStage({
       stageName: 'Bootstrap',
-      actions: [this.createToolkitStage('Bootstrap', `bootstrap`)],
+      actions: [this.createToolkitStage({ actionName: 'Bootstrap', command: 'bootstrap' })],
     });
+
+    if (props.enableApprovalStage) {
+      pipeline.addStage({
+        stageName: 'Review',
+        actions: [
+          this.createToolkitStage({ actionName: 'Diff', command: 'diff', runOrder: 1 }),
+          new codepipeline_actions.ManualApprovalAction({
+            actionName: 'Approve',
+            runOrder: 2,
+            additionalInformation: 'See previous stage (Diff) for changes.',
+          }),
+        ],
+      });
+    }
 
     /**
      * Creates the Accounts, OUs, and SCPs
      */
+
     pipeline.addStage({
       stageName: 'Accounts',
-      actions: [this.createToolkitStage('Accounts', `deploy --stage ${AcceleratorStage.ACCOUNTS}`)],
+      actions: [
+        this.createToolkitStage({ actionName: 'Accounts', command: 'deploy', stage: AcceleratorStage.ACCOUNTS }),
+      ],
     });
 
     // /**
@@ -275,17 +305,29 @@ export class AcceleratorPipeline extends Construct {
      */
     pipeline.addStage({
       stageName: 'Logging',
-      actions: [this.createToolkitStage('Logging', `deploy --stage ${AcceleratorStage.LOGGING}`)],
+      actions: [this.createToolkitStage({ actionName: 'Logging', command: 'deploy', stage: AcceleratorStage.LOGGING })],
     });
 
     pipeline.addStage({
       stageName: 'Organization',
-      actions: [this.createToolkitStage('Organizations', `deploy --stage ${AcceleratorStage.ORGANIZATIONS}`)],
+      actions: [
+        this.createToolkitStage({
+          actionName: 'Organizations',
+          command: 'deploy',
+          stage: AcceleratorStage.ORGANIZATIONS,
+        }),
+      ],
     });
 
     pipeline.addStage({
       stageName: 'SecurityAudit',
-      actions: [this.createToolkitStage('SecurityAudit', `deploy --stage ${AcceleratorStage.SECURITY_AUDIT}`)],
+      actions: [
+        this.createToolkitStage({
+          actionName: 'SecurityAudit',
+          command: 'deploy',
+          stage: AcceleratorStage.SECURITY_AUDIT,
+        }),
+      ],
     });
 
     // pipeline.addStage({
@@ -296,33 +338,80 @@ export class AcceleratorPipeline extends Construct {
     pipeline.addStage({
       stageName: 'Deploy',
       actions: [
-        this.createToolkitStage('Network_Prepare', `deploy --stage ${AcceleratorStage.NETWORK_PREP}`, 1),
-        this.createToolkitStage('Security', `deploy --stage ${AcceleratorStage.SECURITY}`, 1),
-        this.createToolkitStage('Operations', `deploy --stage ${AcceleratorStage.OPERATIONS}`, 1),
-        this.createToolkitStage('Network_VPCs', `deploy --stage ${AcceleratorStage.NETWORK_VPC}`, 2),
-        this.createToolkitStage('Network_Associations', `deploy --stage ${AcceleratorStage.NETWORK_ASSOCIATIONS}`, 3),
+        this.createToolkitStage({
+          actionName: 'Network_Prepare',
+          command: 'deploy',
+          stage: AcceleratorStage.NETWORK_PREP,
+          runOrder: 1,
+        }),
+        this.createToolkitStage({
+          actionName: 'Security',
+          command: 'deploy',
+          stage: AcceleratorStage.SECURITY,
+          runOrder: 1,
+        }),
+        this.createToolkitStage({
+          actionName: 'Operations',
+          command: 'deploy',
+          stage: AcceleratorStage.OPERATIONS,
+          runOrder: 1,
+        }),
+        this.createToolkitStage({
+          actionName: 'Network_VPCs',
+          command: 'deploy',
+          stage: AcceleratorStage.NETWORK_VPC,
+          runOrder: 2,
+        }),
+        this.createToolkitStage({
+          actionName: 'Network_Associations',
+          command: 'deploy',
+          stage: AcceleratorStage.NETWORK_ASSOCIATIONS,
+          runOrder: 3,
+        }),
       ],
     });
   }
 
-  private createToolkitStage(
-    actionName: string,
-    cdkOptions: string,
-    runOrder?: number,
-  ): codepipeline_actions.CodeBuildAction {
+  private createToolkitStage(props: {
+    actionName: string;
+    command: string;
+    stage?: string;
+    runOrder?: number;
+  }): codepipeline_actions.CodeBuildAction {
+    let cdkOptions;
+    if (
+      props.command === AcceleratorToolkitCommand.BOOTSTRAP.toString() ||
+      props.command === AcceleratorToolkitCommand.DIFF.toString()
+    ) {
+      cdkOptions = props.command;
+    } else {
+      cdkOptions = `${props.command} --stage ${props.stage}`;
+    }
+
+    const environmentVariables: {
+      [name: string]: cdk.aws_codebuild.BuildEnvironmentVariable;
+    } = {
+      CDK_OPTIONS: {
+        type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+        value: cdkOptions,
+      },
+    };
+
+    if (props.stage) {
+      environmentVariables['ACCELERATOR_STAGE'] = {
+        type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+        value: props.stage ?? '',
+      };
+    }
+
     return new codepipeline_actions.CodeBuildAction({
-      actionName,
-      runOrder,
+      actionName: props.actionName,
+      runOrder: props.runOrder,
       project: this.toolkitProject,
       input: this.buildOutput,
       extraInputs: [this.configRepoArtifact],
       role: this.pipelineRole,
-      environmentVariables: {
-        CDK_OPTIONS: {
-          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-          value: cdkOptions,
-        },
-      },
+      environmentVariables,
     });
   }
 }

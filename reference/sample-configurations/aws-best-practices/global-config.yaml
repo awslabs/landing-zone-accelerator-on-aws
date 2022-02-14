@@ -9,3 +9,14 @@ logging:
   cloudtrail:
     enable: false
     organizationTrail: false
+dataProtection:
+  enable: true
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+  identityPerimeter:
+    enable: true
+  resourcePerimeter:
+    enable: true
+  networkPerimeter:
+    enable: true

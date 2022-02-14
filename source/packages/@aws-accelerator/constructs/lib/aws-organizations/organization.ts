@@ -20,11 +20,9 @@ const path = require('path');
  * Class to initialize Organization
  */
 export class Organization extends Construct {
-  private static instance: Organization;
-
   public readonly id: string;
 
-  private constructor(scope: Construct, id: string) {
+  public constructor(scope: Construct, id: string) {
     super(scope, id);
 
     const describeOrganizationFunction = cdk.CustomResourceProvider.getOrCreateProvider(
@@ -46,15 +44,11 @@ export class Organization extends Construct {
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: 'Custom::DescribeOrganization',
       serviceToken: describeOrganizationFunction.serviceToken,
+      properties: {
+        partition: cdk.Aws.PARTITION,
+      },
     });
 
     this.id = resource.ref;
-  }
-
-  public static getInstance(scope: Construct, id: string): Organization {
-    if (!Organization.instance) {
-      Organization.instance = new Organization(scope, id);
-    }
-    return Organization.instance;
   }
 }

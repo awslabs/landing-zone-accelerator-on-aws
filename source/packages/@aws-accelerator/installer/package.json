@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@aws-cdk-extensions/cdk-extensions": "^0.0.0",
+    "@aws-accelerator/accelerator": "^0.0.0",
     "aws-cdk-lib": "2.1.0",
     "aws-cdk": "2.1.0"
   }

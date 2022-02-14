@@ -12,12 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import {
-  DescribeOrganizationCommand,
-  EnablePolicyTypeCommand,
-  OrganizationsClient,
-  paginateListRoots,
-} from '@aws-sdk/client-organizations';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * enable-policy-type - lambda handler
@@ -35,19 +31,27 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
       const policyType = event.ResourceProperties['policyType'];
+      const partition = event.ResourceProperties['partition'];
 
       //
       // Obtain an Organizations client
       //
-      const organizationsClient: OrganizationsClient = new OrganizationsClient({});
+      let organizationsClient: AWS.Organizations;
+      if (partition === 'aws-us-gov') {
+        organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+      } else {
+        organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+      }
 
       // Verify policy type from the describe organizations call
-      const organization = await throttlingBackOff(() => organizationsClient.send(new DescribeOrganizationCommand({})));
+      const organization = await throttlingBackOff(() => organizationsClient.describeOrganization().promise());
       if (organization.Organization?.AvailablePolicyTypes?.find(item => item.Type === policyType) === undefined) {
         throw new Error(`Policy Type ${policyType} not supported`);
       }
 
-      for await (const page of paginateListRoots({ client: organizationsClient }, {})) {
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() => organizationsClient.listRoots({ NextToken: nextToken }).promise());
         for (const item of page.Roots ?? []) {
           if (item.Name === 'Root') {
             if (item.PolicyTypes?.find(item => item.Type === policyType && item.Status === 'ENABLED')) {
@@ -58,7 +62,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             }
 
             await throttlingBackOff(() =>
-              organizationsClient.send(new EnablePolicyTypeCommand({ PolicyType: policyType, RootId: item.Id })),
+              organizationsClient.enablePolicyType({ PolicyType: policyType, RootId: item.Id! }).promise(),
             );
 
             return {
@@ -67,7 +71,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             };
           }
         }
-      }
+        nextToken = page.NextToken;
+      } while (nextToken);
 
       throw new Error(`Error enabling policy type for Root`);
 

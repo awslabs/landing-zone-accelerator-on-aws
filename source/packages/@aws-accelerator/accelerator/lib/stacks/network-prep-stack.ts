@@ -23,11 +23,6 @@ export class NetworkPrepStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    new ssm.StringParameter(this, 'SsmParamStackId', {
-      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
-      stringValue: cdk.Stack.of(this).stackId,
-    });
-
     //
     // Generate Transit Gateways
     //

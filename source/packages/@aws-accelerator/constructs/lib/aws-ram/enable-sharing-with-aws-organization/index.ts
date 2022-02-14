@@ -11,9 +11,9 @@
  *  and limitations under the License.
  */
 
-import { RAMClient, EnableSharingWithAwsOrganizationCommand } from '@aws-sdk/client-ram';
 import { throttlingBackOff } from '@aws-accelerator/utils';
-
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 /**
  * enable-sharing-with-organization - lambda handler
  *
@@ -27,12 +27,12 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
-  const client = new RAMClient({});
+  const client = new AWS.RAM({});
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      await throttlingBackOff(() => client.send(new EnableSharingWithAwsOrganizationCommand({})));
+      await throttlingBackOff(() => client.enableSharingWithAwsOrganization({}).promise());
       return {
         PhysicalResourceId: `ram-enable-sharing-with-aws-organization`,
         Status: 'SUCCESS',

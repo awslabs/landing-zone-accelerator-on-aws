@@ -136,6 +136,7 @@ export class Policy extends Construct {
       properties: {
         bucket: asset.s3BucketName,
         key: asset.s3ObjectKey,
+        partition: cdk.Aws.PARTITION,
         uuid: uuidv4(),
         ...props,
       },

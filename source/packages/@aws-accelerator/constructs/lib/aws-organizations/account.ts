@@ -12,7 +12,6 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
 
 const path = require('path');
@@ -68,6 +67,7 @@ export class Account extends cdk.Resource implements IAccount {
       serviceToken: cr.serviceToken,
       properties: {
         accountId: props.accountId,
+        partition: cdk.Aws.PARTITION,
         roleArn: cdk.Stack.of(this).formatArn({
           service: 'iam',
           region: '',
@@ -76,7 +76,6 @@ export class Account extends cdk.Resource implements IAccount {
           arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
           resourceName: props.assumeRoleName,
         }),
-        uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });
   }

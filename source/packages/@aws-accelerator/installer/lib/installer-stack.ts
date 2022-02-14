@@ -20,6 +20,7 @@ import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { version } from '../../../../package.json';
 
 export enum RepositorySources {
   GITHUB = 'github',
@@ -61,6 +62,13 @@ export class InstallerStack extends cdk.Stack {
     description: 'The name of the git branch to use for installation',
   });
 
+  private readonly enableApprovalStage = new cdk.CfnParameter(this, 'EnableApprovalStage', {
+    type: 'String',
+    description: 'Select yes to add a Manual Approval stage to accelerator pipeline',
+    allowedValues: ['Yes', 'No'],
+    default: 'Yes',
+  });
+
   /**
    * Management Account ID Parameter
    * @private
@@ -91,12 +99,17 @@ export class InstallerStack extends cdk.Stack {
           this.repositoryBranchName.logicalId,
         ],
       },
+      {
+        Label: { default: 'Pipeline Configuration' },
+        Parameters: [this.enableApprovalStage.logicalId],
+      },
     ];
 
     const repositoryParameterLabels: { [p: string]: { default: string } } = {
       [this.repositorySource.logicalId]: { default: 'Source' },
       [this.repositoryName.logicalId]: { default: 'Repository Name' },
       [this.repositoryBranchName.logicalId]: { default: 'Branch Name' },
+      [this.enableApprovalStage.logicalId]: { default: 'Enable Approval Stage' },
     };
 
     let lowerCaseQualifier = 'aws-accelerator';
@@ -180,6 +193,16 @@ export class InstallerStack extends cdk.Stack {
       },
     };
 
+    new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
+      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
+      stringValue: cdk.Stack.of(this).stackId,
+    });
+
+    new cdk.aws_ssm.StringParameter(this, 'SsmParamAcceleratorVersion', {
+      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/version`,
+      stringValue: version,
+    });
+
     const bucket = new Bucket(this, 'SecureBucket', {
       // s3BucketName: `accelerator-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
       s3BucketName: `${lowerCaseQualifier}-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
@@ -210,6 +233,7 @@ export class InstallerStack extends cdk.Stack {
     const pipeline = new codepipeline.Pipeline(this, 'Pipeline', {
       pipelineName: `${pascalCaseQualifier}-Installer`,
       artifactBucket: bucket.getS3Bucket(),
+      restartExecutionOnUpdate: true,
       role: pipelineRole,
     });
 
@@ -281,6 +305,10 @@ export class InstallerStack extends cdk.Stack {
         privileged: true, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.MEDIUM,
         environmentVariables: {
+          NODE_OPTIONS: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: '--max_old_space_size=4096',
+          },
           CDK_NEW_BOOTSTRAP: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: '1',
@@ -292,6 +320,10 @@ export class InstallerStack extends cdk.Stack {
           ACCELERATOR_REPOSITORY_BRANCH_NAME: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.repositoryBranchName.valueAsString,
+          },
+          ACCELERATOR_ENABLE_APPROVAL_STAGE: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.enableApprovalStage.valueAsString,
           },
           ...targetAcceleratorEnvVariables,
           ...targetAcceleratorTestEnvVariables,

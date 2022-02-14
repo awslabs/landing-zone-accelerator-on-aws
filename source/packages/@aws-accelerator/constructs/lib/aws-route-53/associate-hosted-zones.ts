@@ -13,7 +13,6 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { v4 as uuidv4 } from 'uuid';
 
 const path = require('path');
 
@@ -60,7 +59,6 @@ export class AssociateHostedZones extends cdk.Resource {
       resourceType: ASSOCIATE_HOSTED_ZONES_RESOURCE_TYPE,
       serviceToken: customResource.serviceToken,
       properties: {
-        uuid: uuidv4(), // Generates a new UUID to force the resource to update
         partition: cdk.Stack.of(this).partition,
         region: cdk.Stack.of(this).region,
         ...props,

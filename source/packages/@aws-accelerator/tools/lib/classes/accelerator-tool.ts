@@ -10,27 +10,37 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { CodePipelineClient, GetPipelineCommand } from '@aws-sdk/client-codepipeline';
-import {
-  BatchDeleteBuildsCommand,
-  BatchGetProjectsCommand,
-  CodeBuildClient,
-  paginateListBuildsForProject,
-} from '@aws-sdk/client-codebuild';
-import { OrganizationsClient, paginateListAccounts } from '@aws-sdk/client-organizations';
-import { STSClient, AssumeRoleCommand, Credentials } from '@aws-sdk/client-sts';
+import { AcceleratorStackNames, Logger } from '@aws-accelerator/accelerator';
+import { GlobalConfig } from '@aws-accelerator/config';
+import { throttlingBackOff } from '@aws-accelerator/utils';
 import {
   CloudFormationClient,
   DeleteStackCommand,
   DeleteStackCommandOutput,
   DescribeStacksCommand,
+  ListStackResourcesCommand,
   Stack,
-  paginateListStackResources,
   UpdateTerminationProtectionCommand,
   waitUntilStackDeleteComplete,
   waitUntilStackUpdateComplete,
 } from '@aws-sdk/client-cloudformation';
-import { WaiterResult } from '@aws-sdk/util-waiter';
+import { CloudWatchLogsClient, DeleteLogGroupCommand, DescribeLogGroupsCommand } from '@aws-sdk/client-cloudwatch-logs';
+import {
+  BatchDeleteBuildsCommand,
+  BatchGetProjectsCommand,
+  CodeBuildClient,
+  ListBuildsForProjectCommand,
+} from '@aws-sdk/client-codebuild';
+import { CodeCommitClient, DeleteRepositoryCommand, GetFileCommand } from '@aws-sdk/client-codecommit';
+import { CodePipelineClient, GetPipelineCommand } from '@aws-sdk/client-codepipeline';
+import {
+  DescribeKeyCommand,
+  DisableKeyCommand,
+  KeyState,
+  KMSClient,
+  ScheduleKeyDeletionCommand,
+} from '@aws-sdk/client-kms';
+import { ListAccountsCommand, OrganizationsClient } from '@aws-sdk/client-organizations';
 import {
   DeleteBucketCommand,
   DeleteObjectsCommand,
@@ -38,24 +48,9 @@ import {
   ListObjectVersionsCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import {
-  DescribeKeyCommand,
-  DisableKeyCommand,
-  KMSClient,
-  KeyState,
-  ScheduleKeyDeletionCommand,
-} from '@aws-sdk/client-kms';
-import {
-  CloudWatchLogsClient,
-  DeleteLogGroupCommand,
-  paginateDescribeLogGroups,
-} from '@aws-sdk/client-cloudwatch-logs';
-import { CodeCommitClient, DeleteRepositoryCommand, GetFileCommand } from '@aws-sdk/client-codecommit';
-import { GlobalConfig } from '@aws-accelerator/config';
+import { AssumeRoleCommand, Credentials, STSClient } from '@aws-sdk/client-sts';
+import { WaiterResult } from '@aws-sdk/util-waiter';
 import { pascalCase } from 'pascal-case';
-
-import { AcceleratorStackNames, Logger } from '@aws-accelerator/accelerator';
-import { throttlingBackOff } from '@aws-accelerator/utils';
 
 /**
  * Type for pipeline stage action information with order and action name
@@ -621,13 +616,18 @@ export class AcceleratorTool {
     }
 
     const accountIds: { accountName: string; accountId: string }[] = [];
-    for await (const page of paginateListAccounts({ client: organizationsClient }, {})) {
+    let nextToken: string | undefined = undefined;
+    do {
+      const page = await throttlingBackOff(() =>
+        organizationsClient.send(new ListAccountsCommand({ NextToken: nextToken })),
+      );
       for (const account of page.Accounts ?? []) {
         if (account.Id && account.Name) {
           accountIds.push({ accountName: account.Name, accountId: account.Id });
         }
       }
-    }
+      nextToken = page.NextToken;
+    } while (nextToken);
     return accountIds;
   }
 
@@ -738,7 +738,11 @@ export class AcceleratorTool {
         }
 
         // Clean all accelerator related cloud watch log groups
-        for await (const page of paginateDescribeLogGroups({ client: cloudWatchLogsClient }, {})) {
+        let nextToken: string | undefined = undefined;
+        do {
+          const page = await throttlingBackOff(() =>
+            cloudWatchLogsClient.send(new DescribeLogGroupsCommand({ nextToken })),
+          );
           for (const logGroup of page.logGroups!) {
             if (
               logGroup.logGroupName?.includes('/aws/lambda/AWSAccelerator') ||
@@ -751,7 +755,8 @@ export class AcceleratorTool {
               );
             }
           }
-        }
+          nextToken = page.nextToken;
+        } while (nextToken);
       }
     }
     return true;
@@ -786,7 +791,7 @@ export class AcceleratorTool {
    * @private
    */
   private async deleteBucket(s3Client: S3Client, stackName: string, bucketName: string): Promise<boolean> {
-    // Paginate List object and Delete objects
+    // List object and Delete objects
     let listObjectVersionsResponse = await throttlingBackOff(() =>
       s3Client.send(
         new ListObjectVersionsCommand({
@@ -909,16 +914,19 @@ export class AcceleratorTool {
     stackName: string,
   ): Promise<{ status: boolean; pipelineName: string }> {
     try {
-      for await (const page of paginateListStackResources(
-        { client: new CloudFormationClient({}) },
-        { StackName: stackName },
-      )) {
+      const cloudformationClient = new CloudFormationClient({});
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() =>
+          cloudformationClient.send(new ListStackResourcesCommand({ StackName: stackName, NextToken: nextToken })),
+        );
         for (const stackResourceSummary of page.StackResourceSummaries ?? []) {
           if (stackResourceSummary.ResourceType === 'AWS::CodePipeline::Pipeline') {
             return { status: true, pipelineName: stackResourceSummary.PhysicalResourceId! };
           }
         }
-      }
+        nextToken = page.NextToken;
+      } while (nextToken);
       return { status: false, pipelineName: `No pipeline found in stack ${stackName}` };
     } catch (error) {
       return { status: false, pipelineName: `${error}` };
@@ -932,7 +940,11 @@ export class AcceleratorTool {
     cloudWatchLogsClient: CloudWatchLogsClient,
     s3Client: S3Client,
   ): Promise<boolean> {
-    for await (const page of paginateListStackResources({ client: cloudFormationClient }, { StackName: stackName })) {
+    let nextToken: string | undefined = undefined;
+    do {
+      const page = await throttlingBackOff(() =>
+        cloudFormationClient.send(new ListStackResourcesCommand({ StackName: stackName, NextToken: nextToken })),
+      );
       for (const stackResourceSummary of page.StackResourceSummaries ?? []) {
         switch (stackResourceSummary.ResourceType) {
           case 'AWS::KMS::Key':
@@ -951,7 +963,8 @@ export class AcceleratorTool {
             break;
         }
       }
-    }
+      nextToken = page.NextToken;
+    } while (nextToken);
     return true;
   }
 
@@ -1332,14 +1345,16 @@ export class AcceleratorTool {
   private async deleteCodeBuilds(codeBuildClient: CodeBuildClient, buildProjectName: string): Promise<boolean> {
     //delete code build projects before deleting pipeline
     const buildIds: string[] = [];
-    for await (const page of paginateListBuildsForProject(
-      { client: codeBuildClient },
-      { projectName: buildProjectName },
-    )) {
+    let nextToken: string | undefined = undefined;
+    do {
+      const page = await throttlingBackOff(() =>
+        codeBuildClient.send(new ListBuildsForProjectCommand({ projectName: buildProjectName, nextToken })),
+      );
       for (const id of page.ids!) {
         buildIds.push(id);
       }
-    }
+      nextToken = page.nextToken;
+    } while (nextToken);
     Logger.info(`[accelerator-tool] Deleting build ids for the project ${buildProjectName}`);
     await throttlingBackOff(() => codeBuildClient.send(new BatchDeleteBuildsCommand({ ids: buildIds })));
     return true;

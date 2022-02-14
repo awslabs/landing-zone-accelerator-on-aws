@@ -67,6 +67,7 @@ export class PolicyAttachment extends Construct {
       resourceType: 'Custom::AttachPolicy',
       serviceToken: cr.serviceToken,
       properties: {
+        partition: cdk.Aws.PARTITION,
         uuid: uuidv4(),
         ...props,
       },

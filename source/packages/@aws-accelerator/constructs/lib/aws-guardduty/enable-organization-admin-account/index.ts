@@ -12,15 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as console from 'console';
-import {
-  AdminAccount,
-  AdminStatus,
-  DisableOrganizationAdminAccountCommand,
-  EnableOrganizationAdminAccountCommand,
-  GuardDutyClient,
-  paginateListOrganizationAdminAccounts,
-} from '@aws-sdk/client-guardduty';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * enable-guardduty - lambda handler
@@ -38,7 +31,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const region = event.ResourceProperties['region'];
   const adminAccountId = event.ResourceProperties['adminAccountId'];
 
-  const guardDutyClient = new GuardDutyClient({ region: region });
+  const guardDutyClient = new AWS.GuardDuty({ region: region });
 
   switch (event.RequestType) {
     case 'Create':
@@ -46,7 +39,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       if (!(await isGuardDutyEnable(guardDutyClient, adminAccountId))) {
         console.log('start - EnableOrganizationAdminAccountCommand');
         await throttlingBackOff(() =>
-          guardDutyClient.send(new EnableOrganizationAdminAccountCommand({ AdminAccountId: adminAccountId })),
+          guardDutyClient.enableOrganizationAdminAccount({ AdminAccountId: adminAccountId }).promise(),
         );
       }
 
@@ -55,11 +48,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Delete':
       if (await isGuardDutyEnable(guardDutyClient, adminAccountId)) {
         await throttlingBackOff(() =>
-          guardDutyClient.send(
-            new DisableOrganizationAdminAccountCommand({
+          guardDutyClient
+            .disableOrganizationAdminAccount({
               AdminAccountId: adminAccountId,
-            }),
-          ),
+            })
+            .promise(),
         );
       }
 
@@ -67,13 +60,18 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
 }
 
-async function isGuardDutyEnable(guardDutyClient: GuardDutyClient, adminAccountId: string): Promise<boolean> {
-  const adminAccounts: AdminAccount[] = [];
-  for await (const page of paginateListOrganizationAdminAccounts({ client: guardDutyClient }, {})) {
+async function isGuardDutyEnable(guardDutyClient: AWS.GuardDuty, adminAccountId: string): Promise<boolean> {
+  const adminAccounts: AWS.GuardDuty.AdminAccount[] = [];
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      guardDutyClient.listOrganizationAdminAccounts({ NextToken: nextToken }).promise(),
+    );
     for (const account of page.AdminAccounts ?? []) {
       adminAccounts.push(account);
     }
-  }
+    nextToken = page.NextToken;
+  } while (nextToken);
   if (adminAccounts.length === 0) {
     return false;
   }
@@ -81,10 +79,7 @@ async function isGuardDutyEnable(guardDutyClient: GuardDutyClient, adminAccountI
     throw new Error('Multiple admin accounts for GuardDuty in organization');
   }
 
-  if (
-    adminAccounts[0].AdminAccountId === adminAccountId &&
-    adminAccounts[0].AdminStatus === AdminStatus.DISABLE_IN_PROGRESS
-  ) {
+  if (adminAccounts[0].AdminAccountId === adminAccountId && adminAccounts[0].AdminStatus === 'DISABLE_IN_PROGRESS') {
     throw new Error(`Admin account ${adminAccounts[0].AdminAccountId} is in ${adminAccounts[0].AdminStatus}`);
   }
 

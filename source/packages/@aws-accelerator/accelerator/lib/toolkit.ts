@@ -21,7 +21,7 @@ import { ToolkitInfo } from 'aws-cdk/lib/api/toolkit-info';
 import { CdkToolkit } from 'aws-cdk/lib/cdk-toolkit';
 import { RequireApproval } from 'aws-cdk/lib/diff';
 import { Command, Configuration } from 'aws-cdk/lib/settings';
-import path from 'path';
+import { AcceleratorStackNames } from './accelerator';
 import { Logger } from './logger';
 
 /**
@@ -30,9 +30,7 @@ import { Logger } from './logger';
 export enum AcceleratorToolkitCommand {
   BOOTSTRAP = Command.BOOTSTRAP,
   DEPLOY = Command.DEPLOY,
-  DESTROY = Command.DESTROY,
-  LIST = Command.LIST,
-  LS = Command.LS,
+  DIFF = Command.DIFF,
   SYNTH = Command.SYNTH,
   SYNTHESIZE = Command.SYNTHESIZE,
 }
@@ -51,6 +49,9 @@ export class AcceleratorToolkit {
    * @returns
    */
   static isSupportedCommand(command: string): boolean {
+    if (command === undefined) {
+      return false;
+    }
     return Object.values(AcceleratorToolkitCommand).includes(command);
   }
 
@@ -63,36 +64,59 @@ export class AcceleratorToolkit {
    */
   static async execute(options: {
     command: string;
-    accountId: string;
-    region: string;
+    accountId?: string;
+    region?: string;
     partition: string;
     stage?: string;
     configDirPath?: string;
     requireApproval?: RequireApproval;
     trustedAccountId?: string;
-    qualifier?: string;
+    app?: string;
   }): Promise<void> {
-    Logger.info(
-      `[toolkit] Executing cdk ${options.command} ${options.stage} for aws://${options.accountId}/${options.region}`,
-    );
+    // Logger
+    if (options.accountId || options.region) {
+      if (options.stage) {
+        Logger.info(
+          `[toolkit] Executing cdk ${options.command} ${options.stage} for aws://${options.accountId}/${options.region}`,
+        );
+      } else {
+        Logger.info(`[toolkit] Executing cdk ${options.command} for aws://${options.accountId}/${options.region}`);
+      }
+    } else if (options.stage) {
+      Logger.info(`[toolkit] Executing cdk ${options.command} ${options.stage}`);
+    } else {
+      Logger.info(`[toolkit] Executing cdk ${options.command}`);
+    }
+
+    // build the context
+    const context: string[] = [];
+    if (options.configDirPath) {
+      context.push(`config-dir=${options.configDirPath}`);
+    }
+    if (options.stage) {
+      context.push(`stage=${options.stage}`);
+    }
+    if (options.accountId) {
+      context.push(`account=${options.accountId}`);
+    }
+    if (options.region) {
+      context.push(`region=${options.region}`);
+    }
+    if (options.partition) {
+      context.push(`partition=${options.partition}`);
+    }
 
     const configuration = new Configuration({
       commandLineArguments: {
         _: [options.command as Command, ...[]],
         versionReporting: false,
         pathMetadata: false,
-        output: path.join('cdk.out', options.accountId, options.region),
+        output: 'cdk.out',
         assetMetadata: false,
         staging: false,
         lookups: false,
-        context: [
-          `account=${options.accountId}`,
-          `region=${options.region}`,
-          `partition=${options.partition}`,
-          `stage=${options.stage}`,
-          `command=${options.command}`,
-          `config-dir=${options.configDirPath}`,
-        ],
+        app: options.app,
+        context,
       },
     });
     await configuration.load();
@@ -118,10 +142,6 @@ export class AcceleratorToolkit {
       sdkProvider,
     });
 
-    const selector: StackSelector = {
-      patterns: [],
-    };
-
     switch (options.command) {
       case Command.BOOTSTRAP:
         const source: BootstrapSource = { source: 'default' };
@@ -136,34 +156,37 @@ export class AcceleratorToolkit {
           parameters: {
             bucketName: configuration.settings.get(['toolkitBucket', 'bucketName']),
             kmsKeyId: configuration.settings.get(['toolkitBucket', 'kmsKeyId']),
-            qualifier: options.qualifier,
+            qualifier: 'accel',
             trustedAccounts,
             cloudFormationExecutionPolicies: [`arn:${options.partition}:iam::aws:policy/AdministratorAccess`],
           },
         });
         break;
+      case Command.DIFF:
+        console.log('DIFF');
+        await cli.diff({ stackNames: [] });
+        break;
+
       case Command.DEPLOY:
+        if (options.stage === undefined) {
+          throw new Error('trying to deploy with an undefined stage');
+        }
+
+        const selector: StackSelector = {
+          patterns: [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`],
+        };
+
         await cli.deploy({
           selector,
           toolkitStackName,
           requireApproval: options.requireApproval,
         });
         break;
-      case Command.DESTROY:
-        await cli.destroy({
-          selector,
-          exclusively: false,
-          force: true,
-        });
-        break;
-      case Command.LIST:
-      case Command.LS:
-        await cli.list([], { long: false });
-        break;
       case Command.SYNTHESIZE:
       case Command.SYNTH:
         await cli.synth([], false, true);
         break;
+
       default:
         throw new Error(`Unsupported command: ${options.command}`);
     }

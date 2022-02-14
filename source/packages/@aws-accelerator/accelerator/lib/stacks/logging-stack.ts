@@ -21,7 +21,7 @@ export class LoggingStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    const organization = Organization.getInstance(this, 'Organization');
+    const organization = new Organization(this, 'Organization');
 
     //
     // Block Public Access; S3 is global, only need to call in home region. This is done in the
