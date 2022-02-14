@@ -12,18 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as console from 'console';
-import { OrganizationsClient, paginateListAccounts } from '@aws-sdk/client-organizations';
-import {
-  AccountDetails,
-  CreateMembersCommand,
-  DeleteMembersCommand,
-  DisassociateMembersCommand,
-  EnableSecurityHubCommand,
-  SecurityHubClient,
-  UpdateOrganizationConfigurationCommand,
-  paginateListMembers,
-} from '@aws-sdk/client-securityhub';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * enable-guardduty - lambda handler
@@ -39,60 +29,68 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const region = event.ResourceProperties['region'];
+  const partition = event.ResourceProperties['partition'];
 
-  const organizationsClient = new OrganizationsClient({});
-  const securityHubClient = new SecurityHubClient({ region: region });
+  let organizationsClient: AWS.Organizations;
+  if (partition === 'aws-us-gov') {
+    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+  } else {
+    organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+  }
+  const securityHubClient = new AWS.SecurityHub({ region: region });
 
   // Enable security hub is admin account before creating delegation admin account, if this wasn't enabled by organization delegation
   await enableSecurityHub(securityHubClient);
 
-  const allAccounts: AccountDetails[] = [];
-  for await (const page of paginateListAccounts({ client: organizationsClient }, {})) {
+  const allAccounts: AWS.SecurityHub.AccountDetails[] = [];
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() => organizationsClient.listAccounts({ NextToken: nextToken }).promise());
     for (const account of page.Accounts ?? []) {
-      allAccounts.push({ AccountId: account.Id, Email: account.Email });
+      allAccounts.push({ AccountId: account.Id!, Email: account.Email });
     }
-  }
+    nextToken = page.NextToken;
+  } while (nextToken);
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       console.log('starting - CreateMembersCommand');
 
-      await throttlingBackOff(() => securityHubClient.send(new CreateMembersCommand({ AccountDetails: allAccounts })));
+      await throttlingBackOff(() => securityHubClient.createMembers({ AccountDetails: allAccounts }).promise());
 
-      await throttlingBackOff(() =>
-        securityHubClient.send(new UpdateOrganizationConfigurationCommand({ AutoEnable: true })),
-      );
+      await throttlingBackOff(() => securityHubClient.updateOrganizationConfiguration({ AutoEnable: true }).promise());
 
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
       const existingMemberAccountIds: string[] = [];
-      for await (const page of paginateListMembers({ client: securityHubClient }, {})) {
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() => securityHubClient.listMembers({ NextToken: nextToken }).promise());
         for (const member of page.Members ?? []) {
           console.log(member);
           existingMemberAccountIds.push(member.AccountId!);
         }
-      }
+        nextToken = page.NextToken;
+      } while (nextToken);
 
       await throttlingBackOff(() =>
-        securityHubClient.send(new DisassociateMembersCommand({ AccountIds: existingMemberAccountIds })),
+        securityHubClient.disassociateMembers({ AccountIds: existingMemberAccountIds }).promise(),
       );
 
       await throttlingBackOff(() =>
-        securityHubClient.send(new DeleteMembersCommand({ AccountIds: existingMemberAccountIds })),
+        securityHubClient.deleteMembers({ AccountIds: existingMemberAccountIds }).promise(),
       );
 
       return { Status: 'Success', StatusCode: 200 };
   }
 }
 
-async function enableSecurityHub(securityHubClient: SecurityHubClient): Promise<void> {
+async function enableSecurityHub(securityHubClient: AWS.SecurityHub): Promise<void> {
   try {
     console.log('inside enableSecurityHub');
-    await throttlingBackOff(() =>
-      securityHubClient.send(new EnableSecurityHubCommand({ EnableDefaultStandards: false })),
-    );
+    await throttlingBackOff(() => securityHubClient.enableSecurityHub({ EnableDefaultStandards: false }).promise());
   } catch (e) {
     if (`${e}`.includes('Account is already subscribed to Security Hub')) {
       console.warn(`Securityhub is already enabled, error message got ${e}`);

@@ -12,15 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import { EC2Client, paginateDescribeVpcs } from '@aws-sdk/client-ec2';
-import {
-  AssociateVPCWithHostedZoneCommand,
-  CreateVPCAssociationAuthorizationCommand,
-  DeleteVPCAssociationAuthorizationCommand,
-  GetHostedZoneCommand,
-  Route53Client,
-} from '@aws-sdk/client-route-53';
-import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * associate-hosted-zones - lambda handler
@@ -54,27 +47,27 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         //
         // Create clients
         //
-        let targetEc2Client: EC2Client;
-        let targetRoute53Client: Route53Client;
-        const hostedZoneRoute53Client: Route53Client = new Route53Client({});
+        let targetEc2Client: AWS.EC2;
+        let targetRoute53Client: AWS.Route53;
+        const hostedZoneRoute53Client: AWS.Route53 = new AWS.Route53({});
 
         if (accountId === hostedZoneAccountId) {
           console.log('Running in hosted zone account, create local clients');
-          targetEc2Client = new EC2Client({});
-          targetRoute53Client = new Route53Client({});
+          targetEc2Client = new AWS.EC2({});
+          targetRoute53Client = new AWS.Route53({});
         } else {
           console.log('Not running in hosted zone account, assume role to create clients');
-          const stsClient = new STSClient({});
+          const stsClient = new AWS.STS({});
           const assumeRoleResponse = await throttlingBackOff(() =>
-            stsClient.send(
-              new AssumeRoleCommand({
+            stsClient
+              .assumeRole({
                 RoleArn: `arn:${partition}:iam::${accountId}:role/${roleName}`,
                 RoleSessionName: 'AssociateHostedZone',
-              }),
-            ),
+              })
+              .promise(),
           );
 
-          targetEc2Client = new EC2Client({
+          targetEc2Client = new AWS.EC2({
             credentials: {
               accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
               secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
@@ -82,7 +75,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             },
           });
 
-          targetRoute53Client = new Route53Client({
+          targetRoute53Client = new AWS.Route53({
             credentials: {
               accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
               secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
@@ -94,7 +87,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         //
         // Find all the VPCs in the account to create associations
         //
-        for await (const page of paginateDescribeVpcs({ client: targetEc2Client }, {})) {
+        let nextToken: string | undefined = undefined;
+        do {
+          const page = await throttlingBackOff(() => targetEc2Client.describeVpcs({ NextToken: nextToken }).promise());
           for (const vpc of page.Vpcs ?? []) {
             console.log(`Checking vpc: ${vpc.VpcId}`);
             console.log('Tags:');
@@ -113,7 +108,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
               for (const hostedZoneId of hostedZoneIds ?? []) {
                 // Check if vpc is already connected to the HostedZone
                 const response = await throttlingBackOff(() =>
-                  hostedZoneRoute53Client.send(new GetHostedZoneCommand({ Id: hostedZoneId })),
+                  hostedZoneRoute53Client.getHostedZone({ Id: hostedZoneId }).promise(),
                 );
                 if (response.VPCs?.find(item => item.VPCId === vpc.VpcId && item.VPCRegion === region)) {
                   console.log(`${vpc.VpcId} is already attached to the hosted zone ${hostedZoneId}`);
@@ -131,26 +126,27 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
                 // authorize association of VPC with Hosted zones when VPC and Hosted Zones are defined in two different accounts
                 if (accountId !== hostedZoneAccountId) {
                   await throttlingBackOff(() =>
-                    hostedZoneRoute53Client.send(new CreateVPCAssociationAuthorizationCommand(hostedZoneProps)),
+                    hostedZoneRoute53Client.createVPCAssociationAuthorization(hostedZoneProps).promise(),
                   );
                 }
 
                 // associate VPC with Hosted zones
                 console.log(`Associating hosted zone ${hostedZoneId} with VPC ${vpc.VpcId}...`);
                 await throttlingBackOff(() =>
-                  targetRoute53Client.send(new AssociateVPCWithHostedZoneCommand(hostedZoneProps)),
+                  targetRoute53Client.associateVPCWithHostedZone(hostedZoneProps).promise(),
                 );
 
                 // delete association of VPC with Hosted zones when VPC and Hosted Zones are defined in two different accounts
                 if (accountId !== hostedZoneAccountId) {
                   await throttlingBackOff(() =>
-                    hostedZoneRoute53Client.send(new DeleteVPCAssociationAuthorizationCommand(hostedZoneProps)),
+                    hostedZoneRoute53Client.deleteVPCAssociationAuthorization(hostedZoneProps).promise(),
                   );
                 }
               }
             }
           }
-        }
+          nextToken = page.NextToken;
+        } while (nextToken);
       }
 
       return {

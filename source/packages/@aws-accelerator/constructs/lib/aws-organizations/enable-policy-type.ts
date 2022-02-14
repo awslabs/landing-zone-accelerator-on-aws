@@ -60,6 +60,7 @@ export class EnablePolicyType extends cdk.Resource {
       resourceType: ENABLE_POLICY_TYPE,
       serviceToken: cr.serviceToken,
       properties: {
+        partition: cdk.Aws.PARTITION,
         ...props,
       },
     });

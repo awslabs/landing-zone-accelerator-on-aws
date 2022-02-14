@@ -12,12 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import {
-  AttachPolicyCommand,
-  DetachPolicyCommand,
-  OrganizationsClient,
-  paginateListPoliciesForTarget,
-} from '@aws-sdk/client-organizations';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * attach-policy - lambda handler
@@ -35,8 +31,14 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const policyId: string = event.ResourceProperties['policyId'];
   const targetId: string = event.ResourceProperties['targetId'] ?? undefined;
   const type: string = event.ResourceProperties['type'];
+  const partition: string = event.ResourceProperties['partition'];
 
-  const organizationsClient = new OrganizationsClient({});
+  let organizationsClient: AWS.Organizations;
+  if (partition === 'aws-us-gov') {
+    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+  } else {
+    organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+  }
 
   switch (event.RequestType) {
     case 'Create':
@@ -44,10 +46,13 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       //
       // Check if already exists, update and return the ID
       //
-      for await (const page of paginateListPoliciesForTarget(
-        { client: organizationsClient },
-        { Filter: type, TargetId: targetId },
-      )) {
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() =>
+          organizationsClient
+            .listPoliciesForTarget({ Filter: type, TargetId: targetId, NextToken: nextToken })
+            .promise(),
+        );
         for (const policy of page.Policies ?? []) {
           if (policy.Id === policyId) {
             console.log('Policy already attached');
@@ -57,18 +62,14 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             };
           }
         }
-      }
+        nextToken = page.NextToken;
+      } while (nextToken);
 
       //
       // Create if not found
       //
       await throttlingBackOff(() =>
-        organizationsClient.send(
-          new AttachPolicyCommand({
-            PolicyId: policyId,
-            TargetId: targetId,
-          }),
-        ),
+        organizationsClient.attachPolicy({ PolicyId: policyId, TargetId: targetId }).promise(),
       );
 
       return {
@@ -83,24 +84,22 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
       // do not remove FullAWSAccess
       if (policyId !== 'p-FullAWSAccess') {
-        // Find the specific policy
-        for await (const page of paginateListPoliciesForTarget(
-          { client: organizationsClient },
-          { Filter: type, TargetId: targetId },
-        )) {
+        let nextToken: string | undefined = undefined;
+        do {
+          const page = await throttlingBackOff(() =>
+            organizationsClient
+              .listPoliciesForTarget({ Filter: type, TargetId: targetId, NextToken: nextToken })
+              .promise(),
+          );
           for (const policy of page.Policies ?? []) {
             if (policy.Id === policyId) {
               await throttlingBackOff(() =>
-                organizationsClient.send(
-                  new DetachPolicyCommand({
-                    PolicyId: policyId,
-                    TargetId: targetId,
-                  }),
-                ),
+                organizationsClient.detachPolicy({ PolicyId: policyId, TargetId: targetId }).promise(),
               );
             }
           }
-        }
+          nextToken = page.NextToken;
+        } while (nextToken);
       }
 
       return {

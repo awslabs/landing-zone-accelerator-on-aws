@@ -12,11 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import {
-  DisableAWSServiceAccessCommand,
-  EnableAWSServiceAccessCommand,
-  OrganizationsClient,
-} from '@aws-sdk/client-organizations';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * enable-aws-service-access - lambda handler
@@ -32,18 +29,20 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const servicePrincipal: string = event.ResourceProperties['servicePrincipal'];
+  const partition = event.ResourceProperties['partition'];
 
-  const organizationsClient = new OrganizationsClient({});
+  let organizationsClient: AWS.Organizations;
+  if (partition === 'aws-us-gov') {
+    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+  } else {
+    organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+  }
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       await throttlingBackOff(() =>
-        organizationsClient.send(
-          new EnableAWSServiceAccessCommand({
-            ServicePrincipal: servicePrincipal,
-          }),
-        ),
+        organizationsClient.enableAWSServiceAccess({ ServicePrincipal: servicePrincipal }).promise(),
       );
 
       return {
@@ -53,11 +52,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
     case 'Delete':
       await throttlingBackOff(() =>
-        organizationsClient.send(
-          new DisableAWSServiceAccessCommand({
-            ServicePrincipal: servicePrincipal,
-          }),
-        ),
+        organizationsClient.disableAWSServiceAccess({ ServicePrincipal: servicePrincipal }).promise(),
       );
       return {
         PhysicalResourceId: event.PhysicalResourceId,

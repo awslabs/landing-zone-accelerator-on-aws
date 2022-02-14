@@ -10,8 +10,8 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-
-import { OrganizationsClient, paginateListAccounts } from '@aws-sdk/client-organizations';
+import { throttlingBackOff } from '@aws-accelerator/utils';
+import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
@@ -118,19 +118,30 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
    * Loads account ids by utilizing the organizations client if account ids are
    * not provided in the config.
    */
-  public async loadAccountIds(): Promise<void> {
+  public async loadAccountIds(partition: string): Promise<void> {
     if (this.accountIds === undefined) {
       this.accountIds = [];
     }
     if (this.accountIds.length == 0) {
-      const organizationsClient = new OrganizationsClient({});
-      for await (const page of paginateListAccounts({ client: organizationsClient }, {})) {
+      let organizationsClient: AWS.Organizations;
+      if (partition === 'aws-us-gov') {
+        organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+      } else {
+        organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+      }
+
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() =>
+          organizationsClient.listAccounts({ NextToken: nextToken }).promise(),
+        );
         page.Accounts?.forEach(item => {
           if (item.Email && item.Id) {
             this.accountIds?.push({ email: item.Email, accountId: item.Id });
           }
         });
-      }
+        nextToken = page.NextToken;
+      } while (nextToken);
     }
   }
 

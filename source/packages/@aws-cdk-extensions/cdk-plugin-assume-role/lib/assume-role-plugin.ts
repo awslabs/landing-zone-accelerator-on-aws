@@ -12,8 +12,9 @@
  */
 
 import { Plugin, PluginHost } from 'aws-cdk/lib/plugin';
+import * as AWS from 'aws-sdk';
 import { AssumeRoleProviderSource } from './assume-role-provider-source';
-import { Credentials } from '@aws-sdk/client-sts';
+
 export class AssumeProfilePlugin implements Plugin {
   readonly version = '1';
 
@@ -21,7 +22,7 @@ export class AssumeProfilePlugin implements Plugin {
     private readonly props: {
       assumeRoleName?: string;
       assumeRoleDuration?: number;
-      credentials?: Credentials;
+      credentials?: AWS.STS.Credentials;
       partition?: string;
     } = {},
   ) {}

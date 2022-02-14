@@ -39,6 +39,7 @@ export class EnableAwsServiceAccess extends Construct {
       resourceType: 'Custom::EnableAwsServiceAccess',
       serviceToken: customResource.serviceToken,
       properties: {
+        partition: cdk.Aws.PARTITION,
         ...props,
       },
     });

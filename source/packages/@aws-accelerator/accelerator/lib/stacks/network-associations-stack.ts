@@ -28,11 +28,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    new ssm.StringParameter(this, 'SsmParamStackId', {
-      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
-      stringValue: cdk.Stack.of(this).stackId,
-    });
-
     // Build Transit Gateway Maps
     const transitGateways = new Map<string, string>();
     const transitGatewayRouteTables = new Map<string, string>();

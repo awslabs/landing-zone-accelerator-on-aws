@@ -12,7 +12,6 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
 
 const path = require('path');
@@ -72,7 +71,6 @@ export class GuardDutyDetectorConfig extends Construct {
         isExportConfigEnable: props.isExportConfigEnable,
         exportDestination: props.exportDestination,
         exportFrequency: props.exportFrequency,
-        uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });
 

@@ -12,14 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as console from 'console';
-import {
-  GuardDutyClient,
-  ListDetectorsCommand,
-  UpdateDetectorCommand,
-  UpdateMemberDetectorsCommand,
-  paginateListMembers,
-} from '@aws-sdk/client-guardduty';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * GuardDutyUpdateDetector - lambda handler
@@ -36,21 +30,26 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const region = event.ResourceProperties['region'];
   const adminAccountId = event.ResourceProperties['adminAccountId'];
-  const isExportConfigEnable = event.ResourceProperties['isExportConfigEnable'];
+  const isExportConfigEnable = event.ResourceProperties['isExportConfigEnable'] === 'true';
   const exportDestination = event.ResourceProperties['exportDestination'];
   const exportFrequency = event.ResourceProperties['exportFrequency'];
 
-  const guardDutyClient = new GuardDutyClient({ region: region });
+  const guardDutyClient = new AWS.GuardDuty({ region: region });
   const detectorId = await getDetectorId(guardDutyClient);
 
   const existingMemberAccountIds: string[] = [adminAccountId];
 
-  for await (const page of paginateListMembers({ client: guardDutyClient }, { DetectorId: detectorId })) {
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      guardDutyClient.listMembers({ DetectorId: detectorId, NextToken: nextToken }).promise(),
+    );
     for (const member of page.Members ?? []) {
       console.log(member);
       existingMemberAccountIds.push(member.AccountId!);
     }
-  }
+    nextToken = page.NextToken;
+  } while (nextToken);
 
   switch (event.RequestType) {
     case 'Create':
@@ -58,24 +57,24 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       console.log('starting - CreateMembersCommand');
       if (isExportConfigEnable && exportDestination === 's3') {
         await throttlingBackOff(() =>
-          guardDutyClient.send(
-            new UpdateMemberDetectorsCommand({
+          guardDutyClient
+            .updateMemberDetectors({
               DetectorId: detectorId,
               AccountIds: existingMemberAccountIds,
               DataSources: { S3Logs: { Enable: isExportConfigEnable } },
-            }),
-          ),
+            })
+            .promise(),
         );
 
         await throttlingBackOff(() =>
-          guardDutyClient.send(
-            new UpdateDetectorCommand({
+          guardDutyClient
+            .updateDetector({
               DetectorId: detectorId,
               Enable: true,
               FindingPublishingFrequency: exportFrequency,
               DataSources: { S3Logs: { Enable: isExportConfigEnable } },
-            }),
-          ),
+            })
+            .promise(),
         );
       }
 
@@ -84,24 +83,24 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Delete':
       if (isExportConfigEnable && exportDestination === 's3') {
         await throttlingBackOff(() =>
-          guardDutyClient.send(
-            new UpdateDetectorCommand({
+          guardDutyClient
+            .updateDetector({
               DetectorId: detectorId,
               Enable: false,
               FindingPublishingFrequency: exportFrequency,
               DataSources: { S3Logs: { Enable: false } },
-            }),
-          ),
+            })
+            .promise(),
         );
 
         await throttlingBackOff(() =>
-          guardDutyClient.send(
-            new UpdateMemberDetectorsCommand({
+          guardDutyClient
+            .updateMemberDetectors({
               DetectorId: detectorId,
               AccountIds: existingMemberAccountIds,
               DataSources: { S3Logs: { Enable: false } },
-            }),
-          ),
+            })
+            .promise(),
         );
       }
 
@@ -109,8 +108,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
 }
 
-async function getDetectorId(guardDutyClient: GuardDutyClient): Promise<string> {
-  const response = await throttlingBackOff(() => guardDutyClient.send(new ListDetectorsCommand({})));
+async function getDetectorId(guardDutyClient: AWS.GuardDuty): Promise<string> {
+  const response = await throttlingBackOff(() => guardDutyClient.listDetectors({}).promise());
   console.log(response);
   if (response.DetectorIds) {
     return response.DetectorIds[0];

@@ -17,39 +17,37 @@ import mri from 'mri';
 import process from 'process';
 import { Accelerator } from './lib/accelerator';
 import { AcceleratorStage } from './lib/accelerator-stage';
-import { AcceleratorToolkit, AcceleratorToolkitCommand } from './lib/toolkit';
+import { AcceleratorToolkit } from './lib/toolkit';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 process.on('unhandledRejection', (reason, _) => {
   console.error(reason);
   // eslint-disable-next-line no-process-exit
   process.exit(1);
 });
 
-const usage = `Usage: cdk.ts <command> --stage STAGE --config-dir CONFIG_DIRECTORY [--account ACCOUNT] [--region REGION] [--parallel]`;
+const usage = `Usage: cdk.ts <command> --stage STAGE --config-dir CONFIG_DIRECTORY [--account ACCOUNT] [--region REGION]`;
 
 const args = mri(process.argv.slice(2), {
-  boolean: ['parallel'],
-  string: ['account'],
+  boolean: [],
+  string: ['require-approval', 'config-dir', 'partition', 'stage', 'account', 'region', 'app'],
   alias: {
     c: 'config-dir',
     s: 'stage',
     a: 'account',
     r: 'region',
-    p: 'partition',
-  },
-  default: {
-    parallel: false,
+    p: 'app',
   },
 });
 
 const commands = args['_'];
-const parallel = args['parallel'];
+const requireApproval = args['require-approval'];
 const configDirPath = args['config-dir'];
+const partition = args['partition'];
 const stage = args['stage'];
 const account = args['account'];
 const region = args['region'];
-const partition = args['partition'];
-const requireApproval = args['require-approval'];
+const app = args['app'];
 
 //
 // Validate args: must specify a command
@@ -64,13 +62,6 @@ if (commands.length === 0) {
 //
 if (!AcceleratorToolkit.isSupportedCommand(commands[0])) {
   throw new Error(`Invalid command: ${commands[0]}`);
-}
-
-//
-// Validate args: verify stage if not bootstrap
-//
-if (!Accelerator.isSupportedStage(stage) && commands[0] !== String(AcceleratorToolkitCommand.BOOTSTRAP)) {
-  throw new Error(`Invalid stage: ${stage}`);
 }
 
 //
@@ -90,11 +81,11 @@ Accelerator.run({
   command: commands[0],
   configDirPath,
   stage,
-  parallel,
   account,
   region,
   partition,
   requireApproval,
+  app,
 }).catch(function (err) {
   console.log(err.message);
   process.exit(1);

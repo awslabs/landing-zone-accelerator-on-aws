@@ -12,15 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as console from 'console';
-import {
-  CreateDetectorCommand,
-  CreatePublishingDestinationCommand,
-  DeletePublishingDestinationCommand,
-  GuardDutyClient,
-  ListDetectorsCommand,
-  ListPublishingDestinationsCommand,
-} from '@aws-sdk/client-guardduty';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * enable-guardduty - lambda handler
@@ -40,7 +33,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const bucketArn = event.ResourceProperties['bucketArn'];
   const kmsKeyArn = event.ResourceProperties['kmsKeyArn'];
 
-  const guardDutyClient = new GuardDutyClient({ region: region });
+  const guardDutyClient = new AWS.GuardDuty({ region: region });
 
   let detectorId = await getDetectorId(guardDutyClient);
 
@@ -50,35 +43,35 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       console.log('starting - CreatePublishingDestination');
       if (!detectorId) {
         await throttlingBackOff(() =>
-          guardDutyClient.send(
-            new CreateDetectorCommand({
+          guardDutyClient
+            .createDetector({
               Enable: true,
-            }),
-          ),
+            })
+            .promise(),
         );
 
         detectorId = await getDetectorId(guardDutyClient);
       }
 
       const listPublishingDestinationResponse = await throttlingBackOff(() =>
-        guardDutyClient.send(
-          new ListPublishingDestinationsCommand({
-            DetectorId: detectorId,
-          }),
-        ),
+        guardDutyClient
+          .listPublishingDestinations({
+            DetectorId: detectorId!,
+          })
+          .promise(),
       );
 
       if (listPublishingDestinationResponse.Destinations!.length === 0) {
         console.log('starting CreatePublishingDestinationCommand');
 
         await throttlingBackOff(() =>
-          guardDutyClient.send(
-            new CreatePublishingDestinationCommand({
-              DetectorId: detectorId,
+          guardDutyClient
+            .createPublishingDestination({
+              DetectorId: detectorId!,
               DestinationType: exportDestinationType,
               DestinationProperties: { DestinationArn: bucketArn, KmsKeyArn: kmsKeyArn },
-            }),
-          ),
+            })
+            .promise(),
         );
       }
 
@@ -86,11 +79,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
     case 'Delete':
       const response = await throttlingBackOff(() =>
-        guardDutyClient.send(
-          new ListPublishingDestinationsCommand({
-            DetectorId: detectorId,
-          }),
-        ),
+        guardDutyClient
+          .listPublishingDestinations({
+            DetectorId: detectorId!,
+          })
+          .promise(),
       );
 
       const destinationId =
@@ -98,12 +91,12 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
       if (response.Destinations!.length === 1) {
         await throttlingBackOff(() =>
-          guardDutyClient.send(
-            new DeletePublishingDestinationCommand({
-              DetectorId: detectorId,
-              DestinationId: destinationId,
-            }),
-          ),
+          guardDutyClient
+            .deletePublishingDestination({
+              DetectorId: detectorId!,
+              DestinationId: destinationId!,
+            })
+            .promise(),
         );
       }
 
@@ -111,8 +104,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
 }
 
-async function getDetectorId(guardDutyClient: GuardDutyClient): Promise<string | undefined> {
-  const response = await throttlingBackOff(() => guardDutyClient.send(new ListDetectorsCommand({})));
+async function getDetectorId(guardDutyClient: AWS.GuardDuty): Promise<string | undefined> {
+  const response = await throttlingBackOff(() => guardDutyClient.listDetectors({}).promise());
   console.log(response);
   return response.DetectorIds!.length === 1 ? response.DetectorIds![0] : undefined;
 }

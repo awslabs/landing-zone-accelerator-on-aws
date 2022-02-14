@@ -69,13 +69,8 @@ export class NetworkVpcStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
-      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
-      stringValue: cdk.Stack.of(this).stackId,
-    });
-
     // Get the organization object, used by Data Protection
-    const organization = Organization.getInstance(this, 'Organization');
+    const organization = new Organization(this, 'Organization');
 
     //
     // Delete Default VPCs

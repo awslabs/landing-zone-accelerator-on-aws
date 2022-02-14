@@ -12,7 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import { DescribeOrganizationCommand, OrganizationsClient } from '@aws-sdk/client-organizations';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * describe-organization - lambda handler
@@ -30,15 +31,23 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const organizationsClient = new OrganizationsClient({});
-      const response = await throttlingBackOff(() => organizationsClient.send(new DescribeOrganizationCommand({})));
+      const partition = event.ResourceProperties['partition'];
+
+      let organizationsClient: AWS.Organizations;
+      if (partition === 'aws-us-gov') {
+        organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+      } else {
+        organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+      }
+
+      const response = await throttlingBackOff(() => organizationsClient.describeOrganization().promise());
       return {
         PhysicalResourceId: response.Organization?.Id,
         Status: 'SUCCESS',
       };
 
     case 'Delete':
-      // Do Nothing, we will leave any created OUs behind
+      // Do Nothing
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',

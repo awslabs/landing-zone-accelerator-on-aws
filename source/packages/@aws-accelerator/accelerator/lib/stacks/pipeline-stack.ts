@@ -12,12 +12,14 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import * as pipeline from '../pipeline';
 import { Construct } from 'constructs';
+import { version } from '../../../../../package.json';
+import * as pipeline from '../pipeline';
 
 export interface PipelineStackProps extends cdk.StackProps {
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
+  readonly enableApprovalStage: boolean;
   readonly qualifier: string;
   readonly managementAccountId?: string;
   readonly managementAccountRoleName?: string;
@@ -27,10 +29,21 @@ export class PipelineStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: PipelineStackProps) {
     super(scope, id, props);
 
+    new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
+      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
+      stringValue: cdk.Stack.of(this).stackId,
+    });
+
+    new cdk.aws_ssm.StringParameter(this, 'SsmParamAcceleratorVersion', {
+      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/version`,
+      stringValue: version,
+    });
+
     // TODO: Add event to launch the Pipeline for new account events
     new pipeline.AcceleratorPipeline(this, 'Pipeline', {
       sourceRepositoryName: props.sourceRepositoryName,
       sourceBranchName: props.sourceBranchName,
+      enableApprovalStage: props.enableApprovalStage,
       qualifier: props.qualifier,
       managementAccountId: props.managementAccountId,
       managementAccountRoleName: props.managementAccountRoleName,

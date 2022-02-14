@@ -41,8 +41,6 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-sdk/client-config-service": "3.46.0",
-    "@aws-sdk/client-ec2": "3.46.0",
-    "@aws-sdk/client-sts": "3.46.0"
+    "aws-sdk": "2.944.0"
   }
 }

@@ -10,16 +10,17 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { AccountsConfig, GlobalConfig, SecurityConfig } from '@aws-accelerator/config';
+import { AccountsConfig, GlobalConfig } from '@aws-accelerator/config';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
-import { AssumeRoleCommand, Credentials, STSClient } from '@aws-sdk/client-sts';
 import { RequireApproval } from 'aws-cdk/lib/diff';
 import { PluginHost } from 'aws-cdk/lib/plugin';
+import { Command } from 'aws-cdk/lib/settings';
+import * as AWS from 'aws-sdk';
+import * as fs from 'fs';
 import { AcceleratorStage } from './accelerator-stage';
 import { Logger } from './logger';
 import { AcceleratorToolkit } from './toolkit';
-import * as fs from 'fs';
 
 /**
  * constant maintaining cloudformation stack names
@@ -46,12 +47,12 @@ export const AcceleratorStackNames: Record<string, string> = {
 export interface AcceleratorProps {
   readonly command: string;
   readonly configDirPath: string;
-  readonly parallel: boolean;
-  readonly stage: string;
-  readonly account: string;
-  readonly region: string;
+  readonly stage?: string;
+  readonly account?: string;
+  readonly region?: string;
   readonly partition: string;
   readonly requireApproval: RequireApproval;
+  readonly app?: string;
 }
 
 /**
@@ -66,6 +67,9 @@ export abstract class Accelerator {
   // private static readonly DEFAULT_MAX_CONCURRENT_STACKS = 20;
 
   static isSupportedStage(stage: AcceleratorStage): boolean {
+    if (stage === undefined) {
+      return false;
+    }
     return Object.values(AcceleratorStage).includes(stage);
   }
 
@@ -93,6 +97,21 @@ export abstract class Accelerator {
         stage: props.stage,
         configDirPath: props.configDirPath,
         requireApproval: props.requireApproval,
+        app: props.app,
+      });
+    }
+
+    // Treat synthesize as a single - do not need parallel paths to generate all stacks
+    if (props.command === Command.SYNTH || props.command === Command.SYNTHESIZE || props.command === Command.DIFF) {
+      return await AcceleratorToolkit.execute({
+        command: props.command,
+        accountId: props.account,
+        region: props.region,
+        partition: props.partition,
+        stage: props.stage,
+        configDirPath: props.configDirPath,
+        requireApproval: props.requireApproval,
+        app: props.app,
       });
     }
 
@@ -111,10 +130,7 @@ export abstract class Accelerator {
     // Will load in account IDs using the Organizations client if not provided
     // as inputs in accountsConfig
     //
-    await accountsConfig.loadAccountIds();
-
-    // TODO: Deprecate securityConfig.getDelegatedAccountName, use accountsConfig.getAuditAccountId()
-    const securityConfig = SecurityConfig.load(props.configDirPath);
+    await accountsConfig.loadAccountIds(props.partition);
 
     //
     // Load Plugins
@@ -131,7 +147,9 @@ export abstract class Accelerator {
     //
     // When running parallel, this will be the max concurrent stacks
     //
-    // const maxStacks = process.env['MAX_CONCURRENT_STACKS'] ?? Accelerator.DEFAULT_MAX_CONCURRENT_STACKS;
+    const maxStacks = process.env['MAX_CONCURRENT_STACKS'] ?? 500;
+
+    const promises: Promise<void>[] = [];
 
     //
     // Execute Bootstrap stacks for all identified accounts
@@ -140,17 +158,24 @@ export abstract class Accelerator {
       const trustedAccountId = accountsConfig.getManagementAccountId();
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
-          await AcceleratorToolkit.execute({
-            command: props.command,
-            accountId: accountsConfig.getAccountId(account.name),
-            region,
-            partition: props.partition,
-            trustedAccountId,
-            requireApproval: props.requireApproval,
-            qualifier: 'accel',
-          });
+          promises.push(
+            AcceleratorToolkit.execute({
+              command: props.command,
+              accountId: accountsConfig.getAccountId(account.name),
+              region,
+              partition: props.partition,
+              trustedAccountId,
+              requireApproval: props.requireApproval,
+              app: props.app,
+            }),
+          );
+
+          if (promises.length >= maxStacks) {
+            await Promise.all(promises);
+          }
         }
       }
+      await Promise.all(promises);
       return;
     }
 
@@ -160,34 +185,25 @@ export abstract class Accelerator {
     // (primary) account, the log archive account, and the security audit account (also referred to
     // as the audit account).
 
-    // const promises: Promise<void>[] = [];
+    if (props.stage === AcceleratorStage.ACCOUNTS) {
+      Logger.info(`[accelerator] Executing ${props.stage} for Management account.`);
+      await AcceleratorToolkit.execute({
+        command: props.command,
+        accountId: accountsConfig.getManagementAccountId(),
+        region: globalConfig.homeRegion,
+        partition: props.partition,
+        stage: props.stage,
+        configDirPath: props.configDirPath,
+        requireApproval: props.requireApproval,
+        app: props.app,
+      });
+    }
 
-    switch (props.stage) {
-      case AcceleratorStage.ACCOUNTS:
-        Logger.info(`[accelerator] Executing ${props.stage} for Management account.`);
-
-        // promises.push(
-        await AcceleratorToolkit.execute({
-          command: props.command,
-          accountId: accountsConfig.getManagementAccountId(),
-          region: globalConfig.homeRegion,
-          partition: props.partition,
-          stage: props.stage,
-          configDirPath: props.configDirPath,
-          requireApproval: props.requireApproval,
-        });
-        // );
-        // if (promises.length >= maxStacks) {
-        //   await Promise.all(promises);
-        // }
-
-        break;
-
-      case AcceleratorStage.ORGANIZATIONS:
-        for (const region of globalConfig.enabledRegions) {
-          Logger.info(`[accelerator] Executing ${props.stage} for Management account in ${region} region.`);
-          // promises.push(
-          await AcceleratorToolkit.execute({
+    if (props.stage === AcceleratorStage.ORGANIZATIONS) {
+      for (const region of globalConfig.enabledRegions) {
+        Logger.info(`[accelerator] Executing ${props.stage} for Management account in ${region} region.`);
+        promises.push(
+          AcceleratorToolkit.execute({
             command: props.command,
             accountId: accountsConfig.getManagementAccountId(),
             region: region,
@@ -195,28 +211,49 @@ export abstract class Accelerator {
             stage: props.stage,
             configDirPath: props.configDirPath,
             requireApproval: props.requireApproval,
-          });
-          // );
-          // if (promises.length >= maxStacks) {
-          //   await Promise.all(promises);
-          // }
+            app: props.app,
+          }),
+        );
+        if (promises.length >= maxStacks) {
+          await Promise.all(promises);
         }
-        break;
+      }
+    }
 
-      //
-      // Apply these stacks to all account / regions. The contents of these stacks are dynamically
-      // built from the inputted configuration files during stack construction
-      //
-      case AcceleratorStage.LOGGING:
-      case AcceleratorStage.SECURITY:
-      case AcceleratorStage.OPERATIONS:
-      case AcceleratorStage.NETWORK_PREP:
-      case AcceleratorStage.NETWORK_VPC:
-      case AcceleratorStage.NETWORK_ASSOCIATIONS:
-        for (const region of globalConfig.enabledRegions) {
-          for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
-            Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
-            await AcceleratorToolkit.execute({
+    if (props.stage === AcceleratorStage.SECURITY_AUDIT) {
+      for (const region of globalConfig.enabledRegions) {
+        Logger.info(`[accelerator] Executing ${props.stage} for audit account in ${region} region.`);
+        promises.push(
+          AcceleratorToolkit.execute({
+            command: props.command,
+            accountId: accountsConfig.getAuditAccountId(),
+            region: region,
+            partition: props.partition,
+            stage: props.stage,
+            configDirPath: props.configDirPath,
+            requireApproval: props.requireApproval,
+            app: props.app,
+          }),
+        );
+        if (promises.length >= maxStacks) {
+          await Promise.all(promises);
+        }
+      }
+    }
+
+    if (
+      props.stage === AcceleratorStage.LOGGING ||
+      props.stage === AcceleratorStage.SECURITY ||
+      props.stage === AcceleratorStage.OPERATIONS ||
+      props.stage === AcceleratorStage.NETWORK_PREP ||
+      props.stage === AcceleratorStage.NETWORK_VPC ||
+      props.stage === AcceleratorStage.NETWORK_ASSOCIATIONS
+    ) {
+      for (const region of globalConfig.enabledRegions) {
+        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+          Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
+          promises.push(
+            AcceleratorToolkit.execute({
               command: props.command,
               accountId: accountsConfig.getAccountId(account.name),
               region,
@@ -224,43 +261,20 @@ export abstract class Accelerator {
               stage: props.stage,
               configDirPath: props.configDirPath,
               requireApproval: props.requireApproval,
-            });
+              app: props.app,
+            }),
+          );
+          if (promises.length >= maxStacks) {
+            await Promise.all(promises);
           }
         }
-        break;
-      case AcceleratorStage.SECURITY_AUDIT:
-        const auditAccountName = securityConfig.getDelegatedAccountName();
-        Logger.info(`[accelerator] Configuring the security-audit stack for account ${auditAccountName}`);
-        if (accountsConfig.containsAccount(auditAccountName)) {
-          for (const region of globalConfig.enabledRegions) {
-            Logger.info(`[accelerator] Executing ${props.stage} for ${auditAccountName} account in ${region} region.`);
-            // promises.push(
-            await AcceleratorToolkit.execute({
-              command: props.command,
-              accountId: accountsConfig.getAccountId(auditAccountName),
-              region: region,
-              partition: props.partition,
-              stage: props.stage,
-              configDirPath: props.configDirPath,
-              requireApproval: props.requireApproval,
-            });
-            // );
-            // if (promises.length >= maxStacks) {
-            //   await Promise.all(promises);
-            // }
-          }
-        } else {
-          throw new Error(`Security delegated admin account name "${auditAccountName}" not found.`);
-        }
-        break;
-      default:
-        throw new Error(`Unknown stage: ${props.stage}`);
+      }
     }
 
-    // await Promise.all(promises);
+    await Promise.all(promises);
   }
 
-  private static async getManagementAccountCredentials(partition: string): Promise<Credentials | undefined> {
+  private static async getManagementAccountCredentials(partition: string): Promise<AWS.STS.Credentials | undefined> {
     if (process.env['CREDENTIALS_PATH'] && fs.existsSync(process.env['CREDENTIALS_PATH'])) {
       Logger.info('Detected Debugging environment. Loading temporary credentials.');
 
@@ -283,11 +297,11 @@ export abstract class Accelerator {
       Logger.info(`[accelerator] management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
 
       const roleArn = `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
-      const stsClient = new STSClient({ region: process.env['AWS_REGION'] });
+      const stsClient = new AWS.STS({ region: process.env['AWS_REGION'] });
       Logger.info(`[accelerator] [PlatformAccelerator][INFO] management account roleArn => ${roleArn}`);
 
       const assumeRoleCredential = await throttlingBackOff(() =>
-        stsClient.send(new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' })),
+        stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' }).promise(),
       );
 
       process.env['AWS_ACCESS_KEY_ID'] = assumeRoleCredential.Credentials!.AccessKeyId!;

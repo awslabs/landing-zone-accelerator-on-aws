@@ -12,13 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import {
-  CreateOrganizationalUnitCommand,
-  OrganizationsClient,
-  paginateListOrganizationalUnitsForParent,
-  paginateListRoots,
-  UpdateOrganizationalUnitCommand,
-} from '@aws-sdk/client-organizations';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * create-organizational-unit - lambda handler
@@ -42,54 +37,69 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const name: string = event.ResourceProperties['name'];
   const path: string = event.ResourceProperties['path'];
+  const partition = event.ResourceProperties['partition'];
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const organizationsClient = new OrganizationsClient({});
+      let organizationsClient: AWS.Organizations;
+      if (partition === 'aws-us-gov') {
+        organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+      } else {
+        organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+      }
 
       let rootId = '';
-      for await (const page of paginateListRoots({ client: organizationsClient }, {})) {
+
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() => organizationsClient.listRoots({ NextToken: nextToken }).promise());
         for (const item of page.Roots ?? []) {
           if (item.Name === 'Root' && item.Id && item.Arn) {
             rootId = item.Id;
           }
         }
-      }
+        nextToken = page.NextToken;
+      } while (nextToken);
 
       let parentId = rootId;
 
       for (const parent of path.split('/')) {
         if (parent) {
-          for await (const page of paginateListOrganizationalUnitsForParent(
-            { client: organizationsClient },
-            { ParentId: parentId },
-          )) {
+          let nextToken: string | undefined = undefined;
+          do {
+            const page = await throttlingBackOff(() =>
+              organizationsClient
+                .listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: nextToken })
+                .promise(),
+            );
             for (const ou of page.OrganizationalUnits ?? []) {
               if (ou.Name === parent && ou.Id) {
                 parentId = ou.Id;
               }
             }
-          }
+            nextToken = page.NextToken;
+          } while (nextToken);
         }
       }
 
       // Check if OU already exists for the specified parent, update
       // and return the ID
-      for await (const page of paginateListOrganizationalUnitsForParent(
-        { client: organizationsClient },
-        { ParentId: parentId },
-      )) {
+      nextToken = undefined;
+      do {
+        const page = await throttlingBackOff(() =>
+          organizationsClient.listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: nextToken }).promise(),
+        );
         for (const organizationalUnit of page.OrganizationalUnits ?? []) {
           if (organizationalUnit.Name === name) {
             console.log('Existing OU found');
             const response = await throttlingBackOff(() =>
-              organizationsClient.send(
-                new UpdateOrganizationalUnitCommand({
+              organizationsClient
+                .updateOrganizationalUnit({
                   Name: name,
-                  OrganizationalUnitId: organizationalUnit.Id,
-                }),
-              ),
+                  OrganizationalUnitId: organizationalUnit.Id!,
+                })
+                .promise(),
             );
             console.log(response.OrganizationalUnit?.Id);
             return {
@@ -101,16 +111,17 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             };
           }
         }
-      }
+        nextToken = page.NextToken;
+      } while (nextToken);
 
       // Create the OU if not found
       const response = await throttlingBackOff(() =>
-        organizationsClient.send(
-          new CreateOrganizationalUnitCommand({
+        organizationsClient
+          .createOrganizationalUnit({
             Name: name,
             ParentId: parentId,
-          }),
-        ),
+          })
+          .promise(),
       );
       console.log(response.OrganizationalUnit?.Id);
       return {
@@ -122,7 +133,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       };
 
     case 'Delete':
-      // Do Nothing, we will leave any created OUs behind
+      // Do Nothing
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',

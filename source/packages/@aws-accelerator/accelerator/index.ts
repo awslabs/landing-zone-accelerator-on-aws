@@ -16,7 +16,6 @@ export * from './lib/config-repository';
 export * from './lib/logger';
 export * from './lib/pipeline';
 export * from './lib/stacks/accounts-stack';
-export * from './lib/stacks/default-stack';
 export * from './lib/stacks/network-associations-stack';
 export * from './lib/stacks/network-prep-stack';
 export * from './lib/stacks/network-vpc-stack';

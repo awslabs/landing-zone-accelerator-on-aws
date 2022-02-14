@@ -27,15 +27,6 @@ export class OperationsStack extends AcceleratorStack {
     super(scope, id, props);
 
     //
-    // Create an SSM Parameter to satisfy requirement to have a resources
-    // definition in event no users, roles, policies, or groups are defined
-    //
-    new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
-      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
-      stringValue: cdk.Stack.of(this).stackId,
-    });
-
-    //
     // Only deploy IAM resources into the home region
     //
     if (props.globalConfig.homeRegion === cdk.Stack.of(this).region) {

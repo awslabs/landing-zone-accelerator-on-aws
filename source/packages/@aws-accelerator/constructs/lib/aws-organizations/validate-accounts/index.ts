@@ -11,9 +11,9 @@
  *  and limitations under the License.
  */
 
-import { OrganizationsClient, paginateListAccounts } from '@aws-sdk/client-organizations';
-import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * validate-organization-accounts - lambda handler
@@ -30,20 +30,32 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const tableName = event.ResourceProperties['tableName'];
   const configAccounts = event.ResourceProperties['accounts'];
+  const partition = event.ResourceProperties['partition'];
 
-  const dynamoDBClient = new DynamoDBClient({});
-  const organizationsClient = new OrganizationsClient({});
+  const dynamoDBClient = new AWS.DynamoDB({});
+  let organizationsClient: AWS.Organizations;
+  if (partition === 'aws-us-gov') {
+    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+  } else {
+    organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+  }
+
   const validationErrors: string[] = [];
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       const organizationAccounts: { email: string; status: string | undefined }[] = [];
-      for await (const page of paginateListAccounts({ client: organizationsClient }, {})) {
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() =>
+          organizationsClient.listAccounts({ NextToken: nextToken }).promise(),
+        );
         for (const account of page.Accounts ?? []) {
           organizationAccounts.push({ email: account.Email!, status: account.Status });
         }
-      }
+        nextToken = page.NextToken;
+      } while (nextToken);
 
       for (const configAccount of configAccounts) {
         const existingAccount = organizationAccounts.find(item => item.email === configAccount.email);
@@ -66,7 +78,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             },
             ReturnConsumedCapacity: 'NONE',
           };
-          await throttlingBackOff(() => dynamoDBClient.send(new PutItemCommand(putItemParams)));
+          await throttlingBackOff(() => dynamoDBClient.putItem(putItemParams).promise());
         }
       }
 

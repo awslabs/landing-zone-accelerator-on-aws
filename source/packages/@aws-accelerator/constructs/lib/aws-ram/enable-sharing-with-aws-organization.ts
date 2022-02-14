@@ -12,7 +12,6 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
 
 const path = require('path');
@@ -48,17 +47,9 @@ export class EnableSharingWithAwsOrganization extends Construct {
       ],
     });
 
-    //
-    // Custom Resource definition. We want this resource to be evaluated on
-    // every CloudFormation update, so we generate a new uuid to force
-    // re-evaluation.
-    //
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: ENABLE_SHARING_WITH_AWS_ORGANIZATION_TYPE,
       serviceToken: cr.serviceToken,
-      properties: {
-        uuid: uuidv4(),
-      },
     });
 
     this.id = resource.ref;

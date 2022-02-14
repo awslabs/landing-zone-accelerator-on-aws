@@ -11,13 +11,12 @@
  *  and limitations under the License.
  */
 
-import * as core from 'aws-cdk-lib';
-import { v4 as uuidv4 } from 'uuid';
+import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 const path = require('path');
 
-export interface IOrganizationalUnit extends core.IResource {
+export interface IOrganizationalUnit extends cdk.IResource {
   readonly organizationalUnitName: string;
   readonly organizationalUnitPath: string;
   readonly organizationalUnitId: string;
@@ -35,7 +34,7 @@ export interface OrganizationalUnitProps {
 /**
  * Class to initialize OrganizationalUnit
  */
-export class OrganizationalUnit extends core.Resource implements IOrganizationalUnit {
+export class OrganizationalUnit extends cdk.Resource implements IOrganizationalUnit {
   public readonly organizationalUnitName: string;
   public readonly organizationalUnitPath: string;
   public readonly organizationalUnitId: string;
@@ -47,12 +46,12 @@ export class OrganizationalUnit extends core.Resource implements IOrganizational
     this.organizationalUnitName = props.name;
     this.organizationalUnitPath = props.path;
 
-    const createOrganizationalUnitFunction = core.CustomResourceProvider.getOrCreateProvider(
+    const createOrganizationalUnitFunction = cdk.CustomResourceProvider.getOrCreateProvider(
       this,
       'Custom::OrganizationsCreateOrganizationalUnit',
       {
         codeDirectory: path.join(__dirname, 'create-organizational-unit/dist'),
-        runtime: core.CustomResourceProviderRuntime.NODEJS_14_X,
+        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
         policyStatements: [
           {
             Effect: 'Allow',
@@ -68,11 +67,11 @@ export class OrganizationalUnit extends core.Resource implements IOrganizational
       },
     );
 
-    const resource = new core.CustomResource(this, 'Resource', {
+    const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: 'Custom::CreateOrganizationalUnit',
       serviceToken: createOrganizationalUnitFunction.serviceToken,
       properties: {
-        uuid: uuidv4(), // Generates a new UUID to force the resource to update
+        partition: cdk.Aws.PARTITION,
         ...props,
       },
     });

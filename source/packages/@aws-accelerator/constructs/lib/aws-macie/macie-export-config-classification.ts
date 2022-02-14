@@ -16,7 +16,6 @@ import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-import { v4 as uuidv4 } from 'uuid';
 
 const path = require('path');
 
@@ -97,7 +96,6 @@ export class MacieExportConfigClassification extends Construct {
         bucketName: bucket.getS3Bucket().bucketName,
         keyPrefix: props.S3keyPrefix,
         kmsKeyArn: bucket.getS3Bucket().encryptionKey!.keyArn,
-        uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });
 

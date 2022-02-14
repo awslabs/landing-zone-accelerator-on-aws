@@ -28,7 +28,6 @@
   "dependencies": {
     "@aws-accelerator/config": "^0.0.0",
     "@aws-accelerator/constructs": "^0.0.0",
-    "@aws-accelerator/installer": "^0.0.0",
     "@aws-cdk-extensions/cdk-plugin-assume-role": "^0.0.0",
     "aws-cdk-lib": "2.1.0",
     "aws-cdk": "2.1.0",

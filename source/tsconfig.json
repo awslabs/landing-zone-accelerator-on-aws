@@ -9,6 +9,7 @@
     "noPropertyAccessFromIndexSignature": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
+    "resolveJsonModule": true,
     "strict": true,
     "module": "commonjs",
     "declaration": true,

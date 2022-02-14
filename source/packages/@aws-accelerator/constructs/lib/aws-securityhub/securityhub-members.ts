@@ -12,7 +12,6 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
 
 const path = require('path');
@@ -72,7 +71,7 @@ export class SecurityHubMembers extends Construct {
       serviceToken: addMembersFunction.serviceToken,
       properties: {
         region: props.region,
-        uuid: uuidv4(), // Generates a new UUID to force the resource to update
+        partition: cdk.Aws.PARTITION,
       },
     });
 

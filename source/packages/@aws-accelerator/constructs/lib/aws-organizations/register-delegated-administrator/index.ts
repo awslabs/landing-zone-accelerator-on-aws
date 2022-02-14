@@ -12,11 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import {
-  DeregisterDelegatedAdministratorCommand,
-  OrganizationsClient,
-  RegisterDelegatedAdministratorCommand,
-} from '@aws-sdk/client-organizations';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * register-delegated-administrator - lambda handler
@@ -33,26 +30,34 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const servicePrincipal: string = event.ResourceProperties['servicePrincipal'];
   const accountId: string = event.ResourceProperties['accountId'];
+  const partition = event.ResourceProperties['partition'];
 
-  const organizationsClient = new OrganizationsClient({});
+  let organizationsClient: AWS.Organizations;
+  if (partition === 'aws-us-gov') {
+    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+  } else {
+    organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+  }
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       try {
         await throttlingBackOff(() =>
-          organizationsClient.send(
-            new RegisterDelegatedAdministratorCommand({
-              ServicePrincipal: servicePrincipal,
-              AccountId: accountId,
-            }),
-          ),
+          organizationsClient
+            .registerDelegatedAdministrator({ ServicePrincipal: servicePrincipal, AccountId: accountId })
+            .promise(),
         );
       } catch (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         e: any
       ) {
-        if (e.name === 'AccountAlreadyRegisteredException') {
+        if (
+          // SDKv2 Error Structure
+          e.code === 'AccountAlreadyRegisteredException' ||
+          // SDKv3 Error Structure
+          e.name === 'AccountAlreadyRegisteredException'
+        ) {
           console.warn(e.name + ': ' + e.message);
           return;
         }
@@ -65,12 +70,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
     case 'Delete':
       await throttlingBackOff(() =>
-        organizationsClient.send(
-          new DeregisterDelegatedAdministratorCommand({
-            ServicePrincipal: servicePrincipal,
-            AccountId: accountId,
-          }),
-        ),
+        organizationsClient
+          .deregisterDelegatedAdministrator({ ServicePrincipal: servicePrincipal, AccountId: accountId })
+          .promise(),
       );
 
       return {

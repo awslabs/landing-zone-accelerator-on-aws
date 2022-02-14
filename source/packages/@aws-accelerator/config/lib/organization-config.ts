@@ -10,16 +10,12 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-
-import * as t from './common-types';
+import { throttlingBackOff } from '@aws-accelerator/utils';
+import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as yaml from 'js-yaml';
-import {
-  OrganizationsClient,
-  paginateListRoots,
-  paginateListOrganizationalUnitsForParent,
-} from '@aws-sdk/client-organizations';
+import * as path from 'path';
+import * as t from './common-types';
 
 /**
  * AWS Organizations configuration items.
@@ -133,51 +129,68 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
     return new OrganizationConfig(values);
   }
 
-  public async loadOrganizationalUnitIds(): Promise<void> {
+  public async loadOrganizationalUnitIds(partition: string): Promise<void> {
     if (this.organizationalUnitIds === undefined) {
       this.organizationalUnitIds = [];
     }
     if (this.organizationalUnitIds.length == 0) {
-      const organizationsClient = new OrganizationsClient({});
+      let organizationsClient: AWS.Organizations;
+      if (partition === 'aws-us-gov') {
+        organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+      } else {
+        organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+      }
 
       let rootId = '';
-      for await (const page of paginateListRoots({ client: organizationsClient }, {})) {
+
+      let nextToken: string | undefined = undefined;
+      do {
+        const page = await throttlingBackOff(() => organizationsClient.listRoots({ NextToken: nextToken }).promise());
         for (const item of page.Roots ?? []) {
           if (item.Name === 'Root' && item.Id && item.Arn) {
             this.organizationalUnitIds?.push({ name: item.Name, id: item.Id, arn: item.Arn });
             rootId = item.Id;
           }
         }
-      }
+        nextToken = page.NextToken;
+      } while (nextToken);
 
       for (const item of this.organizationalUnits) {
         let parentId = rootId;
 
         for (const parent of item.path.split('/')) {
           if (parent) {
-            for await (const page of paginateListOrganizationalUnitsForParent(
-              { client: organizationsClient },
-              { ParentId: parentId },
-            )) {
+            let nextToken: string | undefined = undefined;
+            do {
+              const page = await throttlingBackOff(() =>
+                organizationsClient
+                  .listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: nextToken })
+                  .promise(),
+              );
               for (const ou of page.OrganizationalUnits ?? []) {
                 if (ou.Name === parent && ou.Id) {
                   parentId = ou.Id;
                 }
               }
-            }
+              nextToken = page.NextToken;
+            } while (nextToken);
           }
         }
 
-        for await (const page of paginateListOrganizationalUnitsForParent(
-          { client: organizationsClient },
-          { ParentId: parentId },
-        )) {
+        let nextToken: string | undefined = undefined;
+        do {
+          const page = await throttlingBackOff(() =>
+            organizationsClient
+              .listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: nextToken })
+              .promise(),
+          );
           for (const ou of page.OrganizationalUnits ?? []) {
             if (ou.Name === item.name && ou.Id && ou.Arn) {
               this.organizationalUnitIds?.push({ name: item.name, id: ou.Id, arn: ou.Arn });
             }
           }
-        }
+          nextToken = page.NextToken;
+        } while (nextToken);
       }
     }
   }

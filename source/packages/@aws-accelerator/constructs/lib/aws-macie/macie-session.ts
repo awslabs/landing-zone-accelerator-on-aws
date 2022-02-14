@@ -12,7 +12,6 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
 
 const path = require('path');
@@ -74,7 +73,6 @@ export class MacieSession extends Construct {
         region: props.region,
         findingPublishingFrequency: props.findingPublishingFrequency,
         isSensitiveSh: props.isSensitiveSh,
-        uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });
 

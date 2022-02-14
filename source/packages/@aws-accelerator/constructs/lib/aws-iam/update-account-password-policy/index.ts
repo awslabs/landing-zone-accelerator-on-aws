@@ -12,7 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import { UpdateAccountPasswordPolicyCommand, IAMClient } from '@aws-sdk/client-iam';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * update-account-password-policy - lambda handler
@@ -30,10 +31,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const iamClient = new IAMClient({});
+      const iamClient = new AWS.IAM({});
       await throttlingBackOff(() =>
-        iamClient.send(
-          new UpdateAccountPasswordPolicyCommand({
+        iamClient
+          .updateAccountPasswordPolicy({
             AllowUsersToChangePassword: event.ResourceProperties['allowUsersToChangePassword'] === 'true',
             HardExpiry: event.ResourceProperties['hardExpiry'] === 'true',
             RequireUppercaseCharacters: event.ResourceProperties['requireUppercaseCharacters'] === 'true',
@@ -43,10 +44,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             MinimumPasswordLength: event.ResourceProperties['minimumPasswordLength'],
             PasswordReusePrevention: event.ResourceProperties['passwordReusePrevention'],
             MaxPasswordAge: event.ResourceProperties['maxPasswordAge'],
-          }),
-        ),
+          })
+          .promise(),
       );
-
       return {
         PhysicalResourceId: 'update-account-password-policy',
         Status: 'SUCCESS',

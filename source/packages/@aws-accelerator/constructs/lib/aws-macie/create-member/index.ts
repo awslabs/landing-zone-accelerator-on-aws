@@ -12,21 +12,8 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as console from 'console';
-import {
-  EnableMacieCommand,
-  GetMacieSessionCommand,
-  CreateMemberCommand,
-  DeleteMemberCommand,
-  DescribeOrganizationConfigurationCommand,
-  DisassociateMemberCommand,
-  Macie2Client,
-  Member,
-  MacieStatus,
-  UpdateOrganizationConfigurationCommand,
-  paginateListMembers,
-} from '@aws-sdk/client-macie2';
-import { Account, OrganizationsClient, paginateListAccounts } from '@aws-sdk/client-organizations';
+import * as AWS from 'aws-sdk';
+AWS.config.logger = console;
 
 /**
  * add-macie-members - lambda handler
@@ -42,25 +29,38 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const region = event.ResourceProperties['region'];
+  const partition = event.ResourceProperties['partition'];
   const adminAccountId = event.ResourceProperties['adminAccountId'];
 
-  const organizationsClient = new OrganizationsClient({});
-  const macie2Client = new Macie2Client({ region: region });
-  const allAccounts: Account[] = [];
-  const existingMembers: Member[] = [];
+  let organizationsClient: AWS.Organizations;
+  if (partition === 'aws-us-gov') {
+    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+  } else {
+    organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+  }
+
+  const macie2Client = new AWS.Macie2({ region: region });
+  const allAccounts: AWS.Organizations.Account[] = [];
+  const existingMembers: AWS.Macie2.Member[] = [];
   let isEnabled = false;
 
-  for await (const page of paginateListAccounts({ client: organizationsClient }, {})) {
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() => organizationsClient.listAccounts({ NextToken: nextToken }).promise());
     for (const account of page.Accounts ?? []) {
       allAccounts.push(account);
     }
-  }
+    nextToken = page.NextToken;
+  } while (nextToken);
 
-  for await (const page of paginateListMembers({ client: macie2Client }, {})) {
+  nextToken = undefined;
+  do {
+    const page = await throttlingBackOff(() => macie2Client.listMembers({ nextToken }).promise());
     for (const member of page.members ?? []) {
       existingMembers.push(member);
     }
-  }
+    nextToken = page.nextToken;
+  } while (nextToken);
 
   switch (event.RequestType) {
     case 'Create':
@@ -68,11 +68,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       if (!(await isMacieEnable(macie2Client))) {
         console.log('start enable of macie');
         await throttlingBackOff(() =>
-          macie2Client.send(
-            new EnableMacieCommand({
-              status: MacieStatus.ENABLED,
-            }),
-          ),
+          macie2Client
+            .enableMacie({
+              status: 'ENABLED',
+            })
+            .promise(),
         );
       }
 
@@ -80,11 +80,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         if (!existingMembers!.find(member => member.accountId !== account.Id)) {
           console.log(`OU account - ${account.Id} macie membership status is "not a macie member", adding as a member`);
           await throttlingBackOff(() =>
-            macie2Client.send(
-              new CreateMemberCommand({
-                account: { accountId: account.Id, email: account.Email },
-              }),
-            ),
+            macie2Client
+              .createMember({
+                account: { accountId: account.Id!, email: account.Email! },
+              })
+              .promise(),
           );
         } else {
           console.warn(
@@ -96,9 +96,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       isEnabled = await isOrganizationAutoEnabled(macie2Client);
 
       if (!isEnabled) {
-        await throttlingBackOff(() =>
-          macie2Client.send(new UpdateOrganizationConfigurationCommand({ autoEnable: true })),
-        );
+        await throttlingBackOff(() => macie2Client.updateOrganizationConfiguration({ autoEnable: true }).promise());
       } else {
         console.warn('Delegation admin account Auto-Enable is ON, so ignoring');
       }
@@ -109,8 +107,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           console.log(
             `OU account - ${account.Id} macie membership status is "a macie member", removing from member list`,
           );
-          await throttlingBackOff(() => macie2Client.send(new DisassociateMemberCommand({ id: account.Id })));
-          await throttlingBackOff(() => macie2Client.send(new DeleteMemberCommand({ id: account.Id })));
+          await throttlingBackOff(() => macie2Client.disassociateMember({ id: account.Id! }).promise());
+          await throttlingBackOff(() => macie2Client.deleteMember({ id: account.Id! }).promise());
         } else {
           console.warn(
             `OU account - ${account.Id} macie membership status is "not a macie member", ignoring removing member list!!`,
@@ -120,9 +118,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
       isEnabled = await isOrganizationAutoEnabled(macie2Client);
       if (isEnabled) {
-        await throttlingBackOff(() =>
-          macie2Client.send(new UpdateOrganizationConfigurationCommand({ autoEnable: false })),
-        );
+        await throttlingBackOff(() => macie2Client.updateOrganizationConfiguration({ autoEnable: false }).promise());
       } else {
         console.warn('Delegation admin account Auto-Enable is OFF, so ignoring');
       }
@@ -132,11 +128,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
 /**
  * Checking is organization auto enabled for new account
- * @param macie2Clinet
+ * @param macieClient
  */
-async function isOrganizationAutoEnabled(macie2Clinet: Macie2Client): Promise<boolean> {
+async function isOrganizationAutoEnabled(macieClient: AWS.Macie2): Promise<boolean> {
   console.log('calling isOrganizationAutoEnabled');
-  const response = await throttlingBackOff(() => macie2Clinet.send(new DescribeOrganizationConfigurationCommand({})));
+  const response = await throttlingBackOff(() => macieClient.describeOrganizationConfiguration({}).promise());
   return response.autoEnable ?? false;
 }
 
@@ -144,10 +140,10 @@ async function isOrganizationAutoEnabled(macie2Clinet: Macie2Client): Promise<bo
  * Checking Macie is enable or disabled
  * @param macie2Client
  */
-async function isMacieEnable(macie2Client: Macie2Client): Promise<boolean> {
+async function isMacieEnable(macie2Client: AWS.Macie2): Promise<boolean> {
   try {
-    const response = await throttlingBackOff(() => macie2Client.send(new GetMacieSessionCommand({})));
-    return response.status === MacieStatus.ENABLED;
+    const response = await throttlingBackOff(() => macie2Client.getMacieSession({}).promise());
+    return response.status === 'ENABLED';
   } catch (e) {
     if (`${e}`.includes('Macie is not enabled')) {
       console.warn('Macie is not enabled');

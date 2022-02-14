@@ -364,8 +364,8 @@ cloudWatch:
           comparisonOperator: GreaterThanOrEqualToThreshold
           evaluationPeriods: 1
           period: 300
-          statistic: Sum
-          threshold: 1
+          statistic: Average
+          threshold: 5
           treatMissingData: notBreaching
         # CIS 3.2 – Ensure a log metric filter and alarm exist for AWS Management Console sign-in without MFA
         - alarmName: CIS-3.2-ConsoleSigninWithoutMFA
@@ -400,7 +400,7 @@ cloudWatch:
           comparisonOperator: GreaterThanOrEqualToThreshold
           evaluationPeriods: 1
           period: 300
-          statistic: Sum
+          statistic: Average
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
@@ -448,7 +448,7 @@ cloudWatch:
           comparisonOperator: GreaterThanOrEqualToThreshold
           evaluationPeriods: 1
           period: 300
-          statistic: Sum
+          statistic: Average
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
@@ -508,7 +508,7 @@ cloudWatch:
           comparisonOperator: GreaterThanOrEqualToThreshold
           evaluationPeriods: 1
           period: 300
-          statistic: Sum
+          statistic: Average
           threshold: 1
           treatMissingData: notBreaching
         # CIS 3.14 – Ensure a log metric filter and alarm exist for VPC changes

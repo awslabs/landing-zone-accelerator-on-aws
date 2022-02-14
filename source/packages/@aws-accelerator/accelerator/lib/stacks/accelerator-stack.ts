@@ -23,6 +23,7 @@ import {
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Logger } from '../logger';
+import { version } from '../../../../../package.json';
 
 export interface AcceleratorStackProps extends cdk.StackProps {
   readonly configDirPath: string;
@@ -40,6 +41,16 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
     this.props = props;
+
+    new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
+      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
+      stringValue: cdk.Stack.of(this).stackId,
+    });
+
+    new cdk.aws_ssm.StringParameter(this, 'SsmParamAcceleratorVersion', {
+      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/version`,
+      stringValue: version,
+    });
   }
 
   protected isIncluded(deploymentTargets: DeploymentTargets): boolean {

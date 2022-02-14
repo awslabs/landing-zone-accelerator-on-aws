@@ -83,61 +83,61 @@ vpcs:
         - ec2messages
         - ssm
         - ssmmessages
-        - secretsmanager
-        - cloudformation
-        - access-analyzer
-        - application-autoscaling
-        - appmesh-envoy-management
-        - athena
-        - autoscaling
-        - autoscaling-plans
-        - clouddirectory
-        - cloudtrail
-        - codebuild
-        - codecommit
-        - codepipeline
-        - config
-        - datasync
-        - ecr.dkr
-        - ecs
-        - ecs-agent
-        - ecs-telemetry
-        - elasticfilesystem
-        - elasticloadbalancing
-        - elasticmapreduce
-        - events
-        - execute-api
-        - git-codecommit
-        - glue
-        - kinesis-streams
-        - kms
-        - logs
-        - monitoring
-        - sagemaker.api
-        - sagemaker.runtime
-        - servicecatalog
-        - sms
-        - sns
-        - sqs
-        - storagegateway
-        - sts
-        - transfer
-        - workspaces
-        - awsconnector
-        - ecr.api
-        - kinesis-firehose
-        - states
-        - acm-pca
-        - cassandra
-        - ebs
-        - elasticbeanstalk
-        - elasticbeanstalk-health
-        - email-smtp
-        - license-manager
-        - macie2
-        - notebook
-        - synthetics
-        - transfer.server
+        # - secretsmanager
+        # - cloudformation
+        # - access-analyzer
+        # - application-autoscaling
+        # - appmesh-envoy-management
+        # - athena
+        # - autoscaling
+        # - autoscaling-plans
+        # - clouddirectory
+        # - cloudtrail
+        # - codebuild
+        # - codecommit
+        # - codepipeline
+        # - config
+        # - datasync
+        # - ecr.dkr
+        # - ecs
+        # - ecs-agent
+        # - ecs-telemetry
+        # - elasticfilesystem
+        # - elasticloadbalancing
+        # - elasticmapreduce
+        # - events
+        # - execute-api
+        # - git-codecommit
+        # - glue
+        # - kinesis-streams
+        # - kms
+        # - logs
+        # - monitoring
+        # - sagemaker.api
+        # - sagemaker.runtime
+        # - servicecatalog
+        # - sms
+        # - sns
+        # - sqs
+        # - storagegateway
+        # - sts
+        # - transfer
+        # - workspaces
+        # - awsconnector
+        # - ecr.api
+        # - kinesis-firehose
+        # - states
+        # - acm-pca
+        # - cassandra
+        # - ebs
+        # - elasticbeanstalk
+        # - elasticbeanstalk-health
+        # - email-smtp
+        # - license-manager
+        # - macie2
+        # - notebook
+        # - synthetics
+        # - transfer.server
   - name: Network-Inspection
     account: Network
     region: *HOME_REGION
