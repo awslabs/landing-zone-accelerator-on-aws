@@ -26,4 +26,4 @@ serviceControlPolicies:
     type: customerManaged
     deploymentTargets:
       organizationalUnits:
-        - Root
+        - Security
