@@ -268,7 +268,7 @@ export class InstallerStack extends cdk.Stack {
      * Install Stage
      */
     const installerRole = new cdk.aws_iam.Role(this, 'InstallerRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal('cdk.aws_codebuild.amazonaws.com'),
+      assumedBy: new cdk.aws_iam.ServicePrincipal('codebuild.amazonaws.com'),
       // TODO: Lock this down to just the pipeline and cloudformation actions needed
       managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
     });
