@@ -13,12 +13,7 @@
 
 import { Bucket } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
-import * as codebuild from 'aws-cdk-lib/aws-codebuild';
-import * as codecommit from 'aws-cdk-lib/aws-codecommit';
-import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
-import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as s3 from 'aws-cdk-lib/aws-s3';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { version } from '../../../../package.json';
 
@@ -116,7 +111,7 @@ export class InstallerStack extends cdk.Stack {
     let pascalCaseQualifier = 'aws-accelerator';
 
     let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
-    let targetAcceleratorEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
+    let targetAcceleratorEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } | undefined;
 
     if (props.useExternalPipelineAccount) {
       this.acceleratorQualifier = new cdk.CfnParameter(this, 'AcceleratorQualifier', {
@@ -153,15 +148,15 @@ export class InstallerStack extends cdk.Stack {
 
       targetAcceleratorEnvVariables = {
         MANAGEMENT_ACCOUNT_ID: {
-          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
           value: this.managementAccountId.valueAsString,
         },
         MANAGEMENT_ACCOUNT_ROLE_NAME: {
-          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
           value: this.managementAccountRoleName.valueAsString,
         },
         ACCELERATOR_QUALIFIER: {
-          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
           value: this.acceleratorQualifier.valueAsString,
         },
       };
@@ -171,15 +166,15 @@ export class InstallerStack extends cdk.Stack {
       pascalCaseQualifier = 'AWSAccelerator';
     }
 
-    let targetAcceleratorTestEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
+    let targetAcceleratorTestEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } | undefined;
     if (props.enableTester) {
       targetAcceleratorTestEnvVariables = {
         ENABLE_TESTER: {
-          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
           value: props.enableTester,
         },
         MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME: {
-          type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+          type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
           value: props.managementCrossAccountRoleName,
         },
       };
@@ -210,8 +205,8 @@ export class InstallerStack extends cdk.Stack {
       kmsDescription: 'AWS Accelerator Installer Bucket CMK',
     });
 
-    // cfn_nag: Suppress warning related to the pipeline artifacts S3 bucket
-    const cfnBucket = bucket.node.defaultChild?.node.defaultChild as s3.CfnBucket;
+    // cfn_nag suppressions
+    const cfnBucket = bucket.node.defaultChild?.node.defaultChild as cdk.aws_s3.CfnBucket;
     cfnBucket.cfnOptions.metadata = {
       cfn_nag: {
         rules_to_suppress: [
@@ -226,11 +221,11 @@ export class InstallerStack extends cdk.Stack {
     /**
      * Pipeline
      */
-    const pipelineRole = new iam.Role(this, 'PipelineRole', {
-      assumedBy: new iam.ServicePrincipal('codepipeline.amazonaws.com'),
+    const pipelineRole = new cdk.aws_iam.Role(this, 'PipelineRole', {
+      assumedBy: new cdk.aws_iam.ServicePrincipal('codepipeline.amazonaws.com'),
     });
 
-    const pipeline = new codepipeline.Pipeline(this, 'Pipeline', {
+    const pipeline = new cdk.aws_codepipeline.Pipeline(this, 'Pipeline', {
       pipelineName: `${pascalCaseQualifier}-Installer`,
       artifactBucket: bucket.getS3Bucket(),
       restartExecutionOnUpdate: true,
@@ -238,7 +233,7 @@ export class InstallerStack extends cdk.Stack {
     });
 
     // cfn_nag: Suppress warning related to high SPCM score
-    const cfnPipelinePolicy = pipeline.role.node.findChild('DefaultPolicy').node.defaultChild as iam.CfnPolicy;
+    const cfnPipelinePolicy = pipeline.role.node.findChild('DefaultPolicy').node.defaultChild as cdk.aws_iam.CfnPolicy;
     cfnPipelinePolicy.cfnOptions.metadata = {
       cfn_nag: {
         rules_to_suppress: [
@@ -250,17 +245,21 @@ export class InstallerStack extends cdk.Stack {
       },
     };
 
-    const acceleratorRepoArtifact = new codepipeline.Artifact('Source');
+    const acceleratorRepoArtifact = new cdk.aws_codepipeline.Artifact('Source');
 
     pipeline.addStage({
       stageName: 'Source',
       actions: [
-        new codepipeline_actions.CodeCommitSourceAction({
+        new cdk.aws_codepipeline_actions.CodeCommitSourceAction({
           actionName: 'Source',
-          repository: codecommit.Repository.fromRepositoryName(this, 'SourceRepo', this.repositoryName.valueAsString),
+          repository: cdk.aws_codecommit.Repository.fromRepositoryName(
+            this,
+            'SourceRepo',
+            this.repositoryName.valueAsString,
+          ),
           branch: this.repositoryBranchName.valueAsString,
           output: acceleratorRepoArtifact,
-          trigger: codepipeline_actions.CodeCommitTrigger.NONE,
+          trigger: cdk.aws_codepipeline_actions.CodeCommitTrigger.NONE,
         }),
       ],
     });
@@ -268,16 +267,16 @@ export class InstallerStack extends cdk.Stack {
     /**
      * Install Stage
      */
-    const installerRole = new iam.Role(this, 'InstallerRole', {
-      assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
+    const installerRole = new cdk.aws_iam.Role(this, 'InstallerRole', {
+      assumedBy: new cdk.aws_iam.ServicePrincipal('cdk.aws_codebuild.amazonaws.com'),
       // TODO: Lock this down to just the pipeline and cloudformation actions needed
-      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
+      managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
     });
 
-    const installerProject = new codebuild.PipelineProject(this, 'InstallerProject', {
+    const installerProject = new cdk.aws_codebuild.PipelineProject(this, 'InstallerProject', {
       projectName: `${pascalCaseQualifier}-InstallerProject`,
       role: installerRole,
-      buildSpec: codebuild.BuildSpec.fromObjectToYaml({
+      buildSpec: cdk.aws_codebuild.BuildSpec.fromObjectToYaml({
         version: '0.2',
         phases: {
           install: {
@@ -301,28 +300,28 @@ export class InstallerStack extends cdk.Stack {
         },
       }),
       environment: {
-        buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
+        buildImage: cdk.aws_codebuild.LinuxBuildImage.STANDARD_5_0,
         privileged: true, // Allow access to the Docker daemon
-        computeType: codebuild.ComputeType.MEDIUM,
+        computeType: cdk.aws_codebuild.ComputeType.MEDIUM,
         environmentVariables: {
           NODE_OPTIONS: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: '--max_old_space_size=4096',
           },
           CDK_NEW_BOOTSTRAP: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: '1',
           },
           ACCELERATOR_REPOSITORY_NAME: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.repositoryName.valueAsString,
           },
           ACCELERATOR_REPOSITORY_BRANCH_NAME: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.repositoryBranchName.valueAsString,
           },
           ACCELERATOR_ENABLE_APPROVAL_STAGE: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.enableApprovalStage.valueAsString,
           },
           ...targetAcceleratorEnvVariables,
@@ -334,7 +333,7 @@ export class InstallerStack extends cdk.Stack {
     pipeline.addStage({
       stageName: 'Install',
       actions: [
-        new codepipeline_actions.CodeBuildAction({
+        new cdk.aws_codepipeline_actions.CodeBuildAction({
           actionName: 'Install',
           project: installerProject,
           input: acceleratorRepoArtifact,
@@ -342,5 +341,73 @@ export class InstallerStack extends cdk.Stack {
         }),
       ],
     });
+
+    //
+    // cdk-nag suppressions
+    //
+
+    // [Error at /AWSAccelerator-InstallerStack/SecureBucket/Resource/Resource]
+    // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      'AWSAccelerator-InstallerStack/SecureBucket/Resource/Resource',
+      [
+        {
+          id: 'AwsSolutions-S1',
+          reason: 'S3 Bucket access logging is not enabled for the pipeline artifacts bucket.',
+        },
+      ],
+    );
+
+    // [Error at /AWSAccelerator-InstallerStack/PipelineRole/DefaultPolicy/Resource]
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag
+    // rule suppression with evidence for those permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      'AWSAccelerator-InstallerStack/PipelineRole/DefaultPolicy/Resource',
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'PipelineRole DefaultPolicy is built by cdk',
+        },
+      ],
+    );
+
+    // [Error at /AWSAccelerator-InstallerStack/Pipeline/Source/Source/CodePipelineActionRole/DefaultPolicy/Resource]
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag
+    // rule suppression with evidence for those permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      '/AWSAccelerator-InstallerStack/Pipeline/Source/Source/CodePipelineActionRole/DefaultPolicy/Resource',
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Source CodePipelineActionRole DefaultPolicy is built by cdk',
+        },
+      ],
+    );
+
+    // [Error at /AWSAccelerator-InstallerStack/InstallerRole/Resource]
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+    NagSuppressions.addResourceSuppressionsByPath(this, '/AWSAccelerator-InstallerStack/InstallerRole/Resource', [
+      {
+        id: 'AwsSolutions-IAM4',
+        reason: 'Using AdministratorAccessRole to deploy accelerator pipeline',
+      },
+    ]);
+
+    // [Error at /AWSAccelerator-InstallerStack/InstallerRole/DefaultPolicy/Resource]
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag
+    // rule suppression with evidence for those permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      '/AWSAccelerator-InstallerStack/InstallerRole/DefaultPolicy/Resource',
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'InstallerRole DefaultPolicy is built by cdk',
+        },
+      ],
+    );
   }
 }

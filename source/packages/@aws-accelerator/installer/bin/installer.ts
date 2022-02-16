@@ -2,8 +2,11 @@
 import * as cdk from 'aws-cdk-lib';
 import 'source-map-support/register';
 import * as installer from '../lib/installer-stack';
+import { AwsSolutionsChecks } from 'cdk-nag';
 
 const app = new cdk.App();
+cdk.Aspects.of(app).add(new AwsSolutionsChecks());
+
 const useExternalPipelineAccount = app.node.tryGetContext('use-external-pipeline-account') === 'true';
 const enableTester = app.node.tryGetContext('enable-tester') === 'true';
 const managementCrossAccountRoleName = app.node.tryGetContext('management-cross-account-role-name');

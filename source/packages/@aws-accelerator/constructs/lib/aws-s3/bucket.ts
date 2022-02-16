@@ -115,7 +115,7 @@ export class Bucket extends Construct {
         sid: 'deny-insecure-connections',
         effect: iam.Effect.DENY,
         actions: ['s3:*'],
-        resources: [this.bucket.arnForObjects('*')],
+        resources: [this.bucket.bucketArn, this.bucket.arnForObjects('*')],
         principals: [new iam.AnyPrincipal()],
         conditions: {
           Bool: {
