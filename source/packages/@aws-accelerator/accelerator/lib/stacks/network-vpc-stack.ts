@@ -167,8 +167,8 @@ export class NetworkVpcStack extends AcceleratorStack {
       transitGatewayAccountIds.forEach(accountId => {
         principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
       });
-      new cdk.aws_iam.Role(this, 'DescribeTransitGatewaysAttachmentsRole', {
-        roleName: `AWSAccelerator-DescribeTransitGatewayAttachmentsRole-${cdk.Stack.of(this).region}`,
+      new cdk.aws_iam.Role(this, 'DescribeTgwAttachRole', {
+        roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
         assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
