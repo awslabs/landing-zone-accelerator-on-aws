@@ -960,6 +960,25 @@ export class NetworkVpcStack extends AcceleratorStack {
    * @returns
    */
   private createVpcEndpointPolicy(service: string, organizationId: string): cdk.aws_iam.PolicyDocument | undefined {
+    // See https://docs.aws.amazon.com/vpc/latest/privatelink/integrated-services-vpce-list.html
+    // for the services that integrates with AWS PrivateLink, but does not support VPC endpoint policies
+    if (
+      [
+        'appmesh-envoy-management',
+        'appstream.api',
+        'appstream.streaming',
+        'cloudformation',
+        'cloudtrail',
+        'codeguru-profiler',
+        'codeguru-reviewer',
+        'codepipeline',
+        'datasync',
+        'ebs',
+      ].includes(service)
+    ) {
+      return undefined;
+    }
+
     // Identify if data protection is specified, create policy
     let policyDocument: cdk.aws_iam.PolicyDocument | undefined = undefined;
     if (this.props.globalConfig.dataProtection?.enable) {
