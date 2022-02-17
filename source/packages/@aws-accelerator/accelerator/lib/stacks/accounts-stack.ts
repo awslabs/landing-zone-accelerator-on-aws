@@ -36,6 +36,8 @@ export class AccountsStack extends AcceleratorStack {
 
     Logger.debug(`[accounts-stack] homeRegion: ${props.globalConfig.homeRegion}`);
 
+    const organizationalUnitList: { [key: string]: OrganizationalUnit } = {};
+
     //
     // Global Organizations actions, only execute in the home region
     //
@@ -44,42 +46,6 @@ export class AccountsStack extends AcceleratorStack {
         const enablePolicyTypeScp = new EnablePolicyType(this, 'enablePolicyTypeScp', {
           policyType: PolicyTypeEnum.SERVICE_CONTROL_POLICY,
         });
-
-        //
-        // Loop through list of organizational-units in the configuration file and
-        // create them. Associate related SCPs
-        //
-        // Note: The Accelerator will only create new Organizational Units if they
-        //       do not already exist. If Organizational Units are found outside of
-        //       those that are listed in the configuration file, they are ignored
-        //       and left in place
-        //
-        const organizationalUnitList: { [key: string]: OrganizationalUnit } = {};
-        for (const organizationalUnit of props.organizationConfig.organizationalUnits) {
-          const name = organizationalUnit.name;
-
-          Logger.info(`[accounts-stack] Adding organizational unit (${name}) with path (${organizationalUnit.path})`);
-
-          // Create Organizational Unit
-          organizationalUnitList[name] = new OrganizationalUnit(this, pascalCase(name), {
-            name,
-            path: organizationalUnit.path,
-          });
-
-          // Add FullAWSAccess SCP, skip Root
-          if (name !== 'Root') {
-            Logger.info(
-              `[accounts-stack] Attaching FullAWSAccess service control policy to organizational unit (${name})`,
-            );
-            const policyAttachment = new PolicyAttachment(this, pascalCase(`Attach_FullAWSAccess_${name}`), {
-              policyId: 'p-FullAWSAccess',
-              targetId: organizationalUnitList[name].organizationalUnitId,
-              type: PolicyType.SERVICE_CONTROL_POLICY,
-            });
-
-            policyAttachment.node.addDependency(enablePolicyTypeScp);
-          }
-        }
 
         // Invite Accounts to Organization (GovCloud)
         const accountMap: Map<string, Account> = new Map<string, Account>();

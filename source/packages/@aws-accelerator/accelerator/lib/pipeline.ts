@@ -213,6 +213,7 @@ export class AcceleratorPipeline extends Construct {
     this.toolkitProject = new codebuild.PipelineProject(this, 'ToolkitProject', {
       projectName: `${qualifierInPascalCase}-ToolkitProject`,
       role: this.toolkitRole,
+      timeout: cdk.Duration.hours(5),
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
         phases: {
@@ -256,11 +257,6 @@ export class AcceleratorPipeline extends Construct {
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),
     });
 
-    pipeline.addStage({
-      stageName: 'Bootstrap',
-      actions: [this.createToolkitStage({ actionName: 'Bootstrap', command: 'bootstrap' })],
-    });
-
     if (props.enableApprovalStage) {
       pipeline.addStage({
         stageName: 'Review',
@@ -275,9 +271,16 @@ export class AcceleratorPipeline extends Construct {
       });
     }
 
-    /**
-     * Creates the Accounts, OUs, and SCPs
-     */
+    // /**
+    //  * The Prepare stage is used to verify that all prerequisites have been made and that the
+    //  * Accelerator can be deployed into the environment
+    //  * Creates the accounts
+    //  * Creates the ou's if control tower is not enabled
+    //  */
+    pipeline.addStage({
+      stageName: 'Prepare',
+      actions: [this.createToolkitStage({ actionName: 'Prepare', command: 'deploy', stage: AcceleratorStage.PREPARE })],
+    });
 
     pipeline.addStage({
       stageName: 'Accounts',
@@ -286,14 +289,10 @@ export class AcceleratorPipeline extends Construct {
       ],
     });
 
-    // /**
-    //  * The Validate stage is used to verify that all prerequisites have been made and that the
-    //  * Accelerator can be deployed into the environment
-    //  */
-    // pipeline.addStage({
-    //   stageName: 'Validate',
-    //   actions: [this.createToolkitStage('Validate', `deploy --stage ${AcceleratorStage.VALIDATE}`)],
-    // });
+    pipeline.addStage({
+      stageName: 'Bootstrap',
+      actions: [this.createToolkitStage({ actionName: 'Bootstrap', command: `bootstrap` })],
+    });
 
     /**
      * The Logging stack establishes all the logging assets that are needed in

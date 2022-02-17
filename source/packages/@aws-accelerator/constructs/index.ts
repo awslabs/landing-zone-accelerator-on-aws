@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+export * from './lib/aws-controltower/create-accounts';
 export * from './lib/aws-ec2/delete-default-vpc';
 export * from './lib/aws-ec2/route-table';
 export * from './lib/aws-ec2/transit-gateway';
@@ -34,7 +35,7 @@ export * from './lib/aws-organizations/organizational-unit';
 export * from './lib/aws-organizations/policy';
 export * from './lib/aws-organizations/policy-attachment';
 export * from './lib/aws-organizations/register-delegated-administrator';
-export * from './lib/aws-organizations/validate-organization-accounts';
+export * from './lib/aws-organizations/create-accounts';
 export * from './lib/aws-ram/enable-sharing-with-aws-organization';
 export * from './lib/aws-ram/resource-share';
 export * from './lib/aws-route-53/associate-hosted-zones';
@@ -46,3 +47,4 @@ export * from './lib/aws-s3/public-access-block';
 export * from './lib/aws-securityhub/securityhub-members';
 export * from './lib/aws-securityhub/securityhub-organization-admin-account';
 export * from './lib/aws-securityhub/securityhub-standards';
+export * from './lib/aws-servicecatalog/get-portfolio-id';

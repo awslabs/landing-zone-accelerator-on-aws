@@ -11,17 +11,29 @@
  *  and limitations under the License.
  */
 
-import * as ssm from 'aws-cdk-lib/aws-ssm';
-import { Construct } from 'constructs';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+/**
+ * aws-controltower-create-accounts - lambda handler
+ *
+ * @param event
+ * @returns
+ */
+export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+  | {
+      IsComplete: boolean;
+    }
+  | undefined
+> {
+  switch (event.RequestType) {
+    case 'Create':
+    case 'Update':
+      return {
+        IsComplete: false,
+      };
 
-export class ValidateStack extends AcceleratorStack {
-  constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
-    super(scope, id, props);
-
-    new ssm.StringParameter(this, 'Parameter', {
-      parameterName: `/accelerator/validate-stack/validate`,
-      stringValue: 'value',
-    });
+    case 'Delete':
+      // Do Nothing
+      return {
+        IsComplete: true,
+      };
   }
 }
