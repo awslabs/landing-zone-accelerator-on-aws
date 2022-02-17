@@ -12,36 +12,38 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
 
 const path = require('path');
 
 /**
- * EnableAwsServiceAccessProps properties
+ * Get the PortfolioId from servicecatalog
  */
-export interface EnableAwsServiceAccessProps {
-  readonly servicePrincipal: string;
+export interface GetPortfolioIdProps {
+  readonly displayName: string;
+  readonly providerName: string;
 }
 
-/**
- * Class to Enable AWS Service Access
- */
-export class EnableAwsServiceAccess extends Construct {
-  public readonly id: string;
+export class GetPortfolioId extends Construct {
+  public readonly portfolioId: string;
 
-  constructor(scope: Construct, id: string, props: EnableAwsServiceAccessProps) {
+  constructor(scope: Construct, id: string, props: GetPortfolioIdProps) {
     super(scope, id);
 
-    const customResource = cdk.CustomResourceProvider.getOrCreateProvider(
+    const GET_PORTFOLIO_ID_RESOURCE_TYPE = 'Custom::GetPortfolioId';
+
+    const getPortfolioIdFunction = cdk.CustomResourceProvider.getOrCreateProvider(
       this,
-      'Custom::OrganizationsEnableAwsServiceAccess',
+      GET_PORTFOLIO_ID_RESOURCE_TYPE,
       {
-        codeDirectory: path.join(__dirname, 'enable-aws-service-access/dist'),
+        codeDirectory: path.join(__dirname, 'get-portfolio-id/dist'),
         runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
         policyStatements: [
           {
+            Sid: 'ServiceCatalog',
             Effect: 'Allow',
-            Action: ['organizations:DisableAWSServiceAccess', 'organizations:EnableAwsServiceAccess'],
+            Action: ['servicecatalog:ListPortfolios'],
             Resource: '*',
           },
         ],
@@ -49,14 +51,15 @@ export class EnableAwsServiceAccess extends Construct {
     );
 
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: 'Custom::EnableAwsServiceAccess',
-      serviceToken: customResource.serviceToken,
+      resourceType: GET_PORTFOLIO_ID_RESOURCE_TYPE,
+      serviceToken: getPortfolioIdFunction.serviceToken,
       properties: {
-        partition: cdk.Aws.PARTITION,
-        ...props,
+        displayName: props.displayName,
+        providerName: props.providerName,
+        uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });
 
-    this.id = resource.ref;
+    this.portfolioId = resource.ref;
   }
 }

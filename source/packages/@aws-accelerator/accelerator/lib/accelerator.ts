@@ -26,7 +26,7 @@ import { AcceleratorToolkit } from './toolkit';
  * constant maintaining cloudformation stack names
  */
 export const AcceleratorStackNames: Record<string, string> = {
-  [AcceleratorStage.VALIDATE]: 'AWSAccelerator-ValidateStack',
+  [AcceleratorStage.PREPARE]: 'AWSAccelerator-PrepareStack',
   [AcceleratorStage.PIPELINE]: 'AWSAccelerator-PipelineStack',
   [AcceleratorStage.TESTER_PIPELINE]: 'AWSAccelerator-TesterPipelineStack',
   [AcceleratorStage.ORGANIZATIONS]: 'AWSAccelerator-OrganizationsStack',
@@ -196,6 +196,19 @@ export abstract class Accelerator {
         configDirPath: props.configDirPath,
         requireApproval: props.requireApproval,
         app: props.app,
+      });
+    }
+
+    if (props.stage === AcceleratorStage.PREPARE) {
+      Logger.info(`[accelerator] Executing ${props.stage} for Management account.`);
+      await AcceleratorToolkit.execute({
+        command: props.command,
+        accountId: accountsConfig.getManagementAccountId(),
+        region: globalConfig.homeRegion,
+        partition: props.partition,
+        stage: props.stage,
+        configDirPath: props.configDirPath,
+        requireApproval: props.requireApproval,
       });
     }
 

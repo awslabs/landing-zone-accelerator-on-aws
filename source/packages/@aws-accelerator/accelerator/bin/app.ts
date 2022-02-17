@@ -36,6 +36,7 @@ import { NetworkVpcStack } from '../lib/stacks/network-vpc-stack';
 import { OperationsStack } from '../lib/stacks/operations-stack';
 import { OrganizationsStack } from '../lib/stacks/organizations-stack';
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
+import { PrepareStack } from '../lib/stacks/prepare-stack';
 import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
@@ -170,6 +171,7 @@ async function main() {
       networkConfig: NetworkConfig.load(configDirPath),
       organizationConfig: OrganizationConfig.load(configDirPath),
       securityConfig: SecurityConfig.load(configDirPath),
+      partition: partition,
     };
 
     //
@@ -187,6 +189,20 @@ async function main() {
     const homeRegion = props.globalConfig.homeRegion;
     const managementAccountId = props.accountsConfig.getManagementAccountId();
     const auditAccountId = props.accountsConfig.getAuditAccountId();
+
+    //
+    // PREPARE Stack
+    //
+    if (includeStage({ stage: AcceleratorStage.PREPARE, account: managementAccountId, region: homeRegion })) {
+      new PrepareStack(app, `${AcceleratorStackNames[AcceleratorStage.PREPARE]}-${managementAccountId}-${homeRegion}`, {
+        env: {
+          account: managementAccountId,
+          region: homeRegion,
+        },
+        description: `(SO0199) AWS Platform Accelerator - Prepare Stack`,
+        ...props,
+      });
+    }
 
     //
     // ACCOUNTS Stack
@@ -249,9 +265,13 @@ async function main() {
     }
 
     for (const enabledRegion of props.globalConfig.enabledRegions) {
+      let accountId = '';
       for (const accountItem of [...props.accountsConfig.mandatoryAccounts, ...props.accountsConfig.workloadAccounts]) {
-        const accountId = props.accountsConfig.getAccountId(accountItem.name);
-
+        try {
+          accountId = props.accountsConfig.getAccountId(accountItem.name);
+        } catch (error) {
+          continue;
+        }
         const env = {
           account: accountId,
           region: enabledRegion,

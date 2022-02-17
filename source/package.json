@@ -52,6 +52,7 @@
   "workspaces": {
     "packages": [
       "./packages/@aws-accelerator/accelerator",
+      "./packages/@aws-accelerator/accelerator/lib/validate",
       "./packages/@aws-accelerator/config",
       "./packages/@aws-accelerator/constructs",
       "./packages/@aws-accelerator/constructs/lib/aws-*/*",
