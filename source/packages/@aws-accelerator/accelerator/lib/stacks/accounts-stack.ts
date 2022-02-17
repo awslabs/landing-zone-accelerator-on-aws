@@ -14,7 +14,6 @@
 import {
   Account,
   EnablePolicyType,
-  OrganizationalUnit,
   Policy,
   PolicyAttachment,
   PolicyType,
@@ -35,8 +34,6 @@ export class AccountsStack extends AcceleratorStack {
     super(scope, id, props);
 
     Logger.debug(`[accounts-stack] homeRegion: ${props.globalConfig.homeRegion}`);
-
-    const organizationalUnitList: { [key: string]: OrganizationalUnit } = {};
 
     //
     // Global Organizations actions, only execute in the home region
@@ -100,14 +97,9 @@ export class AccountsStack extends AcceleratorStack {
               `[accounts-stack] Attaching service control policy (${serviceControlPolicy.name}) to organizational unit (${organizationalUnit})`,
             );
 
-            if (organizationalUnit === 'Root') {
-              Logger.error(`[accounts-stack] Attempting to add an SCP to the Root OU`);
-              throw new Error(`Attempting to add an SCP to the Root OU`);
-            }
-
             new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${organizationalUnit}`), {
               policyId: scp.id,
-              targetId: organizationalUnitList[organizationalUnit].organizationalUnitId,
+              targetId: props.organizationConfig.getOrganizationalUnitId(organizationalUnit),
               type: PolicyType.SERVICE_CONTROL_POLICY,
             });
           }
