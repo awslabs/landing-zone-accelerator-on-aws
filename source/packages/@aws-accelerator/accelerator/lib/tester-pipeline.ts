@@ -12,23 +12,22 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import * as iam from 'aws-cdk-lib/aws-iam';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
+import * as codecommit from 'aws-cdk-lib/aws-codecommit';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
-import { Bucket } from '@aws-accelerator/constructs';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as codebuild from 'aws-cdk-lib/aws-codebuild';
-import { pascalCase } from 'change-case';
-import * as codecommit from 'aws-cdk-lib/aws-codecommit';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import * as yaml from 'js-yaml';
 import * as s3_assets from 'aws-cdk-lib/aws-s3-assets';
+import { pascalCase } from 'change-case';
+import { Construct } from 'constructs';
+import fs from 'fs';
+import * as yaml from 'js-yaml';
+import os from 'os';
+import path from 'path';
+
+import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
-import { CfnRepository } from 'aws-cdk-lib/aws-codecommit';
-import { RemovalPolicy } from 'aws-cdk-lib';
 
 /**
  * TesterPipelineProps
@@ -71,8 +70,8 @@ export class TesterPipeline extends Construct {
       description: 'AWS Accelerator functional test configuration repository',
     });
 
-    const cfnRepository = configRepository.node.defaultChild as CfnRepository;
-    cfnRepository.applyRemovalPolicy(RemovalPolicy.RETAIN, { applyToUpdateReplacePolicy: true });
+    const cfnRepository = configRepository.node.defaultChild as codecommit.CfnRepository;
+    cfnRepository.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN, { applyToUpdateReplacePolicy: true });
 
     if (props.managementAccountId && props.managementAccountRoleName) {
       targetAcceleratorEnvVariables = {
@@ -93,6 +92,7 @@ export class TesterPipeline extends Construct {
       .replace(/AwsAccelerator/gi, 'AWSAccelerator');
 
     const bucket = new Bucket(this, 'SecureBucket', {
+      encryptionType: BucketEncryptionType.SSE_KMS,
       s3BucketName: `${props.qualifier}-tester-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
       kmsAliasName: `alias/${props.qualifier}/test-pipeline/s3`,
       kmsDescription: 'AWS Accelerator Functional Test Pipeline Bucket CMK',

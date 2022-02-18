@@ -11,9 +11,10 @@
  *  and limitations under the License.
  */
 
-import { Bucket } from '@aws-accelerator/constructs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
+
+import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 
 export interface CentralLogsBucketProps {
   s3BucketName: string;
@@ -32,6 +33,7 @@ export class CentralLogsBucket extends Construct {
 
     // Create Central Logs Bucket
     const bucket = new Bucket(this, 'Resource', {
+      encryptionType: BucketEncryptionType.SSE_KMS,
       s3BucketName: props.s3BucketName,
       kmsAliasName: props.kmsAliasName,
       kmsDescription: props.kmsDescription,
