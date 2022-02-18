@@ -33,7 +33,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const serviceCatalogClient = new AWS.ServiceCatalog({ region: 'us-east-1' });
+      const serviceCatalogClient = new AWS.ServiceCatalog();
       let nextToken: string | undefined = undefined;
       do {
         const page = await throttlingBackOff(() =>

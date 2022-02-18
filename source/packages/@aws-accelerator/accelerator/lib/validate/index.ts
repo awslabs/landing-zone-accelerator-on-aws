@@ -17,7 +17,7 @@ import { throttlingBackOff } from '@aws-accelerator/utils';
 //control tower operations are executed from us-east-1 region
 
 const documentClient = new AWS.DynamoDB.DocumentClient();
-const serviceCatalogClient = new AWS.ServiceCatalog({ region: 'us-east-1' });
+const serviceCatalogClient = new AWS.ServiceCatalog();
 const organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
 /**
  * validate-environment - lambda handler
