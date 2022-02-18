@@ -22,7 +22,7 @@ import { throttlingBackOff } from '@aws-accelerator/utils';
 import { v4 as uuidv4 } from 'uuid';
 
 const documentClient = new AWS.DynamoDB.DocumentClient();
-const serviceCatalogClient = new AWS.ServiceCatalog({ region: 'us-east-1' });
+const serviceCatalogClient = new AWS.ServiceCatalog();
 
 const tableName = process.env['NewAccountsTableName'] ?? '';
 
