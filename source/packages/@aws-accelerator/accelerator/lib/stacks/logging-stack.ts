@@ -11,10 +11,19 @@
  *  and limitations under the License.
  */
 
-import { Bucket, CentralLogsBucket, Organization, S3PublicAccessBlock } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+
+import {
+  Bucket,
+  BucketEncryptionType,
+  CentralLogsBucket,
+  Organization,
+  S3PublicAccessBlock,
+} from '@aws-accelerator/constructs';
+
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class LoggingStack extends AcceleratorStack {
@@ -41,10 +50,24 @@ export class LoggingStack extends AcceleratorStack {
     // Create S3 Bucket for Access Logs - this is required
     //
     const serverAccessLogsBucket = new Bucket(this, 'AccessLogsBucket', {
+      encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
       s3BucketName: `aws-accelerator-s3-access-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
-      kmsAliasName: 'alias/accelerator/s3-access-logs/s3',
-      kmsDescription: 'AWS Accelerator S3 Access Logs Bucket CMK',
     });
+
+    serverAccessLogsBucket.getS3Bucket().addToResourcePolicy(
+      new iam.PolicyStatement({
+        sid: 'Allow write access for logging service principal',
+        effect: iam.Effect.ALLOW,
+        actions: ['s3:PutObject'],
+        principals: [new iam.ServicePrincipal('logging.s3.amazonaws.com')],
+        resources: [serverAccessLogsBucket.getS3Bucket().arnForObjects('*')],
+        conditions: {
+          StringEquals: {
+            'aws:SourceAccount': cdk.Stack.of(this).account,
+          },
+        },
+      }),
+    );
 
     // cfn_nag: Suppress warning related to the S3 bucket
     const cfnBucket = serverAccessLogsBucket.node.defaultChild?.node.defaultChild as s3.CfnBucket;

@@ -11,7 +11,6 @@
  *  and limitations under the License.
  */
 
-import { Bucket } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codecommit from 'aws-cdk-lib/aws-codecommit';
@@ -21,6 +20,9 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
+
+import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
+
 import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
 import { AcceleratorToolkitCommand } from './toolkit';
@@ -71,6 +73,7 @@ export class AcceleratorPipeline extends Construct {
     }
 
     const bucket = new Bucket(this, 'SecureBucket', {
+      encryptionType: BucketEncryptionType.SSE_KMS,
       s3BucketName: `${props.qualifier}-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
       kmsAliasName: `alias/${props.qualifier}/pipeline/s3`,
       kmsDescription: 'AWS Accelerator Pipeline Bucket CMK',

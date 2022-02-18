@@ -11,10 +11,12 @@
  *  and limitations under the License.
  */
 
-import { Bucket } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
+
+import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
+
 import { version } from '../../../../package.json';
 
 export enum RepositorySources {
@@ -200,6 +202,7 @@ export class InstallerStack extends cdk.Stack {
 
     const bucket = new Bucket(this, 'SecureBucket', {
       // s3BucketName: `accelerator-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
+      encryptionType: BucketEncryptionType.SSE_KMS,
       s3BucketName: `${lowerCaseQualifier}-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
       kmsAliasName: `alias/${lowerCaseQualifier}/installer/s3`,
       kmsDescription: 'AWS Accelerator Installer Bucket CMK',

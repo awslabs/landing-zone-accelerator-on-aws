@@ -11,16 +11,21 @@
  *  and limitations under the License.
  */
 
+import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 export enum BucketAccessType {
   READONLY = 'readonly',
   WRITEONLY = 'writeonly',
   READWRITE = 'readwrite',
+}
+
+export enum BucketEncryptionType {
+  SSE_S3 = 'sse-s3',
+  SSE_KMS = 'sse-kms',
 }
 
 /**
@@ -34,6 +39,10 @@ export interface BucketProps {
    */
   s3BucketName?: string;
   /**
+   * SSE encryption type for this bucket.
+   */
+  encryptionType: BucketEncryptionType;
+  /**
    * Policy to apply when the bucket is removed from this stack.
    *
    * @default - The bucket will be orphaned.
@@ -42,7 +51,7 @@ export interface BucketProps {
   /**
    * The name of the alias.
    */
-  kmsAliasName: string;
+  kmsAliasName?: string;
   /**
    * A description of the key.
    *
@@ -50,12 +59,19 @@ export interface BucketProps {
    * whether the key is appropriate for a particular task.
    *
    */
-  kmsDescription: string;
+  kmsDescription?: string;
 
   /**
    *
    */
   serverAccessLogsBucket?: s3.IBucket | undefined;
+
+  /**
+   * Prefix to use in the target bucket for server access logs.
+   *
+   * @default - name of this bucket
+   */
+  serverAccessLogsPrefix?: string;
 
   /**
    * @optional
@@ -74,19 +90,40 @@ export interface BucketProps {
  */
 export class Bucket extends Construct {
   private readonly bucket: s3.Bucket;
-  private readonly cmk: kms.Key;
+  private readonly encryptionType: s3.BucketEncryption;
+  private readonly cmk?: kms.Key;
+  private readonly serverAccessLogsPrefix?: string;
 
   constructor(scope: Construct, id: string, props: BucketProps) {
     super(scope, id);
 
-    this.cmk = new kms.Key(this, 'Cmk', {
-      enableKeyRotation: true,
-      description: props.kmsDescription,
-    });
-    this.cmk.addAlias(props.kmsAliasName);
+    // Determine encryption type
+    if (props.encryptionType == BucketEncryptionType.SSE_KMS) {
+      this.cmk = new kms.Key(this, 'Cmk', {
+        enableKeyRotation: true,
+        description: props.kmsDescription,
+      });
+      if (props.kmsAliasName) {
+        this.cmk.addAlias(props.kmsAliasName);
+      }
+      this.encryptionType = s3.BucketEncryption.KMS;
+    } else if (props.encryptionType == BucketEncryptionType.SSE_S3) {
+      this.encryptionType = s3.BucketEncryption.S3_MANAGED;
+    } else {
+      throw new Error(`encryptionType ${props.encryptionType} is not valid.`);
+    }
+
+    // Get server access logs prefix
+    if (props.serverAccessLogsBucket) {
+      if (!props.s3BucketName && !props.serverAccessLogsPrefix) {
+        throw new Error('s3BucketName or serverAccessLogsPrefix property must be defined when using serverAccessLogs.');
+      } else {
+        this.serverAccessLogsPrefix = props.serverAccessLogsPrefix ? props.s3BucketName : props.s3BucketName;
+      }
+    }
 
     this.bucket = new s3.Bucket(this, 'Resource', {
-      encryption: s3.BucketEncryption.KMS,
+      encryption: this.encryptionType,
       encryptionKey: this.cmk,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -94,6 +131,8 @@ export class Bucket extends Construct {
       versioned: true,
       objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
       serverAccessLogsBucket: props.serverAccessLogsBucket,
+      // Trailing slash for folder-like prefix in S3
+      serverAccessLogsPrefix: this.serverAccessLogsPrefix?.concat('/'),
     });
     // Had to be removed to allow CloudTrail access
     // this.bucket.addToResourcePolicy(
@@ -148,7 +187,11 @@ export class Bucket extends Construct {
   }
 
   public getKey(): kms.Key {
-    return this.cmk;
+    if (this.cmk) {
+      return this.cmk;
+    } else {
+      throw new Error(`S3 bucket ${this.bucket.bucketName} has no associated CMK.`);
+    }
   }
 
   protected addValidation(): string[] {
