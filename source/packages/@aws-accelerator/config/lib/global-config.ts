@@ -53,6 +53,24 @@ export abstract class GlobalConfigTypes {
     networkPerimeter: this.networkPerimeterConfig,
   });
 
+  static readonly artifactTypeEnum = t.enums('ArtifactType', ['REDSHIFT', 'QUICKSIGHT', 'ATHENA']);
+
+  static readonly costAndUsageReportConfig = t.interface({
+    additionalSchemaElements: t.optional(t.array(t.nonEmptyString)),
+    compression: t.enums('CompressionType', ['ZIP', 'GZIP', 'Parquet']),
+    format: t.enums('FormatType', ['textORcsv', 'Parquet']),
+    reportName: t.nonEmptyString,
+    s3Prefix: t.nonEmptyString,
+    timeUnit: t.enums('TimeCoverageType', ['HOURLY', 'DAILY', 'MONTHLY']),
+    additionalArtifacts: t.optional(t.array(this.artifactTypeEnum)),
+    refreshClosedReports: t.boolean,
+    reportVersioning: t.enums('VersioningType', ['CREATE_NEW_REPORT', 'OVERWRITE_REPORT']),
+  });
+
+  static readonly reportConfig = t.interface({
+    costAndUsageReport: this.costAndUsageReportConfig,
+  });
+
   static readonly globalConfig = t.interface({
     homeRegion: t.nonEmptyString,
     enabledRegions: t.array(t.region),
@@ -60,6 +78,7 @@ export abstract class GlobalConfigTypes {
     controlTower: GlobalConfigTypes.controlTowerConfig,
     logging: GlobalConfigTypes.loggingConfig,
     dataProtection: t.optional(GlobalConfigTypes.dataProtectionConfig),
+    reports: t.optional(GlobalConfigTypes.reportConfig),
   });
 }
 
@@ -96,6 +115,22 @@ export class DataProtectionConfig implements t.TypeOf<typeof GlobalConfigTypes.d
   readonly networkPerimeter = new NetworkPerimeterConfig();
 }
 
+export class CostAndUsageReportConfig implements t.TypeOf<typeof GlobalConfigTypes.costAndUsageReportConfig> {
+  readonly additionalSchemaElements = [''];
+  readonly compression = '';
+  readonly format = '';
+  readonly reportName = '';
+  readonly s3Prefix = '';
+  readonly timeUnit = '';
+  readonly additionalArtifacts = undefined;
+  readonly refreshClosedReports = true;
+  readonly reportVersioning = '';
+}
+
+export class ReportConfig implements t.TypeOf<typeof GlobalConfigTypes.reportConfig> {
+  readonly costAndUsageReport = new CostAndUsageReportConfig();
+}
+
 export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalConfig> {
   static readonly FILENAME = 'global-config.yaml';
 
@@ -118,6 +153,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   readonly logging: LoggingConfig = new LoggingConfig();
 
   readonly dataProtection: DataProtectionConfig | undefined = undefined;
+  readonly reports: ReportConfig | undefined = undefined;
 
   /**
    *

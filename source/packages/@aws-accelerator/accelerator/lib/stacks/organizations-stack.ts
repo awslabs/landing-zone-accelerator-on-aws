@@ -11,16 +11,6 @@
  *  and limitations under the License.
  */
 
-import { Region } from '@aws-accelerator/config';
-import {
-  EnableAwsServiceAccess,
-  EnableSharingWithAwsOrganization,
-  GuardDutyOrganizationAdminAccount,
-  MacieOrganizationAdminAccount,
-  RegisterDelegatedAdministrator,
-  SecurityHubOrganizationAdminAccount,
-} from '@aws-accelerator/constructs';
-import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 import * as cdk from 'aws-cdk-lib';
 import * as cloudtrail from 'aws-cdk-lib/aws-cloudtrail';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -28,6 +18,21 @@ import * as kms from 'aws-cdk-lib/aws-kms';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+
+import { Region } from '@aws-accelerator/config';
+import {
+  Bucket,
+  BucketEncryptionType,
+  EnableAwsServiceAccess,
+  EnableSharingWithAwsOrganization,
+  GuardDutyOrganizationAdminAccount,
+  MacieOrganizationAdminAccount,
+  RegisterDelegatedAdministrator,
+  ReportDefinition,
+  SecurityHubOrganizationAdminAccount,
+} from '@aws-accelerator/constructs';
+import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
+
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
@@ -135,6 +140,36 @@ export class OrganizationsStack extends AcceleratorStack {
         organizationsTrail.node.addDependency(enableCloudtrailServiceAccess);
       }
 
+      //
+      // Enable Cost and Usage Reports
+      //
+      if (props.globalConfig.reports?.costAndUsageReport) {
+        Logger.info('[organizations-stack] Adding Cost and Usage Reports');
+
+        const reportBucket = new Bucket(this, 'ReportBucket', {
+          encryptionType: BucketEncryptionType.SSE_S3, // CUR does not support KMS CMK
+          s3BucketName: `aws-accelerator-cur-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
+          serverAccessLogsBucket: s3.Bucket.fromBucketName(
+            this,
+            'ReportBucketAccessLogs',
+            `aws-accelerator-s3-access-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
+          ),
+        });
+
+        new ReportDefinition(this, 'ReportDefinition', {
+          compression: props.globalConfig.reports.costAndUsageReport.compression,
+          format: props.globalConfig.reports.costAndUsageReport.format,
+          refreshClosedReports: props.globalConfig.reports.costAndUsageReport.refreshClosedReports,
+          reportName: props.globalConfig.reports.costAndUsageReport.reportName,
+          reportVersioning: props.globalConfig.reports.costAndUsageReport.reportVersioning,
+          s3Bucket: reportBucket.getS3Bucket(),
+          s3Prefix: props.globalConfig.reports.costAndUsageReport.s3Prefix,
+          s3Region: cdk.Stack.of(this).region,
+          timeUnit: props.globalConfig.reports.costAndUsageReport.timeUnit,
+          additionalArtifacts: props.globalConfig.reports.costAndUsageReport.additionalArtifacts,
+          additionalSchemaElements: props.globalConfig.reports.costAndUsageReport.additionalSchemaElements,
+        });
+      }
       //
       // IAM Access Analyzer (Does not have a native service enabler)
       //

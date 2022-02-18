@@ -20,3 +20,12 @@ dataProtection:
     enable: true
   networkPerimeter:
     enable: true
+reports:
+  costAndUsageReport:
+    compression: Parquet
+    format: Parquet
+    reportName: accel-test
+    s3Prefix: cur
+    timeUnit: DAILY
+    refreshClosedReports: true
+    reportVersioning: CREATE_NEW_REPORT

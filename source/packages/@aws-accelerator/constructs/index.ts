@@ -12,6 +12,7 @@
  */
 
 export * from './lib/aws-controltower/create-accounts';
+export * from './lib/aws-cur/report-definition';
 export * from './lib/aws-ec2/delete-default-vpc';
 export * from './lib/aws-ec2/route-table';
 export * from './lib/aws-ec2/transit-gateway';
