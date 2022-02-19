@@ -260,20 +260,6 @@ export class AcceleratorPipeline extends Construct {
       cache: codebuild.Cache.local(codebuild.LocalCacheMode.SOURCE),
     });
 
-    if (props.enableApprovalStage) {
-      pipeline.addStage({
-        stageName: 'Review',
-        actions: [
-          this.createToolkitStage({ actionName: 'Diff', command: 'diff', runOrder: 1 }),
-          new codepipeline_actions.ManualApprovalAction({
-            actionName: 'Approve',
-            runOrder: 2,
-            additionalInformation: 'See previous stage (Diff) for changes.',
-          }),
-        ],
-      });
-    }
-
     // /**
     //  * The Prepare stage is used to verify that all prerequisites have been made and that the
     //  * Accelerator can be deployed into the environment
@@ -296,6 +282,20 @@ export class AcceleratorPipeline extends Construct {
       stageName: 'Bootstrap',
       actions: [this.createToolkitStage({ actionName: 'Bootstrap', command: `bootstrap` })],
     });
+
+    if (props.enableApprovalStage) {
+      pipeline.addStage({
+        stageName: 'Review',
+        actions: [
+          this.createToolkitStage({ actionName: 'Diff', command: 'diff', runOrder: 1 }),
+          new codepipeline_actions.ManualApprovalAction({
+            actionName: 'Approve',
+            runOrder: 2,
+            additionalInformation: 'See previous stage (Diff) for changes.',
+          }),
+        ],
+      });
+    }
 
     /**
      * The Logging stack establishes all the logging assets that are needed in

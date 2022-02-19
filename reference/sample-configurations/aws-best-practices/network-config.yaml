@@ -186,7 +186,7 @@ vpcs:
       - dynamodb
     useCentralEndpoints: true
   - name: SharedServices-Main
-    account: Shared Services
+    account: SharedServices
     region: *HOME_REGION
     cidrs:
       - 10.4.0.0/16

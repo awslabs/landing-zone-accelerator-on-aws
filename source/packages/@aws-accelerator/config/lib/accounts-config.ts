@@ -60,25 +60,26 @@ export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accoun
 export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accountsConfig> {
   static readonly FILENAME = 'accounts-config.yaml';
   static readonly MANAGEMENT_ACCOUNT = 'Management';
-  static readonly LOG_ARCHIVE_ACCOUNT = 'Log Archive';
+  static readonly LOG_ARCHIVE_ACCOUNT = 'LogArchive';
   static readonly AUDIT_ACCOUNT = 'Audit';
 
   readonly mandatoryAccounts: AccountConfig[] = [
     {
       name: AccountsConfig.MANAGEMENT_ACCOUNT,
-      description: 'The management (primary) account',
+      description: 'The management (primary) account. Do not change the name field for this mandatory account.',
       email: '<management-account>@example.com <----- UPDATE EMAIL ADDRESS',
       organizationalUnit: 'Root',
     },
     {
       name: AccountsConfig.LOG_ARCHIVE_ACCOUNT,
-      description: 'The log archive account',
+      description: 'The log archive account. Do not change the name field for this mandatory account.',
       email: '<log-archive>@example.com  <----- UPDATE EMAIL ADDRESS',
       organizationalUnit: 'Security',
     },
     {
       name: AccountsConfig.AUDIT_ACCOUNT,
-      description: 'The security audit account (also referred to as the audit account)',
+      description:
+        'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account.',
       email: '<audit>@example.com  <----- UPDATE EMAIL ADDRESS',
       organizationalUnit: 'Security',
     },
@@ -100,6 +101,54 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   constructor(values?: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>) {
     if (values) {
       Object.assign(this, values);
+    }
+
+    //
+    // Validation errors
+    //
+    const errors: string[] = [];
+
+    //
+    // Verify mandatory account names did not change
+    //
+    for (const accountName of [
+      AccountsConfig.MANAGEMENT_ACCOUNT,
+      AccountsConfig.AUDIT_ACCOUNT,
+      AccountsConfig.LOG_ARCHIVE_ACCOUNT,
+    ]) {
+      if (!this.mandatoryAccounts.find(item => item.name === accountName)) {
+        errors.push(`Unable to find mandatory account with name ${accountName}.`);
+      }
+    }
+
+    //
+    // Verify email addresses are unique
+    //
+    const accountNames = [...this.mandatoryAccounts, ...this.workloadAccounts].map(item => item.name);
+    if (new Set(accountNames).size !== accountNames.length) {
+      errors.push(`Duplicate account names defined [${accountNames}].`);
+    }
+
+    //
+    // Verify names are unique
+    //
+    const emails = [...this.mandatoryAccounts, ...this.workloadAccounts].map(item => item.email);
+    if (new Set(emails).size !== emails.length) {
+      errors.push(`Duplicate emails defined [${emails}].`);
+    }
+
+    //
+    // Control Tower Account Factory does not allow spaces in account names
+    //
+    for (const account of [...this.mandatoryAccounts, ...this.workloadAccounts]) {
+      console.log(account.name);
+      if (account.name.indexOf(' ') > 0) {
+        errors.push(`Account name (${account.name}) found with spaces. Please remove spaces and retry the pipeline.`);
+      }
+    }
+
+    if (errors.length) {
+      throw new Error(`${AccountsConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
     }
   }
 

@@ -116,7 +116,9 @@ async function main() {
   if (includeStage({ stage: AcceleratorStage.PIPELINE, account, region })) {
     const sourceRepositoryName = process.env['ACCELERATOR_REPOSITORY_NAME'];
     const sourceBranchName = process.env['ACCELERATOR_REPOSITORY_BRANCH_NAME'];
-    const enableApprovalStage = process.env['ACCELERATOR_ENABLE_APPROVAL_STAGE'] === 'Yes';
+    const enableApprovalStage = process.env['ACCELERATOR_ENABLE_APPROVAL_STAGE']
+      ? process.env['ACCELERATOR_ENABLE_APPROVAL_STAGE'] === 'Yes'
+      : true;
 
     // Verify ENV vars are set
     if (!sourceRepositoryName || !sourceBranchName) {

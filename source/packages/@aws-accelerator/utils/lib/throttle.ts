@@ -38,6 +38,8 @@ export const isThrottlingError = (
   e.code === 'InsufficientDeliveryPolicyException' || // Retry for ConfigService
   e.code === 'NoAvailableDeliveryChannelException' || // Retry for ConfigService
   e.code === 'ConcurrentModifications' || // Retry for AssociateHostedZone
+  e.code === 'LimitExceededException' || // Retry for SecurityHub
+  e.code === 'OperationNotPermittedException' || // Retry for RAM
   e.code === 'TooManyRequestsException' ||
   e.code === 'Throttling' ||
   e.code === 'ThrottlingException' ||
@@ -48,6 +50,8 @@ export const isThrottlingError = (
   e.name === 'InsufficientDeliveryPolicyException' || // Retry for ConfigService
   e.name === 'NoAvailableDeliveryChannelException' || // Retry for ConfigService
   e.name === 'ConcurrentModifications' || // Retry for AssociateHostedZone
+  e.name === 'LimitExceededException' || // Retry for SecurityHub
+  e.name === 'OperationNotPermittedException' || // Retry for RAM
   e.name === 'TooManyRequestsException' ||
   e.name === 'Throttling' ||
   e.name === 'ThrottlingException' ||
