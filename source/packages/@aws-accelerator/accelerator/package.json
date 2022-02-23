@@ -29,8 +29,8 @@
     "@aws-accelerator/config": "^0.0.0",
     "@aws-accelerator/constructs": "^0.0.0",
     "@aws-cdk-extensions/cdk-plugin-assume-role": "^0.0.0",
-    "aws-cdk-lib": "2.1.0",
-    "aws-cdk": "2.1.0",
+    "aws-cdk-lib": "2.13.0",
+    "aws-cdk": "2.13.0",
     "@types/aws-lambda": "8.10.86",
     "@types/js-yaml": "4.0.5",
     "@types/semver": "7.3.9",
@@ -48,8 +48,8 @@
     "yargs": "17.3.0"
   },
   "devDependencies": {
-    "aws-cdk-lib": "2.1.0",
-    "aws-cdk": "2.1.0",
+    "aws-cdk-lib": "2.13.0",
+    "aws-cdk": "2.13.0",
     "constructs": "10.0.12",
     "@types/fs-extra": "9.0.13",
     "@types/jest": "27.0.3",
