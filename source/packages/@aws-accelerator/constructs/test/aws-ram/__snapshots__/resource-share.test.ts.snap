@@ -1,0 +1,62 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ResourceShare Construct(ResourceShare):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "ResourceShareTestResourceShareResourceShare8D7B67C7": Object {
+      "Properties": Object {
+        "AllowExternalPrincipals": true,
+        "Name": "TestResourceShare",
+        "PermissionArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":s3:::test-bucket-1-",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+              ],
+            ],
+          },
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":s3:::test-bucket-2-",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+              ],
+            ],
+          },
+        ],
+        "Principals": Array [
+          "accountID",
+          "organizationUnitId",
+        ],
+        "ResourceArns": Array [
+          "ec2:TransitGateway",
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
+    },
+  },
+}
+`;

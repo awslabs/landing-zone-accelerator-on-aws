@@ -34,10 +34,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
   const macieDelegatedAccount = await getMacieDelegatedAccount(macie2Client, adminAccountId);
 
-  console.log(
-    `Started enableOrganizationAdminAccount function in ${event.ResourceProperties['region']} region for account ${adminAccountId}`,
-  );
-
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
@@ -72,7 +68,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           );
         }
       } else {
-        console.log(`Enabling macie admin account ${adminAccountId} in ${region} region`);
+        console.log(
+          `Started enableOrganizationAdminAccount function in ${event.ResourceProperties['region']} region for account ${adminAccountId}`,
+        );
         await throttlingBackOff(() =>
           macie2Client.enableOrganizationAdminAccount({ adminAccountId: adminAccountId }).promise(),
         );
@@ -82,6 +80,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
     case 'Delete':
       if (macieDelegatedAccount.status) {
+        console.log(
+          `Started disableOrganizationAdminAccount function in ${event.ResourceProperties['region']} region for account ${adminAccountId}`,
+        );
         await throttlingBackOff(() =>
           macie2Client.disableOrganizationAdminAccount({ adminAccountId: macieDelegatedAccount.accountId! }).promise(),
         );
@@ -110,7 +111,7 @@ async function getMacieDelegatedAccount(
     return { accountId: undefined, status: false };
   }
   if (adminAccounts.length > 1) {
-    throw new Error('Multiple admin accounts for GuardDuty in organization');
+    throw new Error('Multiple admin accounts for Macie in organization');
   }
 
   if (adminAccounts[0].accountId === adminAccountId && adminAccounts[0].status === 'DISABLING_IN_PROGRESS') {
@@ -124,12 +125,30 @@ async function isMacieEnable(macie2Client: AWS.Macie2): Promise<boolean> {
   try {
     const response = await throttlingBackOff(() => macie2Client.getMacieSession({}).promise());
     return response.status === 'ENABLED';
-  } catch (e) {
-    if (`${e}`.includes('Macie is not enabled')) {
-      console.warn('Macie is not enabled');
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    e: any
+  ) {
+    if (
+      // SDKv2 Error Structure
+      e.code === 'ResourceConflictException' ||
+      // SDKv3 Error Structure
+      e.name === 'ResourceConflictException'
+    ) {
+      console.warn(e.name + ': ' + e.message);
       return false;
-    } else {
-      throw e;
     }
+
+    // This is required when macie is not enabled(first time executing in any management account) AccessDeniedException exception issues
+    if (
+      // SDKv2 Error Structure
+      e.code === 'AccessDeniedException' ||
+      // SDKv3 Error Structure
+      e.name === 'AccessDeniedException'
+    ) {
+      console.warn(e.name + ': ' + e.message);
+      return false;
+    }
+    throw new Error(`Macie enable issue error message - ${e}`);
   }
 }

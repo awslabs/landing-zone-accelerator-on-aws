@@ -1,11 +1,39 @@
 image: public.ecr.aws/bitnami/node:14
 
-accelerator-test-report:
-  stage: test
+variables:
+  KUBERNETES_CPU_REQUEST: 3
+  KUBERNETES_CPU_LIMIT: 5
+  KUBERNETES_MEMORY_REQUEST: 6Gi
+  KUBERNETES_MEMORY_LIMIT: 8Gi
+  KUBERNETES_EPHEMERAL_STORAGE_REQUEST: 512Mi
+  KUBERNETES_EPHEMERAL_STORAGE_LIMIT: 1Gi
+
+stages:
+  - build
+  - test
+  - metadata
+
+accelerator-build:
+  stage: build
   script:
+    - 'export NODE_OPTIONS=--max_old_space_size=4096'
     - 'cd source'
     - 'npm install --global yarn'
     - 'yarn install'
+    - 'yarn lint'
+    - 'yarn lerna link'
+    - 'yarn build'
+  artifacts:
+    untracked: true
+    when: on_success
+    paths:
+      - source/
+
+accelerator-unit-test:
+  stage: test
+  script:
+    - 'export NODE_OPTIONS=--max_old_space_size=4096'
+    - 'cd source'
     - 'yarn test'
   artifacts:
     when: always
@@ -13,4 +41,14 @@ accelerator-test-report:
       junit:
         - source/test-reports/*.xml
     expire_in: 1 day
-    
+
+accelerator-documentation:
+  stage: metadata
+  script:
+    - 'export NODE_OPTIONS=--max_old_space_size=8192'
+    - 'cd source'
+    - 'yarn docs'
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - source/docs

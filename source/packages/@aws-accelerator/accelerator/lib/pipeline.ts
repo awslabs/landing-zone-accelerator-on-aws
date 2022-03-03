@@ -18,7 +18,6 @@ import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
@@ -34,7 +33,7 @@ export interface AcceleratorPipelineProps {
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
   readonly enableApprovalStage: boolean;
-  readonly qualifier: string;
+  readonly qualifier?: string;
   readonly managementAccountId?: string;
   readonly managementAccountRoleName?: string;
 }
@@ -53,10 +52,6 @@ export class AcceleratorPipeline extends Construct {
   constructor(scope: Construct, id: string, props: AcceleratorPipelineProps) {
     super(scope, id);
 
-    const qualifierInPascalCase = pascalCase(props.qualifier)
-      .split('_')
-      .join('-')
-      .replace(/AwsAccelerator/gi, 'AWSAccelerator');
     let pipelineAccountEnvVariables: { [p: string]: codebuild.BuildEnvironmentVariable } | undefined;
 
     if (props.managementAccountId && props.managementAccountRoleName) {
@@ -74,8 +69,10 @@ export class AcceleratorPipeline extends Construct {
 
     const bucket = new Bucket(this, 'SecureBucket', {
       encryptionType: BucketEncryptionType.SSE_KMS,
-      s3BucketName: `${props.qualifier}-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
-      kmsAliasName: `alias/${props.qualifier}/pipeline/s3`,
+      s3BucketName: `${props.qualifier ?? 'aws-accelerator'}-pipeline-${cdk.Stack.of(this).account}-${
+        cdk.Stack.of(this).region
+      }`,
+      kmsAliasName: `alias/${props.qualifier ?? 'aws-accelerator'}/pipeline/s3`,
       kmsDescription: 'AWS Accelerator Pipeline Bucket CMK',
     });
 
@@ -93,7 +90,7 @@ export class AcceleratorPipeline extends Construct {
     };
 
     const configRepository = new config_repository.ConfigRepository(this, 'ConfigRepository', {
-      repositoryName: `${props.qualifier}-config`,
+      repositoryName: `${props.qualifier ?? 'aws-accelerator'}-config`,
       repositoryBranchName: 'main',
       description:
         'AWS Accelerator configuration repository, created and initialized with default config file by pipeline',
@@ -107,7 +104,7 @@ export class AcceleratorPipeline extends Construct {
     });
 
     const pipeline = new codepipeline.Pipeline(this, 'Resource', {
-      pipelineName: `${qualifierInPascalCase}-Pipeline`,
+      pipelineName: props.qualifier ? `${props.qualifier}-pipeline` : 'AWSAccelerator-Pipeline',
       artifactBucket: bucket.getS3Bucket(),
       role: this.pipelineRole,
     });
@@ -156,7 +153,7 @@ export class AcceleratorPipeline extends Construct {
     });
 
     const buildProject = new codebuild.PipelineProject(this, 'BuildProject', {
-      projectName: `${qualifierInPascalCase}-BuildProject`,
+      projectName: props.qualifier ? `${props.qualifier}-build-project` : 'AWSAccelerator-BuildProject',
       role: buildRole,
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
@@ -214,7 +211,7 @@ export class AcceleratorPipeline extends Construct {
     });
 
     this.toolkitProject = new codebuild.PipelineProject(this, 'ToolkitProject', {
-      projectName: `${qualifierInPascalCase}-ToolkitProject`,
+      projectName: props.qualifier ? `${props.qualifier}-toolkit-project` : 'AWSAccelerator-ToolkitProject',
       role: this.toolkitRole,
       timeout: cdk.Duration.hours(5),
       buildSpec: codebuild.BuildSpec.fromObject({
@@ -249,10 +246,6 @@ export class AcceleratorPipeline extends Construct {
           CDK_NEW_BOOTSTRAP: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: '1',
-          },
-          ACCOUNT_ID: {
-            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: cdk.Aws.ACCOUNT_ID,
           },
           ...pipelineAccountEnvVariables,
         },

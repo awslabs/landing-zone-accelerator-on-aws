@@ -14,16 +14,9 @@
     "cleanup:tsc": "tsc --build ./ --clean",
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "",
+    "test": "jest --coverage --ci",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'",
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'"
-  },
-  "jest": {
-    "preset": "ts-jest",
-    "testEnvironment": "node",
-    "testMatch": [
-      "<rootDir>/test/**/*(*.)@(spec|test).[t]s?(x)"
-    ]
   },
   "dependencies": {
     "@aws-accelerator/config": "^0.0.0",

@@ -540,4 +540,19 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     const values = t.parse(NetworkConfigTypes.networkConfig, yaml.load(buffer));
     return new NetworkConfig(values);
   }
+
+  /**
+   * Load from string content
+   * @param content
+   */
+  static loadFromString(content: string): NetworkConfig | undefined {
+    try {
+      const values = t.parse(NetworkConfigTypes.networkConfig, yaml.load(content));
+      return new NetworkConfig(values);
+    } catch (e) {
+      console.log('[network-config] Error parsing input, global config undefined');
+      console.log(`${e}`);
+      return undefined;
+    }
+  }
 }

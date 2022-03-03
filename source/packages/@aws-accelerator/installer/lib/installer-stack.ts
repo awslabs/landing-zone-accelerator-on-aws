@@ -109,9 +109,6 @@ export class InstallerStack extends cdk.Stack {
       [this.enableApprovalStage.logicalId]: { default: 'Enable Approval Stage' },
     };
 
-    let lowerCaseQualifier = 'aws-accelerator';
-    let pascalCaseQualifier = 'aws-accelerator';
-
     let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
     let targetAcceleratorEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } | undefined;
 
@@ -162,10 +159,6 @@ export class InstallerStack extends cdk.Stack {
           value: this.acceleratorQualifier.valueAsString,
         },
       };
-
-      lowerCaseQualifier = pascalCaseQualifier = this.acceleratorQualifier.valueAsString;
-    } else {
-      pascalCaseQualifier = 'AWSAccelerator';
     }
 
     let targetAcceleratorTestEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } | undefined;
@@ -191,20 +184,30 @@ export class InstallerStack extends cdk.Stack {
     };
 
     new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
-      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
+      parameterName: this.acceleratorQualifier
+        ? `/accelerator/${this.acceleratorQualifier.valueAsString}/${cdk.Stack.of(this).stackName}/stack-id`
+        : `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
       stringValue: cdk.Stack.of(this).stackId,
+      simpleName: false,
     });
 
     new cdk.aws_ssm.StringParameter(this, 'SsmParamAcceleratorVersion', {
-      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/version`,
+      parameterName: this.acceleratorQualifier
+        ? `/accelerator/${this.acceleratorQualifier.valueAsString}/${cdk.Stack.of(this).stackName}/version`
+        : `/accelerator/${cdk.Stack.of(this).stackName}/version`,
       stringValue: version,
+      simpleName: false,
     });
 
     const bucket = new Bucket(this, 'SecureBucket', {
       // s3BucketName: `accelerator-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
       encryptionType: BucketEncryptionType.SSE_KMS,
-      s3BucketName: `${lowerCaseQualifier}-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
-      kmsAliasName: `alias/${lowerCaseQualifier}/installer/s3`,
+      s3BucketName: `${
+        this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'aws-accelerator'
+      }-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
+      kmsAliasName: `alias/${
+        this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'aws-accelerator'
+      }/installer/s3`,
       kmsDescription: 'AWS Accelerator Installer Bucket CMK',
     });
 
@@ -229,7 +232,9 @@ export class InstallerStack extends cdk.Stack {
     });
 
     const pipeline = new cdk.aws_codepipeline.Pipeline(this, 'Pipeline', {
-      pipelineName: `${pascalCaseQualifier}-Installer`,
+      pipelineName: this.acceleratorQualifier
+        ? `${this.acceleratorQualifier.valueAsString}-installer`
+        : 'AWSAccelerator-Installer',
       artifactBucket: bucket.getS3Bucket(),
       restartExecutionOnUpdate: true,
       role: pipelineRole,
@@ -277,7 +282,9 @@ export class InstallerStack extends cdk.Stack {
     });
 
     const installerProject = new cdk.aws_codebuild.PipelineProject(this, 'InstallerProject', {
-      projectName: `${pascalCaseQualifier}-InstallerProject`,
+      projectName: this.acceleratorQualifier
+        ? `${this.acceleratorQualifier.valueAsString}-installer-project`
+        : 'AWSAccelerator-InstallerProject',
       role: installerRole,
       buildSpec: cdk.aws_codebuild.BuildSpec.fromObjectToYaml({
         version: '0.2',
@@ -287,6 +294,14 @@ export class InstallerStack extends cdk.Stack {
               nodejs: 14,
             },
           },
+          pre_build: {
+            commands: [
+              'ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"',
+              'if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ' +
+                'ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; ' +
+                'fi',
+            ],
+          },
           build: {
             commands: [
               'cd source',
@@ -295,6 +310,13 @@ export class InstallerStack extends cdk.Stack {
               'yarn build',
               'cd packages/@aws-accelerator/installer',
               `yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel`,
+              `if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
+                  export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:aws:iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  
+                  yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${cdk.Aws.REGION} --qualifier accel;
+                  unset AWS_ACCESS_KEY_ID;
+                  unset AWS_SECRET_ACCESS_KEY;
+                  unset AWS_SESSION_TOKEN;                  
+               fi`,
               'cd ../accelerator',
               `yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}`,
               `if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}; fi`,

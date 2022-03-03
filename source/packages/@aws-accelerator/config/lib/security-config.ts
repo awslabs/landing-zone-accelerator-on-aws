@@ -300,4 +300,19 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
     const values = t.parse(SecurityConfigTypes.securityConfig, yaml.load(buffer));
     return new SecurityConfig(values);
   }
+
+  /**
+   * Load from string content
+   * @param content
+   */
+  static loadFromString(content: string): SecurityConfig | undefined {
+    try {
+      const values = t.parse(SecurityConfigTypes.securityConfig, yaml.load(content));
+      return new SecurityConfig(values);
+    } catch (e) {
+      console.log('[security-config] Error parsing input, global config undefined');
+      console.log(`${e}`);
+      return undefined;
+    }
+  }
 }

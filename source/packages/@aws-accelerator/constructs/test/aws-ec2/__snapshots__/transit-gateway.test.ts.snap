@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TransitGatewayRouteTableAssociation Construct(TransitGatewayRouteTableAssociation):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TransitGatewayRouteTableAssociation19E386E4": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
+        "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+  },
+}
+`;

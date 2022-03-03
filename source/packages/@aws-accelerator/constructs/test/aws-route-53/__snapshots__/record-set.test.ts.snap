@@ -1,0 +1,250 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RecordSet Construct(RecordSet):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestHostedZone68F306E4": Object {
+      "Properties": Object {
+        "Name": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "s3-global.accesspoint.",
+              Object {
+                "Ref": "AWS::Region",
+              },
+              ".amazonaws.com",
+            ],
+          ],
+        },
+        "VPCs": Array [
+          Object {
+            "VPCId": Object {
+              "Ref": "TestVpcE77CE678",
+            },
+            "VPCRegion": Object {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+    "TestRecordSetED81F5C1": Object {
+      "Properties": Object {
+        "AliasTarget": Object {
+          "DNSName": Object {
+            "Fn::Select": Array [
+              1,
+              Object {
+                "Fn::Split": Array [
+                  ":",
+                  Object {
+                    "Fn::Select": Array [
+                      0,
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "TestVpcEndpointF7CADE71",
+                          "DnsEntries",
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "HostedZoneId": Object {
+            "Fn::Select": Array [
+              0,
+              Object {
+                "Fn::Split": Array [
+                  ":",
+                  Object {
+                    "Fn::Select": Array [
+                      0,
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "TestVpcEndpointF7CADE71",
+                          "DnsEntries",
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        "HostedZoneId": Object {
+          "Ref": "TestHostedZone68F306E4",
+        },
+        "Name": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "s3-global.accesspoint.",
+              Object {
+                "Ref": "AWS::Region",
+              },
+              ".amazonaws.com",
+            ],
+          ],
+        },
+        "Type": "A",
+      },
+      "Type": "AWS::Route53::RecordSet",
+    },
+    "TestRouteTableD3D1979F": Object {
+      "Properties": Object {
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Network-Endpoints-Default",
+          },
+        ],
+        "VpcId": Object {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "TestSecurityGroupDA4B5F83": Object {
+      "Properties": Object {
+        "GroupDescription": "AWS Private Endpoint Zone",
+        "GroupName": "TestSecurityGroup",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "TestSecurityGroup",
+          },
+        ],
+        "VpcId": Object {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "TestSubnet7ABA0E56": Object {
+      "Properties": Object {
+        "AvailabilityZone": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              Object {
+                "Ref": "AWS::Region",
+              },
+              "a",
+            ],
+          ],
+        },
+        "CidrBlock": "10.1.0.0/24",
+        "MapPublicIpOnLaunch": true,
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Network-Endpoints-A",
+          },
+        ],
+        "VpcId": Object {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "TestSubnetRouteTableAssociationFE267B30": Object {
+      "Properties": Object {
+        "RouteTableId": Object {
+          "Ref": "TestRouteTableD3D1979F",
+        },
+        "SubnetId": Object {
+          "Ref": "TestSubnet7ABA0E56",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "TestVpcE77CE678": Object {
+      "Properties": Object {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsHostnames": false,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Test",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "TestVpcEndpointF7CADE71": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "*",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Array [
+                    "organizationId",
+                  ],
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AccessToTrustedPrincipalsAndResources",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PrivateDnsEnabled": false,
+        "SecurityGroupIds": Array [
+          Object {
+            "Ref": "TestSecurityGroupDA4B5F83",
+          },
+        ],
+        "ServiceName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "com.amazonaws.",
+              Object {
+                "Ref": "AWS::Region",
+              },
+              ".ec2",
+            ],
+          ],
+        },
+        "SubnetIds": Array [
+          Object {
+            "Ref": "TestSubnet7ABA0E56",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": Object {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "TestVpcInternetGateway01360C82": Object {
+      "Type": "AWS::EC2::InternetGateway",
+    },
+    "TestVpcInternetGatewayAttachment60E451D5": Object {
+      "Properties": Object {
+        "InternetGatewayId": Object {
+          "Ref": "TestVpcInternetGateway01360C82",
+        },
+        "VpcId": Object {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+  },
+}
+`;

@@ -196,4 +196,19 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
     const values = t.parse(IamConfigTypes.iamConfig, yaml.load(buffer));
     return new IamConfig(values);
   }
+
+  /**
+   * Load from string content
+   * @param content
+   */
+  static loadFromString(content: string): IamConfig | undefined {
+    try {
+      const values = t.parse(IamConfigTypes.iamConfig, yaml.load(content));
+      return new IamConfig(values);
+    } catch (e) {
+      console.log('[iam-config] Error parsing input, global config undefined');
+      console.log(`${e}`);
+      return undefined;
+    }
+  }
 }

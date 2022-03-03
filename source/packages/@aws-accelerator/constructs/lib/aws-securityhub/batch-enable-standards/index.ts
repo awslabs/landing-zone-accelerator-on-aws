@@ -138,16 +138,23 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 }
 
 /**
- * Function to check if security client is enable
+ * Enable SecurityHub
  * @param securityHubClient
  */
 async function enableSecurityHub(securityHubClient: AWS.SecurityHub): Promise<void> {
   try {
-    console.log('inside enableSecurityHub');
     await throttlingBackOff(() => securityHubClient.enableSecurityHub({ EnableDefaultStandards: false }).promise());
-  } catch (e) {
-    if (`${e}`.includes('Account is already subscribed to Security Hub')) {
-      console.warn(`Securityhub is already enabled, error message got ${e}`);
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    e: any
+  ) {
+    if (
+      // SDKv2 Error Structure
+      e.code === 'ResourceConflictException' ||
+      // SDKv3 Error Structure
+      e.name === 'ResourceConflictException'
+    ) {
+      console.warn(e.name + ': ' + e.message);
       return;
     }
     throw new Error(`SecurityHub enable issue error message - ${e}`);

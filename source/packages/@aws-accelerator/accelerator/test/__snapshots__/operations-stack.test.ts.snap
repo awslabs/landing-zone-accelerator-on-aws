@@ -1,0 +1,223 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "AdministratorsA37EF73A": Object {
+      "Properties": Object {
+        "GroupName": "Administrators",
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AdministratorAccess",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Group",
+    },
+    "BreakGlassUser01AA051328": Object {
+      "Properties": Object {
+        "Groups": Array [
+          Object {
+            "Ref": "AdministratorsA37EF73A",
+          },
+        ],
+        "LoginProfile": Object {
+          "Password": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "{{resolve:secretsmanager:",
+                Object {
+                  "Ref": "BreakGlassUser01Secret8A54324D",
+                },
+                ":SecretString:::}}",
+              ],
+            ],
+          },
+        },
+        "PermissionsBoundary": Object {
+          "Ref": "DefaultBoundaryPolicy489A8D26",
+        },
+        "UserName": "breakGlassUser01",
+      },
+      "Type": "AWS::IAM::User",
+    },
+    "BreakGlassUser01Secret8A54324D": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "GenerateSecretString": Object {
+          "GenerateStringKey": "password",
+          "SecretStringTemplate": "{\\"username\\":\\"breakGlassUser01\\"}",
+        },
+        "Name": "/accelerator/breakGlassUser01",
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "BreakGlassUser02DFF444C8": Object {
+      "Properties": Object {
+        "Groups": Array [
+          Object {
+            "Ref": "AdministratorsA37EF73A",
+          },
+        ],
+        "LoginProfile": Object {
+          "Password": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "{{resolve:secretsmanager:",
+                Object {
+                  "Ref": "BreakGlassUser02Secret4D200D8D",
+                },
+                ":SecretString:::}}",
+              ],
+            ],
+          },
+        },
+        "PermissionsBoundary": Object {
+          "Ref": "DefaultBoundaryPolicy489A8D26",
+        },
+        "UserName": "breakGlassUser02",
+      },
+      "Type": "AWS::IAM::User",
+    },
+    "BreakGlassUser02Secret4D200D8D": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "GenerateSecretString": Object {
+          "GenerateStringKey": "password",
+          "SecretStringTemplate": "{\\"username\\":\\"breakGlassUser02\\"}",
+        },
+        "Name": "/accelerator/breakGlassUser02",
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "DefaultBoundaryPolicy489A8D26": Object {
+      "Properties": Object {
+        "Description": "",
+        "ManagedPolicyName": "Default-Boundary-Policy",
+        "Path": "/",
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "*",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
+    "Ec2DefaultSsmAdRoleADFFA4C6": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "ec2.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AmazonSSMManagedInstanceCore",
+              ],
+            ],
+          },
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AmazonSSMDirectoryServiceAccess",
+              ],
+            ],
+          },
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/CloudWatchAgentServerPolicy",
+              ],
+            ],
+          },
+        ],
+        "PermissionsBoundary": Object {
+          "Ref": "DefaultBoundaryPolicy489A8D26",
+        },
+        "RoleName": "EC2-Default-SSM-AD-Role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "Ec2DefaultSsmAdRoleInstanceProfile": Object {
+      "Properties": Object {
+        "InstanceProfileName": Object {
+          "Ref": "Ec2DefaultSsmAdRoleADFFA4C6",
+        },
+        "Roles": Array [
+          Object {
+            "Ref": "Ec2DefaultSsmAdRoleADFFA4C6",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::InstanceProfile",
+    },
+    "ProviderSamlProviderDA84AD16": Object {
+      "Properties": Object {
+        "Name": "provider",
+        "SamlMetadataDocument": "",
+      },
+      "Type": "AWS::IAM::SAMLProvider",
+    },
+    "SsmParamAcceleratorVersionFF83282D": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-OperationsStack-333333333333-us-east-1/version",
+        "Type": "String",
+        "Value": "0.6.0-rc001",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-OperationsStack-333333333333-us-east-1/stack-id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;

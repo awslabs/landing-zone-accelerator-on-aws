@@ -20,8 +20,8 @@ import { TesterPipeline } from '../tester-pipeline';
 export interface TesterPipelineStackProps extends cdk.StackProps {
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
-  readonly qualifier: string;
   readonly managementCrossAccountRoleName: string;
+  readonly qualifier?: string;
   readonly managementAccountId?: string;
   readonly managementAccountRoleName?: string;
 }
@@ -34,10 +34,10 @@ export class TesterPipelineStack extends cdk.Stack {
     super(scope, id, props);
 
     new TesterPipeline(this, 'TesterPipeline', {
-      qualifier: props.qualifier,
       sourceRepositoryName: props.sourceRepositoryName,
       sourceBranchName: props.sourceBranchName,
       managementCrossAccountRoleName: props.managementCrossAccountRoleName,
+      qualifier: props.qualifier,
       managementAccountId: props.managementAccountId,
       managementAccountRoleName: props.managementAccountRoleName,
     });
