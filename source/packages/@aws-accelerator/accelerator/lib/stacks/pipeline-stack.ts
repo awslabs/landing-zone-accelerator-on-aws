@@ -20,7 +20,7 @@ export interface PipelineStackProps extends cdk.StackProps {
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
   readonly enableApprovalStage: boolean;
-  readonly qualifier: string;
+  readonly qualifier?: string;
   readonly managementAccountId?: string;
   readonly managementAccountRoleName?: string;
 }

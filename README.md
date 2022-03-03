@@ -59,6 +59,10 @@ repo is an actively developed project. As the accelerator team identifies
 missing features of the CDK, those features will be initially developed locally
 within this repo and submitted to the CDK project as a pull request.
 
+### @aws-cdk-extensions/tester
+
+Accelerator tester CDK app. This package creates AWS Config custom rules for every test cases defined in test case manifest file.  
+
 ---
 
 ## Included Features

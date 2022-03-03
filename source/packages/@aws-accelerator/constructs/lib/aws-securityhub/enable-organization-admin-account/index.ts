@@ -40,30 +40,41 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
   const securityHubClient = new AWS.SecurityHub({ region: region });
 
-  const adminAccount = await getSecurityHubDelegatedAccount(securityHubClient, adminAccountId);
+  const securityHubAdminAccount = await getSecurityHubDelegatedAccount(securityHubClient, adminAccountId);
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      if (!adminAccount.accountId) {
+      if (securityHubAdminAccount.status) {
+        if (securityHubAdminAccount.accountId === adminAccountId) {
+          console.warn(
+            `SecurityHub admin account ${securityHubAdminAccount.accountId} is already an admin account as status is ${securityHubAdminAccount.status}, in ${region} region. No action needed`,
+          );
+          return { Status: 'Success', StatusCode: 200 };
+        } else {
+          console.warn(
+            `SecurityHub delegated admin is already set to ${securityHubAdminAccount.accountId} account can not assign another delegated account`,
+          );
+        }
+      } else {
         // Enable security hub in management account before creating delegation admin account
         await enableSecurityHub(securityHubClient);
-
-        console.log('start - EnableOrganizationAdminAccountCommand');
+        console.log(
+          `Started enableOrganizationAdminAccount function in ${event.ResourceProperties['region']} region for account ${adminAccountId}`,
+        );
         await throttlingBackOff(() =>
           securityHubClient.enableOrganizationAdminAccount({ AdminAccountId: adminAccountId }).promise(),
-        );
-      } else {
-        console.log(
-          `SecurityHub delegation is already setup for account ${adminAccount.accountId} and the status is ${adminAccount.status}`,
         );
       }
 
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
-      if (adminAccount.accountId) {
-        if (adminAccount.accountId === adminAccountId) {
+      if (securityHubAdminAccount.accountId) {
+        if (securityHubAdminAccount.accountId === adminAccountId) {
+          console.log(
+            `Started disableOrganizationAdminAccount function in ${event.ResourceProperties['region']} region for account ${adminAccountId}`,
+          );
           await throttlingBackOff(() =>
             securityHubClient.disableOrganizationAdminAccount({ AdminAccountId: adminAccountId }).promise(),
           );
@@ -74,6 +85,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           );
 
           if (response.DelegatedAdministrators!.length > 0) {
+            console.log(
+              `Started deregisterDelegatedAdministrator function in ${event.ResourceProperties['region']} region for account ${adminAccountId}`,
+            );
             await throttlingBackOff(() =>
               organizationsClient
                 .deregisterDelegatedAdministrator({
@@ -83,12 +97,14 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
                 .promise(),
             );
           } else {
-            console.warn(`Account ${adminAccount.accountId} is not registered as delegated administrator account`);
+            console.warn(
+              `Account ${securityHubAdminAccount.accountId} is not registered as delegated administrator account`,
+            );
           }
         }
       } else {
         console.warn(
-          `SecurityHub delegation is not configured for account ${adminAccount.accountId}, no action performed`,
+          `SecurityHub delegation is not configured for account ${securityHubAdminAccount.accountId}, no action performed`,
         );
       }
       return { Status: 'Success', StatusCode: 200 };

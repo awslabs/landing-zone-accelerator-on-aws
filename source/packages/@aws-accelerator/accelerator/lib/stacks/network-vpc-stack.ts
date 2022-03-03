@@ -43,7 +43,7 @@ import { Construct } from 'constructs';
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
-interface SecurityGroupRuleProps {
+export interface SecurityGroupRuleProps {
   ipProtocol: string;
   cidrIp?: string;
   cidrIpv6?: string;

@@ -10,9 +10,12 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { AcceleratorStackNames, Logger } from '@aws-accelerator/accelerator';
+import { AcceleratorStackNames } from '../../../accelerator/lib/accelerator';
+import { Logger } from '../../../accelerator/lib/logger';
+// import { AcceleratorStackNames, Logger } from '@aws-accelerator/accelerator';
 import { GlobalConfig } from '@aws-accelerator/config';
 import { throttlingBackOff } from '@aws-accelerator/utils';
+
 import {
   CloudFormationClient,
   DeleteStackCommand,
@@ -48,19 +51,18 @@ import {
   ListObjectVersionsCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { AssumeRoleCommand, Credentials, STSClient } from '@aws-sdk/client-sts';
+import { AssumeRoleCommand, Credentials, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 import { WaiterResult } from '@aws-sdk/util-waiter';
-import { pascalCase } from 'pascal-case';
 
 /**
  * Type for pipeline stage action information with order and action name
  */
-type stageActionType = { order: number; name: string };
+export type stageActionType = { order: number; name: string };
 
 /**
  * Pipeline Stack Type
  */
-type pipelineStackType = {
+export type pipelineStackType = {
   stageOrder: number;
   order: number;
   stackName: string;
@@ -70,13 +72,20 @@ type pipelineStackType = {
 /**
  * Pipeline Management Account Type, with account ID, role name to assume and sts credential
  */
-type ManagementAccountType =
+export type ManagementAccountType =
   | {
       accountId: string;
       assumeRoleName: string | undefined;
       credentials: Credentials | undefined;
     }
   | undefined;
+
+type stackPersistentObjectListType = {
+  stackName: string;
+  resourceType: 'S3' | 'CWLogs' | 'KMS';
+  resourceClient: KMSClient | CloudWatchLogsClient | S3Client;
+  resourcePhysicalId: string;
+};
 
 /**
  * Accelerator AcceleratorToolProps
@@ -95,6 +104,11 @@ export interface AcceleratorToolProps {
  * AcceleratorTool Class
  */
 export class AcceleratorTool {
+  /**
+   * Executing Account ID
+   * @private
+   */
+  private executingAccountId: string | undefined;
   /**
    * Pipeline Global Config
    * @private
@@ -172,6 +186,8 @@ export class AcceleratorTool {
 
   private acceleratorCodeBuildProjects: string[] = [];
 
+  private prepareStackPersistentObjectList: stackPersistentObjectListType[] = [];
+
   constructor(props: AcceleratorToolProps) {
     this.acceleratorToolProps = props;
   }
@@ -191,6 +207,11 @@ export class AcceleratorTool {
    * The name of the installer cloudformation stack
    */
   public async uninstallAccelerator(installerStackName: string): Promise<boolean> {
+    // Get executing account ID
+    const response = await throttlingBackOff(() => new STSClient({}).send(new GetCallerIdentityCommand({})));
+    this.executingAccountId = response.Account;
+
+    // Get installer pipeline
     const installerPipeline = await AcceleratorTool.getPipelineNameFromCloudFormationStack(installerStackName);
     if (!installerPipeline.status) {
       Logger.debug(`[accelerator-tool] ${installerPipeline.pipelineName}`);
@@ -208,33 +229,47 @@ export class AcceleratorTool {
       new CodeBuildClient({}).send(new BatchGetProjectsCommand({ names: [installerCodeBuildProjectName] })),
     );
 
-    let installerQualifier = 'aws-accelerator';
-    let qualifierInPascalCase = 'AWSAccelerator';
+    // Default assignments when no qualifier present
+    let acceleratorQualifier = 'AWSAccelerator';
+    let acceleratorPipelineStackNamePrefix = 'AWSAccelerator-PipelineStack';
+    let acceleratorPipelineName = 'AWSAccelerator-Pipeline';
+
+    // Accelerator tester configuration
+    let testerPipelineStackNamePrefix = 'AWSAccelerator-TesterPipelineStack';
+    let testerPipelineConfigRepositoryName = 'aws-accelerator-test-config';
+    let testerStackNamePrefix = 'AWSAccelerator-TesterStack';
+    // End of default assignments
 
     for (const envVariable of batchGetProjectsCommandResponse.projects![0].environment!.environmentVariables!) {
       if (envVariable.name === 'ACCELERATOR_QUALIFIER') {
-        installerQualifier = envVariable.value!;
-        qualifierInPascalCase = pascalCase(installerQualifier)
-          .split('_')
-          .join('-')
-          .replace(/AwsAccelerator/gi, 'AWSAccelerator');
+        acceleratorQualifier = envVariable.value!;
+        acceleratorPipelineStackNamePrefix = `${envVariable.value!}-pipeline-stack`;
+        acceleratorPipelineName = `${envVariable.value!}-pipeline`;
+        testerStackNamePrefix = `${envVariable.value!}-tester-stack`;
+        testerPipelineStackNamePrefix = `${envVariable.value!}-tester-pipeline-stack`;
+        testerPipelineConfigRepositoryName = `${envVariable.value!}-test-config`;
         break;
       }
     }
+
     //Delete accelerator target cloudformation stacks
-    await this.deleteAcceleratorTargetCloudFormationStacks(qualifierInPascalCase);
+    await this.deleteAcceleratorTargetCloudFormationStacks(acceleratorPipelineName);
+
+    await this.deletePrepareStackResources();
+
+    // return false;
 
     // Installer and Tester stack resource cleanup takes place in pipeline or management account, so reset the credential settings
     AcceleratorTool.resetCredentialEnvironment();
 
     // Delete tester stack
-    await this.deleteTesterStack(qualifierInPascalCase);
+    await this.deleteTesterStack(testerStackNamePrefix);
 
     // Delete tester pipeline stack
-    await this.deleteTesterPipelineStack(installerQualifier, qualifierInPascalCase);
+    await this.deleteTesterPipelineStack(testerPipelineStackNamePrefix, testerPipelineConfigRepositoryName);
 
     // Delete Accelerator Pipeline stack
-    await this.deleteAcceleratorPipelineStack(qualifierInPascalCase);
+    await this.deleteAcceleratorPipelineStack(acceleratorPipelineStackNamePrefix);
 
     //Delete Installer Stack
     await this.deleteAcceleratorInstallerStack(installerStackName);
@@ -243,12 +278,12 @@ export class AcceleratorTool {
     // during deletion of custom resources creates cloudwatch logs which is required to clean
     // Only when full cleanup was intended this this cleanup should take place
     if (this.acceleratorToolProps.ignoreTerminationProtection) {
-      await this.deleteAcceleratorRemainingResourcesInAllAccounts(installerQualifier);
+      await this.deleteAcceleratorRemainingResourcesInAllAccounts(acceleratorQualifier);
     }
 
     //TODO Delete bootstrap stack for management account home region after pipeline deleted only when pipeline management account is not used
     // Delete bootstrap stack from home region for management or pipeline account as last step of cleanups
-    if (!this.acceleratorToolProps.keepBootstraps) {
+    if (!this.acceleratorToolProps.keepBootstraps && !this.externalPipelineAccount.isUsed) {
       AcceleratorTool.resetCredentialEnvironment();
       await this.deleteStack(new CloudFormationClient({}), 'AWSAccelerator-CDKToolkit');
     }
@@ -295,12 +330,11 @@ export class AcceleratorTool {
   }
 
   /**
-   * Function to delete cloudformation stacks created by accelerator
-   * @param qualifierInPascalCase
+   * Function to delete cloudformation stacks created by accelerator pipeline
+   * @param pipelineName
    * @private
    */
-  private async deleteAcceleratorTargetCloudFormationStacks(qualifierInPascalCase: string): Promise<boolean> {
-    const pipelineName = `${qualifierInPascalCase}-Pipeline`;
+  private async deleteAcceleratorTargetCloudFormationStacks(pipelineName: string): Promise<boolean> {
     if (await this.initPipeline(pipelineName)) {
       const groupBy = (array: pipelineStackType[], key1: string, key2: string) => {
         return array.reduce((accumulator, currentValue) => {
@@ -396,7 +430,7 @@ export class AcceleratorTool {
         }
 
         // Get Accelerator stage actions
-        if (stage.name !== 'Source' && stage.name !== 'Build') {
+        if (stage.name !== 'Source' && stage.name !== 'Build' && stage.name !== 'Review') {
           if (stage.actions!.length > 1) {
             for (const action of stage.actions!) {
               const environmentVariableJson = Object.values(
@@ -494,13 +528,14 @@ export class AcceleratorTool {
 
   /**
    * Function to delete accelerator pipeline stack and it's resources
+   * @param acceleratorPipelineStackNamePrefix
    * @private
    */
-  private async deleteAcceleratorPipelineStack(qualifierInPascalCase: string): Promise<boolean> {
+  private async deleteAcceleratorPipelineStack(acceleratorPipelineStackNamePrefix: string): Promise<boolean> {
     if (!this.acceleratorToolProps.deletePipelines) {
       return true;
     }
-    const acceleratorPipelineStackName = `${qualifierInPascalCase}-PipelineStack-${
+    const acceleratorPipelineStackName = `${acceleratorPipelineStackNamePrefix}-${
       this.externalPipelineAccount.isUsed
         ? this.externalPipelineAccount.accountId!
         : this.pipelineManagementAccount!.accountId
@@ -558,15 +593,11 @@ export class AcceleratorTool {
    * @private
    */
   private async getPipelineManagementAccount(): Promise<ManagementAccountType> {
-    let executingAccountId: string | undefined;
     let managementAccountId: string | undefined;
     let managementAccountRoleName: string | undefined;
     let managementAccountCredentials: Credentials | undefined;
 
     for (const envVariable of this.bootstrapBuildEnvironmentVariables!) {
-      if (envVariable.name === 'ACCOUNT_ID') {
-        executingAccountId = envVariable.value;
-      }
       if (envVariable.name === 'MANAGEMENT_ACCOUNT_ID') {
         managementAccountId = envVariable.value;
       }
@@ -575,12 +606,12 @@ export class AcceleratorTool {
       }
     }
 
-    if (executingAccountId !== managementAccountId && managementAccountId && managementAccountRoleName) {
+    if (this.executingAccountId !== managementAccountId && managementAccountId && managementAccountRoleName) {
       managementAccountCredentials = await this.getManagementAccountCredentials(
         managementAccountId!,
         managementAccountRoleName,
       );
-      this.externalPipelineAccount = { isUsed: true, accountId: executingAccountId! };
+      this.externalPipelineAccount = { isUsed: true, accountId: this.executingAccountId! };
       return {
         accountId: managementAccountId,
         assumeRoleName: managementAccountRoleName,
@@ -589,7 +620,7 @@ export class AcceleratorTool {
     } else {
       this.externalPipelineAccount = { isUsed: false, accountId: managementAccountId };
       return {
-        accountId: executingAccountId!,
+        accountId: this.executingAccountId!,
         assumeRoleName: undefined,
         credentials: undefined,
       };
@@ -933,6 +964,15 @@ export class AcceleratorTool {
     }
   }
 
+  /**
+   * Function to delete stack's resources like S3/Cloudwatch logs, KMS key
+   * @param cloudFormationClient
+   * @param stackName
+   * @param kMSClient
+   * @param cloudWatchLogsClient
+   * @param s3Client
+   * @private
+   */
   private async deleteStackPersistentData(
     cloudFormationClient: CloudFormationClient,
     stackName: string,
@@ -966,6 +1006,66 @@ export class AcceleratorTool {
       nextToken = page.NextToken;
     } while (nextToken);
     return true;
+  }
+
+  /**
+   * Function to create list of stack resources for S3, KMS, Cloudwatch logs, which will be deleted after stack deletion completed.
+   * @param cloudFormationClient
+   * @param stackName
+   * @param kMSClient
+   * @param cloudWatchLogsClient
+   * @param s3Client
+   * @private
+   */
+  private async makeStackPersistentObjectList(
+    cloudFormationClient: CloudFormationClient,
+    stackName: string,
+    kMSClient: KMSClient,
+    cloudWatchLogsClient: CloudWatchLogsClient,
+    s3Client: S3Client,
+  ): Promise<stackPersistentObjectListType[]> {
+    const stackPersistentObjectList: stackPersistentObjectListType[] = [];
+    let nextToken: string | undefined = undefined;
+    do {
+      const page = await throttlingBackOff(() =>
+        cloudFormationClient.send(new ListStackResourcesCommand({ StackName: stackName, NextToken: nextToken })),
+      );
+      for (const stackResourceSummary of page.StackResourceSummaries ?? []) {
+        switch (stackResourceSummary.ResourceType) {
+          case 'AWS::KMS::Key':
+            stackPersistentObjectList.push({
+              stackName: stackName,
+              resourceType: 'KMS',
+              resourceClient: kMSClient,
+              resourcePhysicalId: stackResourceSummary.PhysicalResourceId!,
+            });
+            break;
+          case 'AWS::Logs::LogGroup':
+            stackPersistentObjectList.push({
+              stackName: stackName,
+              resourceType: 'CWLogs',
+              resourceClient: cloudWatchLogsClient,
+              resourcePhysicalId: stackResourceSummary.PhysicalResourceId!,
+            });
+            break;
+          case 'AWS::S3::Bucket':
+            const listBucketResponse = await throttlingBackOff(() => s3Client.send(new ListBucketsCommand({})));
+            for (const bucket of listBucketResponse.Buckets!) {
+              if (bucket.Name === stackResourceSummary.PhysicalResourceId) {
+                stackPersistentObjectList.push({
+                  stackName: stackName,
+                  resourceType: 'S3',
+                  resourceClient: s3Client,
+                  resourcePhysicalId: stackResourceSummary.PhysicalResourceId!,
+                });
+              }
+            }
+            break;
+        }
+      }
+      nextToken = page.NextToken;
+    } while (nextToken);
+    return stackPersistentObjectList;
   }
 
   /**
@@ -1117,13 +1217,25 @@ export class AcceleratorTool {
           if (this.acceleratorToolProps.deleteData) {
             Logger.info('[accelerator-tool] delete-data flag is ON !!!');
 
-            await this.deleteStackPersistentData(
-              cloudFormationClient,
-              cloudFormationStack!.StackName!,
-              kMSClient,
-              cloudWatchLogsClient,
-              s3Client,
-            );
+            // Since prepare stack have dependencies on KSM key, can't delete resources before stacks deleted.
+            if (cloudFormationStack!.StackName!.includes('PrepareStack')) {
+              this.prepareStackPersistentObjectList = await this.makeStackPersistentObjectList(
+                cloudFormationClient,
+                cloudFormationStack!.StackName!,
+                kMSClient,
+                cloudWatchLogsClient,
+                s3Client,
+              );
+            } else {
+              await this.deleteStackPersistentData(
+                // this.stackPersistentObjectList = await this.makeStackPersistentObjectList(
+                cloudFormationClient,
+                cloudFormationStack!.StackName!,
+                kMSClient,
+                cloudWatchLogsClient,
+                s3Client,
+              );
+            }
           } else {
             Logger.info('[accelerator-tool] delete-data flag is OFF');
           }
@@ -1218,12 +1330,12 @@ export class AcceleratorTool {
 
   /**
    * Function to delete accelerator tester stack
-   * @param qualifierInPascalCase
+   * @param stackNamePrefix
    * @private
    */
-  private async deleteTesterStack(qualifierInPascalCase: string): Promise<boolean> {
+  private async deleteTesterStack(stackNamePrefix: string): Promise<boolean> {
     const cloudFormationClient = new CloudFormationClient({});
-    const testerStackName = `${qualifierInPascalCase}-TesterStack-${
+    const testerStackName = `${stackNamePrefix}-${
       this.externalPipelineAccount.isUsed
         ? this.externalPipelineAccount.accountId!
         : this.pipelineManagementAccount!.accountId
@@ -1235,25 +1347,28 @@ export class AcceleratorTool {
 
   /**
    * Function to delete accelerator tester pipeline stack
-   * @param qualifier
-   * @param qualifierInPascalCase
+   * @param testerPipelineStackNamePrefix
+   * @param testerPipelineConfigRepositoryName
    * @private
    */
-  private async deleteTesterPipelineStack(qualifier: string, qualifierInPascalCase: string): Promise<boolean> {
+  private async deleteTesterPipelineStack(
+    testerPipelineStackNamePrefix: string,
+    testerPipelineConfigRepositoryName: string,
+  ): Promise<boolean> {
     const cloudFormationClient = new CloudFormationClient({});
 
     if (!this.acceleratorToolProps.deletePipelines) {
       return true;
     }
 
-    const testerPipelineStackName = `${qualifierInPascalCase}-TesterPipelineStack-${
+    const testerPipelineStackName = `${testerPipelineStackNamePrefix}-${
       this.externalPipelineAccount.isUsed
         ? this.externalPipelineAccount.accountId!
         : this.pipelineManagementAccount!.accountId
     }-${this.globalConfig?.homeRegion}`;
 
     if (this.acceleratorToolProps.deleteConfigRepo) {
-      await this.deleteCodecommitRepository(new CodeCommitClient({}), `${qualifier}-test-config`);
+      await this.deleteCodecommitRepository(new CodeCommitClient({}), testerPipelineConfigRepositoryName);
     }
 
     const testerPipeline = await AcceleratorTool.getPipelineNameFromCloudFormationStack(testerPipelineStackName);
@@ -1332,6 +1447,43 @@ export class AcceleratorTool {
     await throttlingBackOff(() =>
       codeCommitClient.send(new DeleteRepositoryCommand({ repositoryName: repositoryName })),
     );
+
+    return true;
+  }
+
+  /**
+   * Delete prepare stack resources
+   * @private
+   */
+  private async deletePrepareStackResources(): Promise<boolean> {
+    // Now delete persistent resources from deleted stacks
+    Logger.info(`[accelerator-tool] Deleting S3, cloudwatch logs and KMS keys`);
+    for (const stackPersistentObject of this.prepareStackPersistentObjectList) {
+      switch (stackPersistentObject.resourceType) {
+        case 'KMS':
+          // await this.scheduleKeyDeletion(kMSClient, stackName, stackResourceSummary.PhysicalResourceId!);
+          await this.scheduleKeyDeletion(
+            stackPersistentObject.resourceClient as KMSClient,
+            stackPersistentObject.stackName,
+            stackPersistentObject.resourcePhysicalId,
+          );
+          break;
+        case 'CWLogs':
+          await this.deleteCloudWatchLogs(
+            stackPersistentObject.resourceClient as CloudWatchLogsClient,
+            stackPersistentObject.stackName,
+            stackPersistentObject.resourcePhysicalId,
+          );
+          break;
+        case 'S3':
+          await this.deleteBucket(
+            stackPersistentObject.resourceClient as S3Client,
+            stackPersistentObject.stackName,
+            stackPersistentObject.resourcePhysicalId,
+          );
+          break;
+      }
+    }
 
     return true;
   }

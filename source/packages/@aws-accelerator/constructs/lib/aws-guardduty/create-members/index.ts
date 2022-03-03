@@ -43,12 +43,14 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
   const detectorId = await getDetectorId(guardDutyClient);
 
+  let nextToken: string | undefined = undefined;
+
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       console.log('starting - CreateMembersCommand');
       const allAccounts: AWS.GuardDuty.AccountDetail[] = [];
-      let nextToken: string | undefined = undefined;
+
       do {
         const page = await throttlingBackOff(() =>
           organizationsClient.listAccounts({ NextToken: nextToken }).promise(),
@@ -89,15 +91,17 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         nextToken = page.NextToken;
       } while (nextToken);
 
-      await throttlingBackOff(() =>
-        guardDutyClient
-          .disassociateMembers({ AccountIds: existingMemberAccountIds, DetectorId: detectorId! })
-          .promise(),
-      );
+      if (existingMemberAccountIds.length > 0) {
+        await throttlingBackOff(() =>
+          guardDutyClient
+            .disassociateMembers({ AccountIds: existingMemberAccountIds, DetectorId: detectorId! })
+            .promise(),
+        );
 
-      await throttlingBackOff(() =>
-        guardDutyClient.deleteMembers({ AccountIds: existingMemberAccountIds, DetectorId: detectorId! }).promise(),
-      );
+        await throttlingBackOff(() =>
+          guardDutyClient.deleteMembers({ AccountIds: existingMemberAccountIds, DetectorId: detectorId! }).promise(),
+        );
+      }
 
       return { Status: 'Success', StatusCode: 200 };
   }

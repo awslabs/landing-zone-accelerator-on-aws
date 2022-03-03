@@ -19,7 +19,6 @@ import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3_assets from 'aws-cdk-lib/aws-s3-assets';
-import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import fs from 'fs';
 import * as yaml from 'js-yaml';
@@ -33,10 +32,10 @@ import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
  * TesterPipelineProps
  */
 export interface TesterPipelineProps {
-  readonly qualifier: string;
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
   readonly managementCrossAccountRoleName: string;
+  readonly qualifier?: string;
   readonly managementAccountId?: string;
   readonly managementAccountRoleName?: string;
 }
@@ -63,7 +62,7 @@ export class TesterPipeline extends Construct {
     });
 
     const configRepository = new cdk_extensions.Repository(this, 'ConfigRepository', {
-      repositoryName: `${props.qualifier}-test-config`,
+      repositoryName: `${props.qualifier ?? 'aws-accelerator'}-test-config`,
       repositoryBranchName: 'main',
       s3BucketName: configurationDefaultAssets.bucket.bucketName,
       s3key: configurationDefaultAssets.s3ObjectKey,
@@ -86,15 +85,12 @@ export class TesterPipeline extends Construct {
       };
     }
 
-    const qualifierInPascalCase = pascalCase(props.qualifier)
-      .split('_')
-      .join('-')
-      .replace(/AwsAccelerator/gi, 'AWSAccelerator');
-
     const bucket = new Bucket(this, 'SecureBucket', {
       encryptionType: BucketEncryptionType.SSE_KMS,
-      s3BucketName: `${props.qualifier}-tester-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
-      kmsAliasName: `alias/${props.qualifier}/test-pipeline/s3`,
+      s3BucketName: `${props.qualifier ?? 'aws-accelerator'}-tester-pipeline-${cdk.Stack.of(this).account}-${
+        cdk.Stack.of(this).region
+      }`,
+      kmsAliasName: `alias/${props.qualifier ?? 'aws-accelerator'}/test-pipeline/s3`,
       kmsDescription: 'AWS Accelerator Functional Test Pipeline Bucket CMK',
     });
 
@@ -122,7 +118,7 @@ export class TesterPipeline extends Construct {
      * Functional test pipeline
      */
     const pipeline = new codepipeline.Pipeline(this, 'Resource', {
-      pipelineName: `${qualifierInPascalCase}-TesterPipeline`,
+      pipelineName: props.qualifier ? `${props.qualifier}-tester-pipeline` : 'AWSAccelerator-TesterPipeline',
       artifactBucket: bucket.getS3Bucket(),
       role: this.pipelineRole,
     });
@@ -173,7 +169,7 @@ export class TesterPipeline extends Construct {
     });
 
     const testerProject = new codebuild.PipelineProject(this, 'TesterProject', {
-      projectName: `${qualifierInPascalCase}-TesterProject`,
+      projectName: props.qualifier ? `${props.qualifier}-tester-project` : 'AWSAccelerator-TesterProject',
       role: deployRole,
       buildSpec: codebuild.BuildSpec.fromObjectToYaml({
         version: '0.2',
@@ -191,7 +187,7 @@ export class TesterPipeline extends Construct {
               'yarn build',
               'cd packages/@aws-accelerator/tester',
               'env',
-              `if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then yarn run cdk deploy --require-approval never --context account=${cdk.Aws.ACCOUNT_ID} --context region=${cdk.Aws.REGION} --context management-cross-account-role-name=${props.managementCrossAccountRoleName} --context qualifier=${props.qualifier} --context config-dir=$CODEBUILD_SRC_DIR_Config --context management-account-id=${props.managementAccountId} --context management-account-role-name=${props.managementAccountRoleName}; else yarn run cdk deploy --require-approval never --context account=${cdk.Aws.ACCOUNT_ID} --context region=${cdk.Aws.REGION} --context management-cross-account-role-name=${props.managementCrossAccountRoleName} --context qualifier=${props.qualifier} --context config-dir=$CODEBUILD_SRC_DIR_Config; fi`,
+              `if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then yarn run cdk deploy --require-approval never --context account=${cdk.Aws.ACCOUNT_ID} --context region=${cdk.Aws.REGION} --context management-cross-account-role-name=${props.managementCrossAccountRoleName} --context qualifier=${props.qualifier} --context config-dir=$CODEBUILD_SRC_DIR_Config --context management-account-id=${props.managementAccountId} --context management-account-role-name=${props.managementAccountRoleName}; else yarn run cdk deploy --require-approval never --context account=${cdk.Aws.ACCOUNT_ID} --context region=${cdk.Aws.REGION} --context management-cross-account-role-name=${props.managementCrossAccountRoleName} --context config-dir=$CODEBUILD_SRC_DIR_Config; fi`,
             ],
           },
         },
@@ -201,6 +197,10 @@ export class TesterPipeline extends Construct {
         privileged: true, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.MEDIUM,
         environmentVariables: {
+          NODE_OPTIONS: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: '--max_old_space_size=4096',
+          },
           ACCELERATOR_REPOSITORY_NAME: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: props.sourceRepositoryName,

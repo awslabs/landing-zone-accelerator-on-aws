@@ -1,0 +1,176 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NetworkPrepStack Construct(NetworkPrepStack):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CoreTransitGatewayRouteTableD73AD6A9": Object {
+      "Properties": Object {
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "core",
+          },
+        ],
+        "TransitGatewayId": Object {
+          "Ref": "MainTransitGateway66204EF2",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTable",
+    },
+    "MainTransitGateway66204EF2": Object {
+      "Properties": Object {
+        "AmazonSideAsn": 65521,
+        "AutoAcceptSharedAttachments": "enable",
+        "DefaultRouteTableAssociation": "disable",
+        "DefaultRouteTablePropagation": "disable",
+        "DnsSupport": "enable",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Main",
+          },
+        ],
+        "VpnEcmpSupport": "enable",
+      },
+      "Type": "AWS::EC2::TransitGateway",
+    },
+    "MainTransitGatewayShareMainTransitGatewayShareResourceShareC2C21F6E": Object {
+      "Properties": Object {
+        "Name": "Main_TransitGatewayShare",
+        "Principals": Array [
+          "Sandbox-arn",
+          "222222222222",
+        ],
+        "ResourceArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":ec2:us-east-1:333333333333:transit-gateway/",
+                Object {
+                  "Ref": "MainTransitGateway66204EF2",
+                },
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
+    },
+    "SegregatedTransitGatewayRouteTableFBA11CE4": Object {
+      "Properties": Object {
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "segregated",
+          },
+        ],
+        "TransitGatewayId": Object {
+          "Ref": "MainTransitGateway66204EF2",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTable",
+    },
+    "SharedTransitGatewayRouteTableDEC04AD4": Object {
+      "Properties": Object {
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "shared",
+          },
+        ],
+        "TransitGatewayId": Object {
+          "Ref": "MainTransitGateway66204EF2",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTable",
+    },
+    "SsmParamAcceleratorVersionFF83282D": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-SecurityStack-333333333333-us-east-1/version",
+        "Type": "String",
+        "Value": "0.6.0-rc001",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamMainTransitGatewayId76D30719": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/transitGateways/Main/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "MainTransitGateway66204EF2",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamMaincoreTransitGatewayRouteTableIdC4F7B376": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/transitGateways/Main/routeTables/core/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "CoreTransitGatewayRouteTableD73AD6A9",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamMainsegregatedTransitGatewayRouteTableId8DCAFE8D": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/transitGateways/Main/routeTables/segregated/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "SegregatedTransitGatewayRouteTableFBA11CE4",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamMainsharedTransitGatewayRouteTableId2B981DF1": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/transitGateways/Main/routeTables/shared/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "SharedTransitGatewayRouteTableDEC04AD4",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamMainstandaloneTransitGatewayRouteTableIdE6B97388": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/transitGateways/Main/routeTables/standalone/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "StandaloneTransitGatewayRouteTableD8B42C98",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-SecurityStack-333333333333-us-east-1/stack-id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "StandaloneTransitGatewayRouteTableD8B42C98": Object {
+      "Properties": Object {
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "standalone",
+          },
+        ],
+        "TransitGatewayId": Object {
+          "Ref": "MainTransitGateway66204EF2",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTable",
+    },
+  },
+}
+`;

@@ -101,6 +101,9 @@ export abstract class Accelerator {
       });
     }
 
+    // Get management account credential when pipeline is executing outside of management account
+    const managementAccountCredentials = await this.getManagementAccountCredentials(props.partition);
+
     // Treat synthesize as a single - do not need parallel paths to generate all stacks
     if (props.command === Command.SYNTH || props.command === Command.SYNTHESIZE || props.command === Command.DIFF) {
       return await AcceleratorToolkit.execute({
@@ -114,9 +117,6 @@ export abstract class Accelerator {
         app: props.app,
       });
     }
-
-    // Get management account credential when pipeline is executing outside of management account
-    const managementAccountCredentials = await this.getManagementAccountCredentials(props.partition);
 
     //
     // Read in all Accelerator Configuration files here, then pass the objects
@@ -287,16 +287,23 @@ export abstract class Accelerator {
     await Promise.all(promises);
   }
 
-  private static async getManagementAccountCredentials(partition: string): Promise<AWS.STS.Credentials | undefined> {
+  static async getManagementAccountCredentials(partition: string): Promise<AWS.STS.Credentials | undefined> {
     if (process.env['CREDENTIALS_PATH'] && fs.existsSync(process.env['CREDENTIALS_PATH'])) {
       Logger.info('Detected Debugging environment. Loading temporary credentials.');
 
       const credentialsString = fs.readFileSync(process.env['CREDENTIALS_PATH']).toString();
       const credentials = JSON.parse(credentialsString);
-      process.env['AWS_ACCESS_KEY_ID'] = credentials.AccessKeyId;
-      process.env['AWS_SECRET_KEY'] = credentials.SecretAccessKey;
-      process.env['AWS_SECRET_ACCESS_KEY'] = credentials.SecretAccessKey;
-      process.env['AWS_SESSION_TOKEN'] = credentials.SessionToken;
+      // process.env['AWS_ACCESS_KEY_ID'] = credentials.AccessKeyId;
+      // process.env['AWS_SECRET_KEY'] = credentials.SecretAccessKey;
+      // process.env['AWS_SECRET_ACCESS_KEY'] = credentials.SecretAccessKey;
+      // process.env['AWS_SESSION_TOKEN'] = credentials.SessionToken;
+
+      // Support for V2 SDK
+      AWS.config.update({
+        accessKeyId: credentials.AccessKeyId,
+        secretAccessKey: credentials.SecretAccessKey,
+        sessionToken: credentials.SessionToken,
+      });
     }
     if (
       process.env['MANAGEMENT_ACCOUNT_ID'] &&
@@ -304,14 +311,12 @@ export abstract class Accelerator {
       process.env['ACCOUNT_ID'] !== process.env['MANAGEMENT_ACCOUNT_ID']
     ) {
       Logger.info('[accelerator] set management account credentials');
-      Logger.info(`[accelerator] pipeline region => ${process.env['AWS_DEFAULT_REGION']}`);
-      Logger.info(`[accelerator] pipeline executingAccountId => ${process.env['ACCOUNT_ID']}`);
       Logger.info(`[accelerator] managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
       Logger.info(`[accelerator] management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
 
       const roleArn = `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
       const stsClient = new AWS.STS({ region: process.env['AWS_REGION'] });
-      Logger.info(`[accelerator] [PlatformAccelerator][INFO] management account roleArn => ${roleArn}`);
+      Logger.info(`[accelerator] management account roleArn => ${roleArn}`);
 
       const assumeRoleCredential = await throttlingBackOff(() =>
         stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' }).promise(),
@@ -324,6 +329,13 @@ export abstract class Accelerator {
       process.env['AWS_SECRET_ACCESS_KEY'] = assumeRoleCredential.Credentials!.SecretAccessKey!;
 
       process.env['AWS_SESSION_TOKEN'] = assumeRoleCredential.Credentials!.SessionToken;
+
+      // Support for V2 SDK
+      AWS.config.update({
+        accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId,
+        secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey,
+        sessionToken: assumeRoleCredential.Credentials!.SessionToken,
+      });
 
       return assumeRoleCredential.Credentials;
     } else {

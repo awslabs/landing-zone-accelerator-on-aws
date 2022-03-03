@@ -12,7 +12,6 @@
  */
 import * as cdk from 'aws-cdk-lib';
 import * as yaml from 'js-yaml';
-import { pascalCase } from 'pascal-case';
 import fs from 'fs';
 import path from 'path';
 import { TesterStack, CONFIG_FILE_NAME, CONFIG_FILE_CONTENT_TYPE } from '../lib/tester-stack';
@@ -27,7 +26,7 @@ async function main() {
 
   const account = app.node.tryGetContext('account');
   const region = app.node.tryGetContext('region');
-  const qualifier = app.node.tryGetContext('qualifier') ?? 'aws-accelerator';
+  const qualifier = app.node.tryGetContext('qualifier');
   const managementCrossAccountRoleName = app.node.tryGetContext('management-cross-account-role-name');
   const configDirPath = app.node.tryGetContext('config-dir');
 
@@ -58,21 +57,22 @@ async function main() {
 
   const configFileContent = yaml.load(fs.readFileSync(configFilePath, 'utf8')) as CONFIG_FILE_CONTENT_TYPE;
 
-  const qualifierInPascalCase = pascalCase(qualifier)
-    .split('_')
-    .join('-')
-    .replace(/AwsAccelerator/gi, 'AWSAccelerator');
-
-  new TesterStack(app, `${qualifierInPascalCase}-TesterStack-${account}-${region}`, {
-    synthesizer: new cdk.DefaultStackSynthesizer({
-      generateBootstrapVersionRule: false,
-    }),
-    managementCrossAccountRoleName: managementCrossAccountRoleName,
-    configFileContent: configFileContent,
-    qualifier: qualifier,
-    managementAccountId: app.node.tryGetContext('management-account-id'),
-    managementAccountRoleName: app.node.tryGetContext('management-account-role-name'),
-  });
+  new TesterStack(
+    app,
+    qualifier === undefined
+      ? `AWSAccelerator-TesterStack-${account}-${region}`
+      : `${qualifier}-tester-stack-${account}-${region}`,
+    {
+      synthesizer: new cdk.DefaultStackSynthesizer({
+        generateBootstrapVersionRule: false,
+      }),
+      managementCrossAccountRoleName: managementCrossAccountRoleName,
+      configFileContent: configFileContent,
+      qualifier: qualifier === undefined ? 'aws-accelerator' : qualifier,
+      managementAccountId: app.node.tryGetContext('management-account-id'),
+      managementAccountRoleName: app.node.tryGetContext('management-account-role-name'),
+    },
+  );
 }
 
 //call the main function

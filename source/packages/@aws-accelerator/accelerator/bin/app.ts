@@ -22,7 +22,6 @@ import {
   SecurityConfig,
 } from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
-import { pascalCase } from 'change-case';
 import { IConstruct } from 'constructs';
 import 'source-map-support/register';
 import { AcceleratorStackNames } from '../lib/accelerator';
@@ -98,18 +97,6 @@ async function main() {
     return false;
   };
 
-  const qualifier = process.env['ACCELERATOR_QUALIFIER'] ?? 'aws-accelerator';
-
-  const getStackName = (name: string, stage: string, account: string, region: string): string => {
-    const stackName = process.env['ACCELERATOR_QUALIFIER']
-      ? `${pascalCase(process.env['ACCELERATOR_QUALIFIER'])}-${name}-${account}-${region}`
-          .split('_')
-          .join('-')
-          .replace(/AwsAccelerator/gi, 'AWSAccelerator')
-      : `${AcceleratorStackNames[stage]}-${account}-${region}`;
-    return stackName;
-  };
-
   //
   // PIPELINE Stack
   //
@@ -127,16 +114,22 @@ async function main() {
       );
     }
 
-    new PipelineStack(app, getStackName('PipelineStack', AcceleratorStage.PIPELINE, account, region), {
-      env: { account, region },
-      description: `(SO0199) AWS Platform Accelerator - Pipeline Stack`,
-      sourceRepositoryName,
-      sourceBranchName,
-      enableApprovalStage,
-      qualifier: qualifier,
-      managementAccountId: process.env['MANAGEMENT_ACCOUNT_ID']!,
-      managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']!,
-    });
+    new PipelineStack(
+      app,
+      process.env['ACCELERATOR_QUALIFIER']
+        ? `${process.env['ACCELERATOR_QUALIFIER']}-${AcceleratorStage.PIPELINE}-stack-${account}-${region}`
+        : `${AcceleratorStackNames[stage]}-${account}-${region}`,
+      {
+        env: { account, region },
+        description: `(SO0199) AWS Platform Accelerator - Pipeline Stack`,
+        sourceRepositoryName,
+        sourceBranchName,
+        enableApprovalStage,
+        qualifier: process.env['ACCELERATOR_QUALIFIER'],
+        managementAccountId: process.env['MANAGEMENT_ACCOUNT_ID']!,
+        managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']!,
+      },
+    );
   }
 
   //
@@ -146,16 +139,18 @@ async function main() {
     if (process.env['ACCELERATOR_REPOSITORY_NAME'] && process.env['ACCELERATOR_REPOSITORY_BRANCH_NAME']) {
       new TesterPipelineStack(
         app,
-        getStackName('TesterPipelineStack', AcceleratorStage.TESTER_PIPELINE, account, region),
+        process.env['ACCELERATOR_QUALIFIER']
+          ? `${process.env['ACCELERATOR_QUALIFIER']}-${AcceleratorStage.TESTER_PIPELINE}-stack-${account}-${region}`
+          : `${AcceleratorStackNames[stage]}-${account}-${region}`,
         {
           env: { account, region },
           description: `(SO0199) AWS Platform Accelerator - Tester Pipeline Stack`,
           sourceRepositoryName: process.env['ACCELERATOR_REPOSITORY_NAME']!,
           sourceBranchName: process.env['ACCELERATOR_REPOSITORY_BRANCH_NAME']!,
-          qualifier: qualifier,
           managementCrossAccountRoleName: process.env['MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME']!,
-          managementAccountId: process.env['MANAGEMENT_ACCOUNT_ID']!,
-          managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']!,
+          qualifier: process.env['ACCELERATOR_QUALIFIER'],
+          managementAccountId: process.env['MANAGEMENT_ACCOUNT_ID'],
+          managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'],
         },
       );
     }

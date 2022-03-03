@@ -23,6 +23,7 @@ import { RequireApproval } from 'aws-cdk/lib/diff';
 import { Command, Configuration } from 'aws-cdk/lib/settings';
 import { AcceleratorStackNames } from './accelerator';
 import { Logger } from './logger';
+import { AcceleratorStage } from './accelerator-stage';
 
 /**
  *
@@ -163,7 +164,6 @@ export class AcceleratorToolkit {
         });
         break;
       case Command.DIFF:
-        console.log('DIFF');
         await cli.diff({ stackNames: [] });
         break;
 
@@ -172,8 +172,23 @@ export class AcceleratorToolkit {
           throw new Error('trying to deploy with an undefined stage');
         }
 
+        let stackName = `${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`;
+
+        if (options.stage === AcceleratorStage.PIPELINE) {
+          stackName = process.env['ACCELERATOR_QUALIFIER']
+            ? `${process.env['ACCELERATOR_QUALIFIER']}-${AcceleratorStage.PIPELINE}-stack-${options.accountId}-${options.region}`
+            : `${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`;
+        }
+
+        if (options.stage === AcceleratorStage.TESTER_PIPELINE) {
+          stackName = process.env['ACCELERATOR_QUALIFIER']
+            ? `${process.env['ACCELERATOR_QUALIFIER']}-${AcceleratorStage.TESTER_PIPELINE}-stack-${options.accountId}-${options.region}`
+            : `${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`;
+        }
+
         const selector: StackSelector = {
-          patterns: [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`],
+          // patterns: [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`],
+          patterns: [stackName],
         };
 
         await cli.deploy({
