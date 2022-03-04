@@ -3,6 +3,15 @@
 exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
 Object {
   "Resources": Object {
+    "TestVpcDhcpOptionsAssociationDB23B751": Object {
+      "Properties": Object {
+        "DhcpOptionsId": "Test-Options",
+        "VpcId": Object {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+    },
     "TestVpcE77CE678": Object {
       "Properties": Object {
         "CidrBlock": "10.0.0.0/16",

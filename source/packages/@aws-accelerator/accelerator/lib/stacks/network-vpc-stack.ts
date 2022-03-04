@@ -11,6 +11,10 @@
  *  and limitations under the License.
  */
 
+import * as cdk from 'aws-cdk-lib';
+import { pascalCase } from 'change-case';
+import { Construct } from 'constructs';
+
 import {
   NetworkAclSubnetSelection,
   NetworkConfigTypes,
@@ -22,6 +26,7 @@ import {
 } from '@aws-accelerator/config';
 import {
   DeleteDefaultVpc,
+  DhcpOptions,
   HostedZone,
   NatGateway,
   NetworkAcl,
@@ -37,9 +42,7 @@ import {
   Vpc,
   VpcEndpoint,
 } from '@aws-accelerator/constructs';
-import * as cdk from 'aws-cdk-lib';
-import { pascalCase } from 'change-case';
-import { Construct } from 'constructs';
+
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
@@ -301,6 +304,37 @@ export class NetworkVpcStack extends AcceleratorStack {
     }
 
     //
+    // Create DHCP options
+    //
+    // Create map to store DHCP options
+    const dhcpOptionsIds = new Map<string, string>();
+
+    for (const dhcpItem of props.networkConfig.dhcpOptions ?? []) {
+      // Check if the set belongs in this account/region
+      const accountIds = dhcpItem.accounts.map(item => {
+        return props.accountsConfig.getAccountId(item);
+      });
+      const regions = dhcpItem.regions.map(item => {
+        return item.toString();
+      });
+
+      if (accountIds.includes(cdk.Stack.of(this).account) && regions.includes(cdk.Stack.of(this).region)) {
+        Logger.info(`[network-vpc-stack] Adding DHCP options set ${dhcpItem.name}`);
+
+        const optionSet = new DhcpOptions(this, pascalCase(`${dhcpItem.name}DhcpOpts`), {
+          name: dhcpItem.name,
+          domainName: dhcpItem.domainName,
+          domainNameServers: dhcpItem.domainNameServers,
+          netbiosNameServers: dhcpItem.netbiosNameServers,
+          netbiosNodeType: dhcpItem.netbiosNodeType,
+          ntpServers: dhcpItem.ntpServers,
+          tags: dhcpItem.tags ?? [], //Default passing an empty array for name tag
+        });
+        dhcpOptionsIds.set(optionSet.name, optionSet.dhcpOptionsId);
+      }
+    }
+
+    //
     // Evaluate VPC entries
     //
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
@@ -315,6 +349,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           name: vpcItem.name,
           ipv4CidrBlock: vpcItem.cidrs[0],
           internetGateway: vpcItem.internetGateway,
+          dhcpOptions: dhcpOptionsIds.get(vpcItem.dhcpOptions ?? ''),
           enableDnsHostnames: vpcItem.enableDnsHostnames ?? true,
           enableDnsSupport: vpcItem.enableDnsSupport ?? true,
           instanceTenancy: vpcItem.instanceTenancy ?? 'default',
@@ -339,8 +374,6 @@ export class NetworkVpcStack extends AcceleratorStack {
             props.accountsConfig.getAccountId(centralEndpointVpc.account),
           );
         }
-
-        // TODO: DHCP OptionSets
 
         //
         // Create VPC Flow Log

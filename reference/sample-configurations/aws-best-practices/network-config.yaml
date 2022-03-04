@@ -22,6 +22,23 @@ transitGateways:
       - name: Network-Main-Segregated
       - name: Network-Main-Shared
       - name: Network-Main-Standalone
+# dhcpOptions:
+#   - name: accelerator-dhcp-opts
+#     accounts:
+#       - Network
+#     regions:
+#       - *HOME_REGION
+#     domainName: example.com
+#     domainNameServers:
+#       - 1.1.1.1
+#       - 2.2.2.2
+#     netbiosNameServers:
+#       - 1.1.1.1
+#       - 2.2.2.2
+#     netbiosNodeType: 2
+#     ntpServers:
+#       - 1.1.1.1
+#       - 2.2.2.2
 vpcs:
   - name: Network-Endpoints
     account: Network
@@ -29,6 +46,7 @@ vpcs:
     cidrs:
       - 10.1.0.0/22
     internetGateway: false
+    # dhcpOptions: accelerator-dhcp-opts
     enableDnsHostnames: true
     enableDnsSupport: true
     instanceTenancy: default

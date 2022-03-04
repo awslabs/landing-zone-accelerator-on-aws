@@ -11,10 +11,11 @@
  *  and limitations under the License.
  */
 
-import * as t from './common-types';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as yaml from 'js-yaml';
+import * as path from 'path';
+
+import * as t from './common-types';
 
 /**
  * Configuration items.
@@ -185,11 +186,26 @@ export class NetworkConfigTypes {
     outboundRules: t.optional(t.array(this.networkAclOutboundRuleConfig)),
   });
 
+  static readonly netbiosNodeEnum = t.enums('NetbiosNodeTypeEnum', [1, 2, 4, 8]);
+
+  static readonly dhcpOptsConfig = t.interface({
+    name: t.nonEmptyString,
+    accounts: t.array(t.nonEmptyString),
+    regions: t.array(t.region),
+    domainName: t.optional(t.nonEmptyString),
+    domainNameServers: t.optional(t.array(t.nonEmptyString)),
+    netbiosNameServers: t.optional(t.array(t.nonEmptyString)),
+    netbiosNodeType: t.optional(this.netbiosNodeEnum),
+    ntpServers: t.optional(t.array(t.nonEmptyString)),
+    tags: t.optional(t.array(t.tag)),
+  });
+
   static readonly vpcConfig = t.interface({
     name: t.nonEmptyString,
     account: t.nonEmptyString,
     region: t.region,
     cidrs: t.array(t.nonEmptyString),
+    dhcpOptions: t.optional(t.nonEmptyString),
     enableDnsHostnames: t.optional(t.boolean),
     enableDnsSupport: t.optional(t.boolean),
     instanceTenancy: t.optional(this.instanceTenancyTypeEnum),
@@ -230,6 +246,7 @@ export class NetworkConfigTypes {
     transitGateways: t.array(this.transitGatewayConfig),
     vpcs: t.array(this.vpcConfig),
     vpcFlowLogs: this.vpcFlowLogsConfig,
+    dhcpOptions: t.optional(t.array(this.dhcpOptsConfig)),
   });
 }
 
@@ -386,6 +403,18 @@ export class NetworkAclConfig implements t.TypeOf<typeof NetworkConfigTypes.netw
   readonly outboundRules: NetworkAclOutboundRuleConfig[] | undefined = undefined;
 }
 
+export class DhcpOptsConfig implements t.TypeOf<typeof NetworkConfigTypes.dhcpOptsConfig> {
+  readonly name: string = '';
+  readonly accounts: string[] = [''];
+  readonly regions: t.Region[] = ['us-east-1'];
+  readonly domainName: string | undefined = undefined;
+  readonly domainNameServers: string[] | undefined = undefined;
+  readonly netbiosNameServers: string[] | undefined = undefined;
+  readonly netbiosNodeType: t.TypeOf<typeof NetworkConfigTypes.netbiosNodeEnum> | undefined = undefined;
+  readonly ntpServers: string[] | undefined = undefined;
+  readonly tags: t.Tag[] | undefined = undefined;
+}
+
 export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> {
   /**
    * The name of the VPC.
@@ -410,6 +439,11 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
    * provided.
    */
   readonly cidrs: string[] = [];
+
+  /**
+   * The name of a DHCP options set.
+   */
+  readonly dhcpOptions: string | undefined = undefined;
 
   /**
    * Defines if an internet gateway should be added to the VPC
@@ -519,6 +553,11 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   readonly vpcs: VpcConfig[] = [];
 
   readonly vpcFlowLogs: VpcFlowLogsConfig = new VpcFlowLogsConfig();
+
+  /**
+   * An optional list of DHCP options set configurations.
+   */
+  readonly dhcpOptions: DhcpOptsConfig[] | undefined = undefined;
 
   /**
    *

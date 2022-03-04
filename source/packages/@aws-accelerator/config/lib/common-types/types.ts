@@ -11,9 +11,9 @@
  *  and limitations under the License.
  */
 
+import { either } from 'fp-ts/lib/Either';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as t from 'io-ts';
-import { either } from 'fp-ts/lib/Either';
 import { IPv4CidrRange } from 'ip-num';
 
 export type { Any, AnyProps, Mixed, Props, TypeC, TypeOf } from 'io-ts';
@@ -274,3 +274,12 @@ export type EnableDisable = t.TypeOf<typeof enableDisable>;
 
 export const availabilityZone = enums('AvailabilityZone', ['a', 'b', 'c', 'd', 'e', 'f']);
 export type AvailabilityZone = t.TypeOf<typeof availabilityZone>;
+
+export const tag = t.interface({
+  key: t.string,
+  value: t.string,
+});
+export class Tag implements t.TypeOf<typeof tag> {
+  readonly key: string = '';
+  readonly value: string = '';
+}
