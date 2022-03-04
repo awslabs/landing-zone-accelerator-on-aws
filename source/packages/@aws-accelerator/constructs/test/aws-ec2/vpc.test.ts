@@ -1,5 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
+
 import { SynthUtils } from '@aws-cdk/assert';
+
 import { Vpc } from '../../lib/aws-ec2/vpc';
 
 const testNamePrefix = 'Construct(Vpc): ';
@@ -10,6 +12,7 @@ const stack = new cdk.Stack();
 new Vpc(stack, 'TestVpc', {
   name: 'Main',
   ipv4CidrBlock: '10.0.0.0/16',
+  dhcpOptions: 'Test-Options',
   internetGateway: true,
   enableDnsHostnames: false,
   enableDnsSupport: true,
@@ -39,6 +42,13 @@ describe('Vpc', () => {
    */
   test(`${testNamePrefix} InternetGateway count test`, () => {
     cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::InternetGateway', 1);
+  });
+
+  /**
+   * Number of DHCP options test
+   */
+  test(`${testNamePrefix} DHCP options association count test`, () => {
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::VPCDHCPOptionsAssociation', 1);
   });
 
   /**
@@ -81,6 +91,25 @@ describe('Vpc', () => {
       Resources: {
         TestVpcInternetGateway01360C82: {
           Type: 'AWS::EC2::InternetGateway',
+        },
+      },
+    });
+  });
+
+  /**
+   * DHCP options association resource configuration test
+   */
+  test(`${testNamePrefix} DHCP options association resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        TestVpcDhcpOptionsAssociationDB23B751: {
+          Type: 'AWS::EC2::VPCDHCPOptionsAssociation',
+          Properties: {
+            DhcpOptionsId: 'Test-Options',
+            VpcId: {
+              Ref: 'TestVpcE77CE678',
+            },
+          },
         },
       },
     });

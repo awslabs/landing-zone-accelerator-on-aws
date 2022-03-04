@@ -377,6 +377,7 @@ export interface IVpc extends cdk.IResource {
 export interface VpcProps {
   readonly name: string;
   readonly ipv4CidrBlock: string;
+  readonly dhcpOptions?: string;
   readonly enableDnsHostnames?: boolean;
   readonly enableDnsSupport?: boolean;
   readonly instanceTenancy?: 'default' | 'dedicated';
@@ -390,6 +391,7 @@ export class Vpc extends cdk.Resource implements IVpc {
   public readonly vpcId: string;
   public readonly internetGateway: cdk.aws_ec2.CfnInternetGateway | undefined;
   public readonly internetGatewayAttachment: cdk.aws_ec2.CfnVPCGatewayAttachment | undefined;
+  public readonly dhcpOptionsAssociation: cdk.aws_ec2.CfnVPCDHCPOptionsAssociation | undefined;
 
   constructor(scope: Construct, id: string, props: VpcProps) {
     super(scope, id);
@@ -409,6 +411,13 @@ export class Vpc extends cdk.Resource implements IVpc {
 
       this.internetGatewayAttachment = new cdk.aws_ec2.CfnVPCGatewayAttachment(this, 'InternetGatewayAttachment', {
         internetGatewayId: this.internetGateway.ref,
+        vpcId: this.vpcId,
+      });
+    }
+
+    if (props.dhcpOptions) {
+      this.dhcpOptionsAssociation = new cdk.aws_ec2.CfnVPCDHCPOptionsAssociation(this, 'DhcpOptionsAssociation', {
+        dhcpOptionsId: props.dhcpOptions,
         vpcId: this.vpcId,
       });
     }
