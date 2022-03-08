@@ -28,7 +28,7 @@ type notificationType = 'ACTUAL' | 'FORECASTED' | string;
 
 type subscriptionType = 'EMAIL' | string;
 
-type threshholdType = 'PERCENTAGE' | 'ABSOLUTE_VALUE' | string;
+type thresholdType = 'PERCENTAGE' | 'ABSOLUTE_VALUE' | string;
 
 type comparisonOperator = 'GREATER_THAN' | 'LESS_THAN' | string;
 
@@ -53,7 +53,7 @@ export interface BudgetDefinitionProps {
   /**
    * The threshold that's associated with a notification.
    */
-  readonly thresholdType: threshholdType;
+  readonly thresholdType: thresholdType;
   /**
    * The address that AWS sends budget notifications to, either an SNS topic or an email.
    */
