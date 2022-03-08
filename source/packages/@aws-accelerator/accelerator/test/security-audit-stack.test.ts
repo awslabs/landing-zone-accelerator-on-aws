@@ -51,6 +51,20 @@ const stack = new SecurityAuditStack(
  */
 describe('SecurityAuditStack', () => {
   /**
+   * Number of S3 bucket resource test
+   */
+  test(`${testNamePrefix} S3 bucket resource count test`, () => {
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::Bucket', 2);
+  });
+
+  /**
+   * Number of S3 bucket policy resource test
+   */
+  test(`${testNamePrefix} S3 bucket policy resource count test`, () => {
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::BucketPolicy', 2);
+  });
+
+  /**
    * Number of Lambda function resource test
    */
   test(`${testNamePrefix} Lambda function resource count test`, () => {
@@ -61,7 +75,7 @@ describe('SecurityAuditStack', () => {
    * Number of IAM role resource test
    */
   test(`${testNamePrefix} IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 5);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 7);
   });
 
   /**
@@ -96,14 +110,14 @@ describe('SecurityAuditStack', () => {
    * Number of KMS alias resource test
    */
   test(`${testNamePrefix} KMS alias resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::KMS::Alias', 1);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::KMS::Alias', 3);
   });
 
   /**
    * Number of KMS key resource test
    */
   test(`${testNamePrefix} KMS key resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::KMS::Key', 1);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::KMS::Key', 3);
   });
 
   /**
@@ -1125,6 +1139,394 @@ describe('SecurityAuditStack', () => {
                   },
                   Resource: '*',
                   Sid: 'Allow AWS Services to encrypt and describe logs',
+                },
+              ],
+              Version: '2012-10-17',
+            },
+          },
+        },
+      },
+    });
+  });
+
+  /**
+   * AwsMacieExportConfigBucket resource configuration test
+   */
+  test(`${testNamePrefix} AwsMacieExportConfigBucket resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        AwsMacieExportConfigBucket83E4FE4E: {
+          Type: 'AWS::S3::Bucket',
+          UpdateReplacePolicy: 'Retain',
+          DeletionPolicy: 'Retain',
+          Metadata: {
+            cfn_nag: {
+              rules_to_suppress: [
+                {
+                  id: 'W35',
+                  reason:
+                    'S3 Bucket access logging is not enabled for the accelerator security macie export config bucket.',
+                },
+              ],
+            },
+          },
+          Properties: {
+            BucketEncryption: {
+              ServerSideEncryptionConfiguration: [
+                {
+                  ServerSideEncryptionByDefault: {
+                    KMSMasterKeyID: {
+                      'Fn::GetAtt': ['AwsMacieExportConfigBucketCmk97C970E9', 'Arn'],
+                    },
+                    SSEAlgorithm: 'aws:kms',
+                  },
+                },
+              ],
+            },
+            BucketName: {
+              'Fn::Join': [
+                '',
+                [
+                  'aws-accelerator-org-macie-disc-repo-',
+                  {
+                    Ref: 'AWS::AccountId',
+                  },
+                  '-',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                ],
+              ],
+            },
+            OwnershipControls: {
+              Rules: [
+                {
+                  ObjectOwnership: 'BucketOwnerPreferred',
+                },
+              ],
+            },
+            PublicAccessBlockConfiguration: {
+              BlockPublicAcls: true,
+              BlockPublicPolicy: true,
+              IgnorePublicAcls: true,
+              RestrictPublicBuckets: true,
+            },
+            Tags: [
+              {
+                Key: 'aws-cdk:auto-macie-access-bucket',
+                Value: 'true',
+              },
+            ],
+            VersioningConfiguration: {
+              Status: 'Enabled',
+            },
+          },
+        },
+      },
+    });
+  });
+
+  /**
+   * GuardDutyPublishingDestinationBucket resource configuration test
+   */
+  test(`${testNamePrefix} GuardDutyPublishingDestinationBucket resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        GuardDutyPublishingDestinationBucket1AFF21BB: {
+          Type: 'AWS::S3::Bucket',
+          UpdateReplacePolicy: 'Retain',
+          DeletionPolicy: 'Retain',
+          Metadata: {
+            cfn_nag: {
+              rules_to_suppress: [
+                {
+                  id: 'W35',
+                  reason:
+                    'S3 Bucket access logging is not enabled for the accelerator security guardduty publish destination bucket.',
+                },
+              ],
+            },
+          },
+          Properties: {
+            BucketEncryption: {
+              ServerSideEncryptionConfiguration: [
+                {
+                  ServerSideEncryptionByDefault: {
+                    KMSMasterKeyID: {
+                      'Fn::GetAtt': ['GuardDutyPublishingDestinationBucketCmkD3255DD0', 'Arn'],
+                    },
+                    SSEAlgorithm: 'aws:kms',
+                  },
+                },
+              ],
+            },
+            BucketName: {
+              'Fn::Join': [
+                '',
+                [
+                  'aws-accelerator-org-gduty-pub-dest-',
+                  {
+                    Ref: 'AWS::AccountId',
+                  },
+                  '-',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                ],
+              ],
+            },
+            OwnershipControls: {
+              Rules: [
+                {
+                  ObjectOwnership: 'BucketOwnerPreferred',
+                },
+              ],
+            },
+            PublicAccessBlockConfiguration: {
+              BlockPublicAcls: true,
+              BlockPublicPolicy: true,
+              IgnorePublicAcls: true,
+              RestrictPublicBuckets: true,
+            },
+            Tags: [
+              {
+                Key: 'aws-cdk:auto-guardduty-access-bucket',
+                Value: 'true',
+              },
+            ],
+            VersioningConfiguration: {
+              Status: 'Enabled',
+            },
+          },
+        },
+      },
+    });
+  });
+
+  /**
+   * GuardDutyPublishingDestinationBucketPolicy resource configuration test
+   */
+  test(`${testNamePrefix} GuardDutyPublishingDestinationBucketPolicy resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        GuardDutyPublishingDestinationBucketPolicyAEFA499A: {
+          Type: 'AWS::S3::BucketPolicy',
+          Properties: {
+            Bucket: {
+              Ref: 'GuardDutyPublishingDestinationBucket1AFF21BB',
+            },
+            PolicyDocument: {
+              Statement: [
+                {
+                  Action: 's3:*',
+                  Condition: {
+                    Bool: {
+                      'aws:SecureTransport': 'false',
+                    },
+                  },
+                  Effect: 'Deny',
+                  Principal: {
+                    AWS: '*',
+                  },
+                  Resource: [
+                    {
+                      'Fn::GetAtt': ['GuardDutyPublishingDestinationBucket1AFF21BB', 'Arn'],
+                    },
+                    {
+                      'Fn::Join': [
+                        '',
+                        [
+                          {
+                            'Fn::GetAtt': ['GuardDutyPublishingDestinationBucket1AFF21BB', 'Arn'],
+                          },
+                          '/*',
+                        ],
+                      ],
+                    },
+                  ],
+                  Sid: 'deny-insecure-connections',
+                },
+                {
+                  Action: [
+                    's3:GetObject*',
+                    's3:GetBucket*',
+                    's3:List*',
+                    's3:DeleteObject*',
+                    's3:PutObject',
+                    's3:PutObjectLegalHold',
+                    's3:PutObjectRetention',
+                    's3:PutObjectTagging',
+                    's3:PutObjectVersionTagging',
+                    's3:Abort*',
+                  ],
+                  Effect: 'Allow',
+                  Principal: {
+                    Service: 'guardduty.amazonaws.com',
+                  },
+                  Resource: [
+                    {
+                      'Fn::GetAtt': ['GuardDutyPublishingDestinationBucket1AFF21BB', 'Arn'],
+                    },
+                    {
+                      'Fn::Join': [
+                        '',
+                        [
+                          {
+                            'Fn::GetAtt': ['GuardDutyPublishingDestinationBucket1AFF21BB', 'Arn'],
+                          },
+                          '/*',
+                        ],
+                      ],
+                    },
+                  ],
+                },
+                {
+                  Action: ['s3:GetBucketLocation', 's3:PutObject'],
+                  Condition: {
+                    StringEquals: {
+                      'aws:PrincipalOrgID': {
+                        Ref: 'Organization29A5FC3F',
+                      },
+                    },
+                  },
+                  Effect: 'Allow',
+                  Principal: {
+                    AWS: '*',
+                  },
+                  Resource: [
+                    {
+                      'Fn::GetAtt': ['GuardDutyPublishingDestinationBucket1AFF21BB', 'Arn'],
+                    },
+                    {
+                      'Fn::Join': [
+                        '',
+                        [
+                          {
+                            'Fn::GetAtt': ['GuardDutyPublishingDestinationBucket1AFF21BB', 'Arn'],
+                          },
+                          '/*',
+                        ],
+                      ],
+                    },
+                  ],
+                  Sid: 'Allow Organization principals to use of the bucket',
+                },
+              ],
+              Version: '2012-10-17',
+            },
+          },
+        },
+      },
+    });
+  });
+
+  /**
+   * AwsMacieExportConfigBucketPolicy resource configuration test
+   */
+  test(`${testNamePrefix} AwsMacieExportConfigBucketPolicy resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        AwsMacieExportConfigBucketPolicy2C40E2D4: {
+          Type: 'AWS::S3::BucketPolicy',
+          Properties: {
+            Bucket: {
+              Ref: 'AwsMacieExportConfigBucket83E4FE4E',
+            },
+            PolicyDocument: {
+              Statement: [
+                {
+                  Action: 's3:*',
+                  Condition: {
+                    Bool: {
+                      'aws:SecureTransport': 'false',
+                    },
+                  },
+                  Effect: 'Deny',
+                  Principal: {
+                    AWS: '*',
+                  },
+                  Resource: [
+                    {
+                      'Fn::GetAtt': ['AwsMacieExportConfigBucket83E4FE4E', 'Arn'],
+                    },
+                    {
+                      'Fn::Join': [
+                        '',
+                        [
+                          {
+                            'Fn::GetAtt': ['AwsMacieExportConfigBucket83E4FE4E', 'Arn'],
+                          },
+                          '/*',
+                        ],
+                      ],
+                    },
+                  ],
+                  Sid: 'deny-insecure-connections',
+                },
+                {
+                  Action: [
+                    's3:GetObject*',
+                    's3:GetBucket*',
+                    's3:List*',
+                    's3:DeleteObject*',
+                    's3:PutObject',
+                    's3:PutObjectLegalHold',
+                    's3:PutObjectRetention',
+                    's3:PutObjectTagging',
+                    's3:PutObjectVersionTagging',
+                    's3:Abort*',
+                  ],
+                  Effect: 'Allow',
+                  Principal: {
+                    Service: 'macie.amazonaws.com',
+                  },
+                  Resource: [
+                    {
+                      'Fn::GetAtt': ['AwsMacieExportConfigBucket83E4FE4E', 'Arn'],
+                    },
+                    {
+                      'Fn::Join': [
+                        '',
+                        [
+                          {
+                            'Fn::GetAtt': ['AwsMacieExportConfigBucket83E4FE4E', 'Arn'],
+                          },
+                          '/*',
+                        ],
+                      ],
+                    },
+                  ],
+                },
+                {
+                  Action: ['s3:GetBucketLocation', 's3:PutObject'],
+                  Condition: {
+                    StringEquals: {
+                      'aws:PrincipalOrgID': {
+                        Ref: 'Organization29A5FC3F',
+                      },
+                    },
+                  },
+                  Effect: 'Allow',
+                  Principal: {
+                    AWS: '*',
+                  },
+                  Resource: [
+                    {
+                      'Fn::GetAtt': ['AwsMacieExportConfigBucket83E4FE4E', 'Arn'],
+                    },
+                    {
+                      'Fn::Join': [
+                        '',
+                        [
+                          {
+                            'Fn::GetAtt': ['AwsMacieExportConfigBucket83E4FE4E', 'Arn'],
+                          },
+                          '/*',
+                        ],
+                      ],
+                    },
+                  ],
+                  Sid: 'Allow Organization principals to use of the bucket',
                 },
               ],
               Version: '2012-10-17',

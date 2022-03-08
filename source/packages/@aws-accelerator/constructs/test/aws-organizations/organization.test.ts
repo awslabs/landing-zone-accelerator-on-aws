@@ -6,8 +6,6 @@ const testNamePrefix = 'Construct(Organization): ';
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-// Organization.getInstance(stack, 'Organization');
-
 new Organization(stack, 'Organization');
 
 /**

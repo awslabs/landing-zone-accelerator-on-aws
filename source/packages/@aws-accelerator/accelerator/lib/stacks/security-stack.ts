@@ -15,8 +15,9 @@ import { Region } from '@aws-accelerator/config';
 import {
   GuardDutyPublishingDestination,
   MacieExportConfigClassification,
-  SecurityHubStandards,
   PasswordPolicy,
+  SecurityHubStandards,
+  SsmParameter,
 } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import * as config from 'aws-cdk-lib/aws-config';
@@ -33,6 +34,9 @@ export class SecurityStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
+    const auditAccountName = props.securityConfig.getDelegatedAccountName();
+    const auditAccountId = props.accountsConfig.getAuditAccountId();
+
     //
     // MacieSession configuration
     //
@@ -42,11 +46,33 @@ export class SecurityStack extends AcceleratorStack {
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
-      const auditAccountName = props.securityConfig.getDelegatedAccountName();
       if (props.accountsConfig.containsAccount(auditAccountName)) {
+        const bucketName = new SsmParameter(this, 'SsmParamMacieBucketName', {
+          region: cdk.Stack.of(this).region as Region,
+          partition: cdk.Stack.of(this).partition,
+          parameter: {
+            name: '/accelerator/organization/security/macie/discovery-repository/bucket-name',
+            accountId: auditAccountId,
+            roleName: `AWSAccelerator-CrossAccountMacieSsmParamAccessRole-${cdk.Stack.of(this).region}`,
+          },
+          invokingAccountID: cdk.Stack.of(this).account,
+        }).value;
+
+        const bucketKmsKeyArn = new SsmParameter(this, 'SsmParamMacieBucketKmsKeyArn', {
+          region: cdk.Stack.of(this).region as Region,
+          partition: cdk.Stack.of(this).partition,
+          parameter: {
+            name: '/accelerator/organization/security/macie/discovery-repository/bucket-kms-key-arn',
+            accountId: auditAccountId,
+            roleName: `AWSAccelerator-CrossAccountMacieSsmParamAccessRole-${cdk.Stack.of(this).region}`,
+          },
+          invokingAccountID: cdk.Stack.of(this).account,
+        }).value;
         new MacieExportConfigClassification(this, 'AwsMacieUpdateExportConfigClassification', {
           region: cdk.Stack.of(this).region,
-          S3keyPrefix: 'aws-macie-export-config',
+          bucketName: bucketName,
+          keyPrefix: `${cdk.Stack.of(this).account}-aws-macie-export-config`,
+          kmsKeyArn: bucketKmsKeyArn,
         });
       } else {
         throw new Error(`Macie audit delegated admin account name "${auditAccountName}" not found.`);
@@ -62,10 +88,33 @@ export class SecurityStack extends AcceleratorStack {
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
-      const auditAccountName = props.securityConfig.getDelegatedAccountName();
       if (props.accountsConfig.containsAccount(auditAccountName)) {
+        const bucketArn = new SsmParameter(this, 'SsmParamGuardDutyBucketName', {
+          region: cdk.Stack.of(this).region as Region,
+          partition: cdk.Stack.of(this).partition,
+          parameter: {
+            name: '/accelerator/organization/security/guardduty/publishing-destination/bucket-arn',
+            accountId: auditAccountId,
+            roleName: `AWSAccelerator-CrossAccountGuardDutySsmParamAccessRole-${cdk.Stack.of(this).region}`,
+          },
+          invokingAccountID: cdk.Stack.of(this).account,
+        }).value;
+
+        const bucketKmsKeyArn = new SsmParameter(this, 'SsmParamGuardDutyBucketKmsKeyArn', {
+          region: cdk.Stack.of(this).region as Region,
+          partition: cdk.Stack.of(this).partition,
+          parameter: {
+            name: '/accelerator/organization/security/guardduty/publishing-destination/bucket-kms-key-arn',
+            accountId: auditAccountId,
+            roleName: `AWSAccelerator-CrossAccountGuardDutySsmParamAccessRole-${cdk.Stack.of(this).region}`,
+          },
+          invokingAccountID: cdk.Stack.of(this).account,
+        }).value;
+
         new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
           region: cdk.Stack.of(this).region,
+          bucketArn: bucketArn,
+          kmsKeyArn: bucketKmsKeyArn,
           exportDestinationType:
             props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.destinationType,
         });
@@ -83,7 +132,6 @@ export class SecurityStack extends AcceleratorStack {
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
-      const auditAccountName = props.securityConfig.getDelegatedAccountName();
       if (props.accountsConfig.containsAccount(auditAccountName)) {
         new SecurityHubStandards(this, 'SecurityHubStandards', {
           region: cdk.Stack.of(this).region,

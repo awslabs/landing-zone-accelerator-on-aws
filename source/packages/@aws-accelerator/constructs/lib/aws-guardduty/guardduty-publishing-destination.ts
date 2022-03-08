@@ -12,11 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-
-import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 
 const path = require('path');
 
@@ -25,6 +21,8 @@ const path = require('path');
  */
 export interface GuardDutyPublishingDestinationProps {
   readonly region: string;
+  readonly bucketArn: string;
+  readonly kmsKeyArn: string;
   readonly exportDestinationType: string;
 }
 
@@ -37,81 +35,38 @@ export class GuardDutyPublishingDestination extends Construct {
   constructor(scope: Construct, id: string, props: GuardDutyPublishingDestinationProps) {
     super(scope, id);
 
-    const ENABLE_GUARDDUTY_PUBLISHING_DEST_RESOURCE_TYPE = 'Custom::GuardDutyCreatePublishingDestinationCommand';
+    const RESOURCE_TYPE = 'Custom::GuardDutyCreatePublishingDestinationCommand';
 
-    // Create MacieSession export config bucket
-    const bucket = new Bucket(this, 'GuardDutyPublishingDestinationBucket', {
-      encryptionType: BucketEncryptionType.SSE_KMS,
-      s3BucketName: `aws-accelerator-security-guardduty-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-      kmsAliasName: 'alias/accelerator/security/guardduty/s3',
-      kmsDescription: 'AWS Accelerator GuardDuty Publishing Destination Bucket CMK',
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
+      codeDirectory: path.join(__dirname, 'create-publishing-destination/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      policyStatements: [
+        {
+          Sid: 'GuardDutyCreatePublishingDestinationCommandTaskGuardDutyActions',
+          Effect: 'Allow',
+          Action: [
+            'guardDuty:CreateDetector',
+            'guardDuty:CreatePublishingDestination',
+            'guardDuty:DeletePublishingDestination',
+            'guardDuty:ListDetectors',
+            'guardDuty:ListPublishingDestinations',
+            'iam:CreateServiceLinkedRole',
+          ],
+          Resource: '*',
+        },
+      ],
     });
 
-    // cfn_nag: Suppress warning related to the accelerator security macie export config S3 bucket
-    const cfnBucket = bucket.node.defaultChild?.node.defaultChild as s3.CfnBucket;
-    cfnBucket.cfnOptions.metadata = {
-      cfn_nag: {
-        rules_to_suppress: [
-          {
-            id: 'W35',
-            reason:
-              'S3 Bucket access logging is not enabled for the accelerator security guardduty publishing destination bucket.',
-          },
-        ],
-      },
-    };
-
-    const guardDutyCreatePublishingDestinationCommandFunction = cdk.CustomResourceProvider.getOrCreateProvider(
-      this,
-      ENABLE_GUARDDUTY_PUBLISHING_DEST_RESOURCE_TYPE,
-      {
-        codeDirectory: path.join(__dirname, 'create-publishing-destination/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-        policyStatements: [
-          {
-            Sid: 'GuardDutyCreatePublishingDestinationCommandTaskGuardDutyActions',
-            Effect: 'Allow',
-            Action: [
-              'guardDuty:CreateDetector',
-              'guardDuty:CreatePublishingDestination',
-              'guardDuty:DeletePublishingDestination',
-              'guardDuty:ListDetectors',
-              'guardDuty:ListPublishingDestinations',
-              'iam:CreateServiceLinkedRole',
-            ],
-            Resource: '*',
-          },
-        ],
-      },
-    );
-
-    // Update the bucket policy to allow the custom resource to write
-    const customLambdaBucketGrant = bucket
-      .getS3Bucket()
-      .grantReadWrite(new iam.ArnPrincipal(guardDutyCreatePublishingDestinationCommandFunction.roleArn));
-
-    // Update the bucket policy to allow the custom resource to write
-    const guardDutyBucketGrant = bucket
-      .getS3Bucket()
-      .grantReadWrite(new iam.ServicePrincipal('guardduty.amazonaws.com'));
-
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: ENABLE_GUARDDUTY_PUBLISHING_DEST_RESOURCE_TYPE,
-      serviceToken: guardDutyCreatePublishingDestinationCommandFunction.serviceToken,
+      resourceType: RESOURCE_TYPE,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
         region: props.region,
         exportDestinationType: props.exportDestinationType,
-        bucketArn: bucket.getS3Bucket().bucketArn,
-        kmsKeyArn: bucket.getS3Bucket().encryptionKey!.keyArn,
+        bucketArn: props.bucketArn,
+        kmsKeyArn: props.kmsKeyArn,
       },
     });
-
-    // Ensure bucket policy is deleted AFTER the custom resource
-    resource.node.addDependency(customLambdaBucketGrant);
-    resource.node.addDependency(guardDutyBucketGrant);
-
-    // We also tag the bucket to record the fact that it has access for macie principal.
-    cdk.Tags.of(bucket).add('aws-cdk:auto-macie-access-bucket', 'true');
 
     this.id = resource.ref;
   }

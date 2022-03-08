@@ -12,11 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-
-import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 
 const path = require('path');
 
@@ -25,7 +21,9 @@ const path = require('path');
  */
 export interface MacieExportConfigClassificationProps {
   readonly region: string;
-  readonly S3keyPrefix: string;
+  readonly bucketName: string;
+  readonly keyPrefix: string;
+  readonly kmsKeyArn: string;
 }
 
 /**
@@ -37,76 +35,36 @@ export class MacieExportConfigClassification extends Construct {
   constructor(scope: Construct, id: string, props: MacieExportConfigClassificationProps) {
     super(scope, id);
 
-    const MACIE_RESOURCE_TYPE = 'Custom::MaciePutClassificationExportConfiguration';
+    const RESOURCE_TYPE = 'Custom::MaciePutClassificationExportConfiguration';
 
-    // Create MacieSession export config bucket
-    const bucket = new Bucket(this, 'AwsMacieExportConfigBucket', {
-      encryptionType: BucketEncryptionType.SSE_KMS,
-      s3BucketName: `aws-accelerator-security-macie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-      kmsAliasName: 'alias/accelerator/security/macie/s3',
-      kmsDescription: 'AWS Accelerator MacieSession Export Config Bucket CMK',
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
+      codeDirectory: path.join(__dirname, 'put-export-config-classification/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      policyStatements: [
+        {
+          Sid: 'MaciePutClassificationExportConfigurationTaskMacieActions',
+          Effect: 'Allow',
+          Action: [
+            'macie2:EnableMacie',
+            'macie2:GetClassificationExportConfiguration',
+            'macie2:GetMacieSession',
+            'macie2:PutClassificationExportConfiguration',
+          ],
+          Resource: '*',
+        },
+      ],
     });
-
-    // cfn_nag: Suppress warning related to the accelerator security macie export config S3 bucket
-    const cfnBucket = bucket.node.defaultChild?.node.defaultChild as s3.CfnBucket;
-    cfnBucket.cfnOptions.metadata = {
-      cfn_nag: {
-        rules_to_suppress: [
-          {
-            id: 'W35',
-            reason: 'S3 Bucket access logging is not enabled for the accelerator security macie export config bucket.',
-          },
-        ],
-      },
-    };
-
-    const maciePutClassificationExportConfigurationFunction = cdk.CustomResourceProvider.getOrCreateProvider(
-      this,
-      MACIE_RESOURCE_TYPE,
-      {
-        codeDirectory: path.join(__dirname, 'put-export-config-classification/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-        policyStatements: [
-          {
-            Sid: 'MaciePutClassificationExportConfigurationTaskMacieActions',
-            Effect: 'Allow',
-            Action: [
-              'macie2:EnableMacie',
-              'macie2:GetClassificationExportConfiguration',
-              'macie2:GetMacieSession',
-              'macie2:PutClassificationExportConfiguration',
-            ],
-            Resource: '*',
-          },
-        ],
-      },
-    );
-
-    // Update the bucket policy to allow the custom resource to write
-    const customLambdaBucketGrant = bucket
-      .getS3Bucket()
-      .grantReadWrite(new iam.ArnPrincipal(maciePutClassificationExportConfigurationFunction.roleArn));
-
-    // Update the bucket policy to allow the custom resource to write
-    const macieBucketGrant = bucket.getS3Bucket().grantReadWrite(new iam.ServicePrincipal('macie.amazonaws.com'));
 
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: MACIE_RESOURCE_TYPE,
-      serviceToken: maciePutClassificationExportConfigurationFunction.serviceToken,
+      resourceType: RESOURCE_TYPE,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
         region: props.region,
-        bucketName: bucket.getS3Bucket().bucketName,
-        keyPrefix: props.S3keyPrefix,
-        kmsKeyArn: bucket.getS3Bucket().encryptionKey!.keyArn,
+        bucketName: props.bucketName,
+        keyPrefix: props.keyPrefix,
+        kmsKeyArn: props.kmsKeyArn,
       },
     });
-
-    // Ensure bucket policy is deleted AFTER the custom resource
-    resource.node.addDependency(customLambdaBucketGrant);
-    resource.node.addDependency(macieBucketGrant);
-
-    // We also tag the bucket to record the fact that it has access for macie principal.
-    cdk.Tags.of(bucket).add('aws-cdk:auto-macie-access-bucket', 'true');
 
     this.id = resource.ref;
   }

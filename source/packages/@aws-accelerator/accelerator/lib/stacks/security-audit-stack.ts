@@ -19,6 +19,8 @@ import {
   MacieMembers,
   SecurityHubMembers,
   Organization,
+  Bucket,
+  BucketEncryptionType,
 } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
@@ -31,25 +33,122 @@ export class SecurityAuditStack extends AcceleratorStack {
     super(scope, id, props);
 
     const organization = new Organization(this, 'Organization');
-
     //
     // Macie configuration
     //
     Logger.debug(
       `[security-audit-stack] centralSecurityServices.macie.enable: ${props.securityConfig.centralSecurityServices.macie.enable}`,
     );
-    if (
-      props.securityConfig.centralSecurityServices.macie.enable &&
-      props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
-        cdk.Stack.of(this).region as Region,
-      ) === -1
-    ) {
-      Logger.info('[security-audit-stack] Adding Macie');
 
-      new MacieMembers(this, 'MacieMembers', {
-        region: cdk.Stack.of(this).region,
-        adminAccountId: cdk.Stack.of(this).account,
+    if (props.securityConfig.centralSecurityServices.macie.enable) {
+      Logger.info(
+        `[security-audit-stack] Creating macie export config bucket - aws-accelerator-securitymacie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+      );
+      const bucket = new Bucket(this, 'AwsMacieExportConfigBucket', {
+        encryptionType: BucketEncryptionType.SSE_KMS,
+        s3BucketName: `aws-accelerator-org-macie-disc-repo-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        kmsAliasName: 'alias/accelerator/organization/macie/discovery-repository/s3',
+        kmsDescription: 'AWS Accelerator Macie Repository for sensitive data discovery results Bucket CMK',
       });
+
+      const bucketNameSsmParameter = new cdk.aws_ssm.StringParameter(
+        this,
+        'SsmParamOrganizationMacieExportConfigBucketName',
+        {
+          parameterName: '/accelerator/organization/security/macie/discovery-repository/bucket-name',
+          stringValue: bucket.getS3Bucket().bucketName,
+        },
+      );
+
+      const bucketKmsKeyArnSsmParameter = new cdk.aws_ssm.StringParameter(
+        this,
+        'SsmParamOrganizationMacieExportConfigBucketKmsKeyArn',
+        {
+          parameterName: '/accelerator/organization/security/macie/discovery-repository/bucket-kms-key-arn',
+          stringValue: bucket.getS3Bucket().encryptionKey!.keyArn,
+        },
+      );
+
+      // SSM parameter access IAM Role for
+      new cdk.aws_iam.Role(this, 'CrossAccountMacieSsmParamAccessRole', {
+        roleName: `AWSAccelerator-CrossAccountMacieSsmParamAccessRole-${cdk.Stack.of(this).region}`,
+        assumedBy: new cdk.aws_iam.OrganizationPrincipal(organization.id),
+        inlinePolicies: {
+          default: new cdk.aws_iam.PolicyDocument({
+            statements: [
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                resources: [bucketNameSsmParameter.parameterArn, bucketKmsKeyArnSsmParameter.parameterArn],
+              }),
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ssm:DescribeParameters'],
+                resources: ['*'],
+              }),
+            ],
+          }),
+        },
+      });
+
+      // cfn_nag: Suppress warning related to the accelerator security macie export config S3 bucket
+      const cfnBucket = bucket.node.defaultChild?.node.defaultChild as cdk.aws_s3.CfnBucket;
+      cfnBucket.cfnOptions.metadata = {
+        cfn_nag: {
+          rules_to_suppress: [
+            {
+              id: 'W35',
+              reason:
+                'S3 Bucket access logging is not enabled for the accelerator security macie export config bucket.',
+            },
+          ],
+        },
+      };
+
+      // Grant macie access to the bucket
+      bucket.getS3Bucket().grantReadWrite(new cdk.aws_iam.ServicePrincipal('macie.amazonaws.com'));
+
+      // Grant organization principals to use the bucket
+      bucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow Organization principals to use of the bucket',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['s3:GetBucketLocation', 's3:PutObject'],
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          resources: [bucket.getS3Bucket().bucketArn, `${bucket.getS3Bucket().bucketArn}/*`],
+          conditions: {
+            StringEquals: {
+              'aws:PrincipalOrgID': organization.id,
+            },
+          },
+        }),
+      );
+
+      bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow macie to use of the key',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          principals: [new cdk.aws_iam.ServicePrincipal('macie.amazonaws.com')],
+          actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
+          resources: ['*'],
+        }),
+      );
+
+      // We also tag the bucket to record the fact that it has access for macie principal.
+      cdk.Tags.of(bucket).add('aws-cdk:auto-macie-access-bucket', 'true');
+
+      if (
+        props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
+          cdk.Stack.of(this).region as Region,
+        ) === -1
+      ) {
+        Logger.info('[security-audit-stack] Adding Macie');
+
+        new MacieMembers(this, 'MacieMembers', {
+          region: cdk.Stack.of(this).region,
+          adminAccountId: cdk.Stack.of(this).account,
+        });
+      }
     }
 
     //
@@ -58,29 +157,124 @@ export class SecurityAuditStack extends AcceleratorStack {
     Logger.debug(
       `[security-audit-stack] centralSecurityServices.guardduty.enable: ${props.securityConfig.centralSecurityServices.guardduty.enable}`,
     );
-    if (
-      props.securityConfig.centralSecurityServices.guardduty.enable &&
-      props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
-        cdk.Stack.of(this).region as Region,
-      ) === -1
-    ) {
-      Logger.info('[security-audit-stack] Adding GuardDuty ');
 
-      const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
-        region: cdk.Stack.of(this).region,
-        enableS3Protection: props.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
+    if (props.securityConfig.centralSecurityServices.guardduty.enable) {
+      const bucket = new Bucket(this, 'GuardDutyPublishingDestinationBucket', {
+        encryptionType: BucketEncryptionType.SSE_KMS,
+        s3BucketName: `aws-accelerator-org-gduty-pub-dest-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        kmsAliasName: 'alias/accelerator/organization/guardduty/publishing-destination/s3',
+        kmsDescription: 'AWS Accelerator GuardDuty Publishing Destination Bucket CMK',
       });
 
-      new GuardDutyDetectorConfig(this, 'GuardDutyDetectorConfig', {
-        region: cdk.Stack.of(this).region,
-        isExportConfigEnable:
-          props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.enable &&
-          !props.securityConfig.centralSecurityServices.guardduty.s3Protection.excludeRegions!.includes(
-            cdk.Stack.of(this).region as Region,
-          ),
-        exportDestination: GuardDutyExportConfigDestinationTypes.S3,
-        exportFrequency: props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.exportFrequency,
-      }).node.addDependency(guardDutyMembers);
+      const bucketArnSsmParameter = new cdk.aws_ssm.StringParameter(
+        this,
+        'SsmParamOrganizationGuardDutyPublishingDestinationBucketArn',
+        {
+          parameterName: '/accelerator/organization/security/guardduty/publishing-destination/bucket-arn',
+          stringValue: bucket.getS3Bucket().bucketArn,
+        },
+      );
+
+      const bucketKmsKeyArnSsmParameter = new cdk.aws_ssm.StringParameter(
+        this,
+        'SsmParamOrganizationGuardDutyPublishingDestinationBucketKmsKeyArn',
+        {
+          parameterName: '/accelerator/organization/security/guardduty/publishing-destination/bucket-kms-key-arn',
+          stringValue: bucket.getS3Bucket().encryptionKey!.keyArn,
+        },
+      );
+
+      // SSM parameter access IAM Role for
+      new cdk.aws_iam.Role(this, 'CrossAccountGuardDutySsmParamAccessRole', {
+        roleName: `AWSAccelerator-CrossAccountGuardDutySsmParamAccessRole-${cdk.Stack.of(this).region}`,
+        assumedBy: new cdk.aws_iam.OrganizationPrincipal(organization.id),
+        inlinePolicies: {
+          default: new cdk.aws_iam.PolicyDocument({
+            statements: [
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                resources: [bucketKmsKeyArnSsmParameter.parameterArn, bucketArnSsmParameter.parameterArn],
+              }),
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ssm:DescribeParameters'],
+                resources: ['*'],
+              }),
+            ],
+          }),
+        },
+      });
+
+      // cfn_nag: Suppress warning related to the accelerator security guardduty publish destination bucket
+      const cfnBucket = bucket.node.defaultChild?.node.defaultChild as cdk.aws_s3.CfnBucket;
+      cfnBucket.cfnOptions.metadata = {
+        cfn_nag: {
+          rules_to_suppress: [
+            {
+              id: 'W35',
+              reason:
+                'S3 Bucket access logging is not enabled for the accelerator security guardduty publish destination bucket.',
+            },
+          ],
+        },
+      };
+
+      // Grant guardduty access to the bucket
+      bucket.getS3Bucket().grantReadWrite(new cdk.aws_iam.ServicePrincipal('guardduty.amazonaws.com'));
+
+      // Grant organization principals to use the bucket
+      bucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow Organization principals to use of the bucket',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['s3:GetBucketLocation', 's3:PutObject'],
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          resources: [bucket.getS3Bucket().bucketArn, `${bucket.getS3Bucket().bucketArn}/*`],
+          conditions: {
+            StringEquals: {
+              'aws:PrincipalOrgID': organization.id,
+            },
+          },
+        }),
+      );
+
+      bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow guardduty to use of the key',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          principals: [new cdk.aws_iam.ServicePrincipal('guardduty.amazonaws.com')],
+          actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
+          resources: ['*'],
+        }),
+      );
+
+      // We also tag the bucket to record the fact that it has access for guardduty principal.
+      cdk.Tags.of(bucket).add('aws-cdk:auto-guardduty-access-bucket', 'true');
+
+      if (
+        props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
+          cdk.Stack.of(this).region as Region,
+        ) === -1
+      ) {
+        Logger.info('[security-audit-stack] Adding GuardDuty ');
+
+        const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
+          region: cdk.Stack.of(this).region,
+          enableS3Protection: props.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
+        });
+
+        new GuardDutyDetectorConfig(this, 'GuardDutyDetectorConfig', {
+          region: cdk.Stack.of(this).region,
+          isExportConfigEnable:
+            props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.enable &&
+            !props.securityConfig.centralSecurityServices.guardduty.s3Protection.excludeRegions!.includes(
+              cdk.Stack.of(this).region as Region,
+            ),
+          exportDestination: GuardDutyExportConfigDestinationTypes.S3,
+          exportFrequency: props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.exportFrequency,
+        }).node.addDependency(guardDutyMembers);
+      }
     }
 
     //
