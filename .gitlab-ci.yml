@@ -29,19 +29,6 @@ accelerator-build:
     paths:
       - source/
 
-accelerator-unit-test:
-  stage: test
-  script:
-    - 'export NODE_OPTIONS=--max_old_space_size=4096'
-    - 'cd source'
-    - 'yarn test'
-  artifacts:
-    when: always
-    reports:
-      junit:
-        - source/test-reports/*.xml
-    expire_in: 1 day
-
 accelerator-documentation:
   stage: metadata
   script:

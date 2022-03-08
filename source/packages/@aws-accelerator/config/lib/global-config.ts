@@ -67,8 +67,45 @@ export abstract class GlobalConfigTypes {
     reportVersioning: t.enums('VersioningType', ['CREATE_NEW_REPORT', 'OVERWRITE_REPORT']),
   });
 
+  static readonly notificationConfig = t.interface({
+    notificationType: t.enums('NotificationType', ['ACTUAL', 'FORECASTED']),
+    thresholdType: t.enums('ThresholdType', ['PERCENTAGE', 'ABSOLUTE_VALUE']),
+    comparisonOperator: t.enums('ComparisonType', ['GREATER_THAN', 'LESS_THAN', 'EQUAL_TO']),
+    threshold: t.optional(t.number),
+  });
+
+  static readonly budgetsConfig = t.interface({
+    amount: t.number,
+    budgetName: t.nonEmptyString,
+    budgetType: t.enums('NotificationType', [
+      'USAGE',
+      'COST',
+      'RI_UTILIZATION',
+      'RI_COVERAGE',
+      'SAVINGS_PLANS_UTILIZATION',
+      'SAVINGS_PLANS_COVERAGE',
+    ]),
+    timeUnit: t.enums('TimeUnitType', ['DAILY', 'MONTHLY', 'QUARTERLY', 'ANNUALLY']),
+    address: t.optional(t.nonEmptyString),
+    includeUpfront: t.optional(t.boolean),
+    includeTax: t.optional(t.boolean),
+    includeSupport: t.optional(t.boolean),
+    includeSubscription: t.optional(t.boolean),
+    includeRecurring: t.optional(t.boolean),
+    includeOtherSubscription: t.optional(t.boolean),
+    includeCredit: t.optional(t.boolean),
+    includeDiscount: t.optional(t.boolean),
+    includeRefund: t.optional(t.boolean),
+    useAmortized: t.optional(t.boolean),
+    useBlended: t.optional(t.boolean),
+    notification: t.optional(this.notificationConfig),
+    subscriptionType: t.enums('SubscriptionType', ['EMAIL', 'SNS']),
+    unit: t.optional(t.nonEmptyString),
+  });
+
   static readonly reportConfig = t.interface({
     costAndUsageReport: this.costAndUsageReportConfig,
+    budgets: this.budgetsConfig,
   });
 
   static readonly globalConfig = t.interface({
@@ -127,8 +164,39 @@ export class CostAndUsageReportConfig implements t.TypeOf<typeof GlobalConfigTyp
   readonly reportVersioning = '';
 }
 
+export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.budgetsConfig> {
+  readonly address = '';
+  readonly amount = 2000;
+  readonly budgetName = '';
+  readonly comparisonOperator = '';
+  readonly timeUnit = '';
+  readonly budgetType = '';
+  readonly includeUpfront = true;
+  readonly includeTax = true;
+  readonly includeSupport = true;
+  readonly includeOtherSubscription = true;
+  readonly includeSubscription = true;
+  readonly includeRecurring = true;
+  readonly includeDiscount = true;
+  readonly includeRefund = false;
+  readonly includeCredit = false;
+  readonly useAmortized = false;
+  readonly useBlended = false;
+  readonly subscriptionType = '';
+  readonly thresholdType = '';
+  readonly unit = '';
+  readonly notification = {
+    notificationType: '',
+    thresholdType: '',
+    subscriptionType: '',
+    comparisonOperator: '',
+    threshold: 90,
+  };
+}
+
 export class ReportConfig implements t.TypeOf<typeof GlobalConfigTypes.reportConfig> {
   readonly costAndUsageReport = new CostAndUsageReportConfig();
+  readonly budgets = new BudgetReportConfig();
 }
 
 export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalConfig> {
