@@ -29,3 +29,28 @@ reports:
     timeUnit: DAILY
     refreshClosedReports: true
     reportVersioning: CREATE_NEW_REPORT
+  budgets:
+      budgetName: accel-budget
+      timeUnit: MONTHLY
+      budgetType: COST
+      amount: 2000
+      includeUpfront: true
+      includeTax: true
+      includeSupport: true
+      includeSubscription: true
+      includeRecurring: true
+      includeOtherSubscription: true
+      includeDiscount: true
+      includeCredit: false
+      includeRefund: false
+      useBlended: false
+      useAmortized: false
+      subscriptionType: EMAIL
+      address: myemail+pa-budg@example.com
+      unit: number
+    notification:
+      notificationType: ACTUAL
+      threshholdType: PERCENTAGE
+      threshold: 90
+      comparisonOperator: GREATER_THAN
+      
