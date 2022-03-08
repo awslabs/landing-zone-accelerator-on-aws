@@ -38,7 +38,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      console.log('Started update');
       if (!(await isMacieEnable(macie2Client))) {
         console.log('start enable of macie');
         await throttlingBackOff(() => macie2Client.enableMacie({ status: 'ENABLED' }).promise());
@@ -72,12 +71,19 @@ async function isMacieEnable(macie2Client: AWS.Macie2): Promise<boolean> {
   try {
     const response = await throttlingBackOff(() => macie2Client.getMacieSession({}).promise());
     return response.status === 'ENABLED';
-  } catch (e) {
-    if (`${e}`.includes('Macie is not enabled')) {
-      console.warn('Macie is not enabled');
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    e: any
+  ) {
+    if (
+      // SDKv2 Error Structure
+      e.code === 'ResourceConflictException' ||
+      // SDKv3 Error Structure
+      e.name === 'ResourceConflictException'
+    ) {
+      console.warn(e.name + ': ' + e.message);
       return false;
-    } else {
-      throw e;
     }
+    throw new Error(`Macie enable issue error message - ${e}`);
   }
 }
