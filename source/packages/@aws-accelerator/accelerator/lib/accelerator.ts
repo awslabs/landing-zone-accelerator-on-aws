@@ -215,6 +215,7 @@ export abstract class Accelerator {
     if (props.stage === AcceleratorStage.ORGANIZATIONS) {
       for (const region of globalConfig.enabledRegions) {
         Logger.info(`[accelerator] Executing ${props.stage} for Management account in ${region} region.`);
+        await delay(1000);
         promises.push(
           AcceleratorToolkit.execute({
             command: props.command,
@@ -236,6 +237,7 @@ export abstract class Accelerator {
     if (props.stage === AcceleratorStage.SECURITY_AUDIT) {
       for (const region of globalConfig.enabledRegions) {
         Logger.info(`[accelerator] Executing ${props.stage} for audit account in ${region} region.`);
+        await delay(1000);
         promises.push(
           AcceleratorToolkit.execute({
             command: props.command,
@@ -265,6 +267,7 @@ export abstract class Accelerator {
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
           Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
+          await delay(1000);
           promises.push(
             AcceleratorToolkit.execute({
               command: props.command,
@@ -342,4 +345,8 @@ export abstract class Accelerator {
       return undefined;
     }
   }
+}
+
+function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
