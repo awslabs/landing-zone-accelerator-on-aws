@@ -71,7 +71,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
       // SSM parameter access IAM Role for
       new cdk.aws_iam.Role(this, 'CrossAccountMacieSsmParamAccessRole', {
-        roleName: `AWSAccelerator-CrossAccountMacieSsmParamAccessRole-${cdk.Stack.of(this).region}`,
+        roleName: `AWSAccelerator-MacieSsmParam-${cdk.Stack.of(this).region}`,
         assumedBy: new cdk.aws_iam.OrganizationPrincipal(organization.id),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
@@ -186,7 +186,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
       // SSM parameter access IAM Role for
       new cdk.aws_iam.Role(this, 'CrossAccountGuardDutySsmParamAccessRole', {
-        roleName: `AWSAccelerator-CrossAccountGuardDutySsmParamAccessRole-${cdk.Stack.of(this).region}`,
+        roleName: `AWSAccelerator-GuardDutySsmParam-${cdk.Stack.of(this).region}`,
         assumedBy: new cdk.aws_iam.OrganizationPrincipal(organization.id),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({

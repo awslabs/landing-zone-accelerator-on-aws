@@ -53,7 +53,7 @@ export class SecurityStack extends AcceleratorStack {
           parameter: {
             name: '/accelerator/organization/security/macie/discovery-repository/bucket-name',
             accountId: auditAccountId,
-            roleName: `AWSAccelerator-CrossAccountMacieSsmParamAccessRole-${cdk.Stack.of(this).region}`,
+            roleName: `AWSAccelerator-MacieSsmParam-${cdk.Stack.of(this).region}`,
           },
           invokingAccountID: cdk.Stack.of(this).account,
         }).value;
@@ -64,7 +64,7 @@ export class SecurityStack extends AcceleratorStack {
           parameter: {
             name: '/accelerator/organization/security/macie/discovery-repository/bucket-kms-key-arn',
             accountId: auditAccountId,
-            roleName: `AWSAccelerator-CrossAccountMacieSsmParamAccessRole-${cdk.Stack.of(this).region}`,
+            roleName: `AWSAccelerator-MacieSsmParam-${cdk.Stack.of(this).region}`,
           },
           invokingAccountID: cdk.Stack.of(this).account,
         }).value;
@@ -95,7 +95,7 @@ export class SecurityStack extends AcceleratorStack {
           parameter: {
             name: '/accelerator/organization/security/guardduty/publishing-destination/bucket-arn',
             accountId: auditAccountId,
-            roleName: `AWSAccelerator-CrossAccountGuardDutySsmParamAccessRole-${cdk.Stack.of(this).region}`,
+            roleName: `AWSAccelerator-GuardDutySsmParam-${cdk.Stack.of(this).region}`,
           },
           invokingAccountID: cdk.Stack.of(this).account,
         }).value;
@@ -106,7 +106,7 @@ export class SecurityStack extends AcceleratorStack {
           parameter: {
             name: '/accelerator/organization/security/guardduty/publishing-destination/bucket-kms-key-arn',
             accountId: auditAccountId,
-            roleName: `AWSAccelerator-CrossAccountGuardDutySsmParamAccessRole-${cdk.Stack.of(this).region}`,
+            roleName: `AWSAccelerator-GuardDutySsmParam-${cdk.Stack.of(this).region}`,
           },
           invokingAccountID: cdk.Stack.of(this).account,
         }).value;
