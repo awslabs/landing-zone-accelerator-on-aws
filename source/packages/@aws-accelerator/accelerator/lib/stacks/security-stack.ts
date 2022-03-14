@@ -26,6 +26,7 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { Logger } from '../logger';
+import path from 'path';
 
 /**
  * Security Stack, configures local account security services
@@ -234,6 +235,88 @@ export class SecurityStack extends AcceleratorStack {
         if (configRecorder) {
           configRule.node.addDependency(configRecorder);
         }
+      }
+    }
+
+    //
+    // Custom Config Rules
+    //
+    Logger.info('[security-stack] Evaluating Custom AWS Config rule sets');
+    for (const ruleSet of props.securityConfig.awsConfig.customRuleSets ?? []) {
+      if (!this.isIncluded(ruleSet.deploymentTargets)) {
+        Logger.info('[security-stack] Item excluded');
+        continue;
+      }
+
+      Logger.info(
+        `[security-stack] Account (${
+          cdk.Stack.of(this).account
+        }) should be included, deploying Custom AWS Custom Config Rules`,
+      );
+
+      for (const rule of ruleSet.rules) {
+        Logger.info(`[security-stack] Creating custom config rule ${rule.name}`);
+        let ruleScope: config.RuleScope | undefined;
+
+        if (rule.triggeringResources.lookupType == 'ResourceTypes') {
+          for (const item of rule.triggeringResources.lookupValue) {
+            ruleScope = config.RuleScope.fromResources([config.ResourceType.of(item)]);
+          }
+        }
+
+        if (rule.triggeringResources.lookupType == 'ResourceId') {
+          ruleScope = config.RuleScope.fromResource(
+            config.ResourceType.of(rule.triggeringResources.lookupKey),
+            rule.triggeringResources.lookupValue[0],
+          );
+        }
+
+        if (rule.triggeringResources.lookupType == 'Tag') {
+          ruleScope = config.RuleScope.fromTag(
+            rule.triggeringResources.lookupKey,
+            rule.triggeringResources.lookupValue[0],
+          );
+        }
+
+        /**
+         * Lambda function for config custom role
+         * Single lambda function can not be used for multiple config custom role, there is a pending issue with CDK team on this
+         * https://github.com/aws/aws-cdk/issues/17582
+         */
+        const roleName = pascalCase(rule.name).split('_').join('-');
+        const lambdaFunction = new cdk.aws_lambda.Function(this, pascalCase(rule.name) + '-Function', {
+          runtime: new cdk.aws_lambda.Runtime(rule.lambda.runtime),
+          handler: rule.lambda.handler,
+          code: cdk.aws_lambda.Code.fromAsset(path.join(props.configDirPath, rule.lambda.sourceFilePath)),
+          description: `AWS Config custom rule function used for "${rule.name}" rule`,
+        });
+
+        // Read in the policy document which should be properly formatted json
+        const policyDocument = require(path.join(props.configDirPath, rule.lambda.rolePolicyFile));
+
+        // Create a statements list using the PolicyStatement factory
+        const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
+        for (const statement of policyDocument.Statement) {
+          policyStatements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+        }
+
+        policyStatements.forEach(policyStatement => {
+          lambdaFunction?.addToRolePolicy(policyStatement);
+        });
+
+        new config.CustomRule(this, roleName + '-CustomRule', {
+          configRuleName: roleName,
+          lambdaFunction: lambdaFunction,
+          periodic: rule.periodic,
+          inputParameters: rule.lambda.inputParameters,
+          description: `${rule.description}`,
+          maximumExecutionFrequency:
+            rule.maximumExecutionFrequency === undefined
+              ? cdk.aws_config.MaximumExecutionFrequency.SIX_HOURS
+              : (rule.maximumExecutionFrequency as cdk.aws_config.MaximumExecutionFrequency),
+          ruleScope: ruleScope,
+          configurationChanges: rule.configurationChanges,
+        });
       }
     }
 
