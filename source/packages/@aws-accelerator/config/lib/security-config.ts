@@ -73,6 +73,37 @@ export class SecurityConfigTypes {
     maxPasswordAge: t.number,
   });
 
+  static readonly customRoleLambdaType = t.interface({
+    sourceFilePath: t.nonEmptyString,
+    handler: t.nonEmptyString,
+    runtime: t.nonEmptyString,
+    rolePolicyFile: t.nonEmptyString,
+    inputParameters: t.optional(t.dictionary(t.nonEmptyString, t.nonEmptyString)),
+  });
+
+  static readonly triggeringResourceType = t.interface({
+    lookupType: t.enums('ResourceLookupType', ['ResourceId', 'Tag', 'ResourceTypes']),
+    lookupKey: t.nonEmptyString,
+    lookupValue: t.array(t.nonEmptyString),
+  });
+
+  static readonly customConfigRule = t.interface({
+    name: t.nonEmptyString,
+    description: t.optional(t.nonEmptyString),
+    lambda: this.customRoleLambdaType,
+    periodic: t.optional(t.boolean),
+    maximumExecutionFrequency: t.optional(
+      t.enums('ExecutionFrequency', ['One_Hour', 'Three_Hours', 'Six_Hours', 'Twelve_Hours', 'TwentyFour_Hours']),
+    ),
+    configurationChanges: t.optional(t.boolean),
+    triggeringResources: this.triggeringResourceType,
+  });
+
+  static readonly customConfigRuleSet = t.interface({
+    deploymentTargets: t.deploymentTargets,
+    rules: t.array(this.customConfigRule),
+  });
+
   static readonly configRule = t.interface({
     name: t.nonEmptyString,
     identifier: t.nonEmptyString,
@@ -89,6 +120,7 @@ export class SecurityConfigTypes {
     enableConfigurationRecorder: t.boolean,
     enableDeliveryChannel: t.boolean,
     ruleSets: t.array(this.awsConfigRuleSet),
+    customRuleSets: t.optional(t.array(this.customConfigRuleSet)),
   });
 
   static readonly metricConfig = t.interface({
@@ -221,10 +253,26 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
   readonly rules: ConfigRule[] = [];
 }
 
+export class CustomConfigRule implements t.TypeOf<typeof SecurityConfigTypes.customConfigRule> {
+  readonly name = '';
+  readonly description = '';
+  readonly lambda = { sourceFilePath: '', handler: '', runtime: '', rolePolicyFile: '', inputParameters: {} };
+  readonly periodic = true;
+  readonly maximumExecutionFrequency = 'Six_Hours';
+  readonly configurationChanges = true;
+  readonly triggeringResources = { lookupType: '', lookupKey: '', lookupValue: [] };
+}
+
+export class CustomConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.customConfigRuleSet> {
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+  readonly rules: CustomConfigRule[] = [];
+}
+
 export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig> {
   readonly enableConfigurationRecorder = true;
   readonly enableDeliveryChannel = true;
   readonly ruleSets: AwsConfigRuleSet[] = [];
+  readonly customRuleSets: CustomConfigRuleSet[] = [];
 }
 
 export class MetricConfig implements t.TypeOf<typeof SecurityConfigTypes.metricConfig> {
