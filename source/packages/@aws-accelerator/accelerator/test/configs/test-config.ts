@@ -159,6 +159,16 @@ const networkConfigJson = {
       ],
     },
   ],
+  prefixLists: [
+    {
+      name: 'Test',
+      accounts: ['Management'],
+      regions: ['us-east-1'],
+      addressFamily: 'IPv4',
+      maxEntries: 10,
+      entries: ['10.0.0.0/8', '100.96.252.0/23', '100.96.250.0/23'],
+    },
+  ],
   vpcs: [
     {
       name: 'Test',
@@ -280,7 +290,11 @@ const networkConfigJson = {
             {
               description: 'Management SSH Traffic Inbound',
               types: ['SSH'],
-              sources: ['10.0.0.0/8', '100.96.252.0/23', '100.96.250.0/23'],
+              sources: [
+                {
+                  prefixLists: ['Test'],
+                },
+              ],
             },
           ],
           outboundRules: [
