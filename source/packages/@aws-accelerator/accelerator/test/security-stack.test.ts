@@ -101,14 +101,14 @@ describe('SecurityStack', () => {
    * Number of Lambda Function resource test
    */
   test(`${testNamePrefix} Lambda Function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 12);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 13);
   });
 
   /**
    * Number of IAM Role resource test
    */
   test(`${testNamePrefix} IAM Role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 13);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 14);
   });
 
   /**

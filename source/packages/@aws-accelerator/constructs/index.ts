@@ -17,6 +17,7 @@ export * from './lib/aws-cur/report-definition';
 export * from './lib/aws-ec2/delete-default-vpc';
 export * from './lib/aws-ec2/dhcp-options';
 export * from './lib/aws-ec2/prefix-list';
+export * from './lib/aws-ec2/ebs-encryption';
 export * from './lib/aws-ec2/route-table';
 export * from './lib/aws-ec2/transit-gateway';
 export * from './lib/aws-ec2/transit-gateway-route-table';

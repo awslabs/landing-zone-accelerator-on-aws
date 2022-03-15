@@ -102,5 +102,13 @@ export class LoggingStack extends AcceleratorStack {
         organizationId: organization.id,
       });
     }
+
+    if (props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption) {
+      // create service linked role for autoscaling
+      // if ebs default encryption enabled and using a customer master key
+      new iam.CfnServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
+        awsServiceName: 'autoscaling.amazonaws.com',
+      });
+    }
   }
 }

@@ -13,6 +13,7 @@
 
 import { Region } from '@aws-accelerator/config';
 import {
+  EbsDefaultEncryption,
   GuardDutyPublishingDestination,
   MacieExportConfigClassification,
   PasswordPolicy,
@@ -26,6 +27,7 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { Logger } from '../logger';
+import { ArnPrincipal, Effect } from 'aws-cdk-lib/aws-iam';
 import path from 'path';
 
 /**
@@ -144,6 +146,58 @@ export class SecurityStack extends AcceleratorStack {
     }
 
     //
+    // Ebs Default Volume Encryption configuration
+    //
+    if (
+      props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
+      props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.excludeRegions!.indexOf(
+        cdk.Stack.of(this).region as Region,
+      ) === -1
+    ) {
+      const ebsEncryptionKey = new cdk.aws_kms.Key(this, 'EbsEncryptionKey', {
+        enableKeyRotation: true,
+        description: 'EBS Volume Encryption',
+      });
+      ebsEncryptionKey.addToResourcePolicy(
+        new iam.PolicyStatement({
+          sid: 'Allow service-linked role use',
+          effect: Effect.ALLOW,
+          actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:GenerateDataKey*', 'kms:ReEncrypt*'],
+          principals: [
+            new ArnPrincipal(
+              `arn:${cdk.Stack.of(this).partition}:iam::${
+                cdk.Stack.of(this).account
+              }:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling`,
+            ),
+          ],
+          resources: ['*'],
+        }),
+      );
+      ebsEncryptionKey.addToResourcePolicy(
+        new iam.PolicyStatement({
+          sid: 'Allow Autoscaling to create grant',
+          effect: Effect.ALLOW,
+          actions: ['kms:CreateGrant'],
+          principals: [
+            new ArnPrincipal(
+              `arn:${cdk.Stack.of(this).partition}:iam::${
+                cdk.Stack.of(this).account
+              }:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling`,
+            ),
+          ],
+          resources: ['*'],
+          conditions: { Bool: { 'kms:GrantIsForAWSResource': 'true' } },
+        }),
+      );
+      new EbsDefaultEncryption(this, 'EbsDefaultVolumeEncryption', {
+        kmsKey: ebsEncryptionKey,
+      });
+      new cdk.aws_ssm.StringParameter(this, 'EbsDefaultVolumeEncryptionParameter', {
+        parameterName: `/accelerator/security-stack/ebsDefaultVolumeEncryptionKeyArn`,
+        stringValue: ebsEncryptionKey.keyArn,
+      });
+    }
+
     // AWS Config - Set up recorder and delivery channel, only if Control Tower
     // is not being used. Else the Control Tower SCP will block these calls from
     // member accounts

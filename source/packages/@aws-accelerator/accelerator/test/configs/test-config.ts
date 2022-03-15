@@ -351,6 +351,10 @@ const securityConfigJson = {
   homeRegion: 'us-east-1',
   centralSecurityServices: {
     delegatedAdminAccount: 'Audit',
+    ebsDefaultVolumeEncryption: {
+      enable: true,
+      excludeRegions: [],
+    },
     snsSubscriptions: [
       {
         level: 'High',
