@@ -1,6 +1,9 @@
 homeRegion: &HOME_REGION us-east-1
 centralSecurityServices:
   delegatedAdminAccount: Audit
+  ebsDefaultVolumeEncryption:
+    enable: true
+    excludeRegions: []
   snsSubscriptions:
     - level: High
       email: <notify-high>@example.com <----- UPDATE EMAIL ADDRESS

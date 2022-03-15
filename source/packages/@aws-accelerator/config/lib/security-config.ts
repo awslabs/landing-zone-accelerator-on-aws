@@ -50,8 +50,14 @@ export class SecurityConfigTypes {
     standards: t.array(this.securityHubStandardConfig),
   });
 
+  static readonly ebsDefaultVolumeEncryptionConfig = t.interface({
+    enable: t.boolean,
+    excludeRegions: t.optional(t.array(t.region)),
+  });
+
   static readonly centralSecurityServicesConfig = t.interface({
     delegatedAdminAccount: t.nonEmptyString,
+    ebsDefaultVolumeEncryption: SecurityConfigTypes.ebsDefaultVolumeEncryptionConfig,
     macie: SecurityConfigTypes.macieConfig,
     guardduty: SecurityConfigTypes.guardDutyConfig,
     securityHub: SecurityConfigTypes.securityHubConfig,
@@ -215,10 +221,18 @@ export class SnsSubscriptionConfig implements t.TypeOf<typeof SecurityConfigType
   readonly email: string = '';
 }
 
+export class ebsDefaultVolumeEncryptionConfig
+  implements t.TypeOf<typeof SecurityConfigTypes.ebsDefaultVolumeEncryptionConfig>
+{
+  readonly enable = true;
+  readonly excludeRegions: t.Region[] = [];
+}
+
 export class CentralSecurityServicesConfig
   implements t.TypeOf<typeof SecurityConfigTypes.centralSecurityServicesConfig>
 {
   readonly delegatedAdminAccount = 'Audit';
+  readonly ebsDefaultVolumeEncryption: ebsDefaultVolumeEncryptionConfig = new ebsDefaultVolumeEncryptionConfig();
   readonly snsSubscriptions: SnsSubscriptionConfig[] = [];
   readonly macie: MacieConfig = new MacieConfig();
   readonly guardduty: GuardDutyConfig = new GuardDutyConfig();
