@@ -20,8 +20,8 @@
     "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
   },
   "devDependencies": {
-    "aws-cdk-lib": "2.13.0",
-    "aws-cdk": "2.13.0",
+    "aws-cdk-lib": "2.16.0",
+    "aws-cdk": "2.16.0",
     "constructs": "10.0.12",
     "@types/jest": "27.0.3",
     "@types/node": "16.11.12",
@@ -41,8 +41,8 @@
   "dependencies": {
     "@aws-cdk-extensions/cdk-extensions": "^0.0.0",
     "@aws-accelerator/accelerator": "^0.0.0",
-    "aws-cdk-lib": "2.13.0",
-    "aws-cdk": "2.13.0",
+    "aws-cdk-lib": "2.16.0",
+    "aws-cdk": "2.16.0",
     "cdk-nag": "2.5.2"
   }
 }
