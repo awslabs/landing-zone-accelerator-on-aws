@@ -96,7 +96,14 @@ describe('NetworkVpcStack', () => {
    * Number of SSM parameter resource test
    */
   test(`${testNamePrefix} SSM parameter custom resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::SSM::Parameter', 2);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::SSM::Parameter', 3);
+  });
+
+  /**
+   * Number of Prefix Lists resource test
+   */
+  test(`${testNamePrefix} Prefix List custom resource count test`, () => {
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::PrefixList', 1);
   });
 
   /**

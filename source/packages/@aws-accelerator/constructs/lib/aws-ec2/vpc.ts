@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { IPrefixList } from './prefix-list';
 
 import { IRouteTable } from './route-table';
 
@@ -178,7 +179,7 @@ export interface SecurityGroupIngressRuleProps {
   readonly description?: string;
   readonly cidrIp?: string;
   readonly cidrIpv6?: string;
-  readonly sourcePrefixListId?: string;
+  readonly sourcePrefixList?: IPrefixList;
   readonly sourceSecurityGroup?: ISecurityGroup;
   readonly fromPort?: number;
   readonly toPort?: number;
@@ -189,7 +190,7 @@ export interface SecurityGroupEgressRuleProps {
   readonly description?: string;
   readonly cidrIp?: string;
   readonly cidrIpv6?: string;
-  readonly destinationPrefixListId?: string;
+  readonly destinationPrefixList?: IPrefixList;
   readonly destinationSecurityGroup?: ISecurityGroup;
   readonly fromPort?: number;
   readonly toPort?: number;
@@ -223,7 +224,7 @@ export class SecurityGroup extends cdk.Resource implements ISecurityGroup {
       description: props.description,
       cidrIp: props.cidrIp,
       cidrIpv6: props.cidrIpv6,
-      sourcePrefixListId: props.sourcePrefixListId,
+      sourcePrefixListId: props.sourcePrefixList?.prefixListId,
       sourceSecurityGroupId: props.sourceSecurityGroup?.securityGroupId,
       fromPort: props.fromPort,
       toPort: props.toPort,
@@ -237,7 +238,7 @@ export class SecurityGroup extends cdk.Resource implements ISecurityGroup {
       description: props.description,
       cidrIp: props.cidrIp,
       cidrIpv6: props.cidrIpv6,
-      destinationPrefixListId: props.destinationPrefixListId,
+      destinationPrefixListId: props.destinationPrefixList?.prefixListId,
       destinationSecurityGroupId: props.destinationSecurityGroup?.securityGroupId,
       fromPort: props.fromPort,
       toPort: props.toPort,

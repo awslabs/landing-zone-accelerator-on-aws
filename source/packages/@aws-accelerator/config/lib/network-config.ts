@@ -88,6 +88,22 @@ export class NetworkConfigTypes {
     routeTablePropagations: t.optional(t.array(t.nonEmptyString)),
   });
 
+  static readonly ipAddressFamilyEnum = t.enums(
+    'IP Address Family',
+    ['IPv4', 'IPv6'],
+    'Value should be an ip address family type',
+  );
+
+  static readonly prefixListConfig = t.interface({
+    name: t.nonEmptyString,
+    accounts: t.array(t.nonEmptyString),
+    regions: t.array(t.region),
+    addressFamily: this.ipAddressFamilyEnum,
+    maxEntries: t.number,
+    entries: t.array(t.nonEmptyString),
+    tags: t.optional(t.array(t.tag)),
+  });
+
   static readonly gatewayEndpointEnum = t.enums(
     'GatewayEndpointType',
     ['s3', 'dynamodb'],
@@ -131,6 +147,10 @@ export class NetworkConfigTypes {
     securityGroups: t.array(t.nonEmptyString),
   });
 
+  static readonly prefixListSourceConfig = t.interface({
+    prefixLists: t.array(t.nonEmptyString),
+  });
+
   static readonly securityGroupRuleConfig = t.interface({
     description: t.nonEmptyString,
     types: t.optional(t.array(this.securityGroupRuleTypeEnum)),
@@ -139,7 +159,9 @@ export class NetworkConfigTypes {
     port: t.optional(t.number),
     fromPort: t.optional(t.number),
     toPort: t.optional(t.number),
-    sources: t.array(t.union([t.nonEmptyString, this.subnetSourceConfig, this.securityGroupSourceConfig])),
+    sources: t.array(
+      t.union([t.nonEmptyString, this.subnetSourceConfig, this.securityGroupSourceConfig, this.prefixListSourceConfig]),
+    ),
   });
 
   static readonly securityGroupConfig = t.interface({
@@ -218,6 +240,7 @@ export class NetworkConfigTypes {
     interfaceEndpoints: t.optional(this.interfaceEndpointConfig),
     useCentralEndpoints: t.optional(t.boolean),
     securityGroups: t.optional(t.array(this.securityGroupConfig)),
+    prefixLists: t.optional(t.array(this.prefixListConfig)),
     networkAcls: t.optional(t.array(this.networkAclConfig)),
   });
 
@@ -334,6 +357,20 @@ export class SecurityGroupSourceConfig implements t.TypeOf<typeof NetworkConfigT
   readonly securityGroups: string[] = [];
 }
 
+export class PrefixListSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.prefixListSourceConfig> {
+  readonly prefixLists: string[] = [];
+}
+
+export class PrefixListConfig implements t.TypeOf<typeof NetworkConfigTypes.prefixListConfig> {
+  readonly name = '';
+  readonly accounts: string[] = [''];
+  readonly regions: t.Region[] = ['us-east-1'];
+  readonly addressFamily = 'IPv4';
+  readonly maxEntries = 1;
+  readonly entries: string[] = [];
+  readonly tags: t.Tag[] | undefined = undefined;
+}
+
 export class SecurityGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.securityGroupRuleConfig> {
   readonly description = '';
   readonly types = [];
@@ -342,7 +379,7 @@ export class SecurityGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTyp
   readonly port = undefined;
   readonly fromPort = undefined;
   readonly toPort = undefined;
-  readonly sources: string[] | SecurityGroupSourceConfig[] | SubnetSourceConfig[] = [];
+  readonly sources: string[] | SecurityGroupSourceConfig[] | PrefixListSourceConfig[] | SubnetSourceConfig[] = [];
 }
 
 export class SecurityGroupConfig implements t.TypeOf<typeof NetworkConfigTypes.securityGroupConfig> {
@@ -489,6 +526,13 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
   readonly securityGroups: SecurityGroupConfig[] | undefined = undefined;
 
   /**
+   * A list of Prefix Lists to deploy for this VPC
+   *
+   * @default undefined
+   */
+  readonly prefixLists: PrefixListConfig[] | undefined = undefined;
+
+  /**
    * A list of Network Access Control Lists (ACLs) to deploy for this VPC
    *
    * @default undefined
@@ -568,6 +612,11 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
       Object.assign(this, values);
     }
   }
+
+  /**
+   * An optional list of prefix list set configurations.
+   */
+  readonly prefixLists: PrefixListConfig[] | undefined = undefined;
 
   /**
    *

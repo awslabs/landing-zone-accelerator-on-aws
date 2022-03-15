@@ -39,6 +39,16 @@ transitGateways:
 #     ntpServers:
 #       - 1.1.1.1
 #       - 2.2.2.2
+# prefixList:
+#   - name: accelerator-prefix-list
+#     accounts:
+#       - Network
+#     regions:
+#       - *HOME_REGION
+#     addressFamily: 'IPv4'
+#     maxEntries: 1
+#     entries:
+#       - 10.1.0.1/32
 vpcs:
   - name: Network-Endpoints
     account: Network
