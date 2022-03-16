@@ -23,6 +23,7 @@ import * as t from './common-types';
 export class NetworkConfigTypes {
   static readonly defaultVpcsConfig = t.interface({
     delete: t.boolean,
+    excludeAccounts: t.optional(t.array(t.string)),
   });
 
   static readonly transitGatewayRouteTableConfig = t.interface({
@@ -275,6 +276,7 @@ export class NetworkConfigTypes {
 
 export class DefaultVpcsConfig implements t.TypeOf<typeof NetworkConfigTypes.defaultVpcsConfig> {
   readonly delete = true;
+  readonly excludeAccounts = [];
 }
 
 export class TransitGatewayRouteTableConfig

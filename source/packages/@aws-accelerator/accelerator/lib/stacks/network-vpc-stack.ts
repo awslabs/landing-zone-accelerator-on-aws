@@ -81,7 +81,10 @@ export class NetworkVpcStack extends AcceleratorStack {
     //
     // Delete Default VPCs
     //
-    if (props.networkConfig.defaultVpc?.delete) {
+    if (
+      props.networkConfig.defaultVpc?.delete &&
+      !this.isAccountExcluded(props.networkConfig.defaultVpc.excludeAccounts)
+    ) {
       Logger.info('[network-vpc-stack] Add DeleteDefaultVpc');
       new DeleteDefaultVpc(this, 'DeleteDefaultVpc');
     }
