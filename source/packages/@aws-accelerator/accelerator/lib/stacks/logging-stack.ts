@@ -36,7 +36,10 @@ export class LoggingStack extends AcceleratorStack {
     // Block Public Access; S3 is global, only need to call in home region. This is done in the
     // logging-stack instead of the security-stack since initial buckets are created in this stack.
     //
-    if (cdk.Stack.of(this).region === props.globalConfig.homeRegion) {
+    if (
+      cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
+      !this.isAccountExcluded(props.securityConfig.centralSecurityServices.s3PublicAccessBlock.excludeAccounts)
+    ) {
       new S3PublicAccessBlock(this, 'S3PublicAccessBlock', {
         blockPublicAcls: true,
         blockPublicPolicy: true,

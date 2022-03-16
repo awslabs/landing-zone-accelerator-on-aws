@@ -9,6 +9,10 @@ export class SecurityConfigTypes {
     email: t.nonEmptyString,
   });
 
+  static readonly s3PublicAccessBlockConfig = t.interface({
+    excludeAccounts: t.optional(t.array(t.string)),
+  });
+
   static readonly macieConfig = t.interface({
     enable: t.boolean,
     excludeRegions: t.optional(t.array(t.region)),
@@ -58,6 +62,7 @@ export class SecurityConfigTypes {
   static readonly centralSecurityServicesConfig = t.interface({
     delegatedAdminAccount: t.nonEmptyString,
     ebsDefaultVolumeEncryption: SecurityConfigTypes.ebsDefaultVolumeEncryptionConfig,
+    s3PublicAccessBlock: SecurityConfigTypes.s3PublicAccessBlockConfig,
     macie: SecurityConfigTypes.macieConfig,
     guardduty: SecurityConfigTypes.guardDutyConfig,
     securityHub: SecurityConfigTypes.securityHubConfig,
@@ -178,6 +183,10 @@ export class SecurityConfigTypes {
   });
 }
 
+export class S3PublicAccessBlockConfig implements t.TypeOf<typeof SecurityConfigTypes.s3PublicAccessBlockConfig> {
+  readonly excludeAccounts: string[] = [];
+}
+
 export class MacieConfig implements t.TypeOf<typeof SecurityConfigTypes.macieConfig> {
   readonly enable = true;
   readonly excludeRegions: t.Region[] = [];
@@ -233,6 +242,7 @@ export class CentralSecurityServicesConfig
 {
   readonly delegatedAdminAccount = 'Audit';
   readonly ebsDefaultVolumeEncryption: ebsDefaultVolumeEncryptionConfig = new ebsDefaultVolumeEncryptionConfig();
+  readonly s3PublicAccessBlock: S3PublicAccessBlockConfig = new S3PublicAccessBlockConfig();
   readonly snsSubscriptions: SnsSubscriptionConfig[] = [];
   readonly macie: MacieConfig = new MacieConfig();
   readonly guardduty: GuardDutyConfig = new GuardDutyConfig();
