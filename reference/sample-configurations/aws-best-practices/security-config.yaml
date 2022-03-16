@@ -4,6 +4,8 @@ centralSecurityServices:
   ebsDefaultVolumeEncryption:
     enable: true
     excludeRegions: []
+  s3PublicAccessBlock:
+    excludeAccounts: []
   snsSubscriptions:
     - level: High
       email: <notify-high>@example.com <----- UPDATE EMAIL ADDRESS
