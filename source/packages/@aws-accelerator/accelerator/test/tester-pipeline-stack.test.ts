@@ -744,7 +744,7 @@ describe('TesterPipelineStack', () => {
               'Fn::Join': [
                 '',
                 [
-                  'aws-accelerator-tester-pipeline-',
+                  'aws-accelerator-tester-',
                   {
                     Ref: 'AWS::AccountId',
                   },
