@@ -87,7 +87,7 @@ export class TesterPipeline extends Construct {
 
     const bucket = new Bucket(this, 'SecureBucket', {
       encryptionType: BucketEncryptionType.SSE_KMS,
-      s3BucketName: `${props.qualifier ?? 'aws-accelerator'}-tester-pipeline-${cdk.Stack.of(this).account}-${
+      s3BucketName: `${props.qualifier ?? 'aws-accelerator'}-tester-${cdk.Stack.of(this).account}-${
         cdk.Stack.of(this).region
       }`,
       kmsAliasName: `alias/${props.qualifier ?? 'aws-accelerator'}/test-pipeline/s3`,
