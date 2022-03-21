@@ -232,6 +232,14 @@ Object {
       "Type": "AWS::EC2::VPCEndpoint",
     },
     "TestVpcInternetGateway01360C82": Object {
+      "Properties": Object {
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Test",
+          },
+        ],
+      },
       "Type": "AWS::EC2::InternetGateway",
     },
     "TestVpcInternetGatewayAttachment60E451D5": Object {

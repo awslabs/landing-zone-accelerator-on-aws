@@ -28,6 +28,7 @@ export class NetworkConfigTypes {
 
   static readonly transitGatewayRouteTableConfig = t.interface({
     name: t.nonEmptyString,
+    tags: t.optional(t.array(t.tag)),
   });
 
   static readonly transitGatewayConfig = t.interface({
@@ -42,6 +43,7 @@ export class NetworkConfigTypes {
     defaultRouteTablePropagation: t.enableDisable,
     autoAcceptSharingAttachments: t.enableDisable,
     routeTables: t.array(this.transitGatewayRouteTableConfig),
+    tags: t.optional(t.array(t.tag)),
   });
 
   static readonly routeTableEntryTypeEnum = t.enums(
@@ -60,6 +62,7 @@ export class NetworkConfigTypes {
   static readonly routeTableConfig = t.interface({
     name: t.nonEmptyString,
     routes: t.optional(t.array(this.routeTableEntryConfig)),
+    tags: t.optional(t.array(t.tag)),
   });
 
   static readonly subnetConfig = t.interface({
@@ -69,11 +72,13 @@ export class NetworkConfigTypes {
     ipv4CidrBlock: t.nonEmptyString,
     mapPublicIpOnLaunch: t.optional(t.boolean),
     shareTargets: t.optional(t.shareTargets),
+    tags: t.optional(t.array(t.tag)),
   });
 
   static readonly natGatewayConfig = t.interface({
     name: t.nonEmptyString,
     subnet: t.nonEmptyString,
+    tags: t.optional(t.array(t.tag)),
   });
 
   static readonly transitGatewayAttachmentTargetConfig = t.interface({
@@ -87,6 +92,7 @@ export class NetworkConfigTypes {
     subnets: t.array(t.nonEmptyString),
     routeTableAssociations: t.optional(t.array(t.nonEmptyString)),
     routeTablePropagations: t.optional(t.array(t.nonEmptyString)),
+    tags: t.optional(t.array(t.tag)),
   });
 
   static readonly ipAddressFamilyEnum = t.enums(
@@ -170,6 +176,7 @@ export class NetworkConfigTypes {
     description: t.optional(t.nonEmptyString),
     inboundRules: t.optional(t.array(this.securityGroupRuleConfig)),
     outboundRules: t.optional(t.array(this.securityGroupRuleConfig)),
+    tags: t.optional(t.array(t.tag)),
   });
 
   static readonly instanceTenancyTypeEnum = t.enums(
@@ -207,6 +214,7 @@ export class NetworkConfigTypes {
     subnetAssociations: t.array(t.nonEmptyString),
     inboundRules: t.optional(t.array(this.networkAclInboundRuleConfig)),
     outboundRules: t.optional(t.array(this.networkAclOutboundRuleConfig)),
+    tags: t.optional(t.array(t.tag)),
   });
 
   static readonly netbiosNodeEnum = t.enums('NetbiosNodeTypeEnum', [1, 2, 4, 8]);
@@ -243,6 +251,7 @@ export class NetworkConfigTypes {
     securityGroups: t.optional(t.array(this.securityGroupConfig)),
     prefixLists: t.optional(t.array(this.prefixListConfig)),
     networkAcls: t.optional(t.array(this.networkAclConfig)),
+    tags: t.optional(t.array(t.tag)),
   });
 
   static readonly trafficTypeEnum = t.enums(
@@ -283,6 +292,7 @@ export class TransitGatewayRouteTableConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteTableConfig>
 {
   readonly name = '';
+  readonly tags: t.Tag[] | undefined = undefined;
 }
 
 export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayConfig> {
@@ -297,6 +307,7 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
   readonly defaultRouteTablePropagation = 'enable';
   readonly autoAcceptSharingAttachments = 'disable';
   readonly routeTables: TransitGatewayRouteTableConfig[] = [];
+  readonly tags: t.Tag[] | undefined = undefined;
 }
 
 export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes.routeTableEntryConfig> {
@@ -309,6 +320,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
 export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.routeTableConfig> {
   readonly name = '';
   readonly routes: RouteTableEntryConfig[] = [];
+  readonly tags: t.Tag[] = [];
 }
 
 export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetConfig> {
@@ -318,11 +330,13 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
   readonly ipv4CidrBlock = '';
   readonly mapPublicIpOnLaunch: boolean | undefined = undefined;
   readonly shareTargets: t.ShareTargets = new t.ShareTargets();
+  readonly tags: t.Tag[] | undefined = undefined;
 }
 
 export class NatGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.natGatewayConfig> {
   readonly name = '';
   readonly subnet = '';
+  readonly tags: t.Tag[] | undefined = undefined;
 }
 
 export class TransitGatewayAttachmentTargetConfig
@@ -340,6 +354,7 @@ export class TransitGatewayAttachmentConfig
   readonly subnets: string[] = [];
   readonly routeTableAssociations: string[] = [];
   readonly routeTablePropagations: string[] = [];
+  readonly tags: t.Tag[] | undefined = undefined;
 }
 
 export class InterfaceEndpointConfig implements t.TypeOf<typeof NetworkConfigTypes.interfaceEndpointConfig> {
@@ -389,6 +404,7 @@ export class SecurityGroupConfig implements t.TypeOf<typeof NetworkConfigTypes.s
   readonly description = '';
   readonly inboundRules: SecurityGroupRuleConfig[] = [];
   readonly outboundRules: SecurityGroupRuleConfig[] = [];
+  readonly tags: t.Tag[] | undefined = undefined;
 }
 
 export class NetworkAclSubnetSelection implements t.TypeOf<typeof NetworkConfigTypes.networkAclSubnetSelection> {
@@ -440,6 +456,11 @@ export class NetworkAclConfig implements t.TypeOf<typeof NetworkConfigTypes.netw
    * A list of outbound rules to define for the Network ACL
    */
   readonly outboundRules: NetworkAclOutboundRuleConfig[] | undefined = undefined;
+  /**
+   * A list of tags to attach to the Network ACL
+   *
+   */
+  readonly tags: t.Tag[] | undefined = undefined;
 }
 
 export class DhcpOptsConfig implements t.TypeOf<typeof NetworkConfigTypes.dhcpOptsConfig> {
@@ -540,6 +561,14 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
    * @default undefined
    */
   readonly networkAcls: NetworkAclConfig[] | undefined = undefined;
+
+  /**
+   * A list of tags to apply to this VPC
+   *
+   * @default undefined
+   *
+   */
+  readonly tags: t.Tag[] | undefined = undefined;
 }
 
 export class VpcFlowLogsConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcFlowLogsConfig> {

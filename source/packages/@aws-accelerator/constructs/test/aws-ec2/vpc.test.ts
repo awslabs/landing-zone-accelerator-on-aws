@@ -17,6 +17,7 @@ new Vpc(stack, 'TestVpc', {
   enableDnsHostnames: false,
   enableDnsSupport: true,
   instanceTenancy: 'default',
+  tags: [{ key: 'Test-Key', value: 'Test-Value' }],
 });
 
 /**
@@ -75,6 +76,10 @@ describe('Vpc', () => {
               {
                 Key: 'Name',
                 Value: 'Main',
+              },
+              {
+                Key: 'Test-Key',
+                Value: 'Test-Value',
               },
             ],
           },

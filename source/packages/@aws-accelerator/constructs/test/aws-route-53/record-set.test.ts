@@ -25,6 +25,7 @@ const hostedZone = new HostedZone(stack, `TestHostedZone`, {
 const routeTable = new RouteTable(stack, 'TestRouteTable', {
   name: 'Network-Endpoints-Default',
   vpc,
+  tags: [],
 });
 
 const subnet = new Subnet(stack, 'TestSubnet', {
@@ -34,12 +35,14 @@ const subnet = new Subnet(stack, 'TestSubnet', {
   mapPublicIpOnLaunch: true,
   routeTable,
   vpc,
+  tags: [],
 });
 
 const securityGroup = new SecurityGroup(stack, 'TestSecurityGroup`', {
   securityGroupName: 'TestSecurityGroup',
   description: `AWS Private Endpoint Zone`,
   vpc,
+  tags: [],
 });
 
 // Create the interface endpoint

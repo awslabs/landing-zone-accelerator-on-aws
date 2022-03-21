@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { CfnTag } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { IPrefixList } from './prefix-list';
 
@@ -54,6 +55,7 @@ export interface SubnetProps {
   readonly mapPublicIpOnLaunch?: boolean;
   readonly routeTable: IRouteTable;
   readonly vpc: IVpc;
+  readonly tags?: cdk.CfnTag[];
   // readonly nacl: INacl;
 }
 
@@ -75,13 +77,17 @@ export class Subnet extends cdk.Resource implements ISubnet {
     this.mapPublicIpOnLaunch = props.mapPublicIpOnLaunch;
     this.routeTable = props.routeTable;
 
+    //props.tags?.push({ key: 'Name', value: props.name });
+
     const resource = new cdk.aws_ec2.CfnSubnet(this, 'Resource', {
       vpcId: props.vpc.vpcId,
       cidrBlock: props.ipv4CidrBlock,
       availabilityZone: props.availabilityZone,
       mapPublicIpOnLaunch: props.mapPublicIpOnLaunch,
-      tags: [{ key: 'Name', value: props.name }],
+      tags: props.tags,
     });
+
+    cdk.Tags.of(this).add('Name', props.name);
 
     this.subnetId = resource.ref;
     this.subnetArn = cdk.Stack.of(this).formatArn({
@@ -117,6 +123,7 @@ export interface INatGateway extends cdk.IResource {
 export interface NatGatewayProps {
   readonly name: string;
   readonly subnet: ISubnet;
+  readonly tags?: CfnTag[];
 }
 
 export class NatGateway extends cdk.Resource implements INatGateway {
@@ -133,8 +140,9 @@ export class NatGateway extends cdk.Resource implements INatGateway {
       allocationId: new cdk.aws_ec2.CfnEIP(this, 'Eip', {
         domain: 'vpc',
       }).attrAllocationId,
-      tags: [{ key: 'Name', value: props.name }],
+      tags: props.tags,
     });
+    cdk.Tags.of(this).add('Name', props.name);
 
     this.natGatewayId = resource.ref;
   }
@@ -172,6 +180,11 @@ export interface SecurityGroupProps {
    * The VPC in which to create the security group.
    */
   readonly vpc: IVpc;
+
+  /**
+   * The tags that will be attached to the security group
+   */
+  readonly tags?: cdk.CfnTag[];
 }
 
 export interface SecurityGroupIngressRuleProps {
@@ -208,6 +221,7 @@ export class SecurityGroup extends cdk.Resource implements ISecurityGroup {
       groupDescription: props.description ?? '',
       groupName: props.securityGroupName,
       vpcId: props.vpc.vpcId,
+      tags: props.tags,
     });
 
     if (props.securityGroupName) {
@@ -286,6 +300,11 @@ export interface NetworkAclProps {
    * The VPC in which to create the NetworkACL.
    */
   readonly vpc: IVpc;
+
+  /**
+   * The tags which will be attached to the NetworkACL.
+   */
+  readonly tags?: cdk.CfnTag[];
 }
 
 /**
@@ -323,8 +342,9 @@ export class NetworkAcl extends NetworkAclBase {
 
     const resource = new cdk.aws_ec2.CfnNetworkAcl(this, 'Resource', {
       vpcId: props.vpc.vpcId,
-      tags: [{ key: 'Name', value: props.networkAclName }],
+      tags: props.tags,
     });
+    cdk.Tags.of(this).add('Name', props.networkAclName);
 
     this.networkAclId = resource.ref;
     this.networkAclVpcId = resource.vpcId;
@@ -383,6 +403,7 @@ export interface VpcProps {
   readonly enableDnsSupport?: boolean;
   readonly instanceTenancy?: 'default' | 'dedicated';
   readonly internetGateway?: boolean;
+  readonly tags?: cdk.CfnTag[];
 }
 
 /**
@@ -402,8 +423,9 @@ export class Vpc extends cdk.Resource implements IVpc {
       enableDnsHostnames: props.enableDnsHostnames,
       enableDnsSupport: props.enableDnsSupport,
       instanceTenancy: props.instanceTenancy,
-      tags: [{ key: 'Name', value: props.name }],
+      tags: props.tags,
     });
+    cdk.Tags.of(this).add('Name', props.name);
 
     this.vpcId = resource.ref;
 

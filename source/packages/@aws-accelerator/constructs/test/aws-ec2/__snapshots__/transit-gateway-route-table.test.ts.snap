@@ -10,6 +10,10 @@ Object {
             "Key": "Name",
             "Value": "core",
           },
+          Object {
+            "Key": "Test-Key",
+            "Value": "Test-Value",
+          },
         ],
         "TransitGatewayId": "tgw0001",
       },

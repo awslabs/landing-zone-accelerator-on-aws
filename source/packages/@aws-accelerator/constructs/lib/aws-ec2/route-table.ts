@@ -35,6 +35,7 @@ export interface IRouteTable extends cdk.IResource {
 export interface RouteTableProps {
   readonly name: string;
   readonly vpc: Vpc;
+  readonly tags?: cdk.CfnTag[];
 }
 
 export class RouteTable extends cdk.Resource implements IRouteTable {
@@ -49,8 +50,9 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
 
     const resource = new cdk.aws_ec2.CfnRouteTable(this, 'Resource', {
       vpcId: props.vpc.vpcId,
-      tags: [{ key: 'Name', value: props.name }],
+      tags: props.tags,
     });
+    cdk.Tags.of(this).add('Name', props.name);
 
     this.routeTableId = resource.ref;
   }

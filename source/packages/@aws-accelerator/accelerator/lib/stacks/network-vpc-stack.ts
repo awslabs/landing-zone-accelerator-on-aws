@@ -394,6 +394,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           enableDnsHostnames: vpcItem.enableDnsHostnames ?? true,
           enableDnsSupport: vpcItem.enableDnsSupport ?? true,
           instanceTenancy: vpcItem.instanceTenancy ?? 'default',
+          tags: vpcItem.tags,
         });
         new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${pascalCase(vpcItem.name)}VpcId`), {
           parameterName: `/accelerator/network/vpc/${vpcItem.name}/id`,
@@ -443,6 +444,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             {
               name: routeTableItem.name,
               vpc,
+              tags: routeTableItem.tags,
             },
           );
           routeTableMap.set(routeTableItem.name, routeTable);
@@ -475,6 +477,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             mapPublicIpOnLaunch: subnetItem.mapPublicIpOnLaunch,
             routeTable,
             vpc,
+            tags: subnetItem.tags,
           });
           subnetMap.set(subnetItem.name, subnet);
           new cdk.aws_ssm.StringParameter(
@@ -540,6 +543,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             {
               name: natGatewayItem.name,
               subnet,
+              tags: natGatewayItem.tags,
             },
           );
           natGatewayMap.set(natGatewayItem.name, natGateway);
@@ -584,6 +588,7 @@ export class NetworkVpcStack extends AcceleratorStack {
               transitGatewayId,
               subnetIds,
               vpcId: vpc.vpcId,
+              tags: tgwAttachmentItem.tags,
             },
           );
           transitGatewayAttachments.set(tgwAttachmentItem.transitGateway.name, attachment);
@@ -684,6 +689,7 @@ export class NetworkVpcStack extends AcceleratorStack {
               securityGroupName: securityGroupItem.name,
               description: securityGroupItem.description,
               vpc,
+              tags: securityGroupItem.tags,
             },
           );
           securityGroupMap.set(securityGroupItem.name, securityGroup);
@@ -771,6 +777,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           const networkAcl = new NetworkAcl(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}Nacl`, {
             networkAclName: naclItem.name,
             vpc,
+            tags: naclItem.tags,
           });
 
           new cdk.aws_ssm.StringParameter(
