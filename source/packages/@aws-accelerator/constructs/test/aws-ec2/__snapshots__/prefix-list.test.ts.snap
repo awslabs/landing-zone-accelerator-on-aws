@@ -13,6 +13,12 @@ Object {
         ],
         "MaxEntries": 1,
         "PrefixListName": "Test",
+        "Tags": Array [
+          Object {
+            "Key": "Test-Key",
+            "Value": "Test-Value",
+          },
+        ],
       },
       "Type": "AWS::EC2::PrefixList",
     },

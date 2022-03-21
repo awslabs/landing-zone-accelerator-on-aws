@@ -12,6 +12,7 @@
  */
 
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
@@ -25,6 +26,11 @@ export interface TransitGatewayRouteTableProps {
    * The ID of the transit gateway.
    */
   readonly transitGatewayId: string;
+
+  /**
+   * The tags that will be attached to the transit gateway route table.
+   */
+  readonly tags?: cdk.CfnTag[];
 }
 
 /**
@@ -38,8 +44,9 @@ export class TransitGatewayRouteTable extends Construct {
 
     const routeTable = new ec2.CfnTransitGatewayRouteTable(this, pascalCase(`${props.name}TransitGatewayRouteTable`), {
       transitGatewayId: props.transitGatewayId,
-      tags: [{ key: 'Name', value: props.name }],
+      tags: props.tags,
     });
+    cdk.Tags.of(this).add('Name', props.name);
 
     this.id = routeTable.ref;
   }

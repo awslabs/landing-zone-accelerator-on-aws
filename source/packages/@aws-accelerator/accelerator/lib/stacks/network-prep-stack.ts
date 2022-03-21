@@ -39,6 +39,7 @@ export class NetworkPrepStack extends AcceleratorStack {
           defaultRouteTablePropagation: tgwItem.defaultRouteTablePropagation,
           dnsSupport: tgwItem.dnsSupport,
           vpnEcmpSupport: tgwItem.vpnEcmpSupport,
+          tags: tgwItem.tags,
         });
 
         new ssm.StringParameter(this, pascalCase(`SsmParam${tgwItem.name}TransitGatewayId`), {
@@ -55,6 +56,7 @@ export class NetworkPrepStack extends AcceleratorStack {
             {
               transitGatewayId: tgw.transitGatewayId,
               name: routeTableItem.name,
+              tags: routeTableItem.tags,
             },
           );
 

@@ -10,6 +10,7 @@ const stack = new cdk.Stack();
 new TransitGatewayRouteTable(stack, 'TransitGatewayRouteTable', {
   name: 'core',
   transitGatewayId: 'tgw0001',
+  tags: [{ key: 'Test-Key', value: 'Test-Value' }],
 });
 /**
  * TransitGatewayRouteTable construct test
@@ -41,6 +42,10 @@ describe('TransitGatewayRouteTable', () => {
               {
                 Key: 'Name',
                 Value: 'core',
+              },
+              {
+                Key: 'Test-Key',
+                Value: 'Test-Value',
               },
             ],
             TransitGatewayId: 'tgw0001',

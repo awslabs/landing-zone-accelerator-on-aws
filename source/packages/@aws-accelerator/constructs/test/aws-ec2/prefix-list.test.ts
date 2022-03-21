@@ -14,7 +14,7 @@ new PrefixList(stack, 'TestPrefixList', {
   addressFamily: 'IPv4',
   maxEntries: 1,
   entries: ['1.1.1.1/32'],
-  tags: [],
+  tags: [{ key: 'Test-Key', value: 'Test-Value' }],
 });
 
 /**

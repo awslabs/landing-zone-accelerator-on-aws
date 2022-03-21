@@ -82,6 +82,7 @@ export interface TransitGatewayAttachmentProps {
   readonly transitGatewayId: string;
   readonly subnetIds: string[];
   readonly vpcId: string;
+  readonly tags?: core.CfnTag[];
 }
 
 export interface TransitGatewayAttachmentLookupOptions {
@@ -151,8 +152,9 @@ export class TransitGatewayAttachment extends core.Resource implements ITransitG
       vpcId: props.vpcId,
       transitGatewayId: props.transitGatewayId,
       subnetIds: props.subnetIds,
-      tags: [{ key: 'Name', value: props.name }],
+      tags: props.tags,
     });
+    core.Tags.of(this).add('Name', props.name);
 
     this.transitGatewayAttachmentId = resource.ref;
     this.transitGatewayAttachmentName = props.name;
@@ -230,6 +232,11 @@ export interface TransitGatewayProps {
    * Enable or disable Equal Cost Multipath Protocol support. Enabled by default.
    */
   readonly vpnEcmpSupport?: string;
+
+  /**
+   * Tags that will be attached to the transit gateway
+   */
+  readonly tags?: core.CfnTag[];
 }
 
 /**
@@ -252,8 +259,9 @@ export class TransitGateway extends core.Resource implements ITransitGateway {
       defaultRouteTablePropagation: props.defaultRouteTablePropagation,
       dnsSupport: props.dnsSupport,
       vpnEcmpSupport: props.vpnEcmpSupport,
-      tags: [{ key: 'Name', value: props.name }],
+      tags: props.tags,
     });
+    core.Tags.of(this).add('Name', props.name);
 
     this.transitGatewayId = resource.ref;
 

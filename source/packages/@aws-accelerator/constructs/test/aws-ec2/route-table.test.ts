@@ -17,7 +17,11 @@ const vpc = new Vpc(stack, 'TestVpc', {
   instanceTenancy: 'default',
 });
 
-new RouteTable(stack, 'RouteTable', { name: 'TestRouteTable', vpc: vpc });
+new RouteTable(stack, 'RouteTable', {
+  name: 'TestRouteTable',
+  vpc: vpc,
+  tags: [{ key: 'Test-Key', value: 'Test-Value' }],
+});
 
 /**
  * RouteTable construct test
@@ -71,6 +75,10 @@ describe('RouteTable', () => {
               {
                 Key: 'Name',
                 Value: 'TestRouteTable',
+              },
+              {
+                Key: 'Test-Key',
+                Value: 'Test-Value',
               },
             ],
             VpcId: {
