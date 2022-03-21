@@ -18,12 +18,14 @@ import { Duration } from 'aws-cdk-lib';
 import path = require('path');
 
 export interface ValidateEnvironmentConfigProps {
-  readonly table: cdk.aws_dynamodb.ITable;
+  readonly newOrgAccountsTable: cdk.aws_dynamodb.ITable;
+  readonly newCTAccountsTable: cdk.aws_dynamodb.ITable;
   readonly controlTowerEnabled: boolean;
   readonly workloadAccounts: {
     name: string;
     description: string;
     email: string;
+    govAccount?: boolean;
     organizationalUnit: string;
     organizationalUnitId: string;
   }[];
@@ -58,7 +60,7 @@ export class ValidateEnvironmentConfig extends Construct {
       this,
       VALIDATE_ENVIRONMENT_RESOURCE_TYPE,
       {
-        codeDirectory: path.join(__dirname, 'validate/dist'),
+        codeDirectory: path.join(__dirname, 'lambdas/validate-environment/dist'),
         runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
         timeout: Duration.minutes(10),
         policyStatements: [
@@ -72,13 +74,13 @@ export class ValidateEnvironmentConfig extends Construct {
             Sid: 'dynamodb',
             Effect: 'Allow',
             Action: ['dynamodb:PutItem'],
-            Resource: props.table.tableArn,
+            Resource: [props.newOrgAccountsTable.tableArn, props.newCTAccountsTable?.tableArn],
           },
           {
             Sid: 'kms',
             Effect: 'Allow',
             Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
-            Resource: props.table.encryptionKey?.keyArn,
+            Resource: [props.newOrgAccountsTable.encryptionKey?.keyArn, props.newCTAccountsTable.encryptionKey?.keyArn],
           },
         ],
       },
@@ -96,7 +98,8 @@ export class ValidateEnvironmentConfig extends Construct {
         workloadAccounts: props.workloadAccounts,
         mandatoryAccounts: props.mandatoryAccounts,
         existingAccounts: props.existingAccounts,
-        newAccountsTableName: props.table.tableName,
+        newOrgAccountsTableName: props.newOrgAccountsTable.tableName,
+        newCTAccountsTableName: props.newCTAccountsTable?.tableName || '',
         controlTowerEnabled: props.controlTowerEnabled,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },

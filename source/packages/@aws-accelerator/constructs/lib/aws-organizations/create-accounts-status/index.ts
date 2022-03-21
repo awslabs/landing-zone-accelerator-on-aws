@@ -19,15 +19,18 @@
 
 import * as AWS from 'aws-sdk';
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import { CreateAccountResponse } from 'aws-sdk/clients/organizations';
 
 const documentClient = new AWS.DynamoDB.DocumentClient();
-const newAccountsTableName = process.env['NewAccountsTableName'] ?? '';
+const newOrgAccountsTableName = process.env['NewOrgAccountsTableName'] ?? '';
+const govCloudAccountMappingTableName = process.env['GovCloudAccountMappingTableName'] ?? '';
 const accountRoleName = process.env['AccountRoleName'];
 
 interface AccountConfig {
   name: string;
   description: string;
   email: string;
+  enableGovCloud?: boolean | undefined;
   organizationalUnit: string;
   organizationalUnitId: string;
   createRequestId?: string | undefined;
@@ -56,9 +59,14 @@ export async function handler(event: any): Promise<
   }
 
   const singleAccountToAdd = accountToAdd[0];
+  let createAccountResponse: CreateAccountResponse;
   // if the createRequestId is empty then we need to create the account
   if (singleAccountToAdd.createRequestId === '' || singleAccountToAdd.createRequestId === undefined) {
-    const createAccountResponse = await createOrganizationAccount(singleAccountToAdd.email, singleAccountToAdd.name);
+    if (singleAccountToAdd.enableGovCloud) {
+      createAccountResponse = await createGovCloudAccount(singleAccountToAdd.email, singleAccountToAdd.name);
+    } else {
+      createAccountResponse = await createOrganizationAccount(singleAccountToAdd.email, singleAccountToAdd.name);
+    }
     switch (createAccountResponse.CreateAccountStatus?.State) {
       case 'IN_PROGRESS':
         console.log(`Initiated account creation for ${accountToAdd[0].email}`);
@@ -72,6 +80,16 @@ export async function handler(event: any): Promise<
           };
         }
       case 'SUCCEEDED':
+        if (createAccountResponse.CreateAccountStatus.GovCloudAccountId) {
+          console.log(
+            `GovCloud account created with id ${createAccountResponse.CreateAccountStatus.GovCloudAccountId}`,
+          );
+          await saveGovCloudAccountMapping(
+            createAccountResponse.CreateAccountStatus.AccountId!,
+            createAccountResponse.CreateAccountStatus.GovCloudAccountId,
+            createAccountResponse.CreateAccountStatus.AccountName!,
+          );
+        }
         console.log(
           `Account with id ${createAccountResponse.CreateAccountStatus.AccountId} was created for email ${singleAccountToAdd.email}`,
         );
@@ -97,6 +115,14 @@ export async function handler(event: any): Promise<
         };
       case 'SUCCEEDED':
         console.log(`Account with id ${createAccountStatusResponse.CreateAccountStatus?.AccountId} is complete`);
+        if (createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId) {
+          console.log(createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId);
+          await saveGovCloudAccountMapping(
+            createAccountStatusResponse.CreateAccountStatus.AccountId!,
+            createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId,
+            createAccountStatusResponse.CreateAccountStatus.AccountName!,
+          );
+        }
         await moveAccountToOrgIdFromRoot(
           createAccountStatusResponse.CreateAccountStatus.AccountId!,
           singleAccountToAdd.organizationalUnitId,
@@ -117,7 +143,7 @@ export async function handler(event: any): Promise<
 async function getSingleAccountConfigFromTable(): Promise<AccountConfigs> {
   const accountToAdd: AccountConfigs = [];
   const scanParams = {
-    TableName: newAccountsTableName,
+    TableName: newOrgAccountsTableName,
     Limit: 1,
   };
 
@@ -134,7 +160,7 @@ async function getSingleAccountConfigFromTable(): Promise<AccountConfigs> {
 
 async function deleteSingleAccountConfigFromTable(accountToDeleteEmail: string): Promise<boolean> {
   const deleteParams = {
-    TableName: newAccountsTableName,
+    TableName: newOrgAccountsTableName,
     Key: {
       accountEmail: accountToDeleteEmail,
     },
@@ -164,6 +190,22 @@ async function createOrganizationAccount(
   return createAccountResponse;
 }
 
+async function createGovCloudAccount(
+  accountEmail: string,
+  accountName: string,
+): Promise<AWS.Organizations.CreateAccountResponse> {
+  const createAccountsParams = {
+    AccountName: accountName,
+    Email: accountEmail,
+    RoleName: accountRoleName,
+  };
+  const createAccountResponse = await throttlingBackOff(() =>
+    organizationsClient.createGovCloudAccount(createAccountsParams).promise(),
+  );
+  console.log(createAccountResponse);
+  return createAccountResponse;
+}
+
 async function getAccountCreationStatus(
   requestId: string,
 ): Promise<AWS.Organizations.DescribeCreateAccountStatusResponse> {
@@ -175,7 +217,7 @@ async function getAccountCreationStatus(
 
 async function updateAccountConfig(accountConfig: AccountConfig): Promise<boolean> {
   const params = {
-    TableName: newAccountsTableName,
+    TableName: newOrgAccountsTableName,
     Item: {
       accountEmail: accountConfig.email,
       accountConfig: JSON.stringify(accountConfig),
@@ -211,4 +253,26 @@ async function moveAccountToOrgIdFromRoot(accountId: string, orgId: string): Pro
     );
   }
   return false;
+}
+
+async function saveGovCloudAccountMapping(
+  commericalAccountId: string,
+  govCloudAccountId: string,
+  accountName: string,
+): Promise<boolean> {
+  const params = {
+    TableName: govCloudAccountMappingTableName,
+    Item: {
+      commericalAccountId: commericalAccountId,
+      govCloudAccountId: govCloudAccountId,
+      accountName: accountName,
+    },
+  };
+  const response = await throttlingBackOff(() => documentClient.put(params).promise());
+  if (response.$response.httpResponse.statusCode === 200) {
+    return true;
+  } else {
+    console.log(response);
+    return false;
+  }
 }

@@ -31,14 +31,22 @@ export class AccountsConfigTypes {
     organizationalUnit: t.optional(t.nonEmptyString),
   });
 
+  static readonly govCloudAccountConfig = t.interface({
+    name: t.nonEmptyString,
+    description: t.optional(t.nonEmptyString),
+    email: t.nonEmptyString,
+    organizationalUnit: t.optional(t.nonEmptyString),
+    enableGovCloud: t.optional(t.boolean),
+  });
+
   static readonly accountIdConfig = t.interface({
     email: t.nonEmptyString,
     accountId: t.nonEmptyString,
   });
 
   static readonly accountsConfig = t.interface({
-    mandatoryAccounts: t.array(this.accountConfig),
-    workloadAccounts: t.array(this.accountConfig),
+    mandatoryAccounts: t.array(t.union([this.accountConfig, this.govCloudAccountConfig])),
+    workloadAccounts: t.array(t.union([this.accountConfig, this.govCloudAccountConfig])),
     accountIds: t.optional(t.array(this.accountIdConfig)),
   });
 }
@@ -54,6 +62,14 @@ export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accoun
   readonly email: string = '';
   readonly organizationalUnit: string = '';
 }
+
+export class GovCloudAccountConfig implements t.TypeOf<typeof AccountsConfigTypes.govCloudAccountConfig> {
+  readonly name: string = '';
+  readonly description: string = '';
+  readonly email: string = '';
+  readonly organizationalUnit: string = '';
+  readonly enableGovCloud: boolean | undefined = undefined;
+}
 /**
  *
  */
@@ -63,7 +79,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   static readonly LOG_ARCHIVE_ACCOUNT = 'LogArchive';
   static readonly AUDIT_ACCOUNT = 'Audit';
 
-  readonly mandatoryAccounts: AccountConfig[] = [
+  readonly mandatoryAccounts: AccountConfig[] | GovCloudAccountConfig[] = [
     {
       name: AccountsConfig.MANAGEMENT_ACCOUNT,
       description: 'The management (primary) account. Do not change the name field for this mandatory account.',
@@ -85,7 +101,27 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     },
   ];
 
-  readonly workloadAccounts: AccountConfig[] = [];
+  readonly workloadAccounts: AccountConfig[] | GovCloudAccountConfig[] = [];
+
+  public isGovCloudAccount(account: AccountConfig | GovCloudAccountConfig) {
+    return AccountsConfigTypes.govCloudAccountConfig.is(account);
+  }
+
+  public anyGovCloudAccounts(): boolean {
+    for (const account of this.workloadAccounts) {
+      if (this.isGovCloudAccount(account)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public isGovCloudEnabled(account: AccountConfig | GovCloudAccountConfig) {
+    if (AccountsConfigTypes.govCloudAccountConfig.is(account)) {
+      return account.enableGovCloud;
+    }
+    return false;
+  }
 
   /**
    * Optionally provide a list of AWS Account IDs to bypass the usage of the

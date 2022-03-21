@@ -672,4 +672,13 @@ export const ACCOUNT_CONFIG = {
     }
     return '111111111111';
   },
+  isGovCloudAccount: function () {
+    return false;
+  },
+  anyGovCloudAccounts: function () {
+    return false;
+  },
+  isGovCloudEnabled: function () {
+    return false;
+  },
 };

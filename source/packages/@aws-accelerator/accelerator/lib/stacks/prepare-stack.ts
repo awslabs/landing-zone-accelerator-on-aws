@@ -60,21 +60,60 @@ export class PrepareStack extends AcceleratorStack {
     }
 
     if (props.partition == 'aws') {
-      const newAccountsTable = new cdk.aws_dynamodb.Table(this, 'NewAccounts', {
+      let govCloudAccountMappingTable: cdk.aws_dynamodb.ITable | undefined;
+      Logger.info(`[prepare-stack] newOrgAccountsTable`);
+      const newOrgAccountsTable = new cdk.aws_dynamodb.Table(this, 'NewOrgAccounts', {
         partitionKey: { name: 'accountEmail', type: cdk.aws_dynamodb.AttributeType.STRING },
         billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
         encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
 
-      new cdk.aws_ssm.StringParameter(this, 'TableNameParameter', {
-        parameterName: `/accelerator/prepare-stack/newAccountsTableName`,
-        stringValue: newAccountsTable.tableName,
+      Logger.info(`[prepare-stack] newControlTowerAccountsTable`);
+      const newCTAccountsTable = new cdk.aws_dynamodb.Table(this, 'NewCTAccounts', {
+        partitionKey: { name: 'accountEmail', type: cdk.aws_dynamodb.AttributeType.STRING },
+        billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
+        encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
 
-      new cdk.aws_ssm.StringParameter(this, 'KmsKeyParameter', {
-        parameterName: `/accelerator/prepare-stack/newAccountsTableKmsKeyArn`,
-        stringValue: `${newAccountsTable.encryptionKey?.keyArn}`,
+      new cdk.aws_ssm.StringParameter(this, 'NewCTAccountsTableNameParameter', {
+        parameterName: `/accelerator/prepare-stack/NewCTAccountsTableName`,
+        stringValue: newCTAccountsTable.tableName,
+      });
+
+      new cdk.aws_ssm.StringParameter(this, 'NewCTAccountsKmsKeyParameter', {
+        parameterName: `/accelerator/prepare-stack/NewCTAccountsTableKmsKeyArn`,
+        stringValue: `${newCTAccountsTable.encryptionKey?.keyArn}`,
+      });
+
+      if (props.accountsConfig.anyGovCloudAccounts()) {
+        Logger.info(`[prepare-stack] Create GovCloudAccountsMappingTable`);
+        govCloudAccountMappingTable = new cdk.aws_dynamodb.Table(this, 'govCloudAccountMapping', {
+          partitionKey: { name: 'commericalAccountId', type: cdk.aws_dynamodb.AttributeType.STRING },
+          billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
+          encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
+        });
+
+        new cdk.aws_ssm.StringParameter(this, 'GovCloudAccountMappingKmsKeyParameter', {
+          parameterName: `/accelerator/prepare-stack/govCloudAccountMappingTableKmsKeyArn`,
+          stringValue: `${govCloudAccountMappingTable.encryptionKey?.keyArn}`,
+        });
+
+        new cdk.aws_ssm.StringParameter(this, 'GovCloudAccountMappingTableNameParameter', {
+          parameterName: `/accelerator/prepare-stack/govCloudAccountMappingTableName`,
+          stringValue: govCloudAccountMappingTable.tableName,
+        });
+      }
+
+      new cdk.aws_ssm.StringParameter(this, 'NewOrgAccountsTableNameParameter', {
+        parameterName: `/accelerator/prepare-stack/NewOrgAccountsTableName`,
+        stringValue: newOrgAccountsTable.tableName,
+      });
+
+      new cdk.aws_ssm.StringParameter(this, 'NewOrgAccountsKmsKeyParameter', {
+        parameterName: `/accelerator/prepare-stack/NewOrgAccountsTableKmsKeyArn`,
+        stringValue: `${newOrgAccountsTable.encryptionKey?.keyArn}`,
       });
 
       const mandatoryAccounts: {
@@ -89,6 +128,7 @@ export class PrepareStack extends AcceleratorStack {
         name: string;
         description: string;
         email: string;
+        enableGovCloud?: boolean;
         organizationalUnit: string;
         organizationalUnitId: string;
       }[] = [];
@@ -109,13 +149,28 @@ export class PrepareStack extends AcceleratorStack {
       }
 
       for (const workloadAccount of props.accountsConfig.workloadAccounts) {
-        workloadAccounts.push({
-          name: workloadAccount.name,
-          description: workloadAccount.description,
-          email: workloadAccount.email,
-          organizationalUnit: workloadAccount.organizationalUnit,
-          organizationalUnitId: props.organizationConfig.getOrganizationalUnitId(workloadAccount.organizationalUnit),
-        });
+        if (
+          props.accountsConfig.isGovCloudAccount(workloadAccount) &&
+          props.accountsConfig.isGovCloudEnabled(workloadAccount)
+        ) {
+          workloadAccounts.push({
+            name: workloadAccount.name,
+            description: workloadAccount.description,
+            email: workloadAccount.email,
+            enableGovCloud: true,
+            organizationalUnit: workloadAccount.organizationalUnit,
+            organizationalUnitId: props.organizationConfig.getOrganizationalUnitId(workloadAccount.organizationalUnit),
+          });
+        } else {
+          workloadAccounts.push({
+            name: workloadAccount.name,
+            description: workloadAccount.description,
+            email: workloadAccount.email,
+            enableGovCloud: false,
+            organizationalUnit: workloadAccount.organizationalUnit,
+            organizationalUnitId: props.organizationConfig.getOrganizationalUnitId(workloadAccount.organizationalUnit),
+          });
+        }
       }
 
       for (const accountId of props.accountsConfig.accountIds || []) {
@@ -130,11 +185,20 @@ export class PrepareStack extends AcceleratorStack {
         workloadAccounts: workloadAccounts,
         mandatoryAccounts: mandatoryAccounts,
         existingAccounts: existingAccounts,
-        table: newAccountsTable,
+        newOrgAccountsTable: newOrgAccountsTable,
+        newCTAccountsTable: newCTAccountsTable,
         controlTowerEnabled: props.globalConfig.controlTower.enable,
       });
 
-      if (props.globalConfig.controlTower.enable) {
+      Logger.info(`[prepare-stack] Create new organization accounts`);
+      const organizationAccounts = new CreateOrganizationAccounts(this, 'CreateOrganizationAccounts', {
+        newOrgAccountsTable: newOrgAccountsTable,
+        govCloudAccountMappingTable: govCloudAccountMappingTable,
+        accountRoleName: props.globalConfig.managementAccountAccessRole,
+      });
+      organizationAccounts.node.addDependency(validation);
+
+      if (props.globalConfig.controlTower.enable === true) {
         Logger.info(`[prepare-stack] Get Portfolio Id`);
         const portfolioResults = new GetPortfolioId(this, 'GetPortFolioId', {
           displayName: 'AWS Control Tower Account Factory Portfolio',
@@ -142,17 +206,11 @@ export class PrepareStack extends AcceleratorStack {
         });
         Logger.info(`[prepare-stack] Create new control tower accounts`);
         const controlTowerAccounts = new CreateControlTowerAccounts(this, 'CreateCTAccounts', {
-          table: newAccountsTable,
+          table: newCTAccountsTable,
           portfolioId: portfolioResults.portfolioId,
         });
         controlTowerAccounts.node.addDependency(validation);
-      } else {
-        Logger.info(`[prepare-stack] Creating new organization accounts`);
-        const organizationAccounts = new CreateOrganizationAccounts(this, 'CreateOrganizationAccounts', {
-          table: newAccountsTable,
-          accountRoleName: props.globalConfig.managementAccountAccessRole,
-        });
-        organizationAccounts.node.addDependency(validation);
+        controlTowerAccounts.node.addDependency(organizationAccounts);
       }
     }
   }
