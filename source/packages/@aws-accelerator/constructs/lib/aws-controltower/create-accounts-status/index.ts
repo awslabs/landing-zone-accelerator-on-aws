@@ -30,6 +30,7 @@ interface AccountConfig {
   name: string;
   description: string;
   email: string;
+  enableGovCloud?: boolean | undefined;
   organizationalUnit: string;
   organizationalUnitId: string | undefined;
   createRequestId?: string | undefined;
@@ -105,6 +106,7 @@ async function provisionSuccess(): Promise<boolean> {
   const provisionedProductsError: AWS.ServiceCatalog.ProvisionedProductAttribute[] =
     await getProvisionedProductsWithStatus('ERROR');
   if (provisionedProductsError.length > 0) {
+    console.log(`Provisioning failure error message: ${provisionedProductsError[0].StatusMessage}`);
     return false;
   }
 

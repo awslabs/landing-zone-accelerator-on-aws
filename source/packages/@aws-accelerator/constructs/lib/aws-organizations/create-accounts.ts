@@ -21,7 +21,8 @@ import path = require('path');
  * Organizations create accounts
  */
 export interface CreateOrganizationAccountsProps {
-  readonly table: cdk.aws_dynamodb.ITable;
+  readonly newOrgAccountsTable: cdk.aws_dynamodb.ITable;
+  readonly govCloudAccountMappingTable: cdk.aws_dynamodb.ITable | undefined;
   readonly accountRoleName: string;
 }
 
@@ -40,7 +41,7 @@ export class CreateOrganizationAccounts extends Construct {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'create-accounts/dist')),
       runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
       handler: 'index.handler',
-      timeout: cdk.Duration.minutes(1),
+      timeout: cdk.Duration.seconds(30),
       description: 'Create Organization Accounts OnEvent handler',
     });
 
@@ -48,13 +49,13 @@ export class CreateOrganizationAccounts extends Construct {
       sid: 'DynamoDb',
       effect: cdk.aws_iam.Effect.ALLOW,
       actions: ['dynamodb:Scan', 'dynamodb:GetItem', 'dynamodb:DeleteItem', 'dynamodb:PutItem'],
-      resources: [props.table.tableArn],
+      resources: [props.newOrgAccountsTable.tableArn],
     });
     const ddbKmsPolicy = new cdk.aws_iam.PolicyStatement({
       sid: 'KMS',
       effect: cdk.aws_iam.Effect.ALLOW,
       actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
-      resources: [props.table.encryptionKey?.keyArn as string],
+      resources: [props.newOrgAccountsTable.encryptionKey?.keyArn as string],
     });
     const orgPolicy = new cdk.aws_iam.PolicyStatement({
       sid: 'Organizations',
@@ -75,9 +76,30 @@ export class CreateOrganizationAccounts extends Construct {
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(5),
       description: 'Create Organization Account isComplete handler',
-      environment: { NewAccountsTableName: props.table.tableName, AccountRoleName: props.accountRoleName },
+      environment: {
+        NewOrgAccountsTableName: props.newOrgAccountsTable.tableName,
+        GovCloudAccountMappingTableName: props.govCloudAccountMappingTable?.tableName || '',
+        AccountRoleName: props.accountRoleName,
+      },
       initialPolicy: [ddbPolicy, ddbKmsPolicy, orgPolicy],
     });
+
+    if (props.govCloudAccountMappingTable) {
+      const mappingTablePolicy = new cdk.aws_iam.PolicyStatement({
+        sid: 'MappingDynamoDb',
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['dynamodb:GetItem', 'dynamodb:PutItem'],
+        resources: [props.govCloudAccountMappingTable!.tableArn],
+      });
+      const mappingTableKeyPolicy = new cdk.aws_iam.PolicyStatement({
+        sid: 'MappingKMS',
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+        resources: [props.govCloudAccountMappingTable.encryptionKey?.keyArn as string],
+      });
+      this.isComplete.addToRolePolicy(mappingTablePolicy);
+      this.isComplete.addToRolePolicy(mappingTableKeyPolicy);
+    }
 
     this.provider = new cdk.custom_resources.Provider(this, 'CreateOrganizationAccountsProvider', {
       onEventHandler: this.onEvent,

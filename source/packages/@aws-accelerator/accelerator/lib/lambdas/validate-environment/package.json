@@ -1,5 +1,5 @@
 {
-  "name": "@aws-accelerator/validate-environment-config-validate",
+  "name": "@aws-accelerator/lambdas-validate-environment-config",
   "version": "0.0.0",
   "license": "Apache-2.0",
   "author": {
@@ -15,8 +15,8 @@
     "build": "esbuild --minify --bundle --sourcemap --platform=node --target=node14 --external:aws-sdk --outfile=./dist/index.js index.ts",
     "test": "",
     "testreport": "",
-    "lint": "eslint --fix  --max-warnings 0 -c ../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
-    "precommit": "eslint --max-warnings 0 -c ../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
+    "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
+    "precommit": "eslint --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
   },
   "devDependencies": {
     "@types/jest": "27.0.3",

@@ -33,10 +33,12 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const workloadAccounts = event.ResourceProperties['workloadAccounts'];
   const mandatoryAccounts = event.ResourceProperties['mandatoryAccounts'];
-  const newAccountsTableName = event.ResourceProperties['newAccountsTableName'];
+  const newOrgAccountsTableName = event.ResourceProperties['newOrgAccountsTableName'];
+  const newCTAccountsTableName = event.ResourceProperties['newCTAccountsTableName'];
   const controlTowerEnabled = event.ResourceProperties['controlTowerEnabled'];
   const validationErrors: string[] = [];
-  const accountsToAdd = [];
+  const ctAccountsToAdd = [];
+  const orgAccountsToAdd = [];
 
   switch (event.RequestType) {
     case 'Create':
@@ -101,10 +103,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
                 );
               }
               if (!provisionedControlTowerAccount) {
-                accountsToAdd.push(workloadAccount);
+                ctAccountsToAdd.push(workloadAccount);
               }
             } else {
-              accountsToAdd.push(workloadAccount);
+              ctAccountsToAdd.push(workloadAccount);
             }
           }
         }
@@ -121,26 +123,40 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
               );
             }
           } else {
-            accountsToAdd.push(mandatoryAccount);
+            orgAccountsToAdd.push(mandatoryAccount);
           }
         }
-        for (const workloadAccount of workloadAccounts) {
-          const organizationAccount = organizationAccounts.find(item => item.Email == workloadAccount.email);
-          if (organizationAccount) {
-            if (organizationAccount.Status !== 'ACTIVE') {
-              validationErrors.push(`Workload account ${workloadAccount.email} is in ${organizationAccount.Status}`);
-            }
-          } else {
-            accountsToAdd.push(workloadAccount);
+      }
+      for (const workloadAccount of workloadAccounts) {
+        const organizationAccount = organizationAccounts.find(item => item.Email == workloadAccount.email);
+        if (organizationAccount) {
+          if (organizationAccount.Status !== 'ACTIVE') {
+            validationErrors.push(`Workload account ${workloadAccount.email} is in ${organizationAccount.Status}`);
+          }
+        } else {
+          if (controlTowerEnabled === 'false' || workloadAccount.enableGovCloud) {
+            orgAccountsToAdd.push(workloadAccount);
           }
         }
       }
 
       // put accounts to create in DynamoDb
-      console.log(`Accounts to add: ${JSON.stringify(accountsToAdd)}`);
-      for (const accountToAdd of accountsToAdd) {
+      console.log(`Org Accounts to add: ${JSON.stringify(orgAccountsToAdd)}`);
+      for (const accountToAdd of orgAccountsToAdd) {
         const params = {
-          TableName: newAccountsTableName,
+          TableName: newOrgAccountsTableName,
+          Item: {
+            accountEmail: accountToAdd.email,
+            accountConfig: JSON.stringify(accountToAdd),
+          },
+        };
+        await throttlingBackOff(() => documentClient.put(params).promise());
+      }
+
+      console.log(`CT Accounts to add: ${JSON.stringify(ctAccountsToAdd)}`);
+      for (const accountToAdd of ctAccountsToAdd) {
+        const params = {
+          TableName: newCTAccountsTableName,
           Item: {
             accountEmail: accountToAdd.email,
             accountConfig: JSON.stringify(accountToAdd),
