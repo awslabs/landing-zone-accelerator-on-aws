@@ -17,6 +17,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as path from 'path';
 import { Construct } from 'constructs';
 
 import { Region } from '@aws-accelerator/config';
@@ -25,9 +26,14 @@ import {
   BucketEncryptionType,
   BudgetDefinition,
   EnableAwsServiceAccess,
+  EnablePolicyType,
   EnableSharingWithAwsOrganization,
   GuardDutyOrganizationAdminAccount,
   MacieOrganizationAdminAccount,
+  Policy,
+  PolicyAttachment,
+  PolicyType,
+  PolicyTypeEnum,
   RegisterDelegatedAdministrator,
   ReportDefinition,
   SecurityHubOrganizationAdminAccount,
@@ -36,6 +42,7 @@ import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { pascalCase } from 'pascal-case';
 
 export interface OrganizationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
@@ -327,7 +334,31 @@ export class OrganizationsStack extends AcceleratorStack {
         );
       }
     }
+    //
+    // Tagging Policies Config
+    //
+    if (props.organizationConfig.taggingPolicies) {
+      Logger.info(`[organizations-stack] Adding Tagging Policies`);
+      new EnablePolicyType(this, 'enablePolicyTypeTag', {
+        policyType: PolicyTypeEnum.TAG_POLICY,
+      });
+      for (const taggingPolicy of props.organizationConfig.taggingPolicies ?? []) {
+        for (const orgUnit of taggingPolicy.deploymentTargets.organizationalUnits) {
+          const policy = new Policy(this, taggingPolicy.name, {
+            description: taggingPolicy.description,
+            name: taggingPolicy.name,
+            path: path.join(props.configDirPath, taggingPolicy.policy),
+            type: PolicyType.TAG_POLICY,
+          });
 
+          new PolicyAttachment(this, pascalCase(`Attach_${taggingPolicy.name}_${orgUnit}`), {
+            policyId: policy.id,
+            targetId: props.organizationConfig.getOrganizationalUnitId(orgUnit),
+            type: PolicyType.TAG_POLICY,
+          });
+        }
+      }
+    }
     //
     // Configure Trusted Services and Delegated Management Accounts
     //

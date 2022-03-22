@@ -53,4 +53,3 @@ reports:
       thresholdType: PERCENTAGE
       threshold: 90
       comparisonOperator: GREATER_THAN
-      

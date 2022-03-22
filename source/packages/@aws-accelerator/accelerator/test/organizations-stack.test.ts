@@ -62,14 +62,14 @@ describe('OrganizationsStack', () => {
    * Number of Lambda function resource test
    */
   test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 6);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 9);
   });
 
   /**
    * Number of Lambda IAM role resource test
    */
   test(`${testNamePrefix} Lambda IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 6);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 9);
   });
 
   /**
