@@ -1,4 +1,9 @@
-import { GlobalConfig, IamConfig, NetworkConfig, SecurityConfig } from '@aws-accelerator/config';
+import {
+  GlobalConfig,
+  IamConfig,
+  NetworkConfig,
+  SecurityConfig,
+} from '@aws-accelerator/config';
 
 const globalConfigJson = {
   homeRegion: 'us-east-1',
@@ -19,6 +24,17 @@ const globalConfigJson = {
     identityPerimeter: { enable: true },
     resourcePerimeter: { enable: true },
     networkPerimeter: { enable: true },
+  },
+  reports: {
+    costAndUsageReport: {
+      compression: 'Parquet',
+      format: 'Parquet',
+      reportName: 'TestReport',
+      s3Prefix: 'cur',
+      timeUnit: 'DAILY',
+      refreshClosedReports: true,
+      reportVersioning: 'OVERWRITE_REPORT',
+    },
   },
 };
 
