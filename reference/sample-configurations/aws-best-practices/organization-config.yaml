@@ -27,3 +27,10 @@ serviceControlPolicies:
     deploymentTargets:
       organizationalUnits:
         - Security
+taggingPolicies:
+  - name: OrgTagPolicy
+    description: Organization Tagging Policy
+    policy: tagging-policies/org-tag-policy.json
+    deploymentTargets:
+        organizationalUnits:
+          - Root

@@ -40,11 +40,19 @@ export abstract class OrganizationConfigTypes {
     deploymentTargets: t.deploymentTargets,
   });
 
+  static readonly tagPolicyConfig = t.interface({
+    name: t.nonEmptyString,
+    description: t.string,
+    policy: t.string,
+    deploymentTargets: t.deploymentTargets,
+  });
+
   static readonly organizationConfig = t.interface({
     enable: t.boolean,
     organizationalUnits: t.array(this.organizationalUnitConfig),
     organizationalUnitIds: t.optional(t.array(this.organizationalUnitIdConfig)),
     serviceControlPolicies: t.array(this.serviceControlPolicyConfig),
+    taggingPolicies: t.array(this.tagPolicyConfig),
   });
 }
 
@@ -70,6 +78,13 @@ export abstract class ServiceControlPolicyConfig
   readonly description: string = '';
   readonly policy: string = '';
   readonly type: string = 'customerManaged';
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
+export abstract class TaggingPolicyConfig implements t.TypeOf<typeof OrganizationConfigTypes.tagPolicyConfig> {
+  readonly name: string = '';
+  readonly description: string = '';
+  readonly policy: string = '';
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
 
@@ -107,6 +122,13 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * @see ServiceControlPolicyConfig
    */
   readonly serviceControlPolicies: ServiceControlPolicyConfig[] = [];
+
+  /**
+   * A Record of Tagging Policy configurations
+   *
+   * @see TaggingPolicyConfig
+   */
+  readonly taggingPolicies: TaggingPolicyConfig[] = [];
 
   /**
    *

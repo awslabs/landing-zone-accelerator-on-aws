@@ -663,6 +663,20 @@ export const ORGANIZATION_CONFIG = {
       },
     },
   ],
+  taggingPolicies: [
+    {
+      name: 'OrgTagPolicy',
+      description: 'Organization Tagging Policy',
+      policy: 'tagging-policies/org-tag-policy.json',
+      type: 'customerManaged',
+      deploymentTargets: {
+        organizationalUnits: ['Root'],
+        accounts: ['Management'],
+        excludedRegions: [],
+        excludedAccounts: [],
+      },
+    },
+  ],
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   loadOrganizationalUnitIds: async function (): Promise<void> {},
   getOrganizationalUnitId: function (name: string) {
