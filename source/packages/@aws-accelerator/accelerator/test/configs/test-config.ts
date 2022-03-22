@@ -1,4 +1,9 @@
-import { GlobalConfig, IamConfig, NetworkConfig, SecurityConfig } from '@aws-accelerator/config';
+import {
+  GlobalConfig,
+  IamConfig,
+  NetworkConfig,
+  SecurityConfig,
+} from '@aws-accelerator/config';
 
 const globalConfigJson = {
   homeRegion: 'us-east-1',
@@ -159,6 +164,74 @@ const networkConfigJson = {
       ],
     },
   ],
+  centralNetworkServices: {
+    delegatedAdminAccount: 'Audit',
+    route53Resolver: {
+      endpoints: [
+        {
+          name: 'Accelerator-Inbound',
+          type: 'INBOUND',
+          vpc: 'Test',
+          subnets: ['public-a', 'public-b'],
+        },
+        {
+          name: 'Accelerator-Outbound',
+          type: 'OUTBOUND',
+          vpc: 'Test',
+          subnets: ['public-a', 'public-b'],
+          rules: [
+            {
+              name: 'example-rule',
+              domainName: 'example.com',
+              targetIps: [
+                {
+                  ip: '1.1.1.1',
+                },
+                {
+                  ip: '2.2.2.2',
+                },
+              ],
+              shareTargets: {
+                organizationalUnits: ['Sandbox'],
+              },
+            },
+          ],
+        },
+      ],
+      queryLogs: {
+        name: 'Accelerator-Query-Logs',
+        destinations: ['s3', 'cloud-watch-logs'],
+        shareTargets: {
+          organizationalUnits: ['Sandbox'],
+        },
+      },
+      firewallRuleGroups: [
+        {
+          name: 'Accelerator-Block-Group',
+          regions: ['us-east-1'],
+          rules: [
+            {
+              name: 'Custom-Rule',
+              action: 'BLOCK',
+              customDomainList: 'dns-firewall-rule-groups/domain-list.txt',
+              priority: 100,
+              blockResponse: 'NXDOMAIN',
+            },
+            {
+              name: 'Managed-Rule',
+              action: 'BLOCK',
+              managedDomainList: 'AWSManagedDomainsBotnetCommandandControl',
+              priority: 200,
+              blockResponse: 'NODATA',
+            },
+          ],
+          shareTargets: {
+            organizationalUnits: ['Sandbox'],
+          },
+        },
+      ],
+    },
+  },
   prefixLists: [
     {
       name: 'Test',
@@ -178,6 +251,14 @@ const networkConfigJson = {
       internetGateway: true,
       enableDnsHostnames: false,
       enableDnsSupport: true,
+      dnsFirewallRuleGroups: [
+        {
+          name: 'Accelerator-Block-Group',
+          priority: 101,
+        },
+      ],
+      queryLogs: ['Accelerator-Query-Logs'],
+      resolverRules: ['example-rule'],
       instanceTenancy: 'default',
       routeTables: [
         {

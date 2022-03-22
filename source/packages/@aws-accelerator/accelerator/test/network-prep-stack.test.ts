@@ -1,8 +1,12 @@
 import * as cdk from 'aws-cdk-lib';
+import * as path from 'path';
+
 import { SynthUtils } from '@aws-cdk/assert';
-import { NetworkPrepStack } from '../lib/stacks/network-prep-stack';
+
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
+import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
+import { NetworkPrepStack } from '../lib/stacks/network-prep-stack';
 import {
   ACCOUNT_CONFIG,
   GLOBAL_CONFIG,
@@ -11,8 +15,6 @@ import {
   ORGANIZATION_CONFIG,
   SECURITY_CONFIG,
 } from './configs/test-config';
-import * as path from 'path';
-import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 
 const testNamePrefix = 'Construct(NetworkPrepStack): ';
 
@@ -43,7 +45,7 @@ const props: AcceleratorStackProps = {
 
 const stack = new NetworkPrepStack(
   app,
-  `${AcceleratorStackNames[AcceleratorStage.SECURITY]}-${env.account}-${env.region}`,
+  `${AcceleratorStackNames[AcceleratorStage.NETWORK_PREP]}-${env.account}-${env.region}`,
   props,
 );
 
@@ -352,7 +354,7 @@ describe('NetworkPrepStack', () => {
         SsmParamStackId521A78D3: {
           Type: 'AWS::SSM::Parameter',
           Properties: {
-            Name: '/accelerator/AWSAccelerator-SecurityStack-333333333333-us-east-1/stack-id',
+            Name: '/accelerator/AWSAccelerator-NetworkPrepStack-333333333333-us-east-1/stack-id',
             Type: 'String',
             Value: {
               Ref: 'AWS::StackId',

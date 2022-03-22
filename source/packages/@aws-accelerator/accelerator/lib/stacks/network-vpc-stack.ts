@@ -16,10 +16,13 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
 import {
+  AccountsConfig,
   NetworkAclSubnetSelection,
   NetworkConfigTypes,
   nonEmptyString,
+  OrganizationConfig,
   PrefixListSourceConfig,
+  ResolverEndpointConfig,
   SecurityGroupRuleConfig,
   SecurityGroupSourceConfig,
   SubnetSourceConfig,
@@ -34,6 +37,8 @@ import {
   Organization,
   PrefixList,
   RecordSet,
+  ResolverEndpoint,
+  ResolverRule,
   ResourceShare,
   ResourceShareItem,
   ResourceShareOwner,
@@ -849,6 +854,49 @@ export class NetworkVpcStack extends AcceleratorStack {
             );
           }
         }
+
+        //
+        // Create Route 53 Resolver Endpoints
+        //
+        if (props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints) {
+          const delegatedAdminAccountId = props.accountsConfig.getAccountId(
+            props.networkConfig.centralNetworkServices.delegatedAdminAccount,
+          );
+          const vpcAccountId = props.accountsConfig.getAccountId(vpcItem.account);
+          const endpoints = props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints;
+          const endpointMap = new Map<string, ResolverEndpoint>();
+
+          // Check if the VPC has matching subnets
+          for (const endpointItem of endpoints) {
+            if (vpcItem.name === endpointItem.vpc) {
+              const r53Subnets: string[] = [];
+
+              for (const subnetItem of endpointItem.subnets) {
+                if (subnetMap.has(subnetItem)) {
+                  r53Subnets.push(subnetMap.get(subnetItem)!.subnetId);
+                } else {
+                  throw new Error(`Subnet not found in VPC ${vpcItem.name}`);
+                }
+              }
+              // Create endpoint
+              if (r53Subnets.length > 0 && vpcAccountId === delegatedAdminAccountId) {
+                const endpoint = this.createResolverEndpoint(
+                  endpointItem,
+                  endpointMap,
+                  vpc,
+                  r53Subnets,
+                  props.accountsConfig,
+                  props.organizationConfig,
+                );
+                endpointMap.set(endpointItem.name, endpoint);
+              } else {
+                throw new Error(
+                  'VPC for Route 53 Resolver endpoints must be located in the delegated network administrator account',
+                );
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -1316,5 +1364,164 @@ export class NetworkVpcStack extends AcceleratorStack {
         });
       }
     }
+  }
+
+  //
+  // Create Route 53 Resolver endpoints
+  //
+  private createResolverEndpoint(
+    endpointItem: ResolverEndpointConfig,
+    endpointMap: Map<string, ResolverEndpoint>,
+    vpc: Vpc,
+    subnets: string[],
+    accountsConfig: AccountsConfig,
+    orgConfig: OrganizationConfig,
+  ) {
+    // Validate there are no rules associated with an inbound endpoint
+    if (endpointItem.type === 'INBOUND' && endpointItem.rules) {
+      throw new Error('Route 53 Resolver inbound endpoints cannot have rules.');
+    }
+
+    // Create security group
+    Logger.info(`[network-vpc-stack] Adding Security Group for Route 53 Resolver endpoint ${endpointItem.name}`);
+    const securityGroup = new SecurityGroup(this, pascalCase(`${endpointItem.name}EpSecurityGroup`), {
+      securityGroupName: `ep_${endpointItem.name}_sg`,
+      description: `AWS Route 53 Resolver endpoint - ${endpointItem.name}`,
+      vpc,
+    });
+
+    if (endpointItem.type === 'INBOUND') {
+      let ingressRuleIndex = 0; // Used increment ingressRule id
+
+      for (const ingressCidr of endpointItem.allowedCidrs || ['0.0.0.0/0']) {
+        const port = 53;
+
+        let ingressRuleId = `ep_${endpointItem.name}_sg-Ingress-${ingressRuleIndex++}`;
+        Logger.info(`[network-vpc-stack] Adding ingress cidr ${ingressCidr} TCP:${port} to ${ingressRuleId}`);
+        securityGroup.addIngressRule(ingressRuleId, {
+          ipProtocol: cdk.aws_ec2.Protocol.TCP,
+          fromPort: port,
+          toPort: port,
+          cidrIp: ingressCidr,
+        });
+
+        ingressRuleId = `ep_${endpointItem.name}_sg-Ingress-${ingressRuleIndex++}`;
+        Logger.info(`[network-vpc-stack] Adding ingress cidr ${ingressCidr} UDP:${port} to ${ingressRuleId}`);
+        securityGroup.addIngressRule(ingressRuleId, {
+          ipProtocol: cdk.aws_ec2.Protocol.UDP,
+          fromPort: port,
+          toPort: port,
+          cidrIp: ingressCidr,
+        });
+      }
+
+      // Adding Egress '127.0.0.1/32' to avoid default Egress rule
+      securityGroup.addEgressRule(`ep_${endpointItem.name}_sg-Egress`, {
+        ipProtocol: cdk.aws_ec2.Protocol.ALL,
+        cidrIp: '127.0.0.1/32',
+      });
+    } else {
+      let egressRuleIndex = 0;
+
+      for (const egressCidr of endpointItem.allowedCidrs || ['0.0.0.0/0']) {
+        const port = 53;
+
+        let egressRuleId = `ep_${endpointItem.name}_sg-Egress-${egressRuleIndex++}`;
+        Logger.info(`[network-vpc-stack] Adding egress cidr ${egressCidr} TCP:${port} to ${egressRuleId}`);
+        securityGroup.addEgressRule(egressRuleId, {
+          ipProtocol: cdk.aws_ec2.Protocol.TCP,
+          fromPort: port,
+          toPort: port,
+          cidrIp: egressCidr,
+        });
+
+        egressRuleId = `ep_${endpointItem.name}_sg-Egress-${egressRuleIndex++}`;
+        Logger.info(`[network-vpc-stack] Adding egress cidr ${egressCidr} UDP:${port} to ${egressRuleId}`);
+        securityGroup.addEgressRule(egressRuleId, {
+          ipProtocol: cdk.aws_ec2.Protocol.UDP,
+          fromPort: port,
+          toPort: port,
+          cidrIp: egressCidr,
+        });
+      }
+    }
+
+    Logger.info(`[network-vpc-stack] Add Route 53 Resolver ${endpointItem.type} endpoint ${endpointItem.name}`);
+    const endpoint = new ResolverEndpoint(this, `${pascalCase(endpointItem.name)}ResolverEndpoint`, {
+      direction: endpointItem.type,
+      ipAddresses: subnets,
+      name: endpointItem.name,
+      securityGroupIds: [securityGroup.securityGroupId],
+      tags: endpointItem.tags ?? [],
+    });
+    new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${endpointItem.name}ResolverEndpoint`), {
+      parameterName: `/accelerator/network/route53Resolver/endpoints/${endpointItem.name}/id`,
+      stringValue: endpoint.endpointId,
+    });
+
+    // Create rules
+    for (const ruleItem of endpointItem.rules ?? []) {
+      Logger.info(`[network-vpc-stack] Add Route 53 Resolver rule ${ruleItem.name}`);
+
+      // Check whether there is an inbound endpoint target
+      let inboundTarget: ResolverEndpoint | undefined = undefined;
+      if (ruleItem.inboundEndpointTarget) {
+        inboundTarget = endpointMap.get(ruleItem.inboundEndpointTarget);
+        if (!inboundTarget) {
+          throw new Error(`[network-vpc-stack] Endpoint ${ruleItem.inboundEndpointTarget} not found in endpoint map`);
+        }
+      }
+
+      // Create resolver rule and SSM parameter
+      const rule = new ResolverRule(this, `${pascalCase(endpointItem.name)}ResolverRule${pascalCase(ruleItem.name)}`, {
+        domainName: ruleItem.domainName,
+        name: ruleItem.name,
+        ruleType: ruleItem.ruleType,
+        resolverEndpointId: endpoint.endpointId,
+        targetIps: ruleItem.targetIps,
+        tags: ruleItem.tags ?? [],
+        targetInbound: inboundTarget,
+      });
+      new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${ruleItem.name}ResolverRule`), {
+        parameterName: `/accelerator/network/route53Resolver/rules/${ruleItem.name}/id`,
+        stringValue: rule.ruleId,
+      });
+
+      if (ruleItem.shareTargets) {
+        Logger.info(`[network-vpc-stack] Share Route 53 Resolver rule ${ruleItem.name}`);
+
+        // Build a list of principals to share to
+        const principals: string[] = [];
+
+        // Loop through all the defined OUs
+        for (const ouItem of ruleItem.shareTargets.organizationalUnits ?? []) {
+          let ouArn = orgConfig.getOrganizationalUnitArn(ouItem);
+          // AWS::RAM::ResourceShare expects the organizations ARN if
+          // sharing with the entire org (Root)
+          if (ouItem === 'Root') {
+            ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
+          }
+          Logger.info(`[network-vpc-stack] Share rule ${ruleItem.name} with Organizational Unit ${ouItem}: ${ouArn}`);
+          principals.push(ouArn);
+        }
+
+        // Loop through all the defined accounts
+        for (const account of ruleItem.shareTargets.accounts ?? []) {
+          const accountId = accountsConfig.getAccountId(account);
+          Logger.info(`[network-vpc-stack] Share rule ${ruleItem.name} with Account ${account}: ${accountId}`);
+          principals.push(accountId);
+        }
+
+        // Create the Resource Share
+        new ResourceShare(this, `${pascalCase(ruleItem.name)}ResolverRuleShare`, {
+          name: `${ruleItem.name}_ResolverRule`,
+          principals,
+          resourceArns: [rule.ruleArn],
+        });
+      }
+    }
+
+    // Return endpoint object
+    return endpoint;
   }
 }

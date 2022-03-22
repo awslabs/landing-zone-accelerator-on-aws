@@ -91,7 +91,7 @@ Object {
     },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
-        "Name": "/accelerator/AWSAccelerator-SecurityStack-333333333333-us-east-1/version",
+        "Name": "/accelerator/AWSAccelerator-NetworkPrepStack-333333333333-us-east-1/version",
         "Type": "String",
         "Value": "0.6.0-rc001",
       },
@@ -149,7 +149,7 @@ Object {
     },
     "SsmParamStackId521A78D3": Object {
       "Properties": Object {
-        "Name": "/accelerator/AWSAccelerator-SecurityStack-333333333333-us-east-1/stack-id",
+        "Name": "/accelerator/AWSAccelerator-NetworkPrepStack-333333333333-us-east-1/stack-id",
         "Type": "String",
         "Value": Object {
           "Ref": "AWS::StackId",

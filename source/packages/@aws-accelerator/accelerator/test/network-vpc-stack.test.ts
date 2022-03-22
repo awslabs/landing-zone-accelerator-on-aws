@@ -1,7 +1,10 @@
 import * as cdk from 'aws-cdk-lib';
-import { NetworkVpcStack } from '../lib/stacks/network-vpc-stack';
+import * as path from 'path';
+
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
+import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
+import { NetworkVpcStack } from '../lib/stacks/network-vpc-stack';
 import {
   ACCOUNT_CONFIG,
   GLOBAL_CONFIG,
@@ -10,8 +13,6 @@ import {
   ORGANIZATION_CONFIG,
   SECURITY_CONFIG,
 } from './configs/test-config';
-import * as path from 'path';
-import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 
 const testNamePrefix = 'Construct(NetworkVpcStack): ';
 
@@ -42,7 +43,7 @@ const props: AcceleratorStackProps = {
 
 const stack = new NetworkVpcStack(
   app,
-  `${AcceleratorStackNames[AcceleratorStage.SECURITY]}-${env.account}-${env.region}`,
+  `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC]}-${env.account}-${env.region}`,
   props,
 );
 
@@ -422,7 +423,7 @@ describe('NetworkVpcStack', () => {
         SsmParamStackId521A78D3: {
           Type: 'AWS::SSM::Parameter',
           Properties: {
-            Name: '/accelerator/AWSAccelerator-SecurityStack-333333333333-us-east-1/stack-id',
+            Name: '/accelerator/AWSAccelerator-NetworkVpcStack-333333333333-us-east-1/stack-id',
             Type: 'String',
             Value: {
               Ref: 'AWS::StackId',

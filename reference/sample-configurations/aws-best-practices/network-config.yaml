@@ -40,6 +40,68 @@ transitGateways:
 #     ntpServers:
 #       - 1.1.1.1
 #       - 2.2.2.2
+# centralNetworkServices:
+#   delegatedAdminAccount: Network
+#   route53Resolver:
+#     endpoints:
+#       - name: accelerator-inbound
+#         type: INBOUND
+#         vpc: Network-Endpoints
+#         subnets: 
+#           - Network-Endpoints-A
+#           - Network-Endpoints-B
+#       - name: accelerator-outbound
+#         type: OUTBOUND
+#         vpc: Network-Endpoints
+#         subnets:
+#           - Network-Endpoints-A
+#           - Network-Endpoints-B
+#         rules:
+#           - name: example-rule
+#             domainName: example.com
+#             targetIps:
+#               - ip: 1.1.1.1
+#                 port: 5353 # only include if targeting a non-standard DNS port
+#               - ip: 2.2.2.2
+#             shareTargets:
+#               organizationalUnits:
+#                 - Infrastructure
+#           - name: inbound-target-rule
+#             domainName: aws.internal.domain
+#             inboundEndpointTarget: accelerator-inbound # This endpoint must be listed in the configuration before the outbound endpoint
+#     queryLogs:
+#       name: accelerator-query-logs
+#       destinations:
+#         - s3
+#         - cloud-watch-logs
+#       shareTargets:
+#         organizationalUnits:
+#           - Infrastructure
+#     firewallRuleGroups:
+#       - name: accelerator-block-group
+#         regions:
+#           - *HOME_REGION
+#         rules:
+#           - name: nxdomain-block-rule
+#             action: BLOCK
+#             customDomainList: dns-firewall-domain-lists/domain-list-1.txt
+#             priority: 100
+#             blockResponse: NXDOMAIN
+#           - name: override-block-rule
+#             action: BLOCK
+#             customDomainList: dns-firewall-domain-lists/domain-list-2.txt
+#             priority: 200
+#             blockResponse: OVERRIDE
+#             blockOverrideDomain: amazon.com
+#             blockOverrideTtl: 3600
+#           - name: managed-rule
+#             action: BLOCK
+#             managedDomainList: AWSManagedDomainsBotnetCommandandControl
+#             priority: 300
+#             blockResponse: NODATA
+#         shareTargets:
+#           organizationalUnits:
+#             - Infrastructure
 # prefixList:
 #   - name: accelerator-prefix-list
 #     accounts:
@@ -61,6 +123,13 @@ vpcs:
     enableDnsHostnames: true
     enableDnsSupport: true
     instanceTenancy: default
+    # dnsFirewallRuleGroups:
+    #   - name: accelerator-block-group
+    #     priority: 101
+    # queryLogs:
+    #   - accelerator-query-logs
+    # resolverRules:
+    #   - example-rule
     routeTables:
       - name: Network-Endpoints-Default
         routes:
