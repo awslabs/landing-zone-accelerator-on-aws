@@ -11,16 +11,24 @@
  *  and limitations under the License.
  */
 
-import {
-  AssociateHostedZones,
-  TransitGatewayAttachment,
-  TransitGatewayRouteTableAssociation,
-  TransitGatewayRouteTablePropagation,
-} from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
+
+import {
+  AssociateHostedZones,
+  QueryLoggingConfigAssociation,
+  ResolverFirewallRuleGroupAssociation,
+  ResolverRuleAssociation,
+  ResourceShare,
+  ResourceShareItem,
+  ResourceShareOwner,
+  TransitGatewayAttachment,
+  TransitGatewayRouteTableAssociation,
+  TransitGatewayRouteTablePropagation,
+} from '@aws-accelerator/constructs';
+
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
@@ -68,7 +76,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             let transitGatewayAttachmentId;
             if (accountId === owningAccountId) {
               Logger.info(
-                `[network-tgw-attach-stack] Update route tables for attachment ${tgwAttachmentItem.name} from local account ${owningAccountId}`,
+                `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from local account ${owningAccountId}`,
               );
               transitGatewayAttachmentId = ssm.StringParameter.valueForStringParameter(
                 this,
@@ -76,7 +84,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               );
             } else {
               Logger.info(
-                `[network-tgw-attach-stack] Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
+                `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
               );
 
               const transitGatewayAttachment = TransitGatewayAttachment.fromLookup(
@@ -151,7 +159,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     centralEndpointVpc = centralEndpointVpcs[0];
 
     if (centralEndpointVpc) {
-      Logger.info('[network-vpc-stack] Central endpoints VPC detected, share private hosted zone with member VPCs');
+      Logger.info(
+        '[network-associations-stack] Central endpoints VPC detected, share private hosted zone with member VPCs',
+      );
 
       // Generate list of accounts with VPCs that needed to set up share
       const accountIds: string[] = [];
@@ -191,6 +201,227 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           },
         ],
       });
+    }
+
+    //
+    // Route 53 Resolver associations
+    //
+    const dnsFirewallMap = new Map<string, string>();
+    const queryLogMap = new Map<string, string>();
+    const resolverRuleMap = new Map<string, string>();
+    const centralNetworkConfig = props.networkConfig.centralNetworkServices;
+
+    for (const vpcItem of props.networkConfig.vpcs ?? []) {
+      const accountId = props.accountsConfig.getAccountId(vpcItem.account);
+      // Only care about VPCs to be created in the current account and region
+      if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
+        // DNS firewall rule group associations
+        for (const firewallItem of vpcItem.dnsFirewallRuleGroups ?? []) {
+          // Get VPC ID
+          const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            `/accelerator/network/vpc/${vpcItem.name}/id`,
+          );
+
+          // Skip lookup if already added to map
+          if (dnsFirewallMap.has(firewallItem.name)) {
+            continue;
+          }
+
+          if (centralNetworkConfig?.delegatedAdminAccount) {
+            const owningAccountId = props.accountsConfig.getAccountId(centralNetworkConfig.delegatedAdminAccount);
+
+            // Get SSM parameter if this is the owning account
+            if (owningAccountId === cdk.Stack.of(this).account) {
+              const ruleId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                this,
+                `/accelerator/network/route53Resolver/firewall/ruleGroups/${firewallItem.name}/id`,
+              );
+              Logger.info(`[network-associations-stack] Adding [${firewallItem.name}]: ${ruleId} to dnsFirewallMap`);
+              dnsFirewallMap.set(firewallItem.name, ruleId);
+            } else {
+              // Get ID from the resource share
+              const resourceShare = ResourceShare.fromLookup(
+                this,
+                pascalCase(`${firewallItem.name}ResolverFirewallRuleGroupShare`),
+                {
+                  resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
+                  resourceShareName: `${firewallItem.name}_ResolverFirewallRuleGroupShare`,
+                  owningAccountId,
+                },
+              );
+
+              // Represents the rule group
+              const rule = ResourceShareItem.fromLookup(
+                this,
+                pascalCase(`${firewallItem.name}ResolverFirewallRuleGroup`),
+                {
+                  resourceShare,
+                  resourceShareItemType: 'route53resolver:FirewallRuleGroup',
+                },
+              );
+              dnsFirewallMap.set(firewallItem.name, rule.resourceShareItemId);
+            }
+          }
+
+          // Create association
+          if (!dnsFirewallMap.get(firewallItem.name)) {
+            throw new Error(
+              `[network-associations-stack] Could not find existing DNS firewall rule group ${firewallItem.name}`,
+            );
+          }
+          Logger.info(
+            `[network-associations-stack] Add DNS firewall rule group ${firewallItem.name} to ${vpcItem.name}`,
+          );
+
+          new ResolverFirewallRuleGroupAssociation(
+            this,
+            pascalCase(`${vpcItem.name}${firewallItem.name}RuleGroupAssociation`),
+            {
+              firewallRuleGroupId: dnsFirewallMap.get(firewallItem.name)!,
+              priority: firewallItem.priority,
+              vpcId: vpcId,
+              mutationProtection: firewallItem.mutationProtection,
+              tags: firewallItem.tags,
+            },
+          );
+        }
+
+        //
+        // Route 53 query logging configuration associations
+        //
+        for (const configItem of vpcItem.queryLogs ?? []) {
+          // Get VPC ID
+          const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            `/accelerator/network/vpc/${vpcItem.name}/id`,
+          );
+
+          // Skip lookup if already added to map
+          if (queryLogMap.has(configItem)) {
+            continue;
+          }
+
+          if (centralNetworkConfig?.delegatedAdminAccount) {
+            const owningAccountId = props.accountsConfig.getAccountId(centralNetworkConfig.delegatedAdminAccount);
+
+            // Determine query log destination(s)
+            const configNames: string[] = [];
+            if (centralNetworkConfig.route53Resolver?.queryLogs?.destinations.includes('s3')) {
+              configNames.push(`${configItem}-s3`);
+            }
+            if (centralNetworkConfig.route53Resolver?.queryLogs?.destinations.includes('cloud-watch-logs')) {
+              configNames.push(`${configItem}-cwl`);
+            }
+
+            // Get SSM parameter if this is the owning account
+            for (const nameItem of configNames) {
+              if (owningAccountId === cdk.Stack.of(this).account) {
+                const configId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                  this,
+                  `/accelerator/network/route53Resolver/queryLogConfigs/${nameItem}/id`,
+                );
+                Logger.info(`[network-associations-stack] Adding [${nameItem}]: ${configId} to queryLogMap`);
+                queryLogMap.set(nameItem, configId);
+              } else {
+                // Get ID from the resource share
+                const resourceShare = ResourceShare.fromLookup(
+                  this,
+                  pascalCase(`${vpcItem.name}${nameItem}ResolverQueryLogConfigShare`),
+                  {
+                    resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
+                    resourceShareName: `${nameItem}_QueryLogConfigShare`,
+                    owningAccountId,
+                  },
+                );
+
+                // Represents the rule group
+                const config = ResourceShareItem.fromLookup(
+                  this,
+                  pascalCase(`${vpcItem}${nameItem}ResolverQueryLogConfig`),
+                  {
+                    resourceShare,
+                    resourceShareItemType: 'route53resolver:ResolverQueryLogConfig',
+                  },
+                );
+                queryLogMap.set(nameItem, config.resourceShareItemId);
+              }
+            }
+
+            // Create association
+            for (const nameItem of configNames) {
+              if (!queryLogMap.get(nameItem)) {
+                throw new Error(
+                  `[network-associations-stack] Could not find existing DNS query log config ${nameItem}`,
+                );
+              }
+              Logger.info(`[network-associations-stack] Add DNS query log config ${nameItem} to ${vpcItem.name}`);
+              new QueryLoggingConfigAssociation(this, pascalCase(`${vpcItem.name}${nameItem}QueryLogAssociation`), {
+                resolverQueryLogConfigId: queryLogMap.get(nameItem),
+                vpcId: vpcId,
+              });
+            }
+          }
+        }
+
+        //
+        // Route 53 resolver rule associations
+        //
+        for (const ruleItem of vpcItem.resolverRules ?? []) {
+          // Get VPC ID
+          const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            `/accelerator/network/vpc/${vpcItem.name}/id`,
+          );
+
+          // Skip lookup if already added to map
+          if (resolverRuleMap.has(ruleItem)) {
+            continue;
+          }
+
+          if (centralNetworkConfig?.delegatedAdminAccount) {
+            const owningAccountId = props.accountsConfig.getAccountId(centralNetworkConfig.delegatedAdminAccount);
+
+            // Get SSM parameter if this is the owning account
+            if (owningAccountId === cdk.Stack.of(this).account) {
+              const ruleId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                this,
+                `/accelerator/network/route53Resolver/rules/${ruleItem}/id`,
+              );
+              Logger.info(`[network-associations-stack] Adding [${ruleItem}]: ${ruleId} to resolverRuleMap`);
+              resolverRuleMap.set(ruleItem, ruleId);
+            } else {
+              // Get ID from the resource share
+              const resourceShare = ResourceShare.fromLookup(
+                this,
+                pascalCase(`${vpcItem.name}${ruleItem}ResolverRuleShare`),
+                {
+                  resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
+                  resourceShareName: `${ruleItem}_ResolverRule`,
+                  owningAccountId,
+                },
+              );
+
+              // Represents the rule group
+              const rule = ResourceShareItem.fromLookup(this, pascalCase(`${ruleItem}ResolverRule`), {
+                resourceShare,
+                resourceShareItemType: 'route53resolver:ResolverRule',
+              });
+              resolverRuleMap.set(ruleItem, rule.resourceShareItemId);
+            }
+          }
+
+          // Create association
+          if (!resolverRuleMap.get(ruleItem)) {
+            throw new Error(`[network-associations-stack] Could not find existing Route 53 Resolver rule ${ruleItem}`);
+          }
+          Logger.info(`[network-associations-stack] Add Route 53 Resolver rule ${ruleItem} to ${vpcItem.name}`);
+          new ResolverRuleAssociation(this, pascalCase(`${vpcItem.name}${ruleItem}RuleAssociation`), {
+            resolverRuleId: resolverRuleMap.get(ruleItem)!,
+            vpcId: vpcId,
+          });
+        }
+      }
     }
   }
 }

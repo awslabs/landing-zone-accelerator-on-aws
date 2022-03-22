@@ -231,26 +231,38 @@ export class NetworkConfigTypes {
     tags: t.optional(t.array(t.tag)),
   });
 
+  static readonly mutationProtectionEnum = t.enums('MutationProtectionTypeEnum', ['ENABLED', 'DISABLED']);
+
+  static readonly vpcDnsFirewallAssociationConfig = t.interface({
+    name: t.nonEmptyString,
+    priority: t.number,
+    mutationProtection: t.optional(this.mutationProtectionEnum),
+    tags: t.optional(t.array(t.tag)),
+  });
+
   static readonly vpcConfig = t.interface({
     name: t.nonEmptyString,
     account: t.nonEmptyString,
     region: t.region,
     cidrs: t.array(t.nonEmptyString),
     dhcpOptions: t.optional(t.nonEmptyString),
+    dnsFirewallRuleGroups: t.optional(t.array(this.vpcDnsFirewallAssociationConfig)),
     enableDnsHostnames: t.optional(t.boolean),
     enableDnsSupport: t.optional(t.boolean),
-    instanceTenancy: t.optional(this.instanceTenancyTypeEnum),
-    internetGateway: t.optional(t.boolean),
-    routeTables: t.optional(t.array(this.routeTableConfig)),
-    subnets: t.optional(t.array(this.subnetConfig)),
-    natGateways: t.optional(t.array(this.natGatewayConfig)),
-    transitGatewayAttachments: t.optional(t.array(this.transitGatewayAttachmentConfig)),
     gatewayEndpoints: t.optional(t.array(this.gatewayEndpointEnum)),
+    instanceTenancy: t.optional(this.instanceTenancyTypeEnum),
     interfaceEndpoints: t.optional(this.interfaceEndpointConfig),
+    internetGateway: t.optional(t.boolean),
+    natGateways: t.optional(t.array(this.natGatewayConfig)),
     useCentralEndpoints: t.optional(t.boolean),
     securityGroups: t.optional(t.array(this.securityGroupConfig)),
     prefixLists: t.optional(t.array(this.prefixListConfig)),
     networkAcls: t.optional(t.array(this.networkAclConfig)),
+    queryLogs: t.optional(t.array(t.nonEmptyString)),
+    resolverRules: t.optional(t.array(t.nonEmptyString)),
+    routeTables: t.optional(t.array(this.routeTableConfig)),
+    subnets: t.optional(t.array(this.subnetConfig)),
+    transitGatewayAttachments: t.optional(t.array(this.transitGatewayAttachmentConfig)),
     tags: t.optional(t.array(t.tag)),
   });
 
@@ -274,11 +286,90 @@ export class NetworkConfigTypes {
     customFields: t.optional(t.array(t.nonEmptyString)),
   });
 
+  static readonly ruleTypeEnum = t.enums('ResolverRuleType', ['FORWARD', 'RECURSIVE', 'SYSTEM']);
+
+  static readonly ruleTargetIps = t.interface({
+    ip: t.nonEmptyString,
+    port: t.optional(t.nonEmptyString),
+  });
+
+  static readonly resolverRuleConfig = t.interface({
+    name: t.nonEmptyString,
+    domainName: t.nonEmptyString,
+    inboundEndpointTarget: t.optional(t.nonEmptyString),
+    ruleType: t.optional(this.ruleTypeEnum),
+    shareTargets: t.optional(t.shareTargets),
+    targetIps: t.optional(t.array(this.ruleTargetIps)),
+    tags: t.optional(t.array(t.tag)),
+  });
+
+  static readonly resolverEndpointTypeEnum = t.enums('ResolverEndpointType', ['INBOUND', 'OUTBOUND']);
+
+  static readonly resolverEndpointConfig = t.interface({
+    name: t.nonEmptyString,
+    type: this.resolverEndpointTypeEnum,
+    vpc: t.nonEmptyString,
+    subnets: t.array(t.nonEmptyString),
+    allowedCidrs: t.optional(t.array(t.nonEmptyString)),
+    rules: t.optional(t.array(this.resolverRuleConfig)),
+    tags: t.optional(t.array(t.tag)),
+  });
+
+  static readonly dnsQueryLogsConfig = t.interface({
+    name: t.nonEmptyString,
+    destinations: t.array(this.logDestinationTypeEnum),
+    shareTargets: t.optional(t.shareTargets),
+  });
+
+  static readonly dnsFirewallRuleActionTypeEnum = t.enums('DnsFirewallRuleAction', ['ALLOW', 'ALERT', 'BLOCK']);
+
+  static readonly dnsFirewallBlockResponseTypeEnum = t.enums('DnsFirewallBlockResponseType', [
+    'NODATA',
+    'NXDOMAIN',
+    'OVERRIDE',
+  ]);
+
+  static readonly dnsFirewallManagedDomainListEnum = t.enums('DnsFirewallManagedDomainLists', [
+    'AWSManagedDomainsBotnetCommandandControl',
+    'AWSManagedDomainsMalwareDomainList',
+  ]);
+
+  static readonly dnsFirewallRulesConfig = t.interface({
+    name: t.nonEmptyString,
+    action: this.dnsFirewallRuleActionTypeEnum,
+    priority: t.number,
+    blockOverrideDomain: t.optional(t.nonEmptyString),
+    blockOverrideTtl: t.optional(t.number),
+    blockResponse: t.optional(this.dnsFirewallBlockResponseTypeEnum),
+    customDomainList: t.optional(t.nonEmptyString),
+    managedDomainList: t.optional(this.dnsFirewallManagedDomainListEnum),
+  });
+
+  static readonly dnsFirewallRuleGroupConfig = t.interface({
+    name: t.nonEmptyString,
+    regions: t.array(t.region),
+    rules: t.array(this.dnsFirewallRulesConfig),
+    shareTargets: t.optional(t.shareTargets),
+    tags: t.optional(t.array(t.tag)),
+  });
+
+  static readonly resolverConfig = t.interface({
+    endpoints: t.optional(t.array(this.resolverEndpointConfig)),
+    firewallRuleGroups: t.optional(t.array(this.dnsFirewallRuleGroupConfig)),
+    queryLogs: t.optional(this.dnsQueryLogsConfig),
+  });
+
+  static readonly centralNetworkServicesConfig = t.interface({
+    delegatedAdminAccount: t.nonEmptyString,
+    route53Resolver: t.optional(this.resolverConfig),
+  });
+
   static readonly networkConfig = t.interface({
     defaultVpc: this.defaultVpcsConfig,
     transitGateways: t.array(this.transitGatewayConfig),
     vpcs: t.array(this.vpcConfig),
     vpcFlowLogs: this.vpcFlowLogsConfig,
+    centralNetworkServices: t.optional(this.centralNetworkServicesConfig),
     dhcpOptions: t.optional(t.array(this.dhcpOptsConfig)),
   });
 }
@@ -506,6 +597,12 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
   readonly dhcpOptions: string | undefined = undefined;
 
   /**
+   * A list of DNS firewall rule group names.
+   */
+  readonly dnsFirewallRuleGroups: t.TypeOf<typeof NetworkConfigTypes.vpcDnsFirewallAssociationConfig>[] | undefined =
+    undefined;
+
+  /**
    * Defines if an internet gateway should be added to the VPC
    */
   readonly internetGateway: boolean | undefined = undefined;
@@ -515,6 +612,16 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
   readonly enableDnsSupport: boolean | undefined = true;
 
   readonly instanceTenancy: t.TypeOf<typeof NetworkConfigTypes.instanceTenancyTypeEnum> | undefined = 'default';
+
+  /**
+   * An optional list of DNS query log configuration names.
+   */
+  readonly queryLogs: string[] | undefined = undefined;
+
+  /**
+   * An optional list of Route 53 resolver rule names.
+   */
+  readonly resolverRules: string[] | undefined = undefined;
 
   readonly routeTables: RouteTableConfig[] | undefined = undefined;
 
@@ -527,7 +634,7 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
   readonly gatewayEndpoints: t.TypeOf<typeof NetworkConfigTypes.gatewayEndpointEnum>[] | undefined = undefined;
 
   /**
-   * A list of VPC
+   * A list of VPC interface endpoints.
    */
   readonly interfaceEndpoints: InterfaceEndpointConfig | undefined = undefined;
 
@@ -607,6 +714,63 @@ export class VpcFlowLogsConfig implements t.TypeOf<typeof NetworkConfigTypes.vpc
   ];
 }
 
+export class ResolverRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.resolverRuleConfig> {
+  readonly name: string = '';
+  readonly domainName: string = '';
+  readonly inboundEndpointTarget: string | undefined = undefined;
+  readonly ruleType: t.TypeOf<typeof NetworkConfigTypes.ruleTypeEnum> | undefined = 'FORWARD';
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
+  readonly tags: t.Tag[] | undefined = undefined;
+  readonly targetIps: t.TypeOf<typeof NetworkConfigTypes.ruleTargetIps>[] | undefined = undefined;
+}
+
+export class ResolverEndpointConfig implements t.TypeOf<typeof NetworkConfigTypes.resolverEndpointConfig> {
+  readonly name: string = '';
+  readonly type: t.TypeOf<typeof NetworkConfigTypes.resolverEndpointTypeEnum> = 'INBOUND';
+  readonly vpc: string = '';
+  readonly subnets: string[] = [];
+  readonly allowedCidrs: string[] | undefined = undefined;
+  readonly rules: ResolverRuleConfig[] | undefined = undefined;
+  readonly tags: t.Tag[] | undefined = undefined;
+}
+
+export class DnsQueryLogsConfig implements t.TypeOf<typeof NetworkConfigTypes.dnsQueryLogsConfig> {
+  readonly name: string = '';
+  readonly destinations: t.TypeOf<typeof NetworkConfigTypes.logDestinationTypeEnum>[] = ['s3'];
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
+}
+
+export class DnsFirewallRulesConfig implements t.TypeOf<typeof NetworkConfigTypes.dnsFirewallRulesConfig> {
+  readonly name: string = '';
+  readonly action: t.TypeOf<typeof NetworkConfigTypes.dnsFirewallRuleActionTypeEnum> = 'ALERT';
+  readonly priority: number = 100;
+  readonly blockOverrideDomain: string | undefined = undefined;
+  readonly blockOverrideTtl: number | undefined = undefined;
+  readonly blockResponse: t.TypeOf<typeof NetworkConfigTypes.dnsFirewallBlockResponseTypeEnum> | undefined = undefined;
+  readonly customDomainList: string | undefined = undefined;
+  readonly managedDomainList: t.TypeOf<typeof NetworkConfigTypes.dnsFirewallManagedDomainListEnum> | undefined =
+    undefined;
+}
+
+export class DnsFirewallRuleGroupConfig implements t.TypeOf<typeof NetworkConfigTypes.dnsFirewallRuleGroupConfig> {
+  readonly name: string = '';
+  readonly regions: t.Region[] = ['us-east-1'];
+  readonly rules: DnsFirewallRulesConfig[] = [];
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
+  readonly tags: t.Tag[] | undefined = undefined;
+}
+
+export class ResolverConfig implements t.TypeOf<typeof NetworkConfigTypes.resolverConfig> {
+  readonly endpoints: ResolverEndpointConfig[] | undefined = undefined;
+  readonly firewallRuleGroups: DnsFirewallRuleGroupConfig[] | undefined = undefined;
+  readonly queryLogs: DnsQueryLogsConfig | undefined = undefined;
+}
+
+export class CentralNetworkServicesConfig implements t.TypeOf<typeof NetworkConfigTypes.centralNetworkServicesConfig> {
+  readonly delegatedAdminAccount: string = '';
+  readonly route53Resolver: ResolverConfig | undefined = undefined;
+}
+
 export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.networkConfig> {
   static readonly FILENAME = 'network-config.yaml';
 
@@ -633,6 +797,11 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * An optional list of DHCP options set configurations.
    */
   readonly dhcpOptions: DhcpOptsConfig[] | undefined = undefined;
+
+  /**
+   * An optional Route 53 Resolver configuration
+   */
+  readonly centralNetworkServices: CentralNetworkServicesConfig | undefined = undefined;
 
   /**
    *
