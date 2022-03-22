@@ -11,10 +11,11 @@
  *  and limitations under the License.
  */
 
-import * as t from './common-types';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as yaml from 'js-yaml';
+import * as path from 'path';
+
+import * as t from './common-types';
 
 /**
  * Global configuration items.
@@ -104,8 +105,8 @@ export abstract class GlobalConfigTypes {
   });
 
   static readonly reportConfig = t.interface({
-    costAndUsageReport: this.costAndUsageReportConfig,
-    budgets: this.budgetsConfig,
+    costAndUsageReport: t.optional(this.costAndUsageReportConfig),
+    budgets: t.optional(this.budgetsConfig),
   });
 
   static readonly globalConfig = t.interface({

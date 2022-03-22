@@ -25,6 +25,17 @@ const globalConfigJson = {
     resourcePerimeter: { enable: true },
     networkPerimeter: { enable: true },
   },
+  reports: {
+    costAndUsageReport: {
+      compression: 'Parquet',
+      format: 'Parquet',
+      reportName: 'TestReport',
+      s3Prefix: 'cur',
+      timeUnit: 'DAILY',
+      refreshClosedReports: true,
+      reportVersioning: 'OVERWRITE_REPORT',
+    },
+  },
 };
 
 export const GLOBAL_CONFIG = GlobalConfig.loadFromString(JSON.stringify(globalConfigJson))!;
