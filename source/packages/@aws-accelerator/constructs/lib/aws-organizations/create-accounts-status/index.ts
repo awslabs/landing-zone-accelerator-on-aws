@@ -30,7 +30,7 @@ interface AccountConfig {
   name: string;
   description: string;
   email: string;
-  enableGovCloud?: boolean | undefined;
+  enableGovCloud: string;
   organizationalUnit: string;
   organizationalUnitId: string;
   createRequestId?: string | undefined;
@@ -59,10 +59,11 @@ export async function handler(event: any): Promise<
   }
 
   const singleAccountToAdd = accountToAdd[0];
+  console.log(`enablegovcloud value: ${singleAccountToAdd.enableGovCloud}`);
   let createAccountResponse: CreateAccountResponse;
   // if the createRequestId is empty then we need to create the account
   if (singleAccountToAdd.createRequestId === '' || singleAccountToAdd.createRequestId === undefined) {
-    if (singleAccountToAdd.enableGovCloud) {
+    if (singleAccountToAdd.enableGovCloud === 'true') {
       createAccountResponse = await createGovCloudAccount(singleAccountToAdd.email, singleAccountToAdd.name);
     } else {
       createAccountResponse = await createOrganizationAccount(singleAccountToAdd.email, singleAccountToAdd.name);
