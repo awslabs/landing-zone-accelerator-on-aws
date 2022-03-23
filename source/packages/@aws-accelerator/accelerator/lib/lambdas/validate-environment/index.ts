@@ -47,7 +47,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       const organizationAccounts = await getOrganizationAccounts();
       console.log(`Organization Accounts: ${JSON.stringify(organizationAccounts)}`);
 
-      if (controlTowerEnabled == 'true') {
+      if (controlTowerEnabled === 'true') {
         // confirm mandatory accounts exist
         for (const mandatoryAccount of mandatoryAccounts) {
           const existingAccount = organizationAccounts.find(item => item.Email == mandatoryAccount.email);
@@ -113,6 +113,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       }
 
       // find organization accounts that need to be created
+      console.log(`controltowerenabled value: ${controlTowerEnabled}`);
       if (controlTowerEnabled === 'false') {
         for (const mandatoryAccount of mandatoryAccounts) {
           const mandatoryOrganizationAccount = organizationAccounts.find(item => item.Email == mandatoryAccount.email);
@@ -134,7 +135,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             validationErrors.push(`Workload account ${workloadAccount.email} is in ${organizationAccount.Status}`);
           }
         } else {
-          if (controlTowerEnabled === 'false' || workloadAccount.enableGovCloud) {
+          if (controlTowerEnabled === 'false' || workloadAccount.enableGovCloud === 'true') {
             orgAccountsToAdd.push(workloadAccount);
           }
         }
