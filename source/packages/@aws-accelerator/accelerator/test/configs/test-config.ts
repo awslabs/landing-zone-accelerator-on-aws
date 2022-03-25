@@ -668,7 +668,19 @@ export const ORGANIZATION_CONFIG = {
       name: 'OrgTagPolicy',
       description: 'Organization Tagging Policy',
       policy: 'tagging-policies/org-tag-policy.json',
-      type: 'customerManaged',
+      deploymentTargets: {
+        organizationalUnits: ['Root'],
+        accounts: ['Management'],
+        excludedRegions: [],
+        excludedAccounts: [],
+      },
+    },
+  ],
+  backupPolicies: [
+    {
+      name: 'OrgBackupPolicy',
+      description: 'Organization Backup Policy',
+      policy: 'backup-policies/org-backup-policies.json',
       deploymentTargets: {
         organizationalUnits: ['Root'],
         accounts: ['Management'],

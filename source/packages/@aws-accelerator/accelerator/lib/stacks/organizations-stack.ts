@@ -149,6 +149,52 @@ export class OrganizationsStack extends AcceleratorStack {
       }
 
       //
+      // Enable Backup Policy
+      //
+      if (props.organizationConfig.backupPolicies) {
+        Logger.info(`[organizations-stack] Adding Backup Policies`);
+
+        const role = new cdk.aws_iam.Role(this, 'BackupRole', {
+          roleName: 'Backup-Role',
+          assumedBy: new cdk.aws_iam.ServicePrincipal('backup.amazonaws.com'),
+        });
+
+        const managedBackupPolicy = cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(
+          'service-role/AWSBackupServiceRolePolicyForBackup',
+        );
+        role.addManagedPolicy(managedBackupPolicy);
+
+        const vault = new cdk.aws_backup.BackupVault(this, 'BackupVault', {
+          backupVaultName: 'BackupVault',
+        });
+
+        vault.node.addDependency(role);
+
+        new EnablePolicyType(this, 'enablePolicyBackup', {
+          policyType: PolicyTypeEnum.BACKUP_POLICY,
+        });
+
+        for (const backupPolicies of props.organizationConfig.backupPolicies ?? []) {
+          for (const orgUnit of backupPolicies.deploymentTargets.organizationalUnits) {
+            const policy = new Policy(this, backupPolicies.name, {
+              description: backupPolicies.description,
+              name: backupPolicies.name,
+              path: path.join(props.configDirPath, backupPolicies.policy),
+              type: PolicyType.BACKUP_POLICY,
+            });
+
+            policy.node.addDependency(vault);
+
+            new PolicyAttachment(this, pascalCase(`Attach_${backupPolicies.name}_${orgUnit}`), {
+              policyId: policy.id,
+              targetId: props.organizationConfig.getOrganizationalUnitId(orgUnit),
+              type: PolicyType.BACKUP_POLICY,
+            });
+          }
+        }
+      }
+
+      //
       // Enable Cost and Usage Reports
       //
       if (props.globalConfig.reports?.costAndUsageReport) {
@@ -339,7 +385,7 @@ export class OrganizationsStack extends AcceleratorStack {
     //
     if (props.organizationConfig.taggingPolicies) {
       Logger.info(`[organizations-stack] Adding Tagging Policies`);
-      new EnablePolicyType(this, 'enablePolicyTypeTag', {
+      const tagPolicy = new EnablePolicyType(this, 'enablePolicyTypeTag', {
         policyType: PolicyTypeEnum.TAG_POLICY,
       });
       for (const taggingPolicy of props.organizationConfig.taggingPolicies ?? []) {
@@ -350,6 +396,8 @@ export class OrganizationsStack extends AcceleratorStack {
             path: path.join(props.configDirPath, taggingPolicy.policy),
             type: PolicyType.TAG_POLICY,
           });
+
+          policy.node.addDependency(tagPolicy);
 
           new PolicyAttachment(this, pascalCase(`Attach_${taggingPolicy.name}_${orgUnit}`), {
             policyId: policy.id,
