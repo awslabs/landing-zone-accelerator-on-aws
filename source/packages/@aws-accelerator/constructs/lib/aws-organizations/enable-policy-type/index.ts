@@ -43,16 +43,17 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
       }
 
-      // Verify policy type from the describe organizations call
-      const organization = await throttlingBackOff(() => organizationsClient.describeOrganization().promise());
-      if (organization.Organization?.AvailablePolicyTypes?.find(item => item.Type === policyType) === undefined) {
-        throw new Error(`Policy Type ${policyType} not supported`);
-      }
-
+      // Verify policy type from the listRoots call
       let nextToken: string | undefined = undefined;
       do {
         const page = await throttlingBackOff(() => organizationsClient.listRoots({ NextToken: nextToken }).promise());
         for (const item of page.Roots ?? []) {
+          if (
+            partition === 'aws-us-gov' &&
+            item.PolicyTypes?.find(item => item.Type === 'TAG_POLICY' || 'BACKUP_POLICY')
+          ) {
+            throw new Error(`Policy Type ${policyType} not supported.`);
+          }
           if (item.Name === 'Root') {
             if (item.PolicyTypes?.find(item => item.Type === policyType && item.Status === 'ENABLED')) {
               return {

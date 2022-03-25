@@ -42,8 +42,15 @@ export abstract class OrganizationConfigTypes {
 
   static readonly tagPolicyConfig = t.interface({
     name: t.nonEmptyString,
-    description: t.string,
-    policy: t.string,
+    description: t.nonEmptyString,
+    policy: t.nonEmptyString,
+    deploymentTargets: t.deploymentTargets,
+  });
+
+  static readonly backupPolicyConfig = t.interface({
+    name: t.nonEmptyString,
+    description: t.nonEmptyString,
+    policy: t.nonEmptyString,
     deploymentTargets: t.deploymentTargets,
   });
 
@@ -53,6 +60,7 @@ export abstract class OrganizationConfigTypes {
     organizationalUnitIds: t.optional(t.array(this.organizationalUnitIdConfig)),
     serviceControlPolicies: t.array(this.serviceControlPolicyConfig),
     taggingPolicies: t.array(this.tagPolicyConfig),
+    backupPolicies: t.array(this.backupPolicyConfig),
   });
 }
 
@@ -82,6 +90,13 @@ export abstract class ServiceControlPolicyConfig
 }
 
 export abstract class TaggingPolicyConfig implements t.TypeOf<typeof OrganizationConfigTypes.tagPolicyConfig> {
+  readonly name: string = '';
+  readonly description: string = '';
+  readonly policy: string = '';
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
+export abstract class BackupPolicyConfig implements t.TypeOf<typeof OrganizationConfigTypes.backupPolicyConfig> {
   readonly name: string = '';
   readonly description: string = '';
   readonly policy: string = '';
@@ -129,6 +144,13 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * @see TaggingPolicyConfig
    */
   readonly taggingPolicies: TaggingPolicyConfig[] = [];
+
+  /**
+   * A Record of Backup Policy configurations
+   *
+   * @see BackupPolicyConfig
+   */
+  readonly backupPolicies: BackupPolicyConfig[] = [];
 
   /**
    *

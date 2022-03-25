@@ -28,9 +28,16 @@ serviceControlPolicies:
       organizationalUnits:
         - Security
 taggingPolicies:
-  - name: OrgTagPolicy
+  - name: TagPolicy
     description: Organization Tagging Policy
     policy: tagging-policies/org-tag-policy.json
+    deploymentTargets:
+        organizationalUnits:
+          - Root
+backupPolicies:
+  - name: BackupPolicy
+    description: Organization Backup Policy
+    policy: backup-policies/org-backup-policies.json
     deploymentTargets:
         organizationalUnits:
           - Root

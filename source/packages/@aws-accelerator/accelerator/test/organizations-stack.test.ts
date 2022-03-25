@@ -69,7 +69,7 @@ describe('OrganizationsStack', () => {
    * Number of Lambda IAM role resource test
    */
   test(`${testNamePrefix} Lambda IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 9);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 10);
   });
 
   /**
