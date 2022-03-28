@@ -58,6 +58,20 @@ export class SecurityConfigTypes {
     enable: t.boolean,
     excludeRegions: t.optional(t.array(t.region)),
   });
+  static readonly documentConfig = t.interface({
+    name: t.nonEmptyString,
+    template: t.nonEmptyString,
+  });
+
+  static readonly documentSetConfig = t.interface({
+    shareTargets: t.shareTargets,
+    documents: t.array(this.documentConfig),
+  });
+
+  static readonly ssmAutomationConfig = t.interface({
+    excludeRegions: t.optional(t.array(t.region)),
+    documentSets: t.array(this.documentSetConfig),
+  });
 
   static readonly centralSecurityServicesConfig = t.interface({
     delegatedAdminAccount: t.nonEmptyString,
@@ -66,6 +80,7 @@ export class SecurityConfigTypes {
     macie: SecurityConfigTypes.macieConfig,
     guardduty: SecurityConfigTypes.guardDutyConfig,
     securityHub: SecurityConfigTypes.securityHubConfig,
+    ssmAutomation: this.ssmAutomationConfig,
   });
 
   static readonly accessAnalyzerConfig = t.interface({
@@ -84,12 +99,11 @@ export class SecurityConfigTypes {
     maxPasswordAge: t.number,
   });
 
-  static readonly customRoleLambdaType = t.interface({
+  static readonly customRuleLambdaType = t.interface({
     sourceFilePath: t.nonEmptyString,
     handler: t.nonEmptyString,
     runtime: t.nonEmptyString,
     rolePolicyFile: t.nonEmptyString,
-    inputParameters: t.optional(t.dictionary(t.nonEmptyString, t.nonEmptyString)),
   });
 
   static readonly triggeringResourceType = t.interface({
@@ -98,28 +112,64 @@ export class SecurityConfigTypes {
     lookupValue: t.array(t.nonEmptyString),
   });
 
-  static readonly customConfigRule = t.interface({
-    name: t.nonEmptyString,
-    description: t.optional(t.nonEmptyString),
-    lambda: this.customRoleLambdaType,
+  static readonly customRuleConfigType = t.interface({
+    lambda: this.customRuleLambdaType,
     periodic: t.optional(t.boolean),
-    maximumExecutionFrequency: t.optional(
-      t.enums('ExecutionFrequency', ['One_Hour', 'Three_Hours', 'Six_Hours', 'Twelve_Hours', 'TwentyFour_Hours']),
-    ),
+    maximumExecutionFrequency: t.enums('ExecutionFrequency', [
+      'One_Hour',
+      'Three_Hours',
+      'Six_Hours',
+      'Twelve_Hours',
+      'TwentyFour_Hours',
+    ]),
     configurationChanges: t.optional(t.boolean),
     triggeringResources: this.triggeringResourceType,
   });
 
-  static readonly customConfigRuleSet = t.interface({
-    deploymentTargets: t.deploymentTargets,
-    rules: t.array(this.customConfigRule),
+  static readonly configRuleRemediationType = t.interface({
+    /**
+     * SSM document execution role policy definition file
+     */
+    rolePolicyFile: t.nonEmptyString,
+    /**
+     * The remediation is triggered automatically.
+     */
+    automatic: t.boolean,
+    /**
+     * Target ID is the name of the public or shared SSM document.
+     */
+    targetId: t.nonEmptyString,
+    /**
+     * Owner account name for the target SSM document, if not provided audit account ID will be used
+     */
+    targetAccountName: t.optional(t.nonEmptyString),
+    /**
+     * Version of the target. For example, version of the SSM document.
+     */
+    targetVersion: t.optional(t.nonEmptyString),
+    /**
+     * Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.
+     */
+    retryAttemptSeconds: t.optional(t.number),
+    /**
+     * The maximum number of failed attempts for auto-remediation. If you do not select a number, the default is 5.
+     */
+    maximumAutomaticAttempts: t.optional(t.number),
+    /**
+     * An object of the RemediationParameterValue.
+     */
+    parameters: t.optional(t.dictionary(t.nonEmptyString, t.nonEmptyString)),
   });
 
   static readonly configRule = t.interface({
     name: t.nonEmptyString,
-    identifier: t.nonEmptyString,
+    description: t.optional(t.nonEmptyString),
+    identifier: t.optional(t.nonEmptyString),
     inputParameters: t.optional(t.dictionary(t.nonEmptyString, t.nonEmptyString)),
     complianceResourceTypes: t.optional(t.array(t.nonEmptyString)),
+    type: t.optional(t.nonEmptyString),
+    customRule: t.optional(this.customRuleConfigType),
+    remediation: t.optional(this.configRuleRemediationType),
   });
 
   static readonly awsConfigRuleSet = t.interface({
@@ -131,7 +181,6 @@ export class SecurityConfigTypes {
     enableConfigurationRecorder: t.boolean,
     enableDeliveryChannel: t.boolean,
     ruleSets: t.array(this.awsConfigRuleSet),
-    customRuleSets: t.optional(t.array(this.customConfigRuleSet)),
   });
 
   static readonly metricConfig = t.interface({
@@ -236,6 +285,20 @@ export class ebsDefaultVolumeEncryptionConfig
   readonly enable = true;
   readonly excludeRegions: t.Region[] = [];
 }
+export class DocumentConfig implements t.TypeOf<typeof SecurityConfigTypes.documentConfig> {
+  readonly name: string = '';
+  readonly template: string = '';
+}
+
+export class DocumentSetConfig implements t.TypeOf<typeof SecurityConfigTypes.documentSetConfig> {
+  readonly shareTargets: t.ShareTargets = new t.ShareTargets();
+  readonly documents: DocumentConfig[] = [];
+}
+
+export class SsmAutomationConfig implements t.TypeOf<typeof SecurityConfigTypes.ssmAutomationConfig> {
+  readonly excludeRegions: t.Region[] = [];
+  readonly documentSets: DocumentSetConfig[] = [];
+}
 
 export class CentralSecurityServicesConfig
   implements t.TypeOf<typeof SecurityConfigTypes.centralSecurityServicesConfig>
@@ -247,6 +310,7 @@ export class CentralSecurityServicesConfig
   readonly macie: MacieConfig = new MacieConfig();
   readonly guardduty: GuardDutyConfig = new GuardDutyConfig();
   readonly securityHub: SecurityHubConfig = new SecurityHubConfig();
+  readonly ssmAutomation: SsmAutomationConfig = new SsmAutomationConfig();
 }
 
 export class AccessAnalyzerConfig implements t.TypeOf<typeof SecurityConfigTypes.accessAnalyzerConfig> {
@@ -267,9 +331,28 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
 
 export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRule> {
   readonly name = '';
+  readonly description = '';
   readonly identifier = '';
   readonly inputParameters = {};
   readonly complianceResourceTypes: string[] = [];
+  readonly type = '';
+  readonly customRule = {
+    lambda: { sourceFilePath: '', handler: '', runtime: '', rolePolicyFile: '' },
+    periodic: true,
+    maximumExecutionFrequency: 'Six_Hours',
+    configurationChanges: true,
+    triggeringResources: { lookupType: '', lookupKey: '', lookupValue: [] },
+  };
+  readonly remediation = {
+    rolePolicyFile: '',
+    automatic: true,
+    targetId: '',
+    targetAccountName: '',
+    targetVersion: '',
+    retryAttemptSeconds: 0,
+    maximumAutomaticAttempts: 0,
+    parameters: {},
+  };
 }
 
 export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet> {
@@ -277,26 +360,10 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
   readonly rules: ConfigRule[] = [];
 }
 
-export class CustomConfigRule implements t.TypeOf<typeof SecurityConfigTypes.customConfigRule> {
-  readonly name = '';
-  readonly description = '';
-  readonly lambda = { sourceFilePath: '', handler: '', runtime: '', rolePolicyFile: '', inputParameters: {} };
-  readonly periodic = true;
-  readonly maximumExecutionFrequency = 'Six_Hours';
-  readonly configurationChanges = true;
-  readonly triggeringResources = { lookupType: '', lookupKey: '', lookupValue: [] };
-}
-
-export class CustomConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.customConfigRuleSet> {
-  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
-  readonly rules: CustomConfigRule[] = [];
-}
-
 export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig> {
   readonly enableConfigurationRecorder = true;
   readonly enableDeliveryChannel = true;
   readonly ruleSets: AwsConfigRuleSet[] = [];
-  readonly customRuleSets: CustomConfigRuleSet[] = [];
 }
 
 export class MetricConfig implements t.TypeOf<typeof SecurityConfigTypes.metricConfig> {

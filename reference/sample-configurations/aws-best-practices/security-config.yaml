@@ -30,6 +30,7 @@ centralSecurityServices:
       exportFrequency: FIFTEEN_MINUTES
   securityHub:
     enable: true
+    regionAggregation: true
     excludeRegions: []
     standards:
       - name: AWS Foundational Security Best Practices v1.0.0
@@ -51,6 +52,25 @@ centralSecurityServices:
           - CIS.1.20
           - CIS.1.22
           - CIS.2.6
+  ssmAutomation:
+    # excludeRegions: []
+    documentSets:
+      - shareTargets:
+          organizationalUnits:
+            - Root
+        documents:
+          # Calls the AWS CLI to enable access logs on a specified ELB
+          - name: SSM-ELB-Enable-Logging
+            template: ssm-documents/ssm-elb-enable-logging.yaml
+          # Enables S3 encryption using KMS
+          - name: Put-S3-Encryption
+            template: ssm-documents/s3-encryption.yaml
+          # Attaches instance profiles to an EC2 instance
+          - name: Attach-IAM-Instance-Profile
+            template: ssm-documents/attach-iam-instance-profile.yaml
+          # Attaches Aws IAM Managed Policy to IAM Role
+          - name: Attach-IAM-Role-Policy
+            template: ssm-documents/attach-iam-role-policy.yaml
 accessAnalyzer:
   enable: true
 iamPasswordPolicy:
@@ -71,6 +91,33 @@ awsConfig:
         organizationalUnits:
           - Root
       rules:
+        - name: accelerator-attatch-ec2-instance-profile
+          type: Custom
+          description: Custom role to remediate ec2 instance profile to EC2 instances
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/attatch-ec2-instance-profile.zip
+              handler: index.handler
+              runtime: nodejs14.x
+              rolePolicyFile: custom-config-rules/attatch-ec2-instance-profile-lambda-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: true
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::EC2::Instance
+          remediation:
+            rolePolicyFile: custom-config-rules/attatch-ec2-instance-profile-remediation-role.json
+            automatic: true
+            targetId: Attach-IAM-Instance-Profile
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+            parameters:
+              IamInstanceProfile: EC2-Default-SSM-AD-Role
+              InstanceId: RESOURCE_ID
         - name: accelerator-iam-user-group-membership-check
           complianceResourceTypes:
             - AWS::IAM::User

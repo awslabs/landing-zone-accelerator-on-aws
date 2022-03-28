@@ -11,8 +11,8 @@
  *  and limitations under the License.
  */
 
-export * from './lib/aws-controltower/create-accounts';
 export * from './lib/aws-budgets/budget-definition';
+export * from './lib/aws-controltower/create-accounts';
 export * from './lib/aws-cur/report-definition';
 export * from './lib/aws-ec2/delete-default-vpc';
 export * from './lib/aws-ec2/dhcp-options';
@@ -58,4 +58,5 @@ export * from './lib/aws-securityhub/securityhub-members';
 export * from './lib/aws-securityhub/securityhub-organization-admin-account';
 export * from './lib/aws-securityhub/securityhub-standards';
 export * from './lib/aws-servicecatalog/get-portfolio-id';
+export * from './lib/aws-ssm/document';
 export * from './lib/aws-ssm/ssm-parameter';
