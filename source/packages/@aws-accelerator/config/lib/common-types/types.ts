@@ -239,6 +239,9 @@ export const region = enums(
     'us-gov-west-1',
     'us-west-1',
     'us-west-2',
+    'us-iso-west-1',
+    'us-iso-east-1',
+    'us-isob-east-1',
   ],
   'Value should be an AWS region.',
 );

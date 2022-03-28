@@ -56,7 +56,19 @@ process.on(
 export class GovCloudOverrides implements cdk.IAspect {
   public visit(node: IConstruct): void {
     if (node instanceof cdk.aws_logs.CfnLogGroup) {
+      node.addPropertyDeletionOverride('KmsKeyId'), 
+      node.addPropertyDeletionOverride('Tags');
+    }
+  }
+}
+
+export class IsobOverrides implements cdk.IAspect {
+  public visit(node: IConstruct): void {
+    if (node instanceof cdk.aws_logs.CfnLogGroup) {
       node.addPropertyDeletionOverride('KmsKeyId');
+    }
+    if (node instanceof cdk.aws_s3.CfnBucket) {
+      node.addPropertyDeletionOverride('PublicAccessBlockConfiguration');
     }
   }
 }
@@ -78,6 +90,10 @@ async function main() {
     cdk.Aspects.of(app).add(new GovCloudOverrides());
   }
 
+  if (partition === 'aws-iso-b') {
+    cdk.Aspects.of(app).add(new IsobOverrides());
+  }
+  
   const includeStage = (props: { stage: string; account: string; region: string }): boolean => {
     if (stage === undefined) {
       // Do not include PIPELINE or TESTER_PIPELINE in full synth/diff
