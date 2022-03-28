@@ -30,6 +30,21 @@ import { Logger } from '../logger';
 import { ArnPrincipal, Effect } from 'aws-cdk-lib/aws-iam';
 import path from 'path';
 
+enum ACCEL_LOOKUP_TYPE {
+  SSM = 'SSM',
+}
+
+interface RemediationParameters {
+  [key: string]: {
+    StaticValue?: {
+      Values: string[];
+    };
+    ResourceValue?: {
+      Value: 'RESOURCE_ID';
+    };
+  };
+}
+
 /**
  * Security Stack, configures local account security services
  */
@@ -259,6 +274,7 @@ export class SecurityStack extends AcceleratorStack {
     // Config Rules
     //
     Logger.info('[security-stack] Evaluating AWS Config rule sets');
+
     for (const ruleSet of props.securityConfig.awsConfig.ruleSets) {
       if (!this.isIncluded(ruleSet.deploymentTargets)) {
         Logger.info('[security-stack] Item excluded');
@@ -270,107 +286,126 @@ export class SecurityStack extends AcceleratorStack {
       );
 
       for (const rule of ruleSet.rules) {
-        Logger.info(`[security-stack] Creating managed rule ${rule.name}`);
+        let configRule: config.ManagedRule | config.CustomRule | undefined;
 
-        const resourceTypes: config.ResourceType[] = [];
-        for (const resourceType of rule.complianceResourceTypes ?? []) {
-          resourceTypes.push(config.ResourceType.of(resourceType));
+        if (rule.type && rule.type === 'Custom') {
+          Logger.info(`[security-stack] Creating custom rule ${rule.name}`);
+          let ruleScope: config.RuleScope | undefined;
+
+          if (rule.customRule.triggeringResources.lookupType == 'ResourceTypes') {
+            for (const item of rule.customRule.triggeringResources.lookupValue) {
+              ruleScope = config.RuleScope.fromResources([config.ResourceType.of(item)]);
+            }
+          }
+
+          if (rule.customRule.triggeringResources.lookupType == 'ResourceId') {
+            ruleScope = config.RuleScope.fromResource(
+              config.ResourceType.of(rule.customRule.triggeringResources.lookupKey),
+              rule.customRule.triggeringResources.lookupValue[0],
+            );
+          }
+
+          if (rule.customRule.triggeringResources.lookupType == 'Tag') {
+            ruleScope = config.RuleScope.fromTag(
+              rule.customRule.triggeringResources.lookupKey,
+              rule.customRule.triggeringResources.lookupValue[0],
+            );
+          }
+
+          /**
+           * Lambda function for config custom role
+           * Single lambda function can not be used for multiple config custom role, there is a pending issue with CDK team on this
+           * https://github.com/aws/aws-cdk/issues/17582
+           */
+          const lambdaFunction = new cdk.aws_lambda.Function(this, pascalCase(rule.name) + '-Function', {
+            runtime: new cdk.aws_lambda.Runtime(rule.customRule.lambda.runtime),
+            handler: rule.customRule.lambda.handler,
+            code: cdk.aws_lambda.Code.fromAsset(path.join(props.configDirPath, rule.customRule.lambda.sourceFilePath)),
+            description: `AWS Config custom rule function used for "${rule.name}" rule`,
+          });
+
+          // Read in the policy document which should be properly formatted json
+          const policyDocument = require(path.join(props.configDirPath, rule.customRule.lambda.rolePolicyFile));
+
+          // Create a statements list using the PolicyStatement factory
+          const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
+          for (const statement of policyDocument.Statement) {
+            policyStatements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+          }
+
+          policyStatements.forEach(policyStatement => {
+            lambdaFunction?.addToRolePolicy(policyStatement);
+          });
+
+          configRule = new config.CustomRule(this, pascalCase(rule.name), {
+            configRuleName: rule.name,
+            lambdaFunction: lambdaFunction,
+            periodic: rule.customRule.periodic,
+            inputParameters: this.getRuleParameters(rule.name, rule.inputParameters),
+            description: rule.description,
+            maximumExecutionFrequency:
+              rule.customRule.maximumExecutionFrequency === undefined
+                ? undefined
+                : (rule.customRule.maximumExecutionFrequency as cdk.aws_config.MaximumExecutionFrequency),
+            ruleScope: ruleScope,
+            configurationChanges: rule.customRule.configurationChanges,
+          });
+          configRule.node.addDependency(lambdaFunction);
+        } else {
+          Logger.info(`[security-stack] Creating managed rule ${rule.name}`);
+
+          const resourceTypes: config.ResourceType[] = [];
+          for (const resourceType of rule.complianceResourceTypes ?? []) {
+            resourceTypes.push(config.ResourceType.of(resourceType));
+          }
+
+          configRule = new config.ManagedRule(this, pascalCase(rule.name), {
+            configRuleName: rule.name,
+            description: rule.description,
+            identifier: rule.identifier ?? rule.name,
+            inputParameters: this.getRuleParameters(rule.name, rule.inputParameters),
+            ruleScope: {
+              resourceTypes,
+            },
+          });
         }
 
-        const configRule = new config.ManagedRule(this, pascalCase(rule.name), {
-          configRuleName: rule.name,
-          identifier: rule.identifier,
-          inputParameters: rule.inputParameters,
-          ruleScope: {
-            resourceTypes,
-          },
-        });
+        if (configRule) {
+          // Create remediation for config rule
+          if (rule.remediation) {
+            const role = this.createRemediationRole(
+              rule.name,
+              path.join(props.configDirPath, rule.remediation.rolePolicyFile),
+              `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
+                rule.remediation.targetAccountName
+                  ? props.accountsConfig.getAccountId(rule.remediation.targetAccountName)
+                  : props.accountsConfig.getAuditAccountId()
+              }:document/${rule.remediation.targetId}`,
+            );
 
-        if (configRecorder) {
-          configRule.node.addDependency(configRecorder);
-        }
-      }
-    }
+            new config.CfnRemediationConfiguration(this, pascalCase(rule.name) + '-Remediation', {
+              configRuleName: rule.name,
+              targetId: `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
+                rule.remediation.targetAccountName
+                  ? props.accountsConfig.getAccountId(rule.remediation.targetAccountName)
+                  : props.accountsConfig.getAuditAccountId()
+              }:document/${rule.remediation.targetId}`,
+              targetVersion: rule.remediation.targetVersion,
+              targetType: 'SSM_DOCUMENT',
 
-    //
-    // Custom Config Rules
-    //
-    Logger.info('[security-stack] Evaluating Custom AWS Config rule sets');
-    for (const ruleSet of props.securityConfig.awsConfig.customRuleSets ?? []) {
-      if (!this.isIncluded(ruleSet.deploymentTargets)) {
-        Logger.info('[security-stack] Item excluded');
-        continue;
-      }
+              automatic: rule.remediation.automatic,
+              maximumAutomaticAttempts: rule.remediation.maximumAutomaticAttempts,
+              retryAttemptSeconds: rule.remediation.retryAttemptSeconds,
+              parameters: this.getRemediationParameters(rule.name, rule.remediation.parameters, [role.roleArn]),
+            }).node.addDependency(configRule);
+          } else {
+            Logger.info(`[security-stack] No remediation provided for custom config rule ${rule.name}`);
+          }
 
-      Logger.info(
-        `[security-stack] Account (${
-          cdk.Stack.of(this).account
-        }) should be included, deploying Custom AWS Custom Config Rules`,
-      );
-
-      for (const rule of ruleSet.rules) {
-        Logger.info(`[security-stack] Creating custom config rule ${rule.name}`);
-        let ruleScope: config.RuleScope | undefined;
-
-        if (rule.triggeringResources.lookupType == 'ResourceTypes') {
-          for (const item of rule.triggeringResources.lookupValue) {
-            ruleScope = config.RuleScope.fromResources([config.ResourceType.of(item)]);
+          if (configRecorder) {
+            configRule.node.addDependency(configRecorder);
           }
         }
-
-        if (rule.triggeringResources.lookupType == 'ResourceId') {
-          ruleScope = config.RuleScope.fromResource(
-            config.ResourceType.of(rule.triggeringResources.lookupKey),
-            rule.triggeringResources.lookupValue[0],
-          );
-        }
-
-        if (rule.triggeringResources.lookupType == 'Tag') {
-          ruleScope = config.RuleScope.fromTag(
-            rule.triggeringResources.lookupKey,
-            rule.triggeringResources.lookupValue[0],
-          );
-        }
-
-        /**
-         * Lambda function for config custom role
-         * Single lambda function can not be used for multiple config custom role, there is a pending issue with CDK team on this
-         * https://github.com/aws/aws-cdk/issues/17582
-         */
-        const roleName = pascalCase(rule.name).split('_').join('-');
-        const lambdaFunction = new cdk.aws_lambda.Function(this, pascalCase(rule.name) + '-Function', {
-          runtime: new cdk.aws_lambda.Runtime(rule.lambda.runtime),
-          handler: rule.lambda.handler,
-          code: cdk.aws_lambda.Code.fromAsset(path.join(props.configDirPath, rule.lambda.sourceFilePath)),
-          description: `AWS Config custom rule function used for "${rule.name}" rule`,
-        });
-
-        // Read in the policy document which should be properly formatted json
-        const policyDocument = require(path.join(props.configDirPath, rule.lambda.rolePolicyFile));
-
-        // Create a statements list using the PolicyStatement factory
-        const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
-        for (const statement of policyDocument.Statement) {
-          policyStatements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
-        }
-
-        policyStatements.forEach(policyStatement => {
-          lambdaFunction?.addToRolePolicy(policyStatement);
-        });
-
-        new config.CustomRule(this, roleName + '-CustomRule', {
-          configRuleName: roleName,
-          lambdaFunction: lambdaFunction,
-          periodic: rule.periodic,
-          inputParameters: rule.lambda.inputParameters,
-          description: `${rule.description}`,
-          maximumExecutionFrequency:
-            rule.maximumExecutionFrequency === undefined
-              ? cdk.aws_config.MaximumExecutionFrequency.SIX_HOURS
-              : (rule.maximumExecutionFrequency as cdk.aws_config.MaximumExecutionFrequency),
-          ruleScope: ruleScope,
-          configurationChanges: rule.configurationChanges,
-        });
       }
     }
 
@@ -505,5 +540,166 @@ export class SecurityStack extends AcceleratorStack {
       return cdk.aws_cloudwatch.TreatMissingData.MISSING;
     }
     return cdk.aws_cloudwatch.TreatMissingData.NOT_BREACHING;
+  }
+
+  /**
+   * Function to prepare config rule parameters
+   * @param ruleName
+   * @param params
+   * @private
+   */
+  private getRuleParameters(ruleName: string, params?: { [key: string]: string }): { [key: string]: string } {
+    if (params) {
+      const returnParams: { [key: string]: string } = {};
+      for (const [key, value] of Object.entries(params)) {
+        const replacementValues: string[] = [];
+        for (const item of value.split(',')) {
+          // const parameterReplacementNeeded = (item as string).match('\\${ACCEL_LOOKUP::([a-zA-Z0-9-/:]*)}');
+          const parameterReplacementNeeded = (item as string).match('\\${ACCEL_LOOKUP::([a-zA-Z0-9-/:]*)}');
+          if (parameterReplacementNeeded) {
+            const replacementValue = this.getReplacementValue(ruleName, parameterReplacementNeeded);
+            replacementValues.push(replacementValue?.split(',')[0] ?? '');
+          }
+        }
+
+        if (replacementValues.length > 0) {
+          returnParams[key] = replacementValues.join(',');
+        } else {
+          returnParams[key] = value;
+        }
+      }
+      return returnParams;
+    } else {
+      return {};
+    }
+  }
+
+  /**
+   * Function to get remediation parameters
+   * @param ruleName
+   * @param params
+   * @param assumeRoleArn
+   * @private
+   */
+  private getRemediationParameters(
+    ruleName: string,
+    params?: { [key: string]: string | string[] },
+    assumeRoleArn?: string[],
+  ): RemediationParameters | undefined {
+    if (!params) {
+      return undefined;
+    }
+    const returnParams: RemediationParameters = {};
+    if (assumeRoleArn) {
+      returnParams['AutomationAssumeRole'] = {
+        StaticValue: {
+          Values: assumeRoleArn,
+        },
+      };
+    }
+
+    for (const [key, value] of Object.entries(params)) {
+      // const parameterReplacementNeeded = (value as string).match('\\${ACCEL_LOOKUP::([a-zA-Z0-9-,/]*)}');
+      const replacementValues: string[] = [];
+      for (const item of (value as string).split(',')) {
+        const parameterReplacementNeeded = (item as string).match('\\${ACCEL_LOOKUP::([a-zA-Z0-9-/:]*)}');
+        if (parameterReplacementNeeded) {
+          const replacementValue = this.getReplacementValue(ruleName, parameterReplacementNeeded);
+          replacementValues.push(replacementValue ?? '');
+        }
+      }
+      if (replacementValues.length > 0) {
+        returnParams[key] = {
+          StaticValue: {
+            Values: replacementValues,
+          },
+        };
+      } else {
+        if (value === 'RESOURCE_ID') {
+          returnParams[key] = {
+            ResourceValue: {
+              Value: 'RESOURCE_ID',
+            },
+          };
+        } else {
+          returnParams[key] = {
+            StaticValue: {
+              // Values: [value as string],
+              Values: (value as string).split(','),
+            },
+          };
+        }
+      }
+    }
+    return returnParams;
+  }
+
+  /**
+   * Function to get Config rule remediation parameter replacement value
+   * @param ruleName
+   * @param replacement
+   * @private
+   */
+  private getReplacementValue(ruleName: string, replacement: RegExpMatchArray): string | undefined {
+    const replacementArray = replacement[1].split(':');
+    const lookupType = replacementArray[0];
+    if (lookupType === ACCEL_LOOKUP_TYPE.SSM) {
+      if (replacementArray.length === 2) {
+        return cdk.aws_ssm.StringParameter.valueForStringParameter(this, replacementArray[1]);
+      }
+      if (replacementArray.length === 4) {
+        return new SsmParameter(this, pascalCase(ruleName) + 'SsmParam', {
+          region: cdk.Stack.of(this).region as Region,
+          partition: cdk.Stack.of(this).partition,
+          parameter: {
+            name: replacementArray[3],
+            accountId: this.props.accountsConfig.getAccountId(replacementArray[1]),
+            roleName: replacementArray[2],
+          },
+          invokingAccountID: cdk.Stack.of(this).account,
+        }).value;
+      }
+      throw new Error(`Config rule replacement key ${replacement.input} not found`);
+    }
+    return undefined;
+  }
+
+  /**
+   * Function to create remediation role
+   * @param ruleName
+   * @param policyFilePath
+   * @param resources
+   * @private
+   */
+  private createRemediationRole(ruleName: string, policyFilePath: string, resources?: string): iam.Role {
+    // Read in the policy document which should be properly formatted json
+    const policyDocument = require(policyFilePath);
+    // Create a statements list using the PolicyStatement factory
+    const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
+    for (const statement of policyDocument.Statement) {
+      policyStatements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+    }
+    const role = new iam.Role(this, pascalCase(ruleName) + '-RemediationRole', {
+      assumedBy: new iam.ServicePrincipal('ssm.amazonaws.com'),
+    });
+
+    role.addToPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: [
+          'ssm:GetAutomationExecution',
+          'ssm:StartAutomationExecution',
+          'ssm:GetParameters',
+          'ssm:GetParameter',
+          'ssm:PutParameter',
+        ],
+        resources: [resources ?? '*'],
+      }),
+    );
+
+    policyStatements.forEach(policyStatement => {
+      role.addToPolicy(policyStatement);
+    });
+    return role;
   }
 }

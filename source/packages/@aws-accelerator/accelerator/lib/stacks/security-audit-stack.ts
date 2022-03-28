@@ -21,12 +21,16 @@ import {
   Organization,
   Bucket,
   BucketEncryptionType,
+  Document,
 } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
+import * as path from 'path';
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import * as fs from 'fs';
+import * as yaml from 'js-yaml';
 
 export class SecurityAuditStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -297,6 +301,48 @@ export class SecurityAuditStack extends AcceleratorStack {
     }
 
     //
+    // SSM Automation Docs
+    //
+    Logger.info(`[security-audit-stack] Adding SSM Automation Docs`);
+    if (
+      props.securityConfig.centralSecurityServices.ssmAutomation.excludeRegions === undefined ||
+      props.securityConfig.centralSecurityServices.ssmAutomation.excludeRegions.indexOf(
+        cdk.Stack.of(this).region as Region,
+      ) === -1
+    ) {
+      //
+      for (const documentSetItem of props.securityConfig.centralSecurityServices.ssmAutomation.documentSets ?? []) {
+        // Create list of accounts to share with
+        const accountIds: string[] = this.getAccountIdsFromShareTarget(documentSetItem.shareTargets);
+
+        for (const documentItem of documentSetItem.documents ?? []) {
+          Logger.info(`[security-audit-stack] Adding ${documentItem.name}`);
+
+          // Read in the document which should be properly formatted
+          const buffer = fs.readFileSync(path.join(props.configDirPath, documentItem.template), 'utf8');
+
+          let content;
+          if (documentItem.template.endsWith('.json')) {
+            content = JSON.parse(buffer);
+          } else {
+            content = yaml.load(buffer);
+          }
+
+          // console.log(content);
+
+          // Create the document
+          // const document =
+          new Document(this, pascalCase(documentItem.name), {
+            name: documentItem.name,
+            content,
+            documentType: 'Automation',
+            sharedWithAccountIds: accountIds,
+          });
+        }
+      }
+    }
+
+    //
     // IAM Access Analyzer (Does not have a native service enabler)
     //
     Logger.debug(`[security-audit-stack] accessAnalyzer.enable: ${props.securityConfig.accessAnalyzer.enable}`);
@@ -387,6 +433,20 @@ export class SecurityAuditStack extends AcceleratorStack {
       topic.grantPublish({
         grantPrincipal: new cdk.aws_iam.OrganizationPrincipal(organization.id),
       });
+
+      topic.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow Organization list topic',
+          actions: ['sns:ListSubscriptionsByTopic', 'sns:ListTagsForResource', 'sns:GetTopicAttributes'],
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          resources: [topic.topicArn],
+          conditions: {
+            StringEquals: {
+              'aws:PrincipalOrgID': organization.id,
+            },
+          },
+        }),
+      );
 
       Logger.info(`[security-audit-stack] Create SNS Subscription: ${snsSubscriptionItem.email}`);
       topic.addSubscription(new cdk.aws_sns_subscriptions.EmailSubscription(snsSubscriptionItem.email));

@@ -19,6 +19,7 @@ import {
   NetworkConfig,
   OrganizationConfig,
   SecurityConfig,
+  ShareTargets,
 } from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
@@ -73,6 +74,46 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
     // Implicit Deny
     return false;
+  }
+
+  protected getAccountIdsFromShareTarget(shareTargets: ShareTargets): string[] {
+    const accountIds: string[] = [];
+
+    // Helper function to add an account id to the list
+    const addAccountId = (accountId: string) => {
+      if (!accountIds.includes(accountId)) {
+        accountIds.push(accountId);
+      }
+    };
+
+    for (const ou of shareTargets.organizationalUnits ?? []) {
+      // debug: processing ou
+      if (ou === 'Root') {
+        for (const account of this.props.accountsConfig.accountIds ?? []) {
+          // debug: accountId
+          addAccountId(account.accountId);
+        }
+      } else {
+        for (const account of [
+          ...this.props.accountsConfig.mandatoryAccounts,
+          ...this.props.accountsConfig.workloadAccounts,
+        ]) {
+          if (ou === account.organizationalUnit) {
+            const accountId = this.props.accountsConfig.getAccountId(account.name);
+            // debug: accountId
+            addAccountId(accountId);
+          }
+        }
+      }
+    }
+
+    for (const account of shareTargets.accounts ?? []) {
+      const accountId = this.props.accountsConfig.getAccountId(account);
+      // debug: accountId
+      addAccountId(accountId);
+    }
+
+    return accountIds;
   }
 
   protected isRegionExcluded(regions: string[]): boolean {
