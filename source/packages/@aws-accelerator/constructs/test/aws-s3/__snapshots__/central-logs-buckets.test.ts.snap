@@ -374,6 +374,84 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
+    "CentralLogsBucketCrossAccountCentralBucketKMSArnSsmParamAccessRole83E55C59": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": "acceleratorOrg",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "ssm:GetParameters",
+                    "ssm:GetParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":ssm:",
+                        Object {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":parameter",
+                        Object {
+                          "Ref": "CentralLogsBucketSsmParamCentralAccountBucketKMSArn57B61EA3",
+                        },
+                      ],
+                    ],
+                  },
+                },
+                Object {
+                  "Action": "ssm:DescribeParameters",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "default",
+          },
+        ],
+        "RoleName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "AWSAccelerator-CentralBucketKMSArnSsmParam-",
+              Object {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "CentralLogsBucketPolicyC0B90E7C": Object {
       "Properties": Object {
         "Bucket": Object {
@@ -471,6 +549,19 @@ Object {
         },
       },
       "Type": "AWS::S3::BucketPolicy",
+    },
+    "CentralLogsBucketSsmParamCentralAccountBucketKMSArn57B61EA3": Object {
+      "Properties": Object {
+        "Name": "/accelerator/logging/central-bucket/kms/arn",
+        "Type": "String",
+        "Value": Object {
+          "Fn::GetAtt": Array [
+            "CentralLogsBucketCmkBA0AB2FC",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
   },
 }

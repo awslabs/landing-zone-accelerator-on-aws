@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import * as iam from 'aws-cdk-lib/aws-iam';
+import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
@@ -41,20 +41,20 @@ export class CentralLogsBucket extends Construct {
     });
 
     bucket.getKey().addToResourcePolicy(
-      new iam.PolicyStatement({
+      new cdk.aws_iam.PolicyStatement({
         sid: 'Enable IAM User Permissions',
-        principals: [new iam.AccountRootPrincipal()],
+        principals: [new cdk.aws_iam.AccountRootPrincipal()],
         actions: ['kms:*'],
         resources: ['*'],
       }),
     );
 
     bucket.getS3Bucket().addToResourcePolicy(
-      new iam.PolicyStatement({
+      new cdk.aws_iam.PolicyStatement({
         principals: [
-          new iam.ServicePrincipal('cloudtrail.amazonaws.com'),
-          new iam.ServicePrincipal('config.amazonaws.com'),
-          new iam.ServicePrincipal('delivery.logs.amazonaws.com'),
+          new cdk.aws_iam.ServicePrincipal('cloudtrail.amazonaws.com'),
+          new cdk.aws_iam.ServicePrincipal('config.amazonaws.com'),
+          new cdk.aws_iam.ServicePrincipal('delivery.logs.amazonaws.com'),
         ],
         actions: ['s3:PutObject'],
         resources: [bucket.getS3Bucket().arnForObjects('*')],
@@ -67,11 +67,11 @@ export class CentralLogsBucket extends Construct {
     );
 
     bucket.getS3Bucket().addToResourcePolicy(
-      new iam.PolicyStatement({
+      new cdk.aws_iam.PolicyStatement({
         principals: [
-          new iam.ServicePrincipal('cloudtrail.amazonaws.com'),
-          new iam.ServicePrincipal('config.amazonaws.com'),
-          new iam.ServicePrincipal('delivery.logs.amazonaws.com'),
+          new cdk.aws_iam.ServicePrincipal('cloudtrail.amazonaws.com'),
+          new cdk.aws_iam.ServicePrincipal('config.amazonaws.com'),
+          new cdk.aws_iam.ServicePrincipal('delivery.logs.amazonaws.com'),
         ],
         actions: ['s3:GetBucketAcl', 's3:ListBucket'],
         resources: [bucket.getS3Bucket().bucketArn],
@@ -88,7 +88,7 @@ export class CentralLogsBucket extends Construct {
     // );
 
     bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
-      new iam.PolicyStatement({
+      new cdk.aws_iam.PolicyStatement({
         sid: 'Allow S3 use of the key',
         actions: [
           'kms:Decrypt',
@@ -108,13 +108,13 @@ export class CentralLogsBucket extends Construct {
           'kms:ReEncryptFrom',
           'kms:ReEncryptTo',
         ],
-        principals: [new iam.ServicePrincipal('s3.amazonaws.com')],
+        principals: [new cdk.aws_iam.ServicePrincipal('s3.amazonaws.com')],
         resources: ['*'],
       }),
     );
 
     bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
-      new iam.PolicyStatement({
+      new cdk.aws_iam.PolicyStatement({
         sid: 'Allow AWS Services to encrypt and describe logs',
         actions: [
           'kms:Decrypt',
@@ -128,16 +128,16 @@ export class CentralLogsBucket extends Construct {
           'kms:ReEncryptTo',
         ],
         principals: [
-          new iam.ServicePrincipal('config.amazonaws.com'),
-          new iam.ServicePrincipal('cloudtrail.amazonaws.com'),
-          new iam.ServicePrincipal('delivery.logs.amazonaws.com'),
+          new cdk.aws_iam.ServicePrincipal('config.amazonaws.com'),
+          new cdk.aws_iam.ServicePrincipal('cloudtrail.amazonaws.com'),
+          new cdk.aws_iam.ServicePrincipal('delivery.logs.amazonaws.com'),
         ],
         resources: ['*'],
       }),
     );
     if (props.organizationId !== undefined) {
       bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
-        new iam.PolicyStatement({
+        new cdk.aws_iam.PolicyStatement({
           sid: 'Allow Organization use of the key',
           actions: [
             'kms:Decrypt',
@@ -150,7 +150,7 @@ export class CentralLogsBucket extends Construct {
             'kms:ReEncryptFrom',
             'kms:ReEncryptTo',
           ],
-          principals: [new iam.AnyPrincipal()],
+          principals: [new cdk.aws_iam.AnyPrincipal()],
           resources: ['*'],
           conditions: {
             StringEquals: {
@@ -159,6 +159,37 @@ export class CentralLogsBucket extends Construct {
           },
         }),
       );
+
+      const centralLogBucketKmsKeyArnSsmParameter = new cdk.aws_ssm.StringParameter(
+        this,
+        'SsmParamCentralAccountBucketKMSArn',
+        {
+          parameterName: '/accelerator/logging/central-bucket/kms/arn',
+          stringValue: bucket.getKey().keyArn,
+        },
+      );
+
+      // SSM parameter access IAM Role for
+      new cdk.aws_iam.Role(this, 'CrossAccountCentralBucketKMSArnSsmParamAccessRole', {
+        roleName: `AWSAccelerator-CentralBucketKMSArnSsmParam-${cdk.Stack.of(this).region}`,
+        assumedBy: new cdk.aws_iam.OrganizationPrincipal(props.organizationId),
+        inlinePolicies: {
+          default: new cdk.aws_iam.PolicyDocument({
+            statements: [
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                resources: [centralLogBucketKmsKeyArnSsmParameter.parameterArn],
+              }),
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ssm:DescribeParameters'],
+                resources: ['*'],
+              }),
+            ],
+          }),
+        },
+      });
     }
   }
 }

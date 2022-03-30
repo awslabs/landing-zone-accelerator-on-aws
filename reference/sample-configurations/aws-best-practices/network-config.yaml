@@ -181,6 +181,8 @@ vpcs:
         - ec2messages
         - ssm
         - ssmmessages
+        - kms
+        - logs
         # - secretsmanager
         # - cloudformation
         # - access-analyzer

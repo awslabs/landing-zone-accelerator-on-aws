@@ -30,9 +30,15 @@ export abstract class GlobalConfigTypes {
     organizationTrail: t.boolean,
   });
 
+  static readonly sessionManagerConfig = t.interface({
+    sendToCloudWatchLogs: t.boolean,
+    sendToS3: t.boolean,
+  });
+
   static readonly loggingConfig = t.interface({
     account: t.nonEmptyString,
     cloudtrail: GlobalConfigTypes.cloudtrailConfig,
+    sessionManager: GlobalConfigTypes.sessionManagerConfig,
   });
 
   static readonly identityPerimeterConfig = t.interface({
@@ -129,9 +135,15 @@ export class CloudtrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloud
   readonly organizationTrail = false;
 }
 
+export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.sessionManagerConfig> {
+  readonly sendToCloudWatchLogs = false;
+  readonly sendToS3 = false;
+}
+
 export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingConfig> {
   readonly account = 'Log Archive';
   readonly cloudtrail: CloudtrailConfig = new CloudtrailConfig();
+  readonly sessionManager: SessionManagerConfig = new SessionManagerConfig();
 }
 
 export class IdentityPerimeterConfig implements t.TypeOf<typeof GlobalConfigTypes.identityPerimeterConfig> {

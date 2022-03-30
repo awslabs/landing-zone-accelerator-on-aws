@@ -9,6 +9,9 @@ logging:
   cloudtrail:
     enable: false
     organizationTrail: false
+  sessionManager:
+    sendToCloudWatchLogs: false
+    sendToS3: true
 dataProtection:
   enable: true
   deploymentTargets:
