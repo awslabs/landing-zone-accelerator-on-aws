@@ -30,7 +30,11 @@ export class LoggingStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    const organization = new Organization(this, 'Organization');
+    let organizationId: string | undefined = undefined;
+    if (props.organizationConfig.enable) {
+      const organization = new Organization(this, 'Organization');
+      organizationId = organization.id;
+    }
 
     //
     // Block Public Access; S3 is global, only need to call in home region. This is done in the
@@ -102,7 +106,7 @@ export class LoggingStack extends AcceleratorStack {
         serverAccessLogsBucket: serverAccessLogsBucket,
         kmsAliasName: 'alias/accelerator/central-logs/s3',
         kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
-        organizationId: organization.id,
+        organizationId,
       });
     }
 
