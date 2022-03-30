@@ -53,6 +53,20 @@ describe('CentralLogsBucket', () => {
   });
 
   /**
+   * Number of bucket IAM Roles
+   */
+  test(`${testNamePrefix} IAM Role count test`, () => {
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 1);
+  });
+
+  /**
+   * Number of SSM Parameters
+   */
+  test(`${testNamePrefix} SSM Parameter count test`, () => {
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::SSM::Parameter', 1);
+  });
+
+  /**
    * AccessLogsBucket configuration configuration test
    */
   test(`${testNamePrefix} AccessLogsBucket configuration test`, () => {
@@ -396,6 +410,111 @@ describe('CentralLogsBucket', () => {
               'Fn::GetAtt': ['CentralLogsBucketCmkBA0AB2FC', 'Arn'],
             },
           },
+        },
+      },
+    });
+  });
+
+  /**
+   * SSM Parameter configuration test
+   */
+  test(`${testNamePrefix} SSM Parameter configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        CentralLogsBucketSsmParamCentralAccountBucketKMSArn57B61EA3: {
+          Properties: {
+            Name: '/accelerator/logging/central-bucket/kms/arn',
+            Type: 'String',
+            Value: {
+              'Fn::GetAtt': ['CentralLogsBucketCmkBA0AB2FC', 'Arn'],
+            },
+          },
+          Type: 'AWS::SSM::Parameter',
+        },
+      },
+    });
+  });
+
+  /**
+   * SSMParameter IAM Role configuration test
+   */
+  test(`${testNamePrefix} SSMParameter IAM Role configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        CentralLogsBucketCrossAccountCentralBucketKMSArnSsmParamAccessRole83E55C59: {
+          Properties: {
+            AssumeRolePolicyDocument: {
+              Statement: [
+                {
+                  Action: 'sts:AssumeRole',
+                  Condition: {
+                    StringEquals: {
+                      'aws:PrincipalOrgID': 'acceleratorOrg',
+                    },
+                  },
+                  Effect: 'Allow',
+                  Principal: {
+                    AWS: '*',
+                  },
+                },
+              ],
+              Version: '2012-10-17',
+            },
+            Policies: [
+              {
+                PolicyDocument: {
+                  Statement: [
+                    {
+                      Action: ['ssm:GetParameters', 'ssm:GetParameter'],
+                      Effect: 'Allow',
+                      Resource: {
+                        'Fn::Join': [
+                          '',
+                          [
+                            'arn:',
+                            {
+                              Ref: 'AWS::Partition',
+                            },
+                            ':ssm:',
+                            {
+                              Ref: 'AWS::Region',
+                            },
+                            ':',
+                            {
+                              Ref: 'AWS::AccountId',
+                            },
+                            ':parameter',
+                            {
+                              Ref: 'CentralLogsBucketSsmParamCentralAccountBucketKMSArn57B61EA3',
+                            },
+                          ],
+                        ],
+                      },
+                    },
+                    {
+                      Action: 'ssm:DescribeParameters',
+                      Effect: 'Allow',
+                      Resource: '*',
+                    },
+                  ],
+                  Version: '2012-10-17',
+                },
+                PolicyName: 'default',
+              },
+            ],
+            RoleName: {
+              'Fn::Join': [
+                '',
+                [
+                  'AWSAccelerator-CentralBucketKMSArnSsmParam-',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                ],
+              ],
+            },
+          },
+          Type: 'AWS::IAM::Role',
         },
       },
     });

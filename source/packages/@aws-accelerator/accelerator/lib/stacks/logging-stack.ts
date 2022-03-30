@@ -22,7 +22,10 @@ import {
   CentralLogsBucket,
   Organization,
   S3PublicAccessBlock,
+  SsmParameter,
+  SsmSessionManagerSettings,
 } from '@aws-accelerator/constructs';
+import { Region } from '@aws-accelerator/config';
 
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
@@ -115,6 +118,48 @@ export class LoggingStack extends AcceleratorStack {
       // if ebs default encryption enabled and using a customer master key
       new iam.CfnServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
         awsServiceName: 'autoscaling.amazonaws.com',
+      });
+    }
+
+    if (
+      props.globalConfig.logging.sessionManager.sendToCloudWatchLogs ||
+      props.globalConfig.logging.sessionManager.sendToS3
+    ) {
+      let centralLogsBucketName = '';
+      let s3KeyPrefix = '';
+      let s3BucketKeyArn = '';
+      if (props.globalConfig.logging.sessionManager.sendToS3) {
+        const centralLogBucket = cdk.aws_s3.Bucket.fromBucketName(
+          this,
+          'CentralLogBucket',
+          `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
+            props.globalConfig.homeRegion
+          }`,
+        );
+        centralLogsBucketName = centralLogBucket.bucketName;
+        s3KeyPrefix = `AWSSessionManager/${cdk.Aws.ACCOUNT_ID}`;
+
+        s3BucketKeyArn = new SsmParameter(this, 'SsmCentralLogBucketKeyArn', {
+          region: cdk.Stack.of(this).region as Region,
+          partition: cdk.Stack.of(this).partition,
+          parameter: {
+            name: '/accelerator/logging/central-bucket/kms/arn',
+            accountId: props.accountsConfig.getLogArchiveAccountId(),
+            roleName: `AWSAccelerator-CentralBucketKMSArnSsmParam-${cdk.Stack.of(this).region}`,
+          },
+          invokingAccountID: cdk.Stack.of(this).account,
+        }).value;
+      }
+
+      // Set up Session Manager Logging for all Accounts
+      new SsmSessionManagerSettings(this, 'SsmSessionManagerSettings', {
+        s3BucketName: centralLogsBucketName,
+        s3KeyPrefix: s3KeyPrefix,
+        s3BucketKeyArn: s3BucketKeyArn,
+        sendToCloudWatchLogs: props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
+        sendToS3: props.globalConfig.logging.sessionManager.sendToS3,
+        cloudWatchEncryptionEnabled:
+          props.partition !== 'aws-us-gov' && props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
       });
     }
   }

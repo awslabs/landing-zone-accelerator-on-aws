@@ -238,7 +238,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
           nextToken = page.NextToken;
         } while (nextToken);
       }
-    } 
+    }
   }
 
   public getOrganizationalUnitId(name: string): string {

@@ -13,11 +13,15 @@ const globalConfigJson = {
     enable: true,
   },
   logging: {
-    account: 'Log Archive',
+    account: 'LogArchive',
     cloudtrail: {
       enable: false,
       organizationTrail: false,
     },
+    sessionManager: {
+      sendToCloudWatchLogs: true,
+      sendToS3: true
+    }
   },
   dataProtection: {
     enable: true,
