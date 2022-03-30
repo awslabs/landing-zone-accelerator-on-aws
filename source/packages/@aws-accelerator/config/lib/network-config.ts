@@ -26,9 +26,21 @@ export class NetworkConfigTypes {
     excludeAccounts: t.optional(t.array(t.string)),
   });
 
+  static readonly transitGatewayRouteTableVpcEntryConfig = t.interface({
+    account: t.nonEmptyString,
+    vpcName: t.nonEmptyString,
+  });
+
+  static readonly transitGatewayRouteEntryConfig = t.interface({
+    destinationCidrBlock: t.nonEmptyString,
+    blackhole: t.optional(t.boolean),
+    attachment: t.optional(this.transitGatewayRouteTableVpcEntryConfig),
+  });
+
   static readonly transitGatewayRouteTableConfig = t.interface({
     name: t.nonEmptyString,
     tags: t.optional(t.array(t.tag)),
+    routes: t.array(this.transitGatewayRouteEntryConfig),
   });
 
   static readonly transitGatewayConfig = t.interface({
@@ -379,11 +391,27 @@ export class DefaultVpcsConfig implements t.TypeOf<typeof NetworkConfigTypes.def
   readonly excludeAccounts = [];
 }
 
+export class TransitGatewayRouteTableVpcEntryConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig>
+{
+  readonly account = '';
+  readonly vpcName = '';
+}
+
+export class TransitGatewayRouteEntryConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteEntryConfig>
+{
+  readonly destinationCidrBlock = '';
+  readonly blackhole: boolean | undefined = undefined;
+  readonly attachment: TransitGatewayRouteTableVpcEntryConfig | undefined = undefined;
+}
+
 export class TransitGatewayRouteTableConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteTableConfig>
 {
   readonly name = '';
   readonly tags: t.Tag[] | undefined = undefined;
+  readonly routes: TransitGatewayRouteEntryConfig[] = [];
 }
 
 export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayConfig> {

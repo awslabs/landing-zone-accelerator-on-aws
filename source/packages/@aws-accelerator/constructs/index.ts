@@ -21,6 +21,7 @@ export * from './lib/aws-ec2/ebs-encryption';
 export * from './lib/aws-ec2/route-table';
 export * from './lib/aws-ec2/transit-gateway';
 export * from './lib/aws-ec2/transit-gateway-route-table';
+export * from './lib/aws-ec2/transit-gateway-static-route';
 export * from './lib/aws-ec2/vpc';
 export * from './lib/aws-ec2/vpc-endpoint';
 export * from './lib/aws-guardduty/guardduty-detector-config';
