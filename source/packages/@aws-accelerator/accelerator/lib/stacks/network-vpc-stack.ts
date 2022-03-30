@@ -315,6 +315,88 @@ export class NetworkVpcStack extends AcceleratorStack {
     }
 
     //
+    // Loop through VPC peering entries. Determine if accepter VPC is in external account.
+    // Add VPC peering role to external account IDs if necessary
+    //
+    const vpcPeeringAccountIds: string[] = [];
+    for (const peering of props.networkConfig.vpcPeering ?? []) {
+      // Check to ensure only two VPCs are defined
+      if (peering.vpcs.length > 2) {
+        throw new Error(`[network-vpc-stack] VPC peering connection ${peering.name} has more than two VPCs defined`);
+      }
+
+      // Get requester and accepter VPC configurations
+      const requesterVpc = props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[0]);
+      const accepterVpc = props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[1]);
+
+      if (requesterVpc.length === 1 && accepterVpc.length === 1) {
+        const requesterAccountId = props.accountsConfig.getAccountId(requesterVpc[0].account);
+        const accepterAccountId = props.accountsConfig.getAccountId(accepterVpc[0].account);
+
+        // Check for different account peering -- only add IAM role to accepter account
+        if (cdk.Stack.of(this).account === accepterAccountId && cdk.Stack.of(this).region === accepterVpc[0].region) {
+          if (requesterAccountId !== accepterAccountId && !vpcPeeringAccountIds.includes(requesterAccountId)) {
+            vpcPeeringAccountIds.push(requesterAccountId);
+          }
+        }
+      } else if (requesterVpc.length === 0) {
+        throw new Error(`[network-vpc-stack] Requester VPC ${peering.vpcs[0]} is undefined`);
+      } else if (accepterVpc.length === 0) {
+        throw new Error(`[network-vpc-stack] Accepter VPC ${peering.vpcs[1]} is undefined`);
+      } else {
+        throw new Error(`[network-vpc-stack] network-config.yaml cannot contain VPCs with the same name`);
+      }
+    }
+
+    //
+    // Create VPC peering role
+    //
+    if (vpcPeeringAccountIds.length > 0) {
+      Logger.info(`[network-vpc-stack] Create cross-account IAM role for VPC peering`);
+
+      const principals: cdk.aws_iam.PrincipalBase[] = [];
+      vpcPeeringAccountIds.forEach(accountId => {
+        principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
+      });
+      new cdk.aws_iam.Role(this, 'VpcPeeringRole', {
+        roleName: `AWSAccelerator-VpcPeeringRole-${cdk.Stack.of(this).region}`,
+        assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
+        inlinePolicies: {
+          default: new cdk.aws_iam.PolicyDocument({
+            statements: [
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: [
+                  'ec2:AcceptVpcPeeringConnection',
+                  'ec2:CreateVpcPeeringConnection',
+                  'ec2:DeleteVpcPeeringConnection',
+                ],
+                resources: [
+                  `arn:${cdk.Aws.PARTITION}:ec2:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:vpc/*`,
+                  `arn:${cdk.Aws.PARTITION}:ec2:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:vpc-peering-connection/*`,
+                ],
+              }),
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ssm:DeleteParameter', 'ssm:PutParameter'],
+                resources: [
+                  `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/network/vpcPeering/*`,
+                ],
+              }),
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ssm:GetParameter'],
+                resources: [
+                  `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/network/vpc/*`,
+                ],
+              }),
+            ],
+          }),
+        },
+      });
+    }
+
+    //
     // Create DHCP options
     //
     // Create map to store DHCP options

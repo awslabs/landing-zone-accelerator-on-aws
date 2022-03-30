@@ -467,3 +467,8 @@ vpcFlowLogs:
     - pkt-dst-aws-service
     - flow-direction
     - traffic-path
+# vpcPeering:
+#   - name: NetworkEndpointsToInspection
+#     vpcs:
+#       - Network-Endpoints
+#       - Network-Inspection

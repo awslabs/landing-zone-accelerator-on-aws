@@ -11,6 +11,13 @@
  *  and limitations under the License.
  */
 
+import * as cdk from 'aws-cdk-lib';
+import * as config from 'aws-cdk-lib/aws-config';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import { pascalCase } from 'change-case';
+import { Construct } from 'constructs';
+import path from 'path';
+
 import { Region } from '@aws-accelerator/config';
 import {
   EbsDefaultEncryption,
@@ -19,16 +26,11 @@ import {
   PasswordPolicy,
   SecurityHubStandards,
   SsmParameter,
+  SsmParameterType,
 } from '@aws-accelerator/constructs';
-import * as cdk from 'aws-cdk-lib';
-import * as config from 'aws-cdk-lib/aws-config';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import { pascalCase } from 'change-case';
-import { Construct } from 'constructs';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+
 import { Logger } from '../logger';
-import { ArnPrincipal, Effect } from 'aws-cdk-lib/aws-iam';
-import path from 'path';
+import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 enum ACCEL_LOOKUP_TYPE {
   SSM = 'SSM',
@@ -74,6 +76,7 @@ export class SecurityStack extends AcceleratorStack {
             roleName: `AWSAccelerator-MacieSsmParam-${cdk.Stack.of(this).region}`,
           },
           invokingAccountID: cdk.Stack.of(this).account,
+          type: SsmParameterType.GET,
         }).value;
 
         const bucketKmsKeyArn = new SsmParameter(this, 'SsmParamMacieBucketKmsKeyArn', {
@@ -85,6 +88,7 @@ export class SecurityStack extends AcceleratorStack {
             roleName: `AWSAccelerator-MacieSsmParam-${cdk.Stack.of(this).region}`,
           },
           invokingAccountID: cdk.Stack.of(this).account,
+          type: SsmParameterType.GET,
         }).value;
         new MacieExportConfigClassification(this, 'AwsMacieUpdateExportConfigClassification', {
           region: cdk.Stack.of(this).region,
@@ -116,6 +120,7 @@ export class SecurityStack extends AcceleratorStack {
             roleName: `AWSAccelerator-GuardDutySsmParam-${cdk.Stack.of(this).region}`,
           },
           invokingAccountID: cdk.Stack.of(this).account,
+          type: SsmParameterType.GET,
         }).value;
 
         const bucketKmsKeyArn = new SsmParameter(this, 'SsmParamGuardDutyBucketKmsKeyArn', {
@@ -127,6 +132,7 @@ export class SecurityStack extends AcceleratorStack {
             roleName: `AWSAccelerator-GuardDutySsmParam-${cdk.Stack.of(this).region}`,
           },
           invokingAccountID: cdk.Stack.of(this).account,
+          type: SsmParameterType.GET,
         }).value;
 
         new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
@@ -176,10 +182,10 @@ export class SecurityStack extends AcceleratorStack {
       ebsEncryptionKey.addToResourcePolicy(
         new iam.PolicyStatement({
           sid: 'Allow service-linked role use',
-          effect: Effect.ALLOW,
+          effect: iam.Effect.ALLOW,
           actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:GenerateDataKey*', 'kms:ReEncrypt*'],
           principals: [
-            new ArnPrincipal(
+            new iam.ArnPrincipal(
               `arn:${cdk.Stack.of(this).partition}:iam::${
                 cdk.Stack.of(this).account
               }:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling`,
@@ -191,10 +197,10 @@ export class SecurityStack extends AcceleratorStack {
       ebsEncryptionKey.addToResourcePolicy(
         new iam.PolicyStatement({
           sid: 'Allow Autoscaling to create grant',
-          effect: Effect.ALLOW,
+          effect: iam.Effect.ALLOW,
           actions: ['kms:CreateGrant'],
           principals: [
-            new ArnPrincipal(
+            new iam.ArnPrincipal(
               `arn:${cdk.Stack.of(this).partition}:iam::${
                 cdk.Stack.of(this).account
               }:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling`,
@@ -657,6 +663,7 @@ export class SecurityStack extends AcceleratorStack {
             roleName: replacementArray[2],
           },
           invokingAccountID: cdk.Stack.of(this).account,
+          type: SsmParameterType.GET,
         }).value;
       }
       throw new Error(`Config rule replacement key ${replacement.input} not found`);

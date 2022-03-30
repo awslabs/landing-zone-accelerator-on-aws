@@ -13,9 +13,12 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import * as path from 'path';
 
-const path = require('path');
-
+export enum SsmParameterType {
+  GET = 'GET',
+  PUT = 'PUT',
+}
 /**
  * SsmParameterProps
  */
@@ -38,39 +41,80 @@ export interface SsmParameterProps {
      * Role name to assume to access the parameter in target account
      */
     roleName: string;
+    /**
+     * Optional value to put when when using SsmParameterType.PUT
+     */
+    value?: string;
   };
   readonly invokingAccountID: string;
+
+  /**
+   * The type of SSM parameter operation
+   */
+  readonly type: SsmParameterType;
 }
 
 /**
  * SsmParameter class - to get ssm parameter value from other account
  */
 export class SsmParameter extends Construct {
+  public readonly parameterName: string;
   public readonly value: string = '';
 
   constructor(scope: Construct, id: string, props: SsmParameterProps) {
     super(scope, id);
 
-    const RESOURCE_TYPE = 'Custom::SsmGetParameterValue';
-
+    this.parameterName = props.parameter.name;
     const assumeRoleArn = `arn:${props.partition}:iam::${props.parameter.accountId}:role/${props.parameter.roleName}`;
 
-    const customResourceLambdaFunction = new cdk.aws_lambda.Function(this, 'SsmGetParameterValueFunction', {
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-param-value/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
-      handler: 'index.handler',
-      description: `Custom resource provider to get ssm parameter ${props.parameter.name} value`,
-    });
-
+    let RESOURCE_TYPE: string;
+    let codeDir: string;
+    let desc: string;
+    let logicalId: string;
     const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
 
+    if (props.type === SsmParameterType.GET) {
+      RESOURCE_TYPE = 'Custom::SsmGetParameterValue';
+      codeDir = 'get-param-value/dist';
+      desc = `Custom resource provider to get ssm parameter ${props.parameter.name} value`;
+      logicalId = 'SsmGetParameterValueFunction';
+
+      // Push policy statement
+      policyStatements.push(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'SsmGetParameterActions',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:DescribeParameters'],
+          resources: ['*'],
+        }),
+      );
+    } else if (props.type === SsmParameterType.PUT) {
+      // Check if parameter value is included in props
+      if (!props.parameter.value) {
+        throw new Error('parameter.value property required when type is set to PUT');
+      }
+
+      RESOURCE_TYPE = 'Custom::SsmPutParameterValue';
+      codeDir = 'put-param-value/dist';
+      desc = `Custom resource provider to put ssm parameter ${props.parameter.name} value`;
+      logicalId = 'SsmPutParameterValueFunction';
+
+      // Push policy statement
+      policyStatements.push(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'SsmPutParameterActions',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['ssm:DeleteParameter', 'ssm:PutParameter'],
+          resources: ['*'],
+        }),
+      );
+
+      this.value = props.parameter.value;
+    } else {
+      throw new Error(`SSM parameter type ${props.type} is invalid`);
+    }
+
     policyStatements.push(
-      new cdk.aws_iam.PolicyStatement({
-        sid: 'SsmGetParameterActions',
-        effect: cdk.aws_iam.Effect.ALLOW,
-        actions: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:DescribeParameters'],
-        resources: ['*'],
-      }),
       new cdk.aws_iam.PolicyStatement({
         sid: 'StsAssumeRoleActions',
         effect: cdk.aws_iam.Effect.ALLOW,
@@ -78,6 +122,14 @@ export class SsmParameter extends Construct {
         resources: [assumeRoleArn],
       }),
     );
+
+    // Create custom resource
+    const customResourceLambdaFunction = new cdk.aws_lambda.Function(this, logicalId, {
+      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, codeDir)),
+      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      handler: 'index.handler',
+      description: desc,
+    });
 
     policyStatements.forEach(policyStatement => {
       customResourceLambdaFunction?.addToRolePolicy(policyStatement);
@@ -94,11 +146,14 @@ export class SsmParameter extends Construct {
         region: props.region,
         parameterAccountID: props.parameter.accountId,
         parameterName: props.parameter.name,
+        parameterValue: props.parameter.value,
         assumeRoleArn: assumeRoleArn,
         invokingAccountID: props.invokingAccountID,
       },
     });
 
-    this.value = resource.ref;
+    if (props.type === SsmParameterType.GET) {
+      this.value = resource.ref;
+    }
   }
 }

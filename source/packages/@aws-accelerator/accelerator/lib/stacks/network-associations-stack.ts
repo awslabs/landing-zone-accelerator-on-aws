@@ -16,6 +16,7 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
+import { VpcConfig } from '@aws-accelerator/config';
 import {
   AssociateHostedZones,
   QueryLoggingConfigAssociation,
@@ -24,14 +25,24 @@ import {
   ResourceShare,
   ResourceShareItem,
   ResourceShareOwner,
+  SsmParameter,
+  SsmParameterType,
   TransitGatewayAttachment,
   TransitGatewayRouteTableAssociation,
   TransitGatewayRouteTablePropagation,
   TransitGatewayStaticRoute,
+  VpcPeering,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+
+interface Peering {
+  name: string;
+  requester: VpcConfig;
+  accepter: VpcConfig;
+  tags: cdk.CfnTag[] | undefined;
+}
 
 export class NetworkAssociationsStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -484,6 +495,105 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             vpcId: vpcId,
           });
         }
+      }
+    }
+
+    //
+    // Check for VPC peering connections
+    //
+    const peeringList: Peering[] = [];
+    for (const peering of props.networkConfig.vpcPeering ?? []) {
+      // Check to ensure only two VPCs are defined
+      if (peering.vpcs.length > 2) {
+        throw new Error(`[network-vpc-stack] VPC peering connection ${peering.name} has more than two VPCs defined`);
+      }
+
+      // Get requester and accepter VPC configurations
+      const requesterVpc = props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[0]);
+      const accepterVpc = props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[1]);
+
+      if (requesterVpc.length === 1 && accepterVpc.length === 1) {
+        const requesterAccountId = props.accountsConfig.getAccountId(requesterVpc[0].account);
+
+        // Check if requester VPC is in this account and region
+        if (cdk.Stack.of(this).account === requesterAccountId && cdk.Stack.of(this).region === requesterVpc[0].region) {
+          peeringList.push({
+            name: peering.name,
+            requester: requesterVpc[0],
+            accepter: accepterVpc[0],
+            tags: peering.tags,
+          });
+        }
+      }
+    }
+
+    // Create VPC peering connections
+    for (const peering of peeringList ?? []) {
+      // Get account IDs
+      const requesterAccountId = props.accountsConfig.getAccountId(peering.requester.account);
+      const accepterAccountId = props.accountsConfig.getAccountId(peering.accepter.account);
+
+      // Get SSM parameters
+      const requesterVpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        `/accelerator/network/vpc/${peering.requester.name}/id`,
+      );
+
+      let accepterVpcId: string;
+      let accepterRoleName: string | undefined = undefined;
+      if (requesterAccountId !== accepterAccountId) {
+        accepterVpcId = new SsmParameter(this, pascalCase(`SsmParamLookup${peering.name}`), {
+          region: peering.accepter.region,
+          partition: cdk.Stack.of(this).partition,
+          parameter: {
+            name: `/accelerator/network/vpc/${peering.accepter.name}/id`,
+            accountId: accepterAccountId,
+            roleName: `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`,
+          },
+          invokingAccountID: cdk.Stack.of(this).account,
+          type: SsmParameterType.GET,
+        }).value;
+
+        accepterRoleName = `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`;
+      } else {
+        accepterVpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          `/accelerator/network/vpc/${peering.accepter.name}/id`,
+        );
+      }
+
+      // Create VPC peering
+      Logger.info(
+        `[network-associations-stack] Create VPC peering ${peering.name} between ${peering.requester.name} and ${peering.accepter.name}`,
+      );
+      const vpcPeering = new VpcPeering(this, `${peering.name}VpcPeering`, {
+        name: peering.name,
+        peerOwnerId: accepterAccountId,
+        peerRegion: peering.accepter.region,
+        peerVpcId: accepterVpcId,
+        peerRoleName: accepterRoleName,
+        vpcId: requesterVpcId,
+        tags: peering.tags ?? [],
+      });
+      new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${pascalCase(peering.name)}VpcPeering`), {
+        parameterName: `/accelerator/network/vpcPeering/${peering.name}/id`,
+        stringValue: vpcPeering.peeringId,
+      });
+
+      // Put cross-account SSM parameter if necessary
+      if (requesterAccountId !== accepterAccountId) {
+        new SsmParameter(this, pascalCase(`CrossAcctSsmParam${pascalCase(peering.name)}VpcPeering`), {
+          region: peering.accepter.region,
+          partition: cdk.Stack.of(this).partition,
+          parameter: {
+            name: `/accelerator/network/vpcPeering/${peering.name}/id`,
+            accountId: accepterAccountId,
+            roleName: `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`,
+            value: vpcPeering.peeringId,
+          },
+          invokingAccountID: cdk.Stack.of(this).account,
+          type: SsmParameterType.PUT,
+        });
       }
     }
   }
