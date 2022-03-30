@@ -504,6 +504,10 @@ const securityConfigJson = {
         },
       ],
     },
+    ssmAutomation: {
+      excludeRegions: [],
+      documentSets: [],
+    },
   },
   accessAnalyzer: {
     enable: true,

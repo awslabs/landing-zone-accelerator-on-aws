@@ -735,6 +735,24 @@ describe('SecurityAuditStack', () => {
                   },
                   Sid: '2',
                 },
+                {
+                  Action: ['sns:ListSubscriptionsByTopic', 'sns:ListTagsForResource', 'sns:GetTopicAttributes'],
+                  Condition: {
+                    StringEquals: {
+                      'aws:PrincipalOrgID': {
+                        Ref: 'Organization29A5FC3F',
+                      },
+                    },
+                  },
+                  Effect: 'Allow',
+                  Principal: {
+                    AWS: '*',
+                  },
+                  Resource: {
+                    Ref: 'HighSnsTopicF69104E5',
+                  },
+                  Sid: 'Allow Organization list topic',
+                },
               ],
               Version: '2012-10-17',
             },
@@ -839,6 +857,24 @@ describe('SecurityAuditStack', () => {
                     Ref: 'LowSnsTopic53AD0F18',
                   },
                   Sid: '2',
+                },
+                {
+                  Action: ['sns:ListSubscriptionsByTopic', 'sns:ListTagsForResource', 'sns:GetTopicAttributes'],
+                  Condition: {
+                    StringEquals: {
+                      'aws:PrincipalOrgID': {
+                        Ref: 'Organization29A5FC3F',
+                      },
+                    },
+                  },
+                  Effect: 'Allow',
+                  Principal: {
+                    AWS: '*',
+                  },
+                  Resource: {
+                    Ref: 'LowSnsTopic53AD0F18',
+                  },
+                  Sid: 'Allow Organization list topic',
                 },
               ],
               Version: '2012-10-17',
@@ -966,6 +1002,24 @@ describe('SecurityAuditStack', () => {
                     Ref: 'MediumSnsTopic267CAB5B',
                   },
                   Sid: '2',
+                },
+                {
+                  Action: ['sns:ListSubscriptionsByTopic', 'sns:ListTagsForResource', 'sns:GetTopicAttributes'],
+                  Condition: {
+                    StringEquals: {
+                      'aws:PrincipalOrgID': {
+                        Ref: 'Organization29A5FC3F',
+                      },
+                    },
+                  },
+                  Effect: 'Allow',
+                  Principal: {
+                    AWS: '*',
+                  },
+                  Resource: {
+                    Ref: 'MediumSnsTopic267CAB5B',
+                  },
+                  Sid: 'Allow Organization list topic',
                 },
               ],
               Version: '2012-10-17',
