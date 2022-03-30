@@ -151,15 +151,55 @@ const networkConfigJson = {
       routeTables: [
         {
           name: 'core',
+          routes: [
+            {
+              destinationCidrBlock: '10.40.0.0/24',
+              attachment: {
+                vpcName: 'InspectionVpc',
+                account: 'Transit',
+              },
+              blackhole: true,
+            },
+          ],
         },
         {
           name: 'segregated',
+          routes: [
+            {
+              destinationCidrBlock: '10.40.0.0/24',
+              attachment: {
+                vpcName: 'InspectionVpc',
+                account: 'Transit',
+              },
+              blackhole: true,
+            },
+          ],
         },
         {
           name: 'shared',
+          routes: [
+            {
+              destinationCidrBlock: '10.40.0.0/24',
+              attachment: {
+                vpcName: 'InspectionVpc',
+                account: 'Transit',
+              },
+              blackhole: true,
+            },
+          ],
         },
         {
           name: 'standalone',
+          routes: [
+            {
+              destinationCidrBlock: '10.40.0.0/24',
+              attachment: {
+                vpcName: 'InspectionVpc',
+                account: 'Transit',
+              },
+              blackhole: true,
+            },
+          ],
         },
       ],
     },
