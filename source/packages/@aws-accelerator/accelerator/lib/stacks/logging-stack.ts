@@ -23,6 +23,7 @@ import {
   Organization,
   S3PublicAccessBlock,
   SsmParameter,
+  SsmParameterType,
   SsmSessionManagerSettings,
 } from '@aws-accelerator/constructs';
 import { Region } from '@aws-accelerator/config';
@@ -148,6 +149,7 @@ export class LoggingStack extends AcceleratorStack {
             roleName: `AWSAccelerator-CentralBucketKMSArnSsmParam-${cdk.Stack.of(this).region}`,
           },
           invokingAccountID: cdk.Stack.of(this).account,
+          type: SsmParameterType.GET,
         }).value;
       }
 
