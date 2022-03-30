@@ -174,10 +174,12 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
   }
 
   public async loadOrganizationalUnitIds(partition: string): Promise<void> {
-    if (this.organizationalUnitIds === undefined) {
+    if (!this.enable) {
+      // do nothing
+    } else {
       this.organizationalUnitIds = [];
     }
-    if (this.organizationalUnitIds.length == 0) {
+    if (this.organizationalUnitIds?.length == 0) {
       let organizationsClient: AWS.Organizations;
       if (partition === 'aws-us-gov') {
         organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
@@ -236,27 +238,31 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
           nextToken = page.NextToken;
         } while (nextToken);
       }
-    }
+    } 
   }
 
   public getOrganizationalUnitId(name: string): string {
-    if (this.organizationalUnitIds) {
-      const ou = this.organizationalUnitIds.find(item => item.name === name);
+    if (!this.enable) {
+      // do nothing
+    } else {
+      const ou = this.organizationalUnitIds?.find(item => item.name === name);
       if (ou) {
         return ou.id;
       }
     }
-    throw new Error(`OU ${name} not found`);
+    throw new Error('Attempting to access Organizations info when not enabled');
   }
 
   public getOrganizationalUnitArn(name: string): string {
-    if (this.organizationalUnitIds) {
-      const ou = this.organizationalUnitIds.find(item => item.name === name);
+    if (!this.enable) {
+      // do nothing
+    } else {
+      const ou = this.organizationalUnitIds?.find(item => item.name === name);
       if (ou) {
         return ou.arn;
       }
     }
-    throw new Error(`OU ${name} not found`);
+    throw new Error('Attempting to access Organizations info when not enabled');
   }
 
   public getPath(name: string): string {

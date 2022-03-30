@@ -21,7 +21,7 @@ export interface CentralLogsBucketProps {
   kmsAliasName: string;
   kmsDescription: string;
   serverAccessLogsBucket: Bucket;
-  organizationId: string;
+  organizationId?: string;
 }
 
 /**
@@ -135,29 +135,30 @@ export class CentralLogsBucket extends Construct {
         resources: ['*'],
       }),
     );
-
-    bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
-      new iam.PolicyStatement({
-        sid: 'Allow Organization use of the key',
-        actions: [
-          'kms:Decrypt',
-          'kms:DescribeKey',
-          'kms:Encrypt',
-          'kms:GenerateDataKey',
-          'kms:GenerateDataKeyPair',
-          'kms:GenerateDataKeyPairWithoutPlaintext',
-          'kms:GenerateDataKeyWithoutPlaintext',
-          'kms:ReEncryptFrom',
-          'kms:ReEncryptTo',
-        ],
-        principals: [new iam.AnyPrincipal()],
-        resources: ['*'],
-        conditions: {
-          StringEquals: {
-            'aws:PrincipalOrgID': props.organizationId,
+    if (props.organizationId !== undefined) {
+      bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
+        new iam.PolicyStatement({
+          sid: 'Allow Organization use of the key',
+          actions: [
+            'kms:Decrypt',
+            'kms:DescribeKey',
+            'kms:Encrypt',
+            'kms:GenerateDataKey',
+            'kms:GenerateDataKeyPair',
+            'kms:GenerateDataKeyPairWithoutPlaintext',
+            'kms:GenerateDataKeyWithoutPlaintext',
+            'kms:ReEncryptFrom',
+            'kms:ReEncryptTo',
+          ],
+          principals: [new iam.AnyPrincipal()],
+          resources: ['*'],
+          conditions: {
+            StringEquals: {
+              'aws:PrincipalOrgID': props.organizationId,
+            },
           },
-        },
-      }),
-    );
+        }),
+      );
+    }
   }
 }
