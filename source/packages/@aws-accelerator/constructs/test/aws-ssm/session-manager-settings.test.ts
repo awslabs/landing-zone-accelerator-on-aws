@@ -168,7 +168,7 @@ describe('SsmSessionManagerSettings', () => {
   test(`${testNamePrefix} Custom resource provider framework lambda function configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        SsmSessionManagerSettings84BFDF2A: {
+        SsmSessionManagerSettings24721AC9: {
           DeletionPolicy: 'Delete',
           Properties: {
             ServiceToken: {
@@ -176,10 +176,10 @@ describe('SsmSessionManagerSettings', () => {
             },
             cloudWatchEncryptionEnabled: true,
             cloudWatchLogGroupName: {
-              Ref: 'SsmSessionManagerSettingssessionManagerLogGroupF24D77B0',
+              Ref: 'SsmSessionManagerSettingssessionManagerLogGroupEA6AC1BB',
             },
             kmsKeyId: {
-              Ref: 'SsmSessionManagerSettingsSessionManagerSessionCmkDB7A6671',
+              Ref: 'SsmSessionManagerSettingsSessionManagerSessionCmk0B840C26',
             },
             s3BucketName: 'bucketName',
             s3EncryptionEnabled: true,
@@ -198,12 +198,12 @@ describe('SsmSessionManagerSettings', () => {
   test(`${testNamePrefix} Custom resource provider framework lambda function configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        SsmSessionManagerSettingsSessionManagerEC2InstanceProfile274B454B: {
+        SsmSessionManagerSettingsSessionManagerEC2InstanceProfile36B87210: {
           Properties: {
             InstanceProfileName: 'SessionManagerEc2Role',
             Roles: [
               {
-                Ref: 'SsmSessionManagerSettingsSessionManagerEC2Role048EA717',
+                Ref: 'SsmSessionManagerSettingsSessionManagerEC2Role83702F06',
               },
             ],
           },
@@ -219,7 +219,7 @@ describe('SsmSessionManagerSettings', () => {
   test(`${testNamePrefix} Custom resource provider framework lambda function configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        SsmSessionManagerSettingsSessionManagerEC2PolicyBC7A44AF: {
+        SsmSessionManagerSettingsSessionManagerEC2Policy8ED295CA: {
           Properties: {
             Description: '',
             ManagedPolicyName: 'SessionManagerLogging',
@@ -296,7 +296,7 @@ describe('SsmSessionManagerSettings', () => {
                         {
                           Ref: 'AWS::Partition',
                         },
-                        ':s3:::bucketName/*',
+                        ':s3:::bucketName/prefix/*',
                       ],
                     ],
                   },
@@ -326,7 +326,7 @@ describe('SsmSessionManagerSettings', () => {
                   Action: 'kms:Decrypt',
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['SsmSessionManagerSettingsSessionManagerSessionCmkDB7A6671', 'Arn'],
+                    'Fn::GetAtt': ['SsmSessionManagerSettingsSessionManagerSessionCmk0B840C26', 'Arn'],
                   },
                 },
               ],
@@ -345,7 +345,7 @@ describe('SsmSessionManagerSettings', () => {
   test(`${testNamePrefix} Custom resource provider framework lambda function configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        SsmSessionManagerSettingsSessionManagerEC2Role048EA717: {
+        SsmSessionManagerSettingsSessionManagerEC2Role83702F06: {
           Properties: {
             AssumeRolePolicyDocument: {
               Statement: [
@@ -372,7 +372,7 @@ describe('SsmSessionManagerSettings', () => {
             Description: 'IAM Role for an EC2 configured for Session Manager Logging',
             ManagedPolicyArns: [
               {
-                Ref: 'SsmSessionManagerSettingsSessionManagerEC2PolicyBC7A44AF',
+                Ref: 'SsmSessionManagerSettingsSessionManagerEC2Policy8ED295CA',
               },
             ],
             RoleName: 'SessionManagerEC2Role',
@@ -389,11 +389,11 @@ describe('SsmSessionManagerSettings', () => {
   test(`${testNamePrefix} Custom resource provider framework lambda function configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        SsmSessionManagerSettingsSessionManagerLogsCmkAlias13CEEF30: {
+        SsmSessionManagerSettingsSessionManagerLogsCmkAlias739EF1F2: {
           Properties: {
             AliasName: 'alias/accelerator/session-manager-logging/cloud-watch-logs',
             TargetKeyId: {
-              'Fn::GetAtt': ['SsmSessionManagerSettingsSessionManagerLogsCmkF7079169', 'Arn'],
+              'Fn::GetAtt': ['SsmSessionManagerSettingsSessionManagerLogsCmk796F4752', 'Arn'],
             },
           },
           Type: 'AWS::KMS::Alias',
@@ -408,7 +408,7 @@ describe('SsmSessionManagerSettings', () => {
   test(`${testNamePrefix} Custom resource provider framework lambda function configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        SsmSessionManagerSettingsSessionManagerLogsCmkF7079169: {
+        SsmSessionManagerSettingsSessionManagerLogsCmk796F4752: {
           DeletionPolicy: 'Retain',
           Properties: {
             Description: 'AWS Accelerator Cloud Watch Logs CMK for Session Manager Logs',
@@ -523,11 +523,11 @@ describe('SsmSessionManagerSettings', () => {
   test(`${testNamePrefix} Custom resource provider framework lambda function configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        SsmSessionManagerSettingsSessionManagerSessionCmkAlias2CE1507B: {
+        SsmSessionManagerSettingsSessionManagerSessionCmkAliasC8D340F2: {
           Properties: {
             AliasName: 'alias/accelerator/session-manager-logging/session',
             TargetKeyId: {
-              'Fn::GetAtt': ['SsmSessionManagerSettingsSessionManagerSessionCmkDB7A6671', 'Arn'],
+              'Fn::GetAtt': ['SsmSessionManagerSettingsSessionManagerSessionCmk0B840C26', 'Arn'],
             },
           },
           Type: 'AWS::KMS::Alias',
@@ -542,7 +542,7 @@ describe('SsmSessionManagerSettings', () => {
   test(`${testNamePrefix} Custom resource provider framework lambda function configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        SsmSessionManagerSettingsSessionManagerSessionCmkDB7A6671: {
+        SsmSessionManagerSettingsSessionManagerSessionCmk0B840C26: {
           DeletionPolicy: 'Retain',
           Properties: {
             Description: 'AWS Accelerator Cloud Watch Logs CMK for Session Manager Logs',
@@ -657,7 +657,7 @@ describe('SsmSessionManagerSettings', () => {
   test(`${testNamePrefix} Custom resource provider framework lambda function configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        SsmSessionManagerSettingsSessionManagerUserKMSPolicyDEBC25EB: {
+        SsmSessionManagerSettingsSessionManagerUserKMSPolicyFB96BB42: {
           Properties: {
             Description: '',
             ManagedPolicyName: 'SessionManagerUserKMSPolicy',
@@ -668,7 +668,7 @@ describe('SsmSessionManagerSettings', () => {
                   Action: ['kms:Decrypt', 'kms:GenerateDataKey'],
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['SsmSessionManagerSettingsSessionManagerSessionCmkDB7A6671', 'Arn'],
+                    'Fn::GetAtt': ['SsmSessionManagerSettingsSessionManagerSessionCmk0B840C26', 'Arn'],
                   },
                 },
               ],
@@ -687,11 +687,11 @@ describe('SsmSessionManagerSettings', () => {
   test(`${testNamePrefix} Custom resource provider framework lambda function configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        SsmSessionManagerSettingssessionManagerLogGroupF24D77B0: {
+        SsmSessionManagerSettingssessionManagerLogGroupEA6AC1BB: {
           DeletionPolicy: 'Retain',
           Properties: {
             KmsKeyId: {
-              'Fn::GetAtt': ['SsmSessionManagerSettingsSessionManagerLogsCmkF7079169', 'Arn'],
+              'Fn::GetAtt': ['SsmSessionManagerSettingsSessionManagerLogsCmk796F4752', 'Arn'],
             },
             LogGroupName: 'aws-accelerator-session-manager-logs',
             RetentionInDays: 365,
