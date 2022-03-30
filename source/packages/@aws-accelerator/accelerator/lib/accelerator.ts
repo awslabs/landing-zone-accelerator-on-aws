@@ -78,6 +78,23 @@ export abstract class Accelerator {
    * @returns
    */
   static async run(props: AcceleratorProps): Promise<void> {
+    // Get management account credential when pipeline is executing outside of management account
+    const managementAccountCredentials = await this.getManagementAccountCredentials(props.partition);
+
+    // Load in the global config to read in the management account access roles
+    const globalConfig = GlobalConfig.load(props.configDirPath);
+
+    //
+    // Load Plugins
+    //
+    const assumeRolePlugin = new AssumeProfilePlugin({
+      assumeRoleName: globalConfig.managementAccountAccessRole,
+      assumeRoleDuration: 3600,
+      credentials: managementAccountCredentials,
+      partition: props.partition,
+    });
+    assumeRolePlugin.init(PluginHost.instance);
+
     //
     // When an account and region is specified, execute as single stack
     //
@@ -101,9 +118,6 @@ export abstract class Accelerator {
       });
     }
 
-    // Get management account credential when pipeline is executing outside of management account
-    const managementAccountCredentials = await this.getManagementAccountCredentials(props.partition);
-
     // Treat synthesize as a single - do not need parallel paths to generate all stacks
     if (props.command === Command.SYNTH || props.command === Command.SYNTHESIZE || props.command === Command.DIFF) {
       return await AcceleratorToolkit.execute({
@@ -123,7 +137,6 @@ export abstract class Accelerator {
     // to the stacks that need them. Exceptions are thrown if any of the
     // configuration files are malformed.
     //
-    const globalConfig = GlobalConfig.load(props.configDirPath);
     const accountsConfig = AccountsConfig.load(props.configDirPath);
 
     //
@@ -131,18 +144,6 @@ export abstract class Accelerator {
     // as inputs in accountsConfig
     //
     await accountsConfig.loadAccountIds(props.partition);
-
-    //
-    // Load Plugins
-    //
-    const assumeRolePlugin = new AssumeProfilePlugin({
-      // TODO: Read this from arg
-      assumeRoleName: globalConfig.managementAccountAccessRole,
-      assumeRoleDuration: 3600,
-      credentials: managementAccountCredentials,
-      partition: props.partition,
-    });
-    assumeRolePlugin.init(PluginHost.instance);
 
     //
     // When running parallel, this will be the max concurrent stacks
@@ -165,6 +166,7 @@ export abstract class Accelerator {
               region,
               partition: props.partition,
               trustedAccountId,
+              configDirPath: props.configDirPath,
               requireApproval: props.requireApproval,
               app: props.app,
             }),
@@ -179,12 +181,10 @@ export abstract class Accelerator {
       return;
     }
 
-    // TODO: Need to decide the mandatory accounts for an accelerator --
     // Control Tower: To start a well-planned OU structure in your landing zone, AWS Control Tower
     // sets up a Security OU for you. This OU contains three shared accounts: the management
     // (primary) account, the log archive account, and the security audit account (also referred to
     // as the audit account).
-
     if (props.stage === AcceleratorStage.ACCOUNTS) {
       Logger.info(`[accelerator] Executing ${props.stage} for Management account.`);
       await AcceleratorToolkit.execute({
@@ -296,10 +296,6 @@ export abstract class Accelerator {
 
       const credentialsString = fs.readFileSync(process.env['CREDENTIALS_PATH']).toString();
       const credentials = JSON.parse(credentialsString);
-      // process.env['AWS_ACCESS_KEY_ID'] = credentials.AccessKeyId;
-      // process.env['AWS_SECRET_KEY'] = credentials.SecretAccessKey;
-      // process.env['AWS_SECRET_ACCESS_KEY'] = credentials.SecretAccessKey;
-      // process.env['AWS_SESSION_TOKEN'] = credentials.SessionToken;
 
       // Support for V2 SDK
       AWS.config.update({
@@ -327,10 +323,8 @@ export abstract class Accelerator {
 
       process.env['AWS_ACCESS_KEY_ID'] = assumeRoleCredential.Credentials!.AccessKeyId!;
       process.env['AWS_ACCESS_KEY'] = assumeRoleCredential.Credentials!.AccessKeyId!;
-
       process.env['AWS_SECRET_KEY'] = assumeRoleCredential.Credentials!.SecretAccessKey!;
       process.env['AWS_SECRET_ACCESS_KEY'] = assumeRoleCredential.Credentials!.SecretAccessKey!;
-
       process.env['AWS_SESSION_TOKEN'] = assumeRoleCredential.Credentials!.SessionToken;
 
       // Support for V2 SDK

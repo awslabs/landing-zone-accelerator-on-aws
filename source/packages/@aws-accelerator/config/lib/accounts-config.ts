@@ -177,7 +177,6 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     // Control Tower Account Factory does not allow spaces in account names
     //
     for (const account of [...this.mandatoryAccounts, ...this.workloadAccounts]) {
-      console.log(account.name);
       if (account.name.indexOf(' ') > 0) {
         errors.push(`Account name (${account.name}) found with spaces. Please remove spaces and retry the pipeline.`);
       }
