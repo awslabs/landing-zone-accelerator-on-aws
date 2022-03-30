@@ -376,6 +376,12 @@ export class NetworkConfigTypes {
     route53Resolver: t.optional(this.resolverConfig),
   });
 
+  static readonly vpcPeeringConfig = t.interface({
+    name: t.nonEmptyString,
+    vpcs: t.array(t.nonEmptyString),
+    tags: t.optional(t.array(t.tag)),
+  });
+
   static readonly networkConfig = t.interface({
     defaultVpc: this.defaultVpcsConfig,
     transitGateways: t.array(this.transitGatewayConfig),
@@ -383,6 +389,7 @@ export class NetworkConfigTypes {
     vpcFlowLogs: this.vpcFlowLogsConfig,
     centralNetworkServices: t.optional(this.centralNetworkServicesConfig),
     dhcpOptions: t.optional(t.array(this.dhcpOptsConfig)),
+    vpcPeering: t.optional(t.array(this.vpcPeeringConfig)),
   });
 }
 
@@ -799,6 +806,12 @@ export class CentralNetworkServicesConfig implements t.TypeOf<typeof NetworkConf
   readonly route53Resolver: ResolverConfig | undefined = undefined;
 }
 
+export class VpcPeeringConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcPeeringConfig> {
+  readonly name: string = '';
+  readonly vpcs: string[] = [];
+  readonly tags: t.Tag[] | undefined = undefined;
+}
+
 export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.networkConfig> {
   static readonly FILENAME = 'network-config.yaml';
 
@@ -830,6 +843,11 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * An optional Route 53 Resolver configuration
    */
   readonly centralNetworkServices: CentralNetworkServicesConfig | undefined = undefined;
+
+  /**
+   * An optional list of VPC peering configurations
+   */
+  readonly vpcPeering: VpcPeeringConfig[] | undefined = undefined;
 
   /**
    *

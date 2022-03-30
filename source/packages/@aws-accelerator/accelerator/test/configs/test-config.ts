@@ -443,6 +443,23 @@ const networkConfigJson = {
         },
       ],
     },
+    {
+      name: 'Test-Peer',
+      account: 'Audit',
+      region: 'us-east-1',
+      cidrs: ['10.1.0.0/16'],
+      internetGateway: true,
+      enableDnsHostnames: false,
+      enableDnsSupport: true,
+      instanceTenancy: 'default',
+      routeTables: [],
+      subnets: [],
+      natGateways: [],
+      transitGatewayAttachments: [],
+      useCentralEndpoints: false,
+      gatewayEndpoints: [],
+      securityGroups: [],
+    },
   ],
   vpcFlowLogs: {
     trafficType: 'ALL',
@@ -479,6 +496,12 @@ const networkConfigJson = {
       'traffic-path',
     ],
   },
+  vpcPeering: [
+    {
+      name: 'Test',
+      vpcs: ['Test', 'Test-Peer'],
+    },
+  ],
 };
 
 export const NETWORK_CONFIG = NetworkConfig.loadFromString(JSON.stringify(networkConfigJson))!;
