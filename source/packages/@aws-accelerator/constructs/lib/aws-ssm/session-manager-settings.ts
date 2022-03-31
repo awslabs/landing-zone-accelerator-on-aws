@@ -186,7 +186,7 @@ export class SsmSessionManagerSettings extends Construct {
 
     const sessionManagerEC2Policy = new cdk.aws_iam.ManagedPolicy(this, 'SessionManagerEC2Policy', {
       document: sessionManagerEC2PolicyDocument,
-      managedPolicyName: 'SessionManagerLogging',
+      managedPolicyName: `SessionManagerLogging-${cdk.Stack.of(this).region}`,
     });
 
     //Create an EC2 role that can be used for Session Manager
@@ -194,13 +194,13 @@ export class SsmSessionManagerSettings extends Construct {
       assumedBy: new cdk.aws_iam.ServicePrincipal('ec2.amazonaws.com'),
       description: 'IAM Role for an EC2 configured for Session Manager Logging',
       managedPolicies: [sessionManagerEC2Policy],
-      roleName: 'SessionManagerEC2Role',
+      roleName: `SessionManagerEC2Role-${cdk.Stack.of(this).region}`,
     });
 
     //Create an EC2 instance profile
     new cdk.aws_iam.CfnInstanceProfile(this, 'SessionManagerEC2InstanceProfile', {
       roles: [sessionManagerEC2Role.roleName],
-      instanceProfileName: 'SessionManagerEc2Role',
+      instanceProfileName: `SessionManagerEc2Role-${cdk.Stack.of(this).region}`,
     });
 
     const sessionManagerUserPolicyDocument = new cdk.aws_iam.PolicyDocument({
@@ -216,7 +216,7 @@ export class SsmSessionManagerSettings extends Construct {
     //Create an IAM Policy for users to be able to use Session Manager with KMS encryption
     new cdk.aws_iam.ManagedPolicy(this, 'SessionManagerUserKMSPolicy', {
       document: sessionManagerUserPolicyDocument,
-      managedPolicyName: 'SessionManagerUserKMSPolicy',
+      managedPolicyName: `SessionManagerUserKMSPolicy-${cdk.Stack.of(this).region}`,
     });
 
     //

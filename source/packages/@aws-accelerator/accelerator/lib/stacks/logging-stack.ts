@@ -153,16 +153,21 @@ export class LoggingStack extends AcceleratorStack {
         }).value;
       }
 
-      // Set up Session Manager Logging for all Accounts
-      new SsmSessionManagerSettings(this, 'SsmSessionManagerSettings', {
-        s3BucketName: centralLogsBucketName,
-        s3KeyPrefix: s3KeyPrefix,
-        s3BucketKeyArn: s3BucketKeyArn,
-        sendToCloudWatchLogs: props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
-        sendToS3: props.globalConfig.logging.sessionManager.sendToS3,
-        cloudWatchEncryptionEnabled:
-          props.partition !== 'aws-us-gov' && props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
-      });
+      // Set up Session Manager Logging
+      if (
+        !this.isAccountExcluded(props.globalConfig.logging.sessionManager.excludeAccounts ?? []) ||
+        !this.isRegionExcluded(props.globalConfig.logging.sessionManager.excludeRegions ?? [])
+      ) {
+        new SsmSessionManagerSettings(this, 'SsmSessionManagerSettings', {
+          s3BucketName: centralLogsBucketName,
+          s3KeyPrefix: s3KeyPrefix,
+          s3BucketKeyArn: s3BucketKeyArn,
+          sendToCloudWatchLogs: props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
+          sendToS3: props.globalConfig.logging.sessionManager.sendToS3,
+          cloudWatchEncryptionEnabled:
+            props.partition !== 'aws-us-gov' && props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
+        });
+      }
     }
   }
 }

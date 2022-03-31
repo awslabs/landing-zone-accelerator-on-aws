@@ -200,7 +200,17 @@ describe('SsmSessionManagerSettings', () => {
       Resources: {
         SsmSessionManagerSettingsSessionManagerEC2InstanceProfile36B87210: {
           Properties: {
-            InstanceProfileName: 'SessionManagerEc2Role',
+            InstanceProfileName: {
+              'Fn::Join': [
+                '',
+                [
+                  'SessionManagerEc2Role-',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                ],
+              ],
+            },
             Roles: [
               {
                 Ref: 'SsmSessionManagerSettingsSessionManagerEC2Role83702F06',
@@ -222,7 +232,17 @@ describe('SsmSessionManagerSettings', () => {
         SsmSessionManagerSettingsSessionManagerEC2Policy8ED295CA: {
           Properties: {
             Description: '',
-            ManagedPolicyName: 'SessionManagerLogging',
+            ManagedPolicyName: {
+              'Fn::Join': [
+                '',
+                [
+                  'SessionManagerLogging-',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                ],
+              ],
+            },
             Path: '/',
             PolicyDocument: {
               Statement: [
@@ -375,7 +395,17 @@ describe('SsmSessionManagerSettings', () => {
                 Ref: 'SsmSessionManagerSettingsSessionManagerEC2Policy8ED295CA',
               },
             ],
-            RoleName: 'SessionManagerEC2Role',
+            RoleName: {
+              'Fn::Join': [
+                '',
+                [
+                  'SessionManagerEC2Role-',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                ],
+              ],
+            },
           },
           Type: 'AWS::IAM::Role',
         },
@@ -660,7 +690,17 @@ describe('SsmSessionManagerSettings', () => {
         SsmSessionManagerSettingsSessionManagerUserKMSPolicyFB96BB42: {
           Properties: {
             Description: '',
-            ManagedPolicyName: 'SessionManagerUserKMSPolicy',
+            ManagedPolicyName: {
+              'Fn::Join': [
+                '',
+                [
+                  'SessionManagerUserKMSPolicy-',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                ],
+              ],
+            },
             Path: '/',
             PolicyDocument: {
               Statement: [

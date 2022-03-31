@@ -33,6 +33,8 @@ export abstract class GlobalConfigTypes {
   static readonly sessionManagerConfig = t.interface({
     sendToCloudWatchLogs: t.boolean,
     sendToS3: t.boolean,
+    excludeRegions: t.optional(t.array(t.region)),
+    excludeAccounts: t.optional(t.array(t.string)),
   });
 
   static readonly loggingConfig = t.interface({
@@ -138,6 +140,8 @@ export class CloudtrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloud
 export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.sessionManagerConfig> {
   readonly sendToCloudWatchLogs = false;
   readonly sendToS3 = false;
+  readonly excludeRegions = [];
+  readonly excludeAccounts = [];
 }
 
 export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingConfig> {
