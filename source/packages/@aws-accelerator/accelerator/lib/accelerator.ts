@@ -78,22 +78,28 @@ export abstract class Accelerator {
    * @returns
    */
   static async run(props: AcceleratorProps): Promise<void> {
-    // Get management account credential when pipeline is executing outside of management account
-    const managementAccountCredentials = await this.getManagementAccountCredentials(props.partition);
+    let managementAccountCredentials = undefined;
+    let globalConfig = undefined;
+    let assumeRolePlugin = undefined;
 
-    // Load in the global config to read in the management account access roles
-    const globalConfig = GlobalConfig.load(props.configDirPath);
+    if (props.stage !== AcceleratorStage.PIPELINE) {
+      // Get management account credential when pipeline is executing outside of management account
+      managementAccountCredentials = await this.getManagementAccountCredentials(props.partition);
 
-    //
-    // Load Plugins
-    //
-    const assumeRolePlugin = new AssumeProfilePlugin({
-      assumeRoleName: globalConfig.managementAccountAccessRole,
-      assumeRoleDuration: 3600,
-      credentials: managementAccountCredentials,
-      partition: props.partition,
-    });
-    assumeRolePlugin.init(PluginHost.instance);
+      // Load in the global config to read in the management account access roles
+      globalConfig = GlobalConfig.load(props.configDirPath);
+
+      //
+      // Load Plugins
+      //
+      assumeRolePlugin = new AssumeProfilePlugin({
+        assumeRoleName: globalConfig.managementAccountAccessRole,
+        assumeRoleDuration: 3600,
+        credentials: managementAccountCredentials,
+        partition: props.partition,
+      });
+      assumeRolePlugin.init(PluginHost.instance);
+    }
 
     //
     // When an account and region is specified, execute as single stack
@@ -137,6 +143,7 @@ export abstract class Accelerator {
     // to the stacks that need them. Exceptions are thrown if any of the
     // configuration files are malformed.
     //
+    globalConfig = GlobalConfig.load(props.configDirPath);
     const accountsConfig = AccountsConfig.load(props.configDirPath);
 
     //
