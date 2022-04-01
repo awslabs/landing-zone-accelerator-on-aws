@@ -24,6 +24,14 @@ export interface CreateOrganizationAccountsProps {
   readonly newOrgAccountsTable: cdk.aws_dynamodb.ITable;
   readonly govCloudAccountMappingTable: cdk.aws_dynamodb.ITable | undefined;
   readonly accountRoleName: string;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 export class CreateOrganizationAccounts extends Construct {
@@ -31,6 +39,9 @@ export class CreateOrganizationAccounts extends Construct {
   readonly isComplete: cdk.aws_lambda.IFunction;
   readonly provider: cdk.custom_resources.Provider;
   readonly id: string;
+
+  static isEventLogGroupConfigured = false;
+  static isCompleteLogGroupConfigured = false;
 
   constructor(scope: Construct, id: string, props: CreateOrganizationAccountsProps) {
     super(scope, id);
@@ -43,7 +54,26 @@ export class CreateOrganizationAccounts extends Construct {
       handler: 'index.handler',
       timeout: cdk.Duration.seconds(30),
       description: 'Create Organization Accounts OnEvent handler',
+      environmentEncryption: props.kmsKey,
     });
+
+    /**
+     * Creating log group to enable encryption and log retention needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!CreateOrganizationAccounts.isEventLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'OnEventLogGroup', {
+        logGroupName: `/aws/lambda/${this.onEvent.functionName}`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      logGroup.node.addDependency(this.onEvent);
+
+      // Enable the flag to indicate log group configured
+      CreateOrganizationAccounts.isEventLogGroupConfigured = true;
+    }
 
     const ddbPolicy = new cdk.aws_iam.PolicyStatement({
       sid: 'DynamoDb',
@@ -82,7 +112,26 @@ export class CreateOrganizationAccounts extends Construct {
         AccountRoleName: props.accountRoleName,
       },
       initialPolicy: [ddbPolicy, ddbKmsPolicy, orgPolicy],
+      environmentEncryption: props.kmsKey,
     });
+
+    /**
+     * Creating log group to enable encryption and log retention needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!CreateOrganizationAccounts.isCompleteLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'IsCompleteLogGroup', {
+        logGroupName: `/aws/lambda/${this.isComplete.functionName}`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      logGroup.node.addDependency(this.isComplete);
+
+      // Enable the flag to indicate log group configured
+      CreateOrganizationAccounts.isCompleteLogGroupConfigured = true;
+    }
 
     if (props.govCloudAccountMappingTable) {
       const mappingTablePolicy = new cdk.aws_iam.PolicyStatement({

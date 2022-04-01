@@ -71,6 +71,15 @@ export interface ResolverRuleProps {
    * A list of CloudFormation tags.
    */
   readonly tags?: cdk.CfnTag[];
+
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 export class ResolverRule extends cdk.Resource implements IResolverRule {
@@ -86,7 +95,7 @@ export class ResolverRule extends cdk.Resource implements IResolverRule {
     props.tags?.push({ key: 'Name', value: this.name });
 
     if (props.targetInbound) {
-      this.targetIps = this.lookupInbound(props.targetInbound.endpointId);
+      this.targetIps = this.lookupInbound(props.targetInbound.endpointId, props.kmsKey, props.logRetentionInDays);
     } else {
       this.targetIps = props.targetIps;
     }
@@ -103,9 +112,11 @@ export class ResolverRule extends cdk.Resource implements IResolverRule {
     this.ruleId = resource.attrResolverRuleId;
   }
 
-  private lookupInbound(endpointId: string): cdk.Reference {
+  private lookupInbound(endpointId: string, kmsKey: cdk.aws_kms.Key, logRetentionInDays: number): cdk.Reference {
     const lookup = new EndpointAddresses(this, 'LookupInbound', {
       endpointId: endpointId,
+      kmsKey,
+      logRetentionInDays,
     });
     return lookup.ipAddresses;
   }

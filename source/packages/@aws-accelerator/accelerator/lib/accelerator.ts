@@ -206,17 +206,31 @@ export abstract class Accelerator {
       });
     }
 
+    //
+    // PREPARE stage execute in Management and Audit account
+    //
     if (props.stage === AcceleratorStage.PREPARE) {
-      Logger.info(`[accelerator] Executing ${props.stage} for Management account.`);
-      await AcceleratorToolkit.execute({
-        command: props.command,
-        accountId: accountsConfig.getManagementAccountId(),
-        region: globalConfig.homeRegion,
-        partition: props.partition,
-        stage: props.stage,
-        configDirPath: props.configDirPath,
-        requireApproval: props.requireApproval,
-      });
+      for (const region of globalConfig.enabledRegions) {
+        for (const account of [accountsConfig.getManagementAccount(), accountsConfig.getAuditAccount()]) {
+          Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
+          await delay(1000);
+          promises.push(
+            AcceleratorToolkit.execute({
+              command: props.command,
+              accountId: accountsConfig.getAccountId(account.name),
+              region,
+              partition: props.partition,
+              stage: props.stage,
+              configDirPath: props.configDirPath,
+              requireApproval: props.requireApproval,
+              app: props.app,
+            }),
+          );
+          if (promises.length >= maxStacks) {
+            await Promise.all(promises);
+          }
+        }
+      }
     }
 
     if (props.stage === AcceleratorStage.ORGANIZATIONS) {

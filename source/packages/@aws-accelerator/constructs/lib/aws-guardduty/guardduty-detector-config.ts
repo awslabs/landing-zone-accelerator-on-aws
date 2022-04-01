@@ -27,10 +27,26 @@ export enum GuardDutyExportConfigDestinationTypes {
  * Initialized GuardDutyDetectorConfigProps properties
  */
 export interface GuardDutyDetectorConfigProps {
-  readonly region: string;
+  /**
+   * Export config enable flag
+   */
   readonly isExportConfigEnable: boolean;
+  /**
+   * Export config destination type, example s3
+   */
   readonly exportDestination: string;
+  /**
+   * FindingPublishingFrequency
+   */
   readonly exportFrequency: string;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -39,13 +55,14 @@ export interface GuardDutyDetectorConfigProps {
  */
 export class GuardDutyDetectorConfig extends Construct {
   public readonly id: string;
+  static isLogGroupConfigured = false;
 
   constructor(scope: Construct, id: string, props: GuardDutyDetectorConfigProps) {
     super(scope, id);
 
-    const UPDATE_DETECTOR_RESOURCE_TYPE = 'Custom::GuardDutyUpdateDetector';
+    const RESOURCE_TYPE = 'Custom::GuardDutyUpdateDetector';
 
-    const addMembersFunction = cdk.CustomResourceProvider.getOrCreateProvider(this, UPDATE_DETECTOR_RESOURCE_TYPE, {
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'update-detector-config/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
       policyStatements: [
@@ -64,15 +81,36 @@ export class GuardDutyDetectorConfig extends Construct {
     });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: UPDATE_DETECTOR_RESOURCE_TYPE,
-      serviceToken: addMembersFunction.serviceToken,
+      resourceType: RESOURCE_TYPE,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
-        region: props.region,
+        region: cdk.Stack.of(this).region,
         isExportConfigEnable: props.isExportConfigEnable,
         exportDestination: props.exportDestination,
         exportFrequency: props.exportFrequency,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!GuardDutyDetectorConfig.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      GuardDutyDetectorConfig.isLogGroupConfigured = true;
+    }
 
     this.id = resource.ref;
   }

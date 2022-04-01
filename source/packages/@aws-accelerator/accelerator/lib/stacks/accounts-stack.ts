@@ -14,6 +14,7 @@
 import {
   Account,
   EnablePolicyType,
+  KeyLookup,
   Policy,
   PolicyAttachment,
   PolicyType,
@@ -35,6 +36,13 @@ export class AccountsStack extends AcceleratorStack {
 
     Logger.debug(`[accounts-stack] homeRegion: ${props.globalConfig.homeRegion}`);
 
+    const auditAccountId = props.accountsConfig.getAuditAccountId();
+
+    const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
+      accountId: cdk.Stack.of(this).account === auditAccountId ? cdk.Stack.of(this).account : auditAccountId,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
+
     //
     // Global Organizations actions, only execute in the home region
     //
@@ -42,6 +50,8 @@ export class AccountsStack extends AcceleratorStack {
       if (props.organizationConfig.enable) {
         const enablePolicyTypeScp = new EnablePolicyType(this, 'enablePolicyTypeScp', {
           policyType: PolicyTypeEnum.SERVICE_CONTROL_POLICY,
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
 
         // Invite Accounts to Organization (GovCloud)
@@ -52,6 +62,8 @@ export class AccountsStack extends AcceleratorStack {
           const organizationAccount = new Account(this, pascalCase(`${account.name}OrganizationAccount`), {
             accountId: props.accountsConfig.getAccountId(account.name),
             assumeRoleName: props.globalConfig.managementAccountAccessRole,
+            kmsKey: key,
+            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
           });
 
           accountMap.set(account.name, organizationAccount);
@@ -68,6 +80,8 @@ export class AccountsStack extends AcceleratorStack {
             policyId: 'p-FullAWSAccess',
             targetId: props.accountsConfig.getAccountId(account.name),
             type: PolicyType.SERVICE_CONTROL_POLICY,
+            kmsKey: key,
+            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
           });
 
           // Add dependency to ensure that account is part of the OU before
@@ -88,6 +102,8 @@ export class AccountsStack extends AcceleratorStack {
             name: serviceControlPolicy.name,
             path: path.join(props.configDirPath, serviceControlPolicy.policy),
             type: PolicyType.SERVICE_CONTROL_POLICY,
+            kmsKey: key,
+            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
           });
 
           scp.node.addDependency(enablePolicyTypeScp);
@@ -101,6 +117,8 @@ export class AccountsStack extends AcceleratorStack {
               policyId: scp.id,
               targetId: props.organizationConfig.getOrganizationalUnitId(organizationalUnit),
               type: PolicyType.SERVICE_CONTROL_POLICY,
+              kmsKey: key,
+              logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             });
           }
 
@@ -109,6 +127,8 @@ export class AccountsStack extends AcceleratorStack {
               policyId: scp.id,
               targetId: props.accountsConfig.getAccountId(account),
               type: PolicyType.SERVICE_CONTROL_POLICY,
+              kmsKey: key,
+              logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             });
 
             // Add dependency to ensure that account is part of the OU before

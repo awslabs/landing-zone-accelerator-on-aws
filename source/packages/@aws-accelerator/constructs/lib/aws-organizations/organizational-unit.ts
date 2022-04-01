@@ -29,6 +29,14 @@ export interface IOrganizationalUnit extends cdk.IResource {
 export interface OrganizationalUnitProps {
   readonly name: string;
   readonly path: string;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -39,6 +47,8 @@ export class OrganizationalUnit extends cdk.Resource implements IOrganizationalU
   public readonly organizationalUnitPath: string;
   public readonly organizationalUnitId: string;
   public readonly organizationalUnitArn: string;
+
+  static isLogGroupConfigured = false;
 
   constructor(scope: Construct, id: string, props: OrganizationalUnitProps) {
     super(scope, id);
@@ -72,9 +82,31 @@ export class OrganizationalUnit extends cdk.Resource implements IOrganizationalU
       serviceToken: createOrganizationalUnitFunction.serviceToken,
       properties: {
         partition: cdk.Aws.PARTITION,
-        ...props,
+        name: props.name,
+        path: props.path,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!OrganizationalUnit.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (createOrganizationalUnitFunction.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      OrganizationalUnit.isLogGroupConfigured = true;
+    }
 
     this.organizationalUnitId = resource.ref;
     this.organizationalUnitArn = resource.getAttString('arn');

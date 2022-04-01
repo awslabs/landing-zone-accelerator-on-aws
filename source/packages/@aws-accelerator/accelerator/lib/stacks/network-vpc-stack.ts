@@ -32,6 +32,7 @@ import {
   DeleteDefaultVpc,
   DhcpOptions,
   HostedZone,
+  KeyLookup,
   NatGateway,
   NetworkAcl,
   Organization,
@@ -77,11 +78,18 @@ const TCP_PROTOCOLS_PORT: { [key: string]: number } = {
 };
 
 export class NetworkVpcStack extends AcceleratorStack {
+  readonly acceleratorKey: cdk.aws_kms.Key;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     // Get the organization object, used by Data Protection
     const organization = new Organization(this, 'Organization');
+
+    const auditAccountId = props.accountsConfig.getAuditAccountId();
+
+    this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
+      accountId: cdk.Stack.of(this).account === auditAccountId ? cdk.Stack.of(this).account : auditAccountId,
+    }).getKey();
 
     //
     // Delete Default VPCs
@@ -91,7 +99,10 @@ export class NetworkVpcStack extends AcceleratorStack {
       !this.isAccountExcluded(props.networkConfig.defaultVpc.excludeAccounts)
     ) {
       Logger.info('[network-vpc-stack] Add DeleteDefaultVpc');
-      new DeleteDefaultVpc(this, 'DeleteDefaultVpc');
+      new DeleteDefaultVpc(this, 'DeleteDefaultVpc', {
+        kmsKey: this.acceleratorKey,
+        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      });
     }
 
     // Build map of Transit Gateways. We need to know the transit gateway ids so
@@ -160,6 +171,8 @@ export class NetworkVpcStack extends AcceleratorStack {
               {
                 resourceShare,
                 resourceShareItemType: 'ec2:TransitGateway',
+                kmsKey: this.acceleratorKey,
+                logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
               },
             );
 
@@ -213,40 +226,40 @@ export class NetworkVpcStack extends AcceleratorStack {
       centralLogsBucketArn = centralLogsBucket.bucketArn;
     }
 
-    let flowLogsCmk: cdk.aws_kms.Key | undefined = undefined;
+    // let flowLogsCmk: cdk.aws_kms.Key | undefined = undefined;
     if (props.networkConfig.vpcFlowLogs.destinations.includes('cloud-watch-logs')) {
       Logger.info(`[network-vpc-stack] cwl destination for VPC flow log detected, create a cmk to be used by cwl`);
 
-      flowLogsCmk = new cdk.aws_kms.Key(this, 'FlowLogsCmk', {
-        enableKeyRotation: true,
-        description: 'AWS Accelerator Cloud Watch Logs CMK for VPC Flow Logs',
-        alias: 'accelerator/vpc-flow-logs/cloud-watch-logs',
-      });
+      // flowLogsCmk = new cdk.aws_kms.Key(this, 'FlowLogsCmk', {
+      //   enableKeyRotation: true,
+      //   description: 'AWS Accelerator Cloud Watch Logs CMK for VPC Flow Logs',
+      //   alias: 'accelerator/vpc-flow-logs/cloud-watch-logs',
+      // });
 
-      flowLogsCmk.addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'Enable IAM User Permissions',
-          principals: [new cdk.aws_iam.AccountRootPrincipal()],
-          actions: ['kms:*'],
-          resources: ['*'],
-        }),
-      );
+      // flowLogsCmk.addToResourcePolicy(
+      //   new cdk.aws_iam.PolicyStatement({
+      //     sid: 'Enable IAM User Permissions',
+      //     principals: [new cdk.aws_iam.AccountRootPrincipal()],
+      //     actions: ['kms:*'],
+      //     resources: ['*'],
+      //   }),
+      // );
 
-      flowLogsCmk.addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'Allow Cloud Watch Logs access',
-          principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
-          actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
-          resources: ['*'],
-          conditions: {
-            ArnLike: {
-              'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
-                cdk.Stack.of(this).region
-              }:${cdk.Stack.of(this).account}:*`,
-            },
-          },
-        }),
-      );
+      // flowLogsCmk.addToResourcePolicy(
+      //   new cdk.aws_iam.PolicyStatement({
+      //     sid: 'Allow Cloud Watch Logs access',
+      //     principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+      //     actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
+      //     resources: ['*'],
+      //     conditions: {
+      //       ArnLike: {
+      //         'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
+      //           cdk.Stack.of(this).region
+      //         }:${cdk.Stack.of(this).account}:*`,
+      //       },
+      //     },
+      //   }),
+      // );
     }
 
     //
@@ -516,7 +529,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           trafficType: props.networkConfig.vpcFlowLogs.trafficType,
           maxAggregationInterval: props.networkConfig.vpcFlowLogs.maxAggregationInterval,
           logFormat,
-          encryptionKey: flowLogsCmk,
+          encryptionKey: this.acceleratorKey,
           bucketArn: centralLogsBucketArn,
         });
 
@@ -1563,6 +1576,8 @@ export class NetworkVpcStack extends AcceleratorStack {
         targetIps: ruleItem.targetIps,
         tags: ruleItem.tags ?? [],
         targetInbound: inboundTarget,
+        kmsKey: this.acceleratorKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       });
       new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${ruleItem.name}ResolverRule`), {
         parameterName: `/accelerator/network/route53Resolver/rules/${ruleItem.name}/id`,

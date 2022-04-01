@@ -20,8 +20,18 @@ const path = require('path');
  * Initialized SecurityHubOrganizationalAdminAccountProps properties
  */
 export interface SecurityHubOrganizationalAdminAccountProps {
-  readonly region: string;
+  /**
+   * Admin account id
+   */
   readonly adminAccountId: string;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -30,83 +40,102 @@ export interface SecurityHubOrganizationalAdminAccountProps {
 export class SecurityHubOrganizationAdminAccount extends Construct {
   public readonly id: string;
 
+  static isLogGroupConfigured = false;
+
   constructor(scope: Construct, id: string, props: SecurityHubOrganizationalAdminAccountProps) {
     super(scope, id);
 
-    const SECURITYHUB_RESOURCE_TYPE = 'Custom::SecurityHubEnableOrganizationAdminAccount';
+    const RESOURCE_TYPE = 'Custom::SecurityHubEnableOrganizationAdminAccount';
 
-    const enableOrganizationAdminAccountFunction = cdk.CustomResourceProvider.getOrCreateProvider(
-      this,
-      SECURITYHUB_RESOURCE_TYPE,
-      {
-        codeDirectory: path.join(__dirname, 'enable-organization-admin-account/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-        policyStatements: [
-          {
-            Sid: 'SecurityHubEnableOrganizationAdminAccountTaskOrganizationActions',
-            Effect: 'Allow',
-            Action: [
-              'organizations:DescribeOrganization',
-              'organizations:ListAccounts',
-              'organizations:ListDelegatedAdministrators',
-            ],
-            Resource: '*',
-          },
-          {
-            Effect: 'Allow',
-            Action: 'organizations:EnableAWSServiceAccess',
-            Resource: '*',
-            Condition: {
-              StringEquals: {
-                'organizations:ServicePrincipal': 'securityhub.amazonaws.com',
-              },
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
+      codeDirectory: path.join(__dirname, 'enable-organization-admin-account/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      policyStatements: [
+        {
+          Sid: 'SecurityHubEnableOrganizationAdminAccountTaskOrganizationActions',
+          Effect: 'Allow',
+          Action: [
+            'organizations:DescribeOrganization',
+            'organizations:ListAccounts',
+            'organizations:ListDelegatedAdministrators',
+          ],
+          Resource: '*',
+        },
+        {
+          Effect: 'Allow',
+          Action: 'organizations:EnableAWSServiceAccess',
+          Resource: '*',
+          Condition: {
+            StringEquals: {
+              'organizations:ServicePrincipal': 'securityhub.amazonaws.com',
             },
           },
-          {
-            Effect: 'Allow',
-            Action: ['organizations:RegisterDelegatedAdministrator', 'organizations:DeregisterDelegatedAdministrator'],
-            Resource: `arn:${cdk.Stack.of(this).partition}:organizations::*:account/o-*/*`,
-            Condition: {
-              StringEquals: {
-                'organizations:ServicePrincipal': 'securityhub.amazonaws.com',
-              },
+        },
+        {
+          Effect: 'Allow',
+          Action: ['organizations:RegisterDelegatedAdministrator', 'organizations:DeregisterDelegatedAdministrator'],
+          Resource: `arn:${cdk.Stack.of(this).partition}:organizations::*:account/o-*/*`,
+          Condition: {
+            StringEquals: {
+              'organizations:ServicePrincipal': 'securityhub.amazonaws.com',
             },
           },
-          {
-            Sid: 'SecurityHubCreateMembersTaskIamAction',
-            Effect: 'Allow',
-            Action: ['iam:CreateServiceLinkedRole'],
-            Resource: '*',
-            Condition: {
-              StringLike: {
-                'iam:AWSServiceName': ['securityhub.amazonaws.com'],
-              },
+        },
+        {
+          Sid: 'SecurityHubCreateMembersTaskIamAction',
+          Effect: 'Allow',
+          Action: ['iam:CreateServiceLinkedRole'],
+          Resource: '*',
+          Condition: {
+            StringLike: {
+              'iam:AWSServiceName': ['securityhub.amazonaws.com'],
             },
           },
-          {
-            Sid: 'SecurityHubEnableOrganizationAdminAccountTaskSecurityHubActions',
-            Effect: 'Allow',
-            Action: [
-              'securityhub:DisableOrganizationAdminAccount',
-              'securityhub:EnableOrganizationAdminAccount',
-              'securityhub:EnableSecurityHub',
-              'securityhub:ListOrganizationAdminAccounts',
-            ],
-            Resource: '*',
-          },
-        ],
-      },
-    );
+        },
+        {
+          Sid: 'SecurityHubEnableOrganizationAdminAccountTaskSecurityHubActions',
+          Effect: 'Allow',
+          Action: [
+            'securityhub:DisableOrganizationAdminAccount',
+            'securityhub:EnableOrganizationAdminAccount',
+            'securityhub:EnableSecurityHub',
+            'securityhub:ListOrganizationAdminAccounts',
+          ],
+          Resource: '*',
+        },
+      ],
+    });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: SECURITYHUB_RESOURCE_TYPE,
-      serviceToken: enableOrganizationAdminAccountFunction.serviceToken,
+      resourceType: RESOURCE_TYPE,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
-        region: props.region,
+        region: cdk.Stack.of(this).region,
         partition: cdk.Aws.PARTITION,
         adminAccountId: props.adminAccountId,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!SecurityHubOrganizationAdminAccount.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      SecurityHubOrganizationAdminAccount.isLogGroupConfigured = true;
+    }
 
     this.id = resource.ref;
   }

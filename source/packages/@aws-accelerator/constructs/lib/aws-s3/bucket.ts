@@ -49,6 +49,10 @@ export interface BucketProps {
    */
   s3RemovalPolicy?: cdk.RemovalPolicy;
   /**
+   * The ksm key for bucket encryption.
+   */
+  kmsKey?: kms.Key;
+  /**
    * The name of the alias.
    */
   kmsAliasName?: string;
@@ -99,12 +103,16 @@ export class Bucket extends Construct {
 
     // Determine encryption type
     if (props.encryptionType == BucketEncryptionType.SSE_KMS) {
-      this.cmk = new kms.Key(this, 'Cmk', {
-        enableKeyRotation: true,
-        description: props.kmsDescription,
-      });
-      if (props.kmsAliasName) {
-        this.cmk.addAlias(props.kmsAliasName);
+      if (props.kmsKey) {
+        this.cmk = props.kmsKey;
+      } else {
+        this.cmk = new kms.Key(this, 'Cmk', {
+          enableKeyRotation: true,
+          description: props.kmsDescription,
+        });
+        if (props.kmsAliasName) {
+          this.cmk.addAlias(props.kmsAliasName);
+        }
       }
       this.encryptionType = s3.BucketEncryption.KMS;
     } else if (props.encryptionType == BucketEncryptionType.SSE_S3) {

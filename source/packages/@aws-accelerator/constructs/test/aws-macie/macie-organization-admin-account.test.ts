@@ -7,8 +7,9 @@ const testNamePrefix = 'Construct(MacieOrganizationAdminAccount): ';
 const stack = new cdk.Stack();
 
 new MacieOrganizationAdminAccount(stack, 'MacieOrganizationAdminAccount', {
-  region: stack.region,
   adminAccountId: stack.account,
+  logRetentionInDays: 365,
+  kmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
 });
 /**
  * MacieOrganizationAdminAccount construct test

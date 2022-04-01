@@ -19,6 +19,7 @@ import { Construct } from 'constructs';
 import { VpcConfig } from '@aws-accelerator/config';
 import {
   AssociateHostedZones,
+  KeyLookup,
   QueryLoggingConfigAssociation,
   ResolverFirewallRuleGroupAssociation,
   ResolverRuleAssociation,
@@ -47,6 +48,13 @@ interface Peering {
 export class NetworkAssociationsStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    const auditAccountId = props.accountsConfig.getAuditAccountId();
+
+    const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
+      accountId: cdk.Stack.of(this).account === auditAccountId ? cdk.Stack.of(this).account : auditAccountId,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
 
     // Build Transit Gateway Maps
     const transitGateways = new Map<string, string>();
@@ -108,6 +116,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                   owningAccountId,
                   transitGatewayId,
                   roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
+                  kmsKey: key,
+                  logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
                 },
               );
               // Build Transit Gateway Attachment Map
@@ -274,6 +284,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             value: props.accountsConfig.getAccountId(centralEndpointVpc.account),
           },
         ],
+        kmsKey: key,
+        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });
     }
 
@@ -332,6 +344,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                 {
                   resourceShare,
                   resourceShareItemType: 'route53resolver:FirewallRuleGroup',
+                  kmsKey: key,
+                  logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
                 },
               );
               dnsFirewallMap.set(firewallItem.name, rule.resourceShareItemId);
@@ -416,6 +430,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                   {
                     resourceShare,
                     resourceShareItemType: 'route53resolver:ResolverQueryLogConfig',
+                    kmsKey: key,
+                    logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
                   },
                 );
                 queryLogMap.set(nameItem, config.resourceShareItemId);
@@ -480,6 +496,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               const rule = ResourceShareItem.fromLookup(this, pascalCase(`${ruleItem}ResolverRule`), {
                 resourceShare,
                 resourceShareItemType: 'route53resolver:ResolverRule',
+                kmsKey: key,
+                logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
               });
               resolverRuleMap.set(ruleItem, rule.resourceShareItemId);
             }

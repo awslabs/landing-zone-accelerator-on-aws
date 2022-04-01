@@ -9,6 +9,14 @@ const path = require('path');
 export interface RegisterDelegatedAdministratorProps {
   readonly servicePrincipal: string;
   readonly accountId: string;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -20,12 +28,14 @@ export interface RegisterDelegatedAdministratorProps {
 export class RegisterDelegatedAdministrator extends Construct {
   public readonly id: string;
 
+  static isLogGroupConfigured = false;
+
   constructor(scope: Construct, id: string, props: RegisterDelegatedAdministratorProps) {
     super(scope, id);
 
     const RESOURCE_TYPE = 'Custom::OrganizationsRegisterDelegatedAdministrator';
 
-    const cr = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'register-delegated-administrator/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
       policyStatements: [
@@ -39,12 +49,34 @@ export class RegisterDelegatedAdministrator extends Construct {
 
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: RESOURCE_TYPE,
-      serviceToken: cr.serviceToken,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
         partition: cdk.Aws.PARTITION,
-        ...props,
+        servicePrincipal: props.servicePrincipal,
+        accountId: props.accountId,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!RegisterDelegatedAdministrator.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      RegisterDelegatedAdministrator.isLogGroupConfigured = true;
+    }
 
     this.id = resource.ref;
   }

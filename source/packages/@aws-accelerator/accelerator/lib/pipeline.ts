@@ -67,13 +67,26 @@ export class AcceleratorPipeline extends Construct {
       };
     }
 
+    // Get installer key
+    const installerKey = cdk.aws_kms.Key.fromKeyArn(
+      this,
+      'AcceleratorKey',
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        props.qualifier
+          ? `/accelerator/${props.qualifier}/installer/kms/key-arn`
+          : '/accelerator/installer/kms/key-arn',
+      ),
+    ) as cdk.aws_kms.Key;
+
     const bucket = new Bucket(this, 'SecureBucket', {
       encryptionType: BucketEncryptionType.SSE_KMS,
       s3BucketName: `${props.qualifier ?? 'aws-accelerator'}-pipeline-${cdk.Stack.of(this).account}-${
         cdk.Stack.of(this).region
       }`,
-      kmsAliasName: `alias/${props.qualifier ?? 'aws-accelerator'}/pipeline/s3`,
-      kmsDescription: 'AWS Accelerator Pipeline Bucket CMK',
+      kmsKey: installerKey,
+      // kmsAliasName: `alias/${props.qualifier ?? 'aws-accelerator'}/pipeline/s3`,
+      // kmsDescription: 'AWS Accelerator Pipeline Bucket CMK',
     });
 
     // cfn_nag: Suppress warning related to the pipeline artifacts S3 bucket
@@ -154,6 +167,7 @@ export class AcceleratorPipeline extends Construct {
 
     const buildProject = new codebuild.PipelineProject(this, 'BuildProject', {
       projectName: props.qualifier ? `${props.qualifier}-build-project` : 'AWSAccelerator-BuildProject',
+      encryptionKey: installerKey,
       role: buildRole,
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
@@ -212,6 +226,7 @@ export class AcceleratorPipeline extends Construct {
 
     this.toolkitProject = new codebuild.PipelineProject(this, 'ToolkitProject', {
       projectName: props.qualifier ? `${props.qualifier}-toolkit-project` : 'AWSAccelerator-ToolkitProject',
+      encryptionKey: installerKey,
       role: this.toolkitRole,
       timeout: cdk.Duration.hours(5),
       buildSpec: codebuild.BuildSpec.fromObject({
@@ -365,6 +380,49 @@ export class AcceleratorPipeline extends Construct {
         }),
       ],
     });
+
+    // Enable Pipeline notification
+    const acceleratorStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorStatusTopic', {
+      topicName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-status-topic',
+      displayName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-status-topic',
+      masterKey: installerKey,
+    });
+
+    pipeline.notifyOn('AcceleratorPipelineStatusNotification', acceleratorStatusTopic, {
+      events: [
+        cdk.aws_codepipeline.PipelineNotificationEvents.MANUAL_APPROVAL_FAILED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.MANUAL_APPROVAL_NEEDED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.MANUAL_APPROVAL_SUCCEEDED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_CANCELED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_RESUMED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_STARTED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_SUCCEEDED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_SUPERSEDED,
+      ],
+    });
+
+    // Pipeline failure status topic and alarm
+    const acceleratorFailedStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorFailedStatusTopic', {
+      topicName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-failed-status-topic',
+      displayName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-failed-status-topic',
+      masterKey: installerKey,
+    });
+
+    pipeline.notifyOn('AcceleratorPipelineFailureNotification', acceleratorFailedStatusTopic, {
+      events: [cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED],
+    });
+
+    acceleratorFailedStatusTopic
+      .metricNumberOfMessagesPublished()
+      .createAlarm(this, 'AcceleratorPipelineFailureAlarm', {
+        threshold: 1,
+        evaluationPeriods: 1,
+        datapointsToAlarm: 1,
+        treatMissingData: cdk.aws_cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmName: props.qualifier ? props.qualifier + '-pipeline-failed-alarm' : 'AwsAcceleratorFailedAlarm',
+        alarmDescription: 'AWS Accelerator pipeline failure alarm, created by accelerator',
+      });
   }
 
   private createToolkitStage(props: {

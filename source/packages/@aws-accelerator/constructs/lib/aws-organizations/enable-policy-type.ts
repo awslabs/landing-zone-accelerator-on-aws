@@ -28,18 +28,28 @@ export enum PolicyTypeEnum {
  */
 export interface EnablePolicyTypeProps {
   readonly policyType: PolicyTypeEnum;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
  * Class to initialize EnablePolicyType
  */
 export class EnablePolicyType extends cdk.Resource {
+  static isLogGroupConfigured = false;
+
   constructor(scope: Construct, id: string, props: EnablePolicyTypeProps) {
     super(scope, id);
 
     const ENABLE_POLICY_TYPE = 'Custom::EnablePolicyType';
 
-    const cr = cdk.CustomResourceProvider.getOrCreateProvider(this, ENABLE_POLICY_TYPE, {
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, ENABLE_POLICY_TYPE, {
       codeDirectory: path.join(__dirname, 'enable-policy-type/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
       policyStatements: [
@@ -77,14 +87,35 @@ export class EnablePolicyType extends cdk.Resource {
       ],
     });
 
-    new cdk.CustomResource(this, 'Resource', {
+    const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: ENABLE_POLICY_TYPE,
-      serviceToken: cr.serviceToken,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
         partition: cdk.Aws.PARTITION,
-        ...props,
+        policyType: props.policyType,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!EnablePolicyType.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      EnablePolicyType.isLogGroupConfigured = true;
+    }
 
     // this.organizationalUnitId = resource.ref;
     // this.organizationalUnitArn = resource.getAttString('arn');

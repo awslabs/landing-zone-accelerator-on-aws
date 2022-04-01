@@ -212,12 +212,6 @@ describe('InstallerStack', () => {
         InstallerRoleDefaultPolicyC01C83A5: {
           Type: 'AWS::IAM::Policy',
           Properties: {
-            PolicyName: 'InstallerRoleDefaultPolicyC01C83A5',
-            Roles: [
-              {
-                Ref: 'InstallerRole13277E70',
-              },
-            ],
             PolicyDocument: {
               Statement: [
                 {
@@ -308,6 +302,13 @@ describe('InstallerStack', () => {
                   },
                 },
                 {
+                  Action: ['kms:Decrypt', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
+                  Effect: 'Allow',
+                  Resource: {
+                    'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
+                  },
+                },
+                {
                   Action: ['s3:GetObject*', 's3:GetBucket*', 's3:List*'],
                   Effect: 'Allow',
                   Resource: [
@@ -331,19 +332,18 @@ describe('InstallerStack', () => {
                   Action: ['kms:Decrypt', 'kms:DescribeKey'],
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
-                  },
-                },
-                {
-                  Action: ['kms:Decrypt', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
-                  Effect: 'Allow',
-                  Resource: {
-                    'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+                    'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
                   },
                 },
               ],
               Version: '2012-10-17',
             },
+            PolicyName: 'InstallerRoleDefaultPolicyC01C83A5',
+            Roles: [
+              {
+                Ref: 'InstallerRole13277E70',
+              },
+            ],
           },
         },
       },
@@ -359,12 +359,6 @@ describe('InstallerStack', () => {
         InstallerRoleDefaultPolicyC01C83A5: {
           Type: 'AWS::IAM::Policy',
           Properties: {
-            PolicyName: 'InstallerRoleDefaultPolicyC01C83A5',
-            Roles: [
-              {
-                Ref: 'InstallerRole13277E70',
-              },
-            ],
             PolicyDocument: {
               Statement: [
                 {
@@ -455,6 +449,13 @@ describe('InstallerStack', () => {
                   },
                 },
                 {
+                  Action: ['kms:Decrypt', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
+                  Effect: 'Allow',
+                  Resource: {
+                    'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
+                  },
+                },
+                {
                   Action: ['s3:GetObject*', 's3:GetBucket*', 's3:List*'],
                   Effect: 'Allow',
                   Resource: [
@@ -478,19 +479,18 @@ describe('InstallerStack', () => {
                   Action: ['kms:Decrypt', 'kms:DescribeKey'],
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
-                  },
-                },
-                {
-                  Action: ['kms:Decrypt', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
-                  Effect: 'Allow',
-                  Resource: {
-                    'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+                    'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
                   },
                 },
               ],
               Version: '2012-10-17',
             },
+            PolicyName: 'InstallerRoleDefaultPolicyC01C83A5',
+            Roles: [
+              {
+                Ref: 'InstallerRole13277E70',
+              },
+            ],
           },
         },
       },
@@ -592,7 +592,7 @@ describe('InstallerStack', () => {
               Type: 'CODEPIPELINE',
             },
             EncryptionKey: {
-              'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+              'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
             },
             Environment: {
               ComputeType: 'BUILD_GENERAL1_MEDIUM',
@@ -706,7 +706,7 @@ describe('InstallerStack', () => {
               Type: 'CODEPIPELINE',
             },
             EncryptionKey: {
-              'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+              'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
             },
             Environment: {
               ComputeType: 'BUILD_GENERAL1_MEDIUM',
@@ -851,7 +851,7 @@ describe('InstallerStack', () => {
               Type: 'CODEPIPELINE',
             },
             EncryptionKey: {
-              'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+              'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
             },
             Environment: {
               ComputeType: 'BUILD_GENERAL1_MEDIUM',
@@ -955,7 +955,7 @@ describe('InstallerStack', () => {
               Type: 'CODEPIPELINE',
             },
             EncryptionKey: {
-              'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+              'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
             },
             Environment: {
               ComputeType: 'BUILD_GENERAL1_MEDIUM',
@@ -1133,7 +1133,7 @@ describe('InstallerStack', () => {
                   Action: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+                    'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
                   },
                 },
                 {
@@ -1228,7 +1228,7 @@ describe('InstallerStack', () => {
                   Action: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+                    'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
                   },
                 },
                 {
@@ -1273,12 +1273,12 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} Management account pipeline stack - CodePipeline bucket KMS key resource test`, () => {
     cdk.assertions.Template.fromStack(managementAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        SecureBucketCmkB881412D: {
+        InstallerKey2A6A8C6D: {
           Type: 'AWS::KMS::Key',
           UpdateReplacePolicy: 'Retain',
           DeletionPolicy: 'Retain',
           Properties: {
-            Description: 'AWS Accelerator Installer Bucket CMK',
+            Description: 'AWS Accelerator Management Account Kms Key',
             EnableKeyRotation: true,
             KeyPolicy: {
               Statement: [
@@ -1305,6 +1305,15 @@ describe('InstallerStack', () => {
                   },
                   Resource: '*',
                 },
+                {
+                  Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+                  Effect: 'Allow',
+                  Principal: {
+                    Service: 'sns.amazonaws.com',
+                  },
+                  Resource: '*',
+                  Sid: 'Allow Sns service to use the encryption key',
+                },
               ],
               Version: '2012-10-17',
             },
@@ -1320,12 +1329,12 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} External pipeline account stack - CodePipeline bucket KMS key resource test`, () => {
     cdk.assertions.Template.fromStack(externalPipelineAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        SecureBucketCmkB881412D: {
+        InstallerKey2A6A8C6D: {
           Type: 'AWS::KMS::Key',
           UpdateReplacePolicy: 'Retain',
           DeletionPolicy: 'Retain',
           Properties: {
-            Description: 'AWS Accelerator Installer Bucket CMK',
+            Description: 'AWS Accelerator Management Account Kms Key',
             EnableKeyRotation: true,
             KeyPolicy: {
               Statement: [
@@ -1351,6 +1360,15 @@ describe('InstallerStack', () => {
                     },
                   },
                   Resource: '*',
+                },
+                {
+                  Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+                  Effect: 'Allow',
+                  Principal: {
+                    Service: 'sns.amazonaws.com',
+                  },
+                  Resource: '*',
+                  Sid: 'Allow Sns service to use the encryption key',
                 },
               ],
               Version: '2012-10-17',
@@ -1518,55 +1536,6 @@ describe('InstallerStack', () => {
   });
 
   /**
-   * Management account pipeline stack - CodePipeline bucket KMS alias resource test
-   */
-  test(`${testNamePrefix} Management account pipeline stack - CodePipeline bucket KMS alias resource test`, () => {
-    cdk.assertions.Template.fromStack(managementAccountStackWithTesterPipeline).templateMatches({
-      Resources: {
-        SecureBucketCmkAliasE1748931: {
-          Type: 'AWS::KMS::Alias',
-          Properties: {
-            AliasName: 'alias/aws-accelerator/installer/s3',
-            TargetKeyId: {
-              'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * External pipeline account stack - CodePipeline bucket KMS alias resource test
-   */
-  test(`${testNamePrefix} External pipeline account stack - CodePipeline bucket KMS alias resource test`, () => {
-    cdk.assertions.Template.fromStack(externalPipelineAccountStackWithTesterPipeline).templateMatches({
-      Resources: {
-        SecureBucketCmkAliasE1748931: {
-          Type: 'AWS::KMS::Alias',
-          Properties: {
-            AliasName: {
-              'Fn::Join': [
-                '',
-                [
-                  'alias/',
-                  {
-                    Ref: 'AcceleratorQualifier',
-                  },
-                  '/installer/s3',
-                ],
-              ],
-            },
-            TargetKeyId: {
-              'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
    * Management account pipeline stack - CodePipeline bucket resource test
    */
   test(`${testNamePrefix} Management account pipeline stack - CodePipeline bucket resource test`, () => {
@@ -1592,7 +1561,7 @@ describe('InstallerStack', () => {
                 {
                   ServerSideEncryptionByDefault: {
                     KMSMasterKeyID: {
-                      'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+                      'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
                     },
                     SSEAlgorithm: 'aws:kms',
                   },
@@ -1662,7 +1631,7 @@ describe('InstallerStack', () => {
                 {
                   ServerSideEncryptionByDefault: {
                     KMSMasterKeyID: {
-                      'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+                      'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
                     },
                     SSEAlgorithm: 'aws:kms',
                   },
@@ -1755,7 +1724,7 @@ describe('InstallerStack', () => {
                   Action: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+                    'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
                   },
                 },
                 {
@@ -1852,7 +1821,7 @@ describe('InstallerStack', () => {
                   Action: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+                    'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
                   },
                 },
                 {
@@ -2054,7 +2023,7 @@ describe('InstallerStack', () => {
             ArtifactStore: {
               EncryptionKey: {
                 Id: {
-                  'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+                  'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
                 },
                 Type: 'KMS',
               },
@@ -2148,7 +2117,7 @@ describe('InstallerStack', () => {
             ArtifactStore: {
               EncryptionKey: {
                 Id: {
-                  'Fn::GetAtt': ['SecureBucketCmkB881412D', 'Arn'],
+                  'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
                 },
                 Type: 'KMS',
               },
@@ -2168,6 +2137,7 @@ describe('InstallerStack', () => {
                 ],
               ],
             },
+            RestartExecutionOnUpdate: true,
             RoleArn: {
               'Fn::GetAtt': ['PipelineRoleDCFDBB91', 'Arn'],
             },

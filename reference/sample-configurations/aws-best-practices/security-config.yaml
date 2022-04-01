@@ -58,6 +58,8 @@ centralSecurityServices:
       - shareTargets:
           organizationalUnits:
             - Root
+          # accounts:
+          #   - Network
         documents:
           # Calls the AWS CLI to enable access logs on a specified ELB
           - name: SSM-ELB-Enable-Logging
@@ -91,33 +93,89 @@ awsConfig:
         organizationalUnits:
           - Root
       rules:
-        - name: accelerator-attatch-ec2-instance-profile
-          type: Custom
-          description: Custom role to remediate ec2 instance profile to EC2 instances
-          inputParameters:
-          customRule:
-            lambda:
-              sourceFilePath: custom-config-rules/attatch-ec2-instance-profile.zip
-              handler: index.handler
-              runtime: nodejs14.x
-              rolePolicyFile: custom-config-rules/attatch-ec2-instance-profile-lambda-role.json
-            periodic: true
-            maximumExecutionFrequency: Six_Hours
-            configurationChanges: true
-            triggeringResources:
-              lookupType: ResourceTypes
-              lookupKey: ResourceTypes
-              lookupValue:
-                - AWS::EC2::Instance
-          remediation:
-            rolePolicyFile: custom-config-rules/attatch-ec2-instance-profile-remediation-role.json
-            automatic: true
-            targetId: Attach-IAM-Instance-Profile
-            retryAttemptSeconds: 60
-            maximumAutomaticAttempts: 5
-            parameters:
-              IamInstanceProfile: EC2-Default-SSM-AD-Role
-              InstanceId: RESOURCE_ID
+#        - name: accelerator-attatch-ec2-instance-profile
+#          type: Custom
+#          description: Custom role to remediate ec2 instance profile to EC2 instances
+#          inputParameters:
+#          customRule:
+#            lambda:
+#              sourceFilePath: custom-config-rules/attatch-ec2-instance-profile.zip
+#              handler: index.handler
+#              runtime: nodejs14.x
+#              rolePolicyFile: custom-config-rules/attatch-ec2-instance-profile-lambda-role.json
+#            periodic: true
+#            maximumExecutionFrequency: Six_Hours
+#            configurationChanges: true
+#            triggeringResources:
+#              lookupType: ResourceTypes
+#              lookupKey: ResourceTypes
+#              lookupValue:
+#                - AWS::EC2::Instance
+#          remediation:
+#            rolePolicyFile: custom-config-rules/attatch-ec2-instance-profile-remediation-role.json
+#            automatic: true
+#            targetId: Attach-IAM-Instance-Profile
+#            retryAttemptSeconds: 60
+#            maximumAutomaticAttempts: 5
+#            parameters:
+#              IamInstanceProfile: EC2-Default-SSM-AD-Role
+#              InstanceId: RESOURCE_ID
+#        - name: accelerator-ec2-instance-profile-permission
+#          type: Custom
+#          description: Custom role to remediate EC2 instance profile permission
+#          inputParameters:
+#            AWSManagedPolicies: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
+#            # CustomerManagedPolicies: ${ACCEL_LOOKUP::SSM:<PARAMETER_NAME>}, ${ACCEL_LOOKUP::SSM:<PARAMETER_NAME>}
+#            ResourceId: RESOURCE_ID
+#          customRule:
+#            lambda:
+#              sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
+#              handler: index.handler
+#              runtime: nodejs14.x
+#              rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-lambda-role.json
+#            periodic: true
+#            maximumExecutionFrequency: Six_Hours
+#            configurationChanges: true
+#            triggeringResources:
+#              lookupType: ResourceTypes
+#              lookupKey: ResourceTypes
+#              lookupValue:
+#                - AWS::IAM::Role
+#          remediation:
+#            rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-remediation-role.json
+#            automatic: true
+#            targetId: Attach-IAM-Role-Policy
+#            targetAccountName: Audit
+#            retryAttemptSeconds: 60
+#            maximumAutomaticAttempts: 5
+#            parameters:
+#              AWSManagedPolicies: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
+#              # CustomerManagedPolicies: ${ACCEL_LOOKUP::SSM:<PARAMETER_NAME>}, ${ACCEL_LOOKUP::SSM:<PARAMETER_NAME>}
+#              ResourceId: RESOURCE_ID
+#        - name: accelerator-bucket-sse-enabled
+#          identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
+#          remediation:
+#            rolePolicyFile: custom-config-rules/bucket-sse-enabled-remediation-role.json
+#            automatic: true
+#            targetId: Put-S3-Encryption
+#            retryAttemptSeconds: 60
+#            maximumAutomaticAttempts: 5
+#            parameters:
+#              BucketName: RESOURCE_ID
+#              KMSMasterKey: ${ACCEL_LOOKUP::KMS}
+#        - name: accelerator-elb-logging-enabled
+#          identifier: ELB_LOGGING_ENABLED
+#          inputParameters:
+#            s3BucketNames: ${ACCEL_LOOKUP::Bucket:logging}
+#          remediation:
+#            rolePolicyFile: custom-config-rules/elb-logging-enabled-remediation-role.json
+#            automatic: true
+#            targetId: SSM-ELB-Enable-Logging
+#            retryAttemptSeconds: 60
+#            maximumAutomaticAttempts: 5
+#            parameters:
+#              LoadBalancerArn: RESOURCE_ID
+#              LogDestination: ${ACCEL_LOOKUP::Bucket:logging}
         - name: accelerator-iam-user-group-membership-check
           complianceResourceTypes:
             - AWS::IAM::User

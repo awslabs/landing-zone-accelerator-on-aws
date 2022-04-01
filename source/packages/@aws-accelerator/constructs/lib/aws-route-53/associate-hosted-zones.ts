@@ -25,6 +25,14 @@ export interface AssociateHostedZonesProps {
     key: string;
     value: string;
   }[];
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 export class AssociateHostedZones extends cdk.Resource {
@@ -33,9 +41,9 @@ export class AssociateHostedZones extends cdk.Resource {
   constructor(scope: Construct, id: string, props: AssociateHostedZonesProps) {
     super(scope, id);
 
-    const ASSOCIATE_HOSTED_ZONES_RESOURCE_TYPE = 'Custom::Route53AssociateHostedZones';
+    const RESOURCE_TYPE = 'Custom::Route53AssociateHostedZones';
 
-    const customResource = cdk.CustomResourceProvider.getOrCreateProvider(this, ASSOCIATE_HOSTED_ZONES_RESOURCE_TYPE, {
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'associate-hosted-zones/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
       policyStatements: [
@@ -55,15 +63,29 @@ export class AssociateHostedZones extends cdk.Resource {
       ],
     });
 
+    const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+      logGroupName: `/aws/lambda/${
+        (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+      }`,
+      retention: props.logRetentionInDays,
+      encryptionKey: props.kmsKey,
+    });
+
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: ASSOCIATE_HOSTED_ZONES_RESOURCE_TYPE,
-      serviceToken: customResource.serviceToken,
+      resourceType: RESOURCE_TYPE,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
         partition: cdk.Stack.of(this).partition,
         region: cdk.Stack.of(this).region,
-        ...props,
+        accountIds: props.accountIds,
+        hostedZoneIds: props.hostedZoneIds,
+        hostedZoneAccountId: props.hostedZoneAccountId,
+        roleName: props.roleName,
+        tagFilters: props.tagFilters,
       },
     });
+
+    resource.node.addDependency(logGroup);
 
     this.id = resource.ref;
   }

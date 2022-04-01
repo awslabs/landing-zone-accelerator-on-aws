@@ -18,6 +18,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 
 import {
+  KeyLookup,
   Organization,
   QueryLoggingConfig,
   ResolverFirewallDomainList,
@@ -44,6 +45,13 @@ interface ResolverFirewallRuleProps {
 export class NetworkPrepStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    const auditAccountId = props.accountsConfig.getAuditAccountId();
+
+    const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
+      accountId: cdk.Stack.of(this).account === auditAccountId ? cdk.Stack.of(this).account : auditAccountId,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
 
     //
     // Generate Transit Gateways
@@ -190,6 +198,8 @@ export class NetworkPrepStack extends AcceleratorStack {
                 path: filePath,
                 tags: [],
                 type: domainListType,
+                kmsKey: key,
+                logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
               });
               domainMap.set(listName, domainList.listId);
             }

@@ -29,6 +29,7 @@ import {
   EnablePolicyType,
   EnableSharingWithAwsOrganization,
   GuardDutyOrganizationAdminAccount,
+  KeyLookup,
   MacieOrganizationAdminAccount,
   Policy,
   PolicyAttachment,
@@ -58,6 +59,13 @@ export class OrganizationsStack extends AcceleratorStack {
 
     Logger.debug(`[organizations-stack] homeRegion: ${props.globalConfig.homeRegion}`);
 
+    const auditAccountId = props.accountsConfig.getAuditAccountId();
+
+    const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
+      accountId: cdk.Stack.of(this).account === auditAccountId ? cdk.Stack.of(this).account : auditAccountId,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
+
     //
     // Global Organizations actions, only execute in the home region
     //
@@ -75,6 +83,8 @@ export class OrganizationsStack extends AcceleratorStack {
 
         const enableCloudtrailServiceAccess = new EnableAwsServiceAccess(this, 'EnableOrganizationsCloudTrail', {
           servicePrincipal: 'cloudtrail.amazonaws.com',
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
 
         const cloudTrailCloudWatchCmk = new kms.Key(this, 'CloudTrailCloudWatchCmk', {
@@ -172,6 +182,8 @@ export class OrganizationsStack extends AcceleratorStack {
 
         new EnablePolicyType(this, 'enablePolicyBackup', {
           policyType: PolicyTypeEnum.BACKUP_POLICY,
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
 
         for (const backupPolicies of props.organizationConfig.backupPolicies ?? []) {
@@ -181,6 +193,8 @@ export class OrganizationsStack extends AcceleratorStack {
               name: backupPolicies.name,
               path: path.join(props.configDirPath, backupPolicies.policy),
               type: PolicyType.BACKUP_POLICY,
+              kmsKey: key,
+              logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             });
 
             policy.node.addDependency(vault);
@@ -189,6 +203,8 @@ export class OrganizationsStack extends AcceleratorStack {
               policyId: policy.id,
               targetId: props.organizationConfig.getOrganizationalUnitId(orgUnit),
               type: PolicyType.BACKUP_POLICY,
+              kmsKey: key,
+              logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             });
           }
         }
@@ -222,6 +238,8 @@ export class OrganizationsStack extends AcceleratorStack {
           timeUnit: props.globalConfig.reports.costAndUsageReport.timeUnit,
           additionalArtifacts: props.globalConfig.reports.costAndUsageReport.additionalArtifacts,
           additionalSchemaElements: props.globalConfig.reports.costAndUsageReport.additionalSchemaElements,
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
       }
       //
@@ -267,6 +285,8 @@ export class OrganizationsStack extends AcceleratorStack {
 
         const enableAccessAnalyzer = new EnableAwsServiceAccess(this, 'EnableAccessAnalyzer', {
           servicePrincipal: 'access-analyzer.amazonaws.com',
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
 
         enableAccessAnalyzer.node.addDependency(role);
@@ -277,6 +297,8 @@ export class OrganizationsStack extends AcceleratorStack {
           {
             accountId: props.accountsConfig.getAuditAccountId(),
             servicePrincipal: 'access-analyzer.amazonaws.com',
+            kmsKey: key,
+            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
           },
         );
 
@@ -286,7 +308,10 @@ export class OrganizationsStack extends AcceleratorStack {
       //
       // Enable RAM organization sharing
       //
-      new EnableSharingWithAwsOrganization(this, 'EnableSharingWithAwsOrganization');
+      new EnableSharingWithAwsOrganization(this, 'EnableSharingWithAwsOrganization', {
+        kmsKey: key,
+        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      });
     }
 
     // Security Services delegated admin account configuration
@@ -309,8 +334,9 @@ export class OrganizationsStack extends AcceleratorStack {
 
         Logger.debug(`[organizations-stack] Macie Admin Account ID is ${adminAccountId}`);
         new MacieOrganizationAdminAccount(this, 'MacieOrganizationAdminAccount', {
-          region: cdk.Stack.of(this).region,
           adminAccountId: adminAccountId,
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
       } else {
         Logger.debug(
@@ -338,8 +364,9 @@ export class OrganizationsStack extends AcceleratorStack {
 
         Logger.debug(`[organizations-stack] Guardduty Admin Account ID is ${adminAccountId}`);
         new GuardDutyOrganizationAdminAccount(this, 'GuardDutyEnableOrganizationAdminAccount', {
-          region: cdk.Stack.of(this).region,
           adminAccountId: adminAccountId,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          kmsKey: key,
         });
       } else {
         Logger.debug(
@@ -367,8 +394,9 @@ export class OrganizationsStack extends AcceleratorStack {
 
         Logger.debug(`[organizations-stack] SecurityHub Admin Account ID is ${adminAccountId}`);
         new SecurityHubOrganizationAdminAccount(this, 'SecurityHubOrganizationAdminAccount', {
-          region: cdk.Stack.of(this).region,
           adminAccountId: adminAccountId,
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
       } else {
         Logger.debug(
@@ -387,6 +415,8 @@ export class OrganizationsStack extends AcceleratorStack {
       Logger.info(`[organizations-stack] Adding Tagging Policies`);
       const tagPolicy = new EnablePolicyType(this, 'enablePolicyTypeTag', {
         policyType: PolicyTypeEnum.TAG_POLICY,
+        kmsKey: key,
+        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });
       for (const taggingPolicy of props.organizationConfig.taggingPolicies ?? []) {
         for (const orgUnit of taggingPolicy.deploymentTargets.organizationalUnits) {
@@ -395,6 +425,8 @@ export class OrganizationsStack extends AcceleratorStack {
             name: taggingPolicy.name,
             path: path.join(props.configDirPath, taggingPolicy.policy),
             type: PolicyType.TAG_POLICY,
+            kmsKey: key,
+            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
           });
 
           policy.node.addDependency(tagPolicy);
@@ -403,6 +435,8 @@ export class OrganizationsStack extends AcceleratorStack {
             policyId: policy.id,
             targetId: props.organizationConfig.getOrganizationalUnitId(orgUnit),
             type: PolicyType.TAG_POLICY,
+            kmsKey: key,
+            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
           });
         }
       }

@@ -65,6 +65,14 @@ export interface PolicyProps {
   readonly description?: string;
   readonly type: PolicyType;
   readonly tags?: Tag[];
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -77,6 +85,8 @@ export class Policy extends Construct {
   public readonly description?: string;
   public readonly type: PolicyType;
   public readonly tags?: Tag[];
+
+  static isLogGroupConfigured = false;
 
   constructor(scope: Construct, id: string, props: PolicyProps) {
     super(scope, id);
@@ -138,9 +148,34 @@ export class Policy extends Construct {
         key: asset.s3ObjectKey,
         partition: cdk.Aws.PARTITION,
         uuid: uuidv4(),
-        ...props,
+        path: props.path,
+        name: props.name,
+        description: props.description,
+        type: props.type,
+        tags: props.tags,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!Policy.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (createPolicyFunction.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      Policy.isLogGroupConfigured = true;
+    }
 
     this.id = resource.ref;
   }

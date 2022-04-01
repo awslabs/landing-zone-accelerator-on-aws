@@ -7,7 +7,11 @@ const testNamePrefix = 'Construct(MacieMembers): ';
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new MacieMembers(stack, 'MacieMembers', { region: stack.region, adminAccountId: stack.account });
+new MacieMembers(stack, 'MacieMembers', {
+  adminAccountId: stack.account,
+  logRetentionInDays: 365,
+  kmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
+});
 /**
  * MacieMembers construct test
  */

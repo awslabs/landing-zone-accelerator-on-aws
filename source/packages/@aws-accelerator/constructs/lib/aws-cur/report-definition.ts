@@ -112,10 +112,20 @@ export interface ReportDefinitionProps {
    * @default - no billing view ARN
    */
   readonly billingViewArn?: string;
+
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 export class ReportDefinition extends cdk.Resource implements IReportDefinition {
   public readonly reportName: string;
+  static isLogGroupConfigured = false;
 
   constructor(scope: Construct, id: string, props: ReportDefinitionProps) {
     super(scope, id, {
@@ -142,21 +152,25 @@ export class ReportDefinition extends cdk.Resource implements IReportDefinition 
       });
     } else {
       // Use custom resource
-      const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::CrossRegionReportDefinition', {
-        codeDirectory: path.join(__dirname, 'cross-region-report-definition/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-        policyStatements: [
-          {
-            Effect: 'Allow',
-            Action: ['cur:DeleteReportDefinition', 'cur:ModifyReportDefinition', 'cur:PutReportDefinition'],
-            Resource: '*',
-          },
-        ],
-      });
+      const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(
+        this,
+        'Custom::CrossRegionReportDefinition',
+        {
+          codeDirectory: path.join(__dirname, 'cross-region-report-definition/dist'),
+          runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+          policyStatements: [
+            {
+              Effect: 'Allow',
+              Action: ['cur:DeleteReportDefinition', 'cur:ModifyReportDefinition', 'cur:PutReportDefinition'],
+              Resource: '*',
+            },
+          ],
+        },
+      );
 
-      new cdk.CustomResource(this, 'Resource', {
+      const resource = new cdk.CustomResource(this, 'Resource', {
         resourceType: 'Custom::CrossRegionReportDefinition',
-        serviceToken: provider.serviceToken,
+        serviceToken: customResourceProvider.serviceToken,
         properties: {
           reportDefinition: {
             ReportName: props.reportName,
@@ -174,6 +188,27 @@ export class ReportDefinition extends cdk.Resource implements IReportDefinition 
           },
         },
       });
+
+      /**
+       * Pre-Creating log group to enable encryption and log retention.
+       * Below construct needs to be static
+       * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+       */
+      if (!ReportDefinition.isLogGroupConfigured) {
+        const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+          logGroupName: `/aws/lambda/${
+            (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+          }`,
+          retention: props.logRetentionInDays,
+          encryptionKey: props.kmsKey,
+          removalPolicy: cdk.RemovalPolicy.DESTROY,
+        });
+
+        resource.node.addDependency(logGroup);
+
+        // Enable the flag to indicate log group configured
+        ReportDefinition.isLogGroupConfigured = true;
+      }
     }
 
     // Add bucket policy

@@ -20,15 +20,27 @@ const path = require('path');
  * Initialized EbsVolumeEncryptionProps properties
  */
 export interface EbsVolumeEncryptionProps {
-  readonly kmsKey: cdk.aws_kms.IKey;
+  /**
+   * Ebs encryption key
+   */
+  readonly ebsEncryptionKmsKey: cdk.aws_kms.IKey;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly logGroupKmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
-/**
-* Class to Enable Default EBS Volume Encryption
-*/
+ * Class to Enable Default EBS Volume Encryption
+ */
 export class EbsDefaultEncryption extends Construct {
   public readonly id: string;
+
+  static isLogGroupConfigured = false;
 
   constructor(scope: Construct, id: string, props: EbsVolumeEncryptionProps) {
     super(scope, id);
@@ -51,7 +63,7 @@ export class EbsDefaultEncryption extends Construct {
         Sid: 'KMS',
         Effect: 'Allow',
         Action: ['kms:DescribeKey'],
-        Resource: props.kmsKey.keyArn,
+        Resource: props.ebsEncryptionKmsKey.keyArn,
       },
     ];
 
@@ -65,9 +77,30 @@ export class EbsDefaultEncryption extends Construct {
       resourceType: EBS_ENCRYPTION_TYPE,
       serviceToken: enableEncryptionFunction.serviceToken,
       properties: {
-        kmsKeyId: props.kmsKey?.keyId,
+        kmsKeyId: props.ebsEncryptionKmsKey?.keyId,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!EbsDefaultEncryption.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (enableEncryptionFunction.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.logGroupKmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      EbsDefaultEncryption.isLogGroupConfigured = true;
+    }
 
     this.id = resource.ref;
   }

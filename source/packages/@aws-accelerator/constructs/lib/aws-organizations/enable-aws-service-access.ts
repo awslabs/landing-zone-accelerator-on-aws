@@ -21,6 +21,14 @@ const path = require('path');
  */
 export interface EnableAwsServiceAccessProps {
   readonly servicePrincipal: string;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -28,6 +36,8 @@ export interface EnableAwsServiceAccessProps {
  */
 export class EnableAwsServiceAccess extends Construct {
   public readonly id: string;
+
+  static isLogGroupConfigured = false;
 
   constructor(scope: Construct, id: string, props: EnableAwsServiceAccessProps) {
     super(scope, id);
@@ -53,9 +63,28 @@ export class EnableAwsServiceAccess extends Construct {
       serviceToken: customResource.serviceToken,
       properties: {
         partition: cdk.Aws.PARTITION,
-        ...props,
+        servicePrincipal: props.servicePrincipal,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!EnableAwsServiceAccess.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${(customResource.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      EnableAwsServiceAccess.isLogGroupConfigured = true;
+    }
 
     this.id = resource.ref;
   }

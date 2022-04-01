@@ -25,10 +25,19 @@ export interface DocumentProps {
   readonly content: any | cdk.IResolvable;
   readonly documentType: string;
   readonly sharedWithAccountIds: string[];
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 export class Document extends cdk.Resource implements IDocument {
   readonly documentName: string;
+  static isLogGroupConfigured = false;
 
   constructor(scope: Construct, id: string, props: DocumentProps) {
     super(scope, id);
@@ -45,7 +54,7 @@ export class Document extends cdk.Resource implements IDocument {
     if (props.sharedWithAccountIds.length > 0) {
       const SHARE_SSM_DOCUMENT = 'Custom::SSMShareDocument';
 
-      const cr = cdk.CustomResourceProvider.getOrCreateProvider(this, SHARE_SSM_DOCUMENT, {
+      const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, SHARE_SSM_DOCUMENT, {
         codeDirectory: path.join(__dirname, 'share-document/dist'),
         runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
         policyStatements: [
@@ -63,14 +72,35 @@ export class Document extends cdk.Resource implements IDocument {
         ],
       });
 
-      new cdk.CustomResource(this, 'ShareDocument', {
+      const resource = new cdk.CustomResource(this, 'ShareDocument', {
         resourceType: SHARE_SSM_DOCUMENT,
-        serviceToken: cr.serviceToken,
+        serviceToken: customResourceProvider.serviceToken,
         properties: {
           name: this.documentName,
           accountIds: props.sharedWithAccountIds,
         },
       });
+
+      /**
+       * Pre-Creating log group to enable encryption and log retention.
+       * Below construct needs to be static
+       * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+       */
+      if (!Document.isLogGroupConfigured) {
+        const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+          logGroupName: `/aws/lambda/${
+            (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+          }`,
+          retention: props.logRetentionInDays,
+          encryptionKey: props.kmsKey,
+          removalPolicy: cdk.RemovalPolicy.DESTROY,
+        });
+
+        resource.node.addDependency(logGroup);
+
+        // Enable the flag to indicate log group configured
+        Document.isLogGroupConfigured = true;
+      }
     }
   }
 }
