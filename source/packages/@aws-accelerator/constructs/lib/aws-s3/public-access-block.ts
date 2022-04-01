@@ -25,6 +25,14 @@ export interface S3PublicAccessBlockProps {
    * @default cdk.Aws.ACCOUNT_ID
    */
   accountId?: string;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -32,13 +40,15 @@ export interface S3PublicAccessBlockProps {
  */
 export class S3PublicAccessBlock extends Construct {
   readonly id: string;
+
+  static isLogGroupConfigured = false;
   constructor(scope: Construct, id: string, props: S3PublicAccessBlockProps) {
     super(scope, id);
 
     //
     // Function definition for the custom resource
     //
-    const putPublicAccessBlockFunction = cdk.CustomResourceProvider.getOrCreateProvider(
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(
       this,
       'Custom::S3PutPublicAccessBlock',
       {
@@ -56,11 +66,36 @@ export class S3PublicAccessBlock extends Construct {
 
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: 'Custom::PutPublicAccessBlock',
-      serviceToken: putPublicAccessBlockFunction.serviceToken,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
-        ...props,
+        blockPublicAcls: props.blockPublicAcls,
+        blockPublicPolicy: props.blockPublicPolicy,
+        ignorePublicAcls: props.ignorePublicAcls,
+        restrictPublicBuckets: props.restrictPublicBuckets,
+        accountId: props.accountId,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!S3PublicAccessBlock.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      S3PublicAccessBlock.isLogGroupConfigured = true;
+    }
 
     this.id = resource.ref;
   }

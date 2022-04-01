@@ -85,13 +85,26 @@ export class TesterPipeline extends Construct {
       };
     }
 
+    // Get installer key
+    const installerKey = cdk.aws_kms.Key.fromKeyArn(
+      this,
+      'AcceleratorKey',
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        props.qualifier
+          ? `/accelerator/${props.qualifier}/installer/kms/key-arn`
+          : '/accelerator/installer/kms/key-arn',
+      ),
+    ) as cdk.aws_kms.Key;
+
     const bucket = new Bucket(this, 'SecureBucket', {
       encryptionType: BucketEncryptionType.SSE_KMS,
       s3BucketName: `${props.qualifier ?? 'aws-accelerator'}-tester-${cdk.Stack.of(this).account}-${
         cdk.Stack.of(this).region
       }`,
-      kmsAliasName: `alias/${props.qualifier ?? 'aws-accelerator'}/test-pipeline/s3`,
-      kmsDescription: 'AWS Accelerator Functional Test Pipeline Bucket CMK',
+      kmsKey: installerKey,
+      // kmsAliasName: `alias/${props.qualifier ?? 'aws-accelerator'}/test-pipeline/s3`,
+      // kmsDescription: 'AWS Accelerator Functional Test Pipeline Bucket CMK',
     });
 
     // cfn_nag: Suppress warning related to the pipeline artifacts S3 bucket
@@ -170,6 +183,7 @@ export class TesterPipeline extends Construct {
 
     const testerProject = new codebuild.PipelineProject(this, 'TesterProject', {
       projectName: props.qualifier ? `${props.qualifier}-tester-project` : 'AWSAccelerator-TesterProject',
+      encryptionKey: installerKey,
       role: deployRole,
       buildSpec: codebuild.BuildSpec.fromObjectToYaml({
         version: '0.2',

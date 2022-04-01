@@ -27,6 +27,14 @@ export interface IAccount extends cdk.IResource {
 export interface AccountProps {
   readonly accountId: string;
   readonly assumeRoleName: string;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -36,6 +44,8 @@ export class Account extends cdk.Resource implements IAccount {
   public readonly accountId: string;
   public readonly assumeRoleName: string;
 
+  static isLogGroupConfigured = false;
+
   constructor(scope: Construct, id: string, props: AccountProps) {
     super(scope, id);
 
@@ -44,7 +54,7 @@ export class Account extends cdk.Resource implements IAccount {
 
     const ENROLL_ACCOUNT_TYPE = 'Custom::InviteAccountToOrganization';
 
-    const cr = cdk.CustomResourceProvider.getOrCreateProvider(this, ENROLL_ACCOUNT_TYPE, {
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, ENROLL_ACCOUNT_TYPE, {
       codeDirectory: path.join(__dirname, 'invite-account-to-organization/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
       policyStatements: [
@@ -62,9 +72,9 @@ export class Account extends cdk.Resource implements IAccount {
       ],
     });
 
-    new cdk.CustomResource(this, 'Resource', {
+    const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: ENROLL_ACCOUNT_TYPE,
-      serviceToken: cr.serviceToken,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
         accountId: props.accountId,
         partition: cdk.Aws.PARTITION,
@@ -78,5 +88,26 @@ export class Account extends cdk.Resource implements IAccount {
         }),
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!Account.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      Account.isLogGroupConfigured = true;
+    }
   }
 }

@@ -1,51 +1,34 @@
 import * as cdk from 'aws-cdk-lib';
+import { SsmParameterLookup } from '../../index';
 
-import { SsmParameter, SsmParameterType } from '../../index';
-
-const testNamePrefix = 'Construct(SsmParameter): ';
+const testNamePrefix = 'Construct(SsmParameterLookup): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-// Get parameter test case
-new SsmParameter(stack, 'SsmParameter', {
-  region: stack.region,
-  partition: stack.partition,
-  parameter: { name: 'TestParameter', accountId: '123123123123', roleName: `TestAssumeRoleName-${stack.region}` },
-  invokingAccountID: stack.account,
-  type: SsmParameterType.GET,
-});
-
-// Put parameter test case
-new SsmParameter(stack, 'PutSsmParameter', {
-  region: stack.region,
-  partition: stack.partition,
-  parameter: {
-    name: 'TestParameter',
-    accountId: '123123123123',
-    roleName: `TestAssumeRoleName-${stack.region}`,
-    value: 'TestValue',
-  },
-  invokingAccountID: stack.account,
-  type: SsmParameterType.PUT,
+new SsmParameterLookup(stack, 'SsmParameter', {
+  name: 'TestParameter',
+  accountId: '123123123123',
+  accessRoleName: `TestAssumeRoleName-${stack.region}`,
+  logRetentionInDays: 365,
 });
 
 /**
- * SsmParameter construct test
+ * SsmParameterLookup construct test
  */
 describe('SsmParameter', () => {
   /**
    * Number of Lambda Function test
    */
   test(`${testNamePrefix} Lambda Function count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 4);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 3);
   });
 
   /**
    * Number of IAM Role test
    */
   test(`${testNamePrefix} IAM Role count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 4);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 3);
   });
 
   /**
@@ -56,14 +39,7 @@ describe('SsmParameter', () => {
   });
 
   /**
-   * Number of Custom resource SsmPutParameterValue test
-   */
-  test(`${testNamePrefix} Custom resource SsmPutParameterValue count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::SsmPutParameterValue', 1);
-  });
-
-  /**
-   * Custom resource SsmGetParameter configuration test
+   * Custom resource SsmParameterLookup configuration test
    */
   test(`${testNamePrefix} Custom resource SsmParameter configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
@@ -580,12 +556,41 @@ describe('SsmParameter', () => {
   });
 
   /**
-   * Custom resource SsmGetParameterValue IAM Role lambda function configuration test
+   * Custom resource LogRetention lambda function configuration test
    */
-  test(`${testNamePrefix} Custom resource SsmPutParameterValue lambda function IAM Role configuration test`, () => {
+  test(`${testNamePrefix} Custom resource LogRetention lambda function configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        PutSsmParameterSsmPutParameterValueFunctionServiceRole373A1BC4: {
+        LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A: {
+          Type: 'AWS::Lambda::Function',
+          DependsOn: [
+            'LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB',
+            'LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB',
+          ],
+          Properties: {
+            Code: {
+              S3Bucket: {
+                'Fn::Sub': 'cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}',
+              },
+            },
+            Handler: 'index.handler',
+            Role: {
+              'Fn::GetAtt': ['LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB', 'Arn'],
+            },
+            Runtime: 'nodejs14.x',
+          },
+        },
+      },
+    });
+  });
+
+  /**
+   * Custom resource LogRetention IAM Role lambda function configuration test
+   */
+  test(`${testNamePrefix} Custom resource LogRetention lambda function IAM Role configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB: {
           Type: 'AWS::IAM::Role',
           Properties: {
             AssumeRolePolicyDocument: {

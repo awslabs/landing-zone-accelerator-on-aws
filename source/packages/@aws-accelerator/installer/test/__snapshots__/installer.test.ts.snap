@@ -101,6 +101,105 @@ Object {
     },
   },
   "Resources": Object {
+    "AcceleratorManagementKmsArnParameter1E6975BF": Object {
+      "Properties": Object {
+        "Name": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/accelerator/",
+              Object {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/installer/kms/key-arn",
+            ],
+          ],
+        },
+        "Type": "String",
+        "Value": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "InstallerKey2A6A8C6D": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "Description": "AWS Accelerator Management Account Kms Key",
+        "EnableKeyRotation": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "sns.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow Sns service to use the encryption key",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InstallerKeyAliasD5C174F0": Object {
+      "Properties": Object {
+        "AliasName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "alias/accelerator/",
+              Object {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/installer/kms/key",
+            ],
+          ],
+        },
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
     "InstallerProject879FF821": Object {
       "Properties": Object {
         "Artifacts": Object {
@@ -111,7 +210,7 @@ Object {
         },
         "EncryptionKey": Object {
           "Fn::GetAtt": Array [
-            "SecureBucketCmkB881412D",
+            "InstallerKey2A6A8C6D",
             "Arn",
           ],
         },
@@ -401,6 +500,21 @@ phases:
             },
             Object {
               "Action": Array [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -437,22 +551,7 @@ phases:
               "Effect": "Allow",
               "Resource": Object {
                 "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": Array [
-                "kms:Decrypt",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
+                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -479,7 +578,7 @@ phases:
           "EncryptionKey": Object {
             "Id": Object {
               "Fn::GetAtt": Array [
-                "SecureBucketCmkB881412D",
+                "InstallerKey2A6A8C6D",
                 "Arn",
               ],
             },
@@ -658,7 +757,7 @@ phases:
               "Effect": "Allow",
               "Resource": Object {
                 "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
+                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -793,7 +892,7 @@ phases:
               "Effect": "Allow",
               "Resource": Object {
                 "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
+                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -862,7 +961,7 @@ phases:
               "ServerSideEncryptionByDefault": Object {
                 "KMSMasterKeyID": Object {
                   "Fn::GetAtt": Array [
-                    "SecureBucketCmkB881412D",
+                    "InstallerKey2A6A8C6D",
                     "Arn",
                   ],
                 },
@@ -907,66 +1006,6 @@ phases:
         },
       },
       "Type": "AWS::S3::Bucket",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "SecureBucketCmkAliasE1748931": Object {
-      "Properties": Object {
-        "AliasName": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "alias/",
-              Object {
-                "Ref": "AcceleratorQualifier",
-              },
-              "/installer/s3",
-            ],
-          ],
-        },
-        "TargetKeyId": Object {
-          "Fn::GetAtt": Array [
-            "SecureBucketCmkB881412D",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::KMS::Alias",
-    },
-    "SecureBucketCmkB881412D": Object {
-      "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "Description": "AWS Accelerator Installer Bucket CMK",
-        "EnableKeyRotation": true,
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
-              "Action": "kms:*",
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "arn:",
-                      Object {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
     "SecureBucketPolicy6374AC61": Object {
@@ -1162,6 +1201,105 @@ Object {
     },
   },
   "Resources": Object {
+    "AcceleratorManagementKmsArnParameter1E6975BF": Object {
+      "Properties": Object {
+        "Name": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/accelerator/",
+              Object {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/installer/kms/key-arn",
+            ],
+          ],
+        },
+        "Type": "String",
+        "Value": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "InstallerKey2A6A8C6D": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "Description": "AWS Accelerator Management Account Kms Key",
+        "EnableKeyRotation": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "sns.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow Sns service to use the encryption key",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InstallerKeyAliasD5C174F0": Object {
+      "Properties": Object {
+        "AliasName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "alias/accelerator/",
+              Object {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/installer/kms/key",
+            ],
+          ],
+        },
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
     "InstallerProject879FF821": Object {
       "Properties": Object {
         "Artifacts": Object {
@@ -1172,7 +1310,7 @@ Object {
         },
         "EncryptionKey": Object {
           "Fn::GetAtt": Array [
-            "SecureBucketCmkB881412D",
+            "InstallerKey2A6A8C6D",
             "Arn",
           ],
         },
@@ -1452,6 +1590,21 @@ phases:
             },
             Object {
               "Action": Array [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -1488,22 +1641,7 @@ phases:
               "Effect": "Allow",
               "Resource": Object {
                 "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": Array [
-                "kms:Decrypt",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
+                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -1530,7 +1668,7 @@ phases:
           "EncryptionKey": Object {
             "Id": Object {
               "Fn::GetAtt": Array [
-                "SecureBucketCmkB881412D",
+                "InstallerKey2A6A8C6D",
                 "Arn",
               ],
             },
@@ -1709,7 +1847,7 @@ phases:
               "Effect": "Allow",
               "Resource": Object {
                 "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
+                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -1844,7 +1982,7 @@ phases:
               "Effect": "Allow",
               "Resource": Object {
                 "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
+                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -1913,7 +2051,7 @@ phases:
               "ServerSideEncryptionByDefault": Object {
                 "KMSMasterKeyID": Object {
                   "Fn::GetAtt": Array [
-                    "SecureBucketCmkB881412D",
+                    "InstallerKey2A6A8C6D",
                     "Arn",
                   ],
                 },
@@ -1958,66 +2096,6 @@ phases:
         },
       },
       "Type": "AWS::S3::Bucket",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "SecureBucketCmkAliasE1748931": Object {
-      "Properties": Object {
-        "AliasName": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "alias/",
-              Object {
-                "Ref": "AcceleratorQualifier",
-              },
-              "/installer/s3",
-            ],
-          ],
-        },
-        "TargetKeyId": Object {
-          "Fn::GetAtt": Array [
-            "SecureBucketCmkB881412D",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::KMS::Alias",
-    },
-    "SecureBucketCmkB881412D": Object {
-      "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "Description": "AWS Accelerator Installer Bucket CMK",
-        "EnableKeyRotation": true,
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
-              "Action": "kms:*",
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "arn:",
-                      Object {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
     "SecureBucketPolicy6374AC61": Object {
@@ -2181,6 +2259,83 @@ Object {
     },
   },
   "Resources": Object {
+    "AcceleratorManagementKmsArnParameter1E6975BF": Object {
+      "Properties": Object {
+        "Name": "/accelerator/installer/kms/key-arn",
+        "Type": "String",
+        "Value": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "InstallerKey2A6A8C6D": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "Description": "AWS Accelerator Management Account Kms Key",
+        "EnableKeyRotation": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "sns.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow Sns service to use the encryption key",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InstallerKeyAliasD5C174F0": Object {
+      "Properties": Object {
+        "AliasName": "alias/accelerator/installer/kms/key",
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
     "InstallerProject879FF821": Object {
       "Properties": Object {
         "Artifacts": Object {
@@ -2191,7 +2346,7 @@ Object {
         },
         "EncryptionKey": Object {
           "Fn::GetAtt": Array [
-            "SecureBucketCmkB881412D",
+            "InstallerKey2A6A8C6D",
             "Arn",
           ],
         },
@@ -2450,6 +2605,21 @@ phases:
             },
             Object {
               "Action": Array [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -2486,22 +2656,7 @@ phases:
               "Effect": "Allow",
               "Resource": Object {
                 "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": Array [
-                "kms:Decrypt",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
+                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -2528,7 +2683,7 @@ phases:
           "EncryptionKey": Object {
             "Id": Object {
               "Fn::GetAtt": Array [
-                "SecureBucketCmkB881412D",
+                "InstallerKey2A6A8C6D",
                 "Arn",
               ],
             },
@@ -2697,7 +2852,7 @@ phases:
               "Effect": "Allow",
               "Resource": Object {
                 "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
+                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -2832,7 +2987,7 @@ phases:
               "Effect": "Allow",
               "Resource": Object {
                 "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
+                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -2901,7 +3056,7 @@ phases:
               "ServerSideEncryptionByDefault": Object {
                 "KMSMasterKeyID": Object {
                   "Fn::GetAtt": Array [
-                    "SecureBucketCmkB881412D",
+                    "InstallerKey2A6A8C6D",
                     "Arn",
                   ],
                 },
@@ -2943,55 +3098,6 @@ phases:
         },
       },
       "Type": "AWS::S3::Bucket",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "SecureBucketCmkAliasE1748931": Object {
-      "Properties": Object {
-        "AliasName": "alias/aws-accelerator/installer/s3",
-        "TargetKeyId": Object {
-          "Fn::GetAtt": Array [
-            "SecureBucketCmkB881412D",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::KMS::Alias",
-    },
-    "SecureBucketCmkB881412D": Object {
-      "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "Description": "AWS Accelerator Installer Bucket CMK",
-        "EnableKeyRotation": true,
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
-              "Action": "kms:*",
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "arn:",
-                      Object {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
     "SecureBucketPolicy6374AC61": Object {
@@ -3133,6 +3239,83 @@ Object {
     },
   },
   "Resources": Object {
+    "AcceleratorManagementKmsArnParameter1E6975BF": Object {
+      "Properties": Object {
+        "Name": "/accelerator/installer/kms/key-arn",
+        "Type": "String",
+        "Value": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "InstallerKey2A6A8C6D": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "Description": "AWS Accelerator Management Account Kms Key",
+        "EnableKeyRotation": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "sns.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow Sns service to use the encryption key",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InstallerKeyAliasD5C174F0": Object {
+      "Properties": Object {
+        "AliasName": "alias/accelerator/installer/kms/key",
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
     "InstallerProject879FF821": Object {
       "Properties": Object {
         "Artifacts": Object {
@@ -3143,7 +3326,7 @@ Object {
         },
         "EncryptionKey": Object {
           "Fn::GetAtt": Array [
-            "SecureBucketCmkB881412D",
+            "InstallerKey2A6A8C6D",
             "Arn",
           ],
         },
@@ -3392,6 +3575,21 @@ phases:
             },
             Object {
               "Action": Array [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -3428,22 +3626,7 @@ phases:
               "Effect": "Allow",
               "Resource": Object {
                 "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": Array [
-                "kms:Decrypt",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
+                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -3470,7 +3653,7 @@ phases:
           "EncryptionKey": Object {
             "Id": Object {
               "Fn::GetAtt": Array [
-                "SecureBucketCmkB881412D",
+                "InstallerKey2A6A8C6D",
                 "Arn",
               ],
             },
@@ -3639,7 +3822,7 @@ phases:
               "Effect": "Allow",
               "Resource": Object {
                 "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
+                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -3774,7 +3957,7 @@ phases:
               "Effect": "Allow",
               "Resource": Object {
                 "Fn::GetAtt": Array [
-                  "SecureBucketCmkB881412D",
+                  "InstallerKey2A6A8C6D",
                   "Arn",
                 ],
               },
@@ -3843,7 +4026,7 @@ phases:
               "ServerSideEncryptionByDefault": Object {
                 "KMSMasterKeyID": Object {
                   "Fn::GetAtt": Array [
-                    "SecureBucketCmkB881412D",
+                    "InstallerKey2A6A8C6D",
                     "Arn",
                   ],
                 },
@@ -3885,55 +4068,6 @@ phases:
         },
       },
       "Type": "AWS::S3::Bucket",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "SecureBucketCmkAliasE1748931": Object {
-      "Properties": Object {
-        "AliasName": "alias/aws-accelerator/installer/s3",
-        "TargetKeyId": Object {
-          "Fn::GetAtt": Array [
-            "SecureBucketCmkB881412D",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::KMS::Alias",
-    },
-    "SecureBucketCmkB881412D": Object {
-      "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "Description": "AWS Accelerator Installer Bucket CMK",
-        "EnableKeyRotation": true,
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
-              "Action": "kms:*",
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "arn:",
-                      Object {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
     "SecureBucketPolicy6374AC61": Object {

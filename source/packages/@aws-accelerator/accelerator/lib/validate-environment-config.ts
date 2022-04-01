@@ -40,6 +40,14 @@ export interface ValidateEnvironmentConfigProps {
     email: string;
     accountId: string;
   }[];
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -47,6 +55,8 @@ export interface ValidateEnvironmentConfigProps {
  */
 export class ValidateEnvironmentConfig extends Construct {
   public readonly id: string;
+
+  static isLogGroupConfigured = false;
 
   constructor(scope: Construct, id: string, props: ValidateEnvironmentConfigProps) {
     super(scope, id);
@@ -56,7 +66,7 @@ export class ValidateEnvironmentConfig extends Construct {
     //
     // Function definition for the custom resource
     //
-    const CustomResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(
       this,
       VALIDATE_ENVIRONMENT_RESOURCE_TYPE,
       {
@@ -93,7 +103,7 @@ export class ValidateEnvironmentConfig extends Construct {
     //
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: VALIDATE_ENVIRONMENT_RESOURCE_TYPE,
-      serviceToken: CustomResourceProvider.serviceToken,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
         workloadAccounts: props.workloadAccounts,
         mandatoryAccounts: props.mandatoryAccounts,
@@ -104,6 +114,27 @@ export class ValidateEnvironmentConfig extends Construct {
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!ValidateEnvironmentConfig.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      ValidateEnvironmentConfig.isLogGroupConfigured = true;
+    }
 
     this.id = resource.ref;
   }

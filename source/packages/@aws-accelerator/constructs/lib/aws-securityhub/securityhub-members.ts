@@ -20,7 +20,14 @@ const path = require('path');
  * Initialized SecurityHubMembersProps properties
  */
 export interface SecurityHubMembersProps {
-  readonly region: string;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -30,12 +37,14 @@ export interface SecurityHubMembersProps {
 export class SecurityHubMembers extends Construct {
   public readonly id: string;
 
+  static isLogGroupConfigured = false;
+
   constructor(scope: Construct, id: string, props: SecurityHubMembersProps) {
     super(scope, id);
 
-    const CREATE_MEMBERS_RESOURCE_TYPE = 'Custom::SecurityHubCreateMembers';
+    const RESOURCE_TYPE = 'Custom::SecurityHubCreateMembers';
 
-    const addMembersFunction = cdk.CustomResourceProvider.getOrCreateProvider(this, CREATE_MEMBERS_RESOURCE_TYPE, {
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'create-members/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
       policyStatements: [
@@ -67,13 +76,34 @@ export class SecurityHubMembers extends Construct {
     });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: CREATE_MEMBERS_RESOURCE_TYPE,
-      serviceToken: addMembersFunction.serviceToken,
+      resourceType: RESOURCE_TYPE,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
-        region: props.region,
+        region: cdk.Stack.of(this).region,
         partition: cdk.Aws.PARTITION,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!SecurityHubMembers.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      SecurityHubMembers.isLogGroupConfigured = true;
+    }
 
     this.id = resource.ref;
   }

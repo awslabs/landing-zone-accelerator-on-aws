@@ -7,9 +7,10 @@ const testNamePrefix = 'Construct(MacieSession): ';
 const stack = new cdk.Stack();
 
 new MacieSession(stack, 'MacieSession', {
-  region: stack.region,
   isSensitiveSh: true,
   findingPublishingFrequency: 'FIFTEEN_MINUTES',
+  logRetentionInDays: 365,
+  kmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
 });
 /**
  * MacieSession construct test

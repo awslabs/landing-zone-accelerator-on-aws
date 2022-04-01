@@ -20,10 +20,22 @@ const path = require('path');
  * Initialized MacieExportConfigClassificationProps properties
  */
 export interface MacieExportConfigClassificationProps {
-  readonly region: string;
+  /**
+   * Macie ExportConfigClassification repository bucket name
+   */
   readonly bucketName: string;
+  /**
+   * Bucket key prefix
+   */
   readonly keyPrefix: string;
-  readonly kmsKeyArn: string;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -31,6 +43,8 @@ export interface MacieExportConfigClassificationProps {
  */
 export class MacieExportConfigClassification extends Construct {
   public readonly id: string = '';
+
+  static isLogGroupConfigured = false;
 
   constructor(scope: Construct, id: string, props: MacieExportConfigClassificationProps) {
     super(scope, id);
@@ -59,12 +73,33 @@ export class MacieExportConfigClassification extends Construct {
       resourceType: RESOURCE_TYPE,
       serviceToken: customResourceProvider.serviceToken,
       properties: {
-        region: props.region,
+        region: cdk.Stack.of(this).region,
         bucketName: props.bucketName,
         keyPrefix: props.keyPrefix,
-        kmsKeyArn: props.kmsKeyArn,
+        kmsKeyArn: props.kmsKey.keyArn,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!MacieExportConfigClassification.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      MacieExportConfigClassification.isLogGroupConfigured = true;
+    }
 
     this.id = resource.ref;
   }

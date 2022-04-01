@@ -23,6 +23,14 @@ import path = require('path');
 export interface CreateControlTowerAccountsProps {
   readonly table: cdk.aws_dynamodb.ITable;
   readonly portfolioId: string;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -33,6 +41,8 @@ export class CreateControlTowerAccounts extends Construct {
   readonly isComplete: cdk.aws_lambda.IFunction;
   readonly provider: cdk.custom_resources.Provider;
   readonly id: string;
+  static isEventLogGroupConfigured = false;
+  static isCompleteLogGroupConfigured = false;
   constructor(scope: Construct, id: string, props: CreateControlTowerAccountsProps) {
     super(scope, id);
 
@@ -44,7 +54,26 @@ export class CreateControlTowerAccounts extends Construct {
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(1),
       description: 'Create Control Tower Account onEvent handler',
+      environmentEncryption: props.kmsKey,
     });
+
+    /**
+     * Creating log group to enable encryption and log retention needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!CreateControlTowerAccounts.isEventLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'OnEventLogGroup', {
+        logGroupName: `/aws/lambda/${this.onEvent.functionName}`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      logGroup.node.addDependency(this.onEvent);
+
+      // Enable the flag to indicate log group configured
+      CreateControlTowerAccounts.isEventLogGroupConfigured = true;
+    }
 
     const ddbPolicy = new cdk.aws_iam.PolicyStatement({
       sid: 'DynamoDb',
@@ -116,7 +145,27 @@ export class CreateControlTowerAccounts extends Construct {
       description: 'Create Control Tower Account isComplete handler',
       environment: { NewAccountsTableName: props.table.tableName },
       initialPolicy: [ddbPolicy, ddbKmsPolicy, ctPolicy, ssoPolicy],
+      environmentEncryption: props.kmsKey,
     });
+
+    /**
+     * Creating log group to enable encryption and log retention needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!CreateControlTowerAccounts.isCompleteLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'IsCompleteLogGroup', {
+        logGroupName: `/aws/lambda/${this.isComplete.functionName}`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      logGroup.node.addDependency(this.isComplete);
+
+      // Enable the flag to indicate log group configured
+      CreateControlTowerAccounts.isCompleteLogGroupConfigured = true;
+    }
+
     this.isComplete.role?.addManagedPolicy(
       cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AWSServiceCatalogEndUserFullAccess'),
     );

@@ -121,6 +121,7 @@ export abstract class GlobalConfigTypes {
     homeRegion: t.nonEmptyString,
     enabledRegions: t.array(t.region),
     managementAccountAccessRole: t.nonEmptyString,
+    cloudwatchLogRetentionInDays: t.number,
     controlTower: GlobalConfigTypes.controlTowerConfig,
     logging: GlobalConfigTypes.loggingConfig,
     dataProtection: t.optional(GlobalConfigTypes.dataProtectionConfig),
@@ -233,6 +234,8 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * - OrganizationAccountAccessRole
    */
   readonly managementAccountAccessRole = 'AWSControlTowerExecution';
+
+  readonly cloudwatchLogRetentionInDays = 365;
 
   readonly controlTower: ControlTowerConfig = new ControlTowerConfig();
   readonly logging: LoggingConfig = new LoggingConfig();

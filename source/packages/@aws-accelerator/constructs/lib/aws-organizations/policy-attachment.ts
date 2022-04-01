@@ -25,6 +25,14 @@ export interface PolicyAttachmentProps {
   readonly policyId: string;
   readonly targetId?: string;
   readonly type: PolicyType;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -36,6 +44,8 @@ export class PolicyAttachment extends Construct {
   public readonly targetId: string | undefined;
   public readonly type: PolicyType;
 
+  static isLogGroupConfigured = false;
+
   constructor(scope: Construct, id: string, props: PolicyAttachmentProps) {
     super(scope, id);
 
@@ -46,17 +56,21 @@ export class PolicyAttachment extends Construct {
     //
     // Function definition for the custom resource
     //
-    const cr = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsAttachPolicy', {
-      codeDirectory: path.join(__dirname, 'attach-policy/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-      policyStatements: [
-        {
-          Effect: 'Allow',
-          Action: ['organizations:AttachPolicy', 'organizations:DetachPolicy', 'organizations:ListPoliciesForTarget'],
-          Resource: '*',
-        },
-      ],
-    });
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(
+      this,
+      'Custom::OrganizationsAttachPolicy',
+      {
+        codeDirectory: path.join(__dirname, 'attach-policy/dist'),
+        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+        policyStatements: [
+          {
+            Effect: 'Allow',
+            Action: ['organizations:AttachPolicy', 'organizations:DetachPolicy', 'organizations:ListPoliciesForTarget'],
+            Resource: '*',
+          },
+        ],
+      },
+    );
 
     //
     // Custom Resource definition. We want this resource to be evaluated on
@@ -65,13 +79,36 @@ export class PolicyAttachment extends Construct {
     //
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: 'Custom::AttachPolicy',
-      serviceToken: cr.serviceToken,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
         partition: cdk.Aws.PARTITION,
         uuid: uuidv4(),
-        ...props,
+        policyId: props.policyId,
+        targetId: props.targetId,
+        type: props.type,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!PolicyAttachment.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      PolicyAttachment.isLogGroupConfigured = true;
+    }
 
     this.id = resource.ref;
   }

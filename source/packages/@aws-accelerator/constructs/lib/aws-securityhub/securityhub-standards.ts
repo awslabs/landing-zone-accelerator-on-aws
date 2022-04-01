@@ -20,8 +20,18 @@ const path = require('path');
  * Initialized SecurityHubMembersProps properties
  */
 export interface SecurityHubStandardsProps {
-  readonly region: string;
+  /**
+   * Security hun standard
+   */
   readonly standards: { name: string; enable: boolean; controlsToDisable: string[] | undefined }[];
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 /**
@@ -31,12 +41,14 @@ export interface SecurityHubStandardsProps {
 export class SecurityHubStandards extends Construct {
   public readonly id: string;
 
+  static isLogGroupConfigured = false;
+
   constructor(scope: Construct, id: string, props: SecurityHubStandardsProps) {
     super(scope, id);
 
-    const CREATE_MEMBERS_RESOURCE_TYPE = 'Custom::SecurityHubBatchEnableStandards';
+    const RESOURCE_TYPE = 'Custom::SecurityHubBatchEnableStandards';
 
-    const addMembersFunction = cdk.CustomResourceProvider.getOrCreateProvider(this, CREATE_MEMBERS_RESOURCE_TYPE, {
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'batch-enable-standards/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
       policyStatements: [
@@ -58,13 +70,34 @@ export class SecurityHubStandards extends Construct {
     });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: CREATE_MEMBERS_RESOURCE_TYPE,
-      serviceToken: addMembersFunction.serviceToken,
+      resourceType: RESOURCE_TYPE,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
-        region: props.region,
+        region: cdk.Stack.of(this).region,
         standards: props.standards,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!SecurityHubStandards.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      SecurityHubStandards.isLogGroupConfigured = true;
+    }
 
     this.id = resource.ref;
   }

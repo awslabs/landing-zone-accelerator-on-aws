@@ -16,6 +16,7 @@ import * as core from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
+import * as cdk from 'aws-cdk-lib';
 
 const path = require('path');
 
@@ -71,6 +72,14 @@ export interface ResourceShareProps {
 export interface ResourceShareItemLookupOptions {
   readonly resourceShare: IResourceShare;
   readonly resourceShareItemType: string;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 export interface IResourceShareItem extends core.IResource {
   /**
@@ -88,13 +97,15 @@ export abstract class ResourceShareItem extends core.Resource implements IResour
   public static fromLookup(scope: Construct, id: string, options: ResourceShareItemLookupOptions): IResourceShareItem {
     class Import extends core.Resource implements IResourceShareItem {
       public readonly resourceShareItemId: string;
+
+      static isLogGroupConfigured = false;
       constructor(scope: Construct, id: string) {
         super(scope, id);
 
         console.log(options.resourceShare.resourceShareId);
         const GET_RESOURCE_SHARE_ITEM = 'Custom::GetResourceShareItem';
 
-        const cr = core.CustomResourceProvider.getOrCreateProvider(this, GET_RESOURCE_SHARE_ITEM, {
+        const customResourceProvider = core.CustomResourceProvider.getOrCreateProvider(this, GET_RESOURCE_SHARE_ITEM, {
           codeDirectory: path.join(__dirname, 'get-resource-share-item/dist'),
           runtime: core.CustomResourceProviderRuntime.NODEJS_14_X,
           policyStatements: [
@@ -108,7 +119,7 @@ export abstract class ResourceShareItem extends core.Resource implements IResour
 
         const resource = new core.CustomResource(this, 'Resource', {
           resourceType: GET_RESOURCE_SHARE_ITEM,
-          serviceToken: cr.serviceToken,
+          serviceToken: customResourceProvider.serviceToken,
           properties: {
             resourceOwner: options.resourceShare.resourceShareOwner,
             resourceShareArn: options.resourceShare.resourceShareArn,
@@ -116,6 +127,27 @@ export abstract class ResourceShareItem extends core.Resource implements IResour
             uuid: uuidv4(), // Generates a new UUID to force the resource to update
           },
         });
+
+        /**
+         * Pre-Creating log group to enable encryption and log retention.
+         * Below construct needs to be static
+         * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+         */
+        if (!Import.isLogGroupConfigured) {
+          const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+            logGroupName: `/aws/lambda/${
+              (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+            }`,
+            retention: options.logRetentionInDays,
+            encryptionKey: options.kmsKey,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+          });
+
+          resource.node.addDependency(logGroup);
+
+          // Enable the flag to indicate log group configured
+          Import.isLogGroupConfigured = true;
+        }
 
         this.resourceShareItemId = resource.ref;
       }

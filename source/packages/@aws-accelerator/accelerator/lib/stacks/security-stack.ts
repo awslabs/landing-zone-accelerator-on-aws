@@ -22,11 +22,11 @@ import { Region } from '@aws-accelerator/config';
 import {
   EbsDefaultEncryption,
   GuardDutyPublishingDestination,
+  KeyLookup,
   MacieExportConfigClassification,
   PasswordPolicy,
   SecurityHubStandards,
-  SsmParameter,
-  SsmParameterType,
+  SsmParameterLookup,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
@@ -34,6 +34,8 @@ import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 enum ACCEL_LOOKUP_TYPE {
   SSM = 'SSM',
+  KMS = 'KMS',
+  Bucket = 'Bucket',
 }
 
 interface RemediationParameters {
@@ -51,11 +53,20 @@ interface RemediationParameters {
  * Security Stack, configures local account security services
  */
 export class SecurityStack extends AcceleratorStack {
+  readonly acceleratorKey: cdk.aws_kms.Key;
+  readonly auditAccountId: string;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     const auditAccountName = props.securityConfig.getDelegatedAccountName();
+    this.auditAccountId = props.accountsConfig.getAuditAccountId();
+
     const auditAccountId = props.accountsConfig.getAuditAccountId();
+
+    this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
+      accountId: cdk.Stack.of(this).account === auditAccountId ? cdk.Stack.of(this).account : auditAccountId,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
 
     //
     // MacieSession configuration
@@ -67,34 +78,13 @@ export class SecurityStack extends AcceleratorStack {
       ) === -1
     ) {
       if (props.accountsConfig.containsAccount(auditAccountName)) {
-        const bucketName = new SsmParameter(this, 'SsmParamMacieBucketName', {
-          region: cdk.Stack.of(this).region as Region,
-          partition: cdk.Stack.of(this).partition,
-          parameter: {
-            name: '/accelerator/organization/security/macie/discovery-repository/bucket-name',
-            accountId: auditAccountId,
-            roleName: `AWSAccelerator-MacieSsmParam-${cdk.Stack.of(this).region}`,
-          },
-          invokingAccountID: cdk.Stack.of(this).account,
-          type: SsmParameterType.GET,
-        }).value;
+        const bucketName = `aws-accelerator-org-macie-disc-repo-${this.auditAccountId}-${cdk.Aws.REGION}`;
 
-        const bucketKmsKeyArn = new SsmParameter(this, 'SsmParamMacieBucketKmsKeyArn', {
-          region: cdk.Stack.of(this).region as Region,
-          partition: cdk.Stack.of(this).partition,
-          parameter: {
-            name: '/accelerator/organization/security/macie/discovery-repository/bucket-kms-key-arn',
-            accountId: auditAccountId,
-            roleName: `AWSAccelerator-MacieSsmParam-${cdk.Stack.of(this).region}`,
-          },
-          invokingAccountID: cdk.Stack.of(this).account,
-          type: SsmParameterType.GET,
-        }).value;
         new MacieExportConfigClassification(this, 'AwsMacieUpdateExportConfigClassification', {
-          region: cdk.Stack.of(this).region,
           bucketName: bucketName,
+          kmsKey: this.acceleratorKey,
           keyPrefix: `${cdk.Stack.of(this).account}-aws-macie-export-config`,
-          kmsKeyArn: bucketKmsKeyArn,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
       } else {
         throw new Error(`Macie audit delegated admin account name "${auditAccountName}" not found.`);
@@ -111,36 +101,16 @@ export class SecurityStack extends AcceleratorStack {
       ) === -1
     ) {
       if (props.accountsConfig.containsAccount(auditAccountName)) {
-        const bucketArn = new SsmParameter(this, 'SsmParamGuardDutyBucketName', {
-          region: cdk.Stack.of(this).region as Region,
-          partition: cdk.Stack.of(this).partition,
-          parameter: {
-            name: '/accelerator/organization/security/guardduty/publishing-destination/bucket-arn',
-            accountId: auditAccountId,
-            roleName: `AWSAccelerator-GuardDutySsmParam-${cdk.Stack.of(this).region}`,
-          },
-          invokingAccountID: cdk.Stack.of(this).account,
-          type: SsmParameterType.GET,
-        }).value;
-
-        const bucketKmsKeyArn = new SsmParameter(this, 'SsmParamGuardDutyBucketKmsKeyArn', {
-          region: cdk.Stack.of(this).region as Region,
-          partition: cdk.Stack.of(this).partition,
-          parameter: {
-            name: '/accelerator/organization/security/guardduty/publishing-destination/bucket-kms-key-arn',
-            accountId: auditAccountId,
-            roleName: `AWSAccelerator-GuardDutySsmParam-${cdk.Stack.of(this).region}`,
-          },
-          invokingAccountID: cdk.Stack.of(this).account,
-          type: SsmParameterType.GET,
-        }).value;
+        const bucketArn = `arn:${cdk.Stack.of(this).partition}:s3:::aws-accelerator-org-gduty-pub-dest-${
+          this.auditAccountId
+        }-${cdk.Stack.of(this).region}`;
 
         new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
-          region: cdk.Stack.of(this).region,
-          bucketArn: bucketArn,
-          kmsKeyArn: bucketKmsKeyArn,
           exportDestinationType:
             props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.destinationType,
+          bucketArn: bucketArn,
+          kmsKey: this.acceleratorKey,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
       } else {
         throw new Error(`Guardduty audit delegated admin account name "${auditAccountName}" not found.`);
@@ -158,8 +128,9 @@ export class SecurityStack extends AcceleratorStack {
     ) {
       if (props.accountsConfig.containsAccount(auditAccountName)) {
         new SecurityHubStandards(this, 'SecurityHubStandards', {
-          region: cdk.Stack.of(this).region,
           standards: props.securityConfig.centralSecurityServices.securityHub.standards,
+          kmsKey: this.acceleratorKey,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
       } else {
         throw new Error(`SecurityHub audit delegated admin account name "${auditAccountName}" not found.`);
@@ -182,10 +153,10 @@ export class SecurityStack extends AcceleratorStack {
       ebsEncryptionKey.addToResourcePolicy(
         new iam.PolicyStatement({
           sid: 'Allow service-linked role use',
-          effect: iam.Effect.ALLOW,
+          effect: cdk.aws_iam.Effect.ALLOW,
           actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:GenerateDataKey*', 'kms:ReEncrypt*'],
           principals: [
-            new iam.ArnPrincipal(
+            new cdk.aws_iam.ArnPrincipal(
               `arn:${cdk.Stack.of(this).partition}:iam::${
                 cdk.Stack.of(this).account
               }:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling`,
@@ -197,10 +168,10 @@ export class SecurityStack extends AcceleratorStack {
       ebsEncryptionKey.addToResourcePolicy(
         new iam.PolicyStatement({
           sid: 'Allow Autoscaling to create grant',
-          effect: iam.Effect.ALLOW,
+          effect: cdk.aws_iam.Effect.ALLOW,
           actions: ['kms:CreateGrant'],
           principals: [
-            new iam.ArnPrincipal(
+            new cdk.aws_iam.ArnPrincipal(
               `arn:${cdk.Stack.of(this).partition}:iam::${
                 cdk.Stack.of(this).account
               }:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling`,
@@ -211,8 +182,11 @@ export class SecurityStack extends AcceleratorStack {
         }),
       );
       new EbsDefaultEncryption(this, 'EbsDefaultVolumeEncryption', {
-        kmsKey: ebsEncryptionKey,
+        ebsEncryptionKmsKey: ebsEncryptionKey,
+        logGroupKmsKey: this.acceleratorKey,
+        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });
+
       new cdk.aws_ssm.StringParameter(this, 'EbsDefaultVolumeEncryptionParameter', {
         parameterName: `/accelerator/security-stack/ebsDefaultVolumeEncryptionKeyArn`,
         stringValue: ebsEncryptionKey.keyArn,
@@ -330,6 +304,16 @@ export class SecurityStack extends AcceleratorStack {
             description: `AWS Config custom rule function used for "${rule.name}" rule`,
           });
 
+          //TODO
+          // const logGroup = new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-LogGroup', {
+          //   logGroupName: `/aws/lambda/${lambdaFunction.functionName}`,
+          //   retention: props.globalConfig.logRetentionInDays,
+          //   encryptionKey: this.acceleratorKey,
+          //   removalPolicy: cdk.RemovalPolicy.DESTROY,
+          // });
+          //
+          // logGroup.node.addDependency(lambdaFunction);
+
           // Read in the policy document which should be properly formatted json
           const policyDocument = require(path.join(props.configDirPath, rule.customRule.lambda.rolePolicyFile));
 
@@ -422,6 +406,8 @@ export class SecurityStack extends AcceleratorStack {
       Logger.info(`[security-stack] Setting the IAM Password policy`);
       new PasswordPolicy(this, 'IamPasswordPolicy', {
         ...props.securityConfig.iamPasswordPolicy,
+        kmsKey: this.acceleratorKey,
+        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });
     }
 
@@ -560,10 +546,9 @@ export class SecurityStack extends AcceleratorStack {
       for (const [key, value] of Object.entries(params)) {
         const replacementValues: string[] = [];
         for (const item of value.split(',')) {
-          // const parameterReplacementNeeded = (item as string).match('\\${ACCEL_LOOKUP::([a-zA-Z0-9-/:]*)}');
           const parameterReplacementNeeded = (item as string).match('\\${ACCEL_LOOKUP::([a-zA-Z0-9-/:]*)}');
           if (parameterReplacementNeeded) {
-            const replacementValue = this.getReplacementValue(ruleName, parameterReplacementNeeded);
+            const replacementValue = this.getReplacementValue(ruleName, parameterReplacementNeeded, 'Rule-Parameter');
             replacementValues.push(replacementValue?.split(',')[0] ?? '');
           }
         }
@@ -605,12 +590,15 @@ export class SecurityStack extends AcceleratorStack {
     }
 
     for (const [key, value] of Object.entries(params)) {
-      // const parameterReplacementNeeded = (value as string).match('\\${ACCEL_LOOKUP::([a-zA-Z0-9-,/]*)}');
       const replacementValues: string[] = [];
       for (const item of (value as string).split(',')) {
         const parameterReplacementNeeded = (item as string).match('\\${ACCEL_LOOKUP::([a-zA-Z0-9-/:]*)}');
         if (parameterReplacementNeeded) {
-          const replacementValue = this.getReplacementValue(ruleName, parameterReplacementNeeded);
+          const replacementValue = this.getReplacementValue(
+            ruleName,
+            parameterReplacementNeeded,
+            'Remediation-Parameter',
+          );
           replacementValues.push(replacementValue ?? '');
         }
       }
@@ -644,28 +632,35 @@ export class SecurityStack extends AcceleratorStack {
    * Function to get Config rule remediation parameter replacement value
    * @param ruleName
    * @param replacement
+   * @param replacementType
    * @private
    */
-  private getReplacementValue(ruleName: string, replacement: RegExpMatchArray): string | undefined {
+  private getReplacementValue(
+    ruleName: string,
+    replacement: RegExpMatchArray,
+    replacementType: string,
+  ): string | undefined {
     const replacementArray = replacement[1].split(':');
     const lookupType = replacementArray[0];
     if (lookupType === ACCEL_LOOKUP_TYPE.SSM) {
       if (replacementArray.length === 2) {
-        return cdk.aws_ssm.StringParameter.valueForStringParameter(this, replacementArray[1]);
-      }
-      if (replacementArray.length === 4) {
-        return new SsmParameter(this, pascalCase(ruleName) + 'SsmParam', {
-          region: cdk.Stack.of(this).region as Region,
-          partition: cdk.Stack.of(this).partition,
-          parameter: {
-            name: replacementArray[3],
-            accountId: this.props.accountsConfig.getAccountId(replacementArray[1]),
-            roleName: replacementArray[2],
-          },
-          invokingAccountID: cdk.Stack.of(this).account,
-          type: SsmParameterType.GET,
+        return new SsmParameterLookup(this, pascalCase(ruleName) + 'SsmParam' + replacementType, {
+          name: replacementArray[1],
+          accountId: this.props.accountsConfig.getAuditAccountId(),
         }).value;
       }
+
+      throw new Error(`Config rule replacement key ${replacement.input} not found`);
+    }
+    if (lookupType === ACCEL_LOOKUP_TYPE.KMS) {
+      return this.acceleratorKey.keyArn;
+    }
+
+    if (lookupType === ACCEL_LOOKUP_TYPE.Bucket) {
+      if (replacementArray.length === 2 && replacementArray[1].toLowerCase() === 'logging'.toLowerCase()) {
+        return `aws-accelerator-logs-${this.auditAccountId}-${cdk.Stack.of(this).region}`;
+      }
+
       throw new Error(`Config rule replacement key ${replacement.input} not found`);
     }
     return undefined;

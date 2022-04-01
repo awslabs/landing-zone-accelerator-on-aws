@@ -27,34 +27,69 @@ export interface EndpointAddressesProps {
    * The ID of the Route 53 Resolver endpoint.
    */
   readonly endpointId: string;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 export class EndpointAddresses extends cdk.Resource implements IEndpointAddresses {
   public ipAddresses: cdk.Reference;
 
+  static isLogGroupConfigured = false;
+
   constructor(scope: Construct, id: string, props: EndpointAddressesProps) {
     super(scope, id);
 
-    const cr = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::ResolverEndpointAddresses', {
-      codeDirectory: path.join(__dirname, 'get-endpoint-addresses/dist'),
-      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-      policyStatements: [
-        {
-          Effect: 'Allow',
-          Action: ['route53resolver:ListResolverEndpointIpAddresses'],
-          Resource: '*',
-        },
-      ],
-    });
+    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(
+      this,
+      'Custom::ResolverEndpointAddresses',
+      {
+        codeDirectory: path.join(__dirname, 'get-endpoint-addresses/dist'),
+        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+        policyStatements: [
+          {
+            Effect: 'Allow',
+            Action: ['route53resolver:ListResolverEndpointIpAddresses'],
+            Resource: '*',
+          },
+        ],
+      },
+    );
 
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: 'Custom::ResolverEndpointAddresses',
-      serviceToken: cr.serviceToken,
+      serviceToken: customResourceProvider.serviceToken,
       properties: {
         endpointId: props.endpointId,
         region: cdk.Stack.of(this).region,
       },
     });
+
+    /**
+     * Pre-Creating log group to enable encryption and log retention.
+     * Below construct needs to be static
+     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     */
+    if (!EndpointAddresses.isLogGroupConfigured) {
+      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+        logGroupName: `/aws/lambda/${
+          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+        }`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      resource.node.addDependency(logGroup);
+
+      // Enable the flag to indicate log group configured
+      EndpointAddresses.isLogGroupConfigured = true;
+    }
 
     this.ipAddresses = resource.getAtt('ipAddresses');
   }

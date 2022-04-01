@@ -199,16 +199,48 @@ export class InstallerStack extends cdk.Stack {
       simpleName: false,
     });
 
+    // Create Accelerator Installer KMS Key
+    const installerKey = new cdk.aws_kms.Key(this, 'InstallerKey', {
+      alias: this.acceleratorQualifier
+        ? `alias/accelerator/${this.acceleratorQualifier.valueAsString}/installer/kms/key`
+        : 'alias/accelerator/installer/kms/key',
+      description: 'AWS Accelerator Management Account Kms Key',
+      enableKeyRotation: true,
+    });
+
+    // TODO Isn't there a better way to grant to all AWS services through a condition?
+    const allowedServicePrincipals: { name: string; principal: string }[] = [
+      { name: 'Sns', principal: 'sns.amazonaws.com' },
+      // Add similar objects for any other service principal needs access to this key
+    ];
+
+    allowedServicePrincipals.forEach(item => {
+      installerKey.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: `Allow ${item.name} service to use the encryption key`,
+          principals: [new cdk.aws_iam.ServicePrincipal(item.principal)],
+          actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+          resources: ['*'],
+        }),
+      );
+    });
+
+    // Create SSM parameter for installer key arn for future use
+    new cdk.aws_ssm.StringParameter(this, 'AcceleratorManagementKmsArnParameter', {
+      parameterName: this.acceleratorQualifier
+        ? `/accelerator/${this.acceleratorQualifier.valueAsString}/installer/kms/key-arn`
+        : '/accelerator/installer/kms/key-arn',
+      stringValue: installerKey.keyArn,
+      simpleName: false,
+    });
+
     const bucket = new Bucket(this, 'SecureBucket', {
       // s3BucketName: `accelerator-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
       encryptionType: BucketEncryptionType.SSE_KMS,
       s3BucketName: `${
         this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'aws-accelerator'
       }-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
-      kmsAliasName: `alias/${
-        this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'aws-accelerator'
-      }/installer/s3`,
-      kmsDescription: 'AWS Accelerator Installer Bucket CMK',
+      kmsKey: installerKey,
     });
 
     // cfn_nag suppressions
@@ -285,6 +317,7 @@ export class InstallerStack extends cdk.Stack {
       projectName: this.acceleratorQualifier
         ? `${this.acceleratorQualifier.valueAsString}-installer-project`
         : 'AWSAccelerator-InstallerProject',
+      encryptionKey: installerKey,
       role: installerRole,
       buildSpec: cdk.aws_codebuild.BuildSpec.fromObjectToYaml({
         version: '0.2',

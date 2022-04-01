@@ -57,6 +57,15 @@ export interface ResolverFirewallDomainListProps {
    * A list of CloudFormation tags
    */
   readonly tags?: cdk.CfnTag[];
+
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 export class ResolverFirewallDomainList extends cdk.Resource implements IResolverFirewallDomainList {
@@ -64,6 +73,8 @@ export class ResolverFirewallDomainList extends cdk.Resource implements IResolve
   public readonly name: string;
   public readonly listArn?: string;
   private assetUrl?: string;
+
+  static isLogGroupConfigured = false;
 
   constructor(scope: Construct, id: string, props: ResolverFirewallDomainListProps) {
     super(scope, id);
@@ -89,7 +100,9 @@ export class ResolverFirewallDomainList extends cdk.Resource implements IResolve
       this.listId = resource.attrId;
     } else {
       // Create custom resource provider
-      const cr = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::ResolverManagedDomainList', {
+      const RESOURCE_TYPE = 'Custom::ResolverManagedDomainList';
+
+      const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
         codeDirectory: path.join(__dirname, 'get-domain-lists/dist'),
         runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
         policyStatements: [
@@ -103,13 +116,34 @@ export class ResolverFirewallDomainList extends cdk.Resource implements IResolve
 
       // Get managed domain list ID
       const resource = new cdk.CustomResource(this, 'Resource', {
-        resourceType: 'Custom::ResolverManagedDomainList',
-        serviceToken: cr.serviceToken,
+        resourceType: RESOURCE_TYPE,
+        serviceToken: customResourceProvider.serviceToken,
         properties: {
           listName: props.name,
           region: cdk.Stack.of(this).region,
         },
       });
+
+      /**
+       * Pre-Creating log group to enable encryption and log retention.
+       * Below construct needs to be static
+       * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+       */
+      if (!ResolverFirewallDomainList.isLogGroupConfigured) {
+        const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
+          logGroupName: `/aws/lambda/${
+            (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
+          }`,
+          retention: props.logRetentionInDays,
+          encryptionKey: props.kmsKey,
+          removalPolicy: cdk.RemovalPolicy.DESTROY,
+        });
+
+        resource.node.addDependency(logGroup);
+
+        // Enable the flag to indicate log group configured
+        ResolverFirewallDomainList.isLogGroupConfigured = true;
+      }
 
       this.listId = resource.ref;
     }

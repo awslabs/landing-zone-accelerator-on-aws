@@ -56,8 +56,7 @@ process.on(
 export class GovCloudOverrides implements cdk.IAspect {
   public visit(node: IConstruct): void {
     if (node instanceof cdk.aws_logs.CfnLogGroup) {
-      node.addPropertyDeletionOverride('KmsKeyId'), 
-      node.addPropertyDeletionOverride('Tags');
+      node.addPropertyDeletionOverride('KmsKeyId'), node.addPropertyDeletionOverride('Tags');
     }
   }
 }
@@ -93,7 +92,7 @@ async function main() {
   if (partition === 'aws-iso-b') {
     cdk.Aspects.of(app).add(new IsobOverrides());
   }
-  
+
   const includeStage = (props: { stage: string; account: string; region: string }): boolean => {
     if (stage === undefined) {
       // Do not include PIPELINE or TESTER_PIPELINE in full synth/diff
@@ -204,17 +203,32 @@ async function main() {
     const auditAccountId = props.accountsConfig.getAuditAccountId();
 
     //
-    // PREPARE Stack
+    // PREPARE Stack execute in Management and Audit account
     //
-    if (includeStage({ stage: AcceleratorStage.PREPARE, account: managementAccountId, region: homeRegion })) {
-      new PrepareStack(app, `${AcceleratorStackNames[AcceleratorStage.PREPARE]}-${managementAccountId}-${homeRegion}`, {
-        env: {
-          account: managementAccountId,
-          region: homeRegion,
-        },
-        description: `(SO0199) AWS Platform Accelerator - Prepare Stack`,
-        ...props,
-      });
+    for (const enabledRegion of props.globalConfig.enabledRegions) {
+      let accountId = '';
+      for (const accountItem of [props.accountsConfig.getManagementAccount(), props.accountsConfig.getAuditAccount()]) {
+        try {
+          accountId = props.accountsConfig.getAccountId(accountItem.name);
+        } catch (error) {
+          continue;
+        }
+        const env = {
+          account: accountId,
+          region: enabledRegion,
+        };
+
+        if (includeStage({ stage: AcceleratorStage.PREPARE, account: accountId, region: enabledRegion })) {
+          new PrepareStack(app, `${AcceleratorStackNames[AcceleratorStage.PREPARE]}-${accountId}-${enabledRegion}`, {
+            env,
+            description: `(SO0199) AWS Platform Accelerator - Prepare Stack`,
+            synthesizer: new cdk.DefaultStackSynthesizer({
+              generateBootstrapVersionRule: false,
+            }),
+            ...props,
+          });
+        }
+      }
     }
 
     //

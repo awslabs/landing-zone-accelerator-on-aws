@@ -22,6 +22,7 @@ import {
   Bucket,
   BucketEncryptionType,
   Document,
+  KeyLookup,
 } from '@aws-accelerator/constructs';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
@@ -37,6 +38,12 @@ export class SecurityAuditStack extends AcceleratorStack {
     super(scope, id, props);
 
     const organization = new Organization(this, 'Organization');
+
+    const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
+      accountId: props.accountsConfig.getAuditAccountId(),
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
+
     //
     // Macie configuration
     //
@@ -51,48 +58,12 @@ export class SecurityAuditStack extends AcceleratorStack {
       const bucket = new Bucket(this, 'AwsMacieExportConfigBucket', {
         encryptionType: BucketEncryptionType.SSE_KMS,
         s3BucketName: `aws-accelerator-org-macie-disc-repo-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-        kmsAliasName: 'alias/accelerator/organization/macie/discovery-repository/s3',
-        kmsDescription: 'AWS Accelerator Macie Repository for sensitive data discovery results Bucket CMK',
+        kmsKey: key,
       });
 
-      const bucketNameSsmParameter = new cdk.aws_ssm.StringParameter(
-        this,
-        'SsmParamOrganizationMacieExportConfigBucketName',
-        {
-          parameterName: '/accelerator/organization/security/macie/discovery-repository/bucket-name',
-          stringValue: bucket.getS3Bucket().bucketName,
-        },
-      );
-
-      const bucketKmsKeyArnSsmParameter = new cdk.aws_ssm.StringParameter(
-        this,
-        'SsmParamOrganizationMacieExportConfigBucketKmsKeyArn',
-        {
-          parameterName: '/accelerator/organization/security/macie/discovery-repository/bucket-kms-key-arn',
-          stringValue: bucket.getS3Bucket().encryptionKey!.keyArn,
-        },
-      );
-
-      // SSM parameter access IAM Role for
-      new cdk.aws_iam.Role(this, 'CrossAccountMacieSsmParamAccessRole', {
-        roleName: `AWSAccelerator-MacieSsmParam-${cdk.Stack.of(this).region}`,
-        assumedBy: new cdk.aws_iam.OrganizationPrincipal(organization.id),
-        inlinePolicies: {
-          default: new cdk.aws_iam.PolicyDocument({
-            statements: [
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ssm:GetParameters', 'ssm:GetParameter'],
-                resources: [bucketNameSsmParameter.parameterArn, bucketKmsKeyArnSsmParameter.parameterArn],
-              }),
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ssm:DescribeParameters'],
-                resources: ['*'],
-              }),
-            ],
-          }),
-        },
+      new cdk.aws_ssm.StringParameter(this, 'SsmParamOrganizationMacieExportConfigBucketName', {
+        parameterName: '/accelerator/organization/security/macie/discovery-repository/bucket-name',
+        stringValue: bucket.getS3Bucket().bucketName,
       });
 
       // cfn_nag: Suppress warning related to the accelerator security macie export config S3 bucket
@@ -128,16 +99,6 @@ export class SecurityAuditStack extends AcceleratorStack {
         }),
       );
 
-      bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'Allow macie to use of the key',
-          effect: cdk.aws_iam.Effect.ALLOW,
-          principals: [new cdk.aws_iam.ServicePrincipal('macie.amazonaws.com')],
-          actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
-          resources: ['*'],
-        }),
-      );
-
       // We also tag the bucket to record the fact that it has access for macie principal.
       cdk.Tags.of(bucket).add('aws-cdk:auto-macie-access-bucket', 'true');
 
@@ -149,8 +110,9 @@ export class SecurityAuditStack extends AcceleratorStack {
         Logger.info('[security-audit-stack] Adding Macie');
 
         new MacieMembers(this, 'MacieMembers', {
-          region: cdk.Stack.of(this).region,
           adminAccountId: cdk.Stack.of(this).account,
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
       }
     }
@@ -166,48 +128,12 @@ export class SecurityAuditStack extends AcceleratorStack {
       const bucket = new Bucket(this, 'GuardDutyPublishingDestinationBucket', {
         encryptionType: BucketEncryptionType.SSE_KMS,
         s3BucketName: `aws-accelerator-org-gduty-pub-dest-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-        kmsAliasName: 'alias/accelerator/organization/guardduty/publishing-destination/s3',
-        kmsDescription: 'AWS Accelerator GuardDuty Publishing Destination Bucket CMK',
+        kmsKey: key,
       });
 
-      const bucketArnSsmParameter = new cdk.aws_ssm.StringParameter(
-        this,
-        'SsmParamOrganizationGuardDutyPublishingDestinationBucketArn',
-        {
-          parameterName: '/accelerator/organization/security/guardduty/publishing-destination/bucket-arn',
-          stringValue: bucket.getS3Bucket().bucketArn,
-        },
-      );
-
-      const bucketKmsKeyArnSsmParameter = new cdk.aws_ssm.StringParameter(
-        this,
-        'SsmParamOrganizationGuardDutyPublishingDestinationBucketKmsKeyArn',
-        {
-          parameterName: '/accelerator/organization/security/guardduty/publishing-destination/bucket-kms-key-arn',
-          stringValue: bucket.getS3Bucket().encryptionKey!.keyArn,
-        },
-      );
-
-      // SSM parameter access IAM Role for
-      new cdk.aws_iam.Role(this, 'CrossAccountGuardDutySsmParamAccessRole', {
-        roleName: `AWSAccelerator-GuardDutySsmParam-${cdk.Stack.of(this).region}`,
-        assumedBy: new cdk.aws_iam.OrganizationPrincipal(organization.id),
-        inlinePolicies: {
-          default: new cdk.aws_iam.PolicyDocument({
-            statements: [
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ssm:GetParameters', 'ssm:GetParameter'],
-                resources: [bucketKmsKeyArnSsmParameter.parameterArn, bucketArnSsmParameter.parameterArn],
-              }),
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ssm:DescribeParameters'],
-                resources: ['*'],
-              }),
-            ],
-          }),
-        },
+      new cdk.aws_ssm.StringParameter(this, 'SsmParamOrganizationGuardDutyPublishingDestinationBucketArn', {
+        parameterName: '/accelerator/organization/security/guardduty/publishing-destination/bucket-arn',
+        stringValue: bucket.getS3Bucket().bucketArn,
       });
 
       // cfn_nag: Suppress warning related to the accelerator security guardduty publish destination bucket
@@ -243,16 +169,6 @@ export class SecurityAuditStack extends AcceleratorStack {
         }),
       );
 
-      bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'Allow guardduty to use of the key',
-          effect: cdk.aws_iam.Effect.ALLOW,
-          principals: [new cdk.aws_iam.ServicePrincipal('guardduty.amazonaws.com')],
-          actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
-          resources: ['*'],
-        }),
-      );
-
       // We also tag the bucket to record the fact that it has access for guardduty principal.
       cdk.Tags.of(bucket).add('aws-cdk:auto-guardduty-access-bucket', 'true');
 
@@ -264,12 +180,12 @@ export class SecurityAuditStack extends AcceleratorStack {
         Logger.info('[security-audit-stack] Adding GuardDuty ');
 
         const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
-          region: cdk.Stack.of(this).region,
           enableS3Protection: props.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
 
         new GuardDutyDetectorConfig(this, 'GuardDutyDetectorConfig', {
-          region: cdk.Stack.of(this).region,
           isExportConfigEnable:
             props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.enable &&
             !props.securityConfig.centralSecurityServices.guardduty.s3Protection.excludeRegions!.includes(
@@ -277,6 +193,8 @@ export class SecurityAuditStack extends AcceleratorStack {
             ),
           exportDestination: GuardDutyExportConfigDestinationTypes.S3,
           exportFrequency: props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.exportFrequency,
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         }).node.addDependency(guardDutyMembers);
       }
     }
@@ -296,7 +214,8 @@ export class SecurityAuditStack extends AcceleratorStack {
       Logger.info('[security-audit-stack] Adding SecurityHub ');
 
       new SecurityHubMembers(this, 'SecurityHubMembers', {
-        region: cdk.Stack.of(this).region,
+        kmsKey: key,
+        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });
     }
 
@@ -328,15 +247,14 @@ export class SecurityAuditStack extends AcceleratorStack {
             content = yaml.load(buffer);
           }
 
-          // console.log(content);
-
           // Create the document
-          // const document =
           new Document(this, pascalCase(documentItem.name), {
             name: documentItem.name,
             content,
             documentType: 'Automation',
             sharedWithAccountIds: accountIds,
+            kmsKey: key,
+            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
           });
         }
       }
@@ -358,57 +276,57 @@ export class SecurityAuditStack extends AcceleratorStack {
     //
     Logger.info(`[security-audit-stack] Create SNS Topics and Subscriptions`);
 
-    // Create CMK for topic
-    // TODO: replace this with the single Accelerator key
-    const topicCmk = new cdk.aws_kms.Key(this, 'TopicCmk', {
-      enableKeyRotation: true,
-      description: 'AWS Accelerator SNS Topic CMK',
-    });
-    topicCmk.addAlias('accelerator/sns/topic');
-    topicCmk.addToResourcePolicy(
-      new cdk.aws_iam.PolicyStatement({
-        sid: 'Allow Organization use of the key',
-        actions: [
-          'kms:Decrypt',
-          'kms:DescribeKey',
-          'kms:Encrypt',
-          'kms:GenerateDataKey',
-          'kms:GenerateDataKeyPair',
-          'kms:GenerateDataKeyPairWithoutPlaintext',
-          'kms:GenerateDataKeyWithoutPlaintext',
-          'kms:ReEncryptFrom',
-          'kms:ReEncryptTo',
-        ],
-        principals: [new cdk.aws_iam.AnyPrincipal()],
-        resources: ['*'],
-        conditions: {
-          StringEquals: {
-            'aws:PrincipalOrgID': organization.id,
-          },
-        },
-      }),
-    );
-    topicCmk.addToResourcePolicy(
-      new cdk.aws_iam.PolicyStatement({
-        sid: 'Allow AWS Services to encrypt and describe logs',
-        actions: [
-          'kms:Decrypt',
-          'kms:DescribeKey',
-          'kms:Encrypt',
-          'kms:GenerateDataKey',
-          'kms:GenerateDataKeyPair',
-          'kms:GenerateDataKeyPairWithoutPlaintext',
-          'kms:GenerateDataKeyWithoutPlaintext',
-          'kms:ReEncryptFrom',
-          'kms:ReEncryptTo',
-        ],
-        principals: [
-          new cdk.aws_iam.ServicePrincipal('cloudwatch.amazonaws.com'),
-          new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
-        ],
-        resources: ['*'],
-      }),
-    );
+    // // Create CMK for topic
+    // // TODO: replace this with the single Accelerator key
+    // const topicCmk = new cdk.aws_kms.Key(this, 'TopicCmk', {
+    //   enableKeyRotation: true,
+    //   description: 'AWS Accelerator SNS Topic CMK',
+    // });
+    // topicCmk.addAlias('accelerator/sns/topic');
+    // topicCmk.addToResourcePolicy(
+    //   new cdk.aws_iam.PolicyStatement({
+    //     sid: 'Allow Organization use of the key',
+    //     actions: [
+    //       'kms:Decrypt',
+    //       'kms:DescribeKey',
+    //       'kms:Encrypt',
+    //       'kms:GenerateDataKey',
+    //       'kms:GenerateDataKeyPair',
+    //       'kms:GenerateDataKeyPairWithoutPlaintext',
+    //       'kms:GenerateDataKeyWithoutPlaintext',
+    //       'kms:ReEncryptFrom',
+    //       'kms:ReEncryptTo',
+    //     ],
+    //     principals: [new cdk.aws_iam.AnyPrincipal()],
+    //     resources: ['*'],
+    //     conditions: {
+    //       StringEquals: {
+    //         'aws:PrincipalOrgID': organization.id,
+    //       },
+    //     },
+    //   }),
+    // );
+    // topicCmk.addToResourcePolicy(
+    //   new cdk.aws_iam.PolicyStatement({
+    //     sid: 'Allow AWS Services to encrypt and describe logs',
+    //     actions: [
+    //       'kms:Decrypt',
+    //       'kms:DescribeKey',
+    //       'kms:Encrypt',
+    //       'kms:GenerateDataKey',
+    //       'kms:GenerateDataKeyPair',
+    //       'kms:GenerateDataKeyPairWithoutPlaintext',
+    //       'kms:GenerateDataKeyWithoutPlaintext',
+    //       'kms:ReEncryptFrom',
+    //       'kms:ReEncryptTo',
+    //     ],
+    //     principals: [
+    //       new cdk.aws_iam.ServicePrincipal('cloudwatch.amazonaws.com'),
+    //       new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
+    //     ],
+    //     resources: ['*'],
+    //   }),
+    // );
 
     // Loop through all the subscription entries
     for (const snsSubscriptionItem of props.securityConfig.centralSecurityServices.snsSubscriptions ?? []) {
@@ -416,7 +334,7 @@ export class SecurityAuditStack extends AcceleratorStack {
       const topic = new cdk.aws_sns.Topic(this, `${pascalCase(snsSubscriptionItem.level)}SnsTopic`, {
         displayName: `AWS Accelerator - ${snsSubscriptionItem.level} Notifications`,
         topicName: `aws-accelerator-${snsSubscriptionItem.level}Notifications`,
-        masterKey: topicCmk,
+        masterKey: key,
       });
 
       // Allowing Publish from CloudWatch Service form any account
