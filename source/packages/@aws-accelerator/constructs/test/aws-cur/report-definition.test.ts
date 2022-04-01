@@ -10,11 +10,13 @@ const app = new cdk.App();
 const nativeEnv = { account: '333333333333', region: 'us-east-1' };
 const nativeStack = new cdk.Stack(app, 'NativeStack', { env: nativeEnv });
 const nativeBucket = new cdk.aws_s3.Bucket(nativeStack, 'TestBucket');
+const nativeKey = new cdk.aws_kms.Key(nativeStack, 'NativeStack', {});
 
 // Create stack for custom Cfn construct
 const customEnv = { account: '333333333333', region: 'us-west-1' };
 const customStack = new cdk.Stack(app, 'CustomStack', { env: customEnv });
 const customBucket = new cdk.aws_s3.Bucket(customStack, 'TestBucket');
+const customKey = new cdk.aws_kms.Key(customStack, 'CustomKey', {});
 
 // Create report definitions for each stack
 new ReportDefinition(nativeStack, 'TestReportDefinition', {
@@ -27,6 +29,8 @@ new ReportDefinition(nativeStack, 'TestReportDefinition', {
   s3Prefix: 'test',
   s3Region: cdk.Stack.of(nativeStack).region,
   timeUnit: 'DAILY',
+  kmsKey: nativeKey,
+  logRetentionInDays: 365,
 });
 
 new ReportDefinition(customStack, 'TestReportDefinition', {
@@ -39,6 +43,8 @@ new ReportDefinition(customStack, 'TestReportDefinition', {
   s3Prefix: 'test',
   s3Region: cdk.Stack.of(customStack).region,
   timeUnit: 'DAILY',
+  kmsKey: customKey,
+  logRetentionInDays: 365,
 });
 
 /**
@@ -176,7 +182,7 @@ describe('ReportDefinition', () => {
       Resources: {
         TestReportDefinition9701AAC4: {
           Type: 'Custom::CrossRegionReportDefinition',
-          DependsOn: ['TestBucketPolicyBA12ED38'],
+          DependsOn: ['TestBucketPolicyBA12ED38', 'TestReportDefinitionLogGroup6D3D9202'],
           Properties: {
             ServiceToken: {
               'Fn::GetAtt': ['CustomCrossRegionReportDefinitionCustomResourceProviderHandler8E3AEE17', 'Arn'],

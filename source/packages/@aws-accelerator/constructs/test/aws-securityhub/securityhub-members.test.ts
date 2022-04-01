@@ -7,7 +7,8 @@ const testNamePrefix = 'Construct(SecurityHubMembers): ';
 const stack = new cdk.Stack();
 
 new SecurityHubMembers(stack, 'SecurityHubMembers', {
-  region: stack.region,
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
 });
 
 /**

@@ -6,7 +6,10 @@ const testNamePrefix = 'Construct(EnableSharingWithAwsOrganization): ';
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new EnableSharingWithAwsOrganization(stack, 'EnableSharingWithAwsOrganization');
+new EnableSharingWithAwsOrganization(stack, 'EnableSharingWithAwsOrganization', {
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
+});
 
 /**
  * HostedZone construct test

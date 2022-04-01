@@ -15,12 +15,16 @@ new ResolverFirewallDomainList(stack, 'TestDomainList', {
   path: __dirname,
   tags: [],
   type: ResolverFirewallDomainListType.CUSTOM,
+  kmsKey: new cdk.aws_kms.Key(stack, 'TestDomainListKey', {}),
+  logRetentionInDays: 365,
 });
 
 // Managed domain list
 new ResolverFirewallDomainList(stack, 'TestManagedDomainList', {
   name: 'TestManagedDomainList',
   type: ResolverFirewallDomainListType.MANAGED,
+  kmsKey: new cdk.aws_kms.Key(stack, 'TestManagedDomainListKey', {}),
+  logRetentionInDays: 365,
 });
 
 /**

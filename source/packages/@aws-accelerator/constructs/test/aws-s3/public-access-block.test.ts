@@ -12,6 +12,8 @@ new S3PublicAccessBlock(stack, 'S3PublicAccessBlock', {
   ignorePublicAcls: true,
   restrictPublicBuckets: true,
   accountId: stack.account,
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
 });
 
 /**

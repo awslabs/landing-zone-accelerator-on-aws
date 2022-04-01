@@ -6,7 +6,12 @@ const testNamePrefix = 'Construct(OrganizationalUnit): ';
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new OrganizationalUnit(stack, 'OrganizationalUnit', { name: 'root', path: '/' });
+new OrganizationalUnit(stack, 'OrganizationalUnit', {
+  name: 'root',
+  path: '/',
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
+});
 
 /**
  * OrganizationalUnit construct test

@@ -10,6 +10,8 @@ new PolicyAttachment(stack, 'PolicyAttachment', {
   policyId: 'policyId',
   targetId: 'targetId',
   type: PolicyType.SERVICE_CONTROL_POLICY,
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
 });
 
 /**

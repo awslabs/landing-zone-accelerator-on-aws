@@ -55,14 +55,14 @@ describe('NetworkAssociationsStack', () => {
    * Number of Lambda function resource test
    */
   test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 1);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 3);
   });
 
   /**
    * Number of Lambda function IAM role resource test
    */
   test(`${testNamePrefix} Lambda function IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 1);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 3);
   });
 
   /**

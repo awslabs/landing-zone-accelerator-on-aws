@@ -16,6 +16,8 @@ new PasswordPolicy(stack, 'PasswordPolicy', {
   minimumPasswordLength: 8,
   passwordReusePrevention: 5,
   maxPasswordAge: 90,
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
 });
 
 /**
