@@ -44,7 +44,8 @@ export class PolicyAttachment extends Construct {
   public readonly targetId: string | undefined;
   public readonly type: PolicyType;
 
-  static isLogGroupConfigured = false;
+  // TODO in future change will need to investigate why log group already exists error comes. for now it is disabling the log group creation
+  static isLogGroupConfigured = true;
 
   constructor(scope: Construct, id: string, props: PolicyAttachmentProps) {
     super(scope, id);
