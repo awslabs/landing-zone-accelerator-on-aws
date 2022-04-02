@@ -86,7 +86,8 @@ export class Policy extends Construct {
   public readonly type: PolicyType;
   public readonly tags?: Tag[];
 
-  static isLogGroupConfigured = false;
+  // TODO in future change will need to investigate why log group already exists error comes. for now it is disabling the log group creation
+  static isLogGroupConfigured = true;
 
   constructor(scope: Construct, id: string, props: PolicyProps) {
     super(scope, id);
