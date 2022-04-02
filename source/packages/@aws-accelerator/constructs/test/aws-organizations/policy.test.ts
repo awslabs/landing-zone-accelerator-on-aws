@@ -15,6 +15,8 @@ new Policy(stack, 'Policy', {
     { Key: 'name', Value: 'TestPolicy' },
     { Key: 'usage', Value: 'ConstructTest' },
   ],
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
 });
 
 /**

@@ -6,7 +6,11 @@ const testNamePrefix = 'Construct(GuardDutyMembers): ';
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new GuardDutyMembers(stack, 'GuardDutyMembers', { region: stack.region, enableS3Protection: true });
+new GuardDutyMembers(stack, 'GuardDutyMembers', {
+  enableS3Protection: true,
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
+});
 
 /**
  * GuardDutyMembers construct test

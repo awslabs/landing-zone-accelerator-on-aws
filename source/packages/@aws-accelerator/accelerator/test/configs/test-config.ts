@@ -1,14 +1,10 @@
-import {
-  GlobalConfig,
-  IamConfig,
-  NetworkConfig,
-  SecurityConfig,
-} from '@aws-accelerator/config';
+import { GlobalConfig, IamConfig, NetworkConfig, SecurityConfig } from '@aws-accelerator/config';
 
 const globalConfigJson = {
   homeRegion: 'us-east-1',
   enabledRegions: ['us-east-1'],
   managementAccountAccessRole: 'AWSControlTowerExecution',
+  cloudwatchLogRetentionInDays: 365,
   controlTower: {
     enable: true,
   },
@@ -20,8 +16,8 @@ const globalConfigJson = {
     },
     sessionManager: {
       sendToCloudWatchLogs: true,
-      sendToS3: true
-    }
+      sendToS3: true,
+    },
   },
   dataProtection: {
     enable: true,

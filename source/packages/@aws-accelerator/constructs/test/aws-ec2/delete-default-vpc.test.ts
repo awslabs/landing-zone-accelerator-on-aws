@@ -6,7 +6,10 @@ const testNamePrefix = 'Construct(DeleteDefaultVpc): ';
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new DeleteDefaultVpc(stack, 'DeleteDefaultVpc');
+new DeleteDefaultVpc(stack, 'DeleteDefaultVpc', {
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
+});
 
 /**
  * DeleteDefaultVpc construct test

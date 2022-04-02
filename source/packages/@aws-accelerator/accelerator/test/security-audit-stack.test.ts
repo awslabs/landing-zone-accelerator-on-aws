@@ -68,7 +68,7 @@ describe('SecurityAuditStack', () => {
    * Number of Lambda function resource test
    */
   test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 5);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 7);
   });
 
   /**
@@ -104,20 +104,6 @@ describe('SecurityAuditStack', () => {
    */
   test(`${testNamePrefix} SNS subscription resource count test`, () => {
     cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::SNS::Subscription', 3);
-  });
-
-  /**
-   * Number of KMS alias resource test
-   */
-  test(`${testNamePrefix} KMS alias resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::KMS::Alias', 3);
-  });
-
-  /**
-   * Number of KMS key resource test
-   */
-  test(`${testNamePrefix} KMS key resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::KMS::Key', 3);
   });
 
   /**
@@ -627,7 +613,11 @@ describe('SecurityAuditStack', () => {
           Type: 'Custom::GuardDutyUpdateDetector',
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
-          DependsOn: ['GuardDutyMembersD34CA003'],
+          DependsOn: [
+            'GuardDutyDetectorConfigLogGroupFBFF15EA',
+            'GuardDutyMembersLogGroup1749C967',
+            'GuardDutyMembersD34CA003',
+          ],
           Properties: {
             ServiceToken: {
               'Fn::GetAtt': ['CustomGuardDutyUpdateDetectorCustomResourceProviderHandler78DF0FF9', 'Arn'],
@@ -675,7 +665,7 @@ describe('SecurityAuditStack', () => {
           Properties: {
             DisplayName: 'AWS Accelerator - High Notifications',
             KmsMasterKeyId: {
-              'Fn::GetAtt': ['TopicCmkCA24A15B', 'Arn'],
+              Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
             },
             TopicName: 'aws-accelerator-HighNotifications',
           },
@@ -798,7 +788,7 @@ describe('SecurityAuditStack', () => {
           Properties: {
             DisplayName: 'AWS Accelerator - Low Notifications',
             KmsMasterKeyId: {
-              'Fn::GetAtt': ['TopicCmkCA24A15B', 'Arn'],
+              Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
             },
             TopicName: 'aws-accelerator-LowNotifications',
           },
@@ -943,7 +933,7 @@ describe('SecurityAuditStack', () => {
           Properties: {
             DisplayName: 'AWS Accelerator - Medium Notifications',
             KmsMasterKeyId: {
-              'Fn::GetAtt': ['TopicCmkCA24A15B', 'Arn'],
+              Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
             },
             TopicName: 'aws-accelerator-MediumNotifications',
           },
@@ -1097,113 +1087,6 @@ describe('SecurityAuditStack', () => {
   });
 
   /**
-   * TopicCmkAlias resource configuration test
-   */
-  test(`${testNamePrefix} TopicCmkAlias resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TopicCmkAlias3A35BFA2: {
-          Type: 'AWS::KMS::Alias',
-          Properties: {
-            AliasName: 'alias/accelerator/sns/topic',
-            TargetKeyId: {
-              'Fn::GetAtt': ['TopicCmkCA24A15B', 'Arn'],
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * TopicCmk resource configuration test
-   */
-  test(`${testNamePrefix} TopicCmk resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TopicCmkCA24A15B: {
-          Type: 'AWS::KMS::Key',
-          UpdateReplacePolicy: 'Retain',
-          DeletionPolicy: 'Retain',
-          Properties: {
-            Description: 'AWS Accelerator SNS Topic CMK',
-            EnableKeyRotation: true,
-            KeyPolicy: {
-              Statement: [
-                {
-                  Action: 'kms:*',
-                  Effect: 'Allow',
-                  Principal: {
-                    AWS: {
-                      'Fn::Join': [
-                        '',
-                        [
-                          'arn:',
-                          {
-                            Ref: 'AWS::Partition',
-                          },
-                          ':iam::333333333333:root',
-                        ],
-                      ],
-                    },
-                  },
-                  Resource: '*',
-                },
-                {
-                  Action: [
-                    'kms:Decrypt',
-                    'kms:DescribeKey',
-                    'kms:Encrypt',
-                    'kms:GenerateDataKey',
-                    'kms:GenerateDataKeyPair',
-                    'kms:GenerateDataKeyPairWithoutPlaintext',
-                    'kms:GenerateDataKeyWithoutPlaintext',
-                    'kms:ReEncryptFrom',
-                    'kms:ReEncryptTo',
-                  ],
-                  Condition: {
-                    StringEquals: {
-                      'aws:PrincipalOrgID': {
-                        Ref: 'Organization29A5FC3F',
-                      },
-                    },
-                  },
-                  Effect: 'Allow',
-                  Principal: {
-                    AWS: '*',
-                  },
-                  Resource: '*',
-                  Sid: 'Allow Organization use of the key',
-                },
-                {
-                  Action: [
-                    'kms:Decrypt',
-                    'kms:DescribeKey',
-                    'kms:Encrypt',
-                    'kms:GenerateDataKey',
-                    'kms:GenerateDataKeyPair',
-                    'kms:GenerateDataKeyPairWithoutPlaintext',
-                    'kms:GenerateDataKeyWithoutPlaintext',
-                    'kms:ReEncryptFrom',
-                    'kms:ReEncryptTo',
-                  ],
-                  Effect: 'Allow',
-                  Principal: {
-                    Service: ['cloudwatch.amazonaws.com', 'lambda.amazonaws.com'],
-                  },
-                  Resource: '*',
-                  Sid: 'Allow AWS Services to encrypt and describe logs',
-                },
-              ],
-              Version: '2012-10-17',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
    * AwsMacieExportConfigBucket resource configuration test
    */
   test(`${testNamePrefix} AwsMacieExportConfigBucket resource configuration test`, () => {
@@ -1230,7 +1113,7 @@ describe('SecurityAuditStack', () => {
                 {
                   ServerSideEncryptionByDefault: {
                     KMSMasterKeyID: {
-                      'Fn::GetAtt': ['AwsMacieExportConfigBucketCmk97C970E9', 'Arn'],
+                      Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
                     },
                     SSEAlgorithm: 'aws:kms',
                   },
@@ -1307,7 +1190,7 @@ describe('SecurityAuditStack', () => {
                 {
                   ServerSideEncryptionByDefault: {
                     KMSMasterKeyID: {
-                      'Fn::GetAtt': ['GuardDutyPublishingDestinationBucketCmkD3255DD0', 'Arn'],
+                      Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
                     },
                     SSEAlgorithm: 'aws:kms',
                   },

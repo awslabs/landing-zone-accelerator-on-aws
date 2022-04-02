@@ -6,7 +6,11 @@ const testNamePrefix = 'Construct(EnableAwsServiceAccess): ';
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new EnableAwsServiceAccess(stack, 'EnableAwsServiceAccess', { servicePrincipal: 's3.amazonaws.com' });
+new EnableAwsServiceAccess(stack, 'EnableAwsServiceAccess', {
+  servicePrincipal: 's3.amazonaws.com',
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
+});
 
 /**
  * EnableAwsServiceAccess construct test

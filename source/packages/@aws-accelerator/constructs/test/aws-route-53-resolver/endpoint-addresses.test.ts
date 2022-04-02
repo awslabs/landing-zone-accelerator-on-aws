@@ -8,6 +8,8 @@ const stack = new cdk.Stack();
 
 new EndpointAddresses(stack, 'TestEndpointAddresses', {
   endpointId: 'TestEndpointId',
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
 });
 
 /**

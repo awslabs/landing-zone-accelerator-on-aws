@@ -14,6 +14,8 @@ const rule = new ResolverRule(stack, 'TestResolverRule', {
   resolverEndpointId: 'TestEndpoint',
   targetIps: ipAddresses,
   tags: [],
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
 });
 
 new ResolverRuleAssociation(stack, 'TestResolverRuleAssoc', {

@@ -6,7 +6,11 @@ const testNamePrefix = 'Construct(EnablePolicyType): ';
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new EnablePolicyType(stack, 'EnablePolicyType', { policyType: PolicyTypeEnum.SERVICE_CONTROL_POLICY });
+new EnablePolicyType(stack, 'EnablePolicyType', {
+  policyType: PolicyTypeEnum.SERVICE_CONTROL_POLICY,
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
+});
 /**
  * EnablePolicyType construct test
  */

@@ -6,7 +6,12 @@ const testNamePrefix = 'Construct(Account): ';
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new Account(stack, 'Account', { accountId: stack.account, assumeRoleName: 'AWSControlTowerExecution' });
+new Account(stack, 'Account', {
+  accountId: stack.account,
+  assumeRoleName: 'AWSControlTowerExecution',
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
+});
 
 /**
  * Account construct test

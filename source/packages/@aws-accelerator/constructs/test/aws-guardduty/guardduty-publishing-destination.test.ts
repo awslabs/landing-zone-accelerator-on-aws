@@ -7,10 +7,10 @@ const testNamePrefix = 'Construct(GuardDutyPublishingDestination): ';
 const stack = new cdk.Stack();
 
 new GuardDutyPublishingDestination(stack, 'GuardDutyPublishingDestination', {
-  region: stack.region,
   bucketArn: `arn:${stack.partition}:s3:::aws-accelerator-org-gduty-pub-dest-${stack.account}-${stack.region}`,
-  kmsKeyArn: `arn:${stack.partition}:kms:${stack.region}:${stack.account}:key/42f9f24c-bf04-4298-893f-176444ba5979`,
   exportDestinationType: 'S3',
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
 });
 
 /**
@@ -162,24 +162,7 @@ describe('GuardDutyPublishingDestination', () => {
             },
             exportDestinationType: 'S3',
             kmsKeyArn: {
-              'Fn::Join': [
-                '',
-                [
-                  'arn:',
-                  {
-                    Ref: 'AWS::Partition',
-                  },
-                  ':kms:',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  ':',
-                  {
-                    Ref: 'AWS::AccountId',
-                  },
-                  ':key/42f9f24c-bf04-4298-893f-176444ba5979',
-                ],
-              ],
+              'Fn::GetAtt': ['CustomKey1E6D0D07', 'Arn'],
             },
             region: {
               Ref: 'AWS::Region',

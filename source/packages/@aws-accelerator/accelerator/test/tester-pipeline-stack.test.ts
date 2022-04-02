@@ -63,20 +63,6 @@ describe('TesterPipelineStack', () => {
   });
 
   /**
-   * Number of KMS Key resource test
-   */
-  test(`${testNamePrefix} KMS Key resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::KMS::Key', 1);
-  });
-
-  /**
-   * Number of KMS Key Alias  resource test
-   */
-  test(`${testNamePrefix} KMS Key Alias resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::KMS::Alias', 1);
-  });
-
-  /**
    * Number of BucketPolicy resource test
    */
   test(`${testNamePrefix} BucketPolicy resource count test`, () => {
@@ -103,7 +89,7 @@ describe('TesterPipelineStack', () => {
             ArtifactStore: {
               EncryptionKey: {
                 Id: {
-                  'Fn::GetAtt': ['TesterPipelineSecureBucketCmk932F2D13', 'Arn'],
+                  Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
                 },
                 Type: 'KMS',
               },
@@ -440,6 +426,13 @@ describe('TesterPipelineStack', () => {
                   },
                 },
                 {
+                  Action: ['kms:Decrypt', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
+                  Effect: 'Allow',
+                  Resource: {
+                    Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
+                  },
+                },
+                {
                   Action: [
                     's3:GetObject*',
                     's3:GetBucket*',
@@ -474,14 +467,7 @@ describe('TesterPipelineStack', () => {
                   Action: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['TesterPipelineSecureBucketCmk932F2D13', 'Arn'],
-                  },
-                },
-                {
-                  Action: ['kms:Decrypt', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
-                  Effect: 'Allow',
-                  Resource: {
-                    'Fn::GetAtt': ['TesterPipelineSecureBucketCmk932F2D13', 'Arn'],
+                    Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
                   },
                 },
               ],
@@ -662,7 +648,7 @@ describe('TesterPipelineStack', () => {
                   Action: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['TesterPipelineSecureBucketCmk932F2D13', 'Arn'],
+                    Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
                   },
                 },
                 {
@@ -733,7 +719,7 @@ describe('TesterPipelineStack', () => {
                 {
                   ServerSideEncryptionByDefault: {
                     KMSMasterKeyID: {
-                      'Fn::GetAtt': ['TesterPipelineSecureBucketCmk932F2D13', 'Arn'],
+                      Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
                     },
                     SSEAlgorithm: 'aws:kms',
                   },
@@ -770,72 +756,6 @@ describe('TesterPipelineStack', () => {
             },
             VersioningConfiguration: {
               Status: 'Enabled',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * CodePipeline config S3 bucket KMS key resource configuration test
-   */
-  test(`${testNamePrefix} CodePipeline config S3 bucket KMS key resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TesterPipelineSecureBucketCmk932F2D13: {
-          Type: 'AWS::KMS::Key',
-          DeletionPolicy: 'Retain',
-          UpdateReplacePolicy: 'Retain',
-          Properties: {
-            Description: 'AWS Accelerator Functional Test Pipeline Bucket CMK',
-            EnableKeyRotation: true,
-            KeyPolicy: {
-              Statement: [
-                {
-                  Action: 'kms:*',
-                  Effect: 'Allow',
-                  Principal: {
-                    AWS: {
-                      'Fn::Join': [
-                        '',
-                        [
-                          'arn:',
-                          {
-                            Ref: 'AWS::Partition',
-                          },
-                          ':iam::',
-                          {
-                            Ref: 'AWS::AccountId',
-                          },
-                          ':root',
-                        ],
-                      ],
-                    },
-                  },
-                  Resource: '*',
-                },
-              ],
-              Version: '2012-10-17',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * CodePipeline config S3 bucket KMS key alias resource configuration test
-   */
-  test(`${testNamePrefix} CodePipeline config S3 bucket KMS key alias resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TesterPipelineSecureBucketCmkAliasE8E5874F: {
-          Type: 'AWS::KMS::Alias',
-          Properties: {
-            AliasName: 'alias/aws-accelerator/test-pipeline/s3',
-            TargetKeyId: {
-              'Fn::GetAtt': ['TesterPipelineSecureBucketCmk932F2D13', 'Arn'],
             },
           },
         },
@@ -983,7 +903,7 @@ describe('TesterPipelineStack', () => {
                   Action: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['TesterPipelineSecureBucketCmk932F2D13', 'Arn'],
+                    Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
                   },
                 },
                 {
@@ -1119,7 +1039,7 @@ describe('TesterPipelineStack', () => {
                   Action: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['TesterPipelineSecureBucketCmk932F2D13', 'Arn'],
+                    Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
                   },
                 },
                 {
@@ -1167,7 +1087,7 @@ describe('TesterPipelineStack', () => {
               Type: 'LOCAL',
             },
             EncryptionKey: {
-              'Fn::GetAtt': ['TesterPipelineSecureBucketCmk932F2D13', 'Arn'],
+              Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
             },
             Environment: {
               ComputeType: 'BUILD_GENERAL1_MEDIUM',

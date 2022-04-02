@@ -55,14 +55,14 @@ describe('NetworkVpcStack', () => {
    * Number of Lambda function resource test
    */
   test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 2);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 4);
   });
 
   /**
    * Number of Lambda function IAM role resource test
    */
   test(`${testNamePrefix} Lambda function IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 2);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 4);
   });
 
   /**
@@ -70,20 +70,6 @@ describe('NetworkVpcStack', () => {
    */
   test(`${testNamePrefix} DeleteDefaultVpc custom resource count test`, () => {
     cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::DeleteDefaultVpc', 1);
-  });
-
-  /**
-   * Number of KMS Alias resource test
-   */
-  test(`${testNamePrefix} KMS Alias resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::KMS::Alias', 1);
-  });
-
-  /**
-   * Number of KMS Key resource test
-   */
-  test(`${testNamePrefix} KMS Key resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::KMS::Key', 1);
   });
 
   /**
@@ -280,113 +266,6 @@ describe('NetworkVpcStack', () => {
           Properties: {
             ServiceToken: {
               'Fn::GetAtt': ['CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35', 'Arn'],
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * KMS Alias FlowLogsCmkAlias resource configuration test
-   */
-  test(`${testNamePrefix} KMS Alias FlowLogsCmkAlias resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        FlowLogsCmkAlias981952D5: {
-          Type: 'AWS::KMS::Alias',
-          Properties: {
-            AliasName: 'alias/accelerator/vpc-flow-logs/cloud-watch-logs',
-            TargetKeyId: {
-              'Fn::GetAtt': ['FlowLogsCmkE26717BC', 'Arn'],
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * KMS Key FlowLogsCmk resource configuration test
-   */
-  test(`${testNamePrefix} KMS Key FlowLogsCmk resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        FlowLogsCmkE26717BC: {
-          Type: 'AWS::KMS::Key',
-          UpdateReplacePolicy: 'Retain',
-          DeletionPolicy: 'Retain',
-          Properties: {
-            Description: 'AWS Accelerator Cloud Watch Logs CMK for VPC Flow Logs',
-            EnableKeyRotation: true,
-            KeyPolicy: {
-              Statement: [
-                {
-                  Action: 'kms:*',
-                  Effect: 'Allow',
-                  Principal: {
-                    AWS: {
-                      'Fn::Join': [
-                        '',
-                        [
-                          'arn:',
-                          {
-                            Ref: 'AWS::Partition',
-                          },
-                          ':iam::333333333333:root',
-                        ],
-                      ],
-                    },
-                  },
-                  Resource: '*',
-                },
-                {
-                  Action: 'kms:*',
-                  Effect: 'Allow',
-                  Principal: {
-                    AWS: {
-                      'Fn::Join': [
-                        '',
-                        [
-                          'arn:',
-                          {
-                            Ref: 'AWS::Partition',
-                          },
-                          ':iam::333333333333:root',
-                        ],
-                      ],
-                    },
-                  },
-                  Resource: '*',
-                  Sid: 'Enable IAM User Permissions',
-                },
-                {
-                  Action: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
-                  Condition: {
-                    ArnLike: {
-                      'kms:EncryptionContext:aws:logs:arn': {
-                        'Fn::Join': [
-                          '',
-                          [
-                            'arn:',
-                            {
-                              Ref: 'AWS::Partition',
-                            },
-                            ':logs:us-east-1:333333333333:*',
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                  Effect: 'Allow',
-                  Principal: {
-                    Service: 'logs.us-east-1.amazonaws.com',
-                  },
-                  Resource: '*',
-                  Sid: 'Allow Cloud Watch Logs access',
-                },
-              ],
-              Version: '2012-10-17',
             },
           },
         },

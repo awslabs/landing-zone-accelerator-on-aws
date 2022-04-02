@@ -7,7 +7,6 @@ const testNamePrefix = 'Construct(SecurityHubStandards): ';
 const stack = new cdk.Stack();
 
 new SecurityHubStandards(stack, 'SecurityHubStandards', {
-  region: stack.region,
   standards: [
     {
       name: 'AWS Foundational Security Best Practices v1.0.0',
@@ -20,6 +19,8 @@ new SecurityHubStandards(stack, 'SecurityHubStandards', {
       controlsToDisable: ['IAM.1', 'EC2.10', 'Lambda.4'],
     },
   ],
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
 });
 
 /**

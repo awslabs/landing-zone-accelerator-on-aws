@@ -7,8 +7,9 @@ const testNamePrefix = 'Construct(GuardDutyOrganizationAdminAccount): ';
 const stack = new cdk.Stack();
 
 new GuardDutyOrganizationAdminAccount(stack, 'GuardDutyOrganizationAdminAccount', {
-  region: stack.region,
   adminAccountId: stack.account,
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  logRetentionInDays: 365,
 });
 
 /**

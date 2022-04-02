@@ -101,14 +101,14 @@ describe('SecurityStack', () => {
    * Number of Lambda Function resource test
    */
   test(`${testNamePrefix} Lambda Function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 13);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 7);
   });
 
   /**
    * Number of IAM Role resource test
    */
   test(`${testNamePrefix} IAM Role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 14);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 8);
   });
 
   /**
@@ -218,6 +218,7 @@ describe('SecurityStack', () => {
           Type: 'Custom::MaciePutClassificationExportConfiguration',
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
+          DependsOn: ['AwsMacieUpdateExportConfigClassificationLogGroup9E15D505'],
           Properties: {
             ServiceToken: {
               'Fn::GetAtt': [
@@ -226,11 +227,19 @@ describe('SecurityStack', () => {
               ],
             },
             bucketName: {
-              Ref: 'SsmParamMacieBucketName3734BB86',
+              'Fn::Join': [
+                '',
+                [
+                  'aws-accelerator-org-macie-disc-repo-222222222222-',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                ],
+              ],
             },
             keyPrefix: '333333333333-aws-macie-export-config',
             kmsKeyArn: {
-              Ref: 'SsmParamMacieBucketKmsKeyArn1E0D9BC6',
+              Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
             },
             region: 'us-east-1',
           },
@@ -711,6 +720,7 @@ describe('SecurityStack', () => {
           Type: 'Custom::GuardDutyCreatePublishingDestinationCommand',
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
+          DependsOn: ['GuardDutyPublishingDestinationLogGroup0D6CB347'],
           Properties: {
             ServiceToken: {
               'Fn::GetAtt': [
@@ -719,11 +729,20 @@ describe('SecurityStack', () => {
               ],
             },
             bucketArn: {
-              Ref: 'SsmParamGuardDutyBucketNameBC1694B8',
+              'Fn::Join': [
+                '',
+                [
+                  'arn:',
+                  {
+                    Ref: 'AWS::Partition',
+                  },
+                  ':s3:::aws-accelerator-org-gduty-pub-dest-222222222222-us-east-1',
+                ],
+              ],
             },
             exportDestinationType: 'S3',
             kmsKeyArn: {
-              Ref: 'SsmParamGuardDutyBucketKmsKeyArnD576B257',
+              Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
             },
             region: 'us-east-1',
           },
