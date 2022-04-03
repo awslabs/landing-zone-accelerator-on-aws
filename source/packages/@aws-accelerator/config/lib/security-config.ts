@@ -10,6 +10,7 @@ export class SecurityConfigTypes {
   });
 
   static readonly s3PublicAccessBlockConfig = t.interface({
+    enable: t.boolean,
     excludeAccounts: t.optional(t.array(t.string)),
   });
 
@@ -233,31 +234,32 @@ export class SecurityConfigTypes {
 }
 
 export class S3PublicAccessBlockConfig implements t.TypeOf<typeof SecurityConfigTypes.s3PublicAccessBlockConfig> {
+  readonly enable = false;
   readonly excludeAccounts: string[] = [];
 }
 
 export class MacieConfig implements t.TypeOf<typeof SecurityConfigTypes.macieConfig> {
-  readonly enable = true;
+  readonly enable = false;
   readonly excludeRegions: t.Region[] = [];
   readonly policyFindingsPublishingFrequency = 'FIFTEEN_MINUTES';
   readonly publishSensitiveDataFindings = true;
 }
 
 export class GuardDutyS3ProtectionConfig implements t.TypeOf<typeof SecurityConfigTypes.guardDutyS3ProtectionConfig> {
-  readonly enable = true;
+  readonly enable = false;
   readonly excludeRegions: t.Region[] = [];
 }
 
 export class GuardDutyExportFindingsConfig
   implements t.TypeOf<typeof SecurityConfigTypes.guardDutyExportFindingsConfig>
 {
-  readonly enable = true;
+  readonly enable = false;
   readonly destinationType = 'S3';
   readonly exportFrequency = 'FIFTEEN_MINUTES';
 }
 
 export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guardDutyConfig> {
-  readonly enable = true;
+  readonly enable = false;
   readonly excludeRegions: t.Region[] = [];
   readonly s3Protection: GuardDutyS3ProtectionConfig = new GuardDutyS3ProtectionConfig();
   readonly exportConfiguration: GuardDutyExportFindingsConfig = new GuardDutyExportFindingsConfig();
@@ -269,7 +271,7 @@ export class SecurityHubStandardConfig implements t.TypeOf<typeof SecurityConfig
 }
 
 export class SecurityHubConfig implements t.TypeOf<typeof SecurityConfigTypes.securityHubConfig> {
-  readonly enable = true;
+  readonly enable = false;
   readonly excludeRegions: t.Region[] = [];
   readonly standards: SecurityHubStandardConfig[] = [];
 }
@@ -282,7 +284,7 @@ export class SnsSubscriptionConfig implements t.TypeOf<typeof SecurityConfigType
 export class ebsDefaultVolumeEncryptionConfig
   implements t.TypeOf<typeof SecurityConfigTypes.ebsDefaultVolumeEncryptionConfig>
 {
-  readonly enable = true;
+  readonly enable = false;
   readonly excludeRegions: t.Region[] = [];
 }
 export class DocumentConfig implements t.TypeOf<typeof SecurityConfigTypes.documentConfig> {
@@ -314,7 +316,7 @@ export class CentralSecurityServicesConfig
 }
 
 export class AccessAnalyzerConfig implements t.TypeOf<typeof SecurityConfigTypes.accessAnalyzerConfig> {
-  readonly enable = true;
+  readonly enable = false;
 }
 
 export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTypes.iamPasswordPolicyConfig> {

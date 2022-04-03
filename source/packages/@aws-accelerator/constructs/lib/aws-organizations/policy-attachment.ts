@@ -44,9 +44,6 @@ export class PolicyAttachment extends Construct {
   public readonly targetId: string | undefined;
   public readonly type: PolicyType;
 
-  // TODO in future change will need to investigate why log group already exists error comes. for now it is disabling the log group creation
-  static isLogGroupConfigured = true;
-
   constructor(scope: Construct, id: string, props: PolicyAttachmentProps) {
     super(scope, id);
 
@@ -57,21 +54,17 @@ export class PolicyAttachment extends Construct {
     //
     // Function definition for the custom resource
     //
-    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(
-      this,
-      'Custom::OrganizationsAttachPolicy',
-      {
-        codeDirectory: path.join(__dirname, 'attach-policy/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-        policyStatements: [
-          {
-            Effect: 'Allow',
-            Action: ['organizations:AttachPolicy', 'organizations:DetachPolicy', 'organizations:ListPoliciesForTarget'],
-            Resource: '*',
-          },
-        ],
-      },
-    );
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsAttachPolicy', {
+      codeDirectory: path.join(__dirname, 'attach-policy/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      policyStatements: [
+        {
+          Effect: 'Allow',
+          Action: ['organizations:AttachPolicy', 'organizations:DetachPolicy', 'organizations:ListPoliciesForTarget'],
+          Resource: '*',
+        },
+      ],
+    });
 
     //
     // Custom Resource definition. We want this resource to be evaluated on
@@ -80,7 +73,7 @@ export class PolicyAttachment extends Construct {
     //
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: 'Custom::AttachPolicy',
-      serviceToken: customResourceProvider.serviceToken,
+      serviceToken: provider.serviceToken,
       properties: {
         partition: cdk.Aws.PARTITION,
         uuid: uuidv4(),
@@ -91,25 +84,19 @@ export class PolicyAttachment extends Construct {
     });
 
     /**
-     * Pre-Creating log group to enable encryption and log retention.
-     * Below construct needs to be static
-     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
      */
-    if (!PolicyAttachment.isLogGroupConfigured) {
-      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-        logGroupName: `/aws/lambda/${
-          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
-        }`,
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
         retention: props.logRetentionInDays,
         encryptionKey: props.kmsKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
-
-      resource.node.addDependency(logGroup);
-
-      // Enable the flag to indicate log group configured
-      PolicyAttachment.isLogGroupConfigured = true;
-    }
+    resource.node.addDependency(logGroup);
 
     this.id = resource.ref;
   }

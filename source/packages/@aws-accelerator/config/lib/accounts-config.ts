@@ -79,27 +79,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   static readonly LOG_ARCHIVE_ACCOUNT = 'LogArchive';
   static readonly AUDIT_ACCOUNT = 'Audit';
 
-  readonly mandatoryAccounts: AccountConfig[] | GovCloudAccountConfig[] = [
-    {
-      name: AccountsConfig.MANAGEMENT_ACCOUNT,
-      description: 'The management (primary) account. Do not change the name field for this mandatory account.',
-      email: '<management-account>@example.com <----- UPDATE EMAIL ADDRESS',
-      organizationalUnit: 'Root',
-    },
-    {
-      name: AccountsConfig.LOG_ARCHIVE_ACCOUNT,
-      description: 'The log archive account. Do not change the name field for this mandatory account.',
-      email: '<log-archive>@example.com  <----- UPDATE EMAIL ADDRESS',
-      organizationalUnit: 'Security',
-    },
-    {
-      name: AccountsConfig.AUDIT_ACCOUNT,
-      description:
-        'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account.',
-      email: '<audit>@example.com  <----- UPDATE EMAIL ADDRESS',
-      organizationalUnit: 'Security',
-    },
-  ];
+  readonly mandatoryAccounts: AccountConfig[] | GovCloudAccountConfig[];
 
   readonly workloadAccounts: AccountConfig[] | GovCloudAccountConfig[] = [];
 
@@ -134,10 +114,35 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
    *
    * @param values
    */
-  constructor(values?: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>) {
+  constructor(
+    props: { managementAccountEmail: string; logArchiveAccountEmail: string; auditAccountEmail: string },
+    values?: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>,
+  ) {
     if (values) {
       Object.assign(this, values);
     }
+
+    this.mandatoryAccounts = [
+      {
+        name: AccountsConfig.MANAGEMENT_ACCOUNT,
+        description: 'The management (primary) account. Do not change the name field for this mandatory account.',
+        email: props.managementAccountEmail,
+        organizationalUnit: 'Root',
+      },
+      {
+        name: AccountsConfig.LOG_ARCHIVE_ACCOUNT,
+        description: 'The log archive account. Do not change the name field for this mandatory account.',
+        email: props.logArchiveAccountEmail,
+        organizationalUnit: 'Security',
+      },
+      {
+        name: AccountsConfig.AUDIT_ACCOUNT,
+        description:
+          'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account.',
+        email: props.auditAccountEmail,
+        organizationalUnit: 'Security',
+      },
+    ];
 
     //
     // Validation errors
@@ -195,7 +200,25 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   static load(dir: string): AccountsConfig {
     const buffer = fs.readFileSync(path.join(dir, AccountsConfig.FILENAME), 'utf8');
     const values = t.parse(AccountsConfigTypes.accountsConfig, yaml.load(buffer));
-    return new AccountsConfig(values);
+
+    const managementAccountEmail =
+      values.mandatoryAccounts.find(value => value.name == AccountsConfig.MANAGEMENT_ACCOUNT)?.email ||
+      '<management-account>@example.com <----- UPDATE EMAIL ADDRESS';
+    const logArchiveAccountEmail =
+      values.mandatoryAccounts.find(value => value.name == AccountsConfig.LOG_ARCHIVE_ACCOUNT)?.email ||
+      '<log-archive>@example.com  <----- UPDATE EMAIL ADDRESS';
+    const auditAccountEmail =
+      values.mandatoryAccounts.find(value => value.name == AccountsConfig.AUDIT_ACCOUNT)?.email ||
+      '<audit>@example.com  <----- UPDATE EMAIL ADDRESS';
+
+    return new AccountsConfig(
+      {
+        managementAccountEmail,
+        logArchiveAccountEmail,
+        auditAccountEmail,
+      },
+      values,
+    );
   }
 
   /**

@@ -37,7 +37,6 @@ export interface DocumentProps {
 
 export class Document extends cdk.Resource implements IDocument {
   readonly documentName: string;
-  static isLogGroupConfigured = false;
 
   constructor(scope: Construct, id: string, props: DocumentProps) {
     super(scope, id);
@@ -54,7 +53,7 @@ export class Document extends cdk.Resource implements IDocument {
     if (props.sharedWithAccountIds.length > 0) {
       const SHARE_SSM_DOCUMENT = 'Custom::SSMShareDocument';
 
-      const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, SHARE_SSM_DOCUMENT, {
+      const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, SHARE_SSM_DOCUMENT, {
         codeDirectory: path.join(__dirname, 'share-document/dist'),
         runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
         policyStatements: [
@@ -74,7 +73,7 @@ export class Document extends cdk.Resource implements IDocument {
 
       const resource = new cdk.CustomResource(this, 'ShareDocument', {
         resourceType: SHARE_SSM_DOCUMENT,
-        serviceToken: customResourceProvider.serviceToken,
+        serviceToken: provider.serviceToken,
         properties: {
           name: this.documentName,
           accountIds: props.sharedWithAccountIds,
@@ -82,25 +81,19 @@ export class Document extends cdk.Resource implements IDocument {
       });
 
       /**
-       * Pre-Creating log group to enable encryption and log retention.
-       * Below construct needs to be static
-       * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+       * Singleton pattern to define the log group for the singleton function
+       * in the stack
        */
-      if (!Document.isLogGroupConfigured) {
-        const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-          logGroupName: `/aws/lambda/${
-            (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
-          }`,
+      const stack = cdk.Stack.of(scope);
+      const logGroup =
+        (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+        new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+          logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
           retention: props.logRetentionInDays,
           encryptionKey: props.kmsKey,
           removalPolicy: cdk.RemovalPolicy.DESTROY,
         });
-
-        resource.node.addDependency(logGroup);
-
-        // Enable the flag to indicate log group configured
-        Document.isLogGroupConfigured = true;
-      }
+      resource.node.addDependency(logGroup);
     }
   }
 }

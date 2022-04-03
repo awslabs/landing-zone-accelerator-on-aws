@@ -29,6 +29,10 @@ export interface SsmParameterLookupProps {
    */
   readonly accountId: string;
   /**
+   * The name of the cross account role to use when accessing
+   */
+  readonly roleName: string;
+  /**
    * Custom resource lambda log group encryption key
    */
   readonly kmsKey?: cdk.aws_kms.Key;
@@ -38,79 +42,41 @@ export interface SsmParameterLookupProps {
   readonly logRetentionInDays?: number;
 }
 
-const CROSS_ACCOUNT_ACCESS_ROLE_NAME = 'AWSAccelerator-CrossAccount-SsmParameter-Role';
-
 /**
  * SsmParameterLookup class - to get ssm parameter value from other account
  */
 export class SsmParameterLookup extends Construct {
   public readonly value: string = '';
 
-  static isLogGroupConfigured = false;
-
   constructor(scope: Construct, id: string, props: SsmParameterLookupProps) {
     super(scope, id);
 
     const RESOURCE_TYPE = 'Custom::SsmGetParameterValue';
 
-    const roleArn = `arn:${cdk.Stack.of(this).partition}:iam::${
-      props.accountId
-    }:role/${CROSS_ACCOUNT_ACCESS_ROLE_NAME}`;
+    const roleArn = `arn:${cdk.Stack.of(this).partition}:iam::${props.accountId}:role/${props.roleName}`;
 
-    const customResourceLambdaFunction = new cdk.aws_lambda.Function(this, 'SsmGetParameterValueFunction', {
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-param-value/dist')),
-      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
-      handler: 'index.handler',
-      description: `Custom resource provider to get ssm parameter ${props.name} value`,
-    });
-
-    /**
-     * Pre-Creating log group to enable encryption and log retention.
-     * Below construct needs to be static
-     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
-     */
-    if (!SsmParameterLookup.isLogGroupConfigured) {
-      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-        logGroupName: `/aws/lambda/${customResourceLambdaFunction.functionName}`,
-        retention: props.logRetentionInDays,
-        encryptionKey: props.kmsKey,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      });
-
-      logGroup.node.addDependency(customResourceLambdaFunction);
-
-      // Enable the flag to indicate log group configured
-      SsmParameterLookup.isLogGroupConfigured = true;
-    }
-
-    const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
-
-    policyStatements.push(
-      new cdk.aws_iam.PolicyStatement({
-        sid: 'SsmGetParameterActions',
-        effect: cdk.aws_iam.Effect.ALLOW,
-        actions: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:DescribeParameters'],
-        resources: ['*'],
-      }),
-      new cdk.aws_iam.PolicyStatement({
-        sid: 'StsAssumeRoleActions',
-        effect: cdk.aws_iam.Effect.ALLOW,
-        actions: ['sts:AssumeRole'],
-        resources: [roleArn],
-      }),
-    );
-
-    policyStatements.forEach(policyStatement => {
-      customResourceLambdaFunction?.addToRolePolicy(policyStatement);
-    });
-
-    const customResourceProvider = new cdk.custom_resources.Provider(this, 'CustomResourceProvider', {
-      onEventHandler: customResourceLambdaFunction,
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
+      codeDirectory: path.join(__dirname, 'get-param-value/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      policyStatements: [
+        {
+          Sid: 'SsmGetParameterActions',
+          Effect: cdk.aws_iam.Effect.ALLOW,
+          Action: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:DescribeParameters'],
+          Resource: ['*'],
+        },
+        {
+          Sid: 'StsAssumeRoleActions',
+          Effect: cdk.aws_iam.Effect.ALLOW,
+          Action: ['sts:AssumeRole'],
+          Resource: [roleArn],
+        },
+      ],
     });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: RESOURCE_TYPE,
-      serviceToken: customResourceProvider.serviceToken,
+      serviceToken: provider.serviceToken,
       properties: {
         region: cdk.Stack.of(this).region,
         parameterAccountID: props.accountId,
@@ -119,6 +85,21 @@ export class SsmParameterLookup extends Construct {
         invokingAccountID: cdk.Stack.of(this).account,
       },
     });
+
+    /**
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
+     */
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+    resource.node.addDependency(logGroup);
 
     this.value = resource.ref;
   }

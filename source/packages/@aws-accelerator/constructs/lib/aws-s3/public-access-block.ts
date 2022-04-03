@@ -41,32 +41,27 @@ export interface S3PublicAccessBlockProps {
 export class S3PublicAccessBlock extends Construct {
   readonly id: string;
 
-  static isLogGroupConfigured = false;
   constructor(scope: Construct, id: string, props: S3PublicAccessBlockProps) {
     super(scope, id);
 
     //
     // Function definition for the custom resource
     //
-    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(
-      this,
-      'Custom::S3PutPublicAccessBlock',
-      {
-        codeDirectory: path.join(__dirname, 'put-public-access-block/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-        policyStatements: [
-          {
-            Effect: 'Allow',
-            Action: ['s3:PutAccountPublicAccessBlock'],
-            Resource: '*',
-          },
-        ],
-      },
-    );
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::S3PutPublicAccessBlock', {
+      codeDirectory: path.join(__dirname, 'put-public-access-block/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      policyStatements: [
+        {
+          Effect: 'Allow',
+          Action: ['s3:PutAccountPublicAccessBlock'],
+          Resource: '*',
+        },
+      ],
+    });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: 'Custom::PutPublicAccessBlock',
-      serviceToken: customResourceProvider.serviceToken,
+      serviceToken: provider.serviceToken,
       properties: {
         blockPublicAcls: props.blockPublicAcls,
         blockPublicPolicy: props.blockPublicPolicy,
@@ -77,25 +72,19 @@ export class S3PublicAccessBlock extends Construct {
     });
 
     /**
-     * Pre-Creating log group to enable encryption and log retention.
-     * Below construct needs to be static
-     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
      */
-    if (!S3PublicAccessBlock.isLogGroupConfigured) {
-      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-        logGroupName: `/aws/lambda/${
-          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
-        }`,
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
         retention: props.logRetentionInDays,
         encryptionKey: props.kmsKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
-
-      resource.node.addDependency(logGroup);
-
-      // Enable the flag to indicate log group configured
-      S3PublicAccessBlock.isLogGroupConfigured = true;
-    }
+    resource.node.addDependency(logGroup);
 
     this.id = resource.ref;
   }

@@ -66,6 +66,21 @@ export class InstallerStack extends cdk.Stack {
     default: 'Yes',
   });
 
+  private readonly managementAccountEmail = new cdk.CfnParameter(this, 'ManagementAccountEmail', {
+    type: 'String',
+    description: 'The management (primary) account email',
+  });
+
+  private readonly logArchiveAccountEmail = new cdk.CfnParameter(this, 'LogArchiveAccountEmail', {
+    type: 'String',
+    description: 'The log archive account email',
+  });
+
+  private readonly auditAccountEmail = new cdk.CfnParameter(this, 'AuditAccountEmail', {
+    type: 'String',
+    description: 'The security audit account (also referred to as the audit account)',
+  });
+
   /**
    * Management Account ID Parameter
    * @private
@@ -100,6 +115,14 @@ export class InstallerStack extends cdk.Stack {
         Label: { default: 'Pipeline Configuration' },
         Parameters: [this.enableApprovalStage.logicalId],
       },
+      {
+        Label: { default: 'Mandatory Accounts Configuration' },
+        Parameters: [
+          this.managementAccountEmail.logicalId,
+          this.logArchiveAccountEmail.logicalId,
+          this.auditAccountEmail.logicalId,
+        ],
+      },
     ];
 
     const repositoryParameterLabels: { [p: string]: { default: string } } = {
@@ -107,6 +130,9 @@ export class InstallerStack extends cdk.Stack {
       [this.repositoryName.logicalId]: { default: 'Repository Name' },
       [this.repositoryBranchName.logicalId]: { default: 'Branch Name' },
       [this.enableApprovalStage.logicalId]: { default: 'Enable Approval Stage' },
+      [this.managementAccountEmail.logicalId]: { default: 'Management Account Email' },
+      [this.logArchiveAccountEmail.logicalId]: { default: 'Log Archive Account Email' },
+      [this.auditAccountEmail.logicalId]: { default: 'Audit Account Email' },
     };
 
     let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
@@ -344,8 +370,12 @@ export class InstallerStack extends cdk.Stack {
               'cd packages/@aws-accelerator/installer',
               `yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel`,
               `if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
-                  export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:aws:iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  
-                  yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${cdk.Aws.REGION} --qualifier accel;
+                  export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:${
+                    cdk.Stack.of(this).partition
+                  }:iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  
+                  yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${
+                    cdk.Aws.REGION
+                  } --qualifier accel;
                   unset AWS_ACCESS_KEY_ID;
                   unset AWS_SECRET_ACCESS_KEY;
                   unset AWS_SESSION_TOKEN;                  
@@ -381,6 +411,18 @@ export class InstallerStack extends cdk.Stack {
           ACCELERATOR_ENABLE_APPROVAL_STAGE: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.enableApprovalStage.valueAsString,
+          },
+          MANAGEMENT_ACCOUNT_EMAIL: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.managementAccountEmail.valueAsString,
+          },
+          LOG_ARCHIVE_ACCOUNT_EMAIL: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.logArchiveAccountEmail.valueAsString,
+          },
+          AUDIT_ACCOUNT_EMAIL: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.auditAccountEmail.valueAsString,
           },
           ...targetAcceleratorEnvVariables,
           ...targetAcceleratorTestEnvVariables,

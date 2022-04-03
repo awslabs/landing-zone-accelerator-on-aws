@@ -30,7 +30,6 @@ export * from './lib/aws-guardduty/guardduty-members';
 export * from './lib/aws-guardduty/guardduty-organization-admin-account';
 export * from './lib/aws-guardduty/guardduty-publishing-destination';
 export * from './lib/aws-iam/password-policy';
-export * from './lib/aws-kms/accelerator-key';
 export * from './lib/aws-kms/key-lookup';
 export * from './lib/aws-macie/macie-export-config-classification';
 export * from './lib/aws-macie/macie-members';

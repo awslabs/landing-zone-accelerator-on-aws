@@ -14,7 +14,6 @@
 import {
   Account,
   EnablePolicyType,
-  KeyLookup,
   Policy,
   PolicyAttachment,
   PolicyType,
@@ -26,6 +25,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { PrepareStack } from './prepare-stack';
 
 export interface AccountsStackProps extends AcceleratorStackProps {
   readonly configDirPath: string;
@@ -36,12 +36,11 @@ export class AccountsStack extends AcceleratorStack {
 
     Logger.debug(`[accounts-stack] homeRegion: ${props.globalConfig.homeRegion}`);
 
-    const auditAccountId = props.accountsConfig.getAuditAccountId();
-
-    const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
-      accountId: cdk.Stack.of(this).account === auditAccountId ? cdk.Stack.of(this).account : auditAccountId,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-    }).getKey();
+    const keyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
+      this,
+      PrepareStack.MANAGEMENT_KEY_ARN_PARAMETER_NAME,
+    );
+    const key = cdk.aws_kms.Key.fromKeyArn(this, 'ManagementKey', keyArn) as cdk.aws_kms.Key;
 
     //
     // Global Organizations actions, only execute in the home region

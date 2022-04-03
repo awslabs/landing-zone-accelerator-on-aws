@@ -40,30 +40,24 @@ export interface EndpointAddressesProps {
 export class EndpointAddresses extends cdk.Resource implements IEndpointAddresses {
   public ipAddresses: cdk.Reference;
 
-  static isLogGroupConfigured = false;
-
   constructor(scope: Construct, id: string, props: EndpointAddressesProps) {
     super(scope, id);
 
-    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(
-      this,
-      'Custom::ResolverEndpointAddresses',
-      {
-        codeDirectory: path.join(__dirname, 'get-endpoint-addresses/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-        policyStatements: [
-          {
-            Effect: 'Allow',
-            Action: ['route53resolver:ListResolverEndpointIpAddresses'],
-            Resource: '*',
-          },
-        ],
-      },
-    );
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::ResolverEndpointAddresses', {
+      codeDirectory: path.join(__dirname, 'get-endpoint-addresses/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      policyStatements: [
+        {
+          Effect: 'Allow',
+          Action: ['route53resolver:ListResolverEndpointIpAddresses'],
+          Resource: '*',
+        },
+      ],
+    });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: 'Custom::ResolverEndpointAddresses',
-      serviceToken: customResourceProvider.serviceToken,
+      serviceToken: provider.serviceToken,
       properties: {
         endpointId: props.endpointId,
         region: cdk.Stack.of(this).region,
@@ -71,25 +65,19 @@ export class EndpointAddresses extends cdk.Resource implements IEndpointAddresse
     });
 
     /**
-     * Pre-Creating log group to enable encryption and log retention.
-     * Below construct needs to be static
-     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
      */
-    if (!EndpointAddresses.isLogGroupConfigured) {
-      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-        logGroupName: `/aws/lambda/${
-          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
-        }`,
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
         retention: props.logRetentionInDays,
         encryptionKey: props.kmsKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
-
-      resource.node.addDependency(logGroup);
-
-      // Enable the flag to indicate log group configured
-      EndpointAddresses.isLogGroupConfigured = true;
-    }
+    resource.node.addDependency(logGroup);
 
     this.ipAddresses = resource.getAtt('ipAddresses');
   }

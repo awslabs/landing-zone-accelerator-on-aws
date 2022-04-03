@@ -42,14 +42,12 @@ export interface EnablePolicyTypeProps {
  * Class to initialize EnablePolicyType
  */
 export class EnablePolicyType extends cdk.Resource {
-  static isLogGroupConfigured = false;
-
   constructor(scope: Construct, id: string, props: EnablePolicyTypeProps) {
     super(scope, id);
 
     const ENABLE_POLICY_TYPE = 'Custom::EnablePolicyType';
 
-    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, ENABLE_POLICY_TYPE, {
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, ENABLE_POLICY_TYPE, {
       codeDirectory: path.join(__dirname, 'enable-policy-type/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
       policyStatements: [
@@ -89,7 +87,7 @@ export class EnablePolicyType extends cdk.Resource {
 
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: ENABLE_POLICY_TYPE,
-      serviceToken: customResourceProvider.serviceToken,
+      serviceToken: provider.serviceToken,
       properties: {
         partition: cdk.Aws.PARTITION,
         policyType: props.policyType,
@@ -97,25 +95,19 @@ export class EnablePolicyType extends cdk.Resource {
     });
 
     /**
-     * Pre-Creating log group to enable encryption and log retention.
-     * Below construct needs to be static
-     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
      */
-    if (!EnablePolicyType.isLogGroupConfigured) {
-      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-        logGroupName: `/aws/lambda/${
-          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
-        }`,
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
         retention: props.logRetentionInDays,
         encryptionKey: props.kmsKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
-
-      resource.node.addDependency(logGroup);
-
-      // Enable the flag to indicate log group configured
-      EnablePolicyType.isLogGroupConfigured = true;
-    }
+    resource.node.addDependency(logGroup);
 
     // this.organizationalUnitId = resource.ref;
     // this.organizationalUnitArn = resource.getAttString('arn');

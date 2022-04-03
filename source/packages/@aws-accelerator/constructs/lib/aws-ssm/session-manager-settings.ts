@@ -26,6 +26,14 @@ export interface SsmSessionManagerSettingsProps {
   readonly sendToS3: boolean;
   readonly sendToCloudWatchLogs: boolean;
   readonly cloudWatchEncryptionEnabled: boolean;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 export class SsmSessionManagerSettings extends Construct {
@@ -222,25 +230,21 @@ export class SsmSessionManagerSettings extends Construct {
     //
     // Function definition for the custom resource
     //
-    const sessionManagerSettingsFunction = cdk.CustomResourceProvider.getOrCreateProvider(
-      this,
-      'Custom::SessionManagerLogging',
-      {
-        codeDirectory: path.join(__dirname, 'session-manager-settings/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-        policyStatements: [
-          {
-            Effect: 'Allow',
-            Action: ['ssm:DescribeDocument', 'ssm:CreateDocument', 'ssm:UpdateDocument'],
-            Resource: '*',
-          },
-        ],
-      },
-    );
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::SessionManagerLogging', {
+      codeDirectory: path.join(__dirname, 'session-manager-settings/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      policyStatements: [
+        {
+          Effect: 'Allow',
+          Action: ['ssm:DescribeDocument', 'ssm:CreateDocument', 'ssm:UpdateDocument'],
+          Resource: '*',
+        },
+      ],
+    });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: 'Custom::SsmSessionManagerSettings',
-      serviceToken: sessionManagerSettingsFunction.serviceToken,
+      serviceToken: provider.serviceToken,
       properties: {
         s3BucketName: props.s3BucketName,
         s3KeyPrefix: props.s3KeyPrefix,
@@ -250,6 +254,22 @@ export class SsmSessionManagerSettings extends Construct {
         kmsKeyId: sessionManagerSessionCmk.keyId,
       },
     });
+
+    /**
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
+     */
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+    resource.node.addDependency(logGroup);
+
     this.id = resource.ref;
   }
 }

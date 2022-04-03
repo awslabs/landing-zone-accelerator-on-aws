@@ -28,6 +28,7 @@ import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { Logger } from '../lib/logger';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
+import { KeyStack } from '../lib/stacks/key-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
 import { NetworkAssociationsStack } from '../lib/stacks/network-associations-stack';
 import { NetworkPrepStack } from '../lib/stacks/network-prep-stack';
@@ -143,6 +144,9 @@ async function main() {
         qualifier: process.env['ACCELERATOR_QUALIFIER'],
         managementAccountId: process.env['MANAGEMENT_ACCOUNT_ID']!,
         managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']!,
+        managementAccountEmail: process.env['MANAGEMENT_ACCOUNT_EMAIL']!,
+        logArchiveAccountEmail: process.env['LOG_ARCHIVE_ACCOUNT_EMAIL']!,
+        auditAccountEmail: process.env['AUDIT_ACCOUNT_EMAIL']!,
       },
     );
   }
@@ -203,32 +207,20 @@ async function main() {
     const auditAccountId = props.accountsConfig.getAuditAccountId();
 
     //
-    // PREPARE Stack execute in Management and Audit account
+    // PREPARE Stack
     //
-    for (const enabledRegion of props.globalConfig.enabledRegions) {
-      let accountId = '';
-      for (const accountItem of [props.accountsConfig.getManagementAccount(), props.accountsConfig.getAuditAccount()]) {
-        try {
-          accountId = props.accountsConfig.getAccountId(accountItem.name);
-        } catch (error) {
-          continue;
-        }
-        const env = {
-          account: accountId,
-          region: enabledRegion,
-        };
-
-        if (includeStage({ stage: AcceleratorStage.PREPARE, account: accountId, region: enabledRegion })) {
-          new PrepareStack(app, `${AcceleratorStackNames[AcceleratorStage.PREPARE]}-${accountId}-${enabledRegion}`, {
-            env,
-            description: `(SO0199) AWS Platform Accelerator - Prepare Stack`,
-            synthesizer: new cdk.DefaultStackSynthesizer({
-              generateBootstrapVersionRule: false,
-            }),
-            ...props,
-          });
-        }
-      }
+    if (includeStage({ stage: AcceleratorStage.PREPARE, account: managementAccountId, region: homeRegion })) {
+      new PrepareStack(app, `${AcceleratorStackNames[AcceleratorStage.PREPARE]}-${managementAccountId}-${homeRegion}`, {
+        env: {
+          account: managementAccountId,
+          region: homeRegion,
+        },
+        description: `(SO0199) AWS Platform Accelerator - Prepare Stack`,
+        synthesizer: new cdk.DefaultStackSynthesizer({
+          generateBootstrapVersionRule: false,
+        }),
+        ...props,
+      });
     }
 
     //
@@ -272,9 +264,20 @@ async function main() {
     }
 
     //
-    // SECURITY AUDIT Stack
+    // KEY and SECURITY AUDIT Stack
     //
     for (const enabledRegion of props.globalConfig.enabledRegions) {
+      if (includeStage({ stage: AcceleratorStage.KEY, account: auditAccountId, region: enabledRegion })) {
+        new KeyStack(app, `${AcceleratorStackNames[AcceleratorStage.KEY]}-${auditAccountId}-${enabledRegion}`, {
+          env: {
+            account: auditAccountId,
+            region: enabledRegion,
+          },
+          description: `(SO0199) AWS Platform Accelerator - Key Stack`,
+          ...props,
+        });
+      }
+
       if (includeStage({ stage: AcceleratorStage.SECURITY_AUDIT, account: auditAccountId, region: enabledRegion })) {
         new SecurityAuditStack(
           app,

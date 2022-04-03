@@ -26,11 +26,12 @@ import {
   MacieExportConfigClassification,
   PasswordPolicy,
   SecurityHubStandards,
-  SsmParameterLookup,
+  // SsmParameterLookup,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { KeyStack } from './key-stack';
 
 enum ACCEL_LOOKUP_TYPE {
   SSM = 'SSM',
@@ -61,10 +62,10 @@ export class SecurityStack extends AcceleratorStack {
     const auditAccountName = props.securityConfig.getDelegatedAccountName();
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
 
-    const auditAccountId = props.accountsConfig.getAuditAccountId();
-
     this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
-      accountId: cdk.Stack.of(this).account === auditAccountId ? cdk.Stack.of(this).account : auditAccountId,
+      accountId: props.accountsConfig.getAuditAccountId(),
+      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+      keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
 
@@ -642,20 +643,24 @@ export class SecurityStack extends AcceleratorStack {
   ): string | undefined {
     const replacementArray = replacement[1].split(':');
     const lookupType = replacementArray[0];
-    if (lookupType === ACCEL_LOOKUP_TYPE.SSM) {
-      if (replacementArray.length === 2) {
-        return new SsmParameterLookup(this, pascalCase(ruleName) + 'SsmParam' + replacementType, {
-          name: replacementArray[1],
-          accountId: this.props.accountsConfig.getAuditAccountId(),
-        }).value;
-      }
 
-      throw new Error(`Config rule replacement key ${replacement.input} not found`);
-    }
+    ruleName;
+    replacementType;
+    // if (lookupType === ACCEL_LOOKUP_TYPE.SSM) {
+    //   if (replacementArray.length === 2) {
+    //     return new SsmParameterLookup(this, pascalCase(ruleName) + 'SsmParam' + replacementType, {
+    //       name: replacementArray[1],
+    //       accountId: this.props.accountsConfig.getAuditAccountId(),
+    //     }).value;
+    //   }
+
+    //   throw new Error(`Config rule replacement key ${replacement.input} not found`);
+    // }
     if (lookupType === ACCEL_LOOKUP_TYPE.KMS) {
       return this.acceleratorKey.keyArn;
     }
 
+    // TODO: This should be pointing at the central-logs bucket
     if (lookupType === ACCEL_LOOKUP_TYPE.Bucket) {
       if (replacementArray.length === 2 && replacementArray[1].toLowerCase() === 'logging'.toLowerCase()) {
         return `aws-accelerator-logs-${this.auditAccountId}-${cdk.Stack.of(this).region}`;

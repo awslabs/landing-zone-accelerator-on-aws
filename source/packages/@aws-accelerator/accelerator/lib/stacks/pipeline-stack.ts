@@ -23,6 +23,9 @@ export interface PipelineStackProps extends cdk.StackProps {
   readonly qualifier?: string;
   readonly managementAccountId?: string;
   readonly managementAccountRoleName?: string;
+  readonly managementAccountEmail: string;
+  readonly logArchiveAccountEmail: string;
+  readonly auditAccountEmail: string;
 }
 
 export class PipelineStack extends cdk.Stack {
@@ -41,12 +44,7 @@ export class PipelineStack extends cdk.Stack {
 
     // TODO: Add event to launch the Pipeline for new account events
     new pipeline.AcceleratorPipeline(this, 'Pipeline', {
-      sourceRepositoryName: props.sourceRepositoryName,
-      sourceBranchName: props.sourceBranchName,
-      enableApprovalStage: props.enableApprovalStage,
-      qualifier: props.qualifier,
-      managementAccountId: props.managementAccountId,
-      managementAccountRoleName: props.managementAccountRoleName,
+      ...props,
     });
   }
 }

@@ -53,6 +53,7 @@ import {
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { KeyStack } from './key-stack';
 
 export interface SecurityGroupRuleProps {
   ipProtocol: string;
@@ -82,14 +83,15 @@ export class NetworkVpcStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
+    this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
+      accountId: props.accountsConfig.getAuditAccountId(),
+      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+      keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
+
     // Get the organization object, used by Data Protection
     const organization = new Organization(this, 'Organization');
-
-    const auditAccountId = props.accountsConfig.getAuditAccountId();
-
-    this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
-      accountId: cdk.Stack.of(this).account === auditAccountId ? cdk.Stack.of(this).account : auditAccountId,
-    }).getKey();
 
     //
     // Delete Default VPCs

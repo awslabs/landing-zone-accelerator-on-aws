@@ -86,9 +86,6 @@ export class Policy extends Construct {
   public readonly type: PolicyType;
   public readonly tags?: Tag[];
 
-  // TODO in future change will need to investigate why log group already exists error comes. for now it is disabling the log group creation
-  static isLogGroupConfigured = true;
-
   constructor(scope: Construct, id: string, props: PolicyProps) {
     super(scope, id);
 
@@ -108,33 +105,29 @@ export class Policy extends Construct {
     //
     // Function definition for the custom resource
     //
-    const createPolicyFunction = cdk.CustomResourceProvider.getOrCreateProvider(
-      this,
-      'Custom::OrganizationsCreatePolicy',
-      {
-        codeDirectory: path.join(__dirname, 'create-policy/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-        policyStatements: [
-          {
-            Effect: 'Allow',
-            Action: ['organizations:CreatePolicy', 'organizations:ListPolicies', 'organizations:UpdatePolicy'],
-            Resource: '*',
-          },
-          {
-            Effect: 'Allow',
-            Action: ['s3:GetObject'],
-            Resource: cdk.Stack.of(this).formatArn({
-              service: 's3',
-              region: '',
-              account: '',
-              resource: asset.s3BucketName,
-              arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
-              resourceName: '*',
-            }),
-          },
-        ],
-      },
-    );
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsCreatePolicy', {
+      codeDirectory: path.join(__dirname, 'create-policy/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      policyStatements: [
+        {
+          Effect: 'Allow',
+          Action: ['organizations:CreatePolicy', 'organizations:ListPolicies', 'organizations:UpdatePolicy'],
+          Resource: '*',
+        },
+        {
+          Effect: 'Allow',
+          Action: ['s3:GetObject'],
+          Resource: cdk.Stack.of(this).formatArn({
+            service: 's3',
+            region: '',
+            account: '',
+            resource: asset.s3BucketName,
+            arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
+            resourceName: '*',
+          }),
+        },
+      ],
+    });
 
     //
     // Custom Resource definition. We want this resource to be evaluated on
@@ -143,7 +136,7 @@ export class Policy extends Construct {
     //
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: 'Custom::CreatePolicy',
-      serviceToken: createPolicyFunction.serviceToken,
+      serviceToken: provider.serviceToken,
       properties: {
         bucket: asset.s3BucketName,
         key: asset.s3ObjectKey,
@@ -158,25 +151,19 @@ export class Policy extends Construct {
     });
 
     /**
-     * Pre-Creating log group to enable encryption and log retention.
-     * Below construct needs to be static
-     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
      */
-    if (!Policy.isLogGroupConfigured) {
-      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-        logGroupName: `/aws/lambda/${
-          (createPolicyFunction.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
-        }`,
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
         retention: props.logRetentionInDays,
         encryptionKey: props.kmsKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
-
-      resource.node.addDependency(logGroup);
-
-      // Enable the flag to indicate log group configured
-      Policy.isLogGroupConfigured = true;
-    }
+    resource.node.addDependency(logGroup);
 
     this.id = resource.ref;
   }
