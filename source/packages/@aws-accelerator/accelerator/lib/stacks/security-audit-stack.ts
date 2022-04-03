@@ -32,17 +32,20 @@ import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
+import { KeyStack } from './key-stack';
 
 export class SecurityAuditStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    const organization = new Organization(this, 'Organization');
-
     const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
       accountId: props.accountsConfig.getAuditAccountId(),
+      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+      keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
+
+    const organization = new Organization(this, 'Organization');
 
     //
     // Macie configuration

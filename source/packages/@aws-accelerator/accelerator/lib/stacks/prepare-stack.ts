@@ -16,19 +16,17 @@ import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { ValidateEnvironmentConfig } from '../validate-environment-config';
 import {
-  AcceleratorKey,
-  Bucket,
-  BucketEncryptionType,
   CreateControlTowerAccounts,
   CreateOrganizationAccounts,
   GetPortfolioId,
-  Organization,
   OrganizationalUnit,
 } from '@aws-accelerator/constructs';
 import { Logger } from '../logger';
 import { pascalCase } from 'change-case';
 
 export class PrepareStack extends AcceleratorStack {
+  public static readonly MANAGEMENT_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
+
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
     if (
@@ -41,14 +39,49 @@ export class PrepareStack extends AcceleratorStack {
         stringValue: 'value',
       });
 
-      const key = new AcceleratorKey(this, 'ManagementKey', {
+      const key = new cdk.aws_kms.Key(this, 'ManagementKey', {
         alias: 'alias/accelerator/management/kms/key',
         description: 'AWS Accelerator Management Account Kms Key',
-        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-      }).getKey();
+        enableKeyRotation: true,
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+      });
+
+      // Allow Accelerator Role to use the encryption key
+      key.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: `Allow Accelerator Role in this account to use the encryption key`,
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+          resources: ['*'],
+          conditions: {
+            ArnLike: {
+              'aws:PrincipalARN': [
+                `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/AWSAccelerator-*`,
+              ],
+            },
+          },
+        }),
+      );
+
+      // Allow Cloudwatch logs to use the encryption key
+      key.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: `Allow Cloudwatch logs to use the encryption key`,
+          principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+          actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
+          resources: ['*'],
+          conditions: {
+            ArnLike: {
+              'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
+                cdk.Stack.of(this).region
+              }:${cdk.Stack.of(this).account}:log-group:*`,
+            },
+          },
+        }),
+      );
 
       new cdk.aws_ssm.StringParameter(this, 'AcceleratorManagementKmsArnParameter', {
-        parameterName: '/accelerator/management/kms/key-arn',
+        parameterName: PrepareStack.MANAGEMENT_KEY_ARN_PARAMETER_NAME,
         stringValue: key.keyArn,
       });
 
@@ -107,7 +140,7 @@ export class PrepareStack extends AcceleratorStack {
         if (props.accountsConfig.anyGovCloudAccounts()) {
           Logger.info(`[prepare-stack] Create GovCloudAccountsMappingTable`);
           govCloudAccountMappingTable = new cdk.aws_dynamodb.Table(this, 'govCloudAccountMapping', {
-            partitionKey: { name: 'commericalAccountId', type: cdk.aws_dynamodb.AttributeType.STRING },
+            partitionKey: { name: 'commercialAccountId', type: cdk.aws_dynamodb.AttributeType.STRING },
             billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
             encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
             encryptionKey: key,
@@ -233,91 +266,6 @@ export class PrepareStack extends AcceleratorStack {
           controlTowerAccounts.node.addDependency(organizationAccounts);
         }
       }
-    }
-    // Execute in Audit account to create Accelerator KMS Key
-    if (cdk.Stack.of(this).account === props.accountsConfig.getAuditAccountId()) {
-      Logger.debug(`[prepare-stack] Region: ${cdk.Stack.of(this).region}`);
-      const organizationId = new Organization(this, 'Organization').id;
-
-      if (cdk.Stack.of(this).region === props.globalConfig.homeRegion) {
-        // IAM Role to get access to accelerator organization level SSM parameters
-        new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
-          roleName: 'AWSAccelerator-CrossAccount-SsmParameter-Role',
-          assumedBy: new cdk.aws_iam.OrganizationPrincipal(organizationId),
-          inlinePolicies: {
-            default: new cdk.aws_iam.PolicyDocument({
-              statements: [
-                new cdk.aws_iam.PolicyStatement({
-                  effect: cdk.aws_iam.Effect.ALLOW,
-                  actions: ['ssm:GetParameters', 'ssm:GetParameter'],
-                  resources: [
-                    `arn:${cdk.Stack.of(this).partition}:ssm:*:${
-                      cdk.Stack.of(this).account
-                    }:parameter/accelerator/kms/*`,
-                  ],
-                  conditions: {
-                    StringEquals: {
-                      'aws:PrincipalOrgID': organizationId,
-                    },
-                    ArnLike: {
-                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
-                    },
-                  },
-                }),
-                new cdk.aws_iam.PolicyStatement({
-                  effect: cdk.aws_iam.Effect.ALLOW,
-                  actions: ['ssm:DescribeParameters'],
-                  resources: ['*'],
-                  conditions: {
-                    StringEquals: {
-                      'aws:PrincipalOrgID': organizationId,
-                    },
-                    ArnLike: {
-                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
-                    },
-                  },
-                }),
-              ],
-            }),
-          },
-        });
-      }
-
-      // TODO Isn't there a better way to grant to all AWS services through a condition?
-      const allowedServicePrincipals: { name: string; principal: string }[] = [
-        { name: 'Sns', principal: 'sns.amazonaws.com' },
-        { name: 'Lambda', principal: 'lambda.amazonaws.com' },
-        { name: 'Cloudwatch', principal: 'cloudwatch.amazonaws.com' },
-        // Add similar objects for any other service principal needs access to this key
-      ];
-      if (props.securityConfig.centralSecurityServices.macie.enable) {
-        allowedServicePrincipals.push({ name: 'Macie', principal: 'macie.amazonaws.com' });
-      }
-      if (props.securityConfig.centralSecurityServices.guardduty.enable) {
-        allowedServicePrincipals.push({ name: 'Guardduty', principal: 'guardduty.amazonaws.com' });
-      }
-
-      const acceleratorKey = new AcceleratorKey(this, 'AcceleratorKey', {
-        allowedServicePrincipals: allowedServicePrincipals,
-        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-      }).getKey();
-
-      new cdk.aws_ssm.StringParameter(this, 'AcceleratorKmsArnParameter', {
-        parameterName: '/accelerator/kms/key-arn',
-        stringValue: acceleratorKey.keyArn,
-      });
-
-      // Create Accelerator logging bucket
-      const bucket = new Bucket(this, 'AcceleratorLoggingBucket', {
-        encryptionType: BucketEncryptionType.SSE_KMS,
-        s3BucketName: `aws-accelerator-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
-        kmsKey: acceleratorKey,
-      });
-
-      new cdk.aws_ssm.StringParameter(this, 'AcceleratorLoggingBucketNameParameter', {
-        parameterName: '/accelerator/logging/bucket/name',
-        stringValue: bucket.getS3Bucket().bucketName,
-      });
     }
   }
 }

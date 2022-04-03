@@ -394,7 +394,7 @@ export class NetworkConfigTypes {
 }
 
 export class DefaultVpcsConfig implements t.TypeOf<typeof NetworkConfigTypes.defaultVpcsConfig> {
-  readonly delete = true;
+  readonly delete = false;
   readonly excludeAccounts = [];
 }
 

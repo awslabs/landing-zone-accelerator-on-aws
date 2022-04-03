@@ -16,6 +16,7 @@ import * as yaml from 'js-yaml';
 import * as path from 'path';
 
 import * as t from './common-types';
+import { Region } from './common-types';
 
 /**
  * Global configuration items.
@@ -152,19 +153,19 @@ export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingC
 }
 
 export class IdentityPerimeterConfig implements t.TypeOf<typeof GlobalConfigTypes.identityPerimeterConfig> {
-  readonly enable = true;
+  readonly enable = false;
 }
 
 export class ResourcePerimeterConfig implements t.TypeOf<typeof GlobalConfigTypes.resourcePerimeterConfig> {
-  readonly enable = true;
+  readonly enable = false;
 }
 
 export class NetworkPerimeterConfig implements t.TypeOf<typeof GlobalConfigTypes.networkPerimeterConfig> {
-  readonly enable = true;
+  readonly enable = false;
 }
 
 export class DataProtectionConfig implements t.TypeOf<typeof GlobalConfigTypes.dataProtectionConfig> {
-  readonly enable = true;
+  readonly enable = false;
   readonly identityPerimeter = new IdentityPerimeterConfig();
   readonly resourcePerimeter = new ResourcePerimeterConfig();
   readonly networkPerimeter = new NetworkPerimeterConfig();
@@ -220,8 +221,8 @@ export class ReportConfig implements t.TypeOf<typeof GlobalConfigTypes.reportCon
 export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalConfig> {
   static readonly FILENAME = 'global-config.yaml';
 
-  readonly homeRegion = '';
-  readonly enabledRegions = [];
+  readonly homeRegion: string;
+  readonly enabledRegions: t.Region[];
 
   /**
    * This role trusts the management account, allowing users in the management
@@ -247,9 +248,31 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *
    * @param values
    */
-  constructor(values?: t.TypeOf<typeof GlobalConfigTypes.globalConfig>) {
+  constructor(
+    props: {
+      homeRegion: string;
+    },
+    values?: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+  ) {
     if (values) {
       Object.assign(this, values);
+    }
+
+    this.homeRegion = props.homeRegion;
+    this.enabledRegions = [props.homeRegion as Region];
+
+    //
+    // Validation errors
+    //
+    const errors: string[] = [];
+
+    // const accountNames = [...this.mandatoryAccounts, ...this.workloadAccounts].map(item => item.name);
+    // if (new Set(accountNames).size !== accountNames.length) {
+    //   errors.push(`Duplicate account names defined [${accountNames}].`);
+    // }
+
+    if (errors.length) {
+      throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
     }
   }
 
@@ -261,7 +284,15 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   static load(dir: string): GlobalConfig {
     const buffer = fs.readFileSync(path.join(dir, GlobalConfig.FILENAME), 'utf8');
     const values = t.parse(GlobalConfigTypes.globalConfig, yaml.load(buffer));
-    return new GlobalConfig(values);
+
+    const homeRegion = values.homeRegion;
+
+    return new GlobalConfig(
+      {
+        homeRegion,
+      },
+      values,
+    );
   }
 
   /**

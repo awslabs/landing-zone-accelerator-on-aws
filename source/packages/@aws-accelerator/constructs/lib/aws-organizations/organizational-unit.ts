@@ -48,15 +48,13 @@ export class OrganizationalUnit extends cdk.Resource implements IOrganizationalU
   public readonly organizationalUnitId: string;
   public readonly organizationalUnitArn: string;
 
-  static isLogGroupConfigured = false;
-
   constructor(scope: Construct, id: string, props: OrganizationalUnitProps) {
     super(scope, id);
 
     this.organizationalUnitName = props.name;
     this.organizationalUnitPath = props.path;
 
-    const createOrganizationalUnitFunction = cdk.CustomResourceProvider.getOrCreateProvider(
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(
       this,
       'Custom::OrganizationsCreateOrganizationalUnit',
       {
@@ -79,7 +77,7 @@ export class OrganizationalUnit extends cdk.Resource implements IOrganizationalU
 
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: 'Custom::CreateOrganizationalUnit',
-      serviceToken: createOrganizationalUnitFunction.serviceToken,
+      serviceToken: provider.serviceToken,
       properties: {
         partition: cdk.Aws.PARTITION,
         name: props.name,
@@ -88,25 +86,19 @@ export class OrganizationalUnit extends cdk.Resource implements IOrganizationalU
     });
 
     /**
-     * Pre-Creating log group to enable encryption and log retention.
-     * Below construct needs to be static
-     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
      */
-    if (!OrganizationalUnit.isLogGroupConfigured) {
-      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-        logGroupName: `/aws/lambda/${
-          (createOrganizationalUnitFunction.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
-        }`,
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
         retention: props.logRetentionInDays,
         encryptionKey: props.kmsKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
-
-      resource.node.addDependency(logGroup);
-
-      // Enable the flag to indicate log group configured
-      OrganizationalUnit.isLogGroupConfigured = true;
-    }
+    resource.node.addDependency(logGroup);
 
     this.organizationalUnitId = resource.ref;
     this.organizationalUnitArn = resource.getAttString('arn');

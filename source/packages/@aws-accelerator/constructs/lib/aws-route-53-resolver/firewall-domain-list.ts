@@ -74,8 +74,6 @@ export class ResolverFirewallDomainList extends cdk.Resource implements IResolve
   public readonly listArn?: string;
   private assetUrl?: string;
 
-  static isLogGroupConfigured = false;
-
   constructor(scope: Construct, id: string, props: ResolverFirewallDomainListProps) {
     super(scope, id);
 
@@ -102,7 +100,7 @@ export class ResolverFirewallDomainList extends cdk.Resource implements IResolve
       // Create custom resource provider
       const RESOURCE_TYPE = 'Custom::ResolverManagedDomainList';
 
-      const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
+      const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
         codeDirectory: path.join(__dirname, 'get-domain-lists/dist'),
         runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
         policyStatements: [
@@ -117,7 +115,7 @@ export class ResolverFirewallDomainList extends cdk.Resource implements IResolve
       // Get managed domain list ID
       const resource = new cdk.CustomResource(this, 'Resource', {
         resourceType: RESOURCE_TYPE,
-        serviceToken: customResourceProvider.serviceToken,
+        serviceToken: provider.serviceToken,
         properties: {
           listName: props.name,
           region: cdk.Stack.of(this).region,
@@ -125,25 +123,19 @@ export class ResolverFirewallDomainList extends cdk.Resource implements IResolve
       });
 
       /**
-       * Pre-Creating log group to enable encryption and log retention.
-       * Below construct needs to be static
-       * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+       * Singleton pattern to define the log group for the singleton function
+       * in the stack
        */
-      if (!ResolverFirewallDomainList.isLogGroupConfigured) {
-        const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-          logGroupName: `/aws/lambda/${
-            (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
-          }`,
+      const stack = cdk.Stack.of(scope);
+      const logGroup =
+        (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+        new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+          logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
           retention: props.logRetentionInDays,
           encryptionKey: props.kmsKey,
           removalPolicy: cdk.RemovalPolicy.DESTROY,
         });
-
-        resource.node.addDependency(logGroup);
-
-        // Enable the flag to indicate log group configured
-        ResolverFirewallDomainList.isLogGroupConfigured = true;
-      }
+      resource.node.addDependency(logGroup);
 
       this.listId = resource.ref;
     }

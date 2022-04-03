@@ -30,6 +30,7 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.PIPELINE]: 'AWSAccelerator-PipelineStack',
   [AcceleratorStage.TESTER_PIPELINE]: 'AWSAccelerator-TesterPipelineStack',
   [AcceleratorStage.ORGANIZATIONS]: 'AWSAccelerator-OrganizationsStack',
+  [AcceleratorStage.KEY]: 'AWSAccelerator-KeyStack',
   [AcceleratorStage.LOGGING]: 'AWSAccelerator-LoggingStack',
   [AcceleratorStage.ACCOUNTS]: 'AWSAccelerator-AccountsStack',
   [AcceleratorStage.DEPENDENCIES]: 'AWSAccelerator-DependenciesStack',
@@ -206,31 +207,18 @@ export abstract class Accelerator {
       });
     }
 
-    //
-    // PREPARE stage execute in Management and Audit account
-    //
     if (props.stage === AcceleratorStage.PREPARE) {
-      for (const region of globalConfig.enabledRegions) {
-        for (const account of [accountsConfig.getManagementAccount(), accountsConfig.getAuditAccount()]) {
-          Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
-          await delay(1000);
-          promises.push(
-            AcceleratorToolkit.execute({
-              command: props.command,
-              accountId: accountsConfig.getAccountId(account.name),
-              region,
-              partition: props.partition,
-              stage: props.stage,
-              configDirPath: props.configDirPath,
-              requireApproval: props.requireApproval,
-              app: props.app,
-            }),
-          );
-          if (promises.length >= maxStacks) {
-            await Promise.all(promises);
-          }
-        }
-      }
+      Logger.info(`[accelerator] Executing ${props.stage} for Management account.`);
+      await AcceleratorToolkit.execute({
+        command: props.command,
+        accountId: accountsConfig.getManagementAccountId(),
+        region: globalConfig.homeRegion,
+        partition: props.partition,
+        stage: props.stage,
+        configDirPath: props.configDirPath,
+        requireApproval: props.requireApproval,
+        app: props.app,
+      });
     }
 
     if (props.stage === AcceleratorStage.ORGANIZATIONS) {
@@ -255,7 +243,7 @@ export abstract class Accelerator {
       }
     }
 
-    if (props.stage === AcceleratorStage.SECURITY_AUDIT) {
+    if (props.stage === AcceleratorStage.KEY || props.stage === AcceleratorStage.SECURITY_AUDIT) {
       for (const region of globalConfig.enabledRegions) {
         Logger.info(`[accelerator] Executing ${props.stage} for audit account in ${region} region.`);
         await delay(1000);

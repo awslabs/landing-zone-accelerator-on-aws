@@ -21,13 +21,16 @@ import { SsmParameterLookup } from '../aws-ssm/ssm-parameter-lookup';
 export interface KeyLookupProps {
   /**
    * SSM parameter name where key arn is stored
-   * @default /accelerator/kms/key-arn
    */
-  readonly keyArnParameterName?: string;
+  readonly keyArnParameterName: string;
   /**
    * Key account id
    */
   readonly accountId: string;
+  /**
+   * The name of the cross account role to use when accessing
+   */
+  readonly roleName: string;
   /**
    * Custom resource lambda log group encryption key
    */
@@ -49,21 +52,19 @@ export class KeyLookup extends Construct {
 
     let keyArn: string | undefined;
     if (cdk.Stack.of(this).account === props.accountId) {
-      keyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        props.keyArnParameterName ?? '/accelerator/kms/key-arn',
-      );
+      keyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(this, props.keyArnParameterName);
     } else {
-      keyArn = new SsmParameterLookup(this, 'AcceleratorKmsKeyArn', {
-        name: props.keyArnParameterName ?? '/accelerator/kms/key-arn',
+      keyArn = new SsmParameterLookup(this, 'Lookup', {
+        name: props.keyArnParameterName,
         accountId: props.accountId,
+        roleName: props.roleName,
         kmsKey: props.kmsKey,
         logRetentionInDays: props.logRetentionInDays,
       }).value;
     }
 
     // Accelerator Key
-    this.key = cdk.aws_kms.Key.fromKeyArn(this, 'AcceleratorKey', keyArn!) as cdk.aws_kms.Key;
+    this.key = cdk.aws_kms.Key.fromKeyArn(this, 'Resource', keyArn!) as cdk.aws_kms.Key;
   }
 
   public getKey(): cdk.aws_kms.Key {

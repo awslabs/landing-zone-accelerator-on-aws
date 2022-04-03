@@ -27,23 +27,24 @@ import {
 } from '@aws-accelerator/constructs';
 
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { KeyStack } from './key-stack';
 
 export class LoggingStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
+      accountId: props.accountsConfig.getAuditAccountId(),
+      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+      keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
 
     let organizationId: string | undefined = undefined;
     if (props.organizationConfig.enable) {
       const organization = new Organization(this, 'Organization');
       organizationId = organization.id;
     }
-
-    const auditAccountId = props.accountsConfig.getAuditAccountId();
-
-    const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
-      accountId: cdk.Stack.of(this).account === auditAccountId ? cdk.Stack.of(this).account : auditAccountId,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-    }).getKey();
 
     //
     // Block Public Access; S3 is global, only need to call in home region. This is done in the
@@ -53,15 +54,17 @@ export class LoggingStack extends AcceleratorStack {
       cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
       !this.isAccountExcluded(props.securityConfig.centralSecurityServices.s3PublicAccessBlock.excludeAccounts)
     ) {
-      new S3PublicAccessBlock(this, 'S3PublicAccessBlock', {
-        blockPublicAcls: true,
-        blockPublicPolicy: true,
-        ignorePublicAcls: true,
-        restrictPublicBuckets: true,
-        accountId: cdk.Stack.of(this).account,
-        kmsKey: key,
-        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-      });
+      if (props.securityConfig.centralSecurityServices.s3PublicAccessBlock.enable) {
+        new S3PublicAccessBlock(this, 'S3PublicAccessBlock', {
+          blockPublicAcls: true,
+          blockPublicPolicy: true,
+          ignorePublicAcls: true,
+          restrictPublicBuckets: true,
+          accountId: cdk.Stack.of(this).account,
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+        });
+      }
     }
 
     //
@@ -121,7 +124,7 @@ export class LoggingStack extends AcceleratorStack {
       });
     }
 
-    if (props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption) {
+    if (props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable) {
       // create service linked role for autoscaling
       // if ebs default encryption enabled and using a customer master key
       new iam.CfnServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
@@ -157,6 +160,8 @@ export class LoggingStack extends AcceleratorStack {
           sendToS3: props.globalConfig.logging.sessionManager.sendToS3,
           cloudWatchEncryptionEnabled:
             props.partition !== 'aws-us-gov' && props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
       }
     }

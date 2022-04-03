@@ -44,6 +44,7 @@ import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { pascalCase } from 'pascal-case';
+import { KeyStack } from './key-stack';
 
 export interface OrganizationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
@@ -59,10 +60,10 @@ export class OrganizationsStack extends AcceleratorStack {
 
     Logger.debug(`[organizations-stack] homeRegion: ${props.globalConfig.homeRegion}`);
 
-    const auditAccountId = props.accountsConfig.getAuditAccountId();
-
     const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
-      accountId: cdk.Stack.of(this).account === auditAccountId ? cdk.Stack.of(this).account : auditAccountId,
+      accountId: props.accountsConfig.getAuditAccountId(),
+      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+      keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
 

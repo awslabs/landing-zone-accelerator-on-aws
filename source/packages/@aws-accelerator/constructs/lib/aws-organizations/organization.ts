@@ -25,25 +25,21 @@ export class Organization extends Construct {
   public constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    const describeOrganizationFunction = cdk.CustomResourceProvider.getOrCreateProvider(
-      this,
-      'Custom::OrganizationsDescribeOrganization',
-      {
-        codeDirectory: path.join(__dirname, 'describe-organization/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-        policyStatements: [
-          {
-            Effect: 'Allow',
-            Action: ['organizations:DescribeOrganization'],
-            Resource: '*',
-          },
-        ],
-      },
-    );
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsDescribeOrganization', {
+      codeDirectory: path.join(__dirname, 'describe-organization/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      policyStatements: [
+        {
+          Effect: 'Allow',
+          Action: ['organizations:DescribeOrganization'],
+          Resource: '*',
+        },
+      ],
+    });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: 'Custom::DescribeOrganization',
-      serviceToken: describeOrganizationFunction.serviceToken,
+      serviceToken: provider.serviceToken,
       properties: {
         partition: cdk.Aws.PARTITION,
       },

@@ -98,14 +98,13 @@ export abstract class ResourceShareItem extends core.Resource implements IResour
     class Import extends core.Resource implements IResourceShareItem {
       public readonly resourceShareItemId: string;
 
-      static isLogGroupConfigured = false;
       constructor(scope: Construct, id: string) {
         super(scope, id);
 
         console.log(options.resourceShare.resourceShareId);
         const GET_RESOURCE_SHARE_ITEM = 'Custom::GetResourceShareItem';
 
-        const customResourceProvider = core.CustomResourceProvider.getOrCreateProvider(this, GET_RESOURCE_SHARE_ITEM, {
+        const provider = core.CustomResourceProvider.getOrCreateProvider(this, GET_RESOURCE_SHARE_ITEM, {
           codeDirectory: path.join(__dirname, 'get-resource-share-item/dist'),
           runtime: core.CustomResourceProviderRuntime.NODEJS_14_X,
           policyStatements: [
@@ -119,7 +118,7 @@ export abstract class ResourceShareItem extends core.Resource implements IResour
 
         const resource = new core.CustomResource(this, 'Resource', {
           resourceType: GET_RESOURCE_SHARE_ITEM,
-          serviceToken: customResourceProvider.serviceToken,
+          serviceToken: provider.serviceToken,
           properties: {
             resourceOwner: options.resourceShare.resourceShareOwner,
             resourceShareArn: options.resourceShare.resourceShareArn,
@@ -129,25 +128,19 @@ export abstract class ResourceShareItem extends core.Resource implements IResour
         });
 
         /**
-         * Pre-Creating log group to enable encryption and log retention.
-         * Below construct needs to be static
-         * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+         * Singleton pattern to define the log group for the singleton function
+         * in the stack
          */
-        if (!Import.isLogGroupConfigured) {
-          const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-            logGroupName: `/aws/lambda/${
-              (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
-            }`,
+        const stack = cdk.Stack.of(scope);
+        const logGroup =
+          (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+          new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+            logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
             retention: options.logRetentionInDays,
             encryptionKey: options.kmsKey,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
           });
-
-          resource.node.addDependency(logGroup);
-
-          // Enable the flag to indicate log group configured
-          Import.isLogGroupConfigured = true;
-        }
+        resource.node.addDependency(logGroup);
 
         this.resourceShareItemId = resource.ref;
       }

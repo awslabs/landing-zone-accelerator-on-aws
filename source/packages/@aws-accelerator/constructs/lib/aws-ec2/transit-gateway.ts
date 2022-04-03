@@ -109,32 +109,26 @@ export class TransitGatewayAttachment extends cdk.Resource implements ITransitGa
       public readonly transitGatewayAttachmentId: string;
       public readonly transitGatewayAttachmentName = options.name;
 
-      static isLogGroupConfigured = false;
-
       constructor(scope: Construct, id: string) {
         super(scope, id);
 
         const GET_TRANSIT_GATEWAY_ATTACHMENT = 'Custom::GetTransitGatewayAttachment';
 
-        const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(
-          this,
-          GET_TRANSIT_GATEWAY_ATTACHMENT,
-          {
-            codeDirectory: path.join(__dirname, 'get-transit-gateway-attachment/dist'),
-            runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-            policyStatements: [
-              {
-                Effect: 'Allow',
-                Action: ['sts:AssumeRole'],
-                Resource: '*',
-              },
-            ],
-          },
-        );
+        const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, GET_TRANSIT_GATEWAY_ATTACHMENT, {
+          codeDirectory: path.join(__dirname, 'get-transit-gateway-attachment/dist'),
+          runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+          policyStatements: [
+            {
+              Effect: 'Allow',
+              Action: ['sts:AssumeRole'],
+              Resource: '*',
+            },
+          ],
+        });
 
         const resource = new cdk.CustomResource(this, 'Resource', {
           resourceType: GET_TRANSIT_GATEWAY_ATTACHMENT,
-          serviceToken: customResourceProvider.serviceToken,
+          serviceToken: provider.serviceToken,
           properties: {
             name: options.name,
             transitGatewayId: options.transitGatewayId,
@@ -151,25 +145,19 @@ export class TransitGatewayAttachment extends cdk.Resource implements ITransitGa
         });
 
         /**
-         * Pre-Creating log group to enable encryption and log retention.
-         * Below construct needs to be static
-         * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+         * Singleton pattern to define the log group for the singleton function
+         * in the stack
          */
-        if (!Import.isLogGroupConfigured) {
-          const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-            logGroupName: `/aws/lambda/${
-              (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
-            }`,
+        const stack = cdk.Stack.of(scope);
+        const logGroup =
+          (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+          new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+            logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
             retention: options.logRetentionInDays,
             encryptionKey: options.kmsKey,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
           });
-
-          resource.node.addDependency(logGroup);
-
-          // Enable the flag to indicate log group configured
-          Import.isLogGroupConfigured = true;
-        }
+        resource.node.addDependency(logGroup);
 
         this.transitGatewayAttachmentId = resource.ref;
       }

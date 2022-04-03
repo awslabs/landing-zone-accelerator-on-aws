@@ -56,8 +56,6 @@ export interface ValidateEnvironmentConfigProps {
 export class ValidateEnvironmentConfig extends Construct {
   public readonly id: string;
 
-  static isLogGroupConfigured = false;
-
   constructor(scope: Construct, id: string, props: ValidateEnvironmentConfigProps) {
     super(scope, id);
 
@@ -66,35 +64,31 @@ export class ValidateEnvironmentConfig extends Construct {
     //
     // Function definition for the custom resource
     //
-    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(
-      this,
-      VALIDATE_ENVIRONMENT_RESOURCE_TYPE,
-      {
-        codeDirectory: path.join(__dirname, 'lambdas/validate-environment/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-        timeout: Duration.minutes(10),
-        policyStatements: [
-          {
-            Sid: 'organizations',
-            Effect: 'Allow',
-            Action: ['organizations:ListAccounts', 'servicecatalog:SearchProvisionedProducts'],
-            Resource: '*',
-          },
-          {
-            Sid: 'dynamodb',
-            Effect: 'Allow',
-            Action: ['dynamodb:PutItem'],
-            Resource: [props.newOrgAccountsTable.tableArn, props.newCTAccountsTable?.tableArn],
-          },
-          {
-            Sid: 'kms',
-            Effect: 'Allow',
-            Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
-            Resource: [props.newOrgAccountsTable.encryptionKey?.keyArn, props.newCTAccountsTable.encryptionKey?.keyArn],
-          },
-        ],
-      },
-    );
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, VALIDATE_ENVIRONMENT_RESOURCE_TYPE, {
+      codeDirectory: path.join(__dirname, 'lambdas/validate-environment/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      timeout: Duration.minutes(10),
+      policyStatements: [
+        {
+          Sid: 'organizations',
+          Effect: 'Allow',
+          Action: ['organizations:ListAccounts', 'servicecatalog:SearchProvisionedProducts'],
+          Resource: '*',
+        },
+        {
+          Sid: 'dynamodb',
+          Effect: 'Allow',
+          Action: ['dynamodb:PutItem'],
+          Resource: [props.newOrgAccountsTable.tableArn, props.newCTAccountsTable?.tableArn],
+        },
+        {
+          Sid: 'kms',
+          Effect: 'Allow',
+          Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+          Resource: [props.newOrgAccountsTable.encryptionKey?.keyArn, props.newCTAccountsTable.encryptionKey?.keyArn],
+        },
+      ],
+    });
 
     //
     // Custom Resource definition. We want this resource to be evaluated on
@@ -103,7 +97,7 @@ export class ValidateEnvironmentConfig extends Construct {
     //
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: VALIDATE_ENVIRONMENT_RESOURCE_TYPE,
-      serviceToken: customResourceProvider.serviceToken,
+      serviceToken: provider.serviceToken,
       properties: {
         workloadAccounts: props.workloadAccounts,
         mandatoryAccounts: props.mandatoryAccounts,
@@ -116,25 +110,19 @@ export class ValidateEnvironmentConfig extends Construct {
     });
 
     /**
-     * Pre-Creating log group to enable encryption and log retention.
-     * Below construct needs to be static
-     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
      */
-    if (!ValidateEnvironmentConfig.isLogGroupConfigured) {
-      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-        logGroupName: `/aws/lambda/${
-          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
-        }`,
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
         retention: props.logRetentionInDays,
         encryptionKey: props.kmsKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
-
-      resource.node.addDependency(logGroup);
-
-      // Enable the flag to indicate log group configured
-      ValidateEnvironmentConfig.isLogGroupConfigured = true;
-    }
+    resource.node.addDependency(logGroup);
 
     this.id = resource.ref;
   }

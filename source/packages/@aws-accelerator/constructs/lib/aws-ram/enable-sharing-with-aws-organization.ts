@@ -33,7 +33,6 @@ export interface EnableSharingWithAwsOrganizationProps {
 export class EnableSharingWithAwsOrganization extends Construct {
   readonly id: string;
 
-  static isLogGroupConfigured = false;
   constructor(scope: Construct, id: string, props: EnableSharingWithAwsOrganizationProps) {
     super(scope, id);
 
@@ -42,53 +41,43 @@ export class EnableSharingWithAwsOrganization extends Construct {
     //
     // Function definition for the custom resource
     //
-    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(
-      this,
-      ENABLE_SHARING_WITH_AWS_ORGANIZATION_TYPE,
-      {
-        codeDirectory: path.join(__dirname, 'enable-sharing-with-aws-organization/dist'),
-        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-        policyStatements: [
-          {
-            Effect: 'Allow',
-            Action: [
-              'ram:EnableSharingWithAwsOrganization',
-              'iam:CreateServiceLinkedRole',
-              'organizations:EnableAWSServiceAccess',
-              'organizations:ListAWSServiceAccessForOrganization',
-              'organizations:DescribeOrganization',
-            ],
-            Resource: '*',
-          },
-        ],
-      },
-    );
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, ENABLE_SHARING_WITH_AWS_ORGANIZATION_TYPE, {
+      codeDirectory: path.join(__dirname, 'enable-sharing-with-aws-organization/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      policyStatements: [
+        {
+          Effect: 'Allow',
+          Action: [
+            'ram:EnableSharingWithAwsOrganization',
+            'iam:CreateServiceLinkedRole',
+            'organizations:EnableAWSServiceAccess',
+            'organizations:ListAWSServiceAccessForOrganization',
+            'organizations:DescribeOrganization',
+          ],
+          Resource: '*',
+        },
+      ],
+    });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: ENABLE_SHARING_WITH_AWS_ORGANIZATION_TYPE,
-      serviceToken: customResourceProvider.serviceToken,
+      serviceToken: provider.serviceToken,
     });
 
     /**
-     * Pre-Creating log group to enable encryption and log retention.
-     * Below construct needs to be static
-     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
      */
-    if (!EnableSharingWithAwsOrganization.isLogGroupConfigured) {
-      const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-        logGroupName: `/aws/lambda/${
-          (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
-        }`,
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
         retention: props.logRetentionInDays,
         encryptionKey: props.kmsKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
-
-      resource.node.addDependency(logGroup);
-
-      // Enable the flag to indicate log group configured
-      EnableSharingWithAwsOrganization.isLogGroupConfigured = true;
-    }
+    resource.node.addDependency(logGroup);
 
     this.id = resource.ref;
   }

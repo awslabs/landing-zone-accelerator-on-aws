@@ -43,7 +43,7 @@ export class AssociateHostedZones extends cdk.Resource {
 
     const RESOURCE_TYPE = 'Custom::Route53AssociateHostedZones';
 
-    const customResourceProvider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'associate-hosted-zones/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
       policyStatements: [
@@ -63,17 +63,9 @@ export class AssociateHostedZones extends cdk.Resource {
       ],
     });
 
-    const logGroup = new cdk.aws_logs.LogGroup(this, 'LogGroup', {
-      logGroupName: `/aws/lambda/${
-        (customResourceProvider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref
-      }`,
-      retention: props.logRetentionInDays,
-      encryptionKey: props.kmsKey,
-    });
-
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: RESOURCE_TYPE,
-      serviceToken: customResourceProvider.serviceToken,
+      serviceToken: provider.serviceToken,
       properties: {
         partition: cdk.Stack.of(this).partition,
         region: cdk.Stack.of(this).region,
@@ -85,8 +77,20 @@ export class AssociateHostedZones extends cdk.Resource {
       },
     });
 
+    /**
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
+     */
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
     resource.node.addDependency(logGroup);
-
     this.id = resource.ref;
   }
 }

@@ -21,6 +21,7 @@ export enum AcceleratorStage {
    */
   PREPARE = 'prepare',
   ORGANIZATIONS = 'organizations',
+  KEY = 'key',
   LOGGING = 'logging',
   /**
    * Accounts Stage - Handle all Organization and Accounts actions

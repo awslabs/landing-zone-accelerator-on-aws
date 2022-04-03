@@ -18,8 +18,10 @@ import {
   NetworkConfig,
   OrganizationConfig,
   SecurityConfig,
+  Region,
 } from '@aws-accelerator/config';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
+import * as cdk from 'aws-cdk-lib';
 import * as s3_assets from 'aws-cdk-lib/aws-s3-assets';
 import { Construct } from 'constructs';
 import * as fs from 'fs';
@@ -31,6 +33,9 @@ export interface ConfigRepositoryProps {
   readonly repositoryName: string;
   readonly repositoryBranchName?: string;
   readonly description?: string;
+  readonly managementAccountEmail: string;
+  readonly logArchiveAccountEmail: string;
+  readonly auditAccountEmail: string;
 }
 
 /**
@@ -47,8 +52,22 @@ export class ConfigRepository extends Construct {
     //
     const tempDirPath = fs.mkdtempSync(path.join(os.tmpdir(), 'config-assets-'));
 
-    fs.writeFileSync(path.join(tempDirPath, AccountsConfig.FILENAME), yaml.dump(new AccountsConfig()), 'utf8');
-    fs.writeFileSync(path.join(tempDirPath, GlobalConfig.FILENAME), yaml.dump(new GlobalConfig()), 'utf8');
+    fs.writeFileSync(
+      path.join(tempDirPath, AccountsConfig.FILENAME),
+      yaml.dump(
+        new AccountsConfig({
+          managementAccountEmail: props.managementAccountEmail,
+          logArchiveAccountEmail: props.logArchiveAccountEmail,
+          auditAccountEmail: props.auditAccountEmail,
+        }),
+      ),
+      'utf8',
+    );
+    fs.writeFileSync(
+      path.join(tempDirPath, GlobalConfig.FILENAME),
+      yaml.dump(new GlobalConfig({ homeRegion: cdk.Stack.of(this).region as Region })),
+      'utf8',
+    );
     fs.writeFileSync(path.join(tempDirPath, IamConfig.FILENAME), yaml.dump(new IamConfig()), 'utf8');
     fs.writeFileSync(path.join(tempDirPath, NetworkConfig.FILENAME), yaml.dump(new NetworkConfig()), 'utf8');
     fs.writeFileSync(path.join(tempDirPath, OrganizationConfig.FILENAME), yaml.dump(new OrganizationConfig()), 'utf8');

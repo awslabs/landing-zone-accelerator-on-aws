@@ -40,9 +40,6 @@ export class CreateOrganizationAccounts extends Construct {
   readonly provider: cdk.custom_resources.Provider;
   readonly id: string;
 
-  static isEventLogGroupConfigured = false;
-  static isCompleteLogGroupConfigured = false;
-
   constructor(scope: Construct, id: string, props: CreateOrganizationAccountsProps) {
     super(scope, id);
 
@@ -56,24 +53,12 @@ export class CreateOrganizationAccounts extends Construct {
       description: 'Create Organization Accounts OnEvent handler',
       environmentEncryption: props.kmsKey,
     });
-
-    /**
-     * Creating log group to enable encryption and log retention needs to be static
-     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
-     */
-    if (!CreateOrganizationAccounts.isEventLogGroupConfigured) {
-      const logGroup = new cdk.aws_logs.LogGroup(this, 'OnEventLogGroup', {
-        logGroupName: `/aws/lambda/${this.onEvent.functionName}`,
-        retention: props.logRetentionInDays,
-        encryptionKey: props.kmsKey,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      });
-
-      logGroup.node.addDependency(this.onEvent);
-
-      // Enable the flag to indicate log group configured
-      CreateOrganizationAccounts.isEventLogGroupConfigured = true;
-    }
+    new cdk.aws_logs.LogGroup(this, `${this.onEvent.node.id}LogGroup`, {
+      logGroupName: `/aws/lambda/${this.onEvent.functionName}`,
+      retention: props.logRetentionInDays,
+      encryptionKey: props.kmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
 
     const ddbPolicy = new cdk.aws_iam.PolicyStatement({
       sid: 'DynamoDb',
@@ -114,24 +99,12 @@ export class CreateOrganizationAccounts extends Construct {
       initialPolicy: [ddbPolicy, ddbKmsPolicy, orgPolicy],
       environmentEncryption: props.kmsKey,
     });
-
-    /**
-     * Creating log group to enable encryption and log retention needs to be static
-     * isLogGroupConfigured flag used to make sure log group construct synthesize only once in the stack
-     */
-    if (!CreateOrganizationAccounts.isCompleteLogGroupConfigured) {
-      const logGroup = new cdk.aws_logs.LogGroup(this, 'IsCompleteLogGroup', {
-        logGroupName: `/aws/lambda/${this.isComplete.functionName}`,
-        retention: props.logRetentionInDays,
-        encryptionKey: props.kmsKey,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      });
-
-      logGroup.node.addDependency(this.isComplete);
-
-      // Enable the flag to indicate log group configured
-      CreateOrganizationAccounts.isCompleteLogGroupConfigured = true;
-    }
+    new cdk.aws_logs.LogGroup(this, `${this.isComplete.node.id}LogGroup`, {
+      logGroupName: `/aws/lambda/${this.isComplete.functionName}`,
+      retention: props.logRetentionInDays,
+      encryptionKey: props.kmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
 
     if (props.govCloudAccountMappingTable) {
       const mappingTablePolicy = new cdk.aws_iam.PolicyStatement({
