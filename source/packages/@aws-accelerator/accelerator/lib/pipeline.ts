@@ -388,6 +388,8 @@ export class AcceleratorPipeline extends Construct {
       masterKey: installerKey,
     });
 
+    acceleratorStatusTopic.grantPublish(pipeline.role);
+
     pipeline.notifyOn('AcceleratorPipelineStatusNotification', acceleratorStatusTopic, {
       events: [
         cdk.aws_codepipeline.PipelineNotificationEvents.MANUAL_APPROVAL_FAILED,
@@ -408,6 +410,8 @@ export class AcceleratorPipeline extends Construct {
       displayName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-failed-status-topic',
       masterKey: installerKey,
     });
+
+    acceleratorFailedStatusTopic.grantPublish(pipeline.role);
 
     pipeline.notifyOn('AcceleratorPipelineFailureNotification', acceleratorFailedStatusTopic, {
       events: [cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED],
