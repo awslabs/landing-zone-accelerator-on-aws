@@ -17,8 +17,9 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as path from 'path';
 import { Construct } from 'constructs';
+import { pascalCase } from 'pascal-case';
+import * as path from 'path';
 
 import { Region } from '@aws-accelerator/config';
 import {
@@ -43,7 +44,6 @@ import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { pascalCase } from 'pascal-case';
 import { KeyStack } from './key-stack';
 
 export interface OrganizationsStackProps extends AcceleratorStackProps {
@@ -446,5 +446,6 @@ export class OrganizationsStack extends AcceleratorStack {
     // Configure Trusted Services and Delegated Management Accounts
     //
     //
+    Logger.info('[organizations-stack] Completed stack synthesis');
   }
 }

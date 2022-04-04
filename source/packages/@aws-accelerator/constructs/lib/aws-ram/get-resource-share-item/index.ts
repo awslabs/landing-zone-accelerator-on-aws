@@ -1,3 +1,5 @@
+import * as AWS from 'aws-sdk';
+
 /**
  *  Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -11,7 +13,7 @@
  *  and limitations under the License.
  */
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as AWS from 'aws-sdk';
+
 AWS.config.logger = console;
 
 /**
@@ -21,6 +23,13 @@ AWS.config.logger = console;
  * @returns
  */
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+  | {
+      PhysicalResourceId: string | undefined;
+      Data: {
+        arn: string;
+      };
+      Status: string;
+    }
   | {
       PhysicalResourceId: string | undefined;
       Status: string;
@@ -50,6 +59,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             console.log(item.arn);
             return {
               PhysicalResourceId: item.arn.split('/')[1],
+              Data: {
+                arn: item.arn,
+              },
               Status: 'SUCCESS',
             };
           }

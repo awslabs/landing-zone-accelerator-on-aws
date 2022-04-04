@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
+import { GetNetworkFirewallEndpoint } from '../aws-networkfirewall/get-network-firewall-endpoint';
 import { Vpc } from './vpc';
 
 export interface IRouteTable extends cdk.IResource {
@@ -97,5 +98,29 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
     // Need to add depends on for the attachment, as IGW needs to be part of
     // the network (vpc)
     route.addDependsOn(this.vpc.internetGatewayAttachment);
+  }
+
+  public addNetworkFirewallRoute(options: {
+    id: string;
+    destination: string;
+    endpointAz: string;
+    firewallArn: string;
+    kmsKey: cdk.aws_kms.Key;
+    logRetention: number;
+  }): void {
+    // Get endpoint ID from custom resource
+    const endpointId = new GetNetworkFirewallEndpoint(this, 'GetNetworkFirewallEndpoint', {
+      endpointAz: options.endpointAz,
+      firewallArn: options.firewallArn,
+      kmsKey: options.kmsKey,
+      logRetentionInDays: options.logRetention,
+      region: cdk.Stack.of(this).region,
+    }).endpointId;
+
+    new cdk.aws_ec2.CfnRoute(this, options.id, {
+      routeTableId: this.routeTableId,
+      destinationCidrBlock: options.destination,
+      vpcEndpointId: endpointId,
+    });
   }
 }

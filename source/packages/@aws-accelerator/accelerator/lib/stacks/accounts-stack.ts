@@ -11,6 +11,11 @@
  *  and limitations under the License.
  */
 
+import * as cdk from 'aws-cdk-lib';
+import { pascalCase } from 'change-case';
+import { Construct } from 'constructs';
+import * as path from 'path';
+
 import {
   Account,
   EnablePolicyType,
@@ -19,10 +24,7 @@ import {
   PolicyType,
   PolicyTypeEnum,
 } from '@aws-accelerator/constructs';
-import * as cdk from 'aws-cdk-lib';
-import { pascalCase } from 'change-case';
-import { Construct } from 'constructs';
-import * as path from 'path';
+
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { PrepareStack } from './prepare-stack';
@@ -140,5 +142,6 @@ export class AccountsStack extends AcceleratorStack {
         }
       }
     }
+    Logger.info('[accounts-stack] Completed stack synthesis');
   }
 }

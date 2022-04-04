@@ -11,27 +11,29 @@
  *  and limitations under the License.
  */
 
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import * as fs from 'fs';
+import * as yaml from 'js-yaml';
+import { pascalCase } from 'pascal-case';
+import * as path from 'path';
+
 import { Region } from '@aws-accelerator/config';
 import {
-  GuardDutyDetectorConfig,
-  GuardDutyExportConfigDestinationTypes,
-  GuardDutyMembers,
-  MacieMembers,
-  SecurityHubMembers,
-  Organization,
   Bucket,
   BucketEncryptionType,
   Document,
+  GuardDutyDetectorConfig,
+  GuardDutyExportConfigDestinationTypes,
+  GuardDutyMembers,
   KeyLookup,
+  MacieMembers,
+  Organization,
+  SecurityHubMembers,
 } from '@aws-accelerator/constructs';
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import { pascalCase } from 'pascal-case';
-import * as path from 'path';
+
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import * as fs from 'fs';
-import * as yaml from 'js-yaml';
 import { KeyStack } from './key-stack';
 
 export class SecurityAuditStack extends AcceleratorStack {
@@ -372,5 +374,6 @@ export class SecurityAuditStack extends AcceleratorStack {
       Logger.info(`[security-audit-stack] Create SNS Subscription: ${snsSubscriptionItem.email}`);
       topic.addSubscription(new cdk.aws_sns_subscriptions.EmailSubscription(snsSubscriptionItem.email));
     }
+    Logger.info('[security-audit-stack] Completed stack synthesis');
   }
 }

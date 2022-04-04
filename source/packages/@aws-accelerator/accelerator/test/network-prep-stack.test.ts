@@ -145,7 +145,7 @@ describe('NetworkPrepStack', () => {
   test(`${testNamePrefix} RAM ResourceShare MainTransitGatewayShareMainTransitGatewayShareResourceShare resource configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        MainTransitGatewayShareMainTransitGatewayShareResourceShareC2C21F6E: {
+        MainTransitGatewayShareResourceShare02109087: {
           Type: 'AWS::RAM::ResourceShare',
           Properties: {
             Name: 'Main_TransitGatewayShare',

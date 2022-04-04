@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
+
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
@@ -216,5 +217,6 @@ export class OperationsStack extends AcceleratorStack {
         }
       }
     }
+    Logger.info('[operations-stack] Completed stack synthesis');
   }
 }

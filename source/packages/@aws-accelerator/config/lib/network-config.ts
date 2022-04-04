@@ -60,7 +60,15 @@ export class NetworkConfigTypes {
 
   static readonly routeTableEntryTypeEnum = t.enums(
     'Type',
-    ['transitGateway', 'natGateway', 'internetGateway', 'local', 'gatewayEndpoint', 'networkInterface'],
+    [
+      'transitGateway',
+      'natGateway',
+      'internetGateway',
+      'local',
+      'gatewayEndpoint',
+      'networkInterface',
+      'networkFirewall',
+    ],
     'Value should be a route table target type',
   );
 
@@ -69,6 +77,7 @@ export class NetworkConfigTypes {
     destination: t.optional(t.nonEmptyString),
     type: t.optional(this.routeTableEntryTypeEnum),
     target: t.nonEmptyString,
+    targetAvailabilityZone: t.optional(t.nonEmptyString),
   });
 
   static readonly routeTableConfig = t.interface({
@@ -371,9 +380,215 @@ export class NetworkConfigTypes {
     queryLogs: t.optional(this.dnsQueryLogsConfig),
   });
 
+  static readonly nfwRuleType = t.enums('NfwRuleType', ['STATEFUL', 'STATELESS']);
+
+  static readonly nfwGeneratedRulesType = t.enums('NfwGeneratedRulesType', ['ALLOWLIST', 'DENYLIST']);
+
+  static readonly nfwTargetType = t.enums('NfwTargetType', ['TLS_SNI', 'HTTP_HOST']);
+
+  static readonly nfwStatefulRuleActionType = t.enums('NfwStatefulRuleActionType', ['ALERT', 'DROP', 'PASS']);
+
+  static readonly nfwStatefulRuleDirectionType = t.enums('NfwStatefulRuleDirectionType', ['ANY', 'FORWARD']);
+
+  static readonly nfwStatefulRuleProtocolType = t.enums('NfwStatefulRuleProtocolType', [
+    'DCERPC',
+    'DHCP',
+    'DNS',
+    'FTP',
+    'HTTP',
+    'ICMP',
+    'IKEV2',
+    'IMAP',
+    'IP',
+    'KRB5',
+    'MSN',
+    'NTP',
+    'SMB',
+    'SMTP',
+    'SSH',
+    'TCP',
+    'TFTP',
+    'TLS',
+    'UDP',
+  ]);
+
+  static readonly nfwStatelessRuleActionType = t.enums('NfwStatelessRuleActionType', [
+    'aws:pass',
+    'aws:drop',
+    'aws:forward_to_sfe',
+  ]);
+
+  static readonly nfwStatefulRuleOptionsType = t.enums('NfwStatefulRuleOptionsType', [
+    'DEFAULT_ACTION_ORDER',
+    'STRICT_ORDER',
+  ]);
+
+  static readonly nfwLogType = t.enums('NfwLogType', ['ALERT', 'FLOW']);
+
+  static readonly nfwRuleSourceListConfig = t.interface({
+    generatedRulesType: this.nfwGeneratedRulesType,
+    targets: t.array(t.nonEmptyString),
+    targetTypes: t.array(this.nfwTargetType),
+  });
+
+  static readonly nfwRuleSourceStatefulRuleHeaderConfig = t.interface({
+    destination: t.nonEmptyString,
+    destinationPort: t.nonEmptyString,
+    direction: this.nfwStatefulRuleDirectionType,
+    protocol: this.nfwStatefulRuleProtocolType,
+    source: t.nonEmptyString,
+    sourcePort: t.nonEmptyString,
+  });
+
+  static readonly nfwRuleSourceStatefulRuleOptionsConfig = t.interface({
+    keyword: t.nonEmptyString,
+    settings: t.optional(t.array(t.nonEmptyString)),
+  });
+
+  static readonly nfwRuleSourceStatefulRuleConfig = t.interface({
+    action: this.nfwStatefulRuleActionType,
+    header: this.nfwRuleSourceStatefulRuleHeaderConfig,
+    ruleOptions: t.array(this.nfwRuleSourceStatefulRuleOptionsConfig),
+  });
+
+  static readonly nfwRuleSourceCustomActionDimensionConfig = t.interface({
+    dimensions: t.array(t.nonEmptyString),
+  });
+
+  static readonly nfwRuleSourceCustomActionDefinitionConfig = t.interface({
+    publishMetricAction: this.nfwRuleSourceCustomActionDimensionConfig,
+  });
+
+  static readonly nfwRuleSourceCustomActionConfig = t.interface({
+    actionDefinition: this.nfwRuleSourceCustomActionDefinitionConfig,
+    actionName: t.nonEmptyString,
+  });
+
+  static readonly nfwRuleSourceStatelessPortRangeConfig = t.interface({
+    fromPort: t.number,
+    toPort: t.number,
+  });
+
+  static readonly nfwRuleSourceStatelessTcpFlagsConfig = t.interface({
+    flags: t.array(t.nonEmptyString),
+    masks: t.optional(t.array(t.nonEmptyString)),
+  });
+
+  static readonly nfwRuleSourceStatelessMatchAttributesConfig = t.interface({
+    destinationPorts: t.array(this.nfwRuleSourceStatelessPortRangeConfig),
+    destinations: t.array(t.nonEmptyString),
+    protocols: t.array(t.number),
+    sourcePorts: t.array(this.nfwRuleSourceStatelessPortRangeConfig),
+    sources: t.array(t.nonEmptyString),
+    tcpFlags: t.array(this.nfwRuleSourceStatelessTcpFlagsConfig),
+  });
+
+  static readonly nfwRuleSourceStatelessRuleDefinitionConfig = t.interface({
+    actions: t.array(this.nfwStatelessRuleActionType),
+    matchAttributes: this.nfwRuleSourceStatelessMatchAttributesConfig,
+  });
+
+  static readonly nfwRuleSourceStatelessRuleConfig = t.interface({
+    priority: t.number,
+    ruleDefinition: this.nfwRuleSourceStatelessRuleDefinitionConfig,
+  });
+
+  static readonly nfwStatelessRulesAndCustomActionsConfig = t.interface({
+    statelessRules: t.array(this.nfwRuleSourceStatelessRuleConfig),
+    customActions: t.optional(t.array(this.nfwRuleSourceCustomActionConfig)),
+  });
+
+  static readonly nfwRuleSourceConfig = t.interface({
+    rulesSourceList: t.optional(this.nfwRuleSourceListConfig),
+    rulesString: t.optional(t.nonEmptyString),
+    statefulRules: t.optional(t.array(this.nfwRuleSourceStatefulRuleConfig)),
+    statelessRulesAndCustomActions: t.optional(this.nfwStatelessRulesAndCustomActionsConfig),
+  });
+
+  static readonly nfwRuleVariableDefinitionConfig = t.interface({
+    name: t.nonEmptyString,
+    definition: t.array(t.nonEmptyString),
+  });
+
+  static readonly nfwRuleVariableConfig = t.interface({
+    ipSets: this.nfwRuleVariableDefinitionConfig,
+    portSets: this.nfwRuleVariableDefinitionConfig,
+  });
+
+  static readonly nfwRuleGroupRuleConfig = t.interface({
+    rulesSource: this.nfwRuleSourceConfig,
+    ruleVariables: t.optional(this.nfwRuleVariableConfig),
+    statefulRuleOptions: t.optional(this.nfwStatefulRuleOptionsType),
+  });
+
+  static readonly nfwRuleGroupConfig = t.interface({
+    name: t.nonEmptyString,
+    regions: t.array(t.region),
+    capacity: t.number,
+    type: this.nfwRuleType,
+    description: t.optional(t.nonEmptyString),
+    ruleGroup: t.optional(this.nfwRuleGroupRuleConfig),
+    shareTargets: t.optional(t.shareTargets),
+    tags: t.optional(t.array(t.tag)),
+  });
+
+  static readonly nfwStatefulRuleGroupReferenceConfig = t.interface({
+    name: t.nonEmptyString,
+    priority: t.optional(t.number),
+  });
+
+  static readonly nfwStatelessRuleGroupReferenceConfig = t.interface({
+    name: t.nonEmptyString,
+    priority: t.number,
+  });
+
+  static readonly nfwFirewallPolicyPolicyConfig = t.interface({
+    statefulDefaultActions: t.optional(t.array(t.nonEmptyString)),
+    statefulEngineOptions: t.optional(this.nfwStatefulRuleOptionsType),
+    statefulRuleGroups: t.optional(t.array(this.nfwStatefulRuleGroupReferenceConfig)),
+    statelessCustomActions: t.optional(t.array(this.nfwRuleSourceCustomActionConfig)),
+    statelessDefaultActions: t.array(t.union([this.nfwStatelessRuleActionType, t.nonEmptyString])),
+    statelessFragmentDefaultActions: t.array(t.union([this.nfwStatelessRuleActionType, t.nonEmptyString])),
+    statelessRuleGroups: t.optional(t.array(this.nfwStatelessRuleGroupReferenceConfig)),
+  });
+
+  static readonly nfwFirewallPolicyConfig = t.interface({
+    name: t.nonEmptyString,
+    firewallPolicy: this.nfwFirewallPolicyPolicyConfig,
+    regions: t.array(t.region),
+    description: t.optional(t.nonEmptyString),
+    shareTargets: t.optional(t.shareTargets),
+    tags: t.optional(t.array(t.tag)),
+  });
+
+  static readonly nfwLoggingConfig = t.interface({
+    destination: this.logDestinationTypeEnum,
+    type: this.nfwLogType,
+  });
+
+  static readonly nfwFirewallConfig = t.interface({
+    name: t.nonEmptyString,
+    firewallPolicy: t.nonEmptyString,
+    subnets: t.array(t.nonEmptyString),
+    vpc: t.nonEmptyString,
+    deleteProtection: t.optional(t.boolean),
+    description: t.optional(t.nonEmptyString),
+    firewallPolicyChangeProtection: t.optional(t.boolean),
+    subnetChangeProtection: t.optional(t.boolean),
+    loggingConfiguration: t.optional(t.array(this.nfwLoggingConfig)),
+    tags: t.optional(t.array(t.tag)),
+  });
+
+  static readonly nfwConfig = t.interface({
+    firewalls: t.array(this.nfwFirewallConfig),
+    policies: t.array(this.nfwFirewallPolicyConfig),
+    rules: t.array(this.nfwRuleGroupConfig),
+  });
+
   static readonly centralNetworkServicesConfig = t.interface({
     delegatedAdminAccount: t.nonEmptyString,
     route53Resolver: t.optional(this.resolverConfig),
+    networkFirewall: t.optional(this.nfwConfig),
   });
 
   static readonly vpcPeeringConfig = t.interface({
@@ -441,6 +656,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
   readonly destination: string = '';
   readonly type: t.TypeOf<typeof NetworkConfigTypes.routeTableEntryTypeEnum> | undefined = undefined;
   readonly target: string = '';
+  readonly targetAvailabilityZone: string | undefined = undefined;
 }
 
 export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.routeTableConfig> {
@@ -801,9 +1017,207 @@ export class ResolverConfig implements t.TypeOf<typeof NetworkConfigTypes.resolv
   readonly queryLogs: DnsQueryLogsConfig | undefined = undefined;
 }
 
+export class NfwRuleSourceListConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceListConfig> {
+  readonly generatedRulesType: t.TypeOf<typeof NetworkConfigTypes.nfwGeneratedRulesType> = 'DENYLIST';
+  readonly targets: string[] = [];
+  readonly targetTypes: t.TypeOf<typeof NetworkConfigTypes.nfwTargetType>[] = ['TLS_SNI'];
+}
+
+export class NfwRuleSourceStatefulRuleHeaderConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatefulRuleHeaderConfig>
+{
+  readonly destination: string = '';
+  readonly destinationPort: string = '';
+  readonly direction: t.TypeOf<typeof NetworkConfigTypes.nfwStatefulRuleDirectionType> = 'ANY';
+  readonly protocol: t.TypeOf<typeof NetworkConfigTypes.nfwStatefulRuleProtocolType> = 'IP';
+  readonly source: string = '';
+  readonly sourcePort: string = '';
+}
+
+export class NfwRuleSourceStatefulRuleOptionsConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatefulRuleOptionsConfig>
+{
+  readonly keyword: string = '';
+  readonly settings: string[] | undefined = undefined;
+}
+
+export class NfwRuleSourceStatefulRuleConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatefulRuleConfig>
+{
+  readonly action: t.TypeOf<typeof NetworkConfigTypes.nfwStatefulRuleActionType> = 'DROP';
+  readonly header: NfwRuleSourceStatefulRuleHeaderConfig = new NfwRuleSourceStatefulRuleHeaderConfig();
+  readonly ruleOptions: NfwRuleSourceStatefulRuleOptionsConfig[] = [new NfwRuleSourceStatefulRuleOptionsConfig()];
+}
+
+export class NfwRuleSourceCustomActionDimensionConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceCustomActionDimensionConfig>
+{
+  readonly dimensions: string[] = [];
+}
+
+export class NfwRuleSourceCustomActionDefinitionConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceCustomActionDefinitionConfig>
+{
+  readonly publishMetricAction: NfwRuleSourceCustomActionDimensionConfig =
+    new NfwRuleSourceCustomActionDimensionConfig();
+}
+
+export class NfwRuleSourceCustomActionConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceCustomActionConfig>
+{
+  readonly actionDefinition: NfwRuleSourceCustomActionDefinitionConfig =
+    new NfwRuleSourceCustomActionDefinitionConfig();
+  readonly actionName: string = '';
+}
+
+export class NfwRuleSourceStatelessPortRangeConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatelessPortRangeConfig>
+{
+  readonly fromPort: number = 123;
+  readonly toPort: number = 123;
+}
+
+export class NfwRuleSourceStatelessTcpFlagsConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatelessTcpFlagsConfig>
+{
+  readonly flags: string[] = [];
+  readonly masks: string[] | undefined = undefined;
+}
+
+export class NfwRuleSourceStatelessMatchAttributesConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatelessMatchAttributesConfig>
+{
+  readonly destinationPorts: NfwRuleSourceStatelessPortRangeConfig[] = [new NfwRuleSourceStatelessPortRangeConfig()];
+  readonly destinations: string[] = [];
+  readonly protocols: number[] = [];
+  readonly sourcePorts: NfwRuleSourceStatelessPortRangeConfig[] = [new NfwRuleSourceStatelessPortRangeConfig()];
+  readonly sources: string[] = [];
+  readonly tcpFlags: NfwRuleSourceStatelessTcpFlagsConfig[] = [new NfwRuleSourceStatelessTcpFlagsConfig()];
+}
+
+export class NfwRuleSourceStatelessRuleDefinitionConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatelessRuleDefinitionConfig>
+{
+  readonly actions: t.TypeOf<typeof NetworkConfigTypes.nfwStatelessRuleActionType>[] = ['aws:drop'];
+  readonly matchAttributes: NfwRuleSourceStatelessMatchAttributesConfig =
+    new NfwRuleSourceStatelessMatchAttributesConfig();
+}
+
+export class NfwRuleSourceStatelessRuleConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatelessRuleConfig>
+{
+  readonly priority: number = 123;
+  readonly ruleDefinition: NfwRuleSourceStatelessRuleDefinitionConfig =
+    new NfwRuleSourceStatelessRuleDefinitionConfig();
+}
+
+export class NfwStatelessRulesAndCustomActionsConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwStatelessRulesAndCustomActionsConfig>
+{
+  readonly statelessRules: NfwRuleSourceStatelessRuleConfig[] = [new NfwRuleSourceStatelessRuleConfig()];
+  readonly customActions: NfwRuleSourceCustomActionConfig[] | undefined = undefined;
+}
+
+export class NfwRuleSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceConfig> {
+  readonly rulesSourceList: NfwRuleSourceListConfig | undefined = undefined;
+  readonly rulesString: string | undefined = undefined;
+  readonly statefulRules: NfwRuleSourceStatefulRuleConfig[] | undefined = undefined;
+  readonly statelessRulesAndCustomActions: NfwStatelessRulesAndCustomActionsConfig | undefined = undefined;
+}
+
+export class NfwRuleVariableDefinitionConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleVariableDefinitionConfig>
+{
+  readonly name: string = '';
+  readonly definition: string[] = [];
+}
+
+export class NfwRuleVariableConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleVariableConfig> {
+  readonly ipSets: NfwRuleVariableDefinitionConfig = new NfwRuleVariableDefinitionConfig();
+  readonly portSets: NfwRuleVariableDefinitionConfig = new NfwRuleVariableDefinitionConfig();
+}
+
+export class NfwRuleGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleGroupRuleConfig> {
+  readonly rulesSource: NfwRuleSourceConfig = new NfwRuleSourceConfig();
+  readonly ruleVariables: NfwRuleVariableConfig | undefined = undefined;
+  readonly statefulRuleOptions: t.TypeOf<typeof NetworkConfigTypes.nfwStatefulRuleOptionsType> | undefined = undefined;
+}
+
+export class NfwRuleGroupConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleGroupConfig> {
+  readonly name: string = '';
+  readonly regions: t.Region[] = [];
+  readonly capacity: number = 123;
+  readonly type: t.TypeOf<typeof NetworkConfigTypes.nfwRuleType> = 'STATEFUL';
+  readonly description: string | undefined = undefined;
+  readonly ruleGroup: NfwRuleGroupRuleConfig | undefined = undefined;
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
+  readonly tags: t.Tag[] | undefined = undefined;
+}
+
+export class NfwStatefulRuleGroupReferenceConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwStatefulRuleGroupReferenceConfig>
+{
+  readonly name: string = '';
+  readonly priority: number | undefined = undefined;
+}
+
+export class NfwStatelessRuleGroupReferenceConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwStatelessRuleGroupReferenceConfig>
+{
+  readonly name: string = '';
+  readonly priority: number = 123;
+}
+
+export class NfwFirewallPolicyPolicyConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.nfwFirewallPolicyPolicyConfig>
+{
+  readonly statelessDefaultActions: string[] = [];
+  readonly statelessFragmentDefaultActions: string[] = [];
+  readonly statefulDefaultActions: string[] | undefined = undefined;
+  readonly statefulEngineOptions: t.TypeOf<typeof NetworkConfigTypes.nfwStatefulRuleOptionsType> | undefined =
+    undefined;
+  readonly statefulRuleGroups: NfwStatefulRuleGroupReferenceConfig[] | undefined = undefined;
+  readonly statelessCustomActions: NfwRuleSourceCustomActionConfig[] | undefined = undefined;
+  readonly statelessRuleGroups: NfwStatelessRuleGroupReferenceConfig[] | undefined = undefined;
+}
+
+export class NfwFirewallPolicyConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwFirewallPolicyConfig> {
+  readonly name: string = '';
+  readonly firewallPolicy: NfwFirewallPolicyPolicyConfig = new NfwFirewallPolicyPolicyConfig();
+  readonly regions: t.Region[] = [];
+  readonly description: string | undefined = undefined;
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
+  readonly tags: t.Tag[] | undefined = undefined;
+}
+
+export class NfwLoggingConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwLoggingConfig> {
+  readonly destination: t.TypeOf<typeof NetworkConfigTypes.logDestinationTypeEnum> = 's3';
+  readonly type: t.TypeOf<typeof NetworkConfigTypes.nfwLogType> = 'ALERT';
+}
+
+export class NfwFirewallConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwFirewallConfig> {
+  readonly name: string = '';
+  readonly firewallPolicy: string = '';
+  readonly subnets: string[] = [];
+  readonly vpc: string = '';
+  readonly deleteProtection: boolean | undefined = undefined;
+  readonly description: string | undefined = undefined;
+  readonly firewallPolicyChangeProtection: boolean | undefined = undefined;
+  readonly subnetChangeProtection: boolean | undefined = undefined;
+  readonly loggingConfiguration: NfwLoggingConfig[] | undefined = undefined;
+  readonly tags: t.Tag[] | undefined = undefined;
+}
+
+export class NfwConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwConfig> {
+  readonly firewalls: NfwFirewallConfig[] = [];
+  readonly policies: NfwFirewallPolicyConfig[] = [];
+  readonly rules: NfwRuleGroupConfig[] = [];
+}
+
 export class CentralNetworkServicesConfig implements t.TypeOf<typeof NetworkConfigTypes.centralNetworkServicesConfig> {
   readonly delegatedAdminAccount: string = '';
   readonly route53Resolver: ResolverConfig | undefined = undefined;
+  readonly networkFirewall: NfwConfig | undefined = undefined;
 }
 
 export class VpcPeeringConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcPeeringConfig> {

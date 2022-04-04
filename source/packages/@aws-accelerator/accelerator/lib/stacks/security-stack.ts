@@ -492,6 +492,7 @@ export class SecurityStack extends AcceleratorStack {
         );
       }
     }
+    Logger.info('[security-stack] Completed stack synthesis');
   }
 
   private getComparisonOperator(comparisonOperator: string): cdk.aws_cloudwatch.ComparisonOperator {

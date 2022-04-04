@@ -172,7 +172,7 @@ Object {
       },
       "Type": "AWS::EC2::TransitGateway",
     },
-    "MainTransitGatewayShareMainTransitGatewayShareResourceShareC2C21F6E": Object {
+    "MainTransitGatewayShareResourceShare02109087": Object {
       "Properties": Object {
         "Name": "Main_TransitGatewayShare",
         "Principals": Array [

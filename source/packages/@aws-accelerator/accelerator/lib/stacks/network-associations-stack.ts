@@ -19,6 +19,7 @@ import { Construct } from 'constructs';
 import { VpcConfig } from '@aws-accelerator/config';
 import {
   AssociateHostedZones,
+  IResourceShareItem,
   KeyLookup,
   QueryLoggingConfigAssociation,
   ResolverFirewallRuleGroupAssociation,
@@ -47,15 +48,18 @@ interface Peering {
 }
 
 export class NetworkAssociationsStack extends AcceleratorStack {
+  private key: cdk.aws_kms.Key;
+  private logRetention: number;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
+    this.key = new KeyLookup(this, 'AcceleratorKeyLookup', {
       accountId: props.accountsConfig.getAuditAccountId(),
       roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
       keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
+    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
     // Build Transit Gateway Maps
     const transitGateways = new Map<string, string>();
@@ -117,8 +121,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                   owningAccountId,
                   transitGatewayId,
                   roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
-                  kmsKey: key,
-                  logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+                  kmsKey: this.key,
+                  logRetentionInDays: this.logRetention,
                 },
               );
               // Build Transit Gateway Attachment Map
@@ -285,8 +289,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             value: props.accountsConfig.getAccountId(centralEndpointVpc.account),
           },
         ],
-        kmsKey: key,
-        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+        kmsKey: this.key,
+        logRetentionInDays: this.logRetention,
       });
     }
 
@@ -328,28 +332,13 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               dnsFirewallMap.set(firewallItem.name, ruleId);
             } else {
               // Get ID from the resource share
-              const resourceShare = ResourceShare.fromLookup(
-                this,
-                pascalCase(`${firewallItem.name}ResolverFirewallRuleGroupShare`),
-                {
-                  resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
-                  resourceShareName: `${firewallItem.name}_ResolverFirewallRuleGroupShare`,
-                  owningAccountId,
-                },
-              );
-
-              // Represents the rule group
-              const rule = ResourceShareItem.fromLookup(
-                this,
-                pascalCase(`${firewallItem.name}ResolverFirewallRuleGroup`),
-                {
-                  resourceShare,
-                  resourceShareItemType: 'route53resolver:FirewallRuleGroup',
-                  kmsKey: key,
-                  logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-                },
-              );
-              dnsFirewallMap.set(firewallItem.name, rule.resourceShareItemId);
+              const ruleId = this.getResourceShare(
+                vpcItem.name,
+                `${firewallItem.name}_ResolverFirewallRuleGroupShare`,
+                'route53resolver:FirewallRuleGroup',
+                owningAccountId,
+              ).resourceShareItemId;
+              dnsFirewallMap.set(firewallItem.name, ruleId);
             }
           }
 
@@ -414,28 +403,13 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                 queryLogMap.set(nameItem, configId);
               } else {
                 // Get ID from the resource share
-                const resourceShare = ResourceShare.fromLookup(
-                  this,
-                  pascalCase(`${vpcItem.name}${nameItem}ResolverQueryLogConfigShare`),
-                  {
-                    resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
-                    resourceShareName: `${nameItem}_QueryLogConfigShare`,
-                    owningAccountId,
-                  },
-                );
-
-                // Represents the rule group
-                const config = ResourceShareItem.fromLookup(
-                  this,
-                  pascalCase(`${vpcItem}${nameItem}ResolverQueryLogConfig`),
-                  {
-                    resourceShare,
-                    resourceShareItemType: 'route53resolver:ResolverQueryLogConfig',
-                    kmsKey: key,
-                    logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-                  },
-                );
-                queryLogMap.set(nameItem, config.resourceShareItemId);
+                const configId = this.getResourceShare(
+                  vpcItem.name,
+                  `${nameItem}_QueryLogConfigShare`,
+                  'route53resolver:ResolverQueryLogConfig',
+                  owningAccountId,
+                ).resourceShareItemId;
+                queryLogMap.set(nameItem, configId);
               }
             }
 
@@ -483,24 +457,13 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               resolverRuleMap.set(ruleItem, ruleId);
             } else {
               // Get ID from the resource share
-              const resourceShare = ResourceShare.fromLookup(
-                this,
-                pascalCase(`${vpcItem.name}${ruleItem}ResolverRuleShare`),
-                {
-                  resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
-                  resourceShareName: `${ruleItem}_ResolverRule`,
-                  owningAccountId,
-                },
-              );
-
-              // Represents the rule group
-              const rule = ResourceShareItem.fromLookup(this, pascalCase(`${ruleItem}ResolverRule`), {
-                resourceShare,
-                resourceShareItemType: 'route53resolver:ResolverRule',
-                kmsKey: key,
-                logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-              });
-              resolverRuleMap.set(ruleItem, rule.resourceShareItemId);
+              const ruleId = this.getResourceShare(
+                vpcItem.name,
+                `${ruleItem}_ResolverRule`,
+                'route53resolver:ResolverRule',
+                owningAccountId,
+              ).resourceShareItemId;
+              resolverRuleMap.set(ruleItem, ruleId);
             }
           }
 
@@ -615,5 +578,42 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         });
       }
     }
+
+    Logger.info('[network-associations-stack] Completed stack synthesis');
+  }
+
+  /**
+   * Get the resource ID from a RAM share.
+   *
+   * @param vpcName
+   * @param resourceShareName
+   * @param itemType
+   * @param owningAccountId
+   */
+  private getResourceShare(
+    vpcName: string,
+    resourceShareName: string,
+    itemType: string,
+    owningAccountId: string,
+  ): IResourceShareItem {
+    // Generate a logical ID
+    const resourceName = resourceShareName.split('_')[0];
+    const logicalId = `${vpcName}${resourceName}${itemType.split(':')[1]}`;
+
+    // Lookup resource share
+    const resourceShare = ResourceShare.fromLookup(this, pascalCase(`${logicalId}Share`), {
+      resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
+      resourceShareName: resourceShareName,
+      owningAccountId,
+    });
+
+    // Represents the item shared by RAM
+    const item = ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
+      resourceShare,
+      resourceShareItemType: itemType,
+      kmsKey: this.key,
+      logRetentionInDays: this.logRetention,
+    });
+    return item;
   }
 }
