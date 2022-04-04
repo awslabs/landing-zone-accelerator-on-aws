@@ -395,52 +395,52 @@ export class AcceleratorPipeline extends Construct {
       ],
     });
 
-    // // Enable Pipeline notification
-    // const acceleratorStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorStatusTopic', {
-    //   topicName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-status-topic',
-    //   displayName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-status-topic',
-    //   masterKey: installerKey,
-    // });
+    // Enable Pipeline notification
+    const acceleratorStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorStatusTopic', {
+      topicName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-status-topic',
+      displayName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-status-topic',
+      masterKey: installerKey,
+    });
 
-    // acceleratorStatusTopic.grantPublish(pipeline.role);
+    acceleratorStatusTopic.grantPublish(pipeline.role);
 
-    // pipeline.notifyOn('AcceleratorPipelineStatusNotification', acceleratorStatusTopic, {
-    //   events: [
-    //     cdk.aws_codepipeline.PipelineNotificationEvents.MANUAL_APPROVAL_FAILED,
-    //     cdk.aws_codepipeline.PipelineNotificationEvents.MANUAL_APPROVAL_NEEDED,
-    //     cdk.aws_codepipeline.PipelineNotificationEvents.MANUAL_APPROVAL_SUCCEEDED,
-    //     cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_CANCELED,
-    //     cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED,
-    //     cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_RESUMED,
-    //     cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_STARTED,
-    //     cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_SUCCEEDED,
-    //     cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_SUPERSEDED,
-    //   ],
-    // });
+    pipeline.notifyOn('AcceleratorPipelineStatusNotification', acceleratorStatusTopic, {
+      events: [
+        cdk.aws_codepipeline.PipelineNotificationEvents.MANUAL_APPROVAL_FAILED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.MANUAL_APPROVAL_NEEDED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.MANUAL_APPROVAL_SUCCEEDED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_CANCELED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_RESUMED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_STARTED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_SUCCEEDED,
+        cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_SUPERSEDED,
+      ],
+    });
 
-    // // Pipeline failure status topic and alarm
-    // const acceleratorFailedStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorFailedStatusTopic', {
-    //   topicName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-failed-status-topic',
-    //   displayName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-failed-status-topic',
-    //   masterKey: installerKey,
-    // });
+    // Pipeline failure status topic and alarm
+    const acceleratorFailedStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorFailedStatusTopic', {
+      topicName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-failed-status-topic',
+      displayName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-failed-status-topic',
+      masterKey: installerKey,
+    });
 
-    // acceleratorFailedStatusTopic.grantPublish(pipeline.role);
+    acceleratorFailedStatusTopic.grantPublish(pipeline.role);
 
-    // pipeline.notifyOn('AcceleratorPipelineFailureNotification', acceleratorFailedStatusTopic, {
-    //   events: [cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED],
-    // });
+    pipeline.notifyOn('AcceleratorPipelineFailureNotification', acceleratorFailedStatusTopic, {
+      events: [cdk.aws_codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED],
+    });
 
-    // acceleratorFailedStatusTopic
-    //   .metricNumberOfMessagesPublished()
-    //   .createAlarm(this, 'AcceleratorPipelineFailureAlarm', {
-    //     threshold: 1,
-    //     evaluationPeriods: 1,
-    //     datapointsToAlarm: 1,
-    //     treatMissingData: cdk.aws_cloudwatch.TreatMissingData.NOT_BREACHING,
-    //     alarmName: props.qualifier ? props.qualifier + '-pipeline-failed-alarm' : 'AwsAcceleratorFailedAlarm',
-    //     alarmDescription: 'AWS Accelerator pipeline failure alarm, created by accelerator',
-    //   });
+    acceleratorFailedStatusTopic
+      .metricNumberOfMessagesPublished()
+      .createAlarm(this, 'AcceleratorPipelineFailureAlarm', {
+        threshold: 1,
+        evaluationPeriods: 1,
+        datapointsToAlarm: 1,
+        treatMissingData: cdk.aws_cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmName: props.qualifier ? props.qualifier + '-pipeline-failed-alarm' : 'AwsAcceleratorFailedAlarm',
+        alarmDescription: 'AWS Accelerator pipeline failure alarm, created by accelerator',
+      });
   }
 
   private createToolkitStage(props: {
