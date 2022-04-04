@@ -101,14 +101,14 @@ describe('SecurityStack', () => {
    * Number of Lambda Function resource test
    */
   test(`${testNamePrefix} Lambda Function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 7);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 6);
   });
 
   /**
    * Number of IAM Role resource test
    */
   test(`${testNamePrefix} IAM Role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 8);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 7);
   });
 
   /**
@@ -218,7 +218,7 @@ describe('SecurityStack', () => {
           Type: 'Custom::MaciePutClassificationExportConfiguration',
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
-          DependsOn: ['AwsMacieUpdateExportConfigClassificationLogGroup9E15D505'],
+          DependsOn: ['CustomMaciePutClassificationExportConfigurationCustomResourceProviderLogGroup727354F4'],
           Properties: {
             ServiceToken: {
               'Fn::GetAtt': [
@@ -239,7 +239,7 @@ describe('SecurityStack', () => {
             },
             keyPrefix: '333333333333-aws-macie-export-config',
             kmsKeyArn: {
-              Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
+              Ref: 'AcceleratorKeyLookup0C18DA36',
             },
             region: 'us-east-1',
           },
@@ -720,7 +720,7 @@ describe('SecurityStack', () => {
           Type: 'Custom::GuardDutyCreatePublishingDestinationCommand',
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
-          DependsOn: ['GuardDutyPublishingDestinationLogGroup0D6CB347'],
+          DependsOn: ['CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderLogGroup118A06DB'],
           Properties: {
             ServiceToken: {
               'Fn::GetAtt': [
@@ -742,7 +742,7 @@ describe('SecurityStack', () => {
             },
             exportDestinationType: 'S3',
             kmsKeyArn: {
-              Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
+              Ref: 'AcceleratorKeyLookup0C18DA36',
             },
             region: 'us-east-1',
           },

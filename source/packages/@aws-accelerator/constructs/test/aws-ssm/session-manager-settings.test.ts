@@ -13,6 +13,8 @@ new SsmSessionManagerSettings(stack, 'SsmSessionManagerSettings', {
   sendToS3: true,
   sendToCloudWatchLogs: true,
   cloudWatchEncryptionEnabled: true,
+  kmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
+  logRetentionInDays: 365,
 });
 
 /**
@@ -51,7 +53,7 @@ describe('SsmSessionManagerSettings', () => {
    * Number of KMS Key test
    */
   test(`${testNamePrefix} KMS Key count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::KMS::Key', 2);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::KMS::Key', 3);
   });
 
   /**
@@ -65,7 +67,7 @@ describe('SsmSessionManagerSettings', () => {
    * Number of Log Groups test
    */
   test(`${testNamePrefix} Log Group count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Logs::LogGroup', 1);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Logs::LogGroup', 2);
   });
 
   test(`${testNamePrefix} KMS Alias config test`, () => {

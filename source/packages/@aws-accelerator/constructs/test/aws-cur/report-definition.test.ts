@@ -182,7 +182,10 @@ describe('ReportDefinition', () => {
       Resources: {
         TestReportDefinition9701AAC4: {
           Type: 'Custom::CrossRegionReportDefinition',
-          DependsOn: ['TestBucketPolicyBA12ED38', 'TestReportDefinitionLogGroup6D3D9202'],
+          DependsOn: [
+            'CustomCrossRegionReportDefinitionCustomResourceProviderLogGroupC64E88D7',
+            'TestBucketPolicyBA12ED38',
+          ],
           Properties: {
             ServiceToken: {
               'Fn::GetAtt': ['CustomCrossRegionReportDefinitionCustomResourceProviderHandler8E3AEE17', 'Arn'],

@@ -511,6 +511,7 @@ const securityConfigJson = {
       excludeRegions: [],
     },
     s3PublicAccessBlock: {
+      enable: true,
       excludeAccounts: [],
     },
     snsSubscriptions: [

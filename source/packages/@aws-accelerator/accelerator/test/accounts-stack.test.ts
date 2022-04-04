@@ -75,14 +75,14 @@ describe('AccountsStack', () => {
    * Number of Lambda Function resource test
    */
   test(`${testNamePrefix} Lambda Function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 6);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 4);
   });
 
   /**
    * Number of IAM role resource test
    */
   test(`${testNamePrefix} IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 6);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 4);
   });
 
   /**
@@ -109,7 +109,10 @@ describe('AccountsStack', () => {
           Type: 'Custom::AttachPolicy',
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
-          DependsOn: ['ManagementOrganizationAccountLogGroupBB820957', 'ManagementOrganizationAccount93F8866A'],
+          DependsOn: [
+            'CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039',
+            'ManagementOrganizationAccount93F8866A',
+          ],
           Properties: {
             ServiceToken: {
               'Fn::GetAtt': ['CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202', 'Arn'],
@@ -163,7 +166,10 @@ describe('AccountsStack', () => {
           Type: 'Custom::AttachPolicy',
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
-          DependsOn: ['AuditOrganizationAccount11304D9B'],
+          DependsOn: [
+            'AuditOrganizationAccount11304D9B',
+            'CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039',
+          ],
           Properties: {
             ServiceToken: {
               'Fn::GetAtt': ['CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202', 'Arn'],
@@ -187,7 +193,10 @@ describe('AccountsStack', () => {
           Type: 'Custom::AttachPolicy',
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
-          DependsOn: ['LogArchiveOrganizationAccount09183FEA'],
+          DependsOn: [
+            'CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039',
+            'LogArchiveOrganizationAccount09183FEA',
+          ],
           Properties: {
             ServiceToken: {
               'Fn::GetAtt': ['CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202', 'Arn'],
@@ -212,8 +221,7 @@ describe('AccountsStack', () => {
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
           DependsOn: [
-            'AttachFullAwsAccessManagementLogGroup83F8B373',
-            'ManagementOrganizationAccountLogGroupBB820957',
+            'CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039',
             'ManagementOrganizationAccount93F8866A',
           ],
           Properties: {
@@ -621,8 +629,7 @@ describe('AccountsStack', () => {
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
           DependsOn: [
-            'DenyDeleteVpcFlowLogsLogGroup47F4C950',
-            'enablePolicyTypeScpLogGroup6A3A6F9E',
+            'CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9',
             'enablePolicyTypeScpB4BC96BE',
           ],
           Properties: {
