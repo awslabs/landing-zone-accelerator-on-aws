@@ -147,7 +147,7 @@ export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.s
 }
 
 export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingConfig> {
-  readonly account = 'Log Archive';
+  readonly account = 'LogArchive';
   readonly cloudtrail: CloudtrailConfig = new CloudtrailConfig();
   readonly sessionManager: SessionManagerConfig = new SessionManagerConfig();
 }

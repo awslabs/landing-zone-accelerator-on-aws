@@ -778,7 +778,7 @@ export const ACCOUNT_CONFIG = {
       organizationalUnit: 'Root',
     },
     {
-      name: 'Log Archive',
+      name: 'LogArchive',
       description: 'The log archive account',
       email: 'logarchive-account@amazon.com',
       organizationalUnit: 'Security',
@@ -817,7 +817,7 @@ export const ACCOUNT_CONFIG = {
   },
   getLogArchiveAccount: function () {
     return {
-      name: 'Log Archive',
+      name: 'LogArchive',
       description: 'The log archive account',
       email: 'logarchive-account@amazon.com',
       organizationalUnit: 'Security',
