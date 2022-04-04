@@ -68,14 +68,14 @@ describe('LoggingStack', () => {
    * Number of Lambda Function resource test
    */
   test(`${testNamePrefix} Lambda Function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 5);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 3);
   });
 
   /**
    * Number of IAM Role resource test
    */
   test(`${testNamePrefix} IAM Role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 6);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 3);
   });
 
   /**
@@ -407,79 +407,6 @@ describe('LoggingStack', () => {
             ignorePublicAcls: true,
             restrictPublicBuckets: true,
           },
-        },
-      },
-    });
-  });
-
-  /**
-   * Session Manager Settings custom resource configuration test
-   */
-  test(`${testNamePrefix} Session Manager Settings custom resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        CustomSessionManagerLoggingCustomResourceProviderHandler4FE51699: {
-          DependsOn: ['CustomSessionManagerLoggingCustomResourceProviderRole1D8EE686'],
-          Properties: {
-            Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
-            },
-            Handler: '__entrypoint__.handler',
-            MemorySize: 128,
-            Role: {
-              'Fn::GetAtt': ['CustomSessionManagerLoggingCustomResourceProviderRole1D8EE686', 'Arn'],
-            },
-            Runtime: 'nodejs14.x',
-            Timeout: 900,
-          },
-          Type: 'AWS::Lambda::Function',
-        },
-      },
-    });
-  });
-
-  /**
-   * Session Manager Settings custom resource IAM role configuration test
-   */
-  test(`${testNamePrefix} Session Manager Settings custom resource IAM role configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        CustomSessionManagerLoggingCustomResourceProviderRole1D8EE686: {
-          Properties: {
-            AssumeRolePolicyDocument: {
-              Statement: [
-                {
-                  Action: 'sts:AssumeRole',
-                  Effect: 'Allow',
-                  Principal: {
-                    Service: 'lambda.amazonaws.com',
-                  },
-                },
-              ],
-              Version: '2012-10-17',
-            },
-            ManagedPolicyArns: [
-              {
-                'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
-              },
-            ],
-            Policies: [
-              {
-                PolicyDocument: {
-                  Statement: [
-                    {
-                      Action: ['ssm:DescribeDocument', 'ssm:CreateDocument', 'ssm:UpdateDocument'],
-                      Effect: 'Allow',
-                      Resource: '*',
-                    },
-                  ],
-                  Version: '2012-10-17',
-                },
-                PolicyName: 'Inline',
-              },
-            ],
-          },
-          Type: 'AWS::IAM::Role',
         },
       },
     });

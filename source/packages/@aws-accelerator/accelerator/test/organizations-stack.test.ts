@@ -62,14 +62,14 @@ describe('OrganizationsStack', () => {
    * Number of Lambda function resource test
    */
   test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 11);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 10);
   });
 
   /**
    * Number of Lambda IAM role resource test
    */
   test(`${testNamePrefix} Lambda IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 12);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 11);
   });
 
   /**
@@ -112,27 +112,6 @@ describe('OrganizationsStack', () => {
    */
   test(`${testNamePrefix} SecurityHubEnableOrganizationAdminAccount custom resource count test`, () => {
     cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::SecurityHubEnableOrganizationAdminAccount', 1);
-  });
-
-  /**
-   * Number of CUR report definition resource test
-   */
-  test(`${testNamePrefix} CUR report definition resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::CUR::ReportDefinition', 1);
-  });
-
-  /**
-   * Number of S3 buckets resource test
-   */
-  test(`${testNamePrefix} CUR S3 bucket resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::Bucket', 1);
-  });
-
-  /**
-   * Number of S3 bucket policies resource test
-   */
-  test(`${testNamePrefix} CUR bucket policy resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::BucketPolicy', 1);
   });
 
   /**
@@ -880,140 +859,6 @@ describe('OrganizationsStack', () => {
             },
             adminAccountId: '222222222222',
             region: 'us-east-1',
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * CUR report definition resource configuration test
-   */
-  test(`${testNamePrefix} CUR report definition resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        ReportDefinitionB2CAC9F7: {
-          Type: 'AWS::CUR::ReportDefinition',
-          DependsOn: ['ReportBucketPolicyC1DDDC0D'],
-          Properties: {
-            Compression: 'Parquet',
-            Format: 'Parquet',
-            RefreshClosedReports: true,
-            ReportName: 'TestReport',
-            ReportVersioning: 'OVERWRITE_REPORT',
-            S3Bucket: { Ref: 'ReportBucket93428221' },
-            S3Prefix: 'cur',
-            S3Region: 'us-east-1',
-            TimeUnit: 'DAILY',
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * CUR S3 bucket resource configuration test
-   */
-  test(`${testNamePrefix} CUR S3 bucket resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        ReportBucket93428221: {
-          Type: 'AWS::S3::Bucket',
-          Properties: {
-            BucketEncryption: {
-              ServerSideEncryptionConfiguration: [{ ServerSideEncryptionByDefault: { SSEAlgorithm: 'AES256' } }],
-            },
-            BucketName: 'aws-accelerator-cur-333333333333-us-east-1',
-            LoggingConfiguration: {
-              DestinationBucketName: 'aws-accelerator-s3-access-logs-333333333333-us-east-1',
-              LogFilePrefix: 'aws-accelerator-cur-333333333333-us-east-1/',
-            },
-            OwnershipControls: {
-              Rules: [
-                {
-                  ObjectOwnership: 'BucketOwnerPreferred',
-                },
-              ],
-            },
-            PublicAccessBlockConfiguration: {
-              BlockPublicAcls: true,
-              BlockPublicPolicy: true,
-              IgnorePublicAcls: true,
-              RestrictPublicBuckets: true,
-            },
-            VersioningConfiguration: { Status: 'Enabled' },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * CUR bucket policy resource configuration test
-   */
-  test(`${testNamePrefix} CUR bucket policy resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        ReportBucketPolicyC1DDDC0D: {
-          Type: 'AWS::S3::BucketPolicy',
-          Properties: {
-            Bucket: { Ref: 'ReportBucket93428221' },
-            PolicyDocument: {
-              Statement: [
-                {
-                  Action: 's3:*',
-                  Effect: 'Deny',
-                  Principal: { AWS: '*' },
-                  Resource: [
-                    {
-                      'Fn::GetAtt': ['ReportBucket93428221', 'Arn'],
-                    },
-                    {
-                      'Fn::Join': ['', [{ 'Fn::GetAtt': ['ReportBucket93428221', 'Arn'] }, '/*']],
-                    },
-                  ],
-                  Condition: {
-                    Bool: { 'aws:SecureTransport': 'false' },
-                  },
-                },
-                {
-                  Action: ['s3:GetBucketAcl', 's3:GetBucketPolicy'],
-                  Effect: 'Allow',
-                  Principal: {
-                    Service: 'billingreports.amazonaws.com',
-                  },
-                  Resource: {
-                    'Fn::GetAtt': ['ReportBucket93428221', 'Arn'],
-                  },
-                  Condition: {
-                    StringEquals: {
-                      'aws:SourceAccount': { Ref: 'AWS::AccountId' },
-                      'aws:SourceArn': {
-                        'Fn::Join': ['', ['arn:aws:cur:us-east-1:', { Ref: 'AWS::AccountId' }, ':definition/*']],
-                      },
-                    },
-                  },
-                },
-                {
-                  Action: 's3:PutObject',
-                  Effect: 'Allow',
-                  Principal: {
-                    Service: 'billingreports.amazonaws.com',
-                  },
-                  Resource: {
-                    'Fn::Join': ['', [{ 'Fn::GetAtt': ['ReportBucket93428221', 'Arn'] }, '/*']],
-                  },
-                  Condition: {
-                    StringEquals: {
-                      'aws:SourceAccount': { Ref: 'AWS::AccountId' },
-                      'aws:SourceArn': {
-                        'Fn::Join': ['', ['arn:aws:cur:us-east-1:', { Ref: 'AWS::AccountId' }, ':definition/*']],
-                      },
-                    },
-                  },
-                },
-              ],
-            },
           },
         },
       },

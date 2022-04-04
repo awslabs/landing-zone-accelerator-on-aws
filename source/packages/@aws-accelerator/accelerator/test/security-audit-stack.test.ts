@@ -68,14 +68,14 @@ describe('SecurityAuditStack', () => {
    * Number of Lambda function resource test
    */
   test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 7);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 6);
   });
 
   /**
    * Number of IAM role resource test
    */
   test(`${testNamePrefix} IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 7);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 6);
   });
 
   /**
@@ -614,8 +614,7 @@ describe('SecurityAuditStack', () => {
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
           DependsOn: [
-            'GuardDutyDetectorConfigLogGroupFBFF15EA',
-            'GuardDutyMembersLogGroup1749C967',
+            'CustomGuardDutyUpdateDetectorCustomResourceProviderLogGroup0E4B1900',
             'GuardDutyMembersD34CA003',
           ],
           Properties: {
@@ -665,7 +664,7 @@ describe('SecurityAuditStack', () => {
           Properties: {
             DisplayName: 'AWS Accelerator - High Notifications',
             KmsMasterKeyId: {
-              Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
+              Ref: 'AcceleratorKeyLookup0C18DA36',
             },
             TopicName: 'aws-accelerator-HighNotifications',
           },
@@ -788,7 +787,7 @@ describe('SecurityAuditStack', () => {
           Properties: {
             DisplayName: 'AWS Accelerator - Low Notifications',
             KmsMasterKeyId: {
-              Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
+              Ref: 'AcceleratorKeyLookup0C18DA36',
             },
             TopicName: 'aws-accelerator-LowNotifications',
           },
@@ -933,7 +932,7 @@ describe('SecurityAuditStack', () => {
           Properties: {
             DisplayName: 'AWS Accelerator - Medium Notifications',
             KmsMasterKeyId: {
-              Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
+              Ref: 'AcceleratorKeyLookup0C18DA36',
             },
             TopicName: 'aws-accelerator-MediumNotifications',
           },
@@ -1113,7 +1112,7 @@ describe('SecurityAuditStack', () => {
                 {
                   ServerSideEncryptionByDefault: {
                     KMSMasterKeyID: {
-                      Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
+                      Ref: 'AcceleratorKeyLookup0C18DA36',
                     },
                     SSEAlgorithm: 'aws:kms',
                   },
@@ -1190,7 +1189,7 @@ describe('SecurityAuditStack', () => {
                 {
                   ServerSideEncryptionByDefault: {
                     KMSMasterKeyID: {
-                      Ref: 'AcceleratorKeyLookupAcceleratorKmsKeyArnD1CF4C3D',
+                      Ref: 'AcceleratorKeyLookup0C18DA36',
                     },
                     SSEAlgorithm: 'aws:kms',
                   },

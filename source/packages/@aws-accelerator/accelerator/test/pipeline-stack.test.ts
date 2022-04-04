@@ -14,6 +14,9 @@ const stack = new PipelineStack(app, 'PipelineStack', {
   qualifier: 'aws-accelerator',
   managementAccountId: app.account,
   managementAccountRoleName: 'PlatformAcceleratorAccountAccessRole',
+  managementAccountEmail: 'aws-platform-accelerator-root@mydomain.com',
+  logArchiveAccountEmail: 'aws-platform-accelerator-log-archive@mydomain.com',
+  auditAccountEmail: 'aws-platform-accelerator-audit@mydomain.com',
 });
 
 /**
@@ -354,6 +357,35 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage key"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"key"}]',
+                      PrimarySource: 'Build',
+                      ProjectName: {
+                        Ref: 'PipelineToolkitProjectBCBD6910',
+                      },
+                    },
+                    InputArtifacts: [
+                      {
+                        Name: 'Build',
+                      },
+                      {
+                        Name: 'Config',
+                      },
+                    ],
+                    Name: 'Key',
+                    RoleArn: {
+                      'Fn::GetAtt': ['PipelinePipelineRole6D983AD5', 'Arn'],
+                    },
+                    RunOrder: 1,
+                  },
+                  {
+                    ActionTypeId: {
+                      Category: 'Build',
+                      Owner: 'AWS',
+                      Provider: 'CodeBuild',
+                      Version: '1',
+                    },
+                    Configuration: {
+                      EnvironmentVariables:
                         '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage logging"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"logging"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
@@ -372,7 +404,7 @@ describe('PipelineStack', () => {
                     RoleArn: {
                       'Fn::GetAtt': ['PipelinePipelineRole6D983AD5', 'Arn'],
                     },
-                    RunOrder: 1,
+                    RunOrder: 2,
                   },
                 ],
                 Name: 'Logging',
@@ -1391,13 +1423,6 @@ describe('PipelineStack', () => {
             Artifacts: {
               Type: 'CODEPIPELINE',
             },
-            Cache: {
-              Modes: ['LOCAL_SOURCE_CACHE'],
-              Type: 'LOCAL',
-            },
-            EncryptionKey: {
-              Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
-            },
             Environment: {
               ComputeType: 'BUILD_GENERAL1_MEDIUM',
               EnvironmentVariables: [
@@ -1417,7 +1442,6 @@ describe('PipelineStack', () => {
               PrivilegedMode: true,
               Type: 'LINUX_CONTAINER',
             },
-            Name: 'aws-accelerator-toolkit-project',
             ServiceRole: {
               'Fn::GetAtt': ['PipelineToolkitRoleF9E508C4', 'Arn'],
             },

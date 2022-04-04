@@ -128,6 +128,12 @@ describe('InstallerStack', () => {
               },
               Parameters: ['EnableApprovalStage'],
             },
+            {
+              Label: {
+                default: 'Mandatory Accounts Configuration',
+              },
+              Parameters: ['ManagementAccountEmail', 'LogArchiveAccountEmail', 'AuditAccountEmail'],
+            },
           ],
           ParameterLabels: {
             EnableApprovalStage: {
@@ -170,23 +176,29 @@ describe('InstallerStack', () => {
             },
             {
               Label: {
+                default: 'Mandatory Accounts Configuration',
+              },
+              Parameters: ['ManagementAccountEmail', 'LogArchiveAccountEmail', 'AuditAccountEmail'],
+            },
+            {
+              Label: {
                 default: 'Target Environment Configuration',
               },
               Parameters: ['AcceleratorQualifier', 'ManagementAccountId', 'ManagementAccountRoleName'],
             },
           ],
           ParameterLabels: {
-            AcceleratorQualifier: {
-              default: 'Accelerator Qualifier',
+            AuditAccountEmail: {
+              default: 'Audit Account Email',
             },
             EnableApprovalStage: {
               default: 'Enable Approval Stage',
             },
-            ManagementAccountId: {
-              default: 'Management Account ID',
+            LogArchiveAccountEmail: {
+              default: 'Log Archive Account Email',
             },
-            ManagementAccountRoleName: {
-              default: 'Management Account Role Name',
+            ManagementAccountEmail: {
+              default: 'Management Account Email',
             },
             RepositoryBranchName: {
               default: 'Branch Name',
@@ -629,6 +641,27 @@ describe('InstallerStack', () => {
                   },
                 },
                 {
+                  Name: 'MANAGEMENT_ACCOUNT_EMAIL',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'ManagementAccountEmail',
+                  },
+                },
+                {
+                  Name: 'LOG_ARCHIVE_ACCOUNT_EMAIL',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'LogArchiveAccountEmail',
+                  },
+                },
+                {
+                  Name: 'AUDIT_ACCOUNT_EMAIL',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'AuditAccountEmail',
+                  },
+                },
+                {
                   Name: 'ENABLE_TESTER',
                   Type: 'PLAINTEXT',
                   Value: 'true',
@@ -661,7 +694,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:aws:iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  \n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
+                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
+                    {
+                      Ref: 'AWS::Partition',
+                    },
+                    ':iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  \n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
                     {
                       Ref: 'AWS::Region',
                     },
@@ -743,6 +780,27 @@ describe('InstallerStack', () => {
                   },
                 },
                 {
+                  Name: 'MANAGEMENT_ACCOUNT_EMAIL',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'ManagementAccountEmail',
+                  },
+                },
+                {
+                  Name: 'LOG_ARCHIVE_ACCOUNT_EMAIL',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'LogArchiveAccountEmail',
+                  },
+                },
+                {
+                  Name: 'AUDIT_ACCOUNT_EMAIL',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'AuditAccountEmail',
+                  },
+                },
+                {
                   Name: 'MANAGEMENT_ACCOUNT_ID',
                   Type: 'PLAINTEXT',
                   Value: {
@@ -806,7 +864,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:aws:iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  \n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
+                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
+                    {
+                      Ref: 'AWS::Partition',
+                    },
+                    ':iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  \n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
                     {
                       Ref: 'AWS::Region',
                     },
@@ -887,6 +949,27 @@ describe('InstallerStack', () => {
                     Ref: 'EnableApprovalStage',
                   },
                 },
+                {
+                  Name: 'MANAGEMENT_ACCOUNT_EMAIL',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'ManagementAccountEmail',
+                  },
+                },
+                {
+                  Name: 'LOG_ARCHIVE_ACCOUNT_EMAIL',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'LogArchiveAccountEmail',
+                  },
+                },
+                {
+                  Name: 'AUDIT_ACCOUNT_EMAIL',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'AuditAccountEmail',
+                  },
+                },
               ],
               Image: 'aws/codebuild/standard:5.0',
               ImagePullCredentialsType: 'CODEBUILD',
@@ -910,7 +993,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:aws:iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  \n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
+                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
+                    {
+                      Ref: 'AWS::Partition',
+                    },
+                    ':iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  \n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
                     {
                       Ref: 'AWS::Region',
                     },
@@ -954,6 +1041,9 @@ describe('InstallerStack', () => {
             Artifacts: {
               Type: 'CODEPIPELINE',
             },
+            Cache: {
+              Type: 'NO_CACHE',
+            },
             EncryptionKey: {
               'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
             },
@@ -989,6 +1079,27 @@ describe('InstallerStack', () => {
                   Type: 'PLAINTEXT',
                   Value: {
                     Ref: 'EnableApprovalStage',
+                  },
+                },
+                {
+                  Name: 'MANAGEMENT_ACCOUNT_EMAIL',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'ManagementAccountEmail',
+                  },
+                },
+                {
+                  Name: 'LOG_ARCHIVE_ACCOUNT_EMAIL',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'LogArchiveAccountEmail',
+                  },
+                },
+                {
+                  Name: 'AUDIT_ACCOUNT_EMAIL',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'AuditAccountEmail',
                   },
                 },
                 {
@@ -1045,7 +1156,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:aws:iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  \n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
+                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
+                    {
+                      Ref: 'AWS::Partition',
+                    },
+                    ':iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  \n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
                     {
                       Ref: 'AWS::Region',
                     },
