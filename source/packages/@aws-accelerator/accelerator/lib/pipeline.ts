@@ -396,6 +396,16 @@ export class AcceleratorPipeline extends Construct {
     });
 
     // Enable Pipeline notification
+    const codeStarNotificationsRole = new cdk.aws_iam.CfnServiceLinkedRole(
+      this,
+      'AWSServiceRoleForCodeStarNotifications',
+      {
+        awsServiceName: 'codestar-notifications.amazonaws.com',
+        description: 'Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf',
+      },
+    );
+    pipeline.node.addDependency(codeStarNotificationsRole);
+
     const acceleratorStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorStatusTopic', {
       topicName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-status-topic',
       displayName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-status-topic',
