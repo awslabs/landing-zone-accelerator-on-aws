@@ -217,6 +217,54 @@ const networkConfigJson = {
   ],
   centralNetworkServices: {
     delegatedAdminAccount: 'Audit',
+    networkFirewall: {
+      firewalls: [
+        {
+          name: 'Accelerator-Firewall',
+          region: 'us-east-1',
+          firewallPolicy: 'Accelerator-Policy',
+          subnets: ['public-a', 'public-b'],
+          vpc: 'Test',
+        },
+      ],
+      policies: [
+        {
+          name: 'Accelerator-Policy',
+          regions: ['us-east-1'],
+          firewallPolicy: {
+            statelessDefaultActions: ['aws:forward_to_sfe'],
+            statelessFragmentDefaultActions: ['aws:forward_to_sfe'],
+          },
+        },
+      ],
+      rules: [
+        {
+          name: 'Accelerator-Rule',
+          regions: ['us-east-1'],
+          capacity: 100,
+          type: 'STATEFUL',
+          ruleGroup: {
+            rulesSource: {
+              rulesSourceList: {
+                generatedRulesType: 'DENYLIST',
+                targets: ['.example.com'],
+                targetTypes: ['TLS_SNI', 'HTTP_HOST'],
+              },
+              ruleVariables: {
+                ipSets: {
+                  name: 'HOME_NET',
+                  definition: ['10.0.0.0/16', '10.1.0.0/16'],
+                },
+                portSets: {
+                  name: 'HOME_NET',
+                  definition: ['80', '443'],
+                },
+              },
+            },
+          },
+        },
+      ],
+    },
     route53Resolver: {
       endpoints: [
         {

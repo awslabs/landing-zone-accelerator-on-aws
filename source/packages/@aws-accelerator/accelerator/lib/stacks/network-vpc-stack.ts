@@ -19,12 +19,15 @@ import {
   AccountsConfig,
   NetworkAclSubnetSelection,
   NetworkConfigTypes,
+  NfwFirewallConfig,
   nonEmptyString,
   OrganizationConfig,
   PrefixListSourceConfig,
   ResolverEndpointConfig,
+  ResolverRuleConfig,
   SecurityGroupRuleConfig,
   SecurityGroupSourceConfig,
+  SubnetConfig,
   SubnetSourceConfig,
   VpcConfig,
 } from '@aws-accelerator/config';
@@ -32,9 +35,11 @@ import {
   DeleteDefaultVpc,
   DhcpOptions,
   HostedZone,
+  IResourceShareItem,
   KeyLookup,
   NatGateway,
   NetworkAcl,
+  NetworkFirewall,
   Organization,
   PrefixList,
   RecordSet,
@@ -78,10 +83,21 @@ const TCP_PROTOCOLS_PORT: { [key: string]: number } = {
   'ORACLE-RDS': 1521,
 };
 
+type ResourceShareType = SubnetConfig | ResolverRuleConfig;
+
 export class NetworkVpcStack extends AcceleratorStack {
+  private accountsConfig: AccountsConfig;
+  private orgConfig: OrganizationConfig;
+  private logRetention: number;
   readonly acceleratorKey: cdk.aws_kms.Key;
+
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    // Set private properties
+    this.accountsConfig = props.accountsConfig;
+    this.orgConfig = props.organizationConfig;
+    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
     this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
       accountId: props.accountsConfig.getAuditAccountId(),
@@ -117,7 +133,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     // the generated transit gateway attachments
     const transitGatewayAccountIds: string[] = [];
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = props.accountsConfig.getAccountId(vpcItem.account);
+      const accountId = this.accountsConfig.getAccountId(vpcItem.account);
       // Only care about VPCs to be created in the current account and region
       if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
         for (const attachment of vpcItem.transitGatewayAttachments ?? []) {
@@ -132,7 +148,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           Logger.info(
             `[network-vpc-stack] Transit Gateway key ${attachment.transitGateway.name} is not in map, add resources to look up`,
           );
-          const owningAccountId = props.accountsConfig.getAccountId(attachment.transitGateway.account);
+          const owningAccountId = this.accountsConfig.getAccountId(attachment.transitGateway.account);
 
           // If owning account is this account, transit gateway id can be
           // retrieved from ssm parameter store
@@ -156,32 +172,16 @@ export class NetworkVpcStack extends AcceleratorStack {
             }
 
             // Get the resource share related to the transit gateway
-            const resourceShare = ResourceShare.fromLookup(
-              this,
-              pascalCase(`${attachment.transitGateway.name}TransitGatewayShare`),
-              {
-                resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
-                resourceShareName: `${attachment.transitGateway.name}_TransitGatewayShare`,
-                owningAccountId,
-              },
-            );
-
-            // Represents the transit gateway resource
-            const tgw = ResourceShareItem.fromLookup(
-              this,
-              pascalCase(`${attachment.transitGateway.name}TransitGateway`),
-              {
-                resourceShare,
-                resourceShareItemType: 'ec2:TransitGateway',
-                kmsKey: this.acceleratorKey,
-                logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-              },
-            );
+            const tgwId = this.getResourceShare(
+              `${attachment.transitGateway.name}_TransitGatewayShare`,
+              'ec2:TransitGateway',
+              owningAccountId,
+            ).resourceShareItemId;
 
             Logger.info(
-              `[network-vpc-stack] Adding [${attachment.transitGateway.name}]: ${tgw.resourceShareItemId} to transitGatewayIds Map`,
+              `[network-vpc-stack] Adding [${attachment.transitGateway.name}]: ${tgwId} to transitGatewayIds Map`,
             );
-            transitGatewayIds.set(attachment.transitGateway.name, tgw.resourceShareItemId);
+            transitGatewayIds.set(attachment.transitGateway.name, tgwId);
           }
         }
       }
@@ -221,9 +221,7 @@ export class NetworkVpcStack extends AcceleratorStack {
       const centralLogsBucket = cdk.aws_s3.Bucket.fromBucketName(
         this,
         'CentralLogsBucket',
-        `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
-          props.globalConfig.homeRegion
-        }`,
+        `aws-accelerator-central-logs-${this.accountsConfig.getLogArchiveAccountId()}-${props.globalConfig.homeRegion}`,
       );
       centralLogsBucketArn = centralLogsBucket.bucketArn;
     }
@@ -271,7 +269,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     //
     let useCentralEndpoints = false;
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = props.accountsConfig.getAccountId(vpcItem.account);
+      const accountId = this.accountsConfig.getAccountId(vpcItem.account);
       if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
         if (vpcItem.useCentralEndpoints) {
           useCentralEndpoints = true;
@@ -306,7 +304,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     // external account
     //
     if (centralEndpointVpc) {
-      const centralEndpointVpcAccountId = props.accountsConfig.getAccountId(centralEndpointVpc.account);
+      const centralEndpointVpcAccountId = this.accountsConfig.getAccountId(centralEndpointVpc.account);
       if (centralEndpointVpcAccountId !== cdk.Stack.of(this).account) {
         Logger.info(
           '[network-vpc-stack] Central Endpoints VPC is in an external account, create a role to enable central endpoints',
@@ -420,7 +418,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     for (const dhcpItem of props.networkConfig.dhcpOptions ?? []) {
       // Check if the set belongs in this account/region
       const accountIds = dhcpItem.accounts.map(item => {
-        return props.accountsConfig.getAccountId(item);
+        return this.accountsConfig.getAccountId(item);
       });
       const regions = dhcpItem.regions.map(item => {
         return item.toString();
@@ -451,7 +449,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     for (const prefixListItem of props.networkConfig.prefixLists ?? []) {
       // Check if the set belongs in this account/region
       const accountIds = prefixListItem.accounts.map(item => {
-        return props.accountsConfig.getAccountId(item);
+        return this.accountsConfig.getAccountId(item);
       });
       const regions = prefixListItem.regions.map(item => {
         return item.toString();
@@ -481,7 +479,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     // Evaluate VPC entries
     //
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = props.accountsConfig.getAccountId(vpcItem.account);
+      const accountId = this.accountsConfig.getAccountId(vpcItem.account);
       if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
         Logger.info(`[network-vpc-stack] Adding VPC ${vpcItem.name}`);
 
@@ -515,7 +513,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           cdk.Tags.of(vpc).add('accelerator:use-central-endpoints', 'true');
           cdk.Tags.of(vpc).add(
             'accelerator:central-endpoints-account-id',
-            props.accountsConfig.getAccountId(centralEndpointVpc.account),
+            this.accountsConfig.getAccountId(centralEndpointVpc.account),
           );
         }
 
@@ -593,37 +591,7 @@ export class NetworkVpcStack extends AcceleratorStack {
 
           if (subnetItem.shareTargets) {
             Logger.info(`[network-vpc-stack] Share subnet`);
-
-            // Build a list of principals to share to
-            const principals: string[] = [];
-
-            // Loop through all the defined OUs
-            for (const ouItem of subnetItem.shareTargets.organizationalUnits ?? []) {
-              let ouArn = props.organizationConfig.getOrganizationalUnitArn(ouItem);
-              // AWS::RAM::ResourceShare expects the organizations ARN if
-              // sharing with the entire org (Root)
-              if (ouItem === 'Root') {
-                ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
-              }
-              Logger.info(
-                `[network-vpc-stack] Share Subnet ${subnetItem.name} with Organizational Unit ${ouItem}: ${ouArn}`,
-              );
-              principals.push(ouArn);
-            }
-
-            // Loop through all the defined accounts
-            for (const account of subnetItem.shareTargets.accounts ?? []) {
-              const accountId = props.accountsConfig.getAccountId(account);
-              Logger.info(`[network-vpc-stack] Share Subnet ${subnetItem.name} with Account ${account}: ${accountId}`);
-              principals.push(accountId);
-            }
-
-            // Create the Resource Share
-            new ResourceShare(this, `${pascalCase(subnetItem.name)}SubnetShare`, {
-              name: `${subnetItem.name}_SubnetShare`,
-              principals,
-              resourceArns: [subnet.subnetArn],
-            });
+            this.addResourceShare(subnetItem, `${subnetItem.name}_SubnetShare`, [subnet.subnetArn]);
           }
         }
 
@@ -707,6 +675,110 @@ export class NetworkVpcStack extends AcceleratorStack {
         }
 
         //
+        // Create Network Firewalls
+        //
+        const firewallMap = new Map<string, NetworkFirewall>();
+        if (props.networkConfig.centralNetworkServices?.networkFirewall?.firewalls) {
+          const firewalls = props.networkConfig.centralNetworkServices.networkFirewall.firewalls;
+          let firewallLogBucket: cdk.aws_s3.IBucket | undefined;
+
+          for (const firewallItem of firewalls) {
+            if (vpcItem.name === firewallItem.vpc) {
+              const firewallSubnets: string[] = [];
+              const delegatedAdminAccountId = this.accountsConfig.getAccountId(
+                props.networkConfig.centralNetworkServices.delegatedAdminAccount,
+              );
+              let owningAccountId: string | undefined = undefined;
+
+              // Check if this is not the delegated network admin account
+              if (delegatedAdminAccountId !== cdk.Stack.of(this).account) {
+                owningAccountId = delegatedAdminAccountId;
+              }
+
+              // Check if VPC has matching subnets
+              for (const subnetItem of firewallItem.subnets) {
+                if (subnetMap.has(subnetItem)) {
+                  firewallSubnets.push(subnetMap.get(subnetItem)!.subnetId);
+                } else {
+                  throw new Error(
+                    `[network-vpc-stack] Create Network Firewall: subnet not found in VPC ${vpcItem.name}`,
+                  );
+                }
+              }
+
+              // Create firewall
+              if (firewallSubnets.length > 0) {
+                const nfw = this.createNetworkFirewall(
+                  firewallItem,
+                  vpc.vpcId,
+                  vpcItem,
+                  firewallSubnets,
+                  owningAccountId,
+                );
+                firewallMap.set(firewallItem.name, nfw);
+
+                // Check for logging configurations
+                const destinationConfigs: cdk.aws_networkfirewall.CfnLoggingConfiguration.LogDestinationConfigProperty[] =
+                  [];
+                for (const logItem of firewallItem.loggingConfiguration ?? []) {
+                  if (logItem.destination === 'cloud-watch-logs') {
+                    // Create log group and log configuration
+                    Logger.info(
+                      `[network-vpc-stack] Add CloudWatch ${logItem.type} logs for Network Firewall ${firewallItem.name}`,
+                    );
+                    const logGroup = new cdk.aws_logs.LogGroup(
+                      this,
+                      pascalCase(`${firewallItem.name}${logItem.type}LogGroup`),
+                      {
+                        encryptionKey: this.acceleratorKey,
+                        retention: this.logRetention,
+                      },
+                    );
+                    destinationConfigs.push({
+                      logDestination: {
+                        logGroup: logGroup.logGroupName,
+                      },
+                      logDestinationType: 'CloudWatchLogs',
+                      logType: logItem.type,
+                    });
+                  }
+
+                  if (logItem.destination === 's3') {
+                    Logger.info(
+                      `[network-vpc-stack] Add S3 ${logItem.type} logs for Network Firewall ${firewallItem.name}`,
+                    );
+
+                    if (!firewallLogBucket) {
+                      firewallLogBucket = cdk.aws_s3.Bucket.fromBucketName(
+                        this,
+                        'FirewallLogsBucket',
+                        `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
+                          props.globalConfig.homeRegion
+                        }`,
+                      );
+                    }
+
+                    destinationConfigs.push({
+                      logDestination: {
+                        bucketName: firewallLogBucket.bucketName,
+                      },
+                      logDestinationType: 'S3',
+                      logType: logItem.type,
+                    });
+                  }
+                }
+
+                // Add logging configuration
+                const config = {
+                  logDestinationConfigs: destinationConfigs,
+                };
+                nfw.addLogging(config);
+              }
+            }
+          }
+        }
+
+        //
         // Create Route Table Entries.
         //
         for (const routeTableItem of vpcItem.routeTables ?? []) {
@@ -761,6 +833,38 @@ export class NetworkVpcStack extends AcceleratorStack {
             if (routeTableEntryItem.type === 'internetGateway') {
               Logger.info(`[network-vpc-stack] Adding Internet Gateway Route Table Entry ${routeTableEntryItem.name}`);
               routeTable.addInternetGatewayRoute(id, routeTableEntryItem.destination);
+            }
+
+            // Route: Network Firewall
+            if (routeTableEntryItem.type === 'networkFirewall') {
+              // Check for AZ input
+              if (!routeTableEntryItem.targetAvailabilityZone) {
+                throw new Error(
+                  `[network-vpc-stack] Network Firewall route table entry ${routeTableEntryItem.name} must specify a target availability zone`,
+                );
+              }
+
+              // Get Network Firewall and SSM parameter storing endpoint values
+              const firewallArn = firewallMap.get(routeTableEntryItem.target)?.firewallArn;
+              const endpointAz = `${cdk.Stack.of(this).region}${routeTableEntryItem.targetAvailabilityZone}`;
+
+              if (firewallArn) {
+                // Add route
+                Logger.info(
+                  `[network-vpc-stack] Adding Network Firewall Route Table Entry ${routeTableEntryItem.name}`,
+                );
+                const routeOptions = {
+                  id: id,
+                  destination: routeTableEntryItem.destination,
+                  endpointAz: endpointAz,
+                  firewallArn: firewallArn,
+                  kmsKey: this.acceleratorKey,
+                  logRetention: this.logRetention,
+                };
+                routeTable.addNetworkFirewallRoute(routeOptions);
+              } else {
+                throw new Error(`[network-vpc-stack] Unable to locate Network Firewall ${routeTableEntryItem.target}`);
+              }
             }
           }
         }
@@ -956,10 +1060,10 @@ export class NetworkVpcStack extends AcceleratorStack {
         // Create Route 53 Resolver Endpoints
         //
         if (props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints) {
-          const delegatedAdminAccountId = props.accountsConfig.getAccountId(
+          const delegatedAdminAccountId = this.accountsConfig.getAccountId(
             props.networkConfig.centralNetworkServices.delegatedAdminAccount,
           );
-          const vpcAccountId = props.accountsConfig.getAccountId(vpcItem.account);
+          const vpcAccountId = this.accountsConfig.getAccountId(vpcItem.account);
           const endpoints = props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints;
           const endpointMap = new Map<string, ResolverEndpoint>();
 
@@ -972,23 +1076,18 @@ export class NetworkVpcStack extends AcceleratorStack {
                 if (subnetMap.has(subnetItem)) {
                   r53Subnets.push(subnetMap.get(subnetItem)!.subnetId);
                 } else {
-                  throw new Error(`Subnet not found in VPC ${vpcItem.name}`);
+                  throw new Error(
+                    `[network-vpc-stack] Create Route 53 Resolver endpoint: subnet not found in VPC ${vpcItem.name}`,
+                  );
                 }
               }
               // Create endpoint
               if (r53Subnets.length > 0 && vpcAccountId === delegatedAdminAccountId) {
-                const endpoint = this.createResolverEndpoint(
-                  endpointItem,
-                  endpointMap,
-                  vpc,
-                  r53Subnets,
-                  props.accountsConfig,
-                  props.organizationConfig,
-                );
+                const endpoint = this.createResolverEndpoint(endpointItem, endpointMap, vpc, r53Subnets);
                 endpointMap.set(endpointItem.name, endpoint);
               } else {
                 throw new Error(
-                  'VPC for Route 53 Resolver endpoints must be located in the delegated network administrator account',
+                  '[network-vpc-stack] VPC for Route 53 Resolver endpoints must be located in the delegated network administrator account',
                 );
               }
             }
@@ -996,6 +1095,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         }
       }
     }
+    Logger.info('[network-vpc-stack] Completed stack synthesis');
   }
 
   private processNetworkAclTarget(target: string | NetworkAclSubnetSelection): {
@@ -1471,8 +1571,6 @@ export class NetworkVpcStack extends AcceleratorStack {
     endpointMap: Map<string, ResolverEndpoint>,
     vpc: Vpc,
     subnets: string[],
-    accountsConfig: AccountsConfig,
-    orgConfig: OrganizationConfig,
   ) {
     // Validate there are no rules associated with an inbound endpoint
     if (endpointItem.type === 'INBOUND' && endpointItem.rules) {
@@ -1588,39 +1686,134 @@ export class NetworkVpcStack extends AcceleratorStack {
 
       if (ruleItem.shareTargets) {
         Logger.info(`[network-vpc-stack] Share Route 53 Resolver rule ${ruleItem.name}`);
-
-        // Build a list of principals to share to
-        const principals: string[] = [];
-
-        // Loop through all the defined OUs
-        for (const ouItem of ruleItem.shareTargets.organizationalUnits ?? []) {
-          let ouArn = orgConfig.getOrganizationalUnitArn(ouItem);
-          // AWS::RAM::ResourceShare expects the organizations ARN if
-          // sharing with the entire org (Root)
-          if (ouItem === 'Root') {
-            ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
-          }
-          Logger.info(`[network-vpc-stack] Share rule ${ruleItem.name} with Organizational Unit ${ouItem}: ${ouArn}`);
-          principals.push(ouArn);
-        }
-
-        // Loop through all the defined accounts
-        for (const account of ruleItem.shareTargets.accounts ?? []) {
-          const accountId = accountsConfig.getAccountId(account);
-          Logger.info(`[network-vpc-stack] Share rule ${ruleItem.name} with Account ${account}: ${accountId}`);
-          principals.push(accountId);
-        }
-
-        // Create the Resource Share
-        new ResourceShare(this, `${pascalCase(ruleItem.name)}ResolverRuleShare`, {
-          name: `${ruleItem.name}_ResolverRule`,
-          principals,
-          resourceArns: [rule.ruleArn],
-        });
+        this.addResourceShare(ruleItem, `${ruleItem.name}_ResolverRule`, [rule.ruleArn]);
       }
     }
-
     // Return endpoint object
     return endpoint;
+  }
+
+  /**
+   * Create a Network Firewall in the specified VPC and subnets.
+   *
+   * @param firewallItem
+   * @param vpcId
+   * @param vpcItem
+   * @param subnets
+   * @param owningAccountId
+   * @returns
+   */
+  private createNetworkFirewall(
+    firewallItem: NfwFirewallConfig,
+    vpcId: string,
+    vpcItem: VpcConfig,
+    subnets: string[],
+    owningAccountId?: string,
+  ): NetworkFirewall {
+    // Get firewall policy ARN
+    let policyArn: string;
+
+    if (!owningAccountId) {
+      policyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        `/accelerator/network/networkFirewall/policies/${firewallItem.firewallPolicy}/arn`,
+      );
+    } else {
+      policyArn = this.getResourceShare(
+        `${firewallItem.firewallPolicy}_NetworkFirewallPolicyShare`,
+        'network-firewall:FirewallPolicy',
+        owningAccountId,
+      ).resourceShareItemArn;
+    }
+
+    Logger.info(`[network-vpc-stack] Add Network Firewall ${firewallItem.name} to VPC ${vpcItem.name}`);
+    const nfw = new NetworkFirewall(this, pascalCase(`${vpcItem.name}${firewallItem.name}NetworkFirewall`), {
+      firewallPolicyArn: policyArn,
+      name: firewallItem.name,
+      description: firewallItem.description,
+      subnets: subnets,
+      vpcId: vpcId,
+      deleteProtection: firewallItem.deleteProtection,
+      firewallPolicyChangeProtection: firewallItem.firewallPolicyChangeProtection,
+      subnetChangeProtection: firewallItem.subnetChangeProtection,
+      tags: firewallItem.tags ?? [],
+    });
+    // Create SSM parameters
+    new cdk.aws_ssm.StringParameter(
+      this,
+      pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(firewallItem.name)}FirewallArn`),
+      {
+        parameterName: `/accelerator/network/vpc/${vpcItem.name}/networkFirewall/${firewallItem.name}/arn`,
+        stringValue: nfw.firewallArn,
+      },
+    );
+    return nfw;
+  }
+
+  /**
+   * Add RAM resource shares to the stack.
+   *
+   * @param item
+   * @param resourceShareName
+   * @param resourceArns
+   */
+  private addResourceShare(item: ResourceShareType, resourceShareName: string, resourceArns: string[]) {
+    // Build a list of principals to share to
+    const principals: string[] = [];
+
+    // Loop through all the defined OUs
+    for (const ouItem of item.shareTargets?.organizationalUnits ?? []) {
+      let ouArn = this.orgConfig.getOrganizationalUnitArn(ouItem);
+      // AWS::RAM::ResourceShare expects the organizations ARN if
+      // sharing with the entire org (Root)
+      if (ouItem === 'Root') {
+        ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
+      }
+      Logger.info(`[network-vpc-stack] Share ${resourceShareName} with Organizational Unit ${ouItem}: ${ouArn}`);
+      principals.push(ouArn);
+    }
+
+    // Loop through all the defined accounts
+    for (const account of item.shareTargets?.accounts ?? []) {
+      const accountId = this.accountsConfig.getAccountId(account);
+      Logger.info(`[network-vpc-stack] Share ${resourceShareName} with Account ${account}: ${accountId}`);
+      principals.push(accountId);
+    }
+
+    // Create the Resource Share
+    new ResourceShare(this, `${pascalCase(resourceShareName)}ResourceShare`, {
+      name: resourceShareName,
+      principals,
+      resourceArns: resourceArns,
+    });
+  }
+
+  /**
+   * Get the resource ID from a RAM share.
+   *
+   * @param resourceShareName
+   * @param itemType
+   * @param owningAccountId
+   */
+  private getResourceShare(resourceShareName: string, itemType: string, owningAccountId: string): IResourceShareItem {
+    // Generate a logical ID
+    const resourceName = resourceShareName.split('_')[0];
+    const logicalId = `${resourceName}${itemType.split(':')[1]}`;
+
+    // Lookup resource share
+    const resourceShare = ResourceShare.fromLookup(this, pascalCase(`${logicalId}Share`), {
+      resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
+      resourceShareName: resourceShareName,
+      owningAccountId,
+    });
+
+    // Represents the item shared by RAM
+    const item = ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
+      resourceShare,
+      resourceShareItemType: itemType,
+      kmsKey: this.acceleratorKey,
+      logRetentionInDays: this.logRetention,
+    });
+    return item;
   }
 }

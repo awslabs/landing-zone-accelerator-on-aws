@@ -18,7 +18,19 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 
 import {
+  AccountsConfig,
+  DnsFirewallRuleGroupConfig,
+  DnsQueryLogsConfig,
+  NfwFirewallPolicyConfig,
+  NfwRuleGroupConfig,
+  OrganizationConfig,
+  TransitGatewayConfig,
+} from '@aws-accelerator/config';
+import {
+  FirewallPolicyProperty,
   KeyLookup,
+  NetworkFirewallPolicy,
+  NetworkFirewallRuleGroup,
   Organization,
   QueryLoggingConfig,
   ResolverFirewallDomainList,
@@ -43,11 +55,28 @@ interface ResolverFirewallRuleProps {
   blockResponse?: string;
 }
 
+type ResourceShareType =
+  | DnsFirewallRuleGroupConfig
+  | DnsQueryLogsConfig
+  | NfwRuleGroupConfig
+  | NfwFirewallPolicyConfig
+  | TransitGatewayConfig;
+
 export class NetworkPrepStack extends AcceleratorStack {
+  private accountsConfig: AccountsConfig;
+  private orgConfig: OrganizationConfig;
+  private key: cdk.aws_kms.Key;
+  private logRetention: number;
+
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
+    // Set private properties
+    this.accountsConfig = props.accountsConfig;
+    this.orgConfig = props.organizationConfig;
+    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
+
+    this.key = new KeyLookup(this, 'AcceleratorKeyLookup', {
       accountId: props.accountsConfig.getAuditAccountId(),
       roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
       keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
@@ -58,7 +87,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     // Generate Transit Gateways
     //
     for (const tgwItem of props.networkConfig.transitGateways ?? []) {
-      const accountId = props.accountsConfig.getAccountId(tgwItem.account);
+      const accountId = this.accountsConfig.getAccountId(tgwItem.account);
       if (accountId === cdk.Stack.of(this).account && tgwItem.region == cdk.Stack.of(this).region) {
         Logger.info(`[network-prep-stack] Add Transit Gateway ${tgwItem.name}`);
 
@@ -103,39 +132,7 @@ export class NetworkPrepStack extends AcceleratorStack {
 
         if (tgwItem.shareTargets) {
           Logger.info(`[network-prep-stack] Share transit gateway`);
-
-          // Build a list of principals to share to
-          const principals: string[] = [];
-
-          // Loop through all the defined OUs
-          for (const ouItem of tgwItem.shareTargets.organizationalUnits ?? []) {
-            let ouArn = props.organizationConfig.getOrganizationalUnitArn(ouItem);
-            // AWS::RAM::ResourceShare expects the organizations ARN if
-            // sharing with the entire org (Root)
-            if (ouItem === 'Root') {
-              ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
-            }
-            Logger.info(
-              `[network-prep-stack] Share Transit Gateway ${tgwItem.name} with Organizational Unit ${ouItem}: ${ouArn}`,
-            );
-            principals.push(ouArn);
-          }
-
-          // Loop through all the defined accounts
-          for (const account of tgwItem.shareTargets.accounts ?? []) {
-            const accountId = props.accountsConfig.getAccountId(account);
-            Logger.info(
-              `[network-prep-stack] Share Transit Gateway ${tgwItem.name} with Account ${account}: ${accountId}`,
-            );
-            principals.push(accountId);
-          }
-
-          // Create the Resource Share
-          new ResourceShare(this, `${pascalCase(tgwItem.name)}TransitGatewayShare`, {
-            name: `${tgwItem.name}_TransitGatewayShare`,
-            principals,
-            resourceArns: [tgw.transitGatewayArn],
-          });
+          this.addResourceShare(tgwItem, `${tgwItem.name}_TransitGatewayShare`, [tgw.transitGatewayArn]);
         }
       }
     }
@@ -145,7 +142,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     //
     if (props.networkConfig.centralNetworkServices) {
       const centralConfig = props.networkConfig.centralNetworkServices;
-      const accountId = props.accountsConfig.getAccountId(centralConfig.delegatedAdminAccount);
+      const accountId = this.accountsConfig.getAccountId(centralConfig.delegatedAdminAccount);
 
       //
       // DNS firewall
@@ -199,8 +196,8 @@ export class NetworkPrepStack extends AcceleratorStack {
                 path: filePath,
                 tags: [],
                 type: domainListType,
-                kmsKey: key,
-                logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+                kmsKey: this.key,
+                logRetentionInDays: this.logRetention,
               });
               domainMap.set(listName, domainList.listId);
             }
@@ -222,31 +219,28 @@ export class NetworkPrepStack extends AcceleratorStack {
             }
 
             // Create the DNS firewall rule list
-            try {
-              if (domainMap.get(listName)) {
-                if (ruleItem.action === 'BLOCK' && ruleItem.blockResponse === 'OVERRIDE') {
-                  ruleList.push({
-                    action: ruleItem.action.toString(),
-                    firewallDomainListId: domainMap.get(listName)!,
-                    priority: ruleItem.priority,
-                    blockOverrideDnsType: 'CNAME',
-                    blockOverrideDomain: ruleItem.blockOverrideDomain,
-                    blockOverrideTtl: ruleItem.blockOverrideTtl,
-                    blockResponse: ruleItem.blockResponse,
-                  });
-                } else {
-                  ruleList.push({
-                    action: ruleItem.action.toString(),
-                    firewallDomainListId: domainMap.get(listName)!,
-                    priority: ruleItem.priority,
-                    blockResponse: ruleItem.blockResponse,
-                  });
-                }
+
+            if (domainMap.get(listName)) {
+              if (ruleItem.action === 'BLOCK' && ruleItem.blockResponse === 'OVERRIDE') {
+                ruleList.push({
+                  action: ruleItem.action.toString(),
+                  firewallDomainListId: domainMap.get(listName)!,
+                  priority: ruleItem.priority,
+                  blockOverrideDnsType: 'CNAME',
+                  blockOverrideDomain: ruleItem.blockOverrideDomain,
+                  blockOverrideTtl: ruleItem.blockOverrideTtl,
+                  blockResponse: ruleItem.blockResponse,
+                });
               } else {
-                throw new Error(`Domain list ${listName} not found in domain map`);
+                ruleList.push({
+                  action: ruleItem.action.toString(),
+                  firewallDomainListId: domainMap.get(listName)!,
+                  priority: ruleItem.priority,
+                  blockResponse: ruleItem.blockResponse,
+                });
               }
-            } catch (e) {
-              throw new Error(`[network-prep-stack] Error updating DNS firewall rule list: ${e}`);
+            } else {
+              throw new Error(`Domain list ${listName} not found in domain map`);
             }
           }
 
@@ -263,39 +257,9 @@ export class NetworkPrepStack extends AcceleratorStack {
 
           if (firewallItem.shareTargets) {
             Logger.info(`[network-prep-stack] Share DNS firewall rule group ${firewallItem.name}`);
-
-            // Build a list of principals to share to
-            const principals: string[] = [];
-
-            // Loop through all the defined OUs
-            for (const ouItem of firewallItem.shareTargets.organizationalUnits ?? []) {
-              let ouArn = props.organizationConfig.getOrganizationalUnitArn(ouItem);
-              // AWS::RAM::ResourceShare expects the organizations ARN if
-              // sharing with the entire org (Root)
-              if (ouItem === 'Root') {
-                ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
-              }
-              Logger.info(
-                `[network-prep-stack] Share rule group ${firewallItem.name} with Organizational Unit ${ouItem}: ${ouArn}`,
-              );
-              principals.push(ouArn);
-            }
-
-            // Loop through all the defined accounts
-            for (const account of firewallItem.shareTargets.accounts ?? []) {
-              const accountId = props.accountsConfig.getAccountId(account);
-              Logger.info(
-                `[network-prep-stack] Share rule group ${firewallItem.name} with Account ${account}: ${accountId}`,
-              );
-              principals.push(accountId);
-            }
-
-            // Create the Resource Share
-            new ResourceShare(this, `${pascalCase(firewallItem.name)}RuleGroupShare`, {
-              name: `${firewallItem.name}_ResolverFirewallRuleGroupShare`,
-              principals,
-              resourceArns: [ruleGroup.groupArn],
-            });
+            this.addResourceShare(firewallItem, `${firewallItem.name}_ResolverFirewallRuleGroupShare`, [
+              ruleGroup.groupArn,
+            ]);
           }
         }
       }
@@ -329,39 +293,7 @@ export class NetworkPrepStack extends AcceleratorStack {
 
             if (logItem.shareTargets) {
               Logger.info(`[network-prep-stack] Share DNS query log config ${logItem.name}-s3`);
-
-              // Build a list of principals to share to
-              const principals: string[] = [];
-
-              // Loop through all the defined OUs
-              for (const ouItem of logItem.shareTargets.organizationalUnits ?? []) {
-                let ouArn = props.organizationConfig.getOrganizationalUnitArn(ouItem);
-                // AWS::RAM::ResourceShare expects the organizations ARN if
-                // sharing with the entire org (Root)
-                if (ouItem === 'Root') {
-                  ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
-                }
-                Logger.info(
-                  `[network-prep-stack] Share query log config ${logItem.name}-s3 with Organizational Unit ${ouItem}: ${ouArn}`,
-                );
-                principals.push(ouArn);
-              }
-
-              // Loop through all the defined accounts
-              for (const account of logItem.shareTargets.accounts ?? []) {
-                const accountId = props.accountsConfig.getAccountId(account);
-                Logger.info(
-                  `[network-prep-stack] Share rule group ${logItem.name}-s3 with Account ${account}: ${accountId}`,
-                );
-                principals.push(accountId);
-              }
-
-              // Create the Resource Share
-              new ResourceShare(this, `${pascalCase(logItem.name)}S3QueryLogShare`, {
-                name: `${logItem.name}-s3_QueryLogConfigShare`,
-                principals,
-                resourceArns: [s3QueryLogConfig.logArn],
-              });
+              this.addResourceShare(logItem, `${logItem.name}-s3_QueryLogConfigShare`, [s3QueryLogConfig.logArn]);
             }
           }
 
@@ -394,43 +326,146 @@ export class NetworkPrepStack extends AcceleratorStack {
 
             if (logItem.shareTargets) {
               Logger.info(`[network-prep-stack] Share DNS query log config ${logItem.name}-cwl`);
-
-              // Build a list of principals to share to
-              const principals: string[] = [];
-
-              // Loop through all the defined OUs
-              for (const ouItem of logItem.shareTargets.organizationalUnits ?? []) {
-                let ouArn = props.organizationConfig.getOrganizationalUnitArn(ouItem);
-                // AWS::RAM::ResourceShare expects the organizations ARN if
-                // sharing with the entire org (Root)
-                if (ouItem === 'Root') {
-                  ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
-                }
-                Logger.info(
-                  `[network-prep-stack] Share query log config ${logItem.name}-cwl with Organizational Unit ${ouItem}: ${ouArn}`,
-                );
-                principals.push(ouArn);
-              }
-
-              // Loop through all the defined accounts
-              for (const account of logItem.shareTargets.accounts ?? []) {
-                const accountId = props.accountsConfig.getAccountId(account);
-                Logger.info(
-                  `[network-prep-stack] Share rule group ${logItem.name}-cwl with Account ${account}: ${accountId}`,
-                );
-                principals.push(accountId);
-              }
-
-              // Create the Resource Share
-              new ResourceShare(this, `${pascalCase(logItem.name)}CwlQueryLogShare`, {
-                name: `${logItem.name}-cwl_QueryLogConfigShare`,
-                principals,
-                resourceArns: [cwlQueryLogConfig.logArn],
-              });
+              this.addResourceShare(logItem, `${logItem.name}-cwl_QueryLogConfigShare`, [cwlQueryLogConfig.logArn]);
             }
           }
         }
       }
+
+      //
+      // Network Firewall rule groups
+      //
+      const ruleMap = new Map<string, string>();
+
+      for (const ruleItem of centralConfig.networkFirewall?.rules ?? []) {
+        const regions = ruleItem.regions.map(item => {
+          return item.toString();
+        });
+
+        // Create regional rule groups in the delegated admin account
+        if (accountId === cdk.Stack.of(this).account && regions.includes(cdk.Stack.of(this).region)) {
+          Logger.info(`[network-prep-stack] Create network firewall rule group ${ruleItem.name}`);
+          const rule = new NetworkFirewallRuleGroup(this, pascalCase(`${ruleItem.name}NetworkFirewallRuleGroup`), {
+            capacity: ruleItem.capacity,
+            name: ruleItem.name,
+            type: ruleItem.type,
+            description: ruleItem.description,
+            ruleGroup: ruleItem.ruleGroup,
+            tags: ruleItem.tags ?? [],
+          });
+          ruleMap.set(ruleItem.name, rule.groupArn);
+          new ssm.StringParameter(this, pascalCase(`SsmParam${ruleItem.name}NetworkFirewallRuleGroup`), {
+            parameterName: `/accelerator/network/networkFirewall/ruleGroups/${ruleItem.name}/arn`,
+            stringValue: rule.groupArn,
+          });
+
+          if (ruleItem.shareTargets) {
+            Logger.info(`[network-prep-stack] Share Network Firewall rule group ${ruleItem.name}`);
+            this.addResourceShare(ruleItem, `${ruleItem.name}_NetworkFirewallRuleGroupShare`, [rule.groupArn]);
+          }
+        }
+      }
+
+      //
+      // Network Firewall policies
+      //
+      for (const policyItem of centralConfig.networkFirewall?.policies ?? []) {
+        const regions = policyItem.regions.map(item => {
+          return item.toString();
+        });
+
+        // Create regional rule groups in the delegated admin account
+        if (accountId === cdk.Stack.of(this).account && regions.includes(cdk.Stack.of(this).region)) {
+          // Store rule group references to associate with policy
+          const statefulGroups = [];
+          const statelessGroups = [];
+
+          for (const group of policyItem.firewallPolicy.statefulRuleGroups ?? []) {
+            if (ruleMap.has(group.name)) {
+              statefulGroups.push({ priority: group.priority, resourceArn: ruleMap.get(group.name)! });
+            } else {
+              throw new Error(`[network-prep-stack] Rule group ${group.name} not found in rule map`);
+            }
+          }
+
+          for (const group of policyItem.firewallPolicy.statelessRuleGroups ?? []) {
+            if (ruleMap.has(group.name)) {
+              statelessGroups.push({ priority: group.priority, resourceArn: ruleMap.get(group.name)! });
+            } else {
+              throw new Error(`[network-prep-stack] Rule group ${group.name} not found in rule map`);
+            }
+          }
+
+          // Create new firewall policy object with rule group references
+          const firewallPolicy: FirewallPolicyProperty = {
+            statelessDefaultActions: policyItem.firewallPolicy.statelessDefaultActions,
+            statelessFragmentDefaultActions: policyItem.firewallPolicy.statelessFragmentDefaultActions,
+            statefulDefaultActions: policyItem.firewallPolicy.statefulDefaultActions,
+            statefulEngineOptions: policyItem.firewallPolicy.statefulEngineOptions,
+            statefulRuleGroupReferences: statefulGroups,
+            statelessCustomActions: policyItem.firewallPolicy.statelessCustomActions,
+            statelessRuleGroupReferences: statelessGroups,
+          };
+
+          // Instantiate firewall policy construct
+          Logger.info(`[network-prep-stack] Create network firewall policy ${policyItem.name}`);
+          const policy = new NetworkFirewallPolicy(this, pascalCase(`${policyItem.name}NetworkFirewallPolicy`), {
+            name: policyItem.name,
+            firewallPolicy: firewallPolicy,
+            description: policyItem.description,
+            tags: policyItem.tags ?? [],
+          });
+          new ssm.StringParameter(this, pascalCase(`SsmParam${policyItem.name}NetworkFirewallPolicy`), {
+            parameterName: `/accelerator/network/networkFirewall/policies/${policyItem.name}/arn`,
+            stringValue: policy.policyArn,
+          });
+
+          if (policyItem.shareTargets) {
+            Logger.info(`[network-prep-stack] Share Network Firewall policy ${policyItem.name}`);
+            this.addResourceShare(policyItem, `${policyItem.name}_NetworkFirewallPolicyShare`, [policy.policyArn]);
+          }
+        }
+      }
     }
+
+    Logger.info('[network-prep-stack] Completed stack synthesis');
+  }
+
+  /**
+   * Add RAM resource shares to the stack.
+   *
+   * @param item
+   * @param resourceShareName
+   * @param resourceArns
+   */
+  private addResourceShare(item: ResourceShareType, resourceShareName: string, resourceArns: string[]) {
+    // Build a list of principals to share to
+    const principals: string[] = [];
+
+    // Loop through all the defined OUs
+    for (const ouItem of item.shareTargets?.organizationalUnits ?? []) {
+      let ouArn = this.orgConfig.getOrganizationalUnitArn(ouItem);
+      // AWS::RAM::ResourceShare expects the organizations ARN if
+      // sharing with the entire org (Root)
+      if (ouItem === 'Root') {
+        ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
+      }
+      Logger.info(`[network-prep-stack] Share ${resourceShareName} with Organizational Unit ${ouItem}: ${ouArn}`);
+      principals.push(ouArn);
+    }
+
+    // Loop through all the defined accounts
+    for (const account of item.shareTargets?.accounts ?? []) {
+      const accountId = this.accountsConfig.getAccountId(account);
+      Logger.info(`[network-prep-stack] Share ${resourceShareName} with Account ${account}: ${accountId}`);
+      principals.push(accountId);
+    }
+
+    // Create the Resource Share
+    new ResourceShare(this, `${pascalCase(resourceShareName)}ResourceShare`, {
+      name: resourceShareName,
+      principals,
+      resourceArns: resourceArns,
+    });
   }
 }

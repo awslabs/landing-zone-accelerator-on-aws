@@ -11,16 +11,15 @@
  *  and limitations under the License.
  */
 
-import * as ram from 'aws-cdk-lib/aws-ram';
-import * as core from 'aws-cdk-lib';
-import { pascalCase } from 'change-case';
-import { v4 as uuidv4 } from 'uuid';
-import { Construct } from 'constructs';
 import * as cdk from 'aws-cdk-lib';
+import * as ram from 'aws-cdk-lib/aws-ram';
+import { pascalCase } from 'change-case';
+import { Construct } from 'constructs';
+import { v4 as uuidv4 } from 'uuid';
 
 const path = require('path');
 
-export interface IResourceShare extends core.IResource {
+export interface IResourceShare extends cdk.IResource {
   /**
    * The identifier of the resource share
    *
@@ -81,7 +80,9 @@ export interface ResourceShareItemLookupOptions {
    */
   readonly logRetentionInDays: number;
 }
-export interface IResourceShareItem extends core.IResource {
+export interface IResourceShareItem extends cdk.IResource {
+  readonly resourceShareItemArn: string;
+
   /**
    * The identifier of the shared resource item
    *
@@ -90,12 +91,14 @@ export interface IResourceShareItem extends core.IResource {
   readonly resourceShareItemId: string;
 }
 
-export abstract class ResourceShareItem extends core.Resource implements IResourceShareItem {
+export abstract class ResourceShareItem extends cdk.Resource implements IResourceShareItem {
+  readonly resourceShareItemArn: string = '';
   readonly resourceShareItemId: string = '';
   readonly resourceShareItemType: string = '';
 
   public static fromLookup(scope: Construct, id: string, options: ResourceShareItemLookupOptions): IResourceShareItem {
-    class Import extends core.Resource implements IResourceShareItem {
+    class Import extends cdk.Resource implements IResourceShareItem {
+      public readonly resourceShareItemArn: string;
       public readonly resourceShareItemId: string;
 
       constructor(scope: Construct, id: string) {
@@ -104,9 +107,9 @@ export abstract class ResourceShareItem extends core.Resource implements IResour
         console.log(options.resourceShare.resourceShareId);
         const GET_RESOURCE_SHARE_ITEM = 'Custom::GetResourceShareItem';
 
-        const provider = core.CustomResourceProvider.getOrCreateProvider(this, GET_RESOURCE_SHARE_ITEM, {
+        const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, GET_RESOURCE_SHARE_ITEM, {
           codeDirectory: path.join(__dirname, 'get-resource-share-item/dist'),
-          runtime: core.CustomResourceProviderRuntime.NODEJS_14_X,
+          runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
           policyStatements: [
             {
               Effect: 'Allow',
@@ -116,7 +119,7 @@ export abstract class ResourceShareItem extends core.Resource implements IResour
           ],
         });
 
-        const resource = new core.CustomResource(this, 'Resource', {
+        const resource = new cdk.CustomResource(this, 'Resource', {
           resourceType: GET_RESOURCE_SHARE_ITEM,
           serviceToken: provider.serviceToken,
           properties: {
@@ -143,6 +146,7 @@ export abstract class ResourceShareItem extends core.Resource implements IResour
         resource.node.addDependency(logGroup);
 
         this.resourceShareItemId = resource.ref;
+        this.resourceShareItemArn = resource.getAtt('arn').toString();
       }
     }
     return new Import(scope, id);
@@ -152,9 +156,9 @@ export abstract class ResourceShareItem extends core.Resource implements IResour
 /**
  * Creates a Resource Share
  */
-export class ResourceShare extends core.Resource implements IResourceShare {
+export class ResourceShare extends cdk.Resource implements IResourceShare {
   public static fromLookup(scope: Construct, id: string, options: ResourceShareLookupOptions): IResourceShare {
-    class Import extends core.Resource implements IResourceShare {
+    class Import extends cdk.Resource implements IResourceShare {
       public readonly resourceShareId: string;
       public readonly resourceShareName = options.resourceShareName;
       public readonly resourceShareOwner = options.resourceShareOwner;
@@ -167,9 +171,9 @@ export class ResourceShare extends core.Resource implements IResourceShare {
         //
         // Get the Resource Share Definition (by name)
         //
-        const cr = core.CustomResourceProvider.getOrCreateProvider(this, GET_RESOURCE_SHARE, {
+        const cr = cdk.CustomResourceProvider.getOrCreateProvider(this, GET_RESOURCE_SHARE, {
           codeDirectory: path.join(__dirname, 'get-resource-share/dist'),
-          runtime: core.CustomResourceProviderRuntime.NODEJS_14_X,
+          runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
           policyStatements: [
             {
               Effect: 'Allow',
@@ -179,7 +183,7 @@ export class ResourceShare extends core.Resource implements IResourceShare {
           ],
         });
 
-        const resource = new core.CustomResource(this, 'Resource', {
+        const resource = new cdk.CustomResource(this, 'Resource', {
           resourceType: GET_RESOURCE_SHARE,
           serviceToken: cr.serviceToken,
           properties: {
@@ -192,11 +196,11 @@ export class ResourceShare extends core.Resource implements IResourceShare {
 
         this.resourceShareId = resource.ref;
 
-        this.resourceShareArn = core.Stack.of(this).formatArn({
+        this.resourceShareArn = cdk.Stack.of(this).formatArn({
           service: 'ram',
           account: options.owningAccountId,
           resource: 'resource-share',
-          arnFormat: core.ArnFormat.SLASH_RESOURCE_NAME,
+          arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
           resourceName: this.resourceShareId,
         });
       }

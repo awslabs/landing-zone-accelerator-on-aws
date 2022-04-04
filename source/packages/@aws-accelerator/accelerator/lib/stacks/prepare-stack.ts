@@ -12,17 +12,19 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { ValidateEnvironmentConfig } from '../validate-environment-config';
+
 import {
   CreateControlTowerAccounts,
   CreateOrganizationAccounts,
   GetPortfolioId,
   OrganizationalUnit,
 } from '@aws-accelerator/constructs';
+
 import { Logger } from '../logger';
-import { pascalCase } from 'change-case';
+import { ValidateEnvironmentConfig } from '../validate-environment-config';
+import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class PrepareStack extends AcceleratorStack {
   public static readonly MANAGEMENT_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
@@ -267,5 +269,6 @@ export class PrepareStack extends AcceleratorStack {
         }
       }
     }
+    Logger.info('[prepare-stack] Completed stack synthesis');
   }
 }
