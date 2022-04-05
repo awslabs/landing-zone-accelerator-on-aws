@@ -20,9 +20,13 @@ transitGateways:
     autoAcceptSharingAttachments: enable
     routeTables:
       - name: Network-Main-Core
+        routes: [ ]
       - name: Network-Main-Segregated
+        routes: [ ]
       - name: Network-Main-Shared
+        routes: [ ]
       - name: Network-Main-Standalone
+        routes: [ ]
 # dhcpOptions:
 #   - name: accelerator-dhcp-opts
 #     accounts:
