@@ -53,6 +53,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { AssumeRoleCommand, Credentials, GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 import { WaiterResult } from '@aws-sdk/util-waiter';
+import { BackupClient, DeleteBackupVaultCommand } from '@aws-sdk/client-backup';
 
 /**
  * Type for pipeline stage action information with order and action name
@@ -83,7 +84,7 @@ export type ManagementAccountType =
 type stackPersistentObjectListType = {
   stackName: string;
   resourceType: 'S3' | 'CWLogs' | 'KMS';
-  resourceClient: KMSClient | CloudWatchLogsClient | S3Client;
+  resourceClient: KMSClient | CloudWatchLogsClient | S3Client | BackupClient;
   resourcePhysicalId: string;
 };
 
@@ -907,6 +908,30 @@ export class AcceleratorTool {
   }
 
   /**
+   * Function to delete Cloudwatch log group
+   * @param backupClient
+   * @param stackName
+   * @param backupVaultName
+   * @private
+   */
+  private async deleteBackupVault(
+    backupClient: BackupClient,
+    stackName: string,
+    backupVaultName: string,
+  ): Promise<boolean> {
+    Logger.info(`[accelerator-tool] Deleting BackupVault ${backupVaultName} from ${stackName} stack`);
+
+    try {
+      await throttlingBackOff(() =>
+        backupClient.send(new DeleteBackupVaultCommand({ BackupVaultName: backupVaultName })),
+      );
+    } catch (ResourceNotFoundException) {
+      Logger.warn(`[accelerator-tool] AWS BackupVault NOT FOUND ${backupVaultName} from ${stackName} stack`);
+    }
+    return true;
+  }
+
+  /**
    * Function to schedule Key deletion
    * @param kMSClient
    * @param stackName
@@ -971,6 +996,7 @@ export class AcceleratorTool {
    * @param kMSClient
    * @param cloudWatchLogsClient
    * @param s3Client
+   * @param backupClient
    * @private
    */
   private async deleteStackPersistentData(
@@ -979,6 +1005,7 @@ export class AcceleratorTool {
     kMSClient: KMSClient,
     cloudWatchLogsClient: CloudWatchLogsClient,
     s3Client: S3Client,
+    backupClient: BackupClient,
   ): Promise<boolean> {
     let nextToken: string | undefined = undefined;
     do {
@@ -989,6 +1016,9 @@ export class AcceleratorTool {
         switch (stackResourceSummary.ResourceType) {
           case 'AWS::KMS::Key':
             await this.scheduleKeyDeletion(kMSClient, stackName, stackResourceSummary.PhysicalResourceId!);
+            break;
+          case 'AWS::Backup::BackupVault':
+            await this.deleteBackupVault(backupClient, stackName, stackResourceSummary.PhysicalResourceId!);
             break;
           case 'AWS::Logs::LogGroup':
             await this.deleteCloudWatchLogs(cloudWatchLogsClient, stackName, stackResourceSummary.PhysicalResourceId!);
@@ -1102,6 +1132,7 @@ export class AcceleratorTool {
     let s3Client: S3Client;
     let kMSClient: KMSClient;
     let cloudWatchLogsClient: CloudWatchLogsClient;
+    let backupClient: BackupClient;
 
     let cloudFormationStack: Stack | undefined;
     //Use a loop for all regions
@@ -1154,11 +1185,21 @@ export class AcceleratorTool {
               expiration: assumeRoleCredential.Credentials!.Expiration,
             },
           });
+          backupClient = new BackupClient({
+            region: region,
+            credentials: {
+              accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
+              secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
+              sessionToken: assumeRoleCredential.Credentials!.SessionToken,
+              expiration: assumeRoleCredential.Credentials!.Expiration,
+            },
+          });
         } else {
           cloudFormationClient = new CloudFormationClient({ region: region });
           s3Client = new S3Client({ region: region });
           kMSClient = new KMSClient({ region: region });
           cloudWatchLogsClient = new CloudWatchLogsClient({ region: region });
+          backupClient = new BackupClient({ region: region });
         }
 
         const fullyQualifiedStackName = `${resource.stackName}-${resource.accountId}-${region}`;
@@ -1234,6 +1275,7 @@ export class AcceleratorTool {
                 kMSClient,
                 cloudWatchLogsClient,
                 s3Client,
+                backupClient,
               );
             }
           } else {
@@ -1417,6 +1459,7 @@ export class AcceleratorTool {
         new KMSClient({}),
         new CloudWatchLogsClient({}),
         new S3Client({}),
+        new BackupClient({}),
       );
     }
 
