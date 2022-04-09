@@ -43,11 +43,6 @@ export interface QueryLoggingConfigProps {
   readonly name: string;
 
   /**
-   * A KMS CMK, if the destination is CloudWatch Logs.
-   */
-  readonly key?: cdk.aws_kms.Key;
-
-  /**
    * An AWS Organization ID, if the destination is CloudWatch Logs.
    */
   readonly organizationId?: string;
@@ -65,13 +60,10 @@ export class QueryLoggingConfig extends cdk.Resource implements IQueryLoggingCon
     this.name = props.name;
 
     if (props.destination instanceof cdk.aws_logs.LogGroup) {
-      if (!props.key) {
-        throw new Error('key property must be defined when specifying a CloudWatch log group destination');
-      }
       if (!props.organizationId) {
         throw new Error('organizationId property must be defined when specifying a CloudWatch log group destination');
       }
-      this.addPermissions(props.destination, props.key, props.organizationId);
+      this.addPermissions(props.destination, props.organizationId);
       this.destinationArn = props.destination.logGroupArn;
     } else if ('bucketName' in props.destination) {
       this.destinationArn = props.destination.bucketArn;
@@ -87,43 +79,7 @@ export class QueryLoggingConfig extends cdk.Resource implements IQueryLoggingCon
     this.logId = resource.attrId;
   }
 
-  private addPermissions(logGroup: cdk.aws_logs.LogGroup, key: cdk.aws_kms.Key, orgId: string) {
-    // Add key policy permissions
-    key.addToResourcePolicy(
-      new cdk.aws_iam.PolicyStatement({
-        sid: 'Allow Cloud Watch Logs access',
-        principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
-        actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
-        resources: ['*'],
-        conditions: {
-          ArnLike: {
-            'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
-              cdk.Stack.of(this).region
-            }:${cdk.Stack.of(this).account}:*`,
-          },
-        },
-      }),
-    );
-
-    key.addToResourcePolicy(
-      new cdk.aws_iam.PolicyStatement({
-        sid: 'Allow log delivery access',
-        principals: [new cdk.aws_iam.ServicePrincipal(`delivery.logs.amazonaws.com`)],
-        actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
-        resources: ['*'],
-        conditions: {
-          ArnLike: {
-            'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
-              cdk.Stack.of(this).region
-            }:${cdk.Stack.of(this).account}:*`,
-          },
-          StringEquals: {
-            'aws:PrincipalOrgId': orgId,
-          },
-        },
-      }),
-    );
-
+  private addPermissions(logGroup: cdk.aws_logs.LogGroup, orgId: string) {
     logGroup.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: 'Allow log delivery access',

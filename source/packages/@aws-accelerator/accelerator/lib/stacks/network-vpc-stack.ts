@@ -529,6 +529,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           trafficType: props.networkConfig.vpcFlowLogs.trafficType,
           maxAggregationInterval: props.networkConfig.vpcFlowLogs.maxAggregationInterval,
           logFormat,
+          logRetentionInDays: this.logRetention,
           encryptionKey: this.acceleratorKey,
           bucketArn: centralLogsBucketArn,
         });
