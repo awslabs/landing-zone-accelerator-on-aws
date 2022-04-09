@@ -12,7 +12,6 @@ const stack = new cdk.Stack();
 // Instantiate resources required for construct
 const bucket = cdk.aws_s3.Bucket.fromBucketName(stack, 'TestBucket', 'testbucket');
 const logGroup = new cdk.aws_logs.LogGroup(stack, 'TestLogGroup');
-const key = new cdk.aws_kms.Key(stack, 'TestKey');
 
 // S3 query logging config
 const s3Config = new QueryLoggingConfig(stack, 'S3QueryLoggingTest', {
@@ -24,7 +23,6 @@ const s3Config = new QueryLoggingConfig(stack, 'S3QueryLoggingTest', {
 new QueryLoggingConfig(stack, 'CwlQueryLoggingTest', {
   destination: logGroup,
   name: 'CwlQueryLoggingTest',
-  key: key,
   organizationId: 'o-123test',
 });
 
@@ -50,13 +48,6 @@ describe('QueryLoggingConfig', () => {
       'AWS::Route53Resolver::ResolverQueryLoggingConfigAssociation',
       1,
     );
-  });
-
-  /**
-   * KMS key policy count test
-   */
-  test(`${testNamePrefix} Key policy count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::KMS::Key', 1);
   });
 
   /**
@@ -95,94 +86,6 @@ describe('QueryLoggingConfig', () => {
           Properties: {
             DestinationArn: {
               'Fn::GetAtt': ['TestLogGroup4EEF7AD4', 'Arn'],
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * KMS key policy resource config test
-   */
-  test(`${testNamePrefix} KMS key policy resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestKey4CACAF33: {
-          Properties: {
-            KeyPolicy: {
-              Statement: [
-                {
-                  Action: 'kms:*',
-                  Effect: 'Allow',
-                  Principal: {
-                    AWS: {
-                      'Fn::Join': [
-                        '',
-                        ['arn:', { Ref: 'AWS::Partition' }, ':iam::', { Ref: 'AWS::AccountId' }, ':root'],
-                      ],
-                    },
-                  },
-                  Resource: '*',
-                },
-                {
-                  Action: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
-                  Effect: 'Allow',
-                  Principal: {
-                    Service: {
-                      'Fn::Join': ['', ['logs.', { Ref: 'AWS::Region' }, '.amazonaws.com']],
-                    },
-                  },
-                  Resource: '*',
-                  Condition: {
-                    ArnLike: {
-                      'kms:EncryptionContext:aws:logs:arn': {
-                        'Fn::Join': [
-                          '',
-                          [
-                            'arn:',
-                            { Ref: 'AWS::Partition' },
-                            ':logs:',
-                            { Ref: 'AWS::Region' },
-                            ':',
-                            { Ref: 'AWS::AccountId' },
-                            ':*',
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                },
-                {
-                  Action: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
-                  Effect: 'Allow',
-                  Principal: {
-                    Service: 'delivery.logs.amazonaws.com',
-                  },
-                  Resource: '*',
-                  Condition: {
-                    ArnLike: {
-                      'kms:EncryptionContext:aws:logs:arn': {
-                        'Fn::Join': [
-                          '',
-                          [
-                            'arn:',
-                            { Ref: 'AWS::Partition' },
-                            ':logs:',
-                            { Ref: 'AWS::Region' },
-                            ':',
-                            { Ref: 'AWS::AccountId' },
-                            ':*',
-                          ],
-                        ],
-                      },
-                    },
-                    StringEquals: {
-                      'aws:PrincipalOrgId': 'o-123test',
-                    },
-                  },
-                },
-              ],
             },
           },
         },

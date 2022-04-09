@@ -303,20 +303,14 @@ export class NetworkPrepStack extends AcceleratorStack {
             );
             const organization = new Organization(this, 'Organization');
 
-            const logKey = new cdk.aws_kms.Key(this, 'QueryLogsCmk', {
-              alias: `accelerator/route53Resolver/queryLogs`,
-              description: 'AWS Accelerator CloudWatch Logs CMK for Route 53 Resolver Query Logs',
-              enableKeyRotation: true,
-            });
-
             const logGroup = new cdk.aws_logs.LogGroup(this, 'QueryLogsLogGroup', {
-              encryptionKey: logKey,
+              encryptionKey: this.key,
+              retention: this.logRetention,
             });
 
             const cwlQueryLogConfig = new QueryLoggingConfig(this, pascalCase(`${logItem.name}CwlQueryLogConfig`), {
               destination: logGroup,
               name: `${logItem.name}-cwl`,
-              key: logKey,
               organizationId: organization.id,
             });
             new ssm.StringParameter(this, pascalCase(`SsmParam${logItem.name}CwlQueryLogConfig`), {

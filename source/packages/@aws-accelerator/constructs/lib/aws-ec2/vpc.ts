@@ -12,10 +12,9 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { CfnTag } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { IPrefixList } from './prefix-list';
 
+import { IPrefixList } from './prefix-list';
 import { IRouteTable } from './route-table';
 
 export interface ISubnet extends cdk.IResource {
@@ -123,7 +122,7 @@ export interface INatGateway extends cdk.IResource {
 export interface NatGatewayProps {
   readonly name: string;
   readonly subnet: ISubnet;
-  readonly tags?: CfnTag[];
+  readonly tags?: cdk.CfnTag[];
 }
 
 export class NatGateway extends cdk.Resource implements INatGateway {
@@ -451,6 +450,7 @@ export class Vpc extends cdk.Resource implements IVpc {
     trafficType: 'ALL' | 'REJECT' | 'ACCEPT';
     maxAggregationInterval: number;
     logFormat?: string;
+    logRetentionInDays?: number;
     encryptionKey?: cdk.aws_kms.IKey | undefined;
     bucketArn?: string;
   }) {
@@ -462,12 +462,17 @@ export class Vpc extends cdk.Resource implements IVpc {
 
     // Destination: CloudWatch Logs
     if (options.destinations.includes('cloud-watch-logs')) {
-      if (options.encryptionKey === undefined) {
+      if (!options.encryptionKey) {
         throw new Error('encryptionKey not provided for cwl flow log');
+      }
+
+      if (!options.logRetentionInDays) {
+        throw new Error('logRetentionInDays not provided for cwl flow log');
       }
 
       const logGroup = new cdk.aws_logs.LogGroup(this, 'FlowLogsGroup', {
         encryptionKey: options.encryptionKey,
+        retention: options.logRetentionInDays,
       });
 
       const role = new cdk.aws_iam.Role(this, 'FlowLogsRole', {

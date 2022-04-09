@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { v4 as uuidv4 } from 'uuid';
 
 const path = require('path');
 
@@ -83,6 +84,7 @@ export class SsmParameterLookup extends Construct {
         parameterName: props.name,
         assumeRoleArn: roleArn,
         invokingAccountID: cdk.Stack.of(this).account,
+        uuid: uuidv4(),
       },
     });
 

@@ -1,8 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as path from 'path';
 
-import { SynthUtils } from '@aws-cdk/assert';
-
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
@@ -53,12 +51,6 @@ const stack = new NetworkPrepStack(
  * NetworkPrepStack construct test
  */
 describe('NetworkPrepStack', () => {
-  /**
-   * Snapshot test
-   */
-  test(`${testNamePrefix} Snapshot Test`, () => {
-    expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  });
 
   /**
    * Number of TransitGatewayRouteTable resource test
