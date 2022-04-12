@@ -103,11 +103,12 @@ describe('LoggingStack', () => {
           UpdateReplacePolicy: 'Retain',
           DeletionPolicy: 'Retain',
           Metadata: {
-            cfn_nag: {
+            cdk_nag: {
               rules_to_suppress: [
                 {
-                  id: 'W35',
-                  reason: 'S3 Bucket access logging is not enabled for the pipeline artifacts bucket.',
+                  id: 'AwsSolutions-S1',
+                  reason:
+                    'AccessLogsBucket has server access logs disabled till the task for access logging completed.',
                 },
               ],
             },

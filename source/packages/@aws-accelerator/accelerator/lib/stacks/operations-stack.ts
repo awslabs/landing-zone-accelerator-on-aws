@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
@@ -76,6 +77,19 @@ export class OperationsStack extends AcceleratorStack {
             managedPolicyName: policyItem.name,
             statements,
           });
+
+          // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+          // rule suppression with evidence for this permission.
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(policyItem.name)}/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM5',
+                reason: 'Policies definition are derived from accelerator iam-config boundary-policy file',
+              },
+            ],
+          );
         }
       }
 
@@ -141,6 +155,19 @@ export class OperationsStack extends AcceleratorStack {
             permissionsBoundary: policies[roleItem.boundaryPolicy],
           });
 
+          // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+          // rule suppression with evidence for this permission.
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(roleItem.name)}/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM4',
+                reason: 'IAM Role created as per accelerator iam-config needs AWS managed policy',
+              },
+            ],
+          );
+
           // Create instance profile
           if (roleItem.instanceProfile) {
             Logger.info(`[operations-stack] Role - creating instance profile for ${roleItem.name}`);
@@ -183,6 +210,19 @@ export class OperationsStack extends AcceleratorStack {
             groupName: groupItem.name,
             managedPolicies,
           });
+
+          // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+          // rule suppression with evidence for this permission.
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(groupItem.name)}/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM4',
+                reason: 'Groups created as per accelerator iam-config needs AWS managed policy',
+              },
+            ],
+          );
         }
       }
 
@@ -205,6 +245,20 @@ export class OperationsStack extends AcceleratorStack {
             },
             secretName: `/accelerator/${user.username}`,
           });
+
+          // AwsSolutions-SMG4: The secret does not have automatic rotation scheduled.
+          // rule suppression with evidence for this permission.
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(user.username)}Secret/Resource`,
+            [
+              {
+                id: 'AwsSolutions-SMG4',
+                reason:
+                  'Accelerator users created as per iam-config file, upcoming change will take care of secret automatic rotation',
+              },
+            ],
+          );
 
           Logger.info(`[operations-stack] User - password stored to /accelerator/${user.username}`);
 

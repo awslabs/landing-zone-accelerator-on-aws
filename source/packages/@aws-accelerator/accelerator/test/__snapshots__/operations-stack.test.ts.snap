@@ -4,6 +4,16 @@ exports[`OperationsStack Construct(OperationsStack):  Snapshot Test 1`] = `
 Object {
   "Resources": Object {
     "AdministratorsA37EF73A": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Groups created as per accelerator iam-config needs AWS managed policy",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "GroupName": "Administrators",
         "ManagedPolicyArns": Array [
@@ -53,6 +63,16 @@ Object {
     },
     "BreakGlassUser01Secret8A54324D": Object {
       "DeletionPolicy": "Delete",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-SMG4",
+              "reason": "Accelerator users created as per iam-config file, upcoming change will take care of secret automatic rotation",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "GenerateSecretString": Object {
           "GenerateStringKey": "password",
@@ -93,6 +113,16 @@ Object {
     },
     "BreakGlassUser02Secret4D200D8D": Object {
       "DeletionPolicy": "Delete",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-SMG4",
+              "reason": "Accelerator users created as per iam-config file, upcoming change will take care of secret automatic rotation",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "GenerateSecretString": Object {
           "GenerateStringKey": "password",
@@ -104,6 +134,16 @@ Object {
       "UpdateReplacePolicy": "Delete",
     },
     "DefaultBoundaryPolicy489A8D26": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policies definition are derived from accelerator iam-config boundary-policy file",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Description": "",
         "ManagedPolicyName": "Default-Boundary-Policy",
@@ -122,6 +162,16 @@ Object {
       "Type": "AWS::IAM::ManagedPolicy",
     },
     "Ec2DefaultSsmAdRoleADFFA4C6": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "IAM Role created as per accelerator iam-config needs AWS managed policy",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
           "Statement": Array [

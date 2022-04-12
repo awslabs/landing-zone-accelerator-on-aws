@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { Organization } from '@aws-accelerator/constructs';
@@ -113,7 +114,9 @@ export class KeyStack extends AcceleratorStack {
                 effect: cdk.aws_iam.Effect.ALLOW,
                 actions: ['ssm:GetParameters', 'ssm:GetParameter'],
                 resources: [
-                  `arn:${cdk.Stack.of(this).partition}:ssm:*:${cdk.Stack.of(this).account}:parameter/accelerator/kms/*`,
+                  `arn:${cdk.Stack.of(this).partition}:ssm:*:${
+                    cdk.Stack.of(this).account
+                  }:parameter/accelerator/kms/key-arn`,
                 ],
                 conditions: {
                   StringEquals: {
@@ -141,6 +144,20 @@ export class KeyStack extends AcceleratorStack {
           }),
         },
       });
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag
+      // rule suppression with evidence for this permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/CrossAccountAcceleratorSsmParamAccessRole/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason:
+              'This policy is required to give access to ssm parameters in every region where accelerator deployed. Various accelerator roles need permission to describe SSM parameters.',
+          },
+        ],
+      );
     }
   }
 }

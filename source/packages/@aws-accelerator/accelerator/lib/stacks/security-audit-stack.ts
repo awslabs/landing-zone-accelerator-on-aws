@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
@@ -66,24 +67,23 @@ export class SecurityAuditStack extends AcceleratorStack {
         kmsKey: key,
       });
 
+      // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/AwsMacieExportConfigBucket/Resource/Resource`,
+        [
+          {
+            id: 'AwsSolutions-S1',
+            reason:
+              'AwsMacieExportConfigBucket has server access logs disabled till the task for access logging completed.',
+          },
+        ],
+      );
+
       new cdk.aws_ssm.StringParameter(this, 'SsmParamOrganizationMacieExportConfigBucketName', {
         parameterName: '/accelerator/organization/security/macie/discovery-repository/bucket-name',
         stringValue: bucket.getS3Bucket().bucketName,
       });
-
-      // cfn_nag: Suppress warning related to the accelerator security macie export config S3 bucket
-      const cfnBucket = bucket.node.defaultChild?.node.defaultChild as cdk.aws_s3.CfnBucket;
-      cfnBucket.cfnOptions.metadata = {
-        cfn_nag: {
-          rules_to_suppress: [
-            {
-              id: 'W35',
-              reason:
-                'S3 Bucket access logging is not enabled for the accelerator security macie export config bucket.',
-            },
-          ],
-        },
-      };
 
       // Grant macie access to the bucket
       bucket.getS3Bucket().grantReadWrite(new cdk.aws_iam.ServicePrincipal('macie.amazonaws.com'));
@@ -136,24 +136,23 @@ export class SecurityAuditStack extends AcceleratorStack {
         kmsKey: key,
       });
 
+      // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/GuardDutyPublishingDestinationBucket/Resource/Resource`,
+        [
+          {
+            id: 'AwsSolutions-S1',
+            reason:
+              'GuardDutyPublishingDestinationBucket has server access logs disabled till the task for access logging completed.',
+          },
+        ],
+      );
+
       new cdk.aws_ssm.StringParameter(this, 'SsmParamOrganizationGuardDutyPublishingDestinationBucketArn', {
         parameterName: '/accelerator/organization/security/guardduty/publishing-destination/bucket-arn',
         stringValue: bucket.getS3Bucket().bucketArn,
       });
-
-      // cfn_nag: Suppress warning related to the accelerator security guardduty publish destination bucket
-      const cfnBucket = bucket.node.defaultChild?.node.defaultChild as cdk.aws_s3.CfnBucket;
-      cfnBucket.cfnOptions.metadata = {
-        cfn_nag: {
-          rules_to_suppress: [
-            {
-              id: 'W35',
-              reason:
-                'S3 Bucket access logging is not enabled for the accelerator security guardduty publish destination bucket.',
-            },
-          ],
-        },
-      };
 
       // Grant guardduty access to the bucket
       bucket.getS3Bucket().grantReadWrite(new cdk.aws_iam.ServicePrincipal('guardduty.amazonaws.com'));
