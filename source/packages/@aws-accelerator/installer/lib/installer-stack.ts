@@ -66,6 +66,11 @@ export class InstallerStack extends cdk.Stack {
     default: 'Yes',
   });
 
+  private readonly approvalStageNotifyEmailList = new cdk.CfnParameter(this, 'ApprovalStageNotifyEmailList', {
+    type: 'CommaDelimitedList',
+    description: 'Provide comma(,) separated list of email ids to receive manual approval stage notification email',
+  });
+
   private readonly managementAccountEmail = new cdk.CfnParameter(this, 'ManagementAccountEmail', {
     type: 'String',
     description: 'The management (primary) account email',
@@ -113,7 +118,7 @@ export class InstallerStack extends cdk.Stack {
       },
       {
         Label: { default: 'Pipeline Configuration' },
-        Parameters: [this.enableApprovalStage.logicalId],
+        Parameters: [this.enableApprovalStage.logicalId, this.approvalStageNotifyEmailList.logicalId],
       },
       {
         Label: { default: 'Mandatory Accounts Configuration' },
@@ -130,6 +135,7 @@ export class InstallerStack extends cdk.Stack {
       [this.repositoryName.logicalId]: { default: 'Repository Name' },
       [this.repositoryBranchName.logicalId]: { default: 'Branch Name' },
       [this.enableApprovalStage.logicalId]: { default: 'Enable Approval Stage' },
+      [this.approvalStageNotifyEmailList.logicalId]: { default: 'Manual Approval Stage notification email list' },
       [this.managementAccountEmail.logicalId]: { default: 'Management Account Email' },
       [this.logArchiveAccountEmail.logicalId]: { default: 'Log Archive Account Email' },
       [this.auditAccountEmail.logicalId]: { default: 'Audit Account Email' },
@@ -233,6 +239,41 @@ export class InstallerStack extends cdk.Stack {
       description: 'AWS Accelerator Management Account Kms Key',
       enableKeyRotation: true,
     });
+
+    // KMS key access to codestar-notifications
+    installerKey.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'KMS key access to codestar-notifications',
+        actions: ['kms:GenerateDataKey*', 'kms:Decrypt'],
+        principals: [new cdk.aws_iam.ServicePrincipal('codestar-notifications.amazonaws.com')],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'kms:ViaService': `sns.${cdk.Stack.of(this).region}.amazonaws.com`,
+          },
+        },
+      }),
+    );
+
+    // Allow Accelerator Role inside management account to use the encryption key
+    // This is needed for pipeline manual approval action to send notification to encrypted topic
+    installerKey.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: `Allow Accelerator Role to use the encryption key`,
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+        actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+        resources: ['*'],
+        conditions: {
+          ArnLike: {
+            'aws:PrincipalARN': [
+              `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
+                this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'aws-accelerator'
+              }-*`,
+            ],
+          },
+        },
+      }),
+    );
 
     // TODO Isn't there a better way to grant to all AWS services through a condition?
     const allowedServicePrincipals: { name: string; principal: string }[] = [
@@ -411,6 +452,10 @@ export class InstallerStack extends cdk.Stack {
           ACCELERATOR_ENABLE_APPROVAL_STAGE: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.enableApprovalStage.valueAsString,
+          },
+          APPROVAL_STAGE_NOTIFY_EMAIL_LIST: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: cdk.Fn.join(',', this.approvalStageNotifyEmailList.valueAsList),
           },
           MANAGEMENT_ACCOUNT_EMAIL: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,

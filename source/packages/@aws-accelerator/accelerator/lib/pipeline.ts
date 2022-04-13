@@ -39,6 +39,11 @@ export interface AcceleratorPipelineProps {
   readonly managementAccountEmail: string;
   readonly logArchiveAccountEmail: string;
   readonly auditAccountEmail: string;
+  /**
+   * List of email addresses to be notified when pipeline is waiting for manual approval stage.
+   * If pipeline do not have approval stage enabled, this value will have no impact.
+   */
+  readonly approvalStageNotifyEmailList?: string;
 }
 
 /**
@@ -306,6 +311,14 @@ export class AcceleratorPipeline extends Construct {
             actionName: 'Approve',
             runOrder: 2,
             additionalInformation: 'See previous stage (Diff) for changes.',
+            notificationTopic: new cdk.aws_sns.Topic(this, 'ManualApprovalActionTopic', {
+              topicName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
+              displayName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
+              masterKey: installerKey,
+            }),
+            notifyEmails: props.approvalStageNotifyEmailList
+              ? props.approvalStageNotifyEmailList.split(',')
+              : undefined,
           }),
         ],
       });

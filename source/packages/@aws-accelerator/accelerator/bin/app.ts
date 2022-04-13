@@ -147,6 +147,7 @@ async function main() {
         managementAccountEmail: process.env['MANAGEMENT_ACCOUNT_EMAIL']!,
         logArchiveAccountEmail: process.env['LOG_ARCHIVE_ACCOUNT_EMAIL']!,
         auditAccountEmail: process.env['AUDIT_ACCOUNT_EMAIL']!,
+        approvalStageNotifyEmailList: process.env['APPROVAL_STAGE_NOTIFY_EMAIL_LIST'],
       },
     );
   }
