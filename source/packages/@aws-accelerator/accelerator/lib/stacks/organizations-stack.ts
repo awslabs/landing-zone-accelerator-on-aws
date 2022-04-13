@@ -162,7 +162,7 @@ export class OrganizationsStack extends AcceleratorStack {
       //
       // Enable Backup Policy
       //
-      if (props.organizationConfig.backupPolicies) {
+      if (props.organizationConfig.backupPolicies.length > 0) {
         Logger.info(`[organizations-stack] Adding Backup Policies`);
 
         const role = new cdk.aws_iam.Role(this, 'BackupRole', {
@@ -412,7 +412,7 @@ export class OrganizationsStack extends AcceleratorStack {
     //
     // Tagging Policies Config
     //
-    if (props.organizationConfig.taggingPolicies) {
+    if (props.organizationConfig.taggingPolicies.length > 0) {
       Logger.info(`[organizations-stack] Adding Tagging Policies`);
       const tagPolicy = new EnablePolicyType(this, 'enablePolicyTypeTag', {
         policyType: PolicyTypeEnum.TAG_POLICY,
