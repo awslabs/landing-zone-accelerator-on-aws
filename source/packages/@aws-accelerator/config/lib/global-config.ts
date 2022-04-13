@@ -130,98 +130,421 @@ export abstract class GlobalConfigTypes {
   });
 }
 
+/**
+ * AWS ControlTower configuration
+ */
 export class ControlTowerConfig implements t.TypeOf<typeof GlobalConfigTypes.controlTowerConfig> {
+  /**
+   * Indicates whether AWS ControlTower enabled.
+   *
+   * When control tower is enabled, accelerator makes sure account configuration file have three mandatory AWS CT accounts.
+   * In AWS Control Tower, three shared accounts in your landing zone are provisioned automatically during setup: the management account,
+   * the log archive account, and the audit account.
+   */
   readonly enable = true;
 }
 
+/**
+ * AWS Cloudtrail configuration
+ */
 export class CloudtrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloudtrailConfig> {
+  /**
+   * Indicates whether AWS Cloudtrail enabled.
+   *
+   * Cloudtrail a service that helps you enable governance, compliance, and operational and risk auditing of your AWS account.
+   */
   readonly enable = false;
+  /**
+   * Indicates whether AWS OrganizationTrail enabled.
+   *
+   * When OrganizationTrail and cloudtrail is enabled accelerator will enable trusted access designates CloudTrail as a trusted service in your organization.
+   * A trusted service can query the organization's structure and create service-linked roles in the organization's accounts.
+   */
   readonly organizationTrail = false;
 }
 
+/**
+ * AWS SessionManager configuration
+ */
 export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.sessionManagerConfig> {
+  /**
+   * Indicates whether sending SessionManager logs to CloudWatchLogs enabled.
+   */
   readonly sendToCloudWatchLogs = false;
+  /**
+   * Indicates whether sending SessionManager logs to S3 enabled.
+   *
+   * When this flag is on, accelerator will send session manager logs to Central log bucket in Logarchvie account.
+   */
   readonly sendToS3 = false;
+  /**
+   * List of AWS Region names to be excluded from configuring SessionManager configuration
+   */
   readonly excludeRegions = [];
+  /**
+   * List of AWS Account names to be excluded from configuring SessionManager configuration
+   */
   readonly excludeAccounts = [];
 }
 
+/**
+ * Accelerator global logging configuration
+ */
 export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingConfig> {
+  /**
+   * Accelerator logging account name.
+   * Accelerator use LogArchive account for global logging.
+   * This account maintains consolidated logs.
+   */
   readonly account = 'LogArchive';
+  /**
+   * CloudTrail logging configuration
+   */
   readonly cloudtrail: CloudtrailConfig = new CloudtrailConfig();
+  /**
+   * SessionManager logging configuration
+   */
   readonly sessionManager: SessionManagerConfig = new SessionManagerConfig();
 }
 
+/**
+ * IdentityPerimeter configuration
+ */
 export class IdentityPerimeterConfig implements t.TypeOf<typeof GlobalConfigTypes.identityPerimeterConfig> {
+  /**
+   * Indicates whether IdentityPerimeter configuration enabled.
+   */
   readonly enable = false;
 }
 
+/**
+ * ResourcePerimeter configuration
+ */
 export class ResourcePerimeterConfig implements t.TypeOf<typeof GlobalConfigTypes.resourcePerimeterConfig> {
+  /**
+   * Indicates whether ResourcePerimeter configuration enabled.
+   */
   readonly enable = false;
 }
 
+/**
+ * NetworkPerimeter configuration
+ */
 export class NetworkPerimeterConfig implements t.TypeOf<typeof GlobalConfigTypes.networkPerimeterConfig> {
+  /**
+   * Indicates whether NetworkPerimeter configuration enabled.
+   */
   readonly enable = false;
 }
 
+/**
+ * DataProtection configuration
+ */
 export class DataProtectionConfig implements t.TypeOf<typeof GlobalConfigTypes.dataProtectionConfig> {
+  /**
+   * Indicates whether DataProtection configuration enabled.
+   *
+   * When this flag is on, accelerator applies the Identity Perimeter controls for VPC Endpoints
+   */
   readonly enable = false;
+  /**
+   * IdentityPerimeter configuration
+   */
   readonly identityPerimeter = new IdentityPerimeterConfig();
+  /**
+   * ResourcePerimeter configuration
+   */
   readonly resourcePerimeter = new ResourcePerimeterConfig();
+  /**
+   * NetworkPerimeter configuration
+   */
   readonly networkPerimeter = new NetworkPerimeterConfig();
 }
 
+/**
+ * CostAndUsageReport configuration
+ */
 export class CostAndUsageReportConfig implements t.TypeOf<typeof GlobalConfigTypes.costAndUsageReportConfig> {
+  /**
+   * A list of strings that indicate additional content that Amazon Web Services includes in the report, such as individual resource IDs.
+   */
   readonly additionalSchemaElements = [''];
+  /**
+   * The compression format that Amazon Web Services uses for the report.
+   */
   readonly compression = '';
+  /**
+   * The format that Amazon Web Services saves the report in.
+   */
   readonly format = '';
+  /**
+   * The name of the report that you want to create. The name must be unique, is case sensitive, and can't include spaces.
+   */
   readonly reportName = '';
+  /**
+   * The prefix that Amazon Web Services adds to the report name when Amazon Web Services delivers the report. Your prefix can't include spaces.
+   */
   readonly s3Prefix = '';
+  /**
+   * The granularity of the line items in the report.
+   */
   readonly timeUnit = '';
+  /**
+   * A list of manifests that you want Amazon Web Services to create for this report.
+   */
   readonly additionalArtifacts = undefined;
+  /**
+   * Whether you want Amazon Web Services to update your reports after they have been finalized if Amazon Web Services detects charges related to previous months. These charges can include refunds, credits, or support fees.
+   */
   readonly refreshClosedReports = true;
+  /**
+   * Whether you want Amazon Web Services to overwrite the previous version of each report or to deliver the report in addition to the previous versions.
+   */
   readonly reportVersioning = '';
 }
 
+/**
+ * BudgetReport configuration
+ */
 export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.budgetsConfig> {
+  /**
+   * The address that AWS sends budget notifications to, either an SNS topic or an email.
+   *
+   * When you create a subscriber, the value of Address can't contain line breaks.
+   */
   readonly address = '';
+  /**
+   * The cost or usage amount that's associated with a budget forecast, actual spend, or budget threshold.
+   *
+   * @default 2000
+   */
   readonly amount = 2000;
+  /**
+   * The name of a budget. The value must be unique within an account. BudgetName can't include : and \ characters. If you don't include value for BudgetName in the template, Billing and Cost Management assigns your budget a randomly generated name.
+   */
   readonly budgetName = '';
+  /**
+   * The comparison that's used for the notification that's associated with a budget.
+   */
   readonly comparisonOperator = '';
+  /**
+   * The length of time until a budget resets the actual and forecasted spend. DAILY is available only for RI_UTILIZATION and RI_COVERAGE budgets.
+   */
   readonly timeUnit = '';
+  /**
+   * Specifies whether this budget tracks costs, usage, RI utilization, RI coverage, Savings Plans utilization, or Savings Plans coverage.
+   */
   readonly budgetType = '';
+  /**
+   * Specifies whether a budget includes upfront RI costs.
+   *
+   * @default true
+   */
   readonly includeUpfront = true;
+  /**
+   * Specifies whether a budget includes taxes.
+   *
+   * @default true
+   */
   readonly includeTax = true;
+  /**
+   * Specifies whether a budget includes support subscription fees.
+   *
+   * @default true
+   */
   readonly includeSupport = true;
+  /**
+   * Specifies whether a budget includes non-RI subscription costs.
+   *
+   * @default true
+   */
   readonly includeOtherSubscription = true;
+  /**
+   * Specifies whether a budget includes subscriptions.
+   *
+   * @default true
+   */
   readonly includeSubscription = true;
+  /**
+   * Specifies whether a budget includes recurring fees such as monthly RI fees.
+   *
+   * @default true
+   */
   readonly includeRecurring = true;
+  /**
+   * Specifies whether a budget includes discounts.
+   *
+   * @default true
+   */
   readonly includeDiscount = true;
+  /**
+   * Specifies whether a budget includes refunds.
+   *
+   * @default true
+   */
   readonly includeRefund = false;
+  /**
+   * Specifies whether a budget includes credits.
+   *
+   * @default true
+   */
   readonly includeCredit = false;
+  /**
+   * Specifies whether a budget uses the amortized rate.
+   *
+   * @default false
+   */
   readonly useAmortized = false;
+  /**
+   * Specifies whether a budget uses a blended rate.
+   *
+   * @default false
+   */
   readonly useBlended = false;
+  /**
+   * The type of notification that AWS sends to a subscriber.
+   *
+   * An enum value that specifies the target subscription type either EMAIL or SNS
+   */
   readonly subscriptionType = '';
+  /**
+   * The type of threshold for a notification. For ABSOLUTE_VALUE thresholds,
+   * AWS notifies you when you go over or are forecasted to go over your total cost threshold.
+   * For PERCENTAGE thresholds, AWS notifies you when you go over or are forecasted to go over a certain percentage of your forecasted spend. For example,
+   * if you have a budget for 200 dollars and you have a PERCENTAGE threshold of 80%, AWS notifies you when you go over 160 dollars.
+   */
   readonly thresholdType = '';
+  /**
+   * The unit of measurement that's used for the budget forecast, actual spend, or budget threshold, such as USD or GBP.
+   */
   readonly unit = '';
+  /**
+   * The notification that's associated with a budget.
+   */
   readonly notification = {
+    /**
+     * Specifies whether the notification is for how much you have spent ( ACTUAL ) or for how much that you're forecasted to spend ( FORECASTED ).
+     */
     notificationType: '',
+    /**
+     * The type of threshold for a notification.
+     * For ABSOLUTE_VALUE thresholds, AWS notifies you when you go over or are forecasted to go over your total cost threshold.
+     * For PERCENTAGE thresholds, AWS notifies you when you go over or are forecasted to go over a certain percentage of your forecasted spend.
+     * For example, if you have a budget for 200 dollars and you have a PERCENTAGE threshold of 80%, AWS notifies you when you go over 160 dollars.
+     */
     thresholdType: '',
+    /**
+     * The type of notification that AWS sends to a subscriber.
+     *
+     * An enum value that specifies the target subscription type either EMAIL or SNS
+     */
     subscriptionType: '',
+    /**
+     * The comparison that's used for the notification that's associated with a budget.
+     */
     comparisonOperator: '',
+    /**
+     * The threshold that's associated with a notification.
+     * Thresholds are always a percentage, and many customers find value being alerted between 50% - 200% of the budgeted amount.
+     * The maximum limit for your threshold is 1,000,000% above the budgeted amount.
+     *
+     * @default 90
+     */
     threshold: 90,
   };
 }
 
+/**
+ * Accelerator report configuration
+ */
 export class ReportConfig implements t.TypeOf<typeof GlobalConfigTypes.reportConfig> {
+  /**
+   * Cost and usage report configuration
+   *
+   * If you want to create cost and usage report with daily granularity of the line items in the report, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * costAndUsageReport:
+   *     compression: Parquet
+   *     format: Parquet
+   *     reportName: accelerator-cur
+   *     s3Prefix: cur
+   *     timeUnit: DAILY
+   *     refreshClosedReports: true
+   *     reportVersioning: CREATE_NEW_REPORT
+   * ```
+   */
   readonly costAndUsageReport = new CostAndUsageReportConfig();
+  /**
+   * Budget report configuration
+   *
+   * If you want to create budget report with monthly granularity of the line items in the report and other default parameters , you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * budgets:
+   *     budgetName: accel-budget
+   *     timeUnit: MONTHLY
+   *     budgetType: COST
+   *     amount: 2000
+   *     includeUpfront: true
+   *     includeTax: true
+   *     includeSupport: true
+   *     includeSubscription: true
+   *     includeRecurring: true
+   *     includeOtherSubscription: true
+   *     includeDiscount: true
+   *     includeCredit: false
+   *     includeRefund: false
+   *     useBlended: false
+   *     useAmortized: false
+   *     subscriptionType: EMAIL
+   *     address: myemail+pa-budg@example.com
+   *     unit: USD
+   *     notification:
+   *       notificationType: ACTUAL
+   *       thresholdType: PERCENTAGE
+   *       threshold: 90
+   *       comparisonOperator: GREATER_THAN
+   * ```
+   */
   readonly budgets = new BudgetReportConfig();
 }
 
+/**
+ * Accelerator global configuration
+ */
 export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalConfig> {
+  /**
+   * Global configuration file name, this file must be present in accelerator config repository
+   */
   static readonly FILENAME = 'global-config.yaml';
 
+  /**
+   * Accelerator home region name. The region where accelerator pipeline deployed.
+   *
+   * To use us-east-1 as home region for the accelerator, you need to provide below value for this parameter.
+   * Note: Variable HOME_REGION created for future usage of home region in the file
+   *
+   * @example
+   * ```
+   * homeRegion: &HOME_REGION us-east-1
+   * ```
+   */
   readonly homeRegion: string;
+  /**
+   * List of AWS Region names where accelerator will be deployed. Home region must be part of this list.
+   *
+   * To add us-west-2 alongwith home region for accelerator deployment, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * enabledRegions:
+   *   - *HOME_REGION
+   *   - us-west-2
+   * ```
+   */
   readonly enabledRegions: t.Region[];
 
   /**
@@ -236,16 +559,110 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    */
   readonly managementAccountAccessRole = 'AWSControlTowerExecution';
 
+  /**
+   * CloudWatchLogs retention in days, accelerator's custom resource lambda function logs retention period is configured based on this value.
+   */
   readonly cloudwatchLogRetentionInDays = 365;
 
+  /**
+   * AWS ControlTower configuration
+   *
+   * To indicate environment has control tower enabled, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * controlTower:
+   *   enable: true
+   * ```
+   */
   readonly controlTower: ControlTowerConfig = new ControlTowerConfig();
+  /**
+   * Accelerator logging configuration
+   *
+   * To enable organization trail and session manager logs sending to S3, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * logging:
+   *   account: LogArchive
+   *   cloudtrail:
+   *     enable: false
+   *     organizationTrail: false
+   *   sessionManager:
+   *     sendToCloudWatchLogs: false
+   *     sendToS3: true
+   * ```
+   */
   readonly logging: LoggingConfig = new LoggingConfig();
 
+  /**
+   * DataProtection configuration
+   *
+   * To enable data protection for Root organizational unit, and enable identityPerimeter, resourcePerimeter and networkPerimeter, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * dataProtection:
+   *   enable: true
+   *   deploymentTargets:
+   *     organizationalUnits:
+   *       - Root
+   *   identityPerimeter:
+   *     enable: true
+   *   resourcePerimeter:
+   *     enable: true
+   *   networkPerimeter:
+   *     enable: true
+   * ```
+   */
   readonly dataProtection: DataProtectionConfig | undefined = undefined;
+  /**
+   * Report configuration
+   *
+   * To enable budget report along with cost and usage report, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * reports:
+   *   costAndUsageReport:
+   *     compression: Parquet
+   *     format: Parquet
+   *     reportName: accelerator-cur
+   *     s3Prefix: cur
+   *     timeUnit: DAILY
+   *     refreshClosedReports: true
+   *     reportVersioning: CREATE_NEW_REPORT
+   *   budgets:
+   *     budgetName: accel-budget
+   *     timeUnit: MONTHLY
+   *     budgetType: COST
+   *     amount: 2000
+   *     includeUpfront: true
+   *     includeTax: true
+   *     includeSupport: true
+   *     includeSubscription: true
+   *     includeRecurring: true
+   *     includeOtherSubscription: true
+   *     includeDiscount: true
+   *     includeCredit: false
+   *     includeRefund: false
+   *     useBlended: false
+   *     useAmortized: false
+   *     subscriptionType: EMAIL
+   *     address: myemail+pa-budg@example.com
+   *     unit: USD
+   *     notification:
+   *       notificationType: ACTUAL
+   *       thresholdType: PERCENTAGE
+   *       threshold: 90
+   *       comparisonOperator: GREATER_THAN
+   * ```
+   */
   readonly reports: ReportConfig | undefined = undefined;
 
   /**
    *
+   * @param props
    * @param values
    */
   constructor(
