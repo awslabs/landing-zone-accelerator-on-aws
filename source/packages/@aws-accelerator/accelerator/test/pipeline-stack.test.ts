@@ -49,7 +49,7 @@ describe('PipelineStack', () => {
    * Number of IAM Policy resource test
    */
   test(`${testNamePrefix} IAM Policy resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Policy', 5);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Policy', 6);
   });
 
   /**

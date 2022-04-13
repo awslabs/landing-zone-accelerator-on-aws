@@ -21,6 +21,7 @@ Object {
           },
           "Parameters": Array [
             "EnableApprovalStage",
+            "ApprovalStageNotifyEmailList",
           ],
         },
         Object {
@@ -47,6 +48,9 @@ Object {
       "ParameterLabels": Object {
         "AcceleratorQualifier": Object {
           "default": "Accelerator Qualifier",
+        },
+        "ApprovalStageNotifyEmailList": Object {
+          "default": "Manual Approval Stage notification email list",
         },
         "AuditAccountEmail": Object {
           "default": "Audit Account Email",
@@ -83,6 +87,10 @@ Object {
       "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
       "Description": "Accelerator assets arn qualifier",
       "Type": "String",
+    },
+    "ApprovalStageNotifyEmailList": Object {
+      "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
+      "Type": "CommaDelimitedList",
     },
     "AuditAccountEmail": Object {
       "Description": "The security audit account (also referred to as the audit account)",
@@ -188,6 +196,75 @@ Object {
             },
             Object {
               "Action": Array [
+                "kms:GenerateDataKey*",
+                "kms:Decrypt",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "kms:ViaService": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "sns.",
+                        Object {
+                          "Ref": "AWS::Region",
+                        },
+                        ".amazonaws.com",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codestar-notifications.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "KMS key access to codestar-notifications",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::",
+                          Object {
+                            "Ref": "AWS::AccountId",
+                          },
+                          ":role/",
+                          Object {
+                            "Ref": "AcceleratorQualifier",
+                          },
+                          "-*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow Accelerator Role to use the encryption key",
+            },
+            Object {
+              "Action": Array [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -277,6 +354,18 @@ Object {
               "Type": "PLAINTEXT",
               "Value": Object {
                 "Ref": "EnableApprovalStage",
+              },
+            },
+            Object {
+              "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Fn::Join": Array [
+                  ",",
+                  Object {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                ],
               },
             },
             Object {
@@ -1177,6 +1266,7 @@ Object {
           },
           "Parameters": Array [
             "EnableApprovalStage",
+            "ApprovalStageNotifyEmailList",
           ],
         },
         Object {
@@ -1203,6 +1293,9 @@ Object {
       "ParameterLabels": Object {
         "AcceleratorQualifier": Object {
           "default": "Accelerator Qualifier",
+        },
+        "ApprovalStageNotifyEmailList": Object {
+          "default": "Manual Approval Stage notification email list",
         },
         "AuditAccountEmail": Object {
           "default": "Audit Account Email",
@@ -1239,6 +1332,10 @@ Object {
       "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
       "Description": "Accelerator assets arn qualifier",
       "Type": "String",
+    },
+    "ApprovalStageNotifyEmailList": Object {
+      "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
+      "Type": "CommaDelimitedList",
     },
     "AuditAccountEmail": Object {
       "Description": "The security audit account (also referred to as the audit account)",
@@ -1344,6 +1441,75 @@ Object {
             },
             Object {
               "Action": Array [
+                "kms:GenerateDataKey*",
+                "kms:Decrypt",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "kms:ViaService": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "sns.",
+                        Object {
+                          "Ref": "AWS::Region",
+                        },
+                        ".amazonaws.com",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codestar-notifications.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "KMS key access to codestar-notifications",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::",
+                          Object {
+                            "Ref": "AWS::AccountId",
+                          },
+                          ":role/",
+                          Object {
+                            "Ref": "AcceleratorQualifier",
+                          },
+                          "-*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow Accelerator Role to use the encryption key",
+            },
+            Object {
+              "Action": Array [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -1433,6 +1599,18 @@ Object {
               "Type": "PLAINTEXT",
               "Value": Object {
                 "Ref": "EnableApprovalStage",
+              },
+            },
+            Object {
+              "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Fn::Join": Array [
+                  ",",
+                  Object {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                ],
               },
             },
             Object {
@@ -2323,6 +2501,7 @@ Object {
           },
           "Parameters": Array [
             "EnableApprovalStage",
+            "ApprovalStageNotifyEmailList",
           ],
         },
         Object {
@@ -2337,6 +2516,9 @@ Object {
         },
       ],
       "ParameterLabels": Object {
+        "ApprovalStageNotifyEmailList": Object {
+          "default": "Manual Approval Stage notification email list",
+        },
         "AuditAccountEmail": Object {
           "default": "Audit Account Email",
         },
@@ -2362,6 +2544,10 @@ Object {
     },
   },
   "Parameters": Object {
+    "ApprovalStageNotifyEmailList": Object {
+      "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
+      "Type": "CommaDelimitedList",
+    },
     "AuditAccountEmail": Object {
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
@@ -2447,6 +2633,71 @@ Object {
             },
             Object {
               "Action": Array [
+                "kms:GenerateDataKey*",
+                "kms:Decrypt",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "kms:ViaService": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "sns.",
+                        Object {
+                          "Ref": "AWS::Region",
+                        },
+                        ".amazonaws.com",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codestar-notifications.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "KMS key access to codestar-notifications",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::",
+                          Object {
+                            "Ref": "AWS::AccountId",
+                          },
+                          ":role/aws-accelerator-*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow Accelerator Role to use the encryption key",
+            },
+            Object {
+              "Action": Array [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -2525,6 +2776,18 @@ Object {
               "Type": "PLAINTEXT",
               "Value": Object {
                 "Ref": "EnableApprovalStage",
+              },
+            },
+            Object {
+              "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Fn::Join": Array [
+                  ",",
+                  Object {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                ],
               },
             },
             Object {
@@ -3359,6 +3622,7 @@ Object {
           },
           "Parameters": Array [
             "EnableApprovalStage",
+            "ApprovalStageNotifyEmailList",
           ],
         },
         Object {
@@ -3373,6 +3637,9 @@ Object {
         },
       ],
       "ParameterLabels": Object {
+        "ApprovalStageNotifyEmailList": Object {
+          "default": "Manual Approval Stage notification email list",
+        },
         "AuditAccountEmail": Object {
           "default": "Audit Account Email",
         },
@@ -3398,6 +3665,10 @@ Object {
     },
   },
   "Parameters": Object {
+    "ApprovalStageNotifyEmailList": Object {
+      "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
+      "Type": "CommaDelimitedList",
+    },
     "AuditAccountEmail": Object {
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
@@ -3483,6 +3754,71 @@ Object {
             },
             Object {
               "Action": Array [
+                "kms:GenerateDataKey*",
+                "kms:Decrypt",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "kms:ViaService": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "sns.",
+                        Object {
+                          "Ref": "AWS::Region",
+                        },
+                        ".amazonaws.com",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codestar-notifications.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "KMS key access to codestar-notifications",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::",
+                          Object {
+                            "Ref": "AWS::AccountId",
+                          },
+                          ":role/aws-accelerator-*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow Accelerator Role to use the encryption key",
+            },
+            Object {
+              "Action": Array [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -3561,6 +3897,18 @@ Object {
               "Type": "PLAINTEXT",
               "Value": Object {
                 "Ref": "EnableApprovalStage",
+              },
+            },
+            Object {
+              "Name": "APPROVAL_STAGE_NOTIFY_EMAIL_LIST",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Fn::Join": Array [
+                  ",",
+                  Object {
+                    "Ref": "ApprovalStageNotifyEmailList",
+                  },
+                ],
               },
             },
             Object {

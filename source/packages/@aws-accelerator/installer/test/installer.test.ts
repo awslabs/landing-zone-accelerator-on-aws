@@ -126,7 +126,7 @@ describe('InstallerStack', () => {
               Label: {
                 default: 'Pipeline Configuration',
               },
-              Parameters: ['EnableApprovalStage'],
+              Parameters: ['EnableApprovalStage', 'ApprovalStageNotifyEmailList'],
             },
             {
               Label: {
@@ -138,6 +138,9 @@ describe('InstallerStack', () => {
           ParameterLabels: {
             EnableApprovalStage: {
               default: 'Enable Approval Stage',
+            },
+            ApprovalStageNotifyEmailList: {
+              default: 'Manual Approval Stage notification email list',
             },
             RepositoryBranchName: {
               default: 'Branch Name',
@@ -172,7 +175,7 @@ describe('InstallerStack', () => {
               Label: {
                 default: 'Pipeline Configuration',
               },
-              Parameters: ['EnableApprovalStage'],
+              Parameters: ['EnableApprovalStage', 'ApprovalStageNotifyEmailList'],
             },
             {
               Label: {
@@ -193,6 +196,9 @@ describe('InstallerStack', () => {
             },
             EnableApprovalStage: {
               default: 'Enable Approval Stage',
+            },
+            ApprovalStageNotifyEmailList: {
+              default: 'Manual Approval Stage notification email list',
             },
             LogArchiveAccountEmail: {
               default: 'Log Archive Account Email',
@@ -641,6 +647,18 @@ describe('InstallerStack', () => {
                   },
                 },
                 {
+                  Name: 'APPROVAL_STAGE_NOTIFY_EMAIL_LIST',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    'Fn::Join': [
+                      ',',
+                      {
+                        Ref: 'ApprovalStageNotifyEmailList',
+                      },
+                    ],
+                  },
+                },
+                {
                   Name: 'MANAGEMENT_ACCOUNT_EMAIL',
                   Type: 'PLAINTEXT',
                   Value: {
@@ -777,6 +795,18 @@ describe('InstallerStack', () => {
                   Type: 'PLAINTEXT',
                   Value: {
                     Ref: 'EnableApprovalStage',
+                  },
+                },
+                {
+                  Name: 'APPROVAL_STAGE_NOTIFY_EMAIL_LIST',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    'Fn::Join': [
+                      ',',
+                      {
+                        Ref: 'ApprovalStageNotifyEmailList',
+                      },
+                    ],
                   },
                 },
                 {
@@ -950,6 +980,18 @@ describe('InstallerStack', () => {
                   },
                 },
                 {
+                  Name: 'APPROVAL_STAGE_NOTIFY_EMAIL_LIST',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    'Fn::Join': [
+                      ',',
+                      {
+                        Ref: 'ApprovalStageNotifyEmailList',
+                      },
+                    ],
+                  },
+                },
+                {
                   Name: 'MANAGEMENT_ACCOUNT_EMAIL',
                   Type: 'PLAINTEXT',
                   Value: {
@@ -1079,6 +1121,18 @@ describe('InstallerStack', () => {
                   Type: 'PLAINTEXT',
                   Value: {
                     Ref: 'EnableApprovalStage',
+                  },
+                },
+                {
+                  Name: 'APPROVAL_STAGE_NOTIFY_EMAIL_LIST',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    'Fn::Join': [
+                      ',',
+                      {
+                        Ref: 'ApprovalStageNotifyEmailList',
+                      },
+                    ],
                   },
                 },
                 {
@@ -1421,6 +1475,62 @@ describe('InstallerStack', () => {
                   Resource: '*',
                 },
                 {
+                  Action: ['kms:GenerateDataKey*', 'kms:Decrypt'],
+                  Condition: {
+                    StringEquals: {
+                      'kms:ViaService': {
+                        'Fn::Join': [
+                          '',
+                          [
+                            'sns.',
+                            {
+                              Ref: 'AWS::Region',
+                            },
+                            '.amazonaws.com',
+                          ],
+                        ],
+                      },
+                    },
+                  },
+                  Effect: 'Allow',
+                  Principal: {
+                    Service: 'codestar-notifications.amazonaws.com',
+                  },
+                  Resource: '*',
+                  Sid: 'KMS key access to codestar-notifications',
+                },
+                {
+                  Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+                  Condition: {
+                    ArnLike: {
+                      'aws:PrincipalARN': [
+                        {
+                          'Fn::Join': [
+                            '',
+                            [
+                              'arn:',
+                              {
+                                Ref: 'AWS::Partition',
+                              },
+                              ':iam::',
+                              {
+                                Ref: 'AWS::AccountId',
+                              },
+                              ':role/aws-accelerator-*',
+                            ],
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                  Effect: 'Allow',
+                  Principal: {
+                    AWS: '*',
+                  },
+                  Resource: '*',
+                  Sid: 'Allow Accelerator Role to use the encryption key',
+                },
+                {
                   Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
                   Effect: 'Allow',
                   Principal: {
@@ -1475,6 +1585,66 @@ describe('InstallerStack', () => {
                     },
                   },
                   Resource: '*',
+                },
+                {
+                  Action: ['kms:GenerateDataKey*', 'kms:Decrypt'],
+                  Condition: {
+                    StringEquals: {
+                      'kms:ViaService': {
+                        'Fn::Join': [
+                          '',
+                          [
+                            'sns.',
+                            {
+                              Ref: 'AWS::Region',
+                            },
+                            '.amazonaws.com',
+                          ],
+                        ],
+                      },
+                    },
+                  },
+                  Effect: 'Allow',
+                  Principal: {
+                    Service: 'codestar-notifications.amazonaws.com',
+                  },
+                  Resource: '*',
+                  Sid: 'KMS key access to codestar-notifications',
+                },
+                {
+                  Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+                  Condition: {
+                    ArnLike: {
+                      'aws:PrincipalARN': [
+                        {
+                          'Fn::Join': [
+                            '',
+                            [
+                              'arn:',
+                              {
+                                Ref: 'AWS::Partition',
+                              },
+                              ':iam::',
+                              {
+                                Ref: 'AWS::AccountId',
+                              },
+                              ':role/',
+                              {
+                                Ref: 'AcceleratorQualifier',
+                              },
+                              '-*',
+                            ],
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                  Effect: 'Allow',
+                  Principal: {
+                    AWS: '*',
+                  },
+                  Resource: '*',
+                  Sid: 'Allow Accelerator Role to use the encryption key',
                 },
                 {
                   Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],

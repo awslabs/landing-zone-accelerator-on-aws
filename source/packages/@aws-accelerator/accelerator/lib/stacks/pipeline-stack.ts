@@ -26,6 +26,11 @@ export interface PipelineStackProps extends cdk.StackProps {
   readonly managementAccountEmail: string;
   readonly logArchiveAccountEmail: string;
   readonly auditAccountEmail: string;
+  /**
+   * List of email addresses to be notified when pipeline is waiting for manual approval stage.
+   * If pipeline do not have approval stage enabled, this value will have no impact.
+   */
+  readonly approvalStageNotifyEmailList?: string;
 }
 
 export class PipelineStack extends cdk.Stack {
