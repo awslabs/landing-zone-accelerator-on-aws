@@ -18,12 +18,9 @@ import * as path from 'path';
 import * as t from './common-types';
 
 /**
- * AWS Organizations configuration items.
+ * Accounts configuration items.
  */
 export class AccountsConfigTypes {
-  /**
-   *
-   */
   static readonly accountConfig = t.interface({
     name: t.nonEmptyString,
     description: t.optional(t.nonEmptyString),
@@ -56,18 +53,86 @@ export class AccountIdConfig implements t.TypeOf<typeof AccountsConfigTypes.acco
   readonly accountId: string = '';
 }
 
+/**
+ * Account configuration
+ */
 export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accountConfig> {
+  /**
+   * The friendly name that is assigned to the account. This name will be used when creating
+   * a new account. The name will be used to reference this account in other
+   * configuration files.
+   * The name should not contain any spaces.
+   */
   readonly name: string = '';
+  /**
+   * The description is to used to provide more information about the account.
+   * This value is not used when creating accounts.
+   */
   readonly description: string = '';
+  /**
+   * The email address of the owner to assign to the account. The email address
+   * must not already be associated with another AWS acccount. You must use a
+   * valid email address.
+   * The address must be a minimum of 6 and a maximum of 64 characters long.
+   * All characters must be 7-bit ASCII characters
+   * There must be one and only one @ symbol, which separates the local name from the domain name.
+   * The local name can’t contain any of the following characters: whitespace, ” ‘ ( ) < > [ ] : ; , | % &
+   * The local name can’t begin with a dot (.)
+   * The domain name can consist of only the characters [a-z],[A-Z],[0-9], hyphen (-), or dot (.)
+   * The domain name can’t begin or end with a hyphen (-) or dot (.)
+   * The domain name must contain at least one dot
+   */
   readonly email: string = '';
+  /**
+   * The friendly name for the Organizational Unit that this account
+   * is a member of.
+   * This Organizational Unit must exist in the organization-config.yaml file.
+   */
   readonly organizationalUnit: string = '';
 }
 
+/**
+ * GovCloud Account configuration
+ * Used instead of the account configuration in the commercial
+ * partition when creating GovCloud partition linked accounts.
+ */
 export class GovCloudAccountConfig implements t.TypeOf<typeof AccountsConfigTypes.govCloudAccountConfig> {
+  /**
+   * The friendly name that is assigned to the account. This name will be used when creating
+   * a new account. The name will be used to reference this account in other
+   * configuration files.
+   * The name should not contain any spaces.
+   */
   readonly name: string = '';
+  /**
+   * The description is to used to provide more information about the account.
+   * This value is not used when creating accounts.
+   */
   readonly description: string = '';
+  /**
+   * The email address of the owner to assign to the account. The email address
+   * must not already be associated with another AWS acccount. You must use a
+   * valid email address.
+   * The address must be a minimum of 6 and a maximum of 64 characters long.
+   * All characters must be 7-bit ASCII characters
+   * There must be one and only one @ symbol, which separates the local name from the domain name.
+   * The local name can’t contain any of the following characters: whitespace, ” ‘ ( ) < > [ ] : ; , | % &
+   * The local name can’t begin with a dot (.)
+   * The domain name can consist of only the characters [a-z],[A-Z],[0-9], hyphen (-), or dot (.)
+   * The domain name can’t begin or end with a hyphen (-) or dot (.)
+   * The domain name must contain at least one dot
+   */
   readonly email: string = '';
+  /**
+   * The friendly name for the Organizational Unit that this account
+   * is a member of.
+   * This Organizational Unit must exist in the organization-config.yaml file.
+   */
   readonly organizationalUnit: string = '';
+  /**
+   * Indicates whether or not a GovCloud partition account
+   * should be created.
+   */
   readonly enableGovCloud: boolean | undefined = undefined;
 }
 /**
