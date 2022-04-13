@@ -1096,12 +1096,12 @@ describe('SecurityAuditStack', () => {
           UpdateReplacePolicy: 'Retain',
           DeletionPolicy: 'Retain',
           Metadata: {
-            cfn_nag: {
+            cdk_nag: {
               rules_to_suppress: [
                 {
-                  id: 'W35',
+                  id: 'AwsSolutions-S1',
                   reason:
-                    'S3 Bucket access logging is not enabled for the accelerator security macie export config bucket.',
+                    'AwsMacieExportConfigBucket has server access logs disabled till the task for access logging completed.',
                 },
               ],
             },
@@ -1173,12 +1173,12 @@ describe('SecurityAuditStack', () => {
           UpdateReplacePolicy: 'Retain',
           DeletionPolicy: 'Retain',
           Metadata: {
-            cfn_nag: {
+            cdk_nag: {
               rules_to_suppress: [
                 {
-                  id: 'W35',
+                  id: 'AwsSolutions-S1',
                   reason:
-                    'S3 Bucket access logging is not enabled for the accelerator security guardduty publish destination bucket.',
+                    'GuardDutyPublishingDestinationBucket has server access logs disabled till the task for access logging completed.',
                 },
               ],
             },

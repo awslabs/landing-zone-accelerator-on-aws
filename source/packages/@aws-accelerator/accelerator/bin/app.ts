@@ -22,6 +22,7 @@ import {
   SecurityConfig,
 } from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
+import { AwsSolutionsChecks } from 'cdk-nag';
 import { IConstruct } from 'constructs';
 import 'source-map-support/register';
 import { AcceleratorStackNames } from '../lib/accelerator';
@@ -76,6 +77,7 @@ export class IsobOverrides implements cdk.IAspect {
 async function main() {
   Logger.info('[app] Begin Platform Accelerator CDK App');
   const app = new cdk.App();
+  cdk.Aspects.of(app).add(new AwsSolutionsChecks());
 
   //
   // Read in context inputs

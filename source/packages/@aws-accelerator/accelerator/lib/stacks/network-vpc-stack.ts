@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
@@ -211,6 +212,15 @@ export class NetworkVpcStack extends AcceleratorStack {
           }),
         },
       });
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      // rule suppression with evidence for this permission.
+      NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/DescribeTgwAttachRole/Resource`, [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'DescribeTgwAttachRole needs access to every describe each transit gateway attachment in the account',
+        },
+      ]);
     }
 
     // Get the CentralLogsBucket, if needed to send vpc flow logs to
@@ -324,6 +334,19 @@ export class NetworkVpcStack extends AcceleratorStack {
             }),
           },
         });
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+        // rule suppression with evidence for this permission.
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/EnableCentralEndpointsRole/Resource/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason: 'EnableCentralEndpointsRole needs access to every describe every VPC in the account ',
+            },
+          ],
+        );
       }
     }
 
@@ -1510,6 +1533,21 @@ export class NetworkVpcStack extends AcceleratorStack {
             toPort: port,
             cidrIp: ingressCidr,
           });
+
+          // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
+          // rule suppression with evidence for this permission.
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(vpcItem.name)}Vpc${pascalCase(
+              endpointItem,
+            )}EpSecurityGroup/${ingressRuleId}`,
+            [
+              {
+                id: 'AwsSolutions-EC23',
+                reason: 'Allowed access for cassandra',
+              },
+            ],
+          );
         }
 
         // Adding Egress '127.0.0.1/32' to avoid default Egress rule
@@ -1609,6 +1647,19 @@ export class NetworkVpcStack extends AcceleratorStack {
           toPort: port,
           cidrIp: ingressCidr,
         });
+
+        // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
+        // rule suppression with evidence for this permission.
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/${pascalCase(endpointItem.name)}EpSecurityGroup/${ingressRuleId}`,
+          [
+            {
+              id: 'AwsSolutions-EC23',
+              reason: 'Allowed access for TCP and UDP',
+            },
+          ],
+        );
       }
 
       // Adding Egress '127.0.0.1/32' to avoid default Egress rule
@@ -1639,6 +1690,19 @@ export class NetworkVpcStack extends AcceleratorStack {
           toPort: port,
           cidrIp: egressCidr,
         });
+
+        // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
+        // rule suppression with evidence for this permission.
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/ep_${endpointItem.name}_sg-Egress/${egressRuleId}`,
+          [
+            {
+              id: 'AwsSolutions-EC23',
+              reason: 'Allowed access for TCP and UDP',
+            },
+          ],
+        );
       }
     }
 

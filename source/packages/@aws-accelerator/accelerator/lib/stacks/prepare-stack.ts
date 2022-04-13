@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
@@ -125,6 +126,14 @@ export class PrepareStack extends AcceleratorStack {
           removalPolicy: cdk.RemovalPolicy.DESTROY,
         });
 
+        // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
+        NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/NewOrgAccounts/Resource`, [
+          {
+            id: 'AwsSolutions-DDB3',
+            reason: 'NewOrgAccounts DynamoDB table do not need point in time recovery, data can be re-created',
+          },
+        ]);
+
         Logger.info(`[prepare-stack] newControlTowerAccountsTable`);
         const newCTAccountsTable = new cdk.aws_dynamodb.Table(this, 'NewCTAccounts', {
           partitionKey: { name: 'accountEmail', type: cdk.aws_dynamodb.AttributeType.STRING },
@@ -133,6 +142,14 @@ export class PrepareStack extends AcceleratorStack {
           encryptionKey: key,
           removalPolicy: cdk.RemovalPolicy.DESTROY,
         });
+
+        // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
+        NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/NewCTAccounts/Resource`, [
+          {
+            id: 'AwsSolutions-DDB3',
+            reason: 'NewCTAccounts DynamoDB table do not need point in time recovery, data can be re-created',
+          },
+        ]);
 
         new cdk.aws_ssm.StringParameter(this, 'NewCTAccountsTableNameParameter', {
           parameterName: `/accelerator/prepare-stack/NewCTAccountsTableName`,
@@ -147,6 +164,15 @@ export class PrepareStack extends AcceleratorStack {
             encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
             encryptionKey: key,
           });
+
+          // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
+          NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/govCloudAccountMapping/Resource`, [
+            {
+              id: 'AwsSolutions-DDB3',
+              reason:
+                'govCloudAccountMapping DynamoDB table do not need point in time recovery, data can be re-created',
+            },
+          ]);
 
           new cdk.aws_ssm.StringParameter(this, 'GovCloudAccountMappingTableNameParameter', {
             parameterName: `/accelerator/prepare-stack/govCloudAccountMappingTableName`,
@@ -269,6 +295,152 @@ export class PrepareStack extends AcceleratorStack {
         }
       }
     }
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onEvent/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Custom resource provider framework-onEvent role created by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Custom resource provider framework-onTimeout role created by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason:
+            'AWS Custom resource provider framework-isComplete role created by cdk. Provisioning products and service catalog needs AWSServiceCatalogEndUserFullAccess managed policy access.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Custom resource provider framework-onEvent role created by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'AWS Custom resource provider service role created by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Custom resource provider service role created by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/CreateCTAccounts/CreateControlTowerAccount/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Custom resource provider service role created by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onTimeout/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Custom resource provider framework-onTimeout role created by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-isComplete/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Custom resource provider framework-isComplete role created by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/CreateOrganizationAccounts/CreateOrganizationAccountStatus/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'AWS Custom resource provider service role created by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/CreateOrganizationAccounts/CreateOrganizationAccountStatus/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Custom resource provider service role created by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/CreateOrganizationAccounts/CreateOrganizationAccounts/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Custom resource provider service role created by cdk.',
+        },
+      ],
+    );
+
     Logger.info('[prepare-stack] Completed stack synthesis');
   }
 }

@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { version } from '../../../../../package.json';
 import * as pipeline from '../pipeline';
@@ -51,5 +52,93 @@ export class PipelineStack extends cdk.Stack {
     new pipeline.AcceleratorPipeline(this, 'Pipeline', {
       ...props,
     });
+
+    // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/Pipeline/SecureBucket/Resource/Resource`, [
+      {
+        id: 'AwsSolutions-S1',
+        reason: 'SecureBucket has server access logs disabled till the task for access logging completed.',
+      },
+    ]);
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/Pipeline/PipelineRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'PipelineRole DefaultPolicy is built by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/Pipeline/Resource/Source/Source/CodePipelineActionRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Source code pipeline action DefaultPolicy is built by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/Pipeline/Resource/Source/Configuration/CodePipelineActionRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Configuration source pipeline action DefaultPolicy is built by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/Pipeline/BuildRole/DefaultPolicy/Resource`, [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Pipeline code build role is built by cdk.',
+      },
+    ]);
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/Pipeline/ToolkitRole/Resource`, [
+      {
+        id: 'AwsSolutions-IAM4',
+        reason: 'Pipeline toolkit project role is built by cdk.',
+      },
+    ]);
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/Pipeline/ToolkitRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Pipeline toolkit project role DefaultPolicy is built by cdk.',
+        },
+      ],
+    );
+
+    // AwsSolutions-CB3: The CodeBuild project has privileged mode enabled.
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/Pipeline/ToolkitProject/Resource`, [
+      {
+        id: 'AwsSolutions-CB3',
+        reason: 'Pipeline toolkit project allow access to the Docker daemon.',
+      },
+    ]);
+
+    // AwsSolutions-CB3: The CodeBuild project has privileged mode enabled.
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/Pipeline/BuildProject/Resource`, [
+      {
+        id: 'AwsSolutions-CB3',
+        reason: 'Pipeline build project allow access to the Docker daemon.',
+      },
+    ]);
   }
 }

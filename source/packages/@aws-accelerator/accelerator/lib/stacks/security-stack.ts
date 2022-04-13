@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import * as config from 'aws-cdk-lib/aws-config';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { pascalCase } from 'change-case';
@@ -216,6 +217,15 @@ export class SecurityStack extends AcceleratorStack {
           managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSConfigRole')],
         });
 
+        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+        // rule suppression with evidence for this permission.
+        NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/ConfigRecorderRole/Resource`, [
+          {
+            id: 'AwsSolutions-IAM4',
+            reason: 'ConfigRecorderRole needs managed policy service-role/AWSConfigRole to administer config rules',
+          },
+        ]);
+
         /**
          * As per the documentation, the config role should have
          * the s3:PutObject permission to avoid access denied issues
@@ -228,6 +238,19 @@ export class SecurityStack extends AcceleratorStack {
             actions: ['s3:PutObject'],
             resources: ['*'],
           }),
+        );
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag
+        // rule suppression with evidence for this permission.
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/ConfigRecorderRole/DefaultPolicy/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason: 'ConfigRecorderRole DefaultPolicy is built by cdk.',
+            },
+          ],
         );
 
         configRecorder = new config.CfnConfigurationRecorder(this, 'ConfigRecorder', {

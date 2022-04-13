@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import * as cloudtrail from 'aws-cdk-lib/aws-cloudtrail';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
@@ -174,6 +175,16 @@ export class OrganizationsStack extends AcceleratorStack {
           'service-role/AWSBackupServiceRolePolicyForBackup',
         );
         role.addManagedPolicy(managedBackupPolicy);
+
+        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+        // rule suppression with evidence for this permission.
+        NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/BackupRole/Resource`, [
+          {
+            id: 'AwsSolutions-IAM4',
+            reason:
+              'BackupRole needs service-role/AWSBackupServiceRolePolicyForBackup managed policy to manage backup vault',
+          },
+        ]);
 
         const vault = new cdk.aws_backup.BackupVault(this, 'BackupVault', {
           backupVaultName: 'BackupVault',

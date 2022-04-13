@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { NagSuppressions } from 'cdk-nag';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
 import {
@@ -90,18 +90,13 @@ export class LoggingStack extends AcceleratorStack {
       }),
     );
 
-    // cfn_nag: Suppress warning related to the S3 bucket
-    const cfnBucket = serverAccessLogsBucket.node.defaultChild?.node.defaultChild as s3.CfnBucket;
-    cfnBucket.cfnOptions.metadata = {
-      cfn_nag: {
-        rules_to_suppress: [
-          {
-            id: 'W35',
-            reason: 'S3 Bucket access logging is not enabled for the pipeline artifacts bucket.',
-          },
-        ],
+    // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/AccessLogsBucket/Resource/Resource`, [
+      {
+        id: 'AwsSolutions-S1',
+        reason: 'AccessLogsBucket has server access logs disabled till the task for access logging completed.',
       },
-    };
+    ]);
 
     //
     // Create Central Logs Bucket - This is done only in the home region of the log-archive account.
@@ -122,6 +117,19 @@ export class LoggingStack extends AcceleratorStack {
         kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
         organizationId,
       });
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      // rule suppression with evidence for this permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/CentralLogsBucket/CrossAccountCentralBucketKMSArnSsmParamAccessRole/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Central logs bucket arn SSM parameter needs access from other accounts',
+          },
+        ],
+      );
     }
 
     if (props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable) {
@@ -163,6 +171,33 @@ export class LoggingStack extends AcceleratorStack {
           kmsKey: key,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+        // rule suppression with evidence for this permission.
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/SsmSessionManagerSettings/SessionManagerEC2Policy/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason:
+                'Policy needed access to all S3 objects for the account to put objects into the access log bucket',
+            },
+          ],
+        );
+
+        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+        // rule suppression with evidence for this permission.
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/SsmSessionManagerSettings/SessionManagerEC2Role/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM4',
+              reason: 'Create an IAM managed Policy for users to be able to use Session Manager with KMS encryption',
+            },
+          ],
+        );
       }
     }
   }
