@@ -268,6 +268,7 @@ export class OrganizationsStack extends AcceleratorStack {
           includeOtherSubscription: props.globalConfig.reports.budgets.includeOtherSubscription,
           includeRecurring: props.globalConfig.reports.budgets.includeRecurring,
           includeSubscription: props.globalConfig.reports.budgets.includeSubscription,
+          subscriptionType: props.globalConfig.reports.budgets.subscriptionType,
           includeSupport: props.globalConfig.reports.budgets.includeSupport,
           includeTax: props.globalConfig.reports.budgets.includeTax,
           includeUpfront: props.globalConfig.reports.budgets.includeUpfront,
@@ -277,12 +278,8 @@ export class OrganizationsStack extends AcceleratorStack {
           useBlended: props.globalConfig.reports.budgets.useBlended,
           useAmortized: props.globalConfig.reports.budgets.useAmortized,
           address: props.globalConfig.reports.budgets.address,
-          subscriptionType: props.globalConfig.reports.budgets.subscriptionType,
           unit: props.globalConfig.reports.budgets.unit,
-          threshold: props.globalConfig.reports.budgets.notification.threshold,
-          comparisonOperator: props.globalConfig.reports.budgets.notification.comparisonOperator,
-          thresholdType: props.globalConfig.reports.budgets.notification.thresholdType,
-          notificationType: props.globalConfig.reports.budgets.notification.notificationType,
+          notifications: props.globalConfig.reports.budgets.notifications,
         });
       }
       //

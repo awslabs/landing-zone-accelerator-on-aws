@@ -108,7 +108,7 @@ export abstract class GlobalConfigTypes {
     includeRefund: t.optional(t.boolean),
     useAmortized: t.optional(t.boolean),
     useBlended: t.optional(t.boolean),
-    notification: t.optional(this.notificationConfig),
+    notifications: t.optional(t.array(this.notificationConfig)),
     subscriptionType: t.enums('SubscriptionType', ['EMAIL', 'SNS']),
     unit: t.optional(t.nonEmptyString),
   });
@@ -324,10 +324,6 @@ export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.bud
    */
   readonly budgetName = '';
   /**
-   * The comparison that's used for the notification that's associated with a budget.
-   */
-  readonly comparisonOperator = '';
-  /**
    * The length of time until a budget resets the actual and forecasted spend. DAILY is available only for RI_UTILIZATION and RI_COVERAGE budgets.
    */
   readonly timeUnit = '';
@@ -408,50 +404,26 @@ export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.bud
    */
   readonly subscriptionType = '';
   /**
+   * The unit of measurement that's used for the budget forecast, actual spend, or budget threshold, such as USD or GBP.
+   */
+  readonly unit = '';
+  /**
    * The type of threshold for a notification. For ABSOLUTE_VALUE thresholds,
    * AWS notifies you when you go over or are forecasted to go over your total cost threshold.
    * For PERCENTAGE thresholds, AWS notifies you when you go over or are forecasted to go over a certain percentage of your forecasted spend. For example,
    * if you have a budget for 200 dollars and you have a PERCENTAGE threshold of 80%, AWS notifies you when you go over 160 dollars.
    */
-  readonly thresholdType = '';
   /**
-   * The unit of measurement that's used for the budget forecast, actual spend, or budget threshold, such as USD or GBP.
+   * The comparison that's used for the notification that's associated with a budget.
    */
-  readonly unit = '';
-  /**
-   * The notification that's associated with a budget.
-   */
-  readonly notification = {
-    /**
-     * Specifies whether the notification is for how much you have spent ( ACTUAL ) or for how much that you're forecasted to spend ( FORECASTED ).
-     */
-    notificationType: '',
-    /**
-     * The type of threshold for a notification.
-     * For ABSOLUTE_VALUE thresholds, AWS notifies you when you go over or are forecasted to go over your total cost threshold.
-     * For PERCENTAGE thresholds, AWS notifies you when you go over or are forecasted to go over a certain percentage of your forecasted spend.
-     * For example, if you have a budget for 200 dollars and you have a PERCENTAGE threshold of 80%, AWS notifies you when you go over 160 dollars.
-     */
-    thresholdType: '',
-    /**
-     * The type of notification that AWS sends to a subscriber.
-     *
-     * An enum value that specifies the target subscription type either EMAIL or SNS
-     */
-    subscriptionType: '',
-    /**
-     * The comparison that's used for the notification that's associated with a budget.
-     */
-    comparisonOperator: '',
-    /**
-     * The threshold that's associated with a notification.
-     * Thresholds are always a percentage, and many customers find value being alerted between 50% - 200% of the budgeted amount.
-     * The maximum limit for your threshold is 1,000,000% above the budgeted amount.
-     *
-     * @default 90
-     */
-    threshold: 90,
-  };
+  readonly notifications = [
+    {
+      notificationType: '',
+      thresholdType: '',
+      comparisonOperator: '',
+      threshold: 90,
+    },
+  ];
 }
 
 /**
