@@ -52,8 +52,24 @@ reports:
     subscriptionType: EMAIL
     address: myemail+pa-budg@example.com
     unit: USD
-    notification:
-      notificationType: ACTUAL
-      thresholdType: PERCENTAGE
-      threshold: 90
-      comparisonOperator: GREATER_THAN
+    notifications:
+      - notificationType: ACTUAL
+        thresholdType: PERCENTAGE
+        threshold: 100
+        comparisonOperator: GREATER_THAN
+      - notificationType: ACTUAL
+        thresholdType: PERCENTAGE
+        threshold: 90
+        comparisonOperator: GREATER_THAN
+      - notificationType: ACTUAL
+        thresholdType: PERCENTAGE
+        threshold: 80
+        comparisonOperator: GREATER_THAN
+      - notificationType: ACTUAL
+        thresholdType: PERCENTAGE
+        threshold: 75
+        comparisonOperator: GREATER_THAN
+      - notificationType: ACTUAL
+        thresholdType: PERCENTAGE
+        threshold: 50
+        comparisonOperator: GREATER_THAN

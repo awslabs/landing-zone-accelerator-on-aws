@@ -24,13 +24,7 @@ type budgetType =
   | 'SAVINGS_PLAN_COVERAGE'
   | string;
 
-type notificationType = 'ACTUAL' | 'FORECASTED' | string;
-
 type subscriptionType = 'EMAIL' | string;
-
-type thresholdType = 'PERCENTAGE' | 'ABSOLUTE_VALUE' | string;
-
-type comparisonOperator = 'GREATER_THAN' | 'LESS_THAN' | string;
 
 export interface BudgetDefinitionProps {
   /**
@@ -50,10 +44,6 @@ export interface BudgetDefinitionProps {
    * Savings Plans utilization, or Savings Plans coverage.
    */
   readonly budgetType: budgetType;
-  /**
-   * The threshold that's associated with a notification.
-   */
-  readonly thresholdType: thresholdType;
   /**
    * The address that AWS sends budget notifications to, either an SNS topic or an email.
    */
@@ -84,15 +74,6 @@ export interface BudgetDefinitionProps {
    */
   readonly includeRecurring: boolean | cdk.IResolvable;
   /**
-   * The comparison that's used for this notification.
-   */
-  readonly comparisonOperator: comparisonOperator;
-  /**
-   * Specifies whether the notification is for how much you have spent ( ACTUAL )
-   * or for how much that you're forecasted to spend ( FORECASTED ).
-   */
-  readonly notificationType: notificationType;
-  /**
    * Specifies whether a budget includes upfront RI costs.
    */
   readonly includeUpfront: boolean | cdk.IResolvable;
@@ -117,13 +98,18 @@ export interface BudgetDefinitionProps {
    */
   readonly useBlended: boolean | cdk.IResolvable;
   /**
-   * The threshold that's associated with a notification.
-   */
-  readonly threshold: number;
-  /**
    * Specifies whether a budget includes upfront RI costs.
    */
   readonly unit: string;
+  /**
+   * List of notifications.
+   */
+  readonly notifications?: {
+    threshold: number;
+    thresholdType: 'PERCENTAGE' | 'ABSOLUTE_VALUE' | string;
+    notificationType: 'ACTUAL' | 'FORECASTED' | string;
+    comparisonOperator: 'GREATER_THAN' | 'LESS_THAN' | string;
+  }[];
 }
 
 export class BudgetDefinition extends cdk.Resource {
@@ -135,6 +121,24 @@ export class BudgetDefinition extends cdk.Resource {
     });
 
     this.budgetName = this.physicalName;
+    const notificationsWithSubscribers = [];
+    for (const notify of props.notifications ?? []) {
+      const notificationWithSubscriber = {
+        notification: {
+          comparisonOperator: notify.comparisonOperator,
+          notificationType: notify.notificationType,
+          threshold: notify.threshold,
+          thresholdType: notify.thresholdType ?? undefined,
+        },
+        subscribers: [
+          {
+            address: props.address,
+            subscriptionType: props.subscriptionType,
+          },
+        ],
+      };
+      notificationsWithSubscribers.push(notificationWithSubscriber);
+    }
 
     new cdk.aws_budgets.CfnBudget(this, 'Resource', {
       budget: {
@@ -160,22 +164,7 @@ export class BudgetDefinition extends cdk.Resource {
         },
       },
 
-      notificationsWithSubscribers: [
-        {
-          notification: {
-            comparisonOperator: props.comparisonOperator,
-            notificationType: props.notificationType,
-            threshold: props.threshold,
-            thresholdType: props.thresholdType ?? undefined,
-          },
-          subscribers: [
-            {
-              address: props.address,
-              subscriptionType: props.subscriptionType,
-            },
-          ],
-        },
-      ],
+      notificationsWithSubscribers,
     });
   }
 }
