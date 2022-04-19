@@ -8,6 +8,10 @@ CODE_OF_CONDUCT.md:4
 CONTRIBUTING.md:51
 
 ^dist/
+node_modules/
+
+.html
+.js
 
 yarn.lock
 
@@ -15,11 +19,44 @@ source/packages/@aws-accelerator/installer/bin/installer.ts:18
 source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:59
 source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:58
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:731
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1012
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1021
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1030
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1039
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:342
+
+source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:57
+
+source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:57
+
+source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:11
+source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:64
+source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:71
+
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:568
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:572
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:576
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:826
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:832
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:838
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:845
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:849
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:852
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:863
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:871
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:879
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:887
+
+source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:18
+source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:19
+source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:20
+
+source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:768
+source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:891
+source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1036
+
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:763
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1156
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1165
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1174
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1183
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1192
 
 source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:68
 source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:82
