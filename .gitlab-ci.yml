@@ -16,25 +16,34 @@ stages:
 accelerator-build:
   stage: build
   script:
-    - 'export NODE_OPTIONS=--max_old_space_size=4096'
-    - 'cd source'
-    - 'npm install --global yarn'
-    - 'yarn install'
-    - 'yarn lint'
-    - 'yarn lerna link'
-    - 'yarn build'
+    - "export NODE_OPTIONS=--max_old_space_size=4096"
+    - "cd source"
+    - "npm install --global yarn"
+    - "yarn install"
+    - "yarn lint"
+    - "yarn lerna link"
+    - "yarn build"
   artifacts:
     untracked: true
     when: on_success
     paths:
       - source/
-
+accelerator-test:
+  stage: test
+  script:
+    - "wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip'"
+    - "unzip -qo viperlight.zip -d ../viperlight"
+    - "rm -r ./viperlight.zip"
+    - "../viperlight/bin/viperlight scan"
+  artifacts:
+    untracked: true
+    expire_in: 1 day
 accelerator-documentation:
   stage: metadata
   script:
-    - 'export NODE_OPTIONS=--max_old_space_size=8192'
-    - 'cd source'
-    - 'yarn docs'
+    - "export NODE_OPTIONS=--max_old_space_size=8192"
+    - "cd source"
+    - "yarn docs"
   artifacts:
     expire_in: 1 week
     paths:
