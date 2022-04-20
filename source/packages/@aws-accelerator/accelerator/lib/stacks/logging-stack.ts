@@ -137,6 +137,7 @@ export class LoggingStack extends AcceleratorStack {
       // if ebs default encryption enabled and using a customer master key
       new iam.CfnServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
         awsServiceName: 'autoscaling.amazonaws.com',
+        description: 'Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling',
       });
     }
 
