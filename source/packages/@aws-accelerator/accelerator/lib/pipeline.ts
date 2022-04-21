@@ -276,6 +276,16 @@ export class AcceleratorPipeline extends Construct {
     });
 
     if (props.enableApprovalStage) {
+      let notificationTopic: cdk.aws_sns.ITopic | undefined;
+      let notifyEmails: string[] | undefined;
+      if (cdk.Stack.of(this).partition === 'aws') {
+        notificationTopic = new cdk.aws_sns.Topic(this, 'ManualApprovalActionTopic', {
+          topicName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
+          displayName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
+          masterKey: installerKey,
+        });
+        notifyEmails = props.approvalStageNotifyEmailList ? props.approvalStageNotifyEmailList.split(',') : undefined;
+      }
       pipeline.addStage({
         stageName: 'Review',
         actions: [
@@ -284,14 +294,8 @@ export class AcceleratorPipeline extends Construct {
             actionName: 'Approve',
             runOrder: 2,
             additionalInformation: 'See previous stage (Diff) for changes.',
-            notificationTopic: new cdk.aws_sns.Topic(this, 'ManualApprovalActionTopic', {
-              topicName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
-              displayName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
-              masterKey: installerKey,
-            }),
-            notifyEmails: props.approvalStageNotifyEmailList
-              ? props.approvalStageNotifyEmailList.split(',')
-              : undefined,
+            notificationTopic,
+            notifyEmails,
           }),
         ],
       });

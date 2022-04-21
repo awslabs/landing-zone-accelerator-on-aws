@@ -2682,7 +2682,7 @@ Object {
                           Object {
                             "Ref": "AWS::AccountId",
                           },
-                          ":role/aws-accelerator-*",
+                          ":role/AWSAccelerator-*",
                         ],
                       ],
                     },
@@ -3803,7 +3803,7 @@ Object {
                           Object {
                             "Ref": "AWS::AccountId",
                           },
-                          ":role/aws-accelerator-*",
+                          ":role/AWSAccelerator-*",
                         ],
                       ],
                     },

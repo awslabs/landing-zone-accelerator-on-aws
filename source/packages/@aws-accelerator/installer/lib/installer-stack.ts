@@ -241,19 +241,21 @@ export class InstallerStack extends cdk.Stack {
     });
 
     // KMS key access to codestar-notifications
-    installerKey.addToResourcePolicy(
-      new cdk.aws_iam.PolicyStatement({
-        sid: 'KMS key access to codestar-notifications',
-        actions: ['kms:GenerateDataKey*', 'kms:Decrypt'],
-        principals: [new cdk.aws_iam.ServicePrincipal('codestar-notifications.amazonaws.com')],
-        resources: ['*'],
-        conditions: {
-          StringEquals: {
-            'kms:ViaService': `sns.${cdk.Stack.of(this).region}.amazonaws.com`,
+    if (cdk.Stack.of(this).partition === 'aws') {
+      installerKey.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'KMS key access to codestar-notifications',
+          actions: ['kms:GenerateDataKey*', 'kms:Decrypt'],
+          principals: [new cdk.aws_iam.ServicePrincipal('codestar-notifications.amazonaws.com')],
+          resources: ['*'],
+          conditions: {
+            StringEquals: {
+              'kms:ViaService': `sns.${cdk.Stack.of(this).region}.amazonaws.com`,
+            },
           },
-        },
-      }),
-    );
+        }),
+      );
+    }
 
     // Allow Accelerator Role inside management account to use the encryption key
     // This is needed for pipeline manual approval action to send notification to encrypted topic
@@ -267,7 +269,7 @@ export class InstallerStack extends cdk.Stack {
           ArnLike: {
             'aws:PrincipalARN': [
               `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
-                this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'aws-accelerator'
+                this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'AWSAccelerator'
               }-*`,
             ],
           },
