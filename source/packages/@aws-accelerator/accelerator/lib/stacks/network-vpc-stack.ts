@@ -108,7 +108,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     }).getKey();
 
     // Get the organization object, used by Data Protection
-    const organization = new Organization(this, 'Organization');
+    const organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
 
     //
     // Delete Default VPCs
@@ -896,12 +896,12 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         // Add Gateway Endpoints (AWS Services)
         //
-        this.createGatewayEndpoints(vpcItem, vpc, routeTableMap, organization.id);
+        this.createGatewayEndpoints(vpcItem, vpc, routeTableMap, organizationId);
 
         //
         // Create Interface Endpoints (AWS Services)
         //
-        this.createInterfaceEndpoints(vpcItem, vpc, subnetMap, organization.id);
+        this.createInterfaceEndpoints(vpcItem, vpc, subnetMap, organizationId);
 
         //
         // Add Security Groups
@@ -1347,7 +1347,7 @@ export class NetworkVpcStack extends AcceleratorStack {
    * @param organizationId
    * @returns
    */
-  private createVpcEndpointPolicy(service: string, organizationId: string): cdk.aws_iam.PolicyDocument | undefined {
+  private createVpcEndpointPolicy(service: string, organizationId?: string): cdk.aws_iam.PolicyDocument | undefined {
     // See https://docs.aws.amazon.com/vpc/latest/privatelink/integrated-services-vpce-list.html
     // for the services that integrates with AWS PrivateLink, but does not support VPC endpoint policies
     if (
@@ -1417,7 +1417,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     vpcItem: VpcConfig,
     vpc: Vpc,
     routeTableMap: Map<string, RouteTable>,
-    organizationId: string,
+    organizationId?: string,
   ) {
     // Create a list of related route tables that will need to be updated with the gateway routes
     const s3EndpointRouteTables: RouteTable[] = [];
@@ -1484,7 +1484,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     vpcItem: VpcConfig,
     vpc: Vpc,
     subnetMap: Map<string, Subnet>,
-    organizationId: string,
+    organizationId?: string,
   ) {
     //
     // Add Interface Endpoints (AWS Services)
