@@ -49,7 +49,7 @@ describe('PipelineStack', () => {
    * Number of IAM Policy resource test
    */
   test(`${testNamePrefix} IAM Policy resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Policy', 6);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Policy', 5);
   });
 
   /**
@@ -88,11 +88,7 @@ describe('PipelineStack', () => {
       Resources: {
         Pipeline8E4BFAC9: {
           Type: 'AWS::CodePipeline::Pipeline',
-          DependsOn: [
-            'PipelineAWSServiceRoleForCodeStarNotificationsDA052A10',
-            'PipelinePipelineRoleDefaultPolicy7D262A22',
-            'PipelinePipelineRole6D983AD5',
-          ],
+          DependsOn: ['PipelinePipelineRoleDefaultPolicy7D262A22', 'PipelinePipelineRole6D983AD5'],
           Properties: {
             ArtifactStore: {
               EncryptionKey: {
@@ -1023,16 +1019,6 @@ describe('PipelineStack', () => {
                   Resource: {
                     'Fn::GetAtt': ['PipelineReviewApproveCodePipelineActionRole3122ED42', 'Arn'],
                   },
-                },
-                {
-                  Action: 'sns:Publish',
-                  Effect: 'Allow',
-                  Resource: { Ref: 'PipelineAcceleratorStatusTopic2BD5793F' },
-                },
-                {
-                  Action: 'sns:Publish',
-                  Effect: 'Allow',
-                  Resource: { Ref: 'PipelineAcceleratorFailedStatusTopic614002B3' },
                 },
               ],
               Version: '2012-10-17',
