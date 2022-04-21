@@ -1475,31 +1475,6 @@ describe('InstallerStack', () => {
                   Resource: '*',
                 },
                 {
-                  Action: ['kms:GenerateDataKey*', 'kms:Decrypt'],
-                  Condition: {
-                    StringEquals: {
-                      'kms:ViaService': {
-                        'Fn::Join': [
-                          '',
-                          [
-                            'sns.',
-                            {
-                              Ref: 'AWS::Region',
-                            },
-                            '.amazonaws.com',
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                  Effect: 'Allow',
-                  Principal: {
-                    Service: 'codestar-notifications.amazonaws.com',
-                  },
-                  Resource: '*',
-                  Sid: 'KMS key access to codestar-notifications',
-                },
-                {
                   Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
                   Condition: {
                     ArnLike: {
@@ -1585,31 +1560,6 @@ describe('InstallerStack', () => {
                     },
                   },
                   Resource: '*',
-                },
-                {
-                  Action: ['kms:GenerateDataKey*', 'kms:Decrypt'],
-                  Condition: {
-                    StringEquals: {
-                      'kms:ViaService': {
-                        'Fn::Join': [
-                          '',
-                          [
-                            'sns.',
-                            {
-                              Ref: 'AWS::Region',
-                            },
-                            '.amazonaws.com',
-                          ],
-                        ],
-                      },
-                    },
-                  },
-                  Effect: 'Allow',
-                  Principal: {
-                    Service: 'codestar-notifications.amazonaws.com',
-                  },
-                  Resource: '*',
-                  Sid: 'KMS key access to codestar-notifications',
                 },
                 {
                   Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],

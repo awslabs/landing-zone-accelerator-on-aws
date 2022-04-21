@@ -196,34 +196,6 @@ Object {
             },
             Object {
               "Action": Array [
-                "kms:GenerateDataKey*",
-                "kms:Decrypt",
-              ],
-              "Condition": Object {
-                "StringEquals": Object {
-                  "kms:ViaService": Object {
-                    "Fn::Join": Array [
-                      "",
-                      Array [
-                        "sns.",
-                        Object {
-                          "Ref": "AWS::Region",
-                        },
-                        ".amazonaws.com",
-                      ],
-                    ],
-                  },
-                },
-              },
-              "Effect": "Allow",
-              "Principal": Object {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": "*",
-              "Sid": "KMS key access to codestar-notifications",
-            },
-            Object {
-              "Action": Array [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -1441,34 +1413,6 @@ Object {
             },
             Object {
               "Action": Array [
-                "kms:GenerateDataKey*",
-                "kms:Decrypt",
-              ],
-              "Condition": Object {
-                "StringEquals": Object {
-                  "kms:ViaService": Object {
-                    "Fn::Join": Array [
-                      "",
-                      Array [
-                        "sns.",
-                        Object {
-                          "Ref": "AWS::Region",
-                        },
-                        ".amazonaws.com",
-                      ],
-                    ],
-                  },
-                },
-              },
-              "Effect": "Allow",
-              "Principal": Object {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": "*",
-              "Sid": "KMS key access to codestar-notifications",
-            },
-            Object {
-              "Action": Array [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -2633,34 +2577,6 @@ Object {
             },
             Object {
               "Action": Array [
-                "kms:GenerateDataKey*",
-                "kms:Decrypt",
-              ],
-              "Condition": Object {
-                "StringEquals": Object {
-                  "kms:ViaService": Object {
-                    "Fn::Join": Array [
-                      "",
-                      Array [
-                        "sns.",
-                        Object {
-                          "Ref": "AWS::Region",
-                        },
-                        ".amazonaws.com",
-                      ],
-                    ],
-                  },
-                },
-              },
-              "Effect": "Allow",
-              "Principal": Object {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": "*",
-              "Sid": "KMS key access to codestar-notifications",
-            },
-            Object {
-              "Action": Array [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -3751,34 +3667,6 @@ Object {
                 },
               },
               "Resource": "*",
-            },
-            Object {
-              "Action": Array [
-                "kms:GenerateDataKey*",
-                "kms:Decrypt",
-              ],
-              "Condition": Object {
-                "StringEquals": Object {
-                  "kms:ViaService": Object {
-                    "Fn::Join": Array [
-                      "",
-                      Array [
-                        "sns.",
-                        Object {
-                          "Ref": "AWS::Region",
-                        },
-                        ".amazonaws.com",
-                      ],
-                    ],
-                  },
-                },
-              },
-              "Effect": "Allow",
-              "Principal": Object {
-                "Service": "codestar-notifications.amazonaws.com",
-              },
-              "Resource": "*",
-              "Sid": "KMS key access to codestar-notifications",
             },
             Object {
               "Action": Array [

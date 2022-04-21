@@ -940,7 +940,7 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
    *           inputParameters:
    *           customRule:
    *             lambda:
-   *               sourceFilePath: custom-config-rules/attatch-ec2-instance-profile.zip
+   *               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
    *               handler: index.handler
    *               runtime: nodejs14.x
    *             periodic: true
