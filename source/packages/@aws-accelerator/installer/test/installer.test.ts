@@ -1516,7 +1516,7 @@ describe('InstallerStack', () => {
                               {
                                 Ref: 'AWS::AccountId',
                               },
-                              ':role/aws-accelerator-*',
+                              ':role/AWSAccelerator-*',
                             ],
                           ],
                         },
