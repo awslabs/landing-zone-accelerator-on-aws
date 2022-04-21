@@ -13,7 +13,7 @@
 export enum AcceleratorStage {
   PIPELINE = 'pipeline',
   /**
-   * Aceelerator Tester Pipeline
+   * Accelerator Tester Pipeline
    */
   TESTER_PIPELINE = 'tester-pipeline',
   /**

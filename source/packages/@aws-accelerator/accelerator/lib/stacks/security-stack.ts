@@ -35,9 +35,10 @@ import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { KeyStack } from './key-stack';
 
 enum ACCEL_LOOKUP_TYPE {
-  SSM = 'SSM',
   KMS = 'KMS',
   Bucket = 'Bucket',
+  EC2_DEFAULT_PROFILE = 'Ec2DefaultProfile',
+  CUSTOMER_MANAGED_POLICY = 'CustomerManagedPolicy',
 }
 
 interface RemediationParameters {
@@ -57,11 +58,16 @@ interface RemediationParameters {
 export class SecurityStack extends AcceleratorStack {
   readonly acceleratorKey: cdk.aws_kms.Key;
   readonly auditAccountId: string;
+  readonly logArchiveAccountId: string;
+  readonly ec2InstanceDefaultProfileName: string;
+
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     const auditAccountName = props.securityConfig.getDelegatedAccountName();
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
+    this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
+    this.ec2InstanceDefaultProfileName = props.iamConfig.ec2InstanceDefaultProfile.name;
 
     this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
       accountId: props.accountsConfig.getAuditAccountId(),
@@ -264,9 +270,7 @@ export class SecurityStack extends AcceleratorStack {
 
       if (props.securityConfig.awsConfig.enableDeliveryChannel) {
         new config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
-          s3BucketName: `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
-            props.globalConfig.homeRegion
-          }`,
+          s3BucketName: `aws-accelerator-central-logs-${this.logArchiveAccountId}-${props.globalConfig.homeRegion}`,
           configSnapshotDeliveryProperties: {
             deliveryFrequency: 'One_Hour',
           },
@@ -328,28 +332,29 @@ export class SecurityStack extends AcceleratorStack {
             description: `AWS Config custom rule function used for "${rule.name}" rule`,
           });
 
-          //TODO
-          // const logGroup = new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-LogGroup', {
-          //   logGroupName: `/aws/lambda/${lambdaFunction.functionName}`,
-          //   retention: props.globalConfig.logRetentionInDays,
-          //   encryptionKey: this.acceleratorKey,
-          //   removalPolicy: cdk.RemovalPolicy.DESTROY,
-          // });
-          //
-          // logGroup.node.addDependency(lambdaFunction);
-
-          // Read in the policy document which should be properly formatted json
-          const policyDocument = require(path.join(props.configDirPath, rule.customRule.lambda.rolePolicyFile));
-
-          // Create a statements list using the PolicyStatement factory
-          const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
-          for (const statement of policyDocument.Statement) {
-            policyStatements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
-          }
-
-          policyStatements.forEach(policyStatement => {
-            lambdaFunction?.addToRolePolicy(policyStatement);
+          // Configure lambda log file with encryption and log retention
+          new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-LogGroup', {
+            logGroupName: `/aws/lambda/${lambdaFunction.functionName}`,
+            retention: props.globalConfig.cloudwatchLogRetentionInDays,
+            encryptionKey: this.acceleratorKey,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
           });
+
+          // Grant read only access to lambda rule to evaluate config rule
+          lambdaFunction.role?.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('ReadOnlyAccess'));
+
+          // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+          // rule suppression with evidence for this permission.
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(rule.name)}-Function/ServiceRole/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM4',
+                reason: 'AWS Config custom rule needs managed readonly access policy',
+              },
+            ],
+          );
 
           configRule = new config.CustomRule(this, pascalCase(rule.name), {
             configRuleName: rule.name,
@@ -668,26 +673,37 @@ export class SecurityStack extends AcceleratorStack {
     const replacementArray = replacement[1].split(':');
     const lookupType = replacementArray[0];
 
-    ruleName;
-    replacementType;
-    // if (lookupType === ACCEL_LOOKUP_TYPE.SSM) {
-    //   if (replacementArray.length === 2) {
-    //     return new SsmParameterLookup(this, pascalCase(ruleName) + 'SsmParam' + replacementType, {
-    //       name: replacementArray[1],
-    //       accountId: this.props.accountsConfig.getAuditAccountId(),
-    //     }).value;
-    //   }
+    if (lookupType === ACCEL_LOOKUP_TYPE.EC2_DEFAULT_PROFILE) {
+      return this.ec2InstanceDefaultProfileName;
+    }
 
-    //   throw new Error(`Config rule replacement key ${replacement.input} not found`);
-    // }
+    if (lookupType === ACCEL_LOOKUP_TYPE.CUSTOMER_MANAGED_POLICY) {
+      if (replacementArray.length === 2) {
+        return cdk.aws_iam.ManagedPolicy.fromManagedPolicyName(
+          this,
+          `${pascalCase(ruleName)} + ${pascalCase(replacementArray[1])}-${pascalCase(replacementType)}`,
+          replacementArray[1],
+        ).managedPolicyArn;
+      }
+
+      return this.acceleratorKey.keyArn;
+    }
+
     if (lookupType === ACCEL_LOOKUP_TYPE.KMS) {
       return this.acceleratorKey.keyArn;
     }
 
-    // TODO: This should be pointing at the central-logs bucket
     if (lookupType === ACCEL_LOOKUP_TYPE.Bucket) {
-      if (replacementArray.length === 2 && replacementArray[1].toLowerCase() === 'logging'.toLowerCase()) {
-        return `aws-accelerator-logs-${this.auditAccountId}-${cdk.Stack.of(this).region}`;
+      if (replacementArray.length === 2) {
+        if (replacementArray[1].toLowerCase() === 'elbLogs'.toLowerCase()) {
+          return `aws-accelerator-elb-access-logs-${this.logArchiveAccountId}-${cdk.Stack.of(this).region}`;
+        } else {
+          return cdk.aws_s3.Bucket.fromBucketName(
+            this,
+            `${pascalCase(ruleName)}-${pascalCase(replacementType)}-InputBucket`,
+            replacementArray[1].toLowerCase(),
+          ).bucketName;
+        }
       }
 
       throw new Error(`Config rule replacement key ${replacement.input} not found`);
@@ -731,6 +747,19 @@ export class SecurityStack extends AcceleratorStack {
     policyStatements.forEach(policyStatement => {
       role.addToPolicy(policyStatement);
     });
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+    // rule suppression with evidence for this permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${pascalCase(ruleName)}-RemediationRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'AWS Config rule remediation role, created by the permission provided in config repository',
+        },
+      ],
+    );
     return role;
   }
 }
