@@ -135,6 +135,12 @@ export const iamConfigJson = {
       ],
     },
   ],
+  ec2InstanceDefaultProfile: {
+    name: 'Accelerator-EC2-Instance-Default-Profile',
+    deploymentTargets: {
+      organizationalUnits: ['Root'],
+    },
+  },
 };
 
 export const IAM_CONFIG = IamConfig.loadFromString(JSON.stringify(iamConfigJson))!;

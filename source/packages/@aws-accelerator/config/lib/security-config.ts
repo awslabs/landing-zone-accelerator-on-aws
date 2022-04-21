@@ -189,7 +189,6 @@ export class SecurityConfigTypes {
     sourceFilePath: t.nonEmptyString,
     handler: t.nonEmptyString,
     runtime: t.nonEmptyString,
-    rolePolicyFile: t.nonEmptyString,
   });
 
   static readonly triggeringResourceType = t.interface({
@@ -813,10 +812,6 @@ export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRul
        * The runtime environment for the Lambda function that you are uploading. For valid values, see the Runtime property in the AWS Lambda Developer Guide.
        */
       runtime: '',
-      /**
-       * Lambda role policy file. A json file containing lambda function role permission, this file must be available in config repository.
-       */
-      rolePolicyFile: '',
     },
     /**
      * Whether to run the rule on a fixed frequency.
@@ -948,7 +943,6 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
    *               sourceFilePath: custom-config-rules/attatch-ec2-instance-profile.zip
    *               handler: index.handler
    *               runtime: nodejs14.x
-   *               rolePolicyFile: custom-config-rules/attatch-ec2-instance-profile-lambda-role.json
    *             periodic: true
    *             maximumExecutionFrequency: Six_Hours
    *             configurationChanges: true

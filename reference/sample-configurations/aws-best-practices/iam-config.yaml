@@ -40,3 +40,8 @@ userSets:
       - username: breakGlassUser02
         group: Administrators
         boundaryPolicy: Default-Boundary-Policy
+ec2InstanceDefaultProfile:
+  name: Accelerator-EC2-Instance-Default-Profile
+  deploymentTargets:
+    organizationalUnits:
+      - Root

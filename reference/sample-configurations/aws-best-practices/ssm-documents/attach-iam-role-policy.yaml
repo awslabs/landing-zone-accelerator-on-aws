@@ -20,6 +20,7 @@ mainSteps:
       Handler: script_handler
       Script: |-
         import boto3
+        partition = boto3.client("sts").get_caller_identity()['Arn'].split(":")[1]
         iam = boto3.client("iam")
         config = boto3.client("config")
         def script_handler(events, context):
@@ -35,7 +36,7 @@ mainSteps:
           customer_policy_names = events["CustomerManagedPolicies"]
           for policy in aws_policy_names:
             iam.attach_role_policy(
-              PolicyArn="arn:aws:iam::aws:policy/%s"%policy,
+              PolicyArn="arn:%s:iam::aws:policy/%s" %(partition, policy),
               RoleName=role_name
             )
           for policy in customer_policy_names:
