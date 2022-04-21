@@ -1,4 +1,4 @@
-description:
+description: Enable logging on Elastic Load-Balancer
 schemaVersion: '0.3'
 assumeRole: '{{ AutomationAssumeRole }}'
 parameters:
