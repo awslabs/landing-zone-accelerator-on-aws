@@ -64,54 +64,156 @@ export abstract class OrganizationConfigTypes {
   });
 }
 
+/**
+ * AWS Organizational Unit (OU) configuration
+ */
 export abstract class OrganizationalUnitConfig
   implements t.TypeOf<typeof OrganizationConfigTypes.organizationalUnitConfig>
 {
+  /**
+   * The new name that you want to assign to the OU.
+   * The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range.
+   */
   readonly name: string = '';
+  /**
+   * The unique identifier (ID) of the parent root or OU that you want to create the new OU in. The regex pattern for a parent ID string requires one of the following:
+   * Root - A string that begins with "r-" followed by from 4 to 32 lowercase letters or digits.
+   * Organizational unit (OU) - A string that begins with "ou-" followed by from 4 to 32 lowercase letters or digits (the ID of the root that the OU is in).
+   * This string is followed by a second "-" dash and from 8 to 32 additional lowercase letters or digits.
+   */
   readonly path: string = '/';
 }
 
+/**
+ * Organizational unit in configuration
+ */
 export abstract class OrganizationalUnitIdConfig
   implements t.TypeOf<typeof OrganizationConfigTypes.organizationalUnitIdConfig>
 {
+  /**
+   * A name for the OU
+   */
   readonly name: string = '';
+  /**
+   * OU id
+   */
   readonly id: string = '';
+  /**
+   * OU arn
+   */
   readonly arn: string = '';
 }
 
+/**
+ * Service control policy configuration
+ */
 export abstract class ServiceControlPolicyConfig
   implements t.TypeOf<typeof OrganizationConfigTypes.serviceControlPolicyConfig>
 {
+  /**
+   * The friendly name to assign to the policy.
+   * The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range.
+   */
   readonly name: string = '';
+  /**
+   * An optional description to assign to the policy.
+   */
   readonly description: string = '';
+  /**
+   * Service control definition json file. This file must be present in config repository
+   */
   readonly policy: string = '';
+  /**
+   * Kind of service control policy
+   */
   readonly type: string = 'customerManaged';
+  /**
+   * Service control policy deployment targets
+   */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
 
+/**
+ * Organizations tag policy.
+ *
+ * Tag policies help you standardize tags on all tagged resources across your organization.
+ * You can use tag policies to define tag keys (including how they should be capitalized) and their allowed values.
+ */
 export abstract class TaggingPolicyConfig implements t.TypeOf<typeof OrganizationConfigTypes.tagPolicyConfig> {
+  /**
+   * The friendly name to assign to the policy.
+   * The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range.
+   */
   readonly name: string = '';
+  /**
+   * An optional description to assign to the policy.
+   */
   readonly description: string = '';
+  /**
+   * Tagging policy definition json file. This file must be present in config repository
+   */
   readonly policy: string = '';
+  /**
+   * Tagging policy deployment targets
+   */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
 
+/**
+ * Organization backup policy
+ *
+ * Backup policies enable you to deploy organization-wide backup plans to help ensure compliance across your organization's accounts.
+ * Using policies helps ensure consistency in how you implement your backup plans
+ */
 export abstract class BackupPolicyConfig implements t.TypeOf<typeof OrganizationConfigTypes.backupPolicyConfig> {
+  /**
+   * The friendly name to assign to the policy.
+   * The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range.
+   */
   readonly name: string = '';
   readonly description: string = '';
+  /**
+   * An optional description to assign to the policy.
+   */
   readonly policy: string = '';
+  /**
+   * Backup policy deployment targets
+   */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
 
+/**
+ * Organization configuration
+ */
 export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTypes.organizationConfig> {
+  /**
+   * A name for the organization config file in config repository
+   *
+   * @default organization-config.yaml
+   */
   static readonly FILENAME = 'organization-config.yaml';
 
+  /**
+   * Indicates whether AWS Organization enabled.
+   *
+   */
   readonly enable = true;
 
   /**
    * A Record of Organizational Unit configurations
    *
    * @see OrganizationalUnitConfig
+   *
+   * To create Security and Infrastructure OU in / path , you need to provide following values for this parameter.
+   *
+   * @example
+   * ```
+   * organizationalUnits:
+   *   - name: Security
+   *     path: /
+   *   - name: Infrastructure
+   *     path: /
+   * ```
    */
   readonly organizationalUnits: OrganizationalUnitConfig[] = [
     {
@@ -135,6 +237,23 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * A Record of Service Control Policy configurations
    *
    * @see ServiceControlPolicyConfig
+   *
+   * To create service control policy named DenyDeleteVpcFlowLogs from service-control-policies/deny-delete-vpc-flow-logs.json file in config repository, you need to provide following values for this parameter.
+   *
+   * @example
+   * ```
+   * serviceControlPolicies:
+   *   - name: DenyDeleteVpcFlowLogs
+   *     description: >
+   *       This SCP prevents users or roles in any affected account from deleting
+   *       Amazon Elastic Compute Cloud (Amazon EC2) flow logs or CloudWatch log
+   *       groups or log streams.
+   *     policy: service-control-policies/deny-delete-vpc-flow-logs.json
+   *     type: customerManaged
+   *     deploymentTargets:
+   *       organizationalUnits:
+   *         - Security
+   * ```
    */
   readonly serviceControlPolicies: ServiceControlPolicyConfig[] = [];
 
@@ -142,6 +261,19 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * A Record of Tagging Policy configurations
    *
    * @see TaggingPolicyConfig
+   *
+   * To create tagging policy named TagPolicy from tagging-policies/org-tag-policy.json file in config repository, you need to provide following values for this parameter.
+   *
+   * @example
+   * ```
+   * taggingPolicies:
+   *   - name: TagPolicy
+   *     description: Organization Tagging Policy
+   *     policy: tagging-policies/org-tag-policy.json
+   *     deploymentTargets:
+   *         organizationalUnits:
+   *           - Root
+   * ```
    */
   readonly taggingPolicies: TaggingPolicyConfig[] = [];
 
@@ -149,6 +281,19 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * A Record of Backup Policy configurations
    *
    * @see BackupPolicyConfig
+   *
+   * To create backup policy named BackupPolicy from backup-policies/org-backup-policies.json file in config repository, you need to provide following values for this parameter.
+   *
+   * @example
+   * ```
+   * backupPolicies:
+   *   - name: BackupPolicy
+   *     description: Organization Backup Policy
+   *     policy: backup-policies/org-backup-policies.json
+   *     deploymentTargets:
+   *         organizationalUnits:
+   *           - Root
+   * ```
    */
   readonly backupPolicies: BackupPolicyConfig[] = [];
 
@@ -163,7 +308,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
   }
 
   /**
-   *
+   * Load from config file content
    * @param dir
    * @returns
    */
@@ -173,6 +318,10 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
     return new OrganizationConfig(values);
   }
 
+  /**
+   * Load from string content
+   * @param partition
+   */
   public async loadOrganizationalUnitIds(partition: string): Promise<void> {
     if (!this.enable) {
       // do nothing
