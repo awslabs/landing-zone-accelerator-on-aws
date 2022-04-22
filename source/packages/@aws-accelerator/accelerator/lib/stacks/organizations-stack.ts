@@ -317,10 +317,12 @@ export class OrganizationsStack extends AcceleratorStack {
       //
       // Enable RAM organization sharing
       //
-      new EnableSharingWithAwsOrganization(this, 'EnableSharingWithAwsOrganization', {
-        kmsKey: key,
-        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-      });
+      if (props.organizationConfig.enable) {
+        new EnableSharingWithAwsOrganization(this, 'EnableSharingWithAwsOrganization', {
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+        });
+      }
     }
 
     // Security Services delegated admin account configuration

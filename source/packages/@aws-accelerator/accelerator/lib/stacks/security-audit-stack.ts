@@ -48,7 +48,7 @@ export class SecurityAuditStack extends AcceleratorStack {
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
 
-    const organization = new Organization(this, 'Organization');
+    const organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
 
     //
     // Macie configuration
@@ -98,7 +98,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           resources: [bucket.getS3Bucket().bucketArn, `${bucket.getS3Bucket().bucketArn}/*`],
           conditions: {
             StringEquals: {
-              'aws:PrincipalOrgID': organization.id,
+              'aws:PrincipalOrgID': organizationId,
             },
           },
         }),
@@ -167,7 +167,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           resources: [bucket.getS3Bucket().bucketArn, `${bucket.getS3Bucket().bucketArn}/*`],
           conditions: {
             StringEquals: {
-              'aws:PrincipalOrgID': organization.id,
+              'aws:PrincipalOrgID': organizationId,
             },
           },
         }),
@@ -305,7 +305,7 @@ export class SecurityAuditStack extends AcceleratorStack {
     //     resources: ['*'],
     //     conditions: {
     //       StringEquals: {
-    //         'aws:PrincipalOrgID': organization.id,
+    //         'aws:PrincipalOrgID': organizationId,
     //       },
     //     },
     //   }),
@@ -353,7 +353,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
       // Allowing Publish from Organization
       topic.grantPublish({
-        grantPrincipal: new cdk.aws_iam.OrganizationPrincipal(organization.id),
+        grantPrincipal: new cdk.aws_iam.OrganizationPrincipal(organizationId),
       });
 
       topic.addToResourcePolicy(
@@ -364,7 +364,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           resources: [topic.topicArn],
           conditions: {
             StringEquals: {
-              'aws:PrincipalOrgID': organization.id,
+              'aws:PrincipalOrgID': organizationId,
             },
           },
         }),
