@@ -94,7 +94,7 @@ awsConfig:
         organizationalUnits:
           - Root
       rules:
-        - name: accelerator-attatch-ec2-instance-profile
+        - name: accelerator-attach-ec2-instance-profile
           type: Custom
           description: Custom rule for checking EC2 instance IAM profile attachment
           inputParameters:
@@ -153,9 +153,9 @@ awsConfig:
 #              CustomerManagedPolicies: ${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>},${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>}
               ResourceId: RESOURCE_ID
         - name: accelerator-s3-bucket-server-side-encryption-enabled
+          identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
           complianceResourceTypes:
             - AWS::S3::Bucket
-          identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
           remediation:
             rolePolicyFile: custom-config-rules/bucket-sse-enabled-remediation-role.json
             automatic: true
@@ -166,10 +166,10 @@ awsConfig:
               BucketName: RESOURCE_ID
               KMSMasterKey: ${ACCEL_LOOKUP::KMS}
         - name: accelerator-elb-logging-enabled
+          identifier: ELB_LOGGING_ENABLED
           complianceResourceTypes:
             - AWS::ElasticLoadBalancing::LoadBalancer
             - AWS::ElasticLoadBalancingV2::LoadBalancer
-          identifier: ELB_LOGGING_ENABLED
           inputParameters:
             s3BucketNames: ${ACCEL_LOOKUP::Bucket:elbLogs}
           remediation:
