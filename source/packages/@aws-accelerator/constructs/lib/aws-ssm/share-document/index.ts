@@ -28,20 +28,19 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
+  const name = event.ResourceProperties['name'];
+  const accountIds: string[] = event.ResourceProperties['accountIds'];
+  const ssmClient = new AWS.SSM({});
+
+  const documentPermission = await throttlingBackOff(() =>
+    ssmClient.describeDocumentPermission({ Name: name, PermissionType: 'Share' }).promise(),
+  );
+  console.log('DescribeDocumentPermissionCommand:');
+  console.log(JSON.stringify(documentPermission));
+
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const ssmClient = new AWS.SSM({});
-
-      const name = event.ResourceProperties['name'];
-      const accountIds: string[] = event.ResourceProperties['accountIds'];
-
-      const documentPermission = await throttlingBackOff(() =>
-        ssmClient.describeDocumentPermission({ Name: name, PermissionType: 'Share' }).promise(),
-      );
-      console.log('DescribeDocumentPermissionCommand:');
-      console.log(JSON.stringify(documentPermission));
-
       const accountIdsToAdd: string[] = [];
       const accountIdsToRemove: string[] = [];
 
@@ -81,7 +80,19 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       };
 
     case 'Delete':
-      // Do Nothing
+      console.log('Start un-sharing the document');
+      console.log('Following accounts to be un-share');
+      console.log(documentPermission.AccountIds);
+      // Remove sharing
+      await throttlingBackOff(() =>
+        ssmClient
+          .modifyDocumentPermission({
+            Name: name,
+            PermissionType: 'Share',
+            AccountIdsToRemove: documentPermission.AccountIds,
+          })
+          .promise(),
+      );
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',
