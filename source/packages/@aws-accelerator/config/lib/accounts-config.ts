@@ -177,6 +177,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
 
   /**
    *
+   * @param props
    * @param values
    */
   constructor(

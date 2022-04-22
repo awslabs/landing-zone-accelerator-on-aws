@@ -1218,6 +1218,26 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
 
   constructor(values?: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
     if (values) {
+      //
+      // Validate presence of SSM document before used as remediation target
+      const ssmDocuments: string[] = [];
+      for (const documentSet of values.centralSecurityServices.ssmAutomation.documentSets) {
+        for (const document of documentSet.documents ?? []) {
+          ssmDocuments.push(document.name);
+        }
+      }
+      for (const ruleSet of values.awsConfig.ruleSets ?? []) {
+        for (const rule of ruleSet.rules) {
+          if (rule.remediation) {
+            if (!ssmDocuments.includes(rule.remediation.targetId)) {
+              throw new Error(
+                `Invalid remediation target document for ${rule.name} rule. Remediation target SSM document ${rule.remediation.targetId} not found in ssm automation document lists`,
+              );
+            }
+          }
+        }
+      }
+
       Object.assign(this, values);
     }
   }
