@@ -166,7 +166,7 @@ export class IamConfigTypes {
     roleSets: t.optional(t.array(this.roleSetConfig)),
     groupSets: t.optional(t.array(this.groupSetConfig)),
     userSets: t.optional(t.array(this.userSetConfig)),
-    ec2InstanceDefaultProfile: this.ec2InstanceDefaultProfileConfig,
+    ec2InstanceDefaultProfile: t.optional(this.ec2InstanceDefaultProfileConfig),
   });
 }
 

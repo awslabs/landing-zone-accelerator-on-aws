@@ -59,7 +59,7 @@ export class SecurityStack extends AcceleratorStack {
   readonly acceleratorKey: cdk.aws_kms.Key;
   readonly auditAccountId: string;
   readonly logArchiveAccountId: string;
-  readonly ec2InstanceDefaultProfileName: string;
+  readonly ec2InstanceDefaultProfileName: string | undefined;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -67,7 +67,9 @@ export class SecurityStack extends AcceleratorStack {
     const auditAccountName = props.securityConfig.getDelegatedAccountName();
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
-    this.ec2InstanceDefaultProfileName = props.iamConfig.ec2InstanceDefaultProfile.name;
+    this.ec2InstanceDefaultProfileName = props.iamConfig.ec2InstanceDefaultProfile
+      ? props.iamConfig.ec2InstanceDefaultProfile.name
+      : undefined;
 
     this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
       accountId: props.accountsConfig.getAuditAccountId(),
@@ -674,7 +676,11 @@ export class SecurityStack extends AcceleratorStack {
     const lookupType = replacementArray[0];
 
     if (lookupType === ACCEL_LOOKUP_TYPE.EC2_DEFAULT_PROFILE) {
-      return this.ec2InstanceDefaultProfileName;
+      if (this.ec2InstanceDefaultProfileName) {
+        return this.ec2InstanceDefaultProfileName;
+      } else {
+        throw new Error(`EC2 instance default profile not found, can not configure remediation for ${ruleName} rule`);
+      }
     }
 
     if (lookupType === ACCEL_LOOKUP_TYPE.CUSTOMER_MANAGED_POLICY) {
