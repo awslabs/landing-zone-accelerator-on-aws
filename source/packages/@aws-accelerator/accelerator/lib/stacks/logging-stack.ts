@@ -50,7 +50,7 @@ export class LoggingStack extends AcceleratorStack {
     //
     //
     // Create Default EC2 instance profile in home region of every account
-    if (cdk.Stack.of(this).region === props.globalConfig.homeRegion) {
+    if (cdk.Stack.of(this).region === props.globalConfig.homeRegion && props.iamConfig.ec2InstanceDefaultProfile) {
       //Create an EC2 instance default profile Role
       const ec2InstanceDefaultProfileRole = new cdk.aws_iam.Role(this, 'Ec2InstanceDefaultProfileRole', {
         assumedBy: new cdk.aws_iam.ServicePrincipal('ec2.amazonaws.com'),
