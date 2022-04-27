@@ -11,8 +11,10 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as AWS from 'aws-sdk';
+
+import { throttlingBackOff } from '@aws-accelerator/utils';
+
 AWS.config.logger = console;
 
 /**
@@ -60,7 +62,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           ec2Client.describeTransitGatewayAttachments({ NextToken: nextToken }).promise(),
         );
         for (const attachment of page.TransitGatewayAttachments ?? []) {
-          if (attachment.TransitGatewayId === transitGatewayId) {
+          if (attachment.TransitGatewayId === transitGatewayId && attachment.State === 'available') {
             const nameTag = attachment.Tags?.find(t => t.Key === 'Name');
             if (nameTag && nameTag.Value === name) {
               console.log(attachment);
