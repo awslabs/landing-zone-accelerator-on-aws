@@ -682,6 +682,7 @@ export class NetworkVpcStack extends AcceleratorStack {
               transitGatewayId,
               subnetIds,
               vpcId: vpc.vpcId,
+              options: tgwAttachmentItem.options,
               tags: tgwAttachmentItem.tags,
             },
           );
@@ -1639,6 +1640,19 @@ export class NetworkVpcStack extends AcceleratorStack {
           cidrIp: ingressCidr,
         });
 
+        // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
+        // rule suppression with evidence for this permission.
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/${pascalCase(`${endpointItem.name}EpSecurityGroup`)}/${ingressRuleId}`,
+          [
+            {
+              id: 'AwsSolutions-EC23',
+              reason: 'Allowed access for TCP and UDP',
+            },
+          ],
+        );
+
         ingressRuleId = `ep_${endpointItem.name}_sg-Ingress-${ingressRuleIndex++}`;
         Logger.info(`[network-vpc-stack] Adding ingress cidr ${ingressCidr} UDP:${port} to ${ingressRuleId}`);
         securityGroup.addIngressRule(ingressRuleId, {
@@ -1652,7 +1666,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         // rule suppression with evidence for this permission.
         NagSuppressions.addResourceSuppressionsByPath(
           this,
-          `${this.stackName}/${pascalCase(endpointItem.name)}EpSecurityGroup/${ingressRuleId}`,
+          `${this.stackName}/${pascalCase(`${endpointItem.name}EpSecurityGroup`)}/${ingressRuleId}`,
           [
             {
               id: 'AwsSolutions-EC23',
@@ -1690,19 +1704,6 @@ export class NetworkVpcStack extends AcceleratorStack {
           toPort: port,
           cidrIp: egressCidr,
         });
-
-        // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
-        // rule suppression with evidence for this permission.
-        NagSuppressions.addResourceSuppressionsByPath(
-          this,
-          `${this.stackName}/ep_${endpointItem.name}_sg-Egress/${egressRuleId}`,
-          [
-            {
-              id: 'AwsSolutions-EC23',
-              reason: 'Allowed access for TCP and UDP',
-            },
-          ],
-        );
       }
     }
 

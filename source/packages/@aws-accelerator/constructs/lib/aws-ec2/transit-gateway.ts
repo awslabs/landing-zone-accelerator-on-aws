@@ -12,8 +12,10 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
+import { v4 as uuidv4 } from 'uuid';
+
+import { TransitGatewayAttachmentOptionsConfig } from '@aws-accelerator/config';
 
 const path = require('path');
 
@@ -81,6 +83,7 @@ export interface TransitGatewayAttachmentProps {
   readonly transitGatewayId: string;
   readonly subnetIds: string[];
   readonly vpcId: string;
+  readonly options?: TransitGatewayAttachmentOptionsConfig;
   readonly tags?: cdk.CfnTag[];
 }
 
@@ -171,10 +174,15 @@ export class TransitGatewayAttachment extends cdk.Resource implements ITransitGa
   constructor(scope: Construct, id: string, props: TransitGatewayAttachmentProps) {
     super(scope, id);
 
-    const resource = new cdk.aws_ec2.CfnTransitGatewayAttachment(this, 'Resource', {
+    const resource = new cdk.aws_ec2.CfnTransitGatewayVpcAttachment(this, 'Resource', {
       vpcId: props.vpcId,
       transitGatewayId: props.transitGatewayId,
       subnetIds: props.subnetIds,
+      options: {
+        ApplianceModeSupport: props.options?.applianceModeSupport ?? 'disable',
+        DnsSupport: props.options?.dnsSupport ?? 'enable',
+        Ipv6Support: props.options?.ipv6Support ?? 'disable',
+      },
       tags: props.tags,
     });
     cdk.Tags.of(this).add('Name', props.name);
