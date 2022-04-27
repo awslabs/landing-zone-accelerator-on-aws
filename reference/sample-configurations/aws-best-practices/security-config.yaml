@@ -118,7 +118,7 @@ awsConfig:
             retryAttemptSeconds: 60
             maximumAutomaticAttempts: 5
             parameters:
-              IamInstanceProfile: ${ACCEL_LOOKUP::Ec2DefaultProfile}
+              IamInstanceProfile: ${ACCEL_LOOKUP::InstanceProfile:EC2-Default-SSM-AD-Role}
               InstanceId: RESOURCE_ID
         - name: accelerator-ec2-instance-profile-permission
           type: Custom

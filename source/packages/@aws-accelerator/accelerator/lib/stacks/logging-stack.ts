@@ -48,33 +48,6 @@ export class LoggingStack extends AcceleratorStack {
     }
 
     //
-    //
-    // Create Default EC2 instance profile in home region of every account
-    if (cdk.Stack.of(this).region === props.globalConfig.homeRegion && props.iamConfig.ec2InstanceDefaultProfile) {
-      //Create an EC2 instance default profile Role
-      const ec2InstanceDefaultProfileRole = new cdk.aws_iam.Role(this, 'Ec2InstanceDefaultProfileRole', {
-        assumedBy: new cdk.aws_iam.ServicePrincipal('ec2.amazonaws.com'),
-        description: 'IAM Role for an EC2 default profile',
-        roleName: `AWSAccelerator-EC2-Instance-Default-Profile-Role`,
-      });
-
-      // Create an EC2 instance default profile
-      new cdk.aws_iam.CfnInstanceProfile(this, 'Ec2InstanceDefaultProfile', {
-        roles: [ec2InstanceDefaultProfileRole.roleName],
-        instanceProfileName: props.iamConfig.ec2InstanceDefaultProfile.name,
-      });
-
-      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
-      // rule suppression with evidence for this permission.
-      NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/Ec2InstanceDefaultProfileRole/Resource`, [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'EC2 instance default profile needed managed policies listed in iam config file',
-        },
-      ]);
-    }
-
-    //
     // Block Public Access; S3 is global, only need to call in home region. This is done in the
     // logging-stack instead of the security-stack since initial buckets are created in this stack.
     //

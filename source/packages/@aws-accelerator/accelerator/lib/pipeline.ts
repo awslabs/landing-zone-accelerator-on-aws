@@ -377,6 +377,12 @@ export class AcceleratorPipeline extends Construct {
           runOrder: 2,
         }),
         this.createToolkitStage({
+          actionName: 'Security_Resources',
+          command: 'deploy',
+          stage: AcceleratorStage.SECURITY_RESOURCES,
+          runOrder: 2,
+        }),
+        this.createToolkitStage({
           actionName: 'Network_Associations',
           command: 'deploy',
           stage: AcceleratorStage.NETWORK_ASSOCIATIONS,

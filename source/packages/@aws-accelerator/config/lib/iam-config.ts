@@ -150,14 +150,6 @@ export class IamConfigTypes {
   });
 
   /**
-   * EC2 instance default profile configuration
-   */
-  static readonly ec2InstanceDefaultProfileConfig = t.interface({
-    name: t.nonEmptyString,
-    deploymentTargets: t.deploymentTargets,
-  });
-
-  /**
    * IAM configuration
    */
   static readonly iamConfig = t.interface({
@@ -166,7 +158,6 @@ export class IamConfigTypes {
     roleSets: t.optional(t.array(this.roleSetConfig)),
     groupSets: t.optional(t.array(this.groupSetConfig)),
     userSets: t.optional(t.array(this.userSetConfig)),
-    ec2InstanceDefaultProfile: t.optional(this.ec2InstanceDefaultProfileConfig),
   });
 }
 
@@ -358,20 +349,6 @@ export class PolicySetConfig implements t.TypeOf<typeof IamConfigTypes.policySet
 }
 
 /**
- * EC2 instance default policy configuration
- */
-export class Ec2InstanceDefaultPolicy implements t.TypeOf<typeof IamConfigTypes.ec2InstanceDefaultProfileConfig> {
-  /**
-   * A name for the instance default policy
-   */
-  readonly name: string = '';
-  /**
-   * EC2 instance default policy deployment targets
-   */
-  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
-}
-
-/**
  * IAM configuration
  */
 export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
@@ -481,20 +458,6 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    */
   readonly userSets: UserSetConfig[] = [];
 
-  /**
-   * EC2 instance default profile, SSM automation will use this profile to associate to any EC2 instance, when instance profile is missing.
-   *
-   * To create EC2 instance default profile in every account within Root organization unit, you need to provide following values for this parameter
-   * @example
-   * ```
-   * ec2InstanceDefaultProfile:
-   *   name: Accelerator-EC2-Instance-Default-Profile
-   *   - deploymentTargets:
-   *       organizationalUnits:
-   *         - Root
-   * ```
-   */
-  readonly ec2InstanceDefaultProfile: Ec2InstanceDefaultPolicy = new Ec2InstanceDefaultPolicy();
   /**
    *
    * @param values
