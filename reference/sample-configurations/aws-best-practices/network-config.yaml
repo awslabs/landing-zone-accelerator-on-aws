@@ -403,6 +403,8 @@ vpcs:
         transitGateway:
           name: Network-Main
           account: Network
+        options:
+          applianceModeSupport: enable
         routeTableAssociations:
           - Network-Main-Shared
         routeTablePropagations:

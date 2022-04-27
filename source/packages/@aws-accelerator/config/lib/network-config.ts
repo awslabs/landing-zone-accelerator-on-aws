@@ -107,10 +107,17 @@ export class NetworkConfigTypes {
     account: t.nonEmptyString,
   });
 
+  static readonly transitGatewayAttachmentOptionsConfig = t.interface({
+    dnsSupport: t.optional(t.enableDisable),
+    ipv6Support: t.optional(t.enableDisable),
+    applianceModeSupport: t.optional(t.enableDisable),
+  });
+
   static readonly transitGatewayAttachmentConfig = t.interface({
     name: t.nonEmptyString,
     transitGateway: this.transitGatewayAttachmentTargetConfig,
     subnets: t.array(t.nonEmptyString),
+    options: t.optional(this.transitGatewayAttachmentOptionsConfig),
     routeTableAssociations: t.optional(t.array(t.nonEmptyString)),
     routeTablePropagations: t.optional(t.array(t.nonEmptyString)),
     tags: t.optional(t.array(t.tag)),
@@ -921,6 +928,31 @@ export class TransitGatewayAttachmentTargetConfig
 }
 
 /**
+ * Transit Gateway attachment options configuration.
+ * Used to specify advanced options for the attachment.
+ */
+export class TransitGatewayAttachmentOptionsConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayAttachmentOptionsConfig>
+{
+  /**
+   * Enable to configure appliance mode for the attachment. This option is disabled by default.
+   *
+   * @remarks
+   * Appliance mode ensures only a single network interface is chosen for the entirety of a traffic flow,
+   * enabling stateful packet inspection.
+   */
+  readonly applianceModeSupport: t.EnableDisable | undefined = undefined;
+  /**
+   * Enable to configure DNS support for the attachment. This option is enabled by default.
+   */
+  readonly dnsSupport: t.EnableDisable | undefined = undefined;
+  /**
+   * Enable to configure IPv6 support for the attachment. This option is disabled by default.
+   */
+  readonly ipv6Support: t.EnableDisable | undefined = undefined;
+}
+
+/**
  * Transit Gateway attachment configuration.
  * Used to define a Transit Gateway attachment.
  */
@@ -949,6 +981,12 @@ export class TransitGatewayAttachmentConfig
    * An array of friendly names of Transit Gateway route tables to propagate the attachment.
    */
   readonly routeTablePropagations: string[] = [];
+  /**
+   * A Transit Gateway attachment options configuration.
+   *
+   * @see {@link TransitGatewayAttachmentOptionsConfig}
+   */
+  readonly options: TransitGatewayAttachmentOptionsConfig | undefined = undefined;
   /**
    * An array of tag objects for the Transit Gateway attachment.
    */
