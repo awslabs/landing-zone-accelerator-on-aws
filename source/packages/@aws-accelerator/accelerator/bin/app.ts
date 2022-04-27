@@ -38,8 +38,9 @@ import { OperationsStack } from '../lib/stacks/operations-stack';
 import { OrganizationsStack } from '../lib/stacks/organizations-stack';
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
 import { PrepareStack } from '../lib/stacks/prepare-stack';
-import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
+import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
+import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
 import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
 
 process.on(
@@ -66,13 +67,16 @@ export class GovCloudOverrides implements cdk.IAspect {
 export class IsobOverrides implements cdk.IAspect {
   public visit(node: IConstruct): void {
     if (node instanceof cdk.aws_ec2.CfnFlowLog) {
-      node.addPropertyDeletionOverride('LogFormat'), node.addPropertyDeletionOverride('Tags'), node.addPropertyDeletionOverride('MaxAggregationInterval');
+      node.addPropertyDeletionOverride('LogFormat'),
+        node.addPropertyDeletionOverride('Tags'),
+        node.addPropertyDeletionOverride('MaxAggregationInterval');
     }
     if (node instanceof cdk.aws_logs.CfnLogGroup) {
       node.addPropertyDeletionOverride('KmsKeyId'), node.addPropertyDeletionOverride('Tags');
     }
     if (node instanceof cdk.aws_s3.CfnBucket) {
-      node.addPropertyDeletionOverride('PublicAccessBlockConfiguration'), node.addPropertyDeletionOverride('OwnershipControls');
+      node.addPropertyDeletionOverride('PublicAccessBlockConfiguration'),
+        node.addPropertyDeletionOverride('OwnershipControls');
     }
   }
 }
@@ -369,6 +373,24 @@ async function main() {
             {
               env,
               description: `(SO0199) AWS Platform Accelerator - Network Prep Stack`,
+              synthesizer: new cdk.DefaultStackSynthesizer({
+                generateBootstrapVersionRule: false,
+              }),
+              ...props,
+            },
+          );
+        }
+
+        //
+        // SECURITY_RESOURCES Stack
+        //
+        if (includeStage({ stage: AcceleratorStage.SECURITY_RESOURCES, account: accountId, region: enabledRegion })) {
+          new SecurityResourcesStack(
+            app,
+            `${AcceleratorStackNames[AcceleratorStage.SECURITY_RESOURCES]}-${accountId}-${enabledRegion}`,
+            {
+              env,
+              description: `(SO0199) AWS Platform Accelerator - Security Resources Stack`,
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),

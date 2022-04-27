@@ -67,6 +67,7 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.ACCOUNTS]: 'AWSAccelerator-AccountsStack',
   [AcceleratorStage.DEPENDENCIES]: 'AWSAccelerator-DependenciesStack',
   [AcceleratorStage.SECURITY]: 'AWSAccelerator-SecurityStack',
+  [AcceleratorStage.SECURITY_RESOURCES]: 'AWSAccelerator-SecurityResourcesStack',
   [AcceleratorStage.OPERATIONS]: 'AWSAccelerator-OperationsStack',
   [AcceleratorStage.NETWORK_PREP]: 'AWSAccelerator-NetworkPrepStack',
   [AcceleratorStage.NETWORK_VPC]: 'AWSAccelerator-NetworkVpcStack',
@@ -300,6 +301,7 @@ export abstract class Accelerator {
     if (
       props.stage === AcceleratorStage.LOGGING ||
       props.stage === AcceleratorStage.SECURITY ||
+      props.stage === AcceleratorStage.SECURITY_RESOURCES ||
       props.stage === AcceleratorStage.OPERATIONS ||
       props.stage === AcceleratorStage.NETWORK_PREP ||
       props.stage === AcceleratorStage.NETWORK_VPC ||

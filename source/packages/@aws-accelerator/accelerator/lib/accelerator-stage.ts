@@ -29,6 +29,7 @@ export enum AcceleratorStage {
   ACCOUNTS = 'accounts',
   DEPENDENCIES = 'dependencies',
   SECURITY = 'security',
+  SECURITY_RESOURCES = 'security-resources',
   OPERATIONS = 'operations',
   NETWORK_PREP = 'network-prep',
   NETWORK_VPC = 'network-vpc',
