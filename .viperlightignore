@@ -19,6 +19,8 @@ yarn.lock
 # Ignore typescript documentation
 docs
 
+source/test-reports
+
 # Ignore reference custom rules lambda zip files
 reference/sample-configurations/aws-best-practices/custom-config-rules/attach-ec2-instance-profile.zip
 reference/sample-configurations/aws-best-practices/custom-config-rules/ec2-instance-profile-permissions.zip
@@ -54,6 +56,7 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:52
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:53
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:54
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:376
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:396
 
 
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:57
@@ -67,20 +70,20 @@ source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.te
 source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:574
 source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:578
 source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:582
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:832
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:838
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:844
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:851
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:849
 source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:855
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:858
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:869
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:877
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:885
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:893
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:861
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:868
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:872
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:875
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:886
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:894
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:902
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:910
 
-source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:18
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:19
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:20
+source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:21
 
 source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:768
 source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:891

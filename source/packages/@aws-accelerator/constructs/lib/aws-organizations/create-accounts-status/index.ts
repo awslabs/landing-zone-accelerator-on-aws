@@ -121,7 +121,7 @@ export async function handler(event: any): Promise<
           await saveGovCloudAccountMapping(
             createAccountStatusResponse.CreateAccountStatus.AccountId!,
             createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId,
-            createAccountStatusResponse.CreateAccountStatus.AccountName!,
+            singleAccountToAdd.name,
           );
         }
         await moveAccountToOrgIdFromRoot(
@@ -257,14 +257,14 @@ async function moveAccountToOrgIdFromRoot(accountId: string, orgId: string): Pro
 }
 
 async function saveGovCloudAccountMapping(
-  commericalAccountId: string,
+  commercialAccountId: string,
   govCloudAccountId: string,
   accountName: string,
 ): Promise<boolean> {
   const params = {
     TableName: govCloudAccountMappingTableName,
     Item: {
-      commericalAccountId: commericalAccountId,
+      commercialAccountId: commercialAccountId,
       govCloudAccountId: govCloudAccountId,
       accountName: accountName,
     },

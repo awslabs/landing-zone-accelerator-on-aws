@@ -29,6 +29,7 @@ import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { Logger } from '../lib/logger';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
+import { FinalizeStack } from '../lib/stacks/finalize-stack';
 import { KeyStack } from '../lib/stacks/key-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
 import { NetworkAssociationsStack } from '../lib/stacks/network-associations-stack';
@@ -95,8 +96,11 @@ async function main() {
   const region = app.node.tryGetContext('region');
   const partition = app.node.tryGetContext('partition');
 
+  let globalRegion = 'us-east-1';
+
   if (partition === 'aws-us-gov') {
     cdk.Aspects.of(app).add(new GovCloudOverrides());
+    globalRegion = 'us-gov-west-1';
   }
 
   if (partition === 'aws-iso-b') {
@@ -234,16 +238,37 @@ async function main() {
     }
 
     //
-    // ACCOUNTS Stack
+    // FINALIZE Stack
     //
-    if (includeStage({ stage: AcceleratorStage.ACCOUNTS, account: managementAccountId, region: homeRegion })) {
-      new AccountsStack(
+    if (includeStage({ stage: AcceleratorStage.FINALIZE, account: managementAccountId, region: globalRegion })) {
+      new FinalizeStack(
         app,
-        `${AcceleratorStackNames[AcceleratorStage.ACCOUNTS]}-${managementAccountId}-${homeRegion}`,
+        `${AcceleratorStackNames[AcceleratorStage.FINALIZE]}-${managementAccountId}-${globalRegion}`,
         {
           env: {
             account: managementAccountId,
-            region: homeRegion,
+            region: globalRegion,
+          },
+          description: `(SO0199) AWS Platform Accelerator - Finalize Stack`,
+          synthesizer: new cdk.DefaultStackSynthesizer({
+            generateBootstrapVersionRule: false,
+          }),
+          ...props,
+        },
+      );
+    }
+
+    //
+    // ACCOUNTS Stack
+    //
+    if (includeStage({ stage: AcceleratorStage.ACCOUNTS, account: managementAccountId, region: globalRegion })) {
+      new AccountsStack(
+        app,
+        `${AcceleratorStackNames[AcceleratorStage.ACCOUNTS]}-${managementAccountId}-${globalRegion}`,
+        {
+          env: {
+            account: managementAccountId,
+            region: globalRegion,
           },
           description: `(SO0199) AWS Platform Accelerator - Accounts Stack`,
           ...props,

@@ -13,6 +13,8 @@ import {
 import * as path from 'path';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 
+//import { SynthUtils } from '@aws-cdk/assert';
+
 const testNamePrefix = 'Construct(AccountsStack): ';
 
 /**
@@ -49,7 +51,13 @@ const stack = new AccountsStack(
 /**
  * AccountsStack construct test
  */
+
+
 describe('AccountsStack', () => {
+  // test(`${testNamePrefix} Snapshot Test`, () => {
+  //   expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
+  // });
+
   /**
    * Number of AttachPolicy custom resource test
    */
@@ -61,7 +69,7 @@ describe('AccountsStack', () => {
    * Number of SSM parameters resource test
    */
   test(`${testNamePrefix} SSM parameters resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::SSM::Parameter', 2);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::SSM::Parameter', 3);
   });
 
   /**
@@ -75,21 +83,21 @@ describe('AccountsStack', () => {
    * Number of Lambda Function resource test
    */
   test(`${testNamePrefix} Lambda Function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 4);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 5);
   });
 
   /**
    * Number of IAM role resource test
    */
   test(`${testNamePrefix} IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 4);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 5);
   });
 
   /**
    * Number of CreatePolicy custom resource test
    */
   test(`${testNamePrefix} CreatePolicy custom resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::CreatePolicy', 1);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::CreatePolicy', 2);
   });
 
   /**

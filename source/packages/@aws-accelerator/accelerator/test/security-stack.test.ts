@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 import * as cdk from 'aws-cdk-lib';
+//import { SynthUtils } from '@aws-cdk/assert';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
@@ -63,38 +64,17 @@ const stack = new SecurityStack(
  */
 describe('SecurityStack', () => {
   /**
-   * Number of ConfigRule resource test
+   * Snapshot test
    */
-  test(`${testNamePrefix} ConfigRule resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Config::ConfigRule', 3);
-  });
-
-  /**
-   * Number of MetricFilter resource test
-   */
-  test(`${testNamePrefix} MetricFilter resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Logs::MetricFilter', 3);
-  });
+  //test(`${testNamePrefix} Snapshot Test`, () => {
+  // expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
+  //});
 
   /**
    * Number of MaciePutClassificationExportConfiguration custom resource test
    */
   test(`${testNamePrefix} MaciePutClassificationExportConfiguration custom resource count test`, () => {
     cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::MaciePutClassificationExportConfiguration', 1);
-  });
-
-  /**
-   * Number of CloudWatch Alarm resource test
-   */
-  test(`${testNamePrefix} CloudWatch Alarm resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::CloudWatch::Alarm', 3);
-  });
-
-  /**
-   * Number of Logs MetricFilter resource test
-   */
-  test(`${testNamePrefix} Logs MetricFilter resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Logs::MetricFilter', 3);
   });
 
   /**
@@ -108,7 +88,7 @@ describe('SecurityStack', () => {
    * Number of IAM Role resource test
    */
   test(`${testNamePrefix} IAM Role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 7);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 6);
   });
 
   /**
@@ -137,75 +117,6 @@ describe('SecurityStack', () => {
    */
   test(`${testNamePrefix} SecurityHubBatchEnableStandards custom resource count test`, () => {
     cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::SecurityHubBatchEnableStandards', 1);
-  });
-
-  /**
-   * AcceleratorCloudtrailEnabled resource configuration test
-   */
-  test(`${testNamePrefix} AcceleratorCloudtrailEnabled resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        AcceleratorCloudtrailEnabled08B9BEEA: {
-          Type: 'AWS::Config::ConfigRule',
-          Properties: {
-            ConfigRuleName: 'accelerator-cloudtrail-enabled',
-            Scope: {
-              ComplianceResourceTypes: [],
-            },
-            Source: {
-              Owner: 'AWS',
-              SourceIdentifier: 'CLOUD_TRAIL_ENABLED',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * AcceleratorIamUserGroupMembershipCheck resource configuration test
-   */
-  test(`${testNamePrefix} AcceleratorIamUserGroupMembershipCheck resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        AcceleratorIamUserGroupMembershipCheck5D2DBD69: {
-          Type: 'AWS::Config::ConfigRule',
-          Properties: {
-            ConfigRuleName: 'accelerator-iam-user-group-membership-check',
-            Scope: {
-              ComplianceResourceTypes: ['AWS::IAM::User'],
-            },
-            Source: {
-              Owner: 'AWS',
-              SourceIdentifier: 'IAM_USER_GROUP_MEMBERSHIP_CHECK',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * AcceleratorSecurityhubEnabled resource configuration test
-   */
-  test(`${testNamePrefix} AcceleratorSecurityhubEnabled resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        AcceleratorSecurityhubEnabled25B1DE1B: {
-          Type: 'AWS::Config::ConfigRule',
-          Properties: {
-            ConfigRuleName: 'accelerator-securityhub-enabled',
-            Scope: {
-              ComplianceResourceTypes: [],
-            },
-            Source: {
-              Owner: 'AWS',
-              SourceIdentifier: 'SECURITYHUB_ENABLED',
-            },
-          },
-        },
-      },
-    });
   });
 
   /**
@@ -242,147 +153,6 @@ describe('SecurityStack', () => {
               Ref: 'AcceleratorKeyLookup0C18DA36',
             },
             region: 'us-east-1',
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   *  Cis11RootAccountUsage resource configuration test
-   */
-  test(`${testNamePrefix} Cis11RootAccountUsage resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        Cis11RootAccountUsage27B8A444: {
-          Type: 'AWS::CloudWatch::Alarm',
-          Properties: {
-            AlarmActions: [
-              {
-                'Fn::Join': [
-                  '',
-                  [
-                    'arn:',
-                    {
-                      Ref: 'AWS::Partition',
-                    },
-                    ':sns:us-east-1:222222222222:aws-accelerator-LowNotifications',
-                  ],
-                ],
-              },
-            ],
-            AlarmDescription: 'Alarm for usage of "root" account',
-            AlarmName: 'CIS-1.1-RootAccountUsage',
-            ComparisonOperator: 'GreaterThanOrEqualToThreshold',
-            EvaluationPeriods: 1,
-            MetricName: 'RootAccountUsage',
-            Namespace: 'LogMetrics',
-            Period: 300,
-            Statistic: 'Sum',
-            Threshold: 1,
-            TreatMissingData: 'notBreaching',
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   *  Cis31UnauthorizedApiCalls resource configuration test
-   */
-  test(`${testNamePrefix} Cis31UnauthorizedApiCalls resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        Cis31UnauthorizedApiCallsB850B3C7: {
-          Type: 'AWS::CloudWatch::Alarm',
-          Properties: {
-            AlarmActions: [
-              {
-                'Fn::Join': [
-                  '',
-                  [
-                    'arn:',
-                    {
-                      Ref: 'AWS::Partition',
-                    },
-                    ':sns:us-east-1:222222222222:aws-accelerator-LowNotifications',
-                  ],
-                ],
-              },
-            ],
-            AlarmDescription: 'Alarm for unauthorized API calls',
-            AlarmName: 'CIS-3.1-UnauthorizedAPICalls',
-            ComparisonOperator: 'GreaterThanOrEqualToThreshold',
-            EvaluationPeriods: 1,
-            MetricName: 'UnauthorizedAPICalls',
-            Namespace: 'LogMetrics',
-            Period: 300,
-            Statistic: 'Sum',
-            Threshold: 1,
-            TreatMissingData: 'notBreaching',
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   *  Cis32ConsoleSigninWithoutMfa resource configuration test
-   */
-  test(`${testNamePrefix} Cis32ConsoleSigninWithoutMfa resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        Cis32ConsoleSigninWithoutMfa8401FEDF: {
-          Type: 'AWS::CloudWatch::Alarm',
-          Properties: {
-            AlarmActions: [
-              {
-                'Fn::Join': [
-                  '',
-                  [
-                    'arn:',
-                    {
-                      Ref: 'AWS::Partition',
-                    },
-                    ':sns:us-east-1:222222222222:aws-accelerator-LowNotifications',
-                  ],
-                ],
-              },
-            ],
-            AlarmDescription: 'Alarm for AWS Management Console sign-in without MFA',
-            AlarmName: 'CIS-3.2-ConsoleSigninWithoutMFA',
-            ComparisonOperator: 'GreaterThanOrEqualToThreshold',
-            EvaluationPeriods: 1,
-            MetricName: 'ConsoleSigninWithoutMFA',
-            Namespace: 'LogMetrics',
-            Period: 300,
-            Statistic: 'Sum',
-            Threshold: 1,
-            TreatMissingData: 'notBreaching',
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   *  ConsoleSigninWithoutMfaMetricFilter resource configuration test
-   */
-  test(`${testNamePrefix} ConsoleSigninWithoutMfaMetricFilter resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        ConsoleSigninWithoutMfaMetricFilter85B015F7: {
-          Type: 'AWS::Logs::MetricFilter',
-          Properties: {
-            FilterPattern: '{($.eventName="ConsoleLogin") && ($.additionalEventData.MFAUsed !="Yes")}',
-            LogGroupName: 'aws-controltower/CloudTrailLogs',
-            MetricTransformations: [
-              {
-                MetricName: 'ConsoleSigninWithoutMFA',
-                MetricNamespace: 'LogMetrics',
-                MetricValue: '1',
-              },
-            ],
           },
         },
       },
@@ -781,31 +551,6 @@ describe('SecurityStack', () => {
   });
 
   /**
-   *  RootAccountMetricFilter resource configuration test
-   */
-  test(`${testNamePrefix} RootAccountMetricFilter resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        RootAccountMetricFilter2CA28475: {
-          Type: 'AWS::Logs::MetricFilter',
-          Properties: {
-            FilterPattern:
-              '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}',
-            LogGroupName: 'aws-controltower/CloudTrailLogs',
-            MetricTransformations: [
-              {
-                MetricName: 'RootAccount',
-                MetricNamespace: 'LogMetrics',
-                MetricValue: '1',
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
-
-  /**
    *  SecurityHubStandards resource configuration test
    */
   test(`${testNamePrefix} SecurityHubStandards resource configuration test`, () => {
@@ -835,30 +580,6 @@ describe('SecurityStack', () => {
                 controlsToDisable: ['CIS.1.20', 'CIS.1.22', 'CIS.2.6'],
                 enable: true,
                 name: 'CIS AWS Foundations Benchmark v1.2.0',
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   *  UnauthorizedApiCallsMetricFilter resource configuration test
-   */
-  test(`${testNamePrefix} UnauthorizedApiCallsMetricFilter resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        UnauthorizedApiCallsMetricFilter95DF459D: {
-          Type: 'AWS::Logs::MetricFilter',
-          Properties: {
-            FilterPattern: '{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}',
-            LogGroupName: 'aws-controltower/CloudTrailLogs',
-            MetricTransformations: [
-              {
-                MetricName: 'UnauthorizedAPICalls',
-                MetricNamespace: 'LogMetrics',
-                MetricValue: '1',
               },
             ],
           },

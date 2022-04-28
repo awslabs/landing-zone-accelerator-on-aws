@@ -32,6 +32,11 @@ export abstract class OrganizationConfigTypes {
     arn: t.nonEmptyString,
   });
 
+  static readonly quarantineNewAccountsConfig = t.interface({
+    enable: t.boolean,
+    scpPolicyName: t.optional(t.nonEmptyString),
+  });
+
   static readonly serviceControlPolicyConfig = t.interface({
     name: t.nonEmptyString,
     description: t.nonEmptyString,
@@ -102,6 +107,26 @@ export abstract class OrganizationalUnitIdConfig
    * OU arn
    */
   readonly arn: string = '';
+}
+
+/**
+ * Quarantine SCP application configuration
+ */
+export abstract class QuarantineNewAccountsConfig
+  implements t.TypeOf<typeof OrganizationConfigTypes.quarantineNewAccountsConfig>
+{
+  /**
+   * Indicates where or not a Quarantine policy is applied
+   * when new accounts are created. If enabled all accounts created by
+   * any means will have the configured policy applied.
+   */
+  readonly enable: boolean = true;
+  /**
+   * The policy to apply to new accounts. This value must exist
+   * if the feature is enabled. The name must also match
+   * a policy that is defined in the serviceControlPolicy section.
+   */
+  readonly scpPolicyName: string = 'QuarantineAccounts';
 }
 
 /**
@@ -232,6 +257,12 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * will initialize it with values if it is not provided
    */
   public organizationalUnitIds: OrganizationalUnitIdConfig[] | undefined = undefined;
+
+  /**
+   * A record of Quarantine New Accounts configuration
+   * @see QuarantineNewAccountsConfig
+   */
+  readonly quarantineNewAccounts: QuarantineNewAccountsConfig | undefined = undefined;
 
   /**
    * A Record of Service Control Policy configurations

@@ -35,6 +35,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const type: string = event.ResourceProperties['type'];
   const tags: AWS.Organizations.Tag[] = event.ResourceProperties['tags'] || [];
   const partition: string = event.ResourceProperties['partition'];
+  const acceleratorPrefix: string = event.ResourceProperties['acceleratorPrefix'];
+  const managementAccountAccessRole: string = event.ResourceProperties['managementAccountAccessRole'];
 
   let organizationsClient: AWS.Organizations;
   if (partition === 'aws-us-gov') {
@@ -54,6 +56,16 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       const content = s3Object.Body!.toString();
       console.log(content);
 
+      // Minify and update placeholder values
+      let policyContent: string | undefined;
+      policyContent = JSON.stringify(JSON.parse(content));
+      policyContent = replaceDefaults({
+        content: policyContent,
+        acceleratorPrefix: acceleratorPrefix,
+        managementAccountAccessRole: managementAccountAccessRole,
+        partition: partition,
+        additionalReplacements: {},
+      });
       //
       // Check if already exists, update and return the ID
       //
@@ -75,7 +87,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
             const response = await throttlingBackOff(() =>
               organizationsClient
-                .updatePolicy({ Name: name, Content: content, Description: description, PolicyId: policy.Id! })
+                .updatePolicy({ Name: name, Content: policyContent, Description: description, PolicyId: policy.Id! })
                 .promise(),
             );
 
@@ -113,4 +125,33 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         Status: 'SUCCESS',
       };
   }
+}
+
+function replaceDefaults(props: {
+  content: string;
+  acceleratorPrefix: string;
+  managementAccountAccessRole: string;
+  partition: string;
+  additionalReplacements: { [key: string]: string | string[] };
+}): string {
+  const { acceleratorPrefix, additionalReplacements, managementAccountAccessRole, partition } = props;
+  let { content } = props;
+
+  for (const [key, value] of Object.entries(additionalReplacements)) {
+    console.log(`key: ${key}, value: ${value}`);
+    content = content.replace(new RegExp(key, 'g'), StringType.is(value) ? value : JSON.stringify(value));
+  }
+
+  const replacements = {
+    '\\${MANAGEMENT_ACCOUNT_ACCESS_ROLE}': managementAccountAccessRole,
+    '\\${ACCELERATOR_PREFIX}': acceleratorPrefix,
+    '\\${PARTITION}': partition,
+  };
+
+  Object.entries(replacements).map(([key, value]) => {
+    content = content.replace(new RegExp(key, 'g'), value);
+  });
+  console.log(`Policy with placeholder values ${content}`);
+
+  return content;
 }

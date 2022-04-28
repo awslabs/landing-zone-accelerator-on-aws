@@ -25,6 +25,7 @@ export * from './lib/stacks/operations-stack';
 export * from './lib/stacks/organizations-stack';
 export * from './lib/stacks/pipeline-stack';
 export * from './lib/stacks/prepare-stack';
+export * from './lib/stacks/finalize-stack';
 export * from './lib/stacks/security-audit-stack';
 export * from './lib/stacks/security-stack';
 export * from './lib/toolkit';
