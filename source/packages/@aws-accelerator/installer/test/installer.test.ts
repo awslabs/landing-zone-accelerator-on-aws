@@ -712,7 +712,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
+                    ' --qualifier accel\n      - yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://',
+                    {
+                      Ref: 'AWS::AccountId',
+                    },
+                    '/us-east-1 --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
                     {
                       Ref: 'AWS::Partition',
                     },
@@ -720,7 +724,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
+                    ' --qualifier accel;\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
                     {
                       Ref: 'AWS::AccountId',
                     },
@@ -894,7 +898,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
+                    ' --qualifier accel\n      - yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://',
+                    {
+                      Ref: 'AWS::AccountId',
+                    },
+                    '/us-east-1 --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
                     {
                       Ref: 'AWS::Partition',
                     },
@@ -902,7 +910,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
+                    ' --qualifier accel;\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
                     {
                       Ref: 'AWS::AccountId',
                     },
@@ -1035,7 +1043,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
+                    ' --qualifier accel\n      - yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://',
+                    {
+                      Ref: 'AWS::AccountId',
+                    },
+                    '/us-east-1 --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
                     {
                       Ref: 'AWS::Partition',
                     },
@@ -1043,7 +1055,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
+                    ' --qualifier accel;\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
                     {
                       Ref: 'AWS::AccountId',
                     },
@@ -1210,7 +1222,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
+                    ' --qualifier accel\n      - yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://',
+                    {
+                      Ref: 'AWS::AccountId',
+                    },
+                    '/us-east-1 --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
                     {
                       Ref: 'AWS::Partition',
                     },
@@ -1218,7 +1234,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
+                    ' --qualifier accel;\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
                     {
                       Ref: 'AWS::AccountId',
                     },
