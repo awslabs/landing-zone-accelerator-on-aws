@@ -35,4 +35,5 @@ export enum AcceleratorStage {
   NETWORK_VPC = 'network-vpc',
   NETWORK_ASSOCIATIONS = 'network-associations',
   SECURITY_AUDIT = 'security-audit',
+  FINALIZE = 'finalize',
 }

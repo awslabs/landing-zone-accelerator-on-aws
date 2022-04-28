@@ -53,7 +53,7 @@ export class LoggingStack extends AcceleratorStack {
     //
     if (
       cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
-      !this.isAccountExcluded(props.securityConfig.centralSecurityServices.s3PublicAccessBlock.excludeAccounts)
+      !this.isAccountExcluded(props.securityConfig.centralSecurityServices.s3PublicAccessBlock.excludeAccounts ?? [])
     ) {
       if (props.securityConfig.centralSecurityServices.s3PublicAccessBlock.enable) {
         new S3PublicAccessBlock(this, 'S3PublicAccessBlock', {

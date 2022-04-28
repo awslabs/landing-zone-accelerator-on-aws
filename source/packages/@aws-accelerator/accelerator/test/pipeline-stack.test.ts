@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
+//import { SynthUtils } from '@aws-cdk/assert';
 
 const testNamePrefix = 'Construct(PipelineStack): ';
 
@@ -24,6 +25,13 @@ const stack = new PipelineStack(app, 'PipelineStack', {
  * PipelineStack construct test
  */
 describe('PipelineStack', () => {
+  // /**
+  //  * Snapshot test
+  //  */
+  //test(`${testNamePrefix} Snapshot Test`, () => {
+  //  expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
+  //});
+
   /**
    * Number of CodePipeline resource test
    */
@@ -605,6 +613,35 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security-resources"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-resources"}]',
+                      PrimarySource: 'Build',
+                      ProjectName: {
+                        Ref: 'PipelineToolkitProjectBCBD6910',
+                      },
+                    },
+                    InputArtifacts: [
+                      {
+                        Name: 'Build',
+                      },
+                      {
+                        Name: 'Config',
+                      },
+                    ],
+                    Name: 'Security_Resources',
+                    RoleArn: {
+                      'Fn::GetAtt': ['PipelinePipelineRole6D983AD5', 'Arn'],
+                    },
+                    RunOrder: 2,
+                  },
+                  {
+                    ActionTypeId: {
+                      Category: 'Build',
+                      Owner: 'AWS',
+                      Provider: 'CodeBuild',
+                      Version: '1',
+                    },
+                    Configuration: {
+                      EnvironmentVariables:
                         '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-associations"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-associations"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
@@ -624,6 +661,35 @@ describe('PipelineStack', () => {
                       'Fn::GetAtt': ['PipelinePipelineRole6D983AD5', 'Arn'],
                     },
                     RunOrder: 3,
+                  },
+                  {
+                    ActionTypeId: {
+                      Category: 'Build',
+                      Owner: 'AWS',
+                      Provider: 'CodeBuild',
+                      Version: '1',
+                    },
+                    Configuration: {
+                      EnvironmentVariables:
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage finalize"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"finalize"}]',
+                      PrimarySource: 'Build',
+                      ProjectName: {
+                        Ref: 'PipelineToolkitProjectBCBD6910',
+                      },
+                    },
+                    InputArtifacts: [
+                      {
+                        Name: 'Build',
+                      },
+                      {
+                        Name: 'Config',
+                      },
+                    ],
+                    Name: 'Finalize',
+                    RoleArn: {
+                      'Fn::GetAtt': ['PipelinePipelineRole6D983AD5', 'Arn'],
+                    },
+                    RunOrder: 4,
                   },
                 ],
                 Name: 'Deploy',

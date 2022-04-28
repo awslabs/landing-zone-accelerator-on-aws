@@ -73,6 +73,8 @@ export interface PolicyProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  readonly acceleratorPrefix: string;
+  readonly managementAccountAccessRole: string;
 }
 
 /**
@@ -108,6 +110,7 @@ export class Policy extends Construct {
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::OrganizationsCreatePolicy', {
       codeDirectory: path.join(__dirname, 'create-policy/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      description: 'Organizations create policy',
       policyStatements: [
         {
           Effect: 'Allow',
@@ -141,6 +144,8 @@ export class Policy extends Construct {
         bucket: asset.s3BucketName,
         key: asset.s3ObjectKey,
         partition: cdk.Aws.PARTITION,
+        acceleratorPrefix: props.acceleratorPrefix,
+        managementAccountAccessRole: props.managementAccountAccessRole,
         uuid: uuidv4(),
         path: props.path,
         name: props.name,

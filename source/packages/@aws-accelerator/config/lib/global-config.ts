@@ -507,8 +507,9 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   readonly homeRegion: string;
   /**
    * List of AWS Region names where accelerator will be deployed. Home region must be part of this list.
+   * us-east-1 must be in the list of enabled regions if it is not your Home region.
    *
-   * To add us-west-2 alongwith home region for accelerator deployment, you need to provide below value for this parameter.
+   * To add us-west-2 along with home region for accelerator deployment, you need to provide below value for this parameter.
    *
    * @example
    * ```
@@ -655,10 +656,22 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     //
     const errors: string[] = [];
 
-    // const accountNames = [...this.mandatoryAccounts, ...this.workloadAccounts].map(item => item.name);
-    // if (new Set(accountNames).size !== accountNames.length) {
-    //   errors.push(`Duplicate account names defined [${accountNames}].`);
-    // }
+    //In the commerical partition if the home region is not us-east-1 is must be an
+    //enabled region as the accelerator will need to create some resources in the management
+    //account us-east-1 region
+    //In the GovCloud partition the home region must be us-gov-west-1 as the
+    //CodePipeline service does not exist in us-gov-east-1
+    if (values?.homeRegion !== undefined && values?.cloudwatchLogRetentionInDays !== undefined) {
+      if (values.homeRegion == 'us-gov-west-1' || values.homeRegion == 'us-gov-east-1') {
+        if (values.homeRegion != 'us-gov-west-1') {
+          errors.push('The region us-gov-west-1 must be the home region.');
+        }
+      } else {
+        if (values.homeRegion != 'us-east-1' && !values.enabledRegions.includes('us-east-1')) {
+          errors.push('The region us-east-1 must be included in the list of enabled regions');
+        }
+      }
+    }
 
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);

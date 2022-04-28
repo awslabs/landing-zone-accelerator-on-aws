@@ -770,6 +770,10 @@ export const ORGANIZATION_CONFIG = {
     },
   ],
   organizationalUnitIds: [{ name: 'Security', id: 'securityOrgId', arn: 'securityOrgArn' }],
+  quarantineNewAccounts: {
+    enable: true,
+    scpPolicyName: 'QuarantineAccounts',
+  },
   serviceControlPolicies: [
     {
       name: 'DenyDeleteVpcFlowLogs',
@@ -780,6 +784,19 @@ export const ORGANIZATION_CONFIG = {
       deploymentTargets: {
         organizationalUnits: ['Security'],
         accounts: ['Management'],
+        excludedRegions: [],
+        excludedAccounts: [],
+      },
+    },
+    {
+      name: 'QuarantineAccounts',
+      description:
+        'This SCP is used to prevent changes to new accounts until the accelerator\nhas been executed successfully.\nThis policy will be applied upon account create if enabled.\n',
+      policy: 'service-control-policies/quarantine.json',
+      type: 'customerManaged',
+      deploymentTargets: {
+        organizationalUnits: [],
+        accounts: [],
         excludedRegions: [],
         excludedAccounts: [],
       },

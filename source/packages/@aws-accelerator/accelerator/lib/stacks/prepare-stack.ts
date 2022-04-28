@@ -88,7 +88,7 @@ export class PrepareStack extends AcceleratorStack {
         stringValue: key.keyArn,
       });
 
-      if (props.organizationConfig.enable) {
+      if (props.organizationConfig.enable && !props.globalConfig.controlTower.enable) {
         //
         // Loop through list of organizational-units in the configuration file and
         // create them.

@@ -207,6 +207,8 @@ export class OrganizationsStack extends AcceleratorStack {
               type: PolicyType.BACKUP_POLICY,
               kmsKey: key,
               logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+              acceleratorPrefix: 'AWSAccelerator',
+              managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
             });
 
             policy.node.addDependency(vault);
@@ -438,6 +440,8 @@ export class OrganizationsStack extends AcceleratorStack {
             type: PolicyType.TAG_POLICY,
             kmsKey: key,
             logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+            acceleratorPrefix: 'AWSAccelerator',
+            managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
           });
 
           policy.node.addDependency(tagPolicy);

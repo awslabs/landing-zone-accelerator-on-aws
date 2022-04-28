@@ -17,6 +17,8 @@ new Policy(stack, 'Policy', {
   ],
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 365,
+  acceleratorPrefix: 'AWSAccelerator',
+  managementAccountAccessRole: 'AWSControlTowerExecution',
 });
 
 /**

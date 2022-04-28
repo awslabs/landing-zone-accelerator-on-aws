@@ -388,6 +388,12 @@ export class AcceleratorPipeline extends Construct {
           stage: AcceleratorStage.NETWORK_ASSOCIATIONS,
           runOrder: 3,
         }),
+        this.createToolkitStage({
+          actionName: 'Finalize',
+          command: 'deploy',
+          stage: AcceleratorStage.FINALIZE,
+          runOrder: 4,
+        }),
       ],
     });
 

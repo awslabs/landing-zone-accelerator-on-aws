@@ -16,6 +16,9 @@ organizationalUnits:
     path: /
   - name: Prod
     path: /
+quarantineNewAccounts:
+    enable: true
+    scpPolicyName: QuarantineAccounts
 serviceControlPolicies:
   - name: DenyDeleteVpcFlowLogs
     description: >
@@ -27,6 +30,15 @@ serviceControlPolicies:
     deploymentTargets:
       organizationalUnits:
         - Security
+  - name: QuarantineAccounts
+    description: >
+      This SCP is used to prevent changes to new accounts until the accelerator
+      has been executed successfully.
+      This policy will be applied upon account creation if enabled.
+    policy: service-control-policies/quarantine.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits: []
 taggingPolicies:
   - name: TagPolicy
     description: Organization Tagging Policy

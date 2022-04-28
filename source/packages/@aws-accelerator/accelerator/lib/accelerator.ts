@@ -72,6 +72,7 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.NETWORK_PREP]: 'AWSAccelerator-NetworkPrepStack',
   [AcceleratorStage.NETWORK_VPC]: 'AWSAccelerator-NetworkVpcStack',
   [AcceleratorStage.NETWORK_ASSOCIATIONS]: 'AWSAccelerator-NetworkAssociationsStack',
+  [AcceleratorStage.FINALIZE]: 'AWSAccelerator-FinalizeStack',
   [AcceleratorStage.SECURITY_AUDIT]: 'AWSAccelerator-SecurityAuditStack',
 };
 
@@ -222,6 +223,11 @@ export abstract class Accelerator {
       return;
     }
 
+    let globalRegion = 'us-east-1';
+
+    if (props.partition === 'aws-us-gov') {
+      globalRegion = 'us-gov-west-1';
+    }
     // Control Tower: To start a well-planned OU structure in your landing zone, AWS Control Tower
     // sets up a Security OU for you. This OU contains three shared accounts: the management
     // (primary) account, the log archive account, and the security audit account (also referred to
@@ -231,7 +237,7 @@ export abstract class Accelerator {
       await AcceleratorToolkit.execute({
         command: props.command,
         accountId: accountsConfig.getManagementAccountId(),
-        region: globalConfig.homeRegion,
+        region: globalRegion,
         partition: props.partition,
         stage: props.stage,
         configDirPath: props.configDirPath,
@@ -246,6 +252,20 @@ export abstract class Accelerator {
         command: props.command,
         accountId: accountsConfig.getManagementAccountId(),
         region: globalConfig.homeRegion,
+        partition: props.partition,
+        stage: props.stage,
+        configDirPath: props.configDirPath,
+        requireApproval: props.requireApproval,
+        app: props.app,
+      });
+    }
+
+    if (props.stage === AcceleratorStage.FINALIZE) {
+      Logger.info(`[accelerator] Executing ${props.stage} for Management account.`);
+      await AcceleratorToolkit.execute({
+        command: props.command,
+        accountId: accountsConfig.getManagementAccountId(),
+        region: globalRegion,
         partition: props.partition,
         stage: props.stage,
         configDirPath: props.configDirPath,
