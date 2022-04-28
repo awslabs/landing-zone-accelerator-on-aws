@@ -70,21 +70,21 @@ describe('FinalizeStack', () => {
    * Number of IAM Role resource test
    */
   test(`${testNamePrefix} IAM Role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 2);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 1);
   });
 
   /**
    * Number of Lambda Function resource test
    */
   test(`${testNamePrefix} Lambda Function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 2);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 1);
   });
 
   /**
    * Number of Cloudwatch Log groups test
    */
   test(`${testNamePrefix} CloudWatch Log Group resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Logs::LogGroup', 2);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Logs::LogGroup', 1);
   });
 
   test(`${testNamePrefix} Detach Quarantinee custom resource configuration test`, () => {
