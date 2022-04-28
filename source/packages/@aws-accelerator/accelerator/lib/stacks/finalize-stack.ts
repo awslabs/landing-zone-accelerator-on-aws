@@ -16,12 +16,9 @@ import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { Logger } from '../logger';
 import { DetachQuarantineScp } from '../detach-quarantine-scp';
-import { KeyStack } from './key-stack';
-import { KeyLookup } from '@aws-accelerator/constructs';
 
 export class FinalizeStack extends AcceleratorStack {
-  public static readonly CROSS_ACCOUNT_ACCESS_ROLE_NAME = 'AWSAccelerator-CrossAccount-SsmParameter-Role';
-  public static readonly ACCELERATOR_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
+  public static readonly ACCELERATOR_MANAGEMENT_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -35,12 +32,8 @@ export class FinalizeStack extends AcceleratorStack {
 
     if (globalRegion === cdk.Stack.of(this).region) {
       Logger.debug(`[finalize-stack] Retrieving kms key`);
-      const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
-        accountId: props.accountsConfig.getAuditAccountId(),
-        roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-        keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
-        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-      }).getKey();
+      const keyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(this, '/accelerator/management/kms/key-arn');
+      const key = cdk.aws_kms.Key.fromKeyArn(this, 'Resource', keyArn!) as cdk.aws_kms.Key;
 
       if (props.organizationConfig.quarantineNewAccounts?.enable && props.partition == 'aws') {
         Logger.debug(`[finalize-stack] Creating resources to detach quarantine scp`);
