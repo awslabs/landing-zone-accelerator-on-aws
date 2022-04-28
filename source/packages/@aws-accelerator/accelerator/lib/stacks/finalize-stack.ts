@@ -21,7 +21,7 @@ import { KeyLookup } from '@aws-accelerator/constructs';
 
 export class FinalizeStack extends AcceleratorStack {
   public static readonly CROSS_ACCOUNT_ACCESS_ROLE_NAME = 'AWSAccelerator-CrossAccount-SsmParameter-Role';
-  public static readonly ACCELERATOR_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/key-arn';
+  public static readonly ACCELERATOR_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
