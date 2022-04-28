@@ -445,6 +445,11 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel
+      - yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "/us-east-1 --qualifier accel
       - |-
         if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = \\"yes\\" ]; then
                           export $(printf \\"AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s\\" $(aws sts assume-role --role-arn arn:",
@@ -457,6 +462,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel;
+                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;                  
@@ -1652,6 +1658,11 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel
+      - yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "/us-east-1 --qualifier accel
       - |-
         if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = \\"yes\\" ]; then
                           export $(printf \\"AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s\\" $(aws sts assume-role --role-arn arn:",
@@ -1664,6 +1675,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel;
+                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;                  
@@ -2780,6 +2792,11 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel
+      - yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "/us-east-1 --qualifier accel
       - |-
         if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = \\"yes\\" ]; then
                           export $(printf \\"AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s\\" $(aws sts assume-role --role-arn arn:",
@@ -2792,6 +2809,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel;
+                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;                  
@@ -3863,6 +3881,11 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel
+      - yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "/us-east-1 --qualifier accel
       - |-
         if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = \\"yes\\" ]; then
                           export $(printf \\"AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s\\" $(aws sts assume-role --role-arn arn:",
@@ -3875,6 +3898,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel;
+                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;                  

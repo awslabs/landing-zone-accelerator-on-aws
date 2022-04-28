@@ -382,6 +382,10 @@ export class InstallerStack extends cdk.Stack {
       managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
     });
 
+    let globalRegion = 'us-east-1';
+    if (cdk.Stack.of(this).partition === 'aws-us-gov') {
+      globalRegion = 'us-gov-west-1';
+    }
     const installerProject = new cdk.aws_codebuild.PipelineProject(this, 'InstallerProject', {
       projectName: this.acceleratorQualifier
         ? `${this.acceleratorQualifier.valueAsString}-installer-project`
@@ -412,6 +416,7 @@ export class InstallerStack extends cdk.Stack {
               'yarn build',
               'cd packages/@aws-accelerator/installer',
               `yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel`,
+              `yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${globalRegion} --qualifier accel`,
               `if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                   export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:${
                     cdk.Stack.of(this).partition
@@ -419,6 +424,7 @@ export class InstallerStack extends cdk.Stack {
                   yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${
                     cdk.Aws.REGION
                   } --qualifier accel;
+                  yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${globalRegion} --qualifier accel;
                   unset AWS_ACCESS_KEY_ID;
                   unset AWS_SECRET_ACCESS_KEY;
                   unset AWS_SESSION_TOKEN;                  
