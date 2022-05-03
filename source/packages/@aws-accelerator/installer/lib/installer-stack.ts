@@ -277,6 +277,19 @@ export class InstallerStack extends cdk.Stack {
       }),
     );
 
+    // cfn_nag suppressions
+    const cfnInstallerKey = installerKey.node.defaultChild as cdk.aws_kms.CfnKey;
+    cfnInstallerKey.cfnOptions.metadata = {
+      cfn_nag: {
+        rules_to_suppress: [
+          {
+            id: 'F76',
+            reason: 'KMS key using * principal with added arn condition',
+          },
+        ],
+      },
+    };
+
     // TODO Isn't there a better way to grant to all AWS services through a condition?
     const allowedServicePrincipals: { name: string; principal: string }[] = [
       { name: 'Sns', principal: 'sns.amazonaws.com' },
