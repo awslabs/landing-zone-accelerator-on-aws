@@ -32,8 +32,6 @@ normal=$(tput sgr0)
 #------------------------------------------------------------------------------
 # SETTINGS
 #------------------------------------------------------------------------------
-# Important: CDK global version number
-cdk_version=2.1.0 # Note: should match package.json
 template_format="json"
 run_helper="true"
 
@@ -93,7 +91,7 @@ do_replace()
 create_template_json()
 {
     # Run 'cdk synth' to generate raw solution outputs
-    do_cmd cdk synth --output=$staging_dist_dir
+    do_cmd yarn run cdk synth --output=$staging_dist_dir
 
     # Remove unnecessary output files
     do_cmd cd $staging_dist_dir
@@ -119,7 +117,7 @@ create_template_yaml()
     maxrc=0
     for template in `cdk list`; do
         echo Create template $template
-        cdk synth $template > ${template_dist_dir}/${template}.template
+        do_cmd yarn run cdk synth $template > ${template_dist_dir}/${template}.template
         if [[ $? > $maxrc ]]; then
             maxrc=$?
         fi
@@ -265,11 +263,6 @@ echo "--------------------------------------------------------------------------
 
 do_cmd cd $source_dir
 
-# Install the global aws-cdk package
-# Note: do not install using global (-g) option. This makes build-s3-dist.sh difficult
-# for customers and developers to use, as it globally changes their environment.
-do_cmd yarn add aws-cdk@$cdk_version -W
-
 # Install the global lerna package
 # Note: do not install using global (-g) option. This makes build-s3-dist.sh difficult
 # for customers and developers to use, as it globally changes their environment.
@@ -277,13 +270,6 @@ do_cmd yarn add lerna@^4.0.0 -W
 
 # Add local install to PATH
 export PATH=$(yarn bin):$PATH
-# Check cdk version to verify installation
-current_cdkver=`cdk --version | grep -Eo '^[0-9]{1,2}\.[0-9]+\.[0-9]+'`
-echo CDK version $current_cdkver
-if [[ $current_cdkver != $cdk_version ]]; then
-    echo Required CDK version is ${cdk_version}, found ${current_cdkver}
-    exit 255
-fi
 
 do_cmd yarn lerna bootstrap
 do_cmd yarn build          # build javascript from typescript to validate the code
