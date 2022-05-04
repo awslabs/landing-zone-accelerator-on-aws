@@ -504,7 +504,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * homeRegion: &HOME_REGION us-east-1
    * ```
    */
-  readonly homeRegion: string;
+  readonly homeRegion: string = '';
   /**
    * List of AWS Region names where accelerator will be deployed. Home region must be part of this list.
    *
@@ -517,7 +517,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *   - us-west-2
    * ```
    */
-  readonly enabledRegions: t.Region[];
+  readonly enabledRegions: t.Region[] = [];
 
   /**
    * This role trusts the management account, allowing users in the management
@@ -645,10 +645,10 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   ) {
     if (values) {
       Object.assign(this, values);
+    } else {
+      this.homeRegion = props.homeRegion;
+      this.enabledRegions = [props.homeRegion as Region];
     }
-
-    this.homeRegion = props.homeRegion;
-    this.enabledRegions = [props.homeRegion as Region];
 
     //
     // Validation errors

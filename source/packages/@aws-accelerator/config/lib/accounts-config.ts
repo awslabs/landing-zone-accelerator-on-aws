@@ -144,7 +144,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   static readonly LOG_ARCHIVE_ACCOUNT = 'LogArchive';
   static readonly AUDIT_ACCOUNT = 'Audit';
 
-  readonly mandatoryAccounts: AccountConfig[] | GovCloudAccountConfig[];
+  readonly mandatoryAccounts: AccountConfig[] | GovCloudAccountConfig[] = [];
 
   readonly workloadAccounts: AccountConfig[] | GovCloudAccountConfig[] = [];
 
@@ -186,29 +186,29 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   ) {
     if (values) {
       Object.assign(this, values);
+    } else {
+      this.mandatoryAccounts = [
+        {
+          name: AccountsConfig.MANAGEMENT_ACCOUNT,
+          description: 'The management (primary) account. Do not change the name field for this mandatory account.',
+          email: props.managementAccountEmail,
+          organizationalUnit: 'Root',
+        },
+        {
+          name: AccountsConfig.LOG_ARCHIVE_ACCOUNT,
+          description: 'The log archive account. Do not change the name field for this mandatory account.',
+          email: props.logArchiveAccountEmail,
+          organizationalUnit: 'Security',
+        },
+        {
+          name: AccountsConfig.AUDIT_ACCOUNT,
+          description:
+            'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account.',
+          email: props.auditAccountEmail,
+          organizationalUnit: 'Security',
+        },
+      ];
     }
-
-    this.mandatoryAccounts = [
-      {
-        name: AccountsConfig.MANAGEMENT_ACCOUNT,
-        description: 'The management (primary) account. Do not change the name field for this mandatory account.',
-        email: props.managementAccountEmail,
-        organizationalUnit: 'Root',
-      },
-      {
-        name: AccountsConfig.LOG_ARCHIVE_ACCOUNT,
-        description: 'The log archive account. Do not change the name field for this mandatory account.',
-        email: props.logArchiveAccountEmail,
-        organizationalUnit: 'Security',
-      },
-      {
-        name: AccountsConfig.AUDIT_ACCOUNT,
-        description:
-          'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account.',
-        email: props.auditAccountEmail,
-        organizationalUnit: 'Security',
-      },
-    ];
 
     //
     // Validation errors
