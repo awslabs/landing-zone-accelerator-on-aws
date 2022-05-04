@@ -64,7 +64,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     // Build Transit Gateway Maps
     const transitGateways = new Map<string, string>();
     const transitGatewayRouteTables = new Map<string, string>();
-    const transitGatewayAttachments = new Map<{ account: string; vpc: string }, string>();
+    const transitGatewayAttachments = new Map<string, string>();
     for (const tgwItem of props.networkConfig.transitGateways ?? []) {
       const accountId = props.accountsConfig.getAccountId(tgwItem.account);
       if (accountId === cdk.Stack.of(this).account && tgwItem.region == cdk.Stack.of(this).region) {
@@ -100,6 +100,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
             // Get the Transit Gateway Attachment ID
             let transitGatewayAttachmentId;
+            const key = `${vpcItem.account}_${vpcItem.name}`;
             if (accountId === owningAccountId) {
               Logger.info(
                 `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from local account ${owningAccountId}`,
@@ -108,6 +109,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                 this,
                 `/accelerator/network/vpc/${vpcItem.name}/transitGatewayAttachment/${tgwAttachmentItem.name}/id`,
               );
+              transitGatewayAttachments.set(key, transitGatewayAttachmentId);
             } else {
               Logger.info(
                 `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
@@ -127,10 +129,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               );
               // Build Transit Gateway Attachment Map
               transitGatewayAttachmentId = transitGatewayAttachment.transitGatewayAttachmentId;
-              transitGatewayAttachments.set(
-                { account: vpcItem.account, vpc: vpcItem.name },
-                transitGatewayAttachmentId,
-              );
+              transitGatewayAttachments.set(key, transitGatewayAttachmentId);
             }
 
             // Evaluating TGW Routes
@@ -192,7 +191,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             // Build a static route when a route is being blackholed.
             if (routeItem.blackhole) {
               Logger.info(
-                `[network-associations-stack] Adding blackhole route ${routeItem.destinationCidrBlock} to TGW ${tgwItem.name} for TGW Route Table ${routeTableItem.name} in account: ${tgwItem.account}`,
+                `[network-associations-stack] Adding blackhole route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
               );
               new TransitGatewayStaticRoute(
                 this,
@@ -207,24 +206,33 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                 },
               );
             } else if (routeItem.attachment) {
-              Logger.info(
-                `[network-associations-stack] Adding attachment route ${routeItem.destinationCidrBlock} to TGW ${tgwItem.name} for TGW Route Table ${routeTableItem.name} to VPC attachment ${routeItem.attachment.vpcName} for account ${routeItem.attachment.account}`,
+              // Get TGW attachment ID
+              const transitGatewayAttachmentId = transitGatewayAttachments.get(
+                `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
               );
-              new TransitGatewayStaticRoute(
-                this,
-                `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`,
-                {
-                  transitGatewayRouteTableId: cdk.aws_ssm.StringParameter.valueForStringParameter(
-                    this,
-                    `/accelerator/network/transitGateways/${tgwItem.name}/routeTables/${routeTableItem.name}/id`,
-                  ),
-                  destinationCidrBlock: routeItem.destinationCidrBlock,
-                  transitGatewayAttachmentId: transitGatewayAttachments.get({
-                    account: routeItem.attachment.account,
-                    vpc: routeItem.attachment.vpcName,
-                  }),
-                },
-              );
+
+              if (transitGatewayAttachmentId) {
+                Logger.info(
+                  `[network-associations-stack] Adding static route ${routeItem.destinationCidrBlock} to VPC attachment ${routeItem.attachment.vpcName} in account ${routeItem.attachment.account} to route table ${routeTableItem.name} for TGW ${tgwItem.name}`,
+                );
+
+                new TransitGatewayStaticRoute(
+                  this,
+                  `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`,
+                  {
+                    transitGatewayRouteTableId: cdk.aws_ssm.StringParameter.valueForStringParameter(
+                      this,
+                      `/accelerator/network/transitGateways/${tgwItem.name}/routeTables/${routeTableItem.name}/id`,
+                    ),
+                    destinationCidrBlock: routeItem.destinationCidrBlock,
+                    transitGatewayAttachmentId: transitGatewayAttachmentId,
+                  },
+                );
+              } else {
+                throw new Error(
+                  `[network-associations-stack] Unable to locate transit gateway attachment ID for route table item ${routeTableItem.name}`,
+                );
+              }
             }
           }
         }
