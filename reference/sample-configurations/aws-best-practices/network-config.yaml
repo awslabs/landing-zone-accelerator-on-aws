@@ -21,6 +21,12 @@ transitGateways:
     routeTables:
       - name: Network-Main-Core
         routes: [ ]
+        # - destinationCidrBlock: 10.100.0.0/16
+        #     attachment:
+        #       vpcName: Network-Endpoints
+        #       account: Network
+        # - destinationCidrBlock: 1.1.1.1/32
+        #     blackhole: true
       - name: Network-Main-Segregated
         routes: [ ]
       - name: Network-Main-Shared
