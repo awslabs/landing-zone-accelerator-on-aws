@@ -1,7 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
-//import { SynthUtils } from '@aws-cdk/assert';
 
 const testNamePrefix = 'Construct(PipelineStack): ';
 
@@ -19,19 +18,13 @@ const stack = new PipelineStack(app, 'PipelineStack', {
   managementAccountEmail: 'aws-platform-accelerator-root@mydomain.com',
   logArchiveAccountEmail: 'aws-platform-accelerator-log-archive@mydomain.com',
   auditAccountEmail: 'aws-platform-accelerator-audit@mydomain.com',
+  partition: 'aws',
 });
 
 /**
  * PipelineStack construct test
  */
 describe('PipelineStack', () => {
-  // /**
-  //  * Snapshot test
-  //  */
-  //test(`${testNamePrefix} Snapshot Test`, () => {
-  //  expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  //});
-
   /**
    * Number of CodePipeline resource test
    */
@@ -57,7 +50,7 @@ describe('PipelineStack', () => {
    * Number of IAM Policy resource test
    */
   test(`${testNamePrefix} IAM Policy resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Policy', 5);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Policy', 6);
   });
 
   /**
@@ -96,7 +89,11 @@ describe('PipelineStack', () => {
       Resources: {
         Pipeline8E4BFAC9: {
           Type: 'AWS::CodePipeline::Pipeline',
-          DependsOn: ['PipelinePipelineRoleDefaultPolicy7D262A22', 'PipelinePipelineRole6D983AD5'],
+          DependsOn: [
+            'PipelineAWSServiceRoleForCodeStarNotificationsDA052A10',
+            'PipelinePipelineRoleDefaultPolicy7D262A22',
+            'PipelinePipelineRole6D983AD5',
+          ],
           Properties: {
             ArtifactStore: {
               EncryptionKey: {
@@ -1084,6 +1081,20 @@ describe('PipelineStack', () => {
                   Effect: 'Allow',
                   Resource: {
                     'Fn::GetAtt': ['PipelineReviewApproveCodePipelineActionRole3122ED42', 'Arn'],
+                  },
+                },
+                {
+                  Action: 'sns:Publish',
+                  Effect: 'Allow',
+                  Resource: {
+                    Ref: 'PipelineAcceleratorStatusTopic2BD5793F',
+                  },
+                },
+                {
+                  Action: 'sns:Publish',
+                  Effect: 'Allow',
+                  Resource: {
+                    Ref: 'PipelineAcceleratorFailedStatusTopic614002B3',
                   },
                 },
               ],

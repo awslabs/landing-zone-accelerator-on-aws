@@ -2,6 +2,16 @@
 
 exports[`InstallerStack Stack(installer):  Snapshot test - external pipeline account stack with tester pipeline enabled 1`] = `
 Object {
+  "Conditions": Object {
+    "IsCommercialCondition": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Ref": "AWS::Partition",
+        },
+        "aws",
+      ],
+    },
+  },
   "Metadata": Object {
     "AWS::CloudFormation::Interface": Object {
       "ParameterGroups": Array [
@@ -166,6 +176,16 @@ Object {
     },
     "InstallerKey2A6A8C6D": Object {
       "DeletionPolicy": "Retain",
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "F76",
+              "reason": "KMS key using * principal with added arn condition",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Description": "AWS Accelerator Management Account Kms Key",
         "EnableKeyRotation": true,
@@ -202,56 +222,50 @@ Object {
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
-              "Condition": Object {
-                "ArnLike": Object {
-                  "aws:PrincipalARN": Array [
-                    Object {
-                      "Fn::Join": Array [
-                        "",
-                        Array [
-                          "arn:",
-                          Object {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":iam::",
-                          Object {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":role/",
-                          Object {
-                            "Ref": "AcceleratorQualifier",
-                          },
-                          "-*",
-                        ],
-                      ],
-                    },
-                  ],
-                },
-              },
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": "*",
-              },
-              "Resource": "*",
-              "Sid": "Allow Accelerator Role to use the encryption key",
-            },
-            Object {
-              "Action": Array [
-                "kms:Encrypt",
-                "kms:Decrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-                "kms:DescribeKey",
-              ],
               "Effect": "Allow",
               "Principal": Object {
                 "Service": "sns.amazonaws.com",
               },
               "Resource": "*",
-              "Sid": "Allow Sns service to use the encryption key",
+              "Sid": "Allow SNS service to use the encryption key",
+            },
+            Object {
+              "Fn::If": Array [
+                "IsCommercialCondition",
+                Object {
+                  "Action": Array [
+                    "kms:GenerateDataKey*",
+                    "kms:Decrypt",
+                  ],
+                  "Condition": Object {
+                    "StringEquals": Object {
+                      "kms:ViaService": Object {
+                        "Fn::Join": Array [
+                          "",
+                          Array [
+                            "sns.",
+                            Object {
+                              "Ref": "AWS::Region",
+                            },
+                            ".amazonaws.com",
+                          ],
+                        ],
+                      },
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Principal": Object {
+                    "Service": "codestar-notifications.amazonaws.com",
+                  },
+                  "Resource": "*",
+                  "Sid": "KMS key access to codestar-notifications",
+                },
+                Object {
+                  "Ref": "AWS::NoValue",
+                },
+              ],
             },
           ],
-          "Version": "2012-10-17",
         },
       },
       "Type": "AWS::KMS::Key",
@@ -449,7 +463,15 @@ phases:
                 Object {
                   "Ref": "AWS::AccountId",
                 },
-                "/us-east-1 --qualifier accel
+                "/",
+                Object {
+                  "Fn::If": Array [
+                    "IsCommercialCondition",
+                    "us-east-1",
+                    "us-gov-west-1",
+                  ],
+                },
+                " --qualifier accel
       - |-
         if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = \\"yes\\" ]; then
                           export $(printf \\"AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s\\" $(aws sts assume-role --role-arn arn:",
@@ -462,7 +484,15 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel;
-                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;
+                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                Object {
+                  "Fn::If": Array [
+                    "IsCommercialCondition",
+                    "us-east-1",
+                    "us-gov-west-1",
+                  ],
+                },
+                " --qualifier accel;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;                  
@@ -475,6 +505,10 @@ phases:
                 " --region ",
                 Object {
                   "Ref": "AWS::Region",
+                },
+                " --partition ",
+                Object {
+                  "Ref": "AWS::Partition",
                 },
                 "
       - if [ \\"$ENABLE_TESTER\\" = \\"true\\" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
@@ -1225,6 +1259,16 @@ phases:
 
 exports[`InstallerStack Stack(installer):  Snapshot test - external pipeline account stack without tester pipeline enabled 1`] = `
 Object {
+  "Conditions": Object {
+    "IsCommercialCondition": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Ref": "AWS::Partition",
+        },
+        "aws",
+      ],
+    },
+  },
   "Metadata": Object {
     "AWS::CloudFormation::Interface": Object {
       "ParameterGroups": Array [
@@ -1389,6 +1433,16 @@ Object {
     },
     "InstallerKey2A6A8C6D": Object {
       "DeletionPolicy": "Retain",
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "F76",
+              "reason": "KMS key using * principal with added arn condition",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Description": "AWS Accelerator Management Account Kms Key",
         "EnableKeyRotation": true,
@@ -1425,56 +1479,50 @@ Object {
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
-              "Condition": Object {
-                "ArnLike": Object {
-                  "aws:PrincipalARN": Array [
-                    Object {
-                      "Fn::Join": Array [
-                        "",
-                        Array [
-                          "arn:",
-                          Object {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":iam::",
-                          Object {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":role/",
-                          Object {
-                            "Ref": "AcceleratorQualifier",
-                          },
-                          "-*",
-                        ],
-                      ],
-                    },
-                  ],
-                },
-              },
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": "*",
-              },
-              "Resource": "*",
-              "Sid": "Allow Accelerator Role to use the encryption key",
-            },
-            Object {
-              "Action": Array [
-                "kms:Encrypt",
-                "kms:Decrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-                "kms:DescribeKey",
-              ],
               "Effect": "Allow",
               "Principal": Object {
                 "Service": "sns.amazonaws.com",
               },
               "Resource": "*",
-              "Sid": "Allow Sns service to use the encryption key",
+              "Sid": "Allow SNS service to use the encryption key",
+            },
+            Object {
+              "Fn::If": Array [
+                "IsCommercialCondition",
+                Object {
+                  "Action": Array [
+                    "kms:GenerateDataKey*",
+                    "kms:Decrypt",
+                  ],
+                  "Condition": Object {
+                    "StringEquals": Object {
+                      "kms:ViaService": Object {
+                        "Fn::Join": Array [
+                          "",
+                          Array [
+                            "sns.",
+                            Object {
+                              "Ref": "AWS::Region",
+                            },
+                            ".amazonaws.com",
+                          ],
+                        ],
+                      },
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Principal": Object {
+                    "Service": "codestar-notifications.amazonaws.com",
+                  },
+                  "Resource": "*",
+                  "Sid": "KMS key access to codestar-notifications",
+                },
+                Object {
+                  "Ref": "AWS::NoValue",
+                },
+              ],
             },
           ],
-          "Version": "2012-10-17",
         },
       },
       "Type": "AWS::KMS::Key",
@@ -1662,7 +1710,15 @@ phases:
                 Object {
                   "Ref": "AWS::AccountId",
                 },
-                "/us-east-1 --qualifier accel
+                "/",
+                Object {
+                  "Fn::If": Array [
+                    "IsCommercialCondition",
+                    "us-east-1",
+                    "us-gov-west-1",
+                  ],
+                },
+                " --qualifier accel
       - |-
         if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = \\"yes\\" ]; then
                           export $(printf \\"AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s\\" $(aws sts assume-role --role-arn arn:",
@@ -1675,7 +1731,15 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel;
-                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;
+                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                Object {
+                  "Fn::If": Array [
+                    "IsCommercialCondition",
+                    "us-east-1",
+                    "us-gov-west-1",
+                  ],
+                },
+                " --qualifier accel;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;                  
@@ -1688,6 +1752,10 @@ phases:
                 " --region ",
                 Object {
                   "Ref": "AWS::Region",
+                },
+                " --partition ",
+                Object {
+                  "Ref": "AWS::Partition",
                 },
                 "
       - if [ \\"$ENABLE_TESTER\\" = \\"true\\" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
@@ -2438,6 +2506,16 @@ phases:
 
 exports[`InstallerStack Stack(installer):  Snapshot test - management account stack with tester pipeline enabled 1`] = `
 Object {
+  "Conditions": Object {
+    "IsCommercialCondition": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Ref": "AWS::Partition",
+        },
+        "aws",
+      ],
+    },
+  },
   "Metadata": Object {
     "AWS::CloudFormation::Interface": Object {
       "ParameterGroups": Array [
@@ -2559,6 +2637,16 @@ Object {
     },
     "InstallerKey2A6A8C6D": Object {
       "DeletionPolicy": "Retain",
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "F76",
+              "reason": "KMS key using * principal with added arn condition",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Description": "AWS Accelerator Management Account Kms Key",
         "EnableKeyRotation": true,
@@ -2595,52 +2683,50 @@ Object {
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
-              "Condition": Object {
-                "ArnLike": Object {
-                  "aws:PrincipalARN": Array [
-                    Object {
-                      "Fn::Join": Array [
-                        "",
-                        Array [
-                          "arn:",
-                          Object {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":iam::",
-                          Object {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":role/AWSAccelerator-*",
-                        ],
-                      ],
-                    },
-                  ],
-                },
-              },
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": "*",
-              },
-              "Resource": "*",
-              "Sid": "Allow Accelerator Role to use the encryption key",
-            },
-            Object {
-              "Action": Array [
-                "kms:Encrypt",
-                "kms:Decrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-                "kms:DescribeKey",
-              ],
               "Effect": "Allow",
               "Principal": Object {
                 "Service": "sns.amazonaws.com",
               },
               "Resource": "*",
-              "Sid": "Allow Sns service to use the encryption key",
+              "Sid": "Allow SNS service to use the encryption key",
+            },
+            Object {
+              "Fn::If": Array [
+                "IsCommercialCondition",
+                Object {
+                  "Action": Array [
+                    "kms:GenerateDataKey*",
+                    "kms:Decrypt",
+                  ],
+                  "Condition": Object {
+                    "StringEquals": Object {
+                      "kms:ViaService": Object {
+                        "Fn::Join": Array [
+                          "",
+                          Array [
+                            "sns.",
+                            Object {
+                              "Ref": "AWS::Region",
+                            },
+                            ".amazonaws.com",
+                          ],
+                        ],
+                      },
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Principal": Object {
+                    "Service": "codestar-notifications.amazonaws.com",
+                  },
+                  "Resource": "*",
+                  "Sid": "KMS key access to codestar-notifications",
+                },
+                Object {
+                  "Ref": "AWS::NoValue",
+                },
+              ],
             },
           ],
-          "Version": "2012-10-17",
         },
       },
       "Type": "AWS::KMS::Key",
@@ -2796,7 +2882,15 @@ phases:
                 Object {
                   "Ref": "AWS::AccountId",
                 },
-                "/us-east-1 --qualifier accel
+                "/",
+                Object {
+                  "Fn::If": Array [
+                    "IsCommercialCondition",
+                    "us-east-1",
+                    "us-gov-west-1",
+                  ],
+                },
+                " --qualifier accel
       - |-
         if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = \\"yes\\" ]; then
                           export $(printf \\"AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s\\" $(aws sts assume-role --role-arn arn:",
@@ -2809,7 +2903,15 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel;
-                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;
+                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                Object {
+                  "Fn::If": Array [
+                    "IsCommercialCondition",
+                    "us-east-1",
+                    "us-gov-west-1",
+                  ],
+                },
+                " --qualifier accel;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;                  
@@ -2822,6 +2924,10 @@ phases:
                 " --region ",
                 Object {
                   "Ref": "AWS::Region",
+                },
+                " --partition ",
+                Object {
+                  "Ref": "AWS::Partition",
                 },
                 "
       - if [ \\"$ENABLE_TESTER\\" = \\"true\\" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
@@ -3537,6 +3643,16 @@ phases:
 
 exports[`InstallerStack Stack(installer):  Snapshot test - management account stack without tester pipeline enabled 1`] = `
 Object {
+  "Conditions": Object {
+    "IsCommercialCondition": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Ref": "AWS::Partition",
+        },
+        "aws",
+      ],
+    },
+  },
   "Metadata": Object {
     "AWS::CloudFormation::Interface": Object {
       "ParameterGroups": Array [
@@ -3658,6 +3774,16 @@ Object {
     },
     "InstallerKey2A6A8C6D": Object {
       "DeletionPolicy": "Retain",
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "F76",
+              "reason": "KMS key using * principal with added arn condition",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Description": "AWS Accelerator Management Account Kms Key",
         "EnableKeyRotation": true,
@@ -3694,52 +3820,50 @@ Object {
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
-              "Condition": Object {
-                "ArnLike": Object {
-                  "aws:PrincipalARN": Array [
-                    Object {
-                      "Fn::Join": Array [
-                        "",
-                        Array [
-                          "arn:",
-                          Object {
-                            "Ref": "AWS::Partition",
-                          },
-                          ":iam::",
-                          Object {
-                            "Ref": "AWS::AccountId",
-                          },
-                          ":role/AWSAccelerator-*",
-                        ],
-                      ],
-                    },
-                  ],
-                },
-              },
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": "*",
-              },
-              "Resource": "*",
-              "Sid": "Allow Accelerator Role to use the encryption key",
-            },
-            Object {
-              "Action": Array [
-                "kms:Encrypt",
-                "kms:Decrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-                "kms:DescribeKey",
-              ],
               "Effect": "Allow",
               "Principal": Object {
                 "Service": "sns.amazonaws.com",
               },
               "Resource": "*",
-              "Sid": "Allow Sns service to use the encryption key",
+              "Sid": "Allow SNS service to use the encryption key",
+            },
+            Object {
+              "Fn::If": Array [
+                "IsCommercialCondition",
+                Object {
+                  "Action": Array [
+                    "kms:GenerateDataKey*",
+                    "kms:Decrypt",
+                  ],
+                  "Condition": Object {
+                    "StringEquals": Object {
+                      "kms:ViaService": Object {
+                        "Fn::Join": Array [
+                          "",
+                          Array [
+                            "sns.",
+                            Object {
+                              "Ref": "AWS::Region",
+                            },
+                            ".amazonaws.com",
+                          ],
+                        ],
+                      },
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Principal": Object {
+                    "Service": "codestar-notifications.amazonaws.com",
+                  },
+                  "Resource": "*",
+                  "Sid": "KMS key access to codestar-notifications",
+                },
+                Object {
+                  "Ref": "AWS::NoValue",
+                },
+              ],
             },
           ],
-          "Version": "2012-10-17",
         },
       },
       "Type": "AWS::KMS::Key",
@@ -3885,7 +4009,15 @@ phases:
                 Object {
                   "Ref": "AWS::AccountId",
                 },
-                "/us-east-1 --qualifier accel
+                "/",
+                Object {
+                  "Fn::If": Array [
+                    "IsCommercialCondition",
+                    "us-east-1",
+                    "us-gov-west-1",
+                  ],
+                },
+                " --qualifier accel
       - |-
         if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = \\"yes\\" ]; then
                           export $(printf \\"AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s\\" $(aws sts assume-role --role-arn arn:",
@@ -3898,7 +4030,15 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel;
-                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;
+                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                Object {
+                  "Fn::If": Array [
+                    "IsCommercialCondition",
+                    "us-east-1",
+                    "us-gov-west-1",
+                  ],
+                },
+                " --qualifier accel;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
                           unset AWS_SESSION_TOKEN;                  
@@ -3911,6 +4051,10 @@ phases:
                 " --region ",
                 Object {
                   "Ref": "AWS::Region",
+                },
+                " --partition ",
+                Object {
+                  "Ref": "AWS::Partition",
                 },
                 "
       - if [ \\"$ENABLE_TESTER\\" = \\"true\\" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ",
