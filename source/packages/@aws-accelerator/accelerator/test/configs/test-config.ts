@@ -1,4 +1,9 @@
-import { GlobalConfig, IamConfig, NetworkConfig, SecurityConfig } from '@aws-accelerator/config';
+import {
+  GlobalConfig,
+  IamConfig,
+  NetworkConfig,
+  SecurityConfig,
+} from '@aws-accelerator/config';
 
 const globalConfigJson = {
   homeRegion: 'us-east-1',
@@ -172,8 +177,8 @@ const networkConfigJson = {
             {
               destinationCidrBlock: '10.40.0.0/24',
               attachment: {
-                vpcName: 'InspectionVpc',
-                account: 'Transit',
+                vpcName: 'Test',
+                account: 'Audit',
               },
               blackhole: false,
             },
@@ -185,8 +190,8 @@ const networkConfigJson = {
             {
               destinationCidrBlock: '10.40.0.0/24',
               attachment: {
-                vpcName: 'InspectionVpc',
-                account: 'Transit',
+                vpcName: 'Test',
+                account: 'Audit',
               },
               blackhole: false,
             },
@@ -198,8 +203,8 @@ const networkConfigJson = {
             {
               destinationCidrBlock: '10.40.0.0/24',
               attachment: {
-                vpcName: 'InspectionVpc',
-                account: 'Transit',
+                vpcName: 'Test',
+                account: 'Audit',
               },
               blackhole: false,
             },
@@ -211,8 +216,8 @@ const networkConfigJson = {
             {
               destinationCidrBlock: '10.40.0.0/24',
               attachment: {
-                vpcName: 'InspectionVpc',
-                account: 'Transit',
+                vpcName: 'Test',
+                account: 'Audit',
               },
               blackhole: false,
             },
