@@ -107,6 +107,27 @@ export class InstallerStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: InstallerStackProps) {
     super(scope, id, props);
 
+    const isCommercialCondition = new cdk.CfnCondition(this, 'IsCommercialCondition', {
+      expression: cdk.Fn.conditionEquals(cdk.Stack.of(this).partition, 'aws'),
+    });
+
+    const globalRegionMap = new cdk.CfnMapping(this, 'GlobalRegionMap', {
+      mapping: {
+        aws: {
+          regionName: 'us-east-1',
+        },
+        'aws-us-gov': {
+          regionName: 'us-gov-west-1',
+        },
+        'aws-iso-b': {
+          regionName: 'us-isob-east-1',
+        },
+        'aws-iso': {
+          regionName: 'us-iso-east-1',
+        },
+      },
+    });
+
     const parameterGroups: { Label: { default: string }; Parameters: string[] }[] = [
       {
         Label: { default: 'Git Repository Configuration' },
@@ -238,44 +259,51 @@ export class InstallerStack extends cdk.Stack {
         : 'alias/accelerator/installer/kms/key',
       description: 'AWS Accelerator Management Account Kms Key',
       enableKeyRotation: true,
+      policy: undefined,
     });
 
-    // KMS key access to codestar-notifications
-    if (cdk.Stack.of(this).partition === 'aws') {
-      installerKey.addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'KMS key access to codestar-notifications',
-          actions: ['kms:GenerateDataKey*', 'kms:Decrypt'],
-          principals: [new cdk.aws_iam.ServicePrincipal('codestar-notifications.amazonaws.com')],
-          resources: ['*'],
-          conditions: {
-            StringEquals: {
-              'kms:ViaService': `sns.${cdk.Stack.of(this).region}.amazonaws.com`,
+    //
+    // Add conditional policies to Key policy
+    const cfnKey = installerKey.node.defaultChild as cdk.aws_kms.CfnKey;
+    cfnKey.keyPolicy = {
+      Statement: [
+        {
+          Effect: 'Allow',
+          Principal: {
+            AWS: `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:root`,
+          },
+          Action: 'kms:*',
+          Resource: '*',
+        },
+        {
+          Sid: 'Allow SNS service to use the encryption key',
+          Effect: 'Allow',
+          Principal: {
+            Service: 'sns.amazonaws.com',
+          },
+          Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+          Resource: '*',
+        },
+        cdk.Fn.conditionIf(
+          isCommercialCondition.logicalId,
+          {
+            Sid: 'KMS key access to codestar-notifications',
+            Effect: 'Allow',
+            Principal: {
+              Service: 'codestar-notifications.amazonaws.com',
+            },
+            Action: ['kms:GenerateDataKey*', 'kms:Decrypt'],
+            Resource: '*',
+            Condition: {
+              StringEquals: {
+                'kms:ViaService': `sns.${cdk.Stack.of(this).region}.amazonaws.com`,
+              },
             },
           },
-        }),
-      );
-    }
-
-    // Allow Accelerator Role inside management account to use the encryption key
-    // This is needed for pipeline manual approval action to send notification to encrypted topic
-    installerKey.addToResourcePolicy(
-      new cdk.aws_iam.PolicyStatement({
-        sid: `Allow Accelerator Role to use the encryption key`,
-        principals: [new cdk.aws_iam.AnyPrincipal()],
-        actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
-        resources: ['*'],
-        conditions: {
-          ArnLike: {
-            'aws:PrincipalARN': [
-              `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
-                this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'AWSAccelerator'
-              }-*`,
-            ],
-          },
-        },
-      }),
-    );
+          cdk.Aws.NO_VALUE,
+        ),
+      ],
+    };
 
     // cfn_nag suppressions
     const cfnInstallerKey = installerKey.node.defaultChild as cdk.aws_kms.CfnKey;
@@ -289,23 +317,6 @@ export class InstallerStack extends cdk.Stack {
         ],
       },
     };
-
-    // TODO Isn't there a better way to grant to all AWS services through a condition?
-    const allowedServicePrincipals: { name: string; principal: string }[] = [
-      { name: 'Sns', principal: 'sns.amazonaws.com' },
-      // Add similar objects for any other service principal needs access to this key
-    ];
-
-    allowedServicePrincipals.forEach(item => {
-      installerKey.addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: `Allow ${item.name} service to use the encryption key`,
-          principals: [new cdk.aws_iam.ServicePrincipal(item.principal)],
-          actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
-          resources: ['*'],
-        }),
-      );
-    });
 
     // Create SSM parameter for installer key arn for future use
     new cdk.aws_ssm.StringParameter(this, 'AcceleratorManagementKmsArnParameter', {
@@ -395,10 +406,8 @@ export class InstallerStack extends cdk.Stack {
       managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
     });
 
-    let globalRegion = 'us-east-1';
-    if (cdk.Stack.of(this).partition === 'aws-us-gov') {
-      globalRegion = 'us-gov-west-1';
-    }
+    const globalRegion = globalRegionMap.findInMap(cdk.Aws.PARTITION, 'regionName');
+
     const installerProject = new cdk.aws_codebuild.PipelineProject(this, 'InstallerProject', {
       projectName: this.acceleratorQualifier
         ? `${this.acceleratorQualifier.valueAsString}-installer-project`
@@ -443,7 +452,7 @@ export class InstallerStack extends cdk.Stack {
                   unset AWS_SESSION_TOKEN;                  
                fi`,
               'cd ../accelerator',
-              `yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}`,
+              `yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
               `if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}; fi`,
             ],
           },

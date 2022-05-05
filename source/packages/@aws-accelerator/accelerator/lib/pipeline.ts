@@ -43,6 +43,7 @@ export interface AcceleratorPipelineProps {
    * If pipeline do not have approval stage enabled, this value will have no impact.
    */
   readonly approvalStageNotifyEmailList?: string;
+  readonly partition: string;
 }
 
 /**
@@ -276,16 +277,20 @@ export class AcceleratorPipeline extends Construct {
     });
 
     if (props.enableApprovalStage) {
-      let notificationTopic: cdk.aws_sns.ITopic | undefined;
-      let notifyEmails: string[] | undefined;
-      if (cdk.Stack.of(this).partition === 'aws') {
+      const notifyEmails = props.approvalStageNotifyEmailList
+        ? props.approvalStageNotifyEmailList.split(',')
+        : undefined;
+
+      let notificationTopic: cdk.aws_sns.Topic | undefined;
+
+      if (props.partition === 'aws') {
         notificationTopic = new cdk.aws_sns.Topic(this, 'ManualApprovalActionTopic', {
           topicName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
           displayName: (props.qualifier ? props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
           masterKey: installerKey,
         });
-        notifyEmails = props.approvalStageNotifyEmailList ? props.approvalStageNotifyEmailList.split(',') : undefined;
       }
+
       pipeline.addStage({
         stageName: 'Review',
         actions: [
@@ -306,7 +311,7 @@ export class AcceleratorPipeline extends Construct {
      * all the accounts and will configure:
      *
      * - An S3 Access Logs bucket for every region in every account
-     * - The Central Logs bucket in the in the log-archive account
+     * - The Central Logs bucket in the log-archive account
      *
      */
     pipeline.addStage({
@@ -397,8 +402,8 @@ export class AcceleratorPipeline extends Construct {
       ],
     });
 
-    if (cdk.Stack.of(this).partition === 'aws') {
-      // Enable Pipeline notification
+    // Enable Pipeline notification
+    if (props.partition === 'aws') {
       const codeStarNotificationsRole = new cdk.aws_iam.CfnServiceLinkedRole(
         this,
         'AWSServiceRoleForCodeStarNotifications',

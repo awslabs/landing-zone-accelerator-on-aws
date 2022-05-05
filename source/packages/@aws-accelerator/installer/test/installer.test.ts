@@ -716,7 +716,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::AccountId',
                     },
-                    '/us-east-1 --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
+                    '/',
+                    {
+                      'Fn::If': ['IsCommercialCondition', 'us-east-1', 'us-gov-west-1'],
+                    },
+                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
                     {
                       Ref: 'AWS::Partition',
                     },
@@ -724,13 +728,21 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel;\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
+                    ' --qualifier accel;\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
+                    {
+                      'Fn::If': ['IsCommercialCondition', 'us-east-1', 'us-gov-west-1'],
+                    },
+                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
                     {
                       Ref: 'AWS::AccountId',
                     },
                     ' --region ',
                     {
                       Ref: 'AWS::Region',
+                    },
+                    ' --partition ',
+                    {
+                      Ref: 'AWS::Partition',
                     },
                     '\n      - if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ',
                     {
@@ -902,7 +914,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::AccountId',
                     },
-                    '/us-east-1 --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
+                    '/',
+                    {
+                      'Fn::If': ['IsCommercialCondition', 'us-east-1', 'us-gov-west-1'],
+                    },
+                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
                     {
                       Ref: 'AWS::Partition',
                     },
@@ -910,13 +926,21 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel;\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
+                    ' --qualifier accel;\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
+                    {
+                      'Fn::If': ['IsCommercialCondition', 'us-east-1', 'us-gov-west-1'],
+                    },
+                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
                     {
                       Ref: 'AWS::AccountId',
                     },
                     ' --region ',
                     {
                       Ref: 'AWS::Region',
+                    },
+                    ' --partition ',
+                    {
+                      Ref: 'AWS::Partition',
                     },
                     '\n      - if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ',
                     {
@@ -1047,7 +1071,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::AccountId',
                     },
-                    '/us-east-1 --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
+                    '/',
+                    {
+                      'Fn::If': ['IsCommercialCondition', 'us-east-1', 'us-gov-west-1'],
+                    },
+                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
                     {
                       Ref: 'AWS::Partition',
                     },
@@ -1055,13 +1083,21 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel;\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
+                    ' --qualifier accel;\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
+                    {
+                      'Fn::If': ['IsCommercialCondition', 'us-east-1', 'us-gov-west-1'],
+                    },
+                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
                     {
                       Ref: 'AWS::AccountId',
                     },
                     ' --region ',
                     {
                       Ref: 'AWS::Region',
+                    },
+                    ' --partition ',
+                    {
+                      Ref: 'AWS::Partition',
                     },
                     '\n      - if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ',
                     {
@@ -1226,7 +1262,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::AccountId',
                     },
-                    '/us-east-1 --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
+                    '/',
+                    {
+                      'Fn::If': ['IsCommercialCondition', 'us-east-1', 'us-gov-west-1'],
+                    },
+                    ' --qualifier accel\n      - |-\n        if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then\n                          export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:',
                     {
                       Ref: 'AWS::Partition',
                     },
@@ -1234,13 +1274,21 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --qualifier accel;\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/us-east-1 --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
+                    ' --qualifier accel;\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
+                    {
+                      'Fn::If': ['IsCommercialCondition', 'us-east-1', 'us-gov-west-1'],
+                    },
+                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
                     {
                       Ref: 'AWS::AccountId',
                     },
                     ' --region ',
                     {
                       Ref: 'AWS::Region',
+                    },
+                    ' --partition ',
+                    {
+                      Ref: 'AWS::Partition',
                     },
                     '\n      - if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ',
                     {
@@ -1459,8 +1507,6 @@ describe('InstallerStack', () => {
     cdk.assertions.Template.fromStack(managementAccountStackWithTesterPipeline).templateMatches({
       Resources: {
         InstallerKey2A6A8C6D: {
-          Type: 'AWS::KMS::Key',
-          UpdateReplacePolicy: 'Retain',
           DeletionPolicy: 'Retain',
           Properties: {
             Description: 'AWS Accelerator Management Account Kms Key',
@@ -1468,7 +1514,6 @@ describe('InstallerStack', () => {
             KeyPolicy: {
               Statement: [
                 {
-                  Action: 'kms:*',
                   Effect: 'Allow',
                   Principal: {
                     AWS: {
@@ -1488,52 +1533,56 @@ describe('InstallerStack', () => {
                       ],
                     },
                   },
+                  Action: 'kms:*',
                   Resource: '*',
                 },
                 {
-                  Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
-                  Condition: {
-                    ArnLike: {
-                      'aws:PrincipalARN': [
-                        {
-                          'Fn::Join': [
-                            '',
-                            [
-                              'arn:',
-                              {
-                                Ref: 'AWS::Partition',
-                              },
-                              ':iam::',
-                              {
-                                Ref: 'AWS::AccountId',
-                              },
-                              ':role/AWSAccelerator-*',
-                            ],
-                          ],
-                        },
-                      ],
-                    },
-                  },
-                  Effect: 'Allow',
-                  Principal: {
-                    AWS: '*',
-                  },
-                  Resource: '*',
-                  Sid: 'Allow Accelerator Role to use the encryption key',
-                },
-                {
-                  Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+                  Sid: 'Allow SNS service to use the encryption key',
                   Effect: 'Allow',
                   Principal: {
                     Service: 'sns.amazonaws.com',
                   },
+                  Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
                   Resource: '*',
-                  Sid: 'Allow Sns service to use the encryption key',
+                },
+                {
+                  'Fn::If': [
+                    'IsCommercialCondition',
+                    {
+                      Sid: 'KMS key access to codestar-notifications',
+                      Effect: 'Allow',
+                      Principal: {
+                        Service: 'codestar-notifications.amazonaws.com',
+                      },
+                      Action: ['kms:GenerateDataKey*', 'kms:Decrypt'],
+                      Resource: '*',
+                      Condition: {
+                        StringEquals: {
+                          'kms:ViaService': {
+                            'Fn::Join': [
+                              '',
+                              [
+                                'sns.',
+                                {
+                                  Ref: 'AWS::Region',
+                                },
+                                '.amazonaws.com',
+                              ],
+                            ],
+                          },
+                        },
+                      },
+                    },
+                    {
+                      Ref: 'AWS::NoValue',
+                    },
+                  ],
                 },
               ],
-              Version: '2012-10-17',
             },
           },
+          Type: 'AWS::KMS::Key',
+          UpdateReplacePolicy: 'Retain',
         },
       },
     });
@@ -1555,7 +1604,6 @@ describe('InstallerStack', () => {
             KeyPolicy: {
               Statement: [
                 {
-                  Action: 'kms:*',
                   Effect: 'Allow',
                   Principal: {
                     AWS: {
@@ -1575,54 +1623,52 @@ describe('InstallerStack', () => {
                       ],
                     },
                   },
+                  Action: 'kms:*',
                   Resource: '*',
                 },
                 {
-                  Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
-                  Condition: {
-                    ArnLike: {
-                      'aws:PrincipalARN': [
-                        {
-                          'Fn::Join': [
-                            '',
-                            [
-                              'arn:',
-                              {
-                                Ref: 'AWS::Partition',
-                              },
-                              ':iam::',
-                              {
-                                Ref: 'AWS::AccountId',
-                              },
-                              ':role/',
-                              {
-                                Ref: 'AcceleratorQualifier',
-                              },
-                              '-*',
-                            ],
-                          ],
-                        },
-                      ],
-                    },
-                  },
-                  Effect: 'Allow',
-                  Principal: {
-                    AWS: '*',
-                  },
-                  Resource: '*',
-                  Sid: 'Allow Accelerator Role to use the encryption key',
-                },
-                {
-                  Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+                  Sid: 'Allow SNS service to use the encryption key',
                   Effect: 'Allow',
                   Principal: {
                     Service: 'sns.amazonaws.com',
                   },
+                  Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
                   Resource: '*',
-                  Sid: 'Allow Sns service to use the encryption key',
+                },
+                {
+                  'Fn::If': [
+                    'IsCommercialCondition',
+                    {
+                      Sid: 'KMS key access to codestar-notifications',
+                      Effect: 'Allow',
+                      Principal: {
+                        Service: 'codestar-notifications.amazonaws.com',
+                      },
+                      Action: ['kms:GenerateDataKey*', 'kms:Decrypt'],
+                      Resource: '*',
+                      Condition: {
+                        StringEquals: {
+                          'kms:ViaService': {
+                            'Fn::Join': [
+                              '',
+                              [
+                                'sns.',
+                                {
+                                  Ref: 'AWS::Region',
+                                },
+                                '.amazonaws.com',
+                              ],
+                            ],
+                          },
+                        },
+                      },
+                    },
+                    {
+                      Ref: 'AWS::NoValue',
+                    },
+                  ],
                 },
               ],
-              Version: '2012-10-17',
             },
           },
         },

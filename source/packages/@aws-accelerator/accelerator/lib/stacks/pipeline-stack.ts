@@ -32,6 +32,7 @@ export interface PipelineStackProps extends cdk.StackProps {
    * If pipeline do not have approval stage enabled, this value will have no impact.
    */
   readonly approvalStageNotifyEmailList?: string;
+  readonly partition: string;
 }
 
 export class PipelineStack extends cdk.Stack {

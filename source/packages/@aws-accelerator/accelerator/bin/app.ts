@@ -161,6 +161,7 @@ async function main() {
         logArchiveAccountEmail: process.env['LOG_ARCHIVE_ACCOUNT_EMAIL']!,
         auditAccountEmail: process.env['AUDIT_ACCOUNT_EMAIL']!,
         approvalStageNotifyEmailList: process.env['APPROVAL_STAGE_NOTIFY_EMAIL_LIST'],
+        partition,
       },
     );
   }
