@@ -12,7 +12,9 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+
 import { SynthUtils } from '@aws-cdk/assert';
+
 import { InstallerStack } from '../lib/installer-stack';
 
 // Test prefix
@@ -1606,7 +1608,7 @@ describe('InstallerStack', () => {
                             {
                               Ref: 'AWS::AccountId',
                             },
-                            ':role/aws-accelerator-env001-*',
+                            ':role/AWSAccelerator-*',
                           ],
                         ],
                       },
@@ -1725,7 +1727,9 @@ describe('InstallerStack', () => {
                             {
                               Ref: 'AWS::AccountId',
                             },
-                            ':role/aws-accelerator-env001-*',
+                            ':role/',
+                            { Ref: 'AcceleratorQualifier' },
+                            '-*',
                           ],
                         ],
                       },

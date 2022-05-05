@@ -252,7 +252,11 @@ Object {
                         Object {
                           "Ref": "AWS::AccountId",
                         },
-                        ":role/aws-accelerator-env001-*",
+                        ":role/",
+                        Object {
+                          "Ref": "AcceleratorQualifier",
+                        },
+                        "-*",
                       ],
                     ],
                   },
@@ -1564,7 +1568,11 @@ Object {
                         Object {
                           "Ref": "AWS::AccountId",
                         },
-                        ":role/aws-accelerator-env001-*",
+                        ":role/",
+                        Object {
+                          "Ref": "AcceleratorQualifier",
+                        },
+                        "-*",
                       ],
                     ],
                   },
@@ -2823,7 +2831,7 @@ Object {
                         Object {
                           "Ref": "AWS::AccountId",
                         },
-                        ":role/aws-accelerator-env001-*",
+                        ":role/AWSAccelerator-*",
                       ],
                     ],
                   },
@@ -4015,7 +4023,7 @@ Object {
                         Object {
                           "Ref": "AWS::AccountId",
                         },
-                        ":role/aws-accelerator-env001-*",
+                        ":role/AWSAccelerator-*",
                       ],
                     ],
                   },
