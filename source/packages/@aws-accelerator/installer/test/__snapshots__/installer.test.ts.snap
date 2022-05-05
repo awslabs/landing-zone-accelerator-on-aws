@@ -12,6 +12,22 @@ Object {
       ],
     },
   },
+  "Mappings": Object {
+    "GlobalRegionMap": Object {
+      "aws": Object {
+        "regionName": "us-east-1",
+      },
+      "aws-iso": Object {
+        "regionName": "us-iso-east-1",
+      },
+      "aws-iso-b": Object {
+        "regionName": "us-isob-east-1",
+      },
+      "aws-us-gov": Object {
+        "regionName": "us-gov-west-1",
+      },
+    },
+  },
   "Metadata": Object {
     "AWS::CloudFormation::Interface": Object {
       "ParameterGroups": Array [
@@ -213,6 +229,41 @@ Object {
                 },
               },
               "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":role/aws-accelerator-env001-*",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow Accelerator Role to use the encryption key",
             },
             Object {
               "Action": Array [
@@ -465,10 +516,12 @@ phases:
                 },
                 "/",
                 Object {
-                  "Fn::If": Array [
-                    "IsCommercialCondition",
-                    "us-east-1",
-                    "us-gov-west-1",
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
                   ],
                 },
                 " --qualifier accel
@@ -486,10 +539,12 @@ phases:
                 " --qualifier accel;
                           yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
-                  "Fn::If": Array [
-                    "IsCommercialCondition",
-                    "us-east-1",
-                    "us-gov-west-1",
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
                   ],
                 },
                 " --qualifier accel;
@@ -1269,6 +1324,22 @@ Object {
       ],
     },
   },
+  "Mappings": Object {
+    "GlobalRegionMap": Object {
+      "aws": Object {
+        "regionName": "us-east-1",
+      },
+      "aws-iso": Object {
+        "regionName": "us-iso-east-1",
+      },
+      "aws-iso-b": Object {
+        "regionName": "us-isob-east-1",
+      },
+      "aws-us-gov": Object {
+        "regionName": "us-gov-west-1",
+      },
+    },
+  },
   "Metadata": Object {
     "AWS::CloudFormation::Interface": Object {
       "ParameterGroups": Array [
@@ -1470,6 +1541,41 @@ Object {
                 },
               },
               "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":role/aws-accelerator-env001-*",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow Accelerator Role to use the encryption key",
             },
             Object {
               "Action": Array [
@@ -1712,10 +1818,12 @@ phases:
                 },
                 "/",
                 Object {
-                  "Fn::If": Array [
-                    "IsCommercialCondition",
-                    "us-east-1",
-                    "us-gov-west-1",
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
                   ],
                 },
                 " --qualifier accel
@@ -1733,10 +1841,12 @@ phases:
                 " --qualifier accel;
                           yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
-                  "Fn::If": Array [
-                    "IsCommercialCondition",
-                    "us-east-1",
-                    "us-gov-west-1",
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
                   ],
                 },
                 " --qualifier accel;
@@ -2516,6 +2626,22 @@ Object {
       ],
     },
   },
+  "Mappings": Object {
+    "GlobalRegionMap": Object {
+      "aws": Object {
+        "regionName": "us-east-1",
+      },
+      "aws-iso": Object {
+        "regionName": "us-iso-east-1",
+      },
+      "aws-iso-b": Object {
+        "regionName": "us-isob-east-1",
+      },
+      "aws-us-gov": Object {
+        "regionName": "us-gov-west-1",
+      },
+    },
+  },
   "Metadata": Object {
     "AWS::CloudFormation::Interface": Object {
       "ParameterGroups": Array [
@@ -2674,6 +2800,41 @@ Object {
                 },
               },
               "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":role/aws-accelerator-env001-*",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow Accelerator Role to use the encryption key",
             },
             Object {
               "Action": Array [
@@ -2884,10 +3045,12 @@ phases:
                 },
                 "/",
                 Object {
-                  "Fn::If": Array [
-                    "IsCommercialCondition",
-                    "us-east-1",
-                    "us-gov-west-1",
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
                   ],
                 },
                 " --qualifier accel
@@ -2905,10 +3068,12 @@ phases:
                 " --qualifier accel;
                           yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
-                  "Fn::If": Array [
-                    "IsCommercialCondition",
-                    "us-east-1",
-                    "us-gov-west-1",
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
                   ],
                 },
                 " --qualifier accel;
@@ -3653,6 +3818,22 @@ Object {
       ],
     },
   },
+  "Mappings": Object {
+    "GlobalRegionMap": Object {
+      "aws": Object {
+        "regionName": "us-east-1",
+      },
+      "aws-iso": Object {
+        "regionName": "us-iso-east-1",
+      },
+      "aws-iso-b": Object {
+        "regionName": "us-isob-east-1",
+      },
+      "aws-us-gov": Object {
+        "regionName": "us-gov-west-1",
+      },
+    },
+  },
   "Metadata": Object {
     "AWS::CloudFormation::Interface": Object {
       "ParameterGroups": Array [
@@ -3811,6 +3992,41 @@ Object {
                 },
               },
               "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":role/aws-accelerator-env001-*",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow Accelerator Role to use the encryption key",
             },
             Object {
               "Action": Array [
@@ -4011,10 +4227,12 @@ phases:
                 },
                 "/",
                 Object {
-                  "Fn::If": Array [
-                    "IsCommercialCondition",
-                    "us-east-1",
-                    "us-gov-west-1",
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
                   ],
                 },
                 " --qualifier accel
@@ -4032,10 +4250,12 @@ phases:
                 " --qualifier accel;
                           yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
-                  "Fn::If": Array [
-                    "IsCommercialCondition",
-                    "us-east-1",
-                    "us-gov-west-1",
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
                   ],
                 },
                 " --qualifier accel;

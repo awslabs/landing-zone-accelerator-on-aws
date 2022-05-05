@@ -276,6 +276,22 @@ export class InstallerStack extends cdk.Stack {
           Resource: '*',
         },
         {
+          Sid: 'Allow Accelerator Role to use the encryption key',
+          Effect: 'Allow',
+          Principal: {
+            AWS: '*',
+          },
+          Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+          Resource: '*',
+          Condition: {
+            ArnLike: {
+              'aws:PrincipalARN': `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
+                this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'AWSAccelerator'
+              }-*`,
+            },
+          },
+        },
+        {
           Sid: 'Allow SNS service to use the encryption key',
           Effect: 'Allow',
           Principal: {
