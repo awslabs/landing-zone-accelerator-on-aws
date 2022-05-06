@@ -8,7 +8,7 @@ const stack = new cdk.Stack();
 
 new MacieOrganizationAdminAccount(stack, 'MacieOrganizationAdminAccount', {
   adminAccountId: stack.account,
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
   kmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
 });
 /**

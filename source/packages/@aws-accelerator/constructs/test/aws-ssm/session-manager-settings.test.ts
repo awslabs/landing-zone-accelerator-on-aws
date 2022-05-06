@@ -14,7 +14,7 @@ new SsmSessionManagerSettings(stack, 'SsmSessionManagerSettings', {
   sendToCloudWatchLogs: true,
   cloudWatchEncryptionEnabled: true,
   kmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 /**
@@ -736,7 +736,7 @@ describe('SsmSessionManagerSettings', () => {
               'Fn::GetAtt': ['SsmSessionManagerSettingsSessionManagerLogsCmk796F4752', 'Arn'],
             },
             LogGroupName: 'aws-accelerator-session-manager-logs',
-            RetentionInDays: 365,
+            RetentionInDays: 3653,
           },
           Type: 'AWS::Logs::LogGroup',
           UpdateReplacePolicy: 'Retain',

@@ -20,7 +20,7 @@ new SecurityHubStandards(stack, 'SecurityHubStandards', {
     },
   ],
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 /**

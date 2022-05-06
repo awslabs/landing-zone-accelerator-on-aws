@@ -10,7 +10,7 @@ new SsmParameterLookup(stack, 'SsmParameter', {
   name: 'TestParameter',
   accountId: '123123123123',
   roleName: 'TestRole',
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 /**

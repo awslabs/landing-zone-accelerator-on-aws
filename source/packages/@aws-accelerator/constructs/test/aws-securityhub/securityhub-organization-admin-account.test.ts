@@ -9,7 +9,7 @@ const stack = new cdk.Stack();
 new SecurityHubOrganizationAdminAccount(stack, 'SecurityHubOrganizationAdminAccount', {
   adminAccountId: stack.account,
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 /**

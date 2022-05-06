@@ -9,7 +9,7 @@ const stack = new cdk.Stack();
 new EnablePolicyType(stack, 'EnablePolicyType', {
   policyType: PolicyTypeEnum.SERVICE_CONTROL_POLICY,
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 /**
  * EnablePolicyType construct test

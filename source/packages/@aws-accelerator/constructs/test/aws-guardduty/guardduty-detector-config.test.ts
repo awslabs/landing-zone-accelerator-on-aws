@@ -11,7 +11,7 @@ new GuardDutyDetectorConfig(stack, 'GuardDutyDetectorConfig', {
   exportDestination: 'S3',
   exportFrequency: 'FIFTEEN_MINUTES',
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 /**

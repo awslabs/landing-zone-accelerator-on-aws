@@ -30,7 +30,7 @@ new ReportDefinition(nativeStack, 'TestReportDefinition', {
   s3Region: cdk.Stack.of(nativeStack).region,
   timeUnit: 'DAILY',
   kmsKey: nativeKey,
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 new ReportDefinition(customStack, 'TestReportDefinition', {
@@ -44,7 +44,7 @@ new ReportDefinition(customStack, 'TestReportDefinition', {
   s3Region: cdk.Stack.of(customStack).region,
   timeUnit: 'DAILY',
   kmsKey: customKey,
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 /**

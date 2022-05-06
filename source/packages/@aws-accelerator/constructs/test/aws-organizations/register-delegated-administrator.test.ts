@@ -10,7 +10,7 @@ new RegisterDelegatedAdministrator(stack, 'RegisterDelegatedAdministrator', {
   servicePrincipal: 'macie.amazonaws.com',
   accountId: stack.account,
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 /**

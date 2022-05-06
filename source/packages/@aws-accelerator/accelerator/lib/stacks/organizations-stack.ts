@@ -119,7 +119,7 @@ export class OrganizationsStack extends AcceleratorStack {
         );
 
         const cloudTrailCloudWatchCmkLogGroup = new logs.LogGroup(this, 'CloudTrailCloudWatchLogGroup', {
-          retention: logs.RetentionDays.ONE_YEAR,
+          retention: props.globalConfig.cloudwatchLogRetentionInDays,
           encryptionKey: cloudTrailCloudWatchCmk,
           logGroupName: 'aws-accelerator-cloudtrail-logs',
         });
@@ -133,7 +133,7 @@ export class OrganizationsStack extends AcceleratorStack {
             }`,
           ),
           cloudWatchLogGroup: cloudTrailCloudWatchCmkLogGroup,
-          cloudWatchLogsRetention: logs.RetentionDays.ONE_MONTH,
+          cloudWatchLogsRetention: logs.RetentionDays.TEN_YEARS,
           enableFileValidation: true,
           encryptionKey: kms.Key.fromKeyArn(
             this,

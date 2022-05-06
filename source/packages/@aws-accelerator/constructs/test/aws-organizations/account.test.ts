@@ -10,7 +10,7 @@ new Account(stack, 'Account', {
   accountId: stack.account,
   assumeRoleName: 'AWSControlTowerExecution',
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 /**
