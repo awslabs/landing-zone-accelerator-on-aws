@@ -67,19 +67,6 @@ export class SecurityAuditStack extends AcceleratorStack {
         kmsKey: key,
       });
 
-      // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
-      NagSuppressions.addResourceSuppressionsByPath(
-        this,
-        `${this.stackName}/AwsMacieExportConfigBucket/Resource/Resource`,
-        [
-          {
-            id: 'AwsSolutions-S1',
-            reason:
-              'AwsMacieExportConfigBucket has server access logs disabled till the task for access logging completed.',
-          },
-        ],
-      );
-
       new cdk.aws_ssm.StringParameter(this, 'SsmParamOrganizationMacieExportConfigBucketName', {
         parameterName: '/accelerator/organization/security/macie/discovery-repository/bucket-name',
         stringValue: bucket.getS3Bucket().bucketName,

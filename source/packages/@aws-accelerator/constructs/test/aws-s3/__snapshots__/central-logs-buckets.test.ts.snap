@@ -86,6 +86,23 @@ Object {
             ],
           ],
         },
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "s3-access-logs-",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+              ],
+            ],
+          },
+        },
         "OwnershipControls": Object {
           "Rules": Array [
             Object {

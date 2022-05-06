@@ -1095,17 +1095,6 @@ describe('SecurityAuditStack', () => {
           Type: 'AWS::S3::Bucket',
           UpdateReplacePolicy: 'Retain',
           DeletionPolicy: 'Retain',
-          Metadata: {
-            cdk_nag: {
-              rules_to_suppress: [
-                {
-                  id: 'AwsSolutions-S1',
-                  reason:
-                    'AwsMacieExportConfigBucket has server access logs disabled till the task for access logging completed.',
-                },
-              ],
-            },
-          },
           Properties: {
             BucketEncryption: {
               ServerSideEncryptionConfiguration: [
