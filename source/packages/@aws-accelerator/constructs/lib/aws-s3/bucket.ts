@@ -71,6 +71,11 @@ export interface BucketProps {
   serverAccessLogsBucket?: s3.IBucket | undefined;
 
   /**
+   *
+   */
+  serverAccessLogsBucketName?: string;
+
+  /**
    * Prefix to use in the target bucket for server access logs.
    *
    * @default - name of this bucket
@@ -121,8 +126,15 @@ export class Bucket extends Construct {
       throw new Error(`encryptionType ${props.encryptionType} is not valid.`);
     }
 
+    let serverAccessLogBucket = s3.Bucket.fromBucketName(
+      this,
+      'AcceleratorLogsBucket',
+      props.serverAccessLogsBucketName ?? `s3-access-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
+    );
+
     // Get server access logs prefix
     if (props.serverAccessLogsBucket) {
+      serverAccessLogBucket = props.serverAccessLogsBucket;
       if (!props.s3BucketName && !props.serverAccessLogsPrefix) {
         throw new Error('s3BucketName or serverAccessLogsPrefix property must be defined when using serverAccessLogs.');
       } else {
@@ -138,7 +150,7 @@ export class Bucket extends Construct {
       bucketName: props.s3BucketName,
       versioned: true,
       objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
-      serverAccessLogsBucket: props.serverAccessLogsBucket,
+      serverAccessLogsBucket: serverAccessLogBucket,
       // Trailing slash for folder-like prefix in S3
       serverAccessLogsPrefix: this.serverAccessLogsPrefix?.concat('/'),
     });

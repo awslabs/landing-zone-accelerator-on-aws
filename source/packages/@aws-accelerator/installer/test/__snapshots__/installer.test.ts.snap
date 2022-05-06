@@ -190,6 +190,122 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "InstallerAccessLogsBucket647700E9": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "AccessControl": "LogDeliveryWrite",
+        "BucketEncryption": Object {
+          "ServerSideEncryptionConfiguration": Array [
+            Object {
+              "ServerSideEncryptionByDefault": Object {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "BucketName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              Object {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-s3-logs-",
+              Object {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              Object {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "s3-access-logs-",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+              ],
+            ],
+          },
+        },
+        "OwnershipControls": Object {
+          "Rules": Array [
+            Object {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": Object {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "VersioningConfiguration": Object {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InstallerAccessLogsBucketPolicy20D4E285": Object {
+      "Properties": Object {
+        "Bucket": Object {
+          "Ref": "InstallerAccessLogsBucket647700E9",
+        },
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "s3:*",
+              "Condition": Object {
+                "Bool": Object {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "InstallerAccessLogsBucket647700E9",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "InstallerAccessLogsBucket647700E9",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "deny-insecure-connections",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
     "InstallerKey2A6A8C6D": Object {
       "DeletionPolicy": "Retain",
       "Metadata": Object {
@@ -1160,16 +1276,6 @@ phases:
     },
     "SecureBucket747CD8C0": Object {
       "DeletionPolicy": "Retain",
-      "Metadata": Object {
-        "cfn_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
-              "id": "W35",
-              "reason": "S3 Bucket access logging is not enabled for the pipeline artifacts bucket.",
-            },
-          ],
-        },
-      },
       "Properties": Object {
         "BucketEncryption": Object {
           "ServerSideEncryptionConfiguration": Array [
@@ -1203,6 +1309,30 @@ phases:
               },
             ],
           ],
+        },
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": Object {
+            "Ref": "InstallerAccessLogsBucket647700E9",
+          },
+          "LogFilePrefix": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                Object {
+                  "Ref": "AcceleratorQualifier",
+                },
+                "-installer-",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+                "/",
+              ],
+            ],
+          },
         },
         "OwnershipControls": Object {
           "Rules": Array [
@@ -1506,6 +1636,122 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "InstallerAccessLogsBucket647700E9": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "AccessControl": "LogDeliveryWrite",
+        "BucketEncryption": Object {
+          "ServerSideEncryptionConfiguration": Array [
+            Object {
+              "ServerSideEncryptionByDefault": Object {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "BucketName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              Object {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-s3-logs-",
+              Object {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              Object {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "s3-access-logs-",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+              ],
+            ],
+          },
+        },
+        "OwnershipControls": Object {
+          "Rules": Array [
+            Object {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": Object {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "VersioningConfiguration": Object {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InstallerAccessLogsBucketPolicy20D4E285": Object {
+      "Properties": Object {
+        "Bucket": Object {
+          "Ref": "InstallerAccessLogsBucket647700E9",
+        },
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "s3:*",
+              "Condition": Object {
+                "Bool": Object {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "InstallerAccessLogsBucket647700E9",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "InstallerAccessLogsBucket647700E9",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "deny-insecure-connections",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
     "InstallerKey2A6A8C6D": Object {
       "DeletionPolicy": "Retain",
       "Metadata": Object {
@@ -2466,16 +2712,6 @@ phases:
     },
     "SecureBucket747CD8C0": Object {
       "DeletionPolicy": "Retain",
-      "Metadata": Object {
-        "cfn_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
-              "id": "W35",
-              "reason": "S3 Bucket access logging is not enabled for the pipeline artifacts bucket.",
-            },
-          ],
-        },
-      },
       "Properties": Object {
         "BucketEncryption": Object {
           "ServerSideEncryptionConfiguration": Array [
@@ -2509,6 +2745,30 @@ phases:
               },
             ],
           ],
+        },
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": Object {
+            "Ref": "InstallerAccessLogsBucket647700E9",
+          },
+          "LogFilePrefix": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                Object {
+                  "Ref": "AcceleratorQualifier",
+                },
+                "-installer-",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+                "/",
+              ],
+            ],
+          },
         },
         "OwnershipControls": Object {
           "Rules": Array [
@@ -2768,6 +3028,119 @@ Object {
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "InstallerAccessLogsBucket647700E9": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "AccessControl": "LogDeliveryWrite",
+        "BucketEncryption": Object {
+          "ServerSideEncryptionConfiguration": Array [
+            Object {
+              "ServerSideEncryptionByDefault": Object {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "BucketName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "aws-accelerator-s3-logs-",
+              Object {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              Object {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "s3-access-logs-",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+              ],
+            ],
+          },
+        },
+        "OwnershipControls": Object {
+          "Rules": Array [
+            Object {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": Object {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "VersioningConfiguration": Object {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InstallerAccessLogsBucketPolicy20D4E285": Object {
+      "Properties": Object {
+        "Bucket": Object {
+          "Ref": "InstallerAccessLogsBucket647700E9",
+        },
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "s3:*",
+              "Condition": Object {
+                "Bool": Object {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "InstallerAccessLogsBucket647700E9",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "InstallerAccessLogsBucket647700E9",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "deny-insecure-connections",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
     },
     "InstallerKey2A6A8C6D": Object {
       "DeletionPolicy": "Retain",
@@ -3683,16 +4056,6 @@ phases:
     },
     "SecureBucket747CD8C0": Object {
       "DeletionPolicy": "Retain",
-      "Metadata": Object {
-        "cfn_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
-              "id": "W35",
-              "reason": "S3 Bucket access logging is not enabled for the pipeline artifacts bucket.",
-            },
-          ],
-        },
-      },
       "Properties": Object {
         "BucketEncryption": Object {
           "ServerSideEncryptionConfiguration": Array [
@@ -3723,6 +4086,27 @@ phases:
               },
             ],
           ],
+        },
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": Object {
+            "Ref": "InstallerAccessLogsBucket647700E9",
+          },
+          "LogFilePrefix": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "aws-accelerator-installer-",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+                "/",
+              ],
+            ],
+          },
         },
         "OwnershipControls": Object {
           "Rules": Array [
@@ -3960,6 +4344,119 @@ Object {
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "InstallerAccessLogsBucket647700E9": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "AccessControl": "LogDeliveryWrite",
+        "BucketEncryption": Object {
+          "ServerSideEncryptionConfiguration": Array [
+            Object {
+              "ServerSideEncryptionByDefault": Object {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "BucketName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "aws-accelerator-s3-logs-",
+              Object {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              Object {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "s3-access-logs-",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+              ],
+            ],
+          },
+        },
+        "OwnershipControls": Object {
+          "Rules": Array [
+            Object {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": Object {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "VersioningConfiguration": Object {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "InstallerAccessLogsBucketPolicy20D4E285": Object {
+      "Properties": Object {
+        "Bucket": Object {
+          "Ref": "InstallerAccessLogsBucket647700E9",
+        },
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "s3:*",
+              "Condition": Object {
+                "Bool": Object {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "InstallerAccessLogsBucket647700E9",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "InstallerAccessLogsBucket647700E9",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "deny-insecure-connections",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
     },
     "InstallerKey2A6A8C6D": Object {
       "DeletionPolicy": "Retain",
@@ -4865,16 +5362,6 @@ phases:
     },
     "SecureBucket747CD8C0": Object {
       "DeletionPolicy": "Retain",
-      "Metadata": Object {
-        "cfn_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
-              "id": "W35",
-              "reason": "S3 Bucket access logging is not enabled for the pipeline artifacts bucket.",
-            },
-          ],
-        },
-      },
       "Properties": Object {
         "BucketEncryption": Object {
           "ServerSideEncryptionConfiguration": Array [
@@ -4905,6 +5392,27 @@ phases:
               },
             ],
           ],
+        },
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": Object {
+            "Ref": "InstallerAccessLogsBucket647700E9",
+          },
+          "LogFilePrefix": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "aws-accelerator-installer-",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+                "/",
+              ],
+            ],
+          },
         },
         "OwnershipControls": Object {
           "Rules": Array [

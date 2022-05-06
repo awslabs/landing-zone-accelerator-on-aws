@@ -1122,16 +1122,6 @@ describe('PipelineStack', () => {
           Type: 'AWS::S3::Bucket',
           DeletionPolicy: 'Retain',
           UpdateReplacePolicy: 'Retain',
-          Metadata: {
-            cdk_nag: {
-              rules_to_suppress: [
-                {
-                  id: 'AwsSolutions-S1',
-                  reason: 'SecureBucket has server access logs disabled till the task for access logging completed.',
-                },
-              ],
-            },
-          },
           Properties: {
             BucketEncryption: {
               ServerSideEncryptionConfiguration: [

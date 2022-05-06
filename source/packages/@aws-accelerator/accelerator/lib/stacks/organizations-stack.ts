@@ -233,11 +233,6 @@ export class OrganizationsStack extends AcceleratorStack {
         const reportBucket = new Bucket(this, 'ReportBucket', {
           encryptionType: BucketEncryptionType.SSE_S3, // CUR does not support KMS CMK
           s3BucketName: `aws-accelerator-cur-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
-          serverAccessLogsBucket: s3.Bucket.fromBucketName(
-            this,
-            'ReportBucketAccessLogs',
-            `aws-accelerator-s3-access-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
-          ),
         });
 
         new ReportDefinition(this, 'ReportDefinition', {

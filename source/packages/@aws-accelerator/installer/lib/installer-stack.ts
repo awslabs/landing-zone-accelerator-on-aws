@@ -343,6 +343,13 @@ export class InstallerStack extends cdk.Stack {
       simpleName: false,
     });
 
+    const installerServerAccessLogsBucket = new Bucket(this, 'InstallerAccessLogsBucket', {
+      encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
+      s3BucketName: `${
+        this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'aws-accelerator'
+      }-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+    });
+
     const bucket = new Bucket(this, 'SecureBucket', {
       // s3BucketName: `accelerator-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
       encryptionType: BucketEncryptionType.SSE_KMS,
@@ -350,20 +357,8 @@ export class InstallerStack extends cdk.Stack {
         this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'aws-accelerator'
       }-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
       kmsKey: installerKey,
+      serverAccessLogsBucket: installerServerAccessLogsBucket.getS3Bucket(),
     });
-
-    // cfn_nag suppressions
-    const cfnBucket = bucket.node.defaultChild?.node.defaultChild as cdk.aws_s3.CfnBucket;
-    cfnBucket.cfnOptions.metadata = {
-      cfn_nag: {
-        rules_to_suppress: [
-          {
-            id: 'W35',
-            reason: 'S3 Bucket access logging is not enabled for the pipeline artifacts bucket.',
-          },
-        ],
-      },
-    };
 
     /**
      * Pipeline

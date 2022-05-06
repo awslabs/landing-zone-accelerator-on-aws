@@ -1952,16 +1952,6 @@ describe('InstallerStack', () => {
           Type: 'AWS::S3::Bucket',
           UpdateReplacePolicy: 'Retain',
           DeletionPolicy: 'Retain',
-          Metadata: {
-            cfn_nag: {
-              rules_to_suppress: [
-                {
-                  id: 'W35',
-                  reason: 'S3 Bucket access logging is not enabled for the pipeline artifacts bucket.',
-                },
-              ],
-            },
-          },
           Properties: {
             BucketEncryption: {
               ServerSideEncryptionConfiguration: [
@@ -2022,16 +2012,6 @@ describe('InstallerStack', () => {
           Type: 'AWS::S3::Bucket',
           UpdateReplacePolicy: 'Retain',
           DeletionPolicy: 'Retain',
-          Metadata: {
-            cfn_nag: {
-              rules_to_suppress: [
-                {
-                  id: 'W35',
-                  reason: 'S3 Bucket access logging is not enabled for the pipeline artifacts bucket.',
-                },
-              ],
-            },
-          },
           Properties: {
             BucketEncryption: {
               ServerSideEncryptionConfiguration: [

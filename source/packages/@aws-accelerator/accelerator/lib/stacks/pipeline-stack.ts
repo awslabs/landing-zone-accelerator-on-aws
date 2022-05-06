@@ -54,14 +54,6 @@ export class PipelineStack extends cdk.Stack {
       ...props,
     });
 
-    // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
-    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/Pipeline/SecureBucket/Resource/Resource`, [
-      {
-        id: 'AwsSolutions-S1',
-        reason: 'SecureBucket has server access logs disabled till the task for access logging completed.',
-      },
-    ]);
-
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
     NagSuppressions.addResourceSuppressionsByPath(
       this,
