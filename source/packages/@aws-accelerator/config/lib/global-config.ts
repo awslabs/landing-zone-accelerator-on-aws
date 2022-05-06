@@ -534,7 +534,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   /**
    * CloudWatchLogs retention in days, accelerator's custom resource lambda function logs retention period is configured based on this value.
    */
-  readonly cloudwatchLogRetentionInDays = 365;
+  readonly cloudwatchLogRetentionInDays = 3653;
 
   /**
    * AWS ControlTower configuration

@@ -173,7 +173,7 @@
                             "@@assign": "1825"
                         },
                         "delete_after_days": {
-                            "@@assign": "3650"
+                            "@@assign": "365"
                         }
                     }
                 }

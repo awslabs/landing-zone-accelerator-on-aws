@@ -9,7 +9,7 @@ const globalConfigJson = {
   homeRegion: 'us-east-1',
   enabledRegions: ['us-east-1'],
   managementAccountAccessRole: 'AWSControlTowerExecution',
-  cloudwatchLogRetentionInDays: 365,
+  cloudwatchLogRetentionInDays: 3653,
   controlTower: {
     enable: true,
   },

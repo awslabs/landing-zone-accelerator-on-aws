@@ -16,7 +16,7 @@ new ResolverFirewallDomainList(stack, 'TestDomainList', {
   tags: [],
   type: ResolverFirewallDomainListType.CUSTOM,
   kmsKey: new cdk.aws_kms.Key(stack, 'TestDomainListKey', {}),
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 // Managed domain list
@@ -24,7 +24,7 @@ new ResolverFirewallDomainList(stack, 'TestManagedDomainList', {
   name: 'TestManagedDomainList',
   type: ResolverFirewallDomainListType.MANAGED,
   kmsKey: new cdk.aws_kms.Key(stack, 'TestManagedDomainListKey', {}),
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 /**

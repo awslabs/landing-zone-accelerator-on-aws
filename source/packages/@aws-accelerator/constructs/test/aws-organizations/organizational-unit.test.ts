@@ -10,7 +10,7 @@ new OrganizationalUnit(stack, 'OrganizationalUnit', {
   name: 'root',
   path: '/',
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 /**

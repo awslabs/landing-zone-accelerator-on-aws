@@ -10,7 +10,7 @@ new GuardDutyPublishingDestination(stack, 'GuardDutyPublishingDestination', {
   bucketArn: `arn:${stack.partition}:s3:::aws-accelerator-org-gduty-pub-dest-${stack.account}-${stack.region}`,
   exportDestinationType: 'S3',
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 /**

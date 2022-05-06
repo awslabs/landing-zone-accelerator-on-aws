@@ -93,7 +93,7 @@ export class SsmSessionManagerSettings extends Construct {
 
       const logGroupName = 'aws-accelerator-session-manager-logs';
       const sessionManagerLogGroup = new cdk.aws_logs.LogGroup(this, 'sessionManagerLogGroup', {
-        retention: RetentionDays.ONE_YEAR,
+        retention: RetentionDays.TEN_YEARS,
         logGroupName: logGroupName,
         encryptionKey: sessionManagerLogsCmk,
       });

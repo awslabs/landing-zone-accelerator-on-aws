@@ -9,7 +9,7 @@ const stack = new cdk.Stack();
 new MacieSession(stack, 'MacieSession', {
   isSensitiveSh: true,
   findingPublishingFrequency: 'FIFTEEN_MINUTES',
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
   kmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
 });
 /**

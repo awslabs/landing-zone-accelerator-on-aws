@@ -9,7 +9,7 @@ const stack = new cdk.Stack();
 new EnableAwsServiceAccess(stack, 'EnableAwsServiceAccess', {
   servicePrincipal: 's3.amazonaws.com',
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
 });
 
 /**

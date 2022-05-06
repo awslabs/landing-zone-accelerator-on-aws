@@ -13,7 +13,7 @@ new GetNetworkFirewallEndpoint(stack, 'TestGetEndpoint', {
   endpointAz: 'us-east-1a',
   firewallArn: firewallArn,
   kmsKey: new cdk.aws_kms.Key(stack, 'Custom', {}),
-  logRetentionInDays: 365,
+  logRetentionInDays: 3653,
   region: 'us-east-1',
 });
 
@@ -158,7 +158,7 @@ describe('Get Network Firewall endpoint', () => {
                 ['/aws/lambda/', { Ref: 'CustomGetNetworkFirewallEndpointCustomResourceProviderHandler2EF030A1' }],
               ],
             },
-            RetentionInDays: 365,
+            RetentionInDays: 3653,
           },
         },
       },
