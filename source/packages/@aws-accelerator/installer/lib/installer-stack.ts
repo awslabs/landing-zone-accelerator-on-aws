@@ -350,6 +350,18 @@ export class InstallerStack extends cdk.Stack {
       }-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
     });
 
+    // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/InstallerAccessLogsBucket/Resource/Resource`,
+      [
+        {
+          id: 'AwsSolutions-S1',
+          reason: 'AccessLogsBucket has server access logs disabled till the task for access logging completed.',
+        },
+      ],
+    );
+
     const bucket = new Bucket(this, 'SecureBucket', {
       // s3BucketName: `accelerator-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
       encryptionType: BucketEncryptionType.SSE_KMS,

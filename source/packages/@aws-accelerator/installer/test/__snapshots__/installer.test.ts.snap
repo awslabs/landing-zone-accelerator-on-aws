@@ -192,6 +192,16 @@ Object {
     },
     "InstallerAccessLogsBucket647700E9": Object {
       "DeletionPolicy": "Retain",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-S1",
+              "reason": "AccessLogsBucket has server access logs disabled till the task for access logging completed.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "AccessControl": "LogDeliveryWrite",
         "BucketEncryption": Object {
@@ -220,23 +230,6 @@ Object {
               },
             ],
           ],
-        },
-        "LoggingConfiguration": Object {
-          "DestinationBucketName": Object {
-            "Fn::Join": Array [
-              "",
-              Array [
-                "s3-access-logs-",
-                Object {
-                  "Ref": "AWS::AccountId",
-                },
-                "-",
-                Object {
-                  "Ref": "AWS::Region",
-                },
-              ],
-            ],
-          },
         },
         "OwnershipControls": Object {
           "Rules": Array [
@@ -1638,6 +1631,16 @@ Object {
     },
     "InstallerAccessLogsBucket647700E9": Object {
       "DeletionPolicy": "Retain",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-S1",
+              "reason": "AccessLogsBucket has server access logs disabled till the task for access logging completed.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "AccessControl": "LogDeliveryWrite",
         "BucketEncryption": Object {
@@ -1666,23 +1669,6 @@ Object {
               },
             ],
           ],
-        },
-        "LoggingConfiguration": Object {
-          "DestinationBucketName": Object {
-            "Fn::Join": Array [
-              "",
-              Array [
-                "s3-access-logs-",
-                Object {
-                  "Ref": "AWS::AccountId",
-                },
-                "-",
-                Object {
-                  "Ref": "AWS::Region",
-                },
-              ],
-            ],
-          },
         },
         "OwnershipControls": Object {
           "Rules": Array [
@@ -3031,6 +3017,16 @@ Object {
     },
     "InstallerAccessLogsBucket647700E9": Object {
       "DeletionPolicy": "Retain",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-S1",
+              "reason": "AccessLogsBucket has server access logs disabled till the task for access logging completed.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "AccessControl": "LogDeliveryWrite",
         "BucketEncryption": Object {
@@ -3056,23 +3052,6 @@ Object {
               },
             ],
           ],
-        },
-        "LoggingConfiguration": Object {
-          "DestinationBucketName": Object {
-            "Fn::Join": Array [
-              "",
-              Array [
-                "s3-access-logs-",
-                Object {
-                  "Ref": "AWS::AccountId",
-                },
-                "-",
-                Object {
-                  "Ref": "AWS::Region",
-                },
-              ],
-            ],
-          },
         },
         "OwnershipControls": Object {
           "Rules": Array [
@@ -4347,6 +4326,16 @@ Object {
     },
     "InstallerAccessLogsBucket647700E9": Object {
       "DeletionPolicy": "Retain",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-S1",
+              "reason": "AccessLogsBucket has server access logs disabled till the task for access logging completed.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "AccessControl": "LogDeliveryWrite",
         "BucketEncryption": Object {
@@ -4372,23 +4361,6 @@ Object {
               },
             ],
           ],
-        },
-        "LoggingConfiguration": Object {
-          "DestinationBucketName": Object {
-            "Fn::Join": Array [
-              "",
-              Array [
-                "s3-access-logs-",
-                Object {
-                  "Ref": "AWS::AccountId",
-                },
-                "-",
-                Object {
-                  "Ref": "AWS::Region",
-                },
-              ],
-            ],
-          },
         },
         "OwnershipControls": Object {
           "Rules": Array [
