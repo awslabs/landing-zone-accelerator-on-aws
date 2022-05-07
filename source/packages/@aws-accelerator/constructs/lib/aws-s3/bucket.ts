@@ -16,6 +16,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { pascalCase } from 'change-case';
 
 export enum BucketAccessType {
   READONLY = 'readonly',
@@ -126,20 +127,26 @@ export class Bucket extends Construct {
       throw new Error(`encryptionType ${props.encryptionType} is not valid.`);
     }
 
-    let serverAccessLogBucket = s3.Bucket.fromBucketName(
-      this,
-      'AcceleratorLogsBucket',
-      props.serverAccessLogsBucketName ?? `s3-access-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
-    );
+    let serverAccessLogBucket: cdk.aws_s3.IBucket | undefined;
 
-    // Get server access logs prefix
-    if (props.serverAccessLogsBucket) {
+    if (props.serverAccessLogsBucketName && !props.serverAccessLogsBucket) {
+      serverAccessLogBucket = s3.Bucket.fromBucketName(
+        this,
+        `${pascalCase(props.serverAccessLogsBucketName)}-S3LogsBucket`,
+        props.serverAccessLogsBucketName,
+      );
+    }
+    if (!props.serverAccessLogsBucketName && props.serverAccessLogsBucket) {
       serverAccessLogBucket = props.serverAccessLogsBucket;
+      // Get server access logs prefix
       if (!props.s3BucketName && !props.serverAccessLogsPrefix) {
         throw new Error('s3BucketName or serverAccessLogsPrefix property must be defined when using serverAccessLogs.');
       } else {
         this.serverAccessLogsPrefix = props.serverAccessLogsPrefix ? props.s3BucketName : props.s3BucketName;
       }
+    }
+    if (props.serverAccessLogsBucketName && props.serverAccessLogsBucket) {
+      throw new Error('serverAccessLogsBucketName or serverAccessLogsBucket (only one property) should be defined.');
     }
 
     this.bucket = new s3.Bucket(this, 'Resource', {

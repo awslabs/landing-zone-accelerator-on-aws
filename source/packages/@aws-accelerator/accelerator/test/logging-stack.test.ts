@@ -54,14 +54,14 @@ describe('LoggingStack', () => {
    * Number of S3 Bucket resource test
    */
   test(`${testNamePrefix} S3 Bucket resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::Bucket', 2);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::Bucket', 1);
   });
 
   /**
    * Number of BucketPolicy resource test
    */
   test(`${testNamePrefix} BucketPolicy resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::BucketPolicy', 2);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::BucketPolicy', 1);
   });
 
   /**

@@ -71,17 +71,18 @@ export class LoggingStack extends AcceleratorStack {
     //
     // Create S3 Bucket for Access Logs - this is required
     //
-
-    const serverAccessLogBucket = new Bucket(this, 'AccessLogBucket', {
-      encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
-      s3BucketName: `aws-accelerator-server-access-log-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-    });
-
     const serverAccessLogsBucket = new Bucket(this, 'AccessLogsBucket', {
       encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
       s3BucketName: `aws-accelerator-s3-access-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
-      serverAccessLogsBucket: serverAccessLogBucket.getS3Bucket(),
     });
+
+    // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/AccessLogsBucket/Resource/Resource`, [
+      {
+        id: 'AwsSolutions-S1',
+        reason: 'AccessLogsBucket has server access logs disabled till the task for access logging completed.',
+      },
+    ]);
 
     serverAccessLogsBucket.getS3Bucket().addToResourcePolicy(
       new iam.PolicyStatement({

@@ -18,6 +18,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import { pascalCase } from 'pascal-case';
 import * as path from 'path';
+import { S3ServerAccessLogsBucketNamePrefix } from '../accelerator';
 
 import { Region } from '@aws-accelerator/config';
 import {
@@ -61,10 +62,12 @@ export class SecurityAuditStack extends AcceleratorStack {
       Logger.info(
         `[security-audit-stack] Creating macie export config bucket - aws-accelerator-securitymacie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
       );
+      const S3ServerAccessLogsBucketNamePrefix = 'aws-accelerator-s3-access-logs';
       const bucket = new Bucket(this, 'AwsMacieExportConfigBucket', {
         encryptionType: BucketEncryptionType.SSE_KMS,
         s3BucketName: `aws-accelerator-org-macie-disc-repo-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         kmsKey: key,
+        serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
       });
 
       new cdk.aws_ssm.StringParameter(this, 'SsmParamOrganizationMacieExportConfigBucketName', {
@@ -121,6 +124,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         encryptionType: BucketEncryptionType.SSE_KMS,
         s3BucketName: `aws-accelerator-org-gduty-pub-dest-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         kmsKey: key,
+        serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
       });
 
       // AwsSolutions-S1: The S3 Bucket has server access logs disabled.

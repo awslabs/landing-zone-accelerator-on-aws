@@ -46,6 +46,7 @@ import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { KeyStack } from './key-stack';
+import { S3ServerAccessLogsBucketNamePrefix } from '../accelerator';
 
 export interface OrganizationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
@@ -233,6 +234,7 @@ export class OrganizationsStack extends AcceleratorStack {
         const reportBucket = new Bucket(this, 'ReportBucket', {
           encryptionType: BucketEncryptionType.SSE_S3, // CUR does not support KMS CMK
           s3BucketName: `aws-accelerator-cur-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
+          serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         });
 
         new ReportDefinition(this, 'ReportDefinition', {
