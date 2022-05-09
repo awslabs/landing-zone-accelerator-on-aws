@@ -251,6 +251,27 @@ Object {
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
+    "InstallerAccessLogsBucketName4F700F48": Object {
+      "Properties": Object {
+        "Name": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/accelerator/",
+              Object {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/installer-access-logs-bucket-name",
+            ],
+          ],
+        },
+        "Type": "String",
+        "Value": Object {
+          "Ref": "InstallerAccessLogsBucket647700E9",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "InstallerAccessLogsBucketPolicy20D4E285": Object {
       "Properties": Object {
         "Bucket": Object {
@@ -1690,6 +1711,27 @@ Object {
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
+    "InstallerAccessLogsBucketName4F700F48": Object {
+      "Properties": Object {
+        "Name": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/accelerator/",
+              Object {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/installer-access-logs-bucket-name",
+            ],
+          ],
+        },
+        "Type": "String",
+        "Value": Object {
+          "Ref": "InstallerAccessLogsBucket647700E9",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "InstallerAccessLogsBucketPolicy20D4E285": Object {
       "Properties": Object {
         "Bucket": Object {
@@ -3073,6 +3115,16 @@ Object {
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
+    "InstallerAccessLogsBucketName4F700F48": Object {
+      "Properties": Object {
+        "Name": "/accelerator/installer-access-logs-bucket-name",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "InstallerAccessLogsBucket647700E9",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "InstallerAccessLogsBucketPolicy20D4E285": Object {
       "Properties": Object {
         "Bucket": Object {
@@ -4381,6 +4433,16 @@ Object {
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
+    },
+    "InstallerAccessLogsBucketName4F700F48": Object {
+      "Properties": Object {
+        "Name": "/accelerator/installer-access-logs-bucket-name",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "InstallerAccessLogsBucket647700E9",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
     "InstallerAccessLogsBucketPolicy20D4E285": Object {
       "Properties": Object {

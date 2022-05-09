@@ -26,7 +26,6 @@ import path from 'path';
 
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
-import { S3ServerAccessLogsBucketNamePrefix } from './accelerator';
 
 /**
  * TesterPipelineProps
@@ -103,9 +102,12 @@ export class TesterPipeline extends Construct {
         cdk.Stack.of(this).region
       }`,
       kmsKey: installerKey,
-      // kmsAliasName: `alias/${props.qualifier ?? 'aws-accelerator'}/test-pipeline/s3`,
-      // kmsDescription: 'AWS Accelerator Functional Test Pipeline Bucket CMK',
-      serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+      serverAccessLogsBucketName: cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        props.qualifier
+          ? `/accelerator/${props.qualifier}/installer-access-logs-bucket-name`
+          : '/accelerator/installer-access-logs-bucket-name',
+      ),
     });
 
     /**
