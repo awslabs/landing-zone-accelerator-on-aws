@@ -362,6 +362,14 @@ export class InstallerStack extends cdk.Stack {
       ],
     );
 
+    new cdk.aws_ssm.StringParameter(this, 'InstallerAccessLogsBucketName', {
+      parameterName: this.acceleratorQualifier
+        ? `/accelerator/${this.acceleratorQualifier.valueAsString}/installer-access-logs-bucket-name`
+        : `/accelerator/installer-access-logs-bucket-name`,
+      stringValue: installerServerAccessLogsBucket.getS3Bucket().bucketName,
+      simpleName: false,
+    });
+
     const bucket = new Bucket(this, 'SecureBucket', {
       // s3BucketName: `accelerator-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
       encryptionType: BucketEncryptionType.SSE_KMS,

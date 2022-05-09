@@ -24,7 +24,6 @@ import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
 import { AcceleratorToolkitCommand } from './toolkit';
-import { S3ServerAccessLogsBucketNamePrefix } from './accelerator';
 
 /**
  *
@@ -94,9 +93,12 @@ export class AcceleratorPipeline extends Construct {
         cdk.Stack.of(this).region
       }`,
       kmsKey: installerKey,
-      // kmsAliasName: `alias/${props.qualifier ?? 'aws-accelerator'}/pipeline/s3`,
-      // kmsDescription: 'AWS Accelerator Pipeline Bucket CMK',
-      serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+      serverAccessLogsBucketName: cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        props.qualifier
+          ? `/accelerator/${props.qualifier}/installer-access-logs-bucket-name`
+          : '/accelerator/installer-access-logs-bucket-name',
+      ),
     });
 
     const configRepository = new config_repository.ConfigRepository(this, 'ConfigRepository', {
