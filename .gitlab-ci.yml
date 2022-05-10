@@ -23,11 +23,14 @@ accelerator-build:
     - "yarn lint"
     - "yarn lerna link"
     - "yarn build"
+    - "cd packages/@aws-accelerator/installer"
+    - "yarn cdk synth"
+    - "cp cdk.out/AWSAccelerator-InstallerStack.template.json $CI_PROJECT_DIR/AWSAccelerator-InstallerStack.template.json"
   artifacts:
-    untracked: true
+    name: "installer-template"
     when: on_success
     paths:
-      - source/
+      - AWSAccelerator-InstallerStack.template.json
 accelerator-test:
   stage: test
   script:
@@ -38,13 +41,15 @@ accelerator-test:
   artifacts:
     untracked: true
     expire_in: 1 day
-accelerator-documentation:
+pages:
   stage: metadata
   script:
     - "export NODE_OPTIONS=--max_old_space_size=8192"
     - "cd source"
     - "yarn docs"
+    - "cp -R docs/ ../public/"
   artifacts:
-    expire_in: 1 week
     paths:
-      - source/docs
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
