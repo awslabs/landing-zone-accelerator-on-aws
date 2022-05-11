@@ -78,16 +78,18 @@ export abstract class GlobalConfigTypes {
   });
 
   static readonly notificationConfig = t.interface({
-    notificationType: t.enums('NotificationType', ['ACTUAL', 'FORECASTED']),
+    type: t.enums('NotificationType', ['ACTUAL', 'FORECASTED']),
     thresholdType: t.enums('ThresholdType', ['PERCENTAGE', 'ABSOLUTE_VALUE']),
     comparisonOperator: t.enums('ComparisonType', ['GREATER_THAN', 'LESS_THAN', 'EQUAL_TO']),
     threshold: t.optional(t.number),
+    address: t.optional(t.nonEmptyString),
+    subscriptionType: t.enums('SubscriptionType', ['EMAIL', 'SNS']),
   });
 
-  static readonly budgetsConfig = t.interface({
+  static readonly budgetConfig = t.interface({
     amount: t.number,
-    budgetName: t.nonEmptyString,
-    budgetType: t.enums('NotificationType', [
+    name: t.nonEmptyString,
+    type: t.enums('NotificationType', [
       'USAGE',
       'COST',
       'RI_UTILIZATION',
@@ -96,7 +98,6 @@ export abstract class GlobalConfigTypes {
       'SAVINGS_PLANS_COVERAGE',
     ]),
     timeUnit: t.enums('TimeUnitType', ['DAILY', 'MONTHLY', 'QUARTERLY', 'ANNUALLY']),
-    address: t.optional(t.nonEmptyString),
     includeUpfront: t.optional(t.boolean),
     includeTax: t.optional(t.boolean),
     includeSupport: t.optional(t.boolean),
@@ -108,14 +109,13 @@ export abstract class GlobalConfigTypes {
     includeRefund: t.optional(t.boolean),
     useAmortized: t.optional(t.boolean),
     useBlended: t.optional(t.boolean),
-    notifications: t.optional(t.array(this.notificationConfig)),
-    subscriptionType: t.enums('SubscriptionType', ['EMAIL', 'SNS']),
     unit: t.optional(t.nonEmptyString),
+    notifications: t.optional(t.array(this.notificationConfig)),
   });
 
   static readonly reportConfig = t.interface({
     costAndUsageReport: t.optional(this.costAndUsageReportConfig),
-    budgets: t.optional(this.budgetsConfig),
+    budgets: t.optional(t.array(this.budgetConfig)),
   });
 
   static readonly globalConfig = t.interface({
@@ -306,13 +306,7 @@ export class CostAndUsageReportConfig implements t.TypeOf<typeof GlobalConfigTyp
 /**
  * BudgetReport configuration
  */
-export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.budgetsConfig> {
-  /**
-   * The address that AWS sends budget notifications to, either an SNS topic or an email.
-   *
-   * When you create a subscriber, the value of Address can't contain line breaks.
-   */
-  readonly address = '';
+export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.budgetConfig> {
   /**
    * The cost or usage amount that's associated with a budget forecast, actual spend, or budget threshold.
    *
@@ -322,7 +316,7 @@ export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.bud
   /**
    * The name of a budget. The value must be unique within an account. BudgetName can't include : and \ characters. If you don't include value for BudgetName in the template, Billing and Cost Management assigns your budget a randomly generated name.
    */
-  readonly budgetName = '';
+  readonly name = '';
   /**
    * The length of time until a budget resets the actual and forecasted spend. DAILY is available only for RI_UTILIZATION and RI_COVERAGE budgets.
    */
@@ -330,7 +324,7 @@ export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.bud
   /**
    * Specifies whether this budget tracks costs, usage, RI utilization, RI coverage, Savings Plans utilization, or Savings Plans coverage.
    */
-  readonly budgetType = '';
+  readonly type = '';
   /**
    * Specifies whether a budget includes upfront RI costs.
    *
@@ -418,10 +412,12 @@ export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.bud
    */
   readonly notifications = [
     {
-      notificationType: '',
+      type: '',
       thresholdType: '',
       comparisonOperator: '',
       threshold: 90,
+      address: '',
+      subscriptionType: '',
     },
   ];
 }
@@ -456,32 +452,32 @@ export class ReportConfig implements t.TypeOf<typeof GlobalConfigTypes.reportCon
    * @example
    * ```
    * budgets:
-   *     budgetName: accel-budget
-   *     timeUnit: MONTHLY
-   *     budgetType: COST
-   *     amount: 2000
-   *     includeUpfront: true
-   *     includeTax: true
-   *     includeSupport: true
-   *     includeSubscription: true
-   *     includeRecurring: true
-   *     includeOtherSubscription: true
-   *     includeDiscount: true
-   *     includeCredit: false
-   *     includeRefund: false
-   *     useBlended: false
-   *     useAmortized: false
-   *     subscriptionType: EMAIL
-   *     address: myemail+pa-budg@example.com
-   *     unit: USD
-   *     notification:
-   *       notificationType: ACTUAL
-   *       thresholdType: PERCENTAGE
-   *       threshold: 90
-   *       comparisonOperator: GREATER_THAN
+   *     - name: accel-budget
+   *       timeUnit: MONTHLY
+   *       type: COST
+   *       amount: 2000
+   *       includeUpfront: true
+   *       includeTax: true
+   *       includeSupport: true
+   *       includeSubscription: true
+   *       includeRecurring: true
+   *       includeOtherSubscription: true
+   *       includeDiscount: true
+   *       includeCredit: false
+   *       includeRefund: false
+   *       useBlended: false
+   *       useAmortized: false
+   *       unit: USD
+   *       notification:
+   *       - type: ACTUAL
+   *         thresholdType: PERCENTAGE
+   *         threshold: 90
+   *         comparisonOperator: GREATER_THAN
+   *         subscriptionType: EMAIL
+   *         address: myemail+pa-budg@example.com
    * ```
    */
-  readonly budgets = new BudgetReportConfig();
+  readonly budgets: BudgetReportConfig[] = [];
 }
 
 /**
@@ -605,29 +601,29 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *     refreshClosedReports: true
    *     reportVersioning: CREATE_NEW_REPORT
    *   budgets:
-   *     budgetName: accel-budget
-   *     timeUnit: MONTHLY
-   *     budgetType: COST
-   *     amount: 2000
-   *     includeUpfront: true
-   *     includeTax: true
-   *     includeSupport: true
-   *     includeSubscription: true
-   *     includeRecurring: true
-   *     includeOtherSubscription: true
-   *     includeDiscount: true
-   *     includeCredit: false
-   *     includeRefund: false
-   *     useBlended: false
-   *     useAmortized: false
-   *     subscriptionType: EMAIL
-   *     address: myemail+pa-budg@example.com
-   *     unit: USD
-   *     notification:
-   *       notificationType: ACTUAL
-   *       thresholdType: PERCENTAGE
-   *       threshold: 90
-   *       comparisonOperator: GREATER_THAN
+   *     - name: accel-budget
+   *       timeUnit: MONTHLY
+   *       type: COST
+   *       amount: 2000
+   *       includeUpfront: true
+   *       includeTax: true
+   *       includeSupport: true
+   *       includeSubscription: true
+   *       includeRecurring: true
+   *       includeOtherSubscription: true
+   *       includeDiscount: true
+   *       includeCredit: false
+   *       includeRefund: false
+   *       useBlended: false
+   *       useAmortized: false
+   *       unit: USD
+   *       notification:
+   *       - type: ACTUAL
+   *         thresholdType: PERCENTAGE
+   *         threshold: 90
+   *         comparisonOperator: GREATER_THAN
+   *         subscriptionType: EMAIL
+   *         address: myemail+pa-budg@example.com
    * ```
    */
   readonly reports: ReportConfig | undefined = undefined;
