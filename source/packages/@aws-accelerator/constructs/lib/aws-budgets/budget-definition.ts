@@ -14,157 +14,87 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
-type timeUnit = 'DAILY' | 'WEEKLY' | 'MONTHLY' | string;
-
-type budgetType =
-  | 'COST'
-  | 'RI_UTILIZATION'
-  | 'RI_COVERAGE'
-  | 'SAVINGS_PLAN_UTILIZATION'
-  | 'SAVINGS_PLAN_COVERAGE'
-  | string;
-
-type subscriptionType = 'EMAIL' | string;
-
 export interface BudgetDefinitionProps {
   /**
-   * The address that AWS sends budget notifications to, either an SNS topic or an email.
+   * List of Budgets.
    */
-  readonly address: string;
-  /**
-   * The name of the budget.
-   */
-  readonly budgetName: string;
-  /**
-   * The length of time until a budget resets the actual and forecasted spend.
-   */
-  readonly timeUnit: timeUnit;
-  /**
-   * Specifies whether this budget tracks costs, usage, RI utilization, RI coverage,
-   * Savings Plans utilization, or Savings Plans coverage.
-   */
-  readonly budgetType: budgetType;
-  /**
-   * The address that AWS sends budget notifications to, either an SNS topic or an email.
-   */
-  readonly subscriptionType: subscriptionType;
-  /**
-   * The total amount of costs, usage, RI utilization, RI coverage, Savings Plans utilization, or Savings Plans
-   * coverage that you want to track with your budget.
-   */
-  readonly amount: number;
-  /**
-   * Specifies whether a budget includes recurring fees such as monthly RI fees.
-   */
-  readonly includeTax: boolean | cdk.IResolvable;
-  /**
-   * Specifies whether a budget includes support subscription fees.
-   */
-  readonly includeSupport: boolean | cdk.IResolvable;
-  /**
-   * Specifies whether a budget includes subscriptions.
-   */
-  readonly includeSubscription: boolean | cdk.IResolvable;
-  /**
-   * Specifies whether a budget includes non-RI subscription costs.
-   */
-  readonly includeOtherSubscription: boolean | cdk.IResolvable;
-  /**
-   * The type of budget.
-   */
-  readonly includeRecurring: boolean | cdk.IResolvable;
-  /**
-   * Specifies whether a budget includes upfront RI costs.
-   */
-  readonly includeUpfront: boolean | cdk.IResolvable;
-  /**
-   * Specifies whether a budget includes credits.
-   */
-  readonly includeCredit: boolean | cdk.IResolvable;
-  /**
-   * Specifies whether a budget includes refunds.
-   */
-  readonly includeRefund: boolean | cdk.IResolvable;
-  /**
-   * Specifies whether a budget includes discounts.
-   */
-  readonly includeDiscount: boolean | cdk.IResolvable;
-  /**
-   * Specifies whether a budget uses the amortized rate.
-   */
-  readonly useAmortized: boolean | cdk.IResolvable;
-  /**
-   * Specifies whether a budget uses a blended rate.
-   */
-  readonly useBlended: boolean | cdk.IResolvable;
-  /**
-   * Specifies whether a budget includes upfront RI costs.
-   */
-  readonly unit: string;
-  /**
-   * List of notifications.
-   */
-  readonly notifications?: {
-    threshold: number;
-    thresholdType: 'PERCENTAGE' | 'ABSOLUTE_VALUE' | string;
-    notificationType: 'ACTUAL' | 'FORECASTED' | string;
-    comparisonOperator: 'GREATER_THAN' | 'LESS_THAN' | string;
+  readonly budgets?: {
+    type: 'COST' | 'RI_UTILIZATION' | 'RI_COVERAGE' | 'SAVINGS_PLAN_UTILIZATION' | 'SAVINGS_PLAN_COVERAGE' | string;
+    timeUnit: 'DAILY' | 'WEEKLY' | 'MONTHLY' | string;
+    amount: number;
+    unit: 'USD' | string;
+    name: string;
+    includeCredit: boolean;
+    includeDiscount: boolean;
+    includeOtherSubscription: boolean;
+    includeRecurring: boolean;
+    includeRefund: boolean;
+    includeSubscription: boolean;
+    includeSupport: boolean;
+    includeTax: boolean;
+    includeUpfront: boolean;
+    useAmortized: boolean;
+    useBlended: boolean;
+    notifications: {
+      threshold: number;
+      thresholdType: 'PERCENTAGE' | 'ABSOLUTE_VALUE' | string;
+      type: 'ACTUAL' | 'FORECASTED' | string;
+      comparisonOperator: 'GREATER_THAN' | 'LESS_THAN' | string;
+      address: string;
+      subscriptionType: 'EMAIL' | 'SNS' | string;
+    }[];
   }[];
 }
 
 export class BudgetDefinition extends cdk.Resource {
-  public readonly budgetName: string;
-
   constructor(scope: Construct, id: string, props: BudgetDefinitionProps) {
-    super(scope, id, {
-      physicalName: props.budgetName,
-    });
+    super(scope, id);
 
-    this.budgetName = this.physicalName;
-    const notificationsWithSubscribers = [];
-    for (const notify of props.notifications ?? []) {
-      const notificationWithSubscriber = {
-        notification: {
-          comparisonOperator: notify.comparisonOperator,
-          notificationType: notify.notificationType,
-          threshold: notify.threshold,
-          thresholdType: notify.thresholdType ?? undefined,
-        },
-        subscribers: [
-          {
-            address: props.address,
-            subscriptionType: props.subscriptionType,
-          },
-        ],
-      };
-      notificationsWithSubscribers.push(notificationWithSubscriber);
-    }
-
-    new cdk.aws_budgets.CfnBudget(this, 'Resource', {
-      budget: {
-        budgetType: props.budgetType,
-        timeUnit: props.timeUnit,
+    for (const budgetParameters of props.budgets ?? []) {
+      const notificationsWithSubscribers = [];
+      const budget = {
+        budgetType: budgetParameters.type,
+        timeUnit: budgetParameters.timeUnit,
         budgetLimit: {
-          amount: props.amount,
-          unit: props.unit,
+          amount: budgetParameters.amount,
+          unit: budgetParameters.unit,
         },
-        budgetName: props.budgetName,
+        budgetName: budgetParameters.name,
         costTypes: {
-          includeCredit: props.includeCredit ?? undefined,
-          includeDiscount: props.includeDiscount ?? undefined,
-          includeOtherSubscription: props.includeOtherSubscription ?? undefined,
-          includeRecurring: props.includeRecurring ?? undefined,
-          includeRefund: props.includeRefund ?? undefined,
-          includeSubscription: props.includeSubscription ?? undefined,
-          includeSupport: props.includeSupport ?? undefined,
-          includeTax: props.includeTax ?? undefined,
-          includeUpfront: props.includeUpfront ?? undefined,
-          useAmortized: props.useAmortized ?? undefined,
-          useBlended: props.useBlended ?? undefined,
+          includeCredit: budgetParameters.includeCredit ?? undefined,
+          includeDiscount: budgetParameters.includeDiscount ?? undefined,
+          includeOtherSubscription: budgetParameters.includeOtherSubscription ?? undefined,
+          includeRecurring: budgetParameters.includeRecurring ?? undefined,
+          includeRefund: budgetParameters.includeRefund ?? undefined,
+          includeSubscription: budgetParameters.includeSubscription ?? undefined,
+          includeSupport: budgetParameters.includeSupport ?? undefined,
+          includeTax: budgetParameters.includeTax ?? undefined,
+          includeUpfront: budgetParameters.includeUpfront ?? undefined,
+          useAmortized: budgetParameters.useAmortized ?? undefined,
+          useBlended: budgetParameters.useBlended ?? undefined,
         },
-      },
-
-      notificationsWithSubscribers,
-    });
+      };
+      for (const notify of budgetParameters.notifications ?? []) {
+        const notificationWithSubscriber = {
+          notification: {
+            comparisonOperator: notify.comparisonOperator,
+            notificationType: notify.type,
+            threshold: notify.threshold,
+            thresholdType: notify.thresholdType ?? undefined,
+          },
+          subscribers: [
+            {
+              address: notify.address,
+              subscriptionType: notify.subscriptionType,
+            },
+          ],
+        };
+        notificationsWithSubscribers.push(notificationWithSubscriber);
+      }
+      new cdk.aws_budgets.CfnBudget(this, `${budget.budgetName}`, {
+        budget,
+        notificationsWithSubscribers,
+      });
+    }
   }
 }

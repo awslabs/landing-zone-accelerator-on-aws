@@ -260,25 +260,7 @@ export class OrganizationsStack extends AcceleratorStack {
         Logger.info('[organizations-stack] Adding Budget Reports');
 
         new BudgetDefinition(this, 'BudgetDefinition', {
-          budgetType: props.globalConfig.reports.budgets.budgetType,
-          timeUnit: props.globalConfig.reports.budgets.timeUnit,
-          amount: props.globalConfig.reports.budgets.amount,
-          budgetName: props.globalConfig.reports.budgets.budgetName,
-          includeOtherSubscription: props.globalConfig.reports.budgets.includeOtherSubscription,
-          includeRecurring: props.globalConfig.reports.budgets.includeRecurring,
-          includeSubscription: props.globalConfig.reports.budgets.includeSubscription,
-          subscriptionType: props.globalConfig.reports.budgets.subscriptionType,
-          includeSupport: props.globalConfig.reports.budgets.includeSupport,
-          includeTax: props.globalConfig.reports.budgets.includeTax,
-          includeUpfront: props.globalConfig.reports.budgets.includeUpfront,
-          includeCredit: props.globalConfig.reports.budgets.includeCredit,
-          includeDiscount: props.globalConfig.reports.budgets.includeDiscount,
-          includeRefund: props.globalConfig.reports.budgets.includeRefund,
-          useBlended: props.globalConfig.reports.budgets.useBlended,
-          useAmortized: props.globalConfig.reports.budgets.useAmortized,
-          address: props.globalConfig.reports.budgets.address,
-          unit: props.globalConfig.reports.budgets.unit,
-          notifications: props.globalConfig.reports.budgets.notifications,
+          budgets: props.globalConfig.reports.budgets,
         });
       }
       //
