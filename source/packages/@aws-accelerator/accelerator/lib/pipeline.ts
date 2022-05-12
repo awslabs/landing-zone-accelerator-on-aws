@@ -281,10 +281,6 @@ export class AcceleratorPipeline extends Construct {
     });
 
     if (props.enableApprovalStage) {
-      const notifyEmails = props.approvalStageNotifyEmailList
-        ? props.approvalStageNotifyEmailList.split(',')
-        : undefined;
-
       let notificationTopic: cdk.aws_sns.Topic | undefined;
 
       if (props.partition === 'aws') {
@@ -304,7 +300,11 @@ export class AcceleratorPipeline extends Construct {
             runOrder: 2,
             additionalInformation: 'See previous stage (Diff) for changes.',
             notificationTopic,
-            notifyEmails,
+            notifyEmails: notificationTopic
+              ? props.approvalStageNotifyEmailList
+                ? props.approvalStageNotifyEmailList.split(',')
+                : undefined
+              : undefined,
           }),
         ],
       });
