@@ -960,10 +960,13 @@ export class NetworkVpcStack extends AcceleratorStack {
                   sourceSecurityGroup: ingressRule.targetSecurityGroup,
                   ...ingressRule,
                 });
-              }
-              if (ingressRule.targetPrefixList) {
+              } else if (ingressRule.targetPrefixList) {
                 securityGroup.addIngressRule(`${securityGroupItem.name}-Ingress-${ruleId}-${index}`, {
                   sourcePrefixList: ingressRule.targetPrefixList,
+                  ...ingressRule,
+                });
+              } else {
+                securityGroup.addIngressRule(`${securityGroupItem.name}-Ingress-${ruleId}-${index}`, {
                   ...ingressRule,
                 });
               }
@@ -988,10 +991,13 @@ export class NetworkVpcStack extends AcceleratorStack {
                   destinationSecurityGroup: egressRule.targetSecurityGroup,
                   ...egressRule,
                 });
-              }
-              if (egressRule.targetPrefixList) {
+              } else if (egressRule.targetPrefixList) {
                 securityGroup.addEgressRule(`${securityGroupItem.name}-Egress-${ruleId}-${index}`, {
                   destinationPrefixList: egressRule.targetPrefixList,
+                  ...egressRule,
+                });
+              } else {
+                securityGroup.addEgressRule(`${securityGroupItem.name}-Egress-${ruleId}-${index}`, {
                   ...egressRule,
                 });
               }
