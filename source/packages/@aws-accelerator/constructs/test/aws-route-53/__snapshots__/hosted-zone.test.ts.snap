@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`HostedZone Construct(HostedZone):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestHostedZone68F306E4": Object {
+      "Properties": Object {
+        "Name": "s3-global.accesspoint.aws.com",
+        "VPCs": Array [
+          Object {
+            "VPCId": "Test",
+            "VPCRegion": Object {
+              "Ref": "AWS::Region",
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Route53::HostedZone",
+    },
+  },
+}
+`;

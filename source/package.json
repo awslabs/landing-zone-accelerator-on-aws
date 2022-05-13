@@ -1,0 +1,81 @@
+{
+  "name": "landing-zone-accelerator-on-aws",
+  "version": "1.0.0",
+  "description": "Landing Zone Accelerator on AWS",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Amazon Web Services",
+    "url": "https://aws.amazon.com"
+  },
+  "private": true,
+  "dependencies": {
+    "fs-extra": "10.0.0",
+    "jest": "27.4.3",
+    "jsii": "1.47.0",
+    "jsii-pacmak": "1.47.0"
+  },
+  "devDependencies": {
+    "@types/jest": "27.0.3",
+    "@types/node": "16.11.12",
+    "@typescript-eslint/eslint-plugin": "5.6.0",
+    "@typescript-eslint/parser": "5.6.0",
+    "aws-cdk-lib": "2.16.0",
+    "constructs": "10.0.12",
+    "esbuild": "0.14.2",
+    "eslint-config-prettier": "8.3.0",
+    "eslint-plugin-jest": "25.3.0",
+    "eslint-plugin-prettier": "4.0.0",
+    "husky-init": "7.0.0",
+    "jest": "27.4.3",
+    "jest-junit": "13.0.0",
+    "lerna": "^4.0.0",
+    "ts-jest": "27.1.1",
+    "ts-node": "10.4.0",
+    "typedoc": "0.22.11",
+    "typescript": "4.5.2"
+  },
+  "peerDependencies": {
+    "eslint": "8.4.1"
+  },
+  "scripts": {
+    "cleanup": "lerna run cleanup --stream && rm -rf node_modules",
+    "cleanup:tsc": "lerna run cleanup:tsc --stream",
+    "build": "lerna run build --stream",
+    "test": "lerna run test --stream",
+    "test:clean": "rm -f ./test-reports/*.xml",
+    "docs": "yarn run typedoc --entryPointStrategy packages './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' --name 'Landing Zone Accelerator on AWS' --includeVersion --disableSources --logLevel Verbose",
+    "viper-scan": "cd .. && wget -v \"https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip\" && unzip -qo viperlight.zip -d ../viperlight && rm -r ./viperlight.zip && ../viperlight/bin/viperlight scan",
+    "prepare": "cd ../ && husky install source/.husky",
+    "postinstall": "cd ../ && husky install source/.husky && cd source",
+    "lint": "lerna run lint --stream",
+    "prettier": "lerna run prettier --stream"
+  },
+  "workspaces": {
+    "packages": [
+      "./packages/@aws-accelerator/accelerator",
+      "./packages/@aws-accelerator/accelerator/lib/lambdas/*",
+      "./packages/@aws-accelerator/config",
+      "./packages/@aws-accelerator/constructs",
+      "./packages/@aws-accelerator/constructs/lib/aws-*/*",
+      "./packages/@aws-accelerator/installer",
+      "./packages/@aws-accelerator/tester",
+      "./packages/@aws-accelerator/tester/lambdas",
+      "./packages/@aws-accelerator/tools",
+      "./packages/@aws-accelerator/utils",
+      "./packages/@aws-cdk-extensions/cdk-extensions",
+      "./packages/@aws-cdk-extensions/cdk-plugin-assume-role"
+    ],
+    "nohoist": [
+      "**/deepmerge",
+      "**/deepmerge/**",
+      "**/npmlog",
+      "**/npmlog/**",
+      "**/@types/npmlog",
+      "**/@types/npmlog/**",
+      "**/deep-diff",
+      "**/deep-diff/**",
+      "**/@types/deep-diff",
+      "**/@types/deep-diff/**"
+    ]
+  }
+}

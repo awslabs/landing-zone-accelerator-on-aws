@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Initialized CodeCommit Repository Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "SnapshotTest4B1F0CC8": Object {
+      "Properties": Object {
+        "Code": Object {
+          "BranchName": "main",
+          "S3": Object {
+            "Bucket": "Testbucket",
+            "Key": "testkey",
+          },
+        },
+        "RepositoryName": "AWS-accelerator",
+      },
+      "Type": "AWS::CodeCommit::Repository",
+    },
+  },
+}
+`;

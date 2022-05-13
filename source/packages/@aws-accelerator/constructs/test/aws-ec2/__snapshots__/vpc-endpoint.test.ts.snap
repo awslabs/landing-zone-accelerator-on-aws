@@ -1,0 +1,65 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VpcEndpoint Construct(VpcEndpoint):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestSecurityGroupDA4B5F83": Object {
+      "Properties": Object {
+        "GroupDescription": "AWS Private Endpoint Zone",
+        "GroupName": "TestSecurityGroup",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "TestSecurityGroup",
+          },
+        ],
+        "VpcId": "Test",
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "VpcEndpoint80208C18": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "*",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Array [
+                    "organizationId",
+                  ],
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "AccessToTrustedPrincipalsAndResources",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "RouteTableIds": Array [
+          "Test1",
+          "Test2",
+        ],
+        "ServiceName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "com.amazonaws.",
+              Object {
+                "Ref": "AWS::Region",
+              },
+              ".service",
+            ],
+          ],
+        },
+        "VpcId": "Test",
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+  },
+}
+`;

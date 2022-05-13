@@ -1,0 +1,22 @@
+tests:
+  - name: validate main transit gateway
+    description: Validate Main Transit Gateway
+    suite: network
+    testTarget: validateTransitGateway
+    expect: PASS
+    parameters:
+      name: Main
+      accountId: '333333333333'
+      region: us-east-1
+      amazonSideAsn: '65521'
+      dnsSupport: enable
+      vpnEcmpSupport: enable
+      defaultRouteTableAssociation: disable
+      defaultRouteTablePropagation: disable
+      autoAcceptSharingAttachments: enable
+      routeTableNames:
+        - core
+        - segregated
+        - shared
+        - standalone
+      shareTargetAccountIds: ['111111111111','222222222222']

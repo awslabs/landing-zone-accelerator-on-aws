@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TransitGatewayRouteTable Construct(TransitGatewayRouteTable):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TransitGatewayRouteTableCoreTransitGatewayRouteTableD6BC94E0": Object {
+      "Properties": Object {
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "core",
+          },
+          Object {
+            "Key": "Test-Key",
+            "Value": "Test-Value",
+          },
+        ],
+        "TransitGatewayId": "tgw0001",
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTable",
+    },
+  },
+}
+`;

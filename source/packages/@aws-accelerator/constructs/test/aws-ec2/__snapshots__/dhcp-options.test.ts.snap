@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DhcpOptions Construct(DhcpOptions):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestDhcpOpts22CADF8A": Object {
+      "Properties": Object {
+        "DomainName": "test.com",
+        "DomainNameServers": Array [
+          "1.1.1.1",
+        ],
+        "NetbiosNameServers": Array [
+          "1.1.1.1",
+        ],
+        "NetbiosNodeType": 2,
+        "NtpServers": Array [
+          "1.1.1.1",
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Test",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::DHCPOptions",
+    },
+  },
+}
+`;

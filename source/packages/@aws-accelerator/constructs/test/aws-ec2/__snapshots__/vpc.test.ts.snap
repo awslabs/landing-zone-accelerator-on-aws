@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Vpc Construct(Vpc):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestVpcDhcpOptionsAssociationDB23B751": Object {
+      "Properties": Object {
+        "DhcpOptionsId": "Test-Options",
+        "VpcId": Object {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+    },
+    "TestVpcE77CE678": Object {
+      "Properties": Object {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsHostnames": false,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Main",
+          },
+          Object {
+            "Key": "Test-Key",
+            "Value": "Test-Value",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "TestVpcInternetGateway01360C82": Object {
+      "Properties": Object {
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Main",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::InternetGateway",
+    },
+    "TestVpcInternetGatewayAttachment60E451D5": Object {
+      "Properties": Object {
+        "InternetGatewayId": Object {
+          "Ref": "TestVpcInternetGateway01360C82",
+        },
+        "VpcId": Object {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+  },
+}
+`;

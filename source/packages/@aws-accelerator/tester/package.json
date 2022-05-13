@@ -1,0 +1,55 @@
+{
+  "name": "@aws-accelerator/tester",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Amazon Web Services",
+    "url": "https://aws.amazon.com"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "cleanup": "tsc --build ../tests --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
+    "cleanup:tsc": "tsc --build ../tests --clean",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest --coverage --ci",
+    "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'  --ignore-pattern \\\\\\\"*.d.ts\\\\\\\" ",
+    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}'  --ignore-pattern \\\\\\\"*.d.ts\\\\\\\" "
+  },
+  "devDependencies": {
+    "@types/jest": "27.0.3",
+    "@types/node": "16.11.12",
+    "@typescript-eslint/eslint-plugin": "5.6.0",
+    "@typescript-eslint/parser": "5.6.0",
+    "eslint": "8.4.1",
+    "eslint-config-prettier": "8.3.0",
+    "eslint-config-standard": "16.0.3",
+    "eslint-import-resolver-node": "0.3.6",
+    "eslint-import-resolver-typescript": "2.5.0",
+    "eslint-plugin-import": "2.25.3",
+    "eslint-plugin-license-header": "0.2.1",
+    "eslint-plugin-node": "11.1.0",
+    "eslint-plugin-prettier": "4.0.0",
+    "fs-extra": "10.0.0",
+    "jest": "27.4.3",
+    "prettier": "2.5.1",
+    "ts-jest": "27.1.1",
+    "ts-node": "10.4.0",
+    "typescript": "4.5.2",
+    "aws-cdk": "2.16.0",
+    "aws-cdk-lib": "2.16.0",
+    "constructs": "10.0.12"
+  },
+  "peerDependencies": {
+    "aws-cdk-lib": "2.16.0",
+    "es-lint": "8.4.1"
+  },
+  "dependencies": {
+    "@types/fs-extra": "9.0.13",
+    "aws-cdk": "2.16.0",
+    "aws-cdk-lib": "2.16.0",
+    "ts-node": "10.4.0"
+  }
+}
