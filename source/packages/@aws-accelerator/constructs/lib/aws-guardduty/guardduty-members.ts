@@ -76,6 +76,12 @@ export class GuardDutyMembers extends Construct {
           ],
           Resource: '*',
         },
+        {
+          Sid: 'ServiceLinkedRoleSecurityHub',
+          Effect: 'Allow',
+            Action: ['iam:CreateServiceLinkedRole'],
+          Resource: ['*'],
+        },
       ],
     });
 
