@@ -19,6 +19,8 @@ import * as path from 'path';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { KeyLookup, PasswordRotationLambda } from '@aws-accelerator/constructs';
+import { KeyStack } from './key-stack';
 
 export interface OperationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
@@ -32,6 +34,13 @@ export class OperationsStack extends AcceleratorStack {
     // Only deploy IAM resources into the home region
     //
     if (props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
+      const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
+        accountId: props.accountsConfig.getAuditAccountId(),
+        roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+        keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
+        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      }).getKey();
+
       //
       // Add Providers
       //
@@ -238,6 +247,16 @@ export class OperationsStack extends AcceleratorStack {
         for (const user of userSet.users ?? []) {
           Logger.info(`[operations-stack] Add user ${user.username}`);
 
+          const passwordRotationLambda = new PasswordRotationLambda(
+            this,
+            pascalCase(`${user.username}SecretRotationLambda`),
+            {
+              userName: user.username,
+              kmsKey: key,
+              logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+            },
+          );
+
           const secret = new cdk.aws_secretsmanager.Secret(this, pascalCase(`${user.username}Secret`), {
             generateSecretString: {
               secretStringTemplate: JSON.stringify({ username: user.username }),
@@ -246,16 +265,33 @@ export class OperationsStack extends AcceleratorStack {
             secretName: `/accelerator/${user.username}`,
           });
 
-          // AwsSolutions-SMG4: The secret does not have automatic rotation scheduled.
-          // rule suppression with evidence for this permission.
+          secret.addRotationSchedule(`pascalCase(${user.username}SecretRotationSchedule`, {
+            rotationLambda: passwordRotationLambda.node.defaultChild as cdk.aws_lambda.IFunction,
+            automaticallyAfter: cdk.Duration.days(user.passwordRotationScheduleInDays ?? 90),
+          });
+
+          // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
           NagSuppressions.addResourceSuppressionsByPath(
             this,
-            `${this.stackName}/${pascalCase(user.username)}Secret/Resource`,
+            `${this.stackName}/${pascalCase(user.username)}SecretRotationLambda/Resource/ServiceRole/Resource`,
             [
               {
-                id: 'AwsSolutions-SMG4',
-                reason:
-                  'Accelerator users created as per iam-config file, upcoming change will take care of secret automatic rotation',
+                id: 'AwsSolutions-IAM4',
+                reason: 'Role needs managed policy for basic lambda execution permission.',
+              },
+            ],
+          );
+
+          // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(
+              user.username,
+            )}SecretRotationLambda/Resource/ServiceRole/DefaultPolicy/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM5',
+                reason: 'CDK generated poliy for lambda to have access for secretsmanager.',
               },
             ],
           );
