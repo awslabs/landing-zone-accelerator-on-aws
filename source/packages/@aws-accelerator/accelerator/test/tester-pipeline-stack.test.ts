@@ -293,7 +293,7 @@ describe('TesterPipelineStack', () => {
   test(`${testNamePrefix} CodePipeline deploy stage IAM role resource configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        TesterPipelineDeployRole20D5B4C2: {
+        TesterPipelineDeployAdminRole3DA8CFF7: {
           Properties: {
             AssumeRolePolicyDocument: {
               Statement: [
@@ -327,163 +327,163 @@ describe('TesterPipelineStack', () => {
     });
   });
 
-  /**
-   * CodePipeline deploy stage IAM role default policy resource configuration test
-   */
-  test(`${testNamePrefix} CodePipeline deploy stage IAM role default policy resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TesterPipelineDeployRoleDefaultPolicyBB88BBD9: {
-          Type: 'AWS::IAM::Policy',
-          Properties: {
-            PolicyDocument: {
-              Statement: [
-                {
-                  Action: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
-                  Effect: 'Allow',
-                  Resource: [
-                    {
-                      'Fn::Join': [
-                        '',
-                        [
-                          'arn:',
-                          {
-                            Ref: 'AWS::Partition',
-                          },
-                          ':logs:',
-                          {
-                            Ref: 'AWS::Region',
-                          },
-                          ':',
-                          {
-                            Ref: 'AWS::AccountId',
-                          },
-                          ':log-group:/aws/codebuild/',
-                          {
-                            Ref: 'TesterPipelineTesterProject3BEC9F5A',
-                          },
-                        ],
-                      ],
-                    },
-                    {
-                      'Fn::Join': [
-                        '',
-                        [
-                          'arn:',
-                          {
-                            Ref: 'AWS::Partition',
-                          },
-                          ':logs:',
-                          {
-                            Ref: 'AWS::Region',
-                          },
-                          ':',
-                          {
-                            Ref: 'AWS::AccountId',
-                          },
-                          ':log-group:/aws/codebuild/',
-                          {
-                            Ref: 'TesterPipelineTesterProject3BEC9F5A',
-                          },
-                          ':*',
-                        ],
-                      ],
-                    },
-                  ],
-                },
-                {
-                  Action: [
-                    'codebuild:CreateReportGroup',
-                    'codebuild:CreateReport',
-                    'codebuild:UpdateReport',
-                    'codebuild:BatchPutTestCases',
-                    'codebuild:BatchPutCodeCoverages',
-                  ],
-                  Effect: 'Allow',
-                  Resource: {
-                    'Fn::Join': [
-                      '',
-                      [
-                        'arn:',
-                        {
-                          Ref: 'AWS::Partition',
-                        },
-                        ':codebuild:',
-                        {
-                          Ref: 'AWS::Region',
-                        },
-                        ':',
-                        {
-                          Ref: 'AWS::AccountId',
-                        },
-                        ':report-group/',
-                        {
-                          Ref: 'TesterPipelineTesterProject3BEC9F5A',
-                        },
-                        '-*',
-                      ],
-                    ],
-                  },
-                },
-                {
-                  Action: ['kms:Decrypt', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
-                  Effect: 'Allow',
-                  Resource: {
-                    Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
-                  },
-                },
-                {
-                  Action: [
-                    's3:GetObject*',
-                    's3:GetBucket*',
-                    's3:List*',
-                    's3:DeleteObject*',
-                    's3:PutObject',
-                    's3:PutObjectLegalHold',
-                    's3:PutObjectRetention',
-                    's3:PutObjectTagging',
-                    's3:PutObjectVersionTagging',
-                    's3:Abort*',
-                  ],
-                  Effect: 'Allow',
-                  Resource: [
-                    {
-                      'Fn::GetAtt': ['TesterPipelineSecureBucket8740FCE8', 'Arn'],
-                    },
-                    {
-                      'Fn::Join': [
-                        '',
-                        [
-                          {
-                            'Fn::GetAtt': ['TesterPipelineSecureBucket8740FCE8', 'Arn'],
-                          },
-                          '/*',
-                        ],
-                      ],
-                    },
-                  ],
-                },
-                {
-                  Action: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
-                  Effect: 'Allow',
-                  Resource: {
-                    Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
-                  },
-                },
-              ],
-              Version: '2012-10-17',
-            },
-            PolicyName: 'TesterPipelineDeployRoleDefaultPolicyBB88BBD9',
-            Roles: [
-              {
-                Ref: 'TesterPipelineDeployRole20D5B4C2',
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
+  // /**
+  //  * CodePipeline deploy stage IAM role default policy resource configuration test
+  //  */
+  // test(`${testNamePrefix} CodePipeline deploy stage IAM role default policy resource configuration test`, () => {
+  //   cdk.assertions.Template.fromStack(stack).templateMatches({
+  //     Resources: {
+  //       TesterPipelineDeployRoleDefaultPolicyBB88BBD9: {
+  //         Type: 'AWS::IAM::Policy',
+  //         Properties: {
+  //           PolicyDocument: {
+  //             Statement: [
+  //               {
+  //                 Action: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
+  //                 Effect: 'Allow',
+  //                 Resource: [
+  //                   {
+  //                     'Fn::Join': [
+  //                       '',
+  //                       [
+  //                         'arn:',
+  //                         {
+  //                           Ref: 'AWS::Partition',
+  //                         },
+  //                         ':logs:',
+  //                         {
+  //                           Ref: 'AWS::Region',
+  //                         },
+  //                         ':',
+  //                         {
+  //                           Ref: 'AWS::AccountId',
+  //                         },
+  //                         ':log-group:/aws/codebuild/',
+  //                         {
+  //                           Ref: 'TesterPipelineTesterProject3BEC9F5A',
+  //                         },
+  //                       ],
+  //                     ],
+  //                   },
+  //                   {
+  //                     'Fn::Join': [
+  //                       '',
+  //                       [
+  //                         'arn:',
+  //                         {
+  //                           Ref: 'AWS::Partition',
+  //                         },
+  //                         ':logs:',
+  //                         {
+  //                           Ref: 'AWS::Region',
+  //                         },
+  //                         ':',
+  //                         {
+  //                           Ref: 'AWS::AccountId',
+  //                         },
+  //                         ':log-group:/aws/codebuild/',
+  //                         {
+  //                           Ref: 'TesterPipelineTesterProject3BEC9F5A',
+  //                         },
+  //                         ':*',
+  //                       ],
+  //                     ],
+  //                   },
+  //                 ],
+  //               },
+  //               {
+  //                 Action: [
+  //                   'codebuild:CreateReportGroup',
+  //                   'codebuild:CreateReport',
+  //                   'codebuild:UpdateReport',
+  //                   'codebuild:BatchPutTestCases',
+  //                   'codebuild:BatchPutCodeCoverages',
+  //                 ],
+  //                 Effect: 'Allow',
+  //                 Resource: {
+  //                   'Fn::Join': [
+  //                     '',
+  //                     [
+  //                       'arn:',
+  //                       {
+  //                         Ref: 'AWS::Partition',
+  //                       },
+  //                       ':codebuild:',
+  //                       {
+  //                         Ref: 'AWS::Region',
+  //                       },
+  //                       ':',
+  //                       {
+  //                         Ref: 'AWS::AccountId',
+  //                       },
+  //                       ':report-group/',
+  //                       {
+  //                         Ref: 'TesterPipelineTesterProject3BEC9F5A',
+  //                       },
+  //                       '-*',
+  //                     ],
+  //                   ],
+  //                 },
+  //               },
+  //               {
+  //                 Action: ['kms:Decrypt', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
+  //                 Effect: 'Allow',
+  //                 Resource: {
+  //                   Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
+  //                 },
+  //               },
+  //               {
+  //                 Action: [
+  //                   's3:GetObject*',
+  //                   's3:GetBucket*',
+  //                   's3:List*',
+  //                   's3:DeleteObject*',
+  //                   's3:PutObject',
+  //                   's3:PutObjectLegalHold',
+  //                   's3:PutObjectRetention',
+  //                   's3:PutObjectTagging',
+  //                   's3:PutObjectVersionTagging',
+  //                   's3:Abort*',
+  //                 ],
+  //                 Effect: 'Allow',
+  //                 Resource: [
+  //                   {
+  //                     'Fn::GetAtt': ['TesterPipelineSecureBucket8740FCE8', 'Arn'],
+  //                   },
+  //                   {
+  //                     'Fn::Join': [
+  //                       '',
+  //                       [
+  //                         {
+  //                           'Fn::GetAtt': ['TesterPipelineSecureBucket8740FCE8', 'Arn'],
+  //                         },
+  //                         '/*',
+  //                       ],
+  //                     ],
+  //                   },
+  //                 ],
+  //               },
+  //               {
+  //                 Action: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
+  //                 Effect: 'Allow',
+  //                 Resource: {
+  //                   Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
+  //                 },
+  //               },
+  //             ],
+  //             Version: '2012-10-17',
+  //           },
+  //           PolicyName: 'TesterPipelineDeployRoleDefaultPolicyBB88BBD9',
+  //           Roles: [
+  //             {
+  //               Ref: 'TesterPipelineDeployAdminRole3DA8CFF7',
+  //             },
+  //           ],
+  //         },
+  //       },
+  //     },
+  //   });
+  // });
 
   /**
    * CodePipeline config repository events role resource configuration test
@@ -1105,7 +1105,7 @@ describe('TesterPipelineStack', () => {
             },
             Name: 'aws-accelerator-tester-project',
             ServiceRole: {
-              'Fn::GetAtt': ['TesterPipelineDeployRole20D5B4C2', 'Arn'],
+              'Fn::GetAtt': ['TesterPipelineDeployAdminRole3DA8CFF7', 'Arn'],
             },
             Source: {
               BuildSpec: {

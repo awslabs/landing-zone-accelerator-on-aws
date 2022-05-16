@@ -431,7 +431,7 @@ export class InstallerStack extends cdk.Stack {
     /**
      * Install Stage
      */
-    const installerRole = new cdk.aws_iam.Role(this, 'InstallerRole', {
+    const installerRole = new cdk.aws_iam.Role(this, 'InstallerAdminRole', {
       assumedBy: new cdk.aws_iam.ServicePrincipal('codebuild.amazonaws.com'),
       // TODO: Lock this down to just the pipeline and cloudformation actions needed
       managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
@@ -595,7 +595,7 @@ export class InstallerStack extends cdk.Stack {
 
     // [Error at /AWSAccelerator-InstallerStack/InstallerRole/Resource]
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
-    NagSuppressions.addResourceSuppressionsByPath(this, '/AWSAccelerator-InstallerStack/InstallerRole/Resource', [
+    NagSuppressions.addResourceSuppressionsByPath(this, '/AWSAccelerator-InstallerStack/InstallerAdminRole/Resource', [
       {
         id: 'AwsSolutions-IAM4',
         reason: 'Using AdministratorAccessRole to deploy accelerator pipeline',
@@ -607,7 +607,7 @@ export class InstallerStack extends cdk.Stack {
     // rule suppression with evidence for those permission.
     NagSuppressions.addResourceSuppressionsByPath(
       this,
-      '/AWSAccelerator-InstallerStack/InstallerRole/DefaultPolicy/Resource',
+      '/AWSAccelerator-InstallerStack/InstallerAdminRole/DefaultPolicy/Resource',
       [
         {
           id: 'AwsSolutions-IAM5',
