@@ -1511,7 +1511,7 @@ describe('PipelineStack', () => {
               Type: 'LINUX_CONTAINER',
             },
             ServiceRole: {
-              'Fn::GetAtt': ['PipelineToolkitRoleF9E508C4', 'Arn'],
+              'Fn::GetAtt': ['AdminCdkToolkitRole292E163A', 'Arn'],
             },
             Source: {
               BuildSpec: {
@@ -1542,152 +1542,6 @@ describe('PipelineStack', () => {
     });
   });
 
-  /**
-   * PipelineToolkitRoleDefaultPolicy resource configuration test
-   */
-  test(`${testNamePrefix} PipelineToolkitRoleDefaultPolicy resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        PipelineToolkitRoleDefaultPolicy25FA36B0: {
-          Type: 'AWS::IAM::Policy',
-          Properties: {
-            PolicyDocument: {
-              Statement: [
-                {
-                  Action: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
-                  Effect: 'Allow',
-                  Resource: [
-                    {
-                      'Fn::Join': [
-                        '',
-                        [
-                          'arn:',
-                          {
-                            Ref: 'AWS::Partition',
-                          },
-                          ':logs:',
-                          {
-                            Ref: 'AWS::Region',
-                          },
-                          ':',
-                          {
-                            Ref: 'AWS::AccountId',
-                          },
-                          ':log-group:/aws/codebuild/',
-                          {
-                            Ref: 'PipelineToolkitProjectBCBD6910',
-                          },
-                        ],
-                      ],
-                    },
-                    {
-                      'Fn::Join': [
-                        '',
-                        [
-                          'arn:',
-                          {
-                            Ref: 'AWS::Partition',
-                          },
-                          ':logs:',
-                          {
-                            Ref: 'AWS::Region',
-                          },
-                          ':',
-                          {
-                            Ref: 'AWS::AccountId',
-                          },
-                          ':log-group:/aws/codebuild/',
-                          {
-                            Ref: 'PipelineToolkitProjectBCBD6910',
-                          },
-                          ':*',
-                        ],
-                      ],
-                    },
-                  ],
-                },
-                {
-                  Action: [
-                    'codebuild:CreateReportGroup',
-                    'codebuild:CreateReport',
-                    'codebuild:UpdateReport',
-                    'codebuild:BatchPutTestCases',
-                    'codebuild:BatchPutCodeCoverages',
-                  ],
-                  Effect: 'Allow',
-                  Resource: {
-                    'Fn::Join': [
-                      '',
-                      [
-                        'arn:',
-                        {
-                          Ref: 'AWS::Partition',
-                        },
-                        ':codebuild:',
-                        {
-                          Ref: 'AWS::Region',
-                        },
-                        ':',
-                        {
-                          Ref: 'AWS::AccountId',
-                        },
-                        ':report-group/',
-                        {
-                          Ref: 'PipelineToolkitProjectBCBD6910',
-                        },
-                        '-*',
-                      ],
-                    ],
-                  },
-                },
-                {
-                  Action: ['kms:Decrypt', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
-                  Effect: 'Allow',
-                  Resource: {
-                    Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
-                  },
-                },
-                {
-                  Action: ['s3:GetObject*', 's3:GetBucket*', 's3:List*'],
-                  Effect: 'Allow',
-                  Resource: [
-                    {
-                      'Fn::GetAtt': ['PipelineSecureBucketB3EEB324', 'Arn'],
-                    },
-                    {
-                      'Fn::Join': [
-                        '',
-                        [
-                          {
-                            'Fn::GetAtt': ['PipelineSecureBucketB3EEB324', 'Arn'],
-                          },
-                          '/*',
-                        ],
-                      ],
-                    },
-                  ],
-                },
-                {
-                  Action: ['kms:Decrypt', 'kms:DescribeKey'],
-                  Effect: 'Allow',
-                  Resource: {
-                    Ref: 'SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
-                  },
-                },
-              ],
-              Version: '2012-10-17',
-            },
-            PolicyName: 'PipelineToolkitRoleDefaultPolicy25FA36B0',
-            Roles: [
-              {
-                Ref: 'PipelineToolkitRoleF9E508C4',
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
 
   /**
    * PipelineToolkitRole resource configuration test
@@ -1695,7 +1549,7 @@ describe('PipelineStack', () => {
   test(`${testNamePrefix} PipelineToolkitRole resource configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        PipelineToolkitRoleF9E508C4: {
+        AdminCdkToolkitRole292E163A: {
           Type: 'AWS::IAM::Role',
           Properties: {
             AssumeRolePolicyDocument: {

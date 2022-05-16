@@ -29,6 +29,7 @@ import { AcceleratorToolkitCommand } from './toolkit';
  *
  */
 export interface AcceleratorPipelineProps {
+  readonly toolkitRole: cdk.aws_iam.Role;
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
   readonly enableApprovalStage: boolean;
@@ -51,7 +52,6 @@ export interface AcceleratorPipelineProps {
  */
 export class AcceleratorPipeline extends Construct {
   private readonly pipelineRole: iam.Role;
-  private readonly toolkitRole: iam.Role;
   private readonly toolkitProject: codebuild.PipelineProject;
   private readonly buildOutput: codepipeline.Artifact;
   private readonly acceleratorRepoArtifact: codepipeline.Artifact;
@@ -208,15 +208,11 @@ export class AcceleratorPipeline extends Construct {
     /**
      * Deploy Stage
      */
-    this.toolkitRole = new iam.Role(this, 'ToolkitRole', {
-      assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
-      managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
-    });
 
     this.toolkitProject = new codebuild.PipelineProject(this, 'ToolkitProject', {
       projectName: props.qualifier ? `${props.qualifier}-toolkit-project` : 'AWSAccelerator-ToolkitProject',
       encryptionKey: installerKey,
-      role: this.toolkitRole,
+      role: props.toolkitRole,
       timeout: cdk.Duration.hours(5),
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',

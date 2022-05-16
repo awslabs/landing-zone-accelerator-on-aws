@@ -224,306 +224,12 @@ describe('InstallerStack', () => {
   });
 
   /**
-   * Management account pipeline stack - Installer project iam role default policy resource test
-   */
-  test(`${testNamePrefix} Management account pipeline stack - Installer project iam role default policy resource test`, () => {
-    cdk.assertions.Template.fromStack(managementAccountStackWithTesterPipeline).templateMatches({
-      Resources: {
-        InstallerRoleDefaultPolicyC01C83A5: {
-          Type: 'AWS::IAM::Policy',
-          Properties: {
-            PolicyDocument: {
-              Statement: [
-                {
-                  Action: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
-                  Effect: 'Allow',
-                  Resource: [
-                    {
-                      'Fn::Join': [
-                        '',
-                        [
-                          'arn:',
-                          {
-                            Ref: 'AWS::Partition',
-                          },
-                          ':logs:',
-                          {
-                            Ref: 'AWS::Region',
-                          },
-                          ':',
-                          {
-                            Ref: 'AWS::AccountId',
-                          },
-                          ':log-group:/aws/codebuild/',
-                          {
-                            Ref: 'InstallerProject879FF821',
-                          },
-                        ],
-                      ],
-                    },
-                    {
-                      'Fn::Join': [
-                        '',
-                        [
-                          'arn:',
-                          {
-                            Ref: 'AWS::Partition',
-                          },
-                          ':logs:',
-                          {
-                            Ref: 'AWS::Region',
-                          },
-                          ':',
-                          {
-                            Ref: 'AWS::AccountId',
-                          },
-                          ':log-group:/aws/codebuild/',
-                          {
-                            Ref: 'InstallerProject879FF821',
-                          },
-                          ':*',
-                        ],
-                      ],
-                    },
-                  ],
-                },
-                {
-                  Action: [
-                    'codebuild:CreateReportGroup',
-                    'codebuild:CreateReport',
-                    'codebuild:UpdateReport',
-                    'codebuild:BatchPutTestCases',
-                    'codebuild:BatchPutCodeCoverages',
-                  ],
-                  Effect: 'Allow',
-                  Resource: {
-                    'Fn::Join': [
-                      '',
-                      [
-                        'arn:',
-                        {
-                          Ref: 'AWS::Partition',
-                        },
-                        ':codebuild:',
-                        {
-                          Ref: 'AWS::Region',
-                        },
-                        ':',
-                        {
-                          Ref: 'AWS::AccountId',
-                        },
-                        ':report-group/',
-                        {
-                          Ref: 'InstallerProject879FF821',
-                        },
-                        '-*',
-                      ],
-                    ],
-                  },
-                },
-                {
-                  Action: ['kms:Decrypt', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
-                  Effect: 'Allow',
-                  Resource: {
-                    'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
-                  },
-                },
-                {
-                  Action: ['s3:GetObject*', 's3:GetBucket*', 's3:List*'],
-                  Effect: 'Allow',
-                  Resource: [
-                    {
-                      'Fn::GetAtt': ['SecureBucket747CD8C0', 'Arn'],
-                    },
-                    {
-                      'Fn::Join': [
-                        '',
-                        [
-                          {
-                            'Fn::GetAtt': ['SecureBucket747CD8C0', 'Arn'],
-                          },
-                          '/*',
-                        ],
-                      ],
-                    },
-                  ],
-                },
-                {
-                  Action: ['kms:Decrypt', 'kms:DescribeKey'],
-                  Effect: 'Allow',
-                  Resource: {
-                    'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
-                  },
-                },
-              ],
-              Version: '2012-10-17',
-            },
-            PolicyName: 'InstallerRoleDefaultPolicyC01C83A5',
-            Roles: [
-              {
-                Ref: 'InstallerRole13277E70',
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * External pipeline account stack - Installer project iam role default policy resource test
-   */
-  test(`${testNamePrefix} External pipeline account stack - Installer project iam role default policy resource test`, () => {
-    cdk.assertions.Template.fromStack(externalPipelineAccountStackWithTesterPipeline).templateMatches({
-      Resources: {
-        InstallerRoleDefaultPolicyC01C83A5: {
-          Type: 'AWS::IAM::Policy',
-          Properties: {
-            PolicyDocument: {
-              Statement: [
-                {
-                  Action: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
-                  Effect: 'Allow',
-                  Resource: [
-                    {
-                      'Fn::Join': [
-                        '',
-                        [
-                          'arn:',
-                          {
-                            Ref: 'AWS::Partition',
-                          },
-                          ':logs:',
-                          {
-                            Ref: 'AWS::Region',
-                          },
-                          ':',
-                          {
-                            Ref: 'AWS::AccountId',
-                          },
-                          ':log-group:/aws/codebuild/',
-                          {
-                            Ref: 'InstallerProject879FF821',
-                          },
-                        ],
-                      ],
-                    },
-                    {
-                      'Fn::Join': [
-                        '',
-                        [
-                          'arn:',
-                          {
-                            Ref: 'AWS::Partition',
-                          },
-                          ':logs:',
-                          {
-                            Ref: 'AWS::Region',
-                          },
-                          ':',
-                          {
-                            Ref: 'AWS::AccountId',
-                          },
-                          ':log-group:/aws/codebuild/',
-                          {
-                            Ref: 'InstallerProject879FF821',
-                          },
-                          ':*',
-                        ],
-                      ],
-                    },
-                  ],
-                },
-                {
-                  Action: [
-                    'codebuild:CreateReportGroup',
-                    'codebuild:CreateReport',
-                    'codebuild:UpdateReport',
-                    'codebuild:BatchPutTestCases',
-                    'codebuild:BatchPutCodeCoverages',
-                  ],
-                  Effect: 'Allow',
-                  Resource: {
-                    'Fn::Join': [
-                      '',
-                      [
-                        'arn:',
-                        {
-                          Ref: 'AWS::Partition',
-                        },
-                        ':codebuild:',
-                        {
-                          Ref: 'AWS::Region',
-                        },
-                        ':',
-                        {
-                          Ref: 'AWS::AccountId',
-                        },
-                        ':report-group/',
-                        {
-                          Ref: 'InstallerProject879FF821',
-                        },
-                        '-*',
-                      ],
-                    ],
-                  },
-                },
-                {
-                  Action: ['kms:Decrypt', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
-                  Effect: 'Allow',
-                  Resource: {
-                    'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
-                  },
-                },
-                {
-                  Action: ['s3:GetObject*', 's3:GetBucket*', 's3:List*'],
-                  Effect: 'Allow',
-                  Resource: [
-                    {
-                      'Fn::GetAtt': ['SecureBucket747CD8C0', 'Arn'],
-                    },
-                    {
-                      'Fn::Join': [
-                        '',
-                        [
-                          {
-                            'Fn::GetAtt': ['SecureBucket747CD8C0', 'Arn'],
-                          },
-                          '/*',
-                        ],
-                      ],
-                    },
-                  ],
-                },
-                {
-                  Action: ['kms:Decrypt', 'kms:DescribeKey'],
-                  Effect: 'Allow',
-                  Resource: {
-                    'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
-                  },
-                },
-              ],
-              Version: '2012-10-17',
-            },
-            PolicyName: 'InstallerRoleDefaultPolicyC01C83A5',
-            Roles: [
-              {
-                Ref: 'InstallerRole13277E70',
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
-
-  /**
    * Management account pipeline stack - Installer project iam role resource test
    */
   test(`${testNamePrefix} Management account pipeline stack - Installer project iam role resource test`, () => {
     cdk.assertions.Template.fromStack(managementAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        InstallerRole13277E70: {
+        InstallerAdminRole7DEE4AC8: {
           Properties: {
             AssumeRolePolicyDocument: {
               Statement: [
@@ -564,7 +270,7 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} External pipeline account stack - Installer project iam role resource test`, () => {
     cdk.assertions.Template.fromStack(externalPipelineAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        InstallerRole13277E70: {
+        InstallerAdminRole7DEE4AC8: {
           Properties: {
             AssumeRolePolicyDocument: {
               Statement: [
@@ -699,7 +405,7 @@ describe('InstallerStack', () => {
             },
             Name: 'AWSAccelerator-InstallerProject',
             ServiceRole: {
-              'Fn::GetAtt': ['InstallerRole13277E70', 'Arn'],
+              'Fn::GetAtt': ['InstallerAdminRole7DEE4AC8', 'Arn'],
             },
             Source: {
               BuildSpec: {
@@ -909,7 +615,7 @@ describe('InstallerStack', () => {
               ],
             },
             ServiceRole: {
-              'Fn::GetAtt': ['InstallerRole13277E70', 'Arn'],
+              'Fn::GetAtt': ['InstallerAdminRole7DEE4AC8', 'Arn'],
             },
             Source: {
               BuildSpec: {
@@ -1078,7 +784,7 @@ describe('InstallerStack', () => {
             },
             Name: 'AWSAccelerator-InstallerProject',
             ServiceRole: {
-              'Fn::GetAtt': ['InstallerRole13277E70', 'Arn'],
+              'Fn::GetAtt': ['InstallerAdminRole7DEE4AC8', 'Arn'],
             },
             Source: {
               BuildSpec: {
@@ -1281,7 +987,7 @@ describe('InstallerStack', () => {
               ],
             },
             ServiceRole: {
-              'Fn::GetAtt': ['InstallerRole13277E70', 'Arn'],
+              'Fn::GetAtt': ['InstallerAdminRole7DEE4AC8', 'Arn'],
             },
             Source: {
               BuildSpec: {

@@ -49,8 +49,14 @@ export class PipelineStack extends cdk.Stack {
       stringValue: version,
     });
 
+    const toolkitRole = new cdk.aws_iam.Role(this, 'AdminCdkToolkitRole', {
+      assumedBy: new cdk.aws_iam.ServicePrincipal('codebuild.amazonaws.com'),
+      managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
+    });
+
     // TODO: Add event to launch the Pipeline for new account events
     new pipeline.AcceleratorPipeline(this, 'Pipeline', {
+      toolkitRole,
       ...props,
     });
 
@@ -99,7 +105,7 @@ export class PipelineStack extends cdk.Stack {
     ]);
 
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
-    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/Pipeline/ToolkitRole/Resource`, [
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/AdminCdkToolkitRole/Resource`, [
       {
         id: 'AwsSolutions-IAM4',
         reason: 'Pipeline toolkit project role is built by cdk.',
@@ -109,7 +115,7 @@ export class PipelineStack extends cdk.Stack {
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
     NagSuppressions.addResourceSuppressionsByPath(
       this,
-      `${this.stackName}/Pipeline/ToolkitRole/DefaultPolicy/Resource`,
+      `${this.stackName}/AdminCdkToolkitRole/DefaultPolicy/Resource`,
       [
         {
           id: 'AwsSolutions-IAM5',
