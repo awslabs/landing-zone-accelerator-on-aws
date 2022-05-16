@@ -121,6 +121,12 @@ describe('GuardDutyMembers', () => {
                       Resource: '*',
                       Sid: 'GuardDutyCreateMembersTaskGuardDutyActions',
                     },
+                    {
+                      Action: ['iam:CreateServiceLinkedRole'],
+                      Effect: 'Allow',
+                      Resource: ['*'],
+                      Sid: 'ServiceLinkedRoleSecurityHub',
+                    },
                   ],
                   Version: '2012-10-17',
                 },
