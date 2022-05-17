@@ -11,6 +11,18 @@ Object {
         "aws",
       ],
     },
+    "SolutionHelperAnonymousDataToAWS62E4FDE2": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Fn::FindInMap": Array [
+            "SolutionHelperAnonymousData14B64A81",
+            "SendAnonymousData",
+            "Data",
+          ],
+        },
+        "Yes",
+      ],
+    },
     "UseCodeCommitCondition": Object {
       "Fn::Equals": Array [
         Object {
@@ -41,6 +53,11 @@ Object {
       },
       "aws-us-gov": Object {
         "regionName": "us-gov-west-1",
+      },
+    },
+    "SolutionHelperAnonymousData14B64A81": Object {
+      "SendAnonymousData": Object {
+        "Data": "Yes",
       },
     },
   },
@@ -1767,6 +1784,221 @@ phases:
         },
       },
       "Type": "AWS::S3::BucketPolicy",
+    },
+    "SolutionHelper4825923B": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DependsOn": Array [
+        "SolutionHelperServiceRoleF70C0E2A",
+      ],
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Code": Object {
+          "ZipFile": "
+      const AWS = require('aws-sdk');
+      const response = require('cfn-response');
+      const https = require('https');
+      
+      async function post(url, data) {
+          const dataString = JSON.stringify(data)
+          const options = {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              timeout: 1000, // in ms
+          }
+          
+          return new Promise((resolve, reject) => {
+              const req = https.request(url, options, (res) => {
+                  if (res.statusCode < 200 || res.statusCode > 299) {
+                      return reject(new Error('HTTP status code: ', res.statusCode))
+                  }
+                  const body = []
+                  res.on('data', (chunk) => body.push(chunk))
+                  res.on('end', () => {
+                      const resString = Buffer.concat(body).toString()
+                      resolve(resString)
+                  })
+              })
+              req.on('error', (err) => {
+                  reject(err)
+              })
+              req.on('timeout', () => {
+                  req.destroy()
+                  reject(new Error('Request time out'))
+              })
+              req.write(dataString)
+              req.end()
+          })
+      }
+      
+      function uuidv4() {
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+              var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+              return v.toString(16);
+          });
+      }
+      
+      
+      function sanatizeData(resourceProperties) {
+          const keysToExclude = ['ServiceToken', 'Resource', 'SolutionId', 'UUID'];
+          return Object.keys(resourceProperties).reduce((sanatizedData, key) => {
+              if (!keysToExclude.includes(key)) {
+                  sanatizedData[key] = resourceProperties[key];
+              }
+              return sanatizedData;
+          }, {})
+      }
+      
+      exports.handler = async function (event, context) {
+          console.log(JSON.stringify(event, null, 4));
+          const requestType = event.RequestType;
+          const resourceProperties = event.ResourceProperties;
+          const resource = resourceProperties.Resource;
+          let data = {};
+          try {
+              if (resource === 'UUID' && requestType === 'Create') {
+                  data['UUID'] = uuidv4();
+              }
+              if (resource === 'AnonymousMetric') {
+                  const currentDate = new Date()
+                  data = sanatizeData(resourceProperties);
+                  data['RequestType'] = requestType;
+                  const payload = {
+                      Solution: resourceProperties.SolutionId,
+                      UUID: resourceProperties.UUID,
+                      TimeStamp: currentDate.toISOString(),
+                      Data: data
+                  }
+      
+                  console.log('Sending metrics data: ', JSON.stringify(payload, null, 2));
+                  await post('https://metrics.awssolutionsbuilder.com/generic', payload);
+                  console.log('Sent Data');
+              }
+          } catch (error) {
+              console.log(error);
+          }
+      
+          await response.send(event, context, response.SUCCESS, data);
+          return;
+      } 
+      ",
+        },
+        "Description": "This function generates UUID for each deployment and sends anonymous data to the AWS Solutions team",
+        "FunctionName": "LandingZoneAccelerator-SolutionHelper",
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelperServiceRoleF70C0E2A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "SolutionHelperCreateUniqueIDAF03406A": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "Resource": "UUID",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::CreateUUID",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SolutionHelperSendAnonymousData9B19E31D": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "BranchName": Object {
+          "Ref": "RepositoryBranchName",
+        },
+        "Region": Object {
+          "Ref": "AWS::Region",
+        },
+        "RepositoryName": Object {
+          "Ref": "RepositoryName",
+        },
+        "RepositoryOwner": Object {
+          "Ref": "RepositoryOwner",
+        },
+        "RepositorySource": Object {
+          "Ref": "RepositorySource",
+        },
+        "Resource": "AnonymousMetric",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+        "SolutionId": "SO0199",
+        "UUID": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelperCreateUniqueIDAF03406A",
+            "UUID",
+          ],
+        },
+      },
+      "Type": "Custom::AnonymousData",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SolutionHelperServiceRoleF70C0E2A": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
     },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
@@ -1823,6 +2055,18 @@ Object {
         "aws",
       ],
     },
+    "SolutionHelperAnonymousDataToAWS62E4FDE2": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Fn::FindInMap": Array [
+            "SolutionHelperAnonymousData14B64A81",
+            "SendAnonymousData",
+            "Data",
+          ],
+        },
+        "Yes",
+      ],
+    },
     "UseCodeCommitCondition": Object {
       "Fn::Equals": Array [
         Object {
@@ -1853,6 +2097,11 @@ Object {
       },
       "aws-us-gov": Object {
         "regionName": "us-gov-west-1",
+      },
+    },
+    "SolutionHelperAnonymousData14B64A81": Object {
+      "SendAnonymousData": Object {
+        "Data": "Yes",
       },
     },
   },
@@ -3570,6 +3819,221 @@ phases:
       },
       "Type": "AWS::S3::BucketPolicy",
     },
+    "SolutionHelper4825923B": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DependsOn": Array [
+        "SolutionHelperServiceRoleF70C0E2A",
+      ],
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Code": Object {
+          "ZipFile": "
+      const AWS = require('aws-sdk');
+      const response = require('cfn-response');
+      const https = require('https');
+      
+      async function post(url, data) {
+          const dataString = JSON.stringify(data)
+          const options = {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              timeout: 1000, // in ms
+          }
+          
+          return new Promise((resolve, reject) => {
+              const req = https.request(url, options, (res) => {
+                  if (res.statusCode < 200 || res.statusCode > 299) {
+                      return reject(new Error('HTTP status code: ', res.statusCode))
+                  }
+                  const body = []
+                  res.on('data', (chunk) => body.push(chunk))
+                  res.on('end', () => {
+                      const resString = Buffer.concat(body).toString()
+                      resolve(resString)
+                  })
+              })
+              req.on('error', (err) => {
+                  reject(err)
+              })
+              req.on('timeout', () => {
+                  req.destroy()
+                  reject(new Error('Request time out'))
+              })
+              req.write(dataString)
+              req.end()
+          })
+      }
+      
+      function uuidv4() {
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+              var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+              return v.toString(16);
+          });
+      }
+      
+      
+      function sanatizeData(resourceProperties) {
+          const keysToExclude = ['ServiceToken', 'Resource', 'SolutionId', 'UUID'];
+          return Object.keys(resourceProperties).reduce((sanatizedData, key) => {
+              if (!keysToExclude.includes(key)) {
+                  sanatizedData[key] = resourceProperties[key];
+              }
+              return sanatizedData;
+          }, {})
+      }
+      
+      exports.handler = async function (event, context) {
+          console.log(JSON.stringify(event, null, 4));
+          const requestType = event.RequestType;
+          const resourceProperties = event.ResourceProperties;
+          const resource = resourceProperties.Resource;
+          let data = {};
+          try {
+              if (resource === 'UUID' && requestType === 'Create') {
+                  data['UUID'] = uuidv4();
+              }
+              if (resource === 'AnonymousMetric') {
+                  const currentDate = new Date()
+                  data = sanatizeData(resourceProperties);
+                  data['RequestType'] = requestType;
+                  const payload = {
+                      Solution: resourceProperties.SolutionId,
+                      UUID: resourceProperties.UUID,
+                      TimeStamp: currentDate.toISOString(),
+                      Data: data
+                  }
+      
+                  console.log('Sending metrics data: ', JSON.stringify(payload, null, 2));
+                  await post('https://metrics.awssolutionsbuilder.com/generic', payload);
+                  console.log('Sent Data');
+              }
+          } catch (error) {
+              console.log(error);
+          }
+      
+          await response.send(event, context, response.SUCCESS, data);
+          return;
+      } 
+      ",
+        },
+        "Description": "This function generates UUID for each deployment and sends anonymous data to the AWS Solutions team",
+        "FunctionName": "LandingZoneAccelerator-SolutionHelper",
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelperServiceRoleF70C0E2A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "SolutionHelperCreateUniqueIDAF03406A": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "Resource": "UUID",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::CreateUUID",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SolutionHelperSendAnonymousData9B19E31D": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "BranchName": Object {
+          "Ref": "RepositoryBranchName",
+        },
+        "Region": Object {
+          "Ref": "AWS::Region",
+        },
+        "RepositoryName": Object {
+          "Ref": "RepositoryName",
+        },
+        "RepositoryOwner": Object {
+          "Ref": "RepositoryOwner",
+        },
+        "RepositorySource": Object {
+          "Ref": "RepositorySource",
+        },
+        "Resource": "AnonymousMetric",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+        "SolutionId": "SO0199",
+        "UUID": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelperCreateUniqueIDAF03406A",
+            "UUID",
+          ],
+        },
+      },
+      "Type": "Custom::AnonymousData",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SolutionHelperServiceRoleF70C0E2A": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
         "Name": Object {
@@ -3625,6 +4089,18 @@ Object {
         "aws",
       ],
     },
+    "SolutionHelperAnonymousDataToAWS62E4FDE2": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Fn::FindInMap": Array [
+            "SolutionHelperAnonymousData14B64A81",
+            "SendAnonymousData",
+            "Data",
+          ],
+        },
+        "Yes",
+      ],
+    },
     "UseCodeCommitCondition": Object {
       "Fn::Equals": Array [
         Object {
@@ -3655,6 +4131,11 @@ Object {
       },
       "aws-us-gov": Object {
         "regionName": "us-gov-west-1",
+      },
+    },
+    "SolutionHelperAnonymousData14B64A81": Object {
+      "SendAnonymousData": Object {
+        "Data": "Yes",
       },
     },
   },
@@ -5245,6 +5726,221 @@ phases:
       },
       "Type": "AWS::S3::BucketPolicy",
     },
+    "SolutionHelper4825923B": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DependsOn": Array [
+        "SolutionHelperServiceRoleF70C0E2A",
+      ],
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Code": Object {
+          "ZipFile": "
+      const AWS = require('aws-sdk');
+      const response = require('cfn-response');
+      const https = require('https');
+      
+      async function post(url, data) {
+          const dataString = JSON.stringify(data)
+          const options = {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              timeout: 1000, // in ms
+          }
+          
+          return new Promise((resolve, reject) => {
+              const req = https.request(url, options, (res) => {
+                  if (res.statusCode < 200 || res.statusCode > 299) {
+                      return reject(new Error('HTTP status code: ', res.statusCode))
+                  }
+                  const body = []
+                  res.on('data', (chunk) => body.push(chunk))
+                  res.on('end', () => {
+                      const resString = Buffer.concat(body).toString()
+                      resolve(resString)
+                  })
+              })
+              req.on('error', (err) => {
+                  reject(err)
+              })
+              req.on('timeout', () => {
+                  req.destroy()
+                  reject(new Error('Request time out'))
+              })
+              req.write(dataString)
+              req.end()
+          })
+      }
+      
+      function uuidv4() {
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+              var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+              return v.toString(16);
+          });
+      }
+      
+      
+      function sanatizeData(resourceProperties) {
+          const keysToExclude = ['ServiceToken', 'Resource', 'SolutionId', 'UUID'];
+          return Object.keys(resourceProperties).reduce((sanatizedData, key) => {
+              if (!keysToExclude.includes(key)) {
+                  sanatizedData[key] = resourceProperties[key];
+              }
+              return sanatizedData;
+          }, {})
+      }
+      
+      exports.handler = async function (event, context) {
+          console.log(JSON.stringify(event, null, 4));
+          const requestType = event.RequestType;
+          const resourceProperties = event.ResourceProperties;
+          const resource = resourceProperties.Resource;
+          let data = {};
+          try {
+              if (resource === 'UUID' && requestType === 'Create') {
+                  data['UUID'] = uuidv4();
+              }
+              if (resource === 'AnonymousMetric') {
+                  const currentDate = new Date()
+                  data = sanatizeData(resourceProperties);
+                  data['RequestType'] = requestType;
+                  const payload = {
+                      Solution: resourceProperties.SolutionId,
+                      UUID: resourceProperties.UUID,
+                      TimeStamp: currentDate.toISOString(),
+                      Data: data
+                  }
+      
+                  console.log('Sending metrics data: ', JSON.stringify(payload, null, 2));
+                  await post('https://metrics.awssolutionsbuilder.com/generic', payload);
+                  console.log('Sent Data');
+              }
+          } catch (error) {
+              console.log(error);
+          }
+      
+          await response.send(event, context, response.SUCCESS, data);
+          return;
+      } 
+      ",
+        },
+        "Description": "This function generates UUID for each deployment and sends anonymous data to the AWS Solutions team",
+        "FunctionName": "LandingZoneAccelerator-SolutionHelper",
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelperServiceRoleF70C0E2A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "SolutionHelperCreateUniqueIDAF03406A": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "Resource": "UUID",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::CreateUUID",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SolutionHelperSendAnonymousData9B19E31D": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "BranchName": Object {
+          "Ref": "RepositoryBranchName",
+        },
+        "Region": Object {
+          "Ref": "AWS::Region",
+        },
+        "RepositoryName": Object {
+          "Ref": "RepositoryName",
+        },
+        "RepositoryOwner": Object {
+          "Ref": "RepositoryOwner",
+        },
+        "RepositorySource": Object {
+          "Ref": "RepositorySource",
+        },
+        "Resource": "AnonymousMetric",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+        "SolutionId": "SO0199",
+        "UUID": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelperCreateUniqueIDAF03406A",
+            "UUID",
+          ],
+        },
+      },
+      "Type": "Custom::AnonymousData",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SolutionHelperServiceRoleF70C0E2A": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
         "Name": "/accelerator/AWSAccelerator-Test-InstallerStack/version",
@@ -5278,6 +5974,18 @@ Object {
         "aws",
       ],
     },
+    "SolutionHelperAnonymousDataToAWS62E4FDE2": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Fn::FindInMap": Array [
+            "SolutionHelperAnonymousData14B64A81",
+            "SendAnonymousData",
+            "Data",
+          ],
+        },
+        "Yes",
+      ],
+    },
     "UseCodeCommitCondition": Object {
       "Fn::Equals": Array [
         Object {
@@ -5308,6 +6016,11 @@ Object {
       },
       "aws-us-gov": Object {
         "regionName": "us-gov-west-1",
+      },
+    },
+    "SolutionHelperAnonymousData14B64A81": Object {
+      "SendAnonymousData": Object {
+        "Data": "Yes",
       },
     },
   },
@@ -6887,6 +7600,221 @@ phases:
         },
       },
       "Type": "AWS::S3::BucketPolicy",
+    },
+    "SolutionHelper4825923B": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DependsOn": Array [
+        "SolutionHelperServiceRoleF70C0E2A",
+      ],
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Code": Object {
+          "ZipFile": "
+      const AWS = require('aws-sdk');
+      const response = require('cfn-response');
+      const https = require('https');
+      
+      async function post(url, data) {
+          const dataString = JSON.stringify(data)
+          const options = {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              timeout: 1000, // in ms
+          }
+          
+          return new Promise((resolve, reject) => {
+              const req = https.request(url, options, (res) => {
+                  if (res.statusCode < 200 || res.statusCode > 299) {
+                      return reject(new Error('HTTP status code: ', res.statusCode))
+                  }
+                  const body = []
+                  res.on('data', (chunk) => body.push(chunk))
+                  res.on('end', () => {
+                      const resString = Buffer.concat(body).toString()
+                      resolve(resString)
+                  })
+              })
+              req.on('error', (err) => {
+                  reject(err)
+              })
+              req.on('timeout', () => {
+                  req.destroy()
+                  reject(new Error('Request time out'))
+              })
+              req.write(dataString)
+              req.end()
+          })
+      }
+      
+      function uuidv4() {
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+              var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+              return v.toString(16);
+          });
+      }
+      
+      
+      function sanatizeData(resourceProperties) {
+          const keysToExclude = ['ServiceToken', 'Resource', 'SolutionId', 'UUID'];
+          return Object.keys(resourceProperties).reduce((sanatizedData, key) => {
+              if (!keysToExclude.includes(key)) {
+                  sanatizedData[key] = resourceProperties[key];
+              }
+              return sanatizedData;
+          }, {})
+      }
+      
+      exports.handler = async function (event, context) {
+          console.log(JSON.stringify(event, null, 4));
+          const requestType = event.RequestType;
+          const resourceProperties = event.ResourceProperties;
+          const resource = resourceProperties.Resource;
+          let data = {};
+          try {
+              if (resource === 'UUID' && requestType === 'Create') {
+                  data['UUID'] = uuidv4();
+              }
+              if (resource === 'AnonymousMetric') {
+                  const currentDate = new Date()
+                  data = sanatizeData(resourceProperties);
+                  data['RequestType'] = requestType;
+                  const payload = {
+                      Solution: resourceProperties.SolutionId,
+                      UUID: resourceProperties.UUID,
+                      TimeStamp: currentDate.toISOString(),
+                      Data: data
+                  }
+      
+                  console.log('Sending metrics data: ', JSON.stringify(payload, null, 2));
+                  await post('https://metrics.awssolutionsbuilder.com/generic', payload);
+                  console.log('Sent Data');
+              }
+          } catch (error) {
+              console.log(error);
+          }
+      
+          await response.send(event, context, response.SUCCESS, data);
+          return;
+      } 
+      ",
+        },
+        "Description": "This function generates UUID for each deployment and sends anonymous data to the AWS Solutions team",
+        "FunctionName": "LandingZoneAccelerator-SolutionHelper",
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelperServiceRoleF70C0E2A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "SolutionHelperCreateUniqueIDAF03406A": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "Resource": "UUID",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::CreateUUID",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SolutionHelperSendAnonymousData9B19E31D": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "BranchName": Object {
+          "Ref": "RepositoryBranchName",
+        },
+        "Region": Object {
+          "Ref": "AWS::Region",
+        },
+        "RepositoryName": Object {
+          "Ref": "RepositoryName",
+        },
+        "RepositoryOwner": Object {
+          "Ref": "RepositoryOwner",
+        },
+        "RepositorySource": Object {
+          "Ref": "RepositorySource",
+        },
+        "Resource": "AnonymousMetric",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+        "SolutionId": "SO0199",
+        "UUID": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelperCreateUniqueIDAF03406A",
+            "UUID",
+          ],
+        },
+      },
+      "Type": "Custom::AnonymousData",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SolutionHelperServiceRoleF70C0E2A": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
     },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
