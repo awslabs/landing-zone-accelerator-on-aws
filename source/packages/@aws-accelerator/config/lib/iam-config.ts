@@ -35,7 +35,6 @@ export class IamConfigTypes {
     username: t.nonEmptyString,
     group: t.nonEmptyString,
     boundaryPolicy: t.optional(t.nonEmptyString),
-    passwordRotationScheduleInDays: t.optional(t.number),
   });
 
   /**
@@ -206,10 +205,6 @@ export class UserConfig implements t.TypeOf<typeof IamConfigTypes.userConfig> {
    * Group to add this user to.
    */
   readonly group: string = '';
-  /**
-   * Autorotation of password schedule
-   */
-  readonly passwordRotationScheduleInDays: number = 90;
 }
 
 /**

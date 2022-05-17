@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
+import { SynthUtils } from '@aws-cdk/assert';
 import { OperationsStack } from '../lib/stacks/operations-stack';
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
@@ -51,6 +52,13 @@ const stack = new OperationsStack(
  */
 describe('OperationsStack', () => {
   /**
+   * Snapshot test
+   */
+  test(`${testNamePrefix} Snapshot Test`, () => {
+    expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
+  });
+
+  /**
    * Number of IAM group resource test
    */
   test(`${testNamePrefix} IAM group resource count test`, () => {
@@ -82,7 +90,7 @@ describe('OperationsStack', () => {
    * Number of IAM role resource test
    */
   test(`${testNamePrefix} IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 4);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 1);
   });
 
   /**
