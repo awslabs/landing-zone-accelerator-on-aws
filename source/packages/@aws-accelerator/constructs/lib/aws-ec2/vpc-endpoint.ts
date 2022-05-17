@@ -13,32 +13,31 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { IVpc, ISubnet, ISecurityGroup } from './vpc';
-import { IRouteTable } from './route-table';
+
+import { ISecurityGroup } from './vpc';
 
 export interface IVpcEndpoint extends cdk.IResource {
   readonly vpcEndpointId: string;
   readonly service: string;
-  readonly vpc: IVpc;
+  readonly vpcId: string;
   readonly dnsName?: string;
   readonly hostedZoneId?: string;
 }
 
 export interface VpcEndpointProps {
-  readonly vpc: IVpc;
   readonly vpcEndpointType: cdk.aws_ec2.VpcEndpointType;
   readonly service: string;
-  readonly subnets?: ISubnet[];
+  readonly vpcId: string;
+  readonly subnets?: string[];
   readonly securityGroups?: ISecurityGroup[];
   readonly privateDnsEnabled?: boolean;
   readonly policyDocument?: cdk.aws_iam.PolicyDocument;
-  readonly routeTables?: IRouteTable[];
+  readonly routeTables?: string[];
 }
 
 export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
   public readonly vpcEndpointId: string;
-
-  public readonly vpc: IVpc;
+  public readonly vpcId: string;
   public readonly service: string;
   public readonly dnsName?: string;
   public readonly hostedZoneId?: string;
@@ -46,23 +45,26 @@ export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
   constructor(scope: Construct, id: string, props: VpcEndpointProps) {
     super(scope, id);
 
-    this.vpc = props.vpc;
     this.service = props.service;
+    this.vpcId = props.vpcId;
+
+    // Add constant for sagemaker conditionals
+    const sagemakerArray = ['notebook', 'studio'];
 
     if (props.vpcEndpointType === cdk.aws_ec2.VpcEndpointType.INTERFACE) {
       let serviceName = `com.amazonaws.${cdk.Stack.of(this).region}.${props.service}`;
-      if (props.service in ['notebook', 'studio']) {
+      if (sagemakerArray.includes(this.service)) {
         serviceName = `aws.sagemaker.${cdk.Stack.of(this).region}.${props.service}`;
       }
-      if (props.service in ['s3-global.accesspoint']) {
+      if (this.service === 's3-global.accesspoint') {
         serviceName = `com.aws.${props.service}`;
       }
 
       const resource = new cdk.aws_ec2.CfnVPCEndpoint(this, 'Resource', {
         serviceName,
         vpcEndpointType: props.vpcEndpointType,
-        vpcId: props.vpc.vpcId,
-        subnetIds: props.subnets?.map(item => item.subnetId),
+        vpcId: this.vpcId,
+        subnetIds: props.subnets,
         securityGroupIds: props.securityGroups?.map(item => item.securityGroupId),
         privateDnsEnabled: props.privateDnsEnabled,
         policyDocument: props.policyDocument,
@@ -70,7 +72,7 @@ export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
       this.vpcEndpointId = resource.ref;
 
       let dnsEntriesIndex = 0;
-      if (props.service in ['notebook', 'studio']) {
+      if (sagemakerArray.includes(this.service)) {
         // TODO Top 3 DNS names are not valid so selecting the 4th DNS
         // need to find a better way to identify the valid DNS for PHZ
         dnsEntriesIndex = 4;
@@ -84,8 +86,8 @@ export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
     if (props.vpcEndpointType === cdk.aws_ec2.VpcEndpointType.GATEWAY) {
       const resource = new cdk.aws_ec2.CfnVPCEndpoint(this, 'Resource', {
         serviceName: new cdk.aws_ec2.GatewayVpcEndpointAwsService(props.service).name,
-        vpcId: props.vpc.vpcId,
-        routeTableIds: props.routeTables?.map(item => item.routeTableId),
+        vpcId: this.vpcId,
+        routeTableIds: props.routeTables,
         policyDocument: props.policyDocument,
       });
       this.vpcEndpointId = resource.ref;

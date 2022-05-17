@@ -13,35 +13,34 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { IVpc } from '../aws-ec2/vpc';
 
 export interface IHostedZone extends cdk.IResource {
   readonly hostedZoneId: string;
   readonly hostedZoneName: string;
-  readonly vpc: IVpc;
+  readonly vpcId: string;
 }
 
 export interface HostedZoneProps {
   readonly hostedZoneName: string;
-  readonly vpc: IVpc;
+  readonly vpcId: string;
 }
 
 export class HostedZone extends cdk.Resource implements IHostedZone {
   readonly hostedZoneId: string;
   readonly hostedZoneName: string;
-  readonly vpc: IVpc;
+  readonly vpcId: string;
 
   constructor(scope: Construct, id: string, props: HostedZoneProps) {
     super(scope, id);
 
-    this.vpc = props.vpc;
+    this.vpcId = props.vpcId;
     this.hostedZoneName = props.hostedZoneName;
 
     const resource = new cdk.aws_route53.CfnHostedZone(this, 'Resource', {
       name: props.hostedZoneName,
       vpcs: [
         {
-          vpcId: props.vpc.vpcId,
+          vpcId: this.vpcId,
           vpcRegion: cdk.Stack.of(this).region,
         },
       ],
@@ -52,10 +51,11 @@ export class HostedZone extends cdk.Resource implements IHostedZone {
 
   static getHostedZoneNameForService(service: string, region: string): string {
     let hostedZoneName = `${service}.${region}.amazonaws.com`;
-    if (service in ['notebook', 'studio']) {
+    const sagemakerArray = ['notebook', 'studio'];
+    if (sagemakerArray.includes(service)) {
       hostedZoneName = `${service}.${region}.sagemaker.aws`;
     }
-    if (service in ['s3-global.accesspoint']) {
+    if (service === 's3-global.accesspoint') {
       hostedZoneName = `${service}.aws.com`;
     }
     return hostedZoneName;

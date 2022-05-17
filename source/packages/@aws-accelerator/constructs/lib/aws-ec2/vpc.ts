@@ -176,14 +176,19 @@ export interface SecurityGroupProps {
   readonly description?: string;
 
   /**
-   * The VPC in which to create the security group.
-   */
-  readonly vpc: IVpc;
-
-  /**
    * The tags that will be attached to the security group
    */
   readonly tags?: cdk.CfnTag[];
+
+  /**
+   * The VPC in which to create the security group.
+   */
+  readonly vpc?: IVpc;
+
+  /**
+   * The VPC in which to create the security group.
+   */
+  readonly vpcId?: string;
 }
 
 export interface SecurityGroupIngressRuleProps {
@@ -216,10 +221,14 @@ export class SecurityGroup extends cdk.Resource implements ISecurityGroup {
   constructor(scope: Construct, id: string, props: SecurityGroupProps) {
     super(scope, id);
 
+    if (!props.vpc?.vpcId && !props.vpcId) {
+      throw new Error(`A property value for vpc or vpcId must be specified`);
+    }
+
     this.securityGroup = new cdk.aws_ec2.CfnSecurityGroup(this, 'Resource', {
       groupDescription: props.description ?? '',
       groupName: props.securityGroupName,
-      vpcId: props.vpc.vpcId,
+      vpcId: props.vpc?.vpcId ?? props.vpcId,
       tags: props.tags,
     });
 

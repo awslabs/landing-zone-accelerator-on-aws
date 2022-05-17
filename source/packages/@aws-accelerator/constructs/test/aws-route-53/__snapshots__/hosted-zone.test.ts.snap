@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`SecurityHubMembers Construct(HostedZone):  Snapshot Test 1`] = `
+exports[`HostedZone Construct(HostedZone):  Snapshot Test 1`] = `
 Object {
   "Resources": Object {
     "TestHostedZone68F306E4": Object {
@@ -19,9 +19,7 @@ Object {
         },
         "VPCs": Array [
           Object {
-            "VPCId": Object {
-              "Ref": "TestVpcE77CE678",
-            },
+            "VPCId": "Test",
             "VPCRegion": Object {
               "Ref": "AWS::Region",
             },
@@ -29,43 +27,6 @@ Object {
         ],
       },
       "Type": "AWS::Route53::HostedZone",
-    },
-    "TestVpcE77CE678": Object {
-      "Properties": Object {
-        "CidrBlock": "10.0.0.0/16",
-        "EnableDnsHostnames": false,
-        "EnableDnsSupport": true,
-        "InstanceTenancy": "default",
-        "Tags": Array [
-          Object {
-            "Key": "Name",
-            "Value": "Test",
-          },
-        ],
-      },
-      "Type": "AWS::EC2::VPC",
-    },
-    "TestVpcInternetGateway01360C82": Object {
-      "Properties": Object {
-        "Tags": Array [
-          Object {
-            "Key": "Name",
-            "Value": "Test",
-          },
-        ],
-      },
-      "Type": "AWS::EC2::InternetGateway",
-    },
-    "TestVpcInternetGatewayAttachment60E451D5": Object {
-      "Properties": Object {
-        "InternetGatewayId": Object {
-          "Ref": "TestVpcInternetGateway01360C82",
-        },
-        "VpcId": Object {
-          "Ref": "TestVpcE77CE678",
-        },
-      },
-      "Type": "AWS::EC2::VPCGatewayAttachment",
     },
   },
 }

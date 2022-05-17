@@ -20,32 +20,22 @@ import {
   AccountsConfig,
   NetworkAclSubnetSelection,
   NetworkConfigTypes,
-  NfwFirewallConfig,
   nonEmptyString,
   OrganizationConfig,
   PrefixListSourceConfig,
-  ResolverEndpointConfig,
-  ResolverRuleConfig,
   SecurityGroupRuleConfig,
   SecurityGroupSourceConfig,
   SubnetConfig,
   SubnetSourceConfig,
-  VpcConfig,
 } from '@aws-accelerator/config';
 import {
   DeleteDefaultVpc,
   DhcpOptions,
-  HostedZone,
   IResourceShareItem,
   KeyLookup,
   NatGateway,
   NetworkAcl,
-  NetworkFirewall,
-  Organization,
   PrefixList,
-  RecordSet,
-  ResolverEndpoint,
-  ResolverRule,
   ResourceShare,
   ResourceShareItem,
   ResourceShareOwner,
@@ -54,7 +44,6 @@ import {
   Subnet,
   TransitGatewayAttachment,
   Vpc,
-  VpcEndpoint,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
@@ -84,7 +73,7 @@ const TCP_PROTOCOLS_PORT: { [key: string]: number } = {
   'ORACLE-RDS': 1521,
 };
 
-type ResourceShareType = SubnetConfig | ResolverRuleConfig;
+type ResourceShareType = SubnetConfig;
 
 export class NetworkVpcStack extends AcceleratorStack {
   private accountsConfig: AccountsConfig;
@@ -108,7 +97,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     }).getKey();
 
     // Get the organization object, used by Data Protection
-    const organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
+    //const organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
 
     //
     // Delete Default VPCs
@@ -234,42 +223,6 @@ export class NetworkVpcStack extends AcceleratorStack {
         `aws-accelerator-central-logs-${this.accountsConfig.getLogArchiveAccountId()}-${props.globalConfig.homeRegion}`,
       );
       centralLogsBucketArn = centralLogsBucket.bucketArn;
-    }
-
-    // let flowLogsCmk: cdk.aws_kms.Key | undefined = undefined;
-    if (props.networkConfig.vpcFlowLogs.destinations.includes('cloud-watch-logs')) {
-      Logger.info(`[network-vpc-stack] cwl destination for VPC flow log detected, create a cmk to be used by cwl`);
-
-      // flowLogsCmk = new cdk.aws_kms.Key(this, 'FlowLogsCmk', {
-      //   enableKeyRotation: true,
-      //   description: 'AWS Accelerator Cloud Watch Logs CMK for VPC Flow Logs',
-      //   alias: 'accelerator/vpc-flow-logs/cloud-watch-logs',
-      // });
-
-      // flowLogsCmk.addToResourcePolicy(
-      //   new cdk.aws_iam.PolicyStatement({
-      //     sid: 'Enable IAM User Permissions',
-      //     principals: [new cdk.aws_iam.AccountRootPrincipal()],
-      //     actions: ['kms:*'],
-      //     resources: ['*'],
-      //   }),
-      // );
-
-      // flowLogsCmk.addToResourcePolicy(
-      //   new cdk.aws_iam.PolicyStatement({
-      //     sid: 'Allow Cloud Watch Logs access',
-      //     principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
-      //     actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
-      //     resources: ['*'],
-      //     conditions: {
-      //       ArnLike: {
-      //         'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
-      //           cdk.Stack.of(this).region
-      //         }:${cdk.Stack.of(this).account}:*`,
-      //       },
-      //     },
-      //   }),
-      // );
     }
 
     //
@@ -700,110 +653,6 @@ export class NetworkVpcStack extends AcceleratorStack {
         }
 
         //
-        // Create Network Firewalls
-        //
-        const firewallMap = new Map<string, NetworkFirewall>();
-        if (props.networkConfig.centralNetworkServices?.networkFirewall?.firewalls) {
-          const firewalls = props.networkConfig.centralNetworkServices.networkFirewall.firewalls;
-          let firewallLogBucket: cdk.aws_s3.IBucket | undefined;
-
-          for (const firewallItem of firewalls) {
-            if (vpcItem.name === firewallItem.vpc) {
-              const firewallSubnets: string[] = [];
-              const delegatedAdminAccountId = this.accountsConfig.getAccountId(
-                props.networkConfig.centralNetworkServices.delegatedAdminAccount,
-              );
-              let owningAccountId: string | undefined = undefined;
-
-              // Check if this is not the delegated network admin account
-              if (delegatedAdminAccountId !== cdk.Stack.of(this).account) {
-                owningAccountId = delegatedAdminAccountId;
-              }
-
-              // Check if VPC has matching subnets
-              for (const subnetItem of firewallItem.subnets) {
-                if (subnetMap.has(subnetItem)) {
-                  firewallSubnets.push(subnetMap.get(subnetItem)!.subnetId);
-                } else {
-                  throw new Error(
-                    `[network-vpc-stack] Create Network Firewall: subnet not found in VPC ${vpcItem.name}`,
-                  );
-                }
-              }
-
-              // Create firewall
-              if (firewallSubnets.length > 0) {
-                const nfw = this.createNetworkFirewall(
-                  firewallItem,
-                  vpc.vpcId,
-                  vpcItem,
-                  firewallSubnets,
-                  owningAccountId,
-                );
-                firewallMap.set(firewallItem.name, nfw);
-
-                // Check for logging configurations
-                const destinationConfigs: cdk.aws_networkfirewall.CfnLoggingConfiguration.LogDestinationConfigProperty[] =
-                  [];
-                for (const logItem of firewallItem.loggingConfiguration ?? []) {
-                  if (logItem.destination === 'cloud-watch-logs') {
-                    // Create log group and log configuration
-                    Logger.info(
-                      `[network-vpc-stack] Add CloudWatch ${logItem.type} logs for Network Firewall ${firewallItem.name}`,
-                    );
-                    const logGroup = new cdk.aws_logs.LogGroup(
-                      this,
-                      pascalCase(`${firewallItem.name}${logItem.type}LogGroup`),
-                      {
-                        encryptionKey: this.acceleratorKey,
-                        retention: this.logRetention,
-                      },
-                    );
-                    destinationConfigs.push({
-                      logDestination: {
-                        logGroup: logGroup.logGroupName,
-                      },
-                      logDestinationType: 'CloudWatchLogs',
-                      logType: logItem.type,
-                    });
-                  }
-
-                  if (logItem.destination === 's3') {
-                    Logger.info(
-                      `[network-vpc-stack] Add S3 ${logItem.type} logs for Network Firewall ${firewallItem.name}`,
-                    );
-
-                    if (!firewallLogBucket) {
-                      firewallLogBucket = cdk.aws_s3.Bucket.fromBucketName(
-                        this,
-                        'FirewallLogsBucket',
-                        `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
-                          props.globalConfig.homeRegion
-                        }`,
-                      );
-                    }
-
-                    destinationConfigs.push({
-                      logDestination: {
-                        bucketName: firewallLogBucket.bucketName,
-                      },
-                      logDestinationType: 'S3',
-                      logType: logItem.type,
-                    });
-                  }
-                }
-
-                // Add logging configuration
-                const config = {
-                  logDestinationConfigs: destinationConfigs,
-                };
-                nfw.addLogging(config);
-              }
-            }
-          }
-        }
-
-        //
         // Create Route Table Entries.
         //
         for (const routeTableItem of vpcItem.routeTables ?? []) {
@@ -859,50 +708,8 @@ export class NetworkVpcStack extends AcceleratorStack {
               Logger.info(`[network-vpc-stack] Adding Internet Gateway Route Table Entry ${routeTableEntryItem.name}`);
               routeTable.addInternetGatewayRoute(id, routeTableEntryItem.destination);
             }
-
-            // Route: Network Firewall
-            if (routeTableEntryItem.type === 'networkFirewall') {
-              // Check for AZ input
-              if (!routeTableEntryItem.targetAvailabilityZone) {
-                throw new Error(
-                  `[network-vpc-stack] Network Firewall route table entry ${routeTableEntryItem.name} must specify a target availability zone`,
-                );
-              }
-
-              // Get Network Firewall and SSM parameter storing endpoint values
-              const firewallArn = firewallMap.get(routeTableEntryItem.target)?.firewallArn;
-              const endpointAz = `${cdk.Stack.of(this).region}${routeTableEntryItem.targetAvailabilityZone}`;
-
-              if (firewallArn) {
-                // Add route
-                Logger.info(
-                  `[network-vpc-stack] Adding Network Firewall Route Table Entry ${routeTableEntryItem.name}`,
-                );
-                const routeOptions = {
-                  id: id,
-                  destination: routeTableEntryItem.destination,
-                  endpointAz: endpointAz,
-                  firewallArn: firewallArn,
-                  kmsKey: this.acceleratorKey,
-                  logRetention: this.logRetention,
-                };
-                routeTable.addNetworkFirewallRoute(routeOptions);
-              } else {
-                throw new Error(`[network-vpc-stack] Unable to locate Network Firewall ${routeTableEntryItem.target}`);
-              }
-            }
           }
         }
-
-        //
-        // Add Gateway Endpoints (AWS Services)
-        //
-        this.createGatewayEndpoints(vpcItem, vpc, routeTableMap, organizationId);
-
-        //
-        // Create Interface Endpoints (AWS Services)
-        //
-        this.createInterfaceEndpoints(vpcItem, vpc, subnetMap, organizationId);
 
         //
         // Add Security Groups
@@ -1084,44 +891,6 @@ export class NetworkVpcStack extends AcceleratorStack {
                 ...props,
               },
             );
-          }
-        }
-
-        //
-        // Create Route 53 Resolver Endpoints
-        //
-        if (props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints) {
-          const delegatedAdminAccountId = this.accountsConfig.getAccountId(
-            props.networkConfig.centralNetworkServices.delegatedAdminAccount,
-          );
-          const vpcAccountId = this.accountsConfig.getAccountId(vpcItem.account);
-          const endpoints = props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints;
-          const endpointMap = new Map<string, ResolverEndpoint>();
-
-          // Check if the VPC has matching subnets
-          for (const endpointItem of endpoints) {
-            if (vpcItem.name === endpointItem.vpc) {
-              const r53Subnets: string[] = [];
-
-              for (const subnetItem of endpointItem.subnets) {
-                if (subnetMap.has(subnetItem)) {
-                  r53Subnets.push(subnetMap.get(subnetItem)!.subnetId);
-                } else {
-                  throw new Error(
-                    `[network-vpc-stack] Create Route 53 Resolver endpoint: subnet not found in VPC ${vpcItem.name}`,
-                  );
-                }
-              }
-              // Create endpoint
-              if (r53Subnets.length > 0 && vpcAccountId === delegatedAdminAccountId) {
-                const endpoint = this.createResolverEndpoint(endpointItem, endpointMap, vpc, r53Subnets);
-                endpointMap.set(endpointItem.name, endpoint);
-              } else {
-                throw new Error(
-                  '[network-vpc-stack] VPC for Route 53 Resolver endpoints must be located in the delegated network administrator account',
-                );
-              }
-            }
           }
         }
       }
@@ -1354,473 +1123,64 @@ export class NetworkVpcStack extends AcceleratorStack {
    * @param organizationId
    * @returns
    */
-  private createVpcEndpointPolicy(service: string, organizationId?: string): cdk.aws_iam.PolicyDocument | undefined {
-    // See https://docs.aws.amazon.com/vpc/latest/privatelink/integrated-services-vpce-list.html
-    // for the services that integrates with AWS PrivateLink, but does not support VPC endpoint policies
-    if (
-      [
-        'appmesh-envoy-management',
-        'appstream.api',
-        'appstream.streaming',
-        'cloudformation',
-        'cloudtrail',
-        'codeguru-profiler',
-        'codeguru-reviewer',
-        'codepipeline',
-        'datasync',
-        'ebs',
-      ].includes(service)
-    ) {
-      return undefined;
-    }
+  // private createVpcEndpointPolicy(service: string, organizationId?: string): cdk.aws_iam.PolicyDocument | undefined {
+  //   // See https://docs.aws.amazon.com/vpc/latest/privatelink/integrated-services-vpce-list.html
+  //   // for the services that integrates with AWS PrivateLink, but does not support VPC endpoint policies
+  //   if (
+  //     [
+  //       'appmesh-envoy-management',
+  //       'appstream.api',
+  //       'appstream.streaming',
+  //       'cloudformation',
+  //       'cloudtrail',
+  //       'codeguru-profiler',
+  //       'codeguru-reviewer',
+  //       'codepipeline',
+  //       'datasync',
+  //       'ebs',
+  //     ].includes(service)
+  //   ) {
+  //     return undefined;
+  //   }
 
-    // Identify if data protection is specified, create policy
-    let policyDocument: cdk.aws_iam.PolicyDocument | undefined = undefined;
-    if (this.props.globalConfig.dataProtection?.enable) {
-      Logger.info(`[network-vpc-stack] Data protection enabled, update default VPCE policies`);
+  //   // Identify if data protection is specified, create policy
+  //   let policyDocument: cdk.aws_iam.PolicyDocument | undefined = undefined;
+  //   if (this.props.globalConfig.dataProtection?.enable) {
+  //     Logger.info(`[network-vpc-stack] Data protection enabled, update default VPCE policies`);
 
-      // Apply the Identity Perimeter controls for VPC Endpoints
-      policyDocument = new cdk.aws_iam.PolicyDocument({
-        statements: [
-          new cdk.aws_iam.PolicyStatement({
-            sid: 'AccessToTrustedPrincipalsAndResources',
-            actions: ['*'],
-            effect: cdk.aws_iam.Effect.ALLOW,
-            resources: ['*'],
-            principals: [new cdk.aws_iam.AnyPrincipal()],
-            conditions: {
-              StringEquals: {
-                'aws:PrincipalOrgID': [organizationId],
-              },
-            },
-          }),
-        ],
-      });
+  //     // Apply the Identity Perimeter controls for VPC Endpoints
+  //     policyDocument = new cdk.aws_iam.PolicyDocument({
+  //       statements: [
+  //         new cdk.aws_iam.PolicyStatement({
+  //           sid: 'AccessToTrustedPrincipalsAndResources',
+  //           actions: ['*'],
+  //           effect: cdk.aws_iam.Effect.ALLOW,
+  //           resources: ['*'],
+  //           principals: [new cdk.aws_iam.AnyPrincipal()],
+  //           conditions: {
+  //             StringEquals: {
+  //               'aws:PrincipalOrgID': [organizationId],
+  //             },
+  //           },
+  //         }),
+  //       ],
+  //     });
 
-      if (service in ['s3']) {
-        policyDocument.addStatements(
-          new cdk.aws_iam.PolicyStatement({
-            sid: 'AccessToAWSServicePrincipals',
-            actions: ['s3:*'],
-            effect: cdk.aws_iam.Effect.ALLOW,
-            resources: ['*'],
-            principals: [new cdk.aws_iam.AnyPrincipal()],
-          }),
-        );
-      }
-    }
+  //     if (service in ['s3']) {
+  //       policyDocument.addStatements(
+  //         new cdk.aws_iam.PolicyStatement({
+  //           sid: 'AccessToAWSServicePrincipals',
+  //           actions: ['s3:*'],
+  //           effect: cdk.aws_iam.Effect.ALLOW,
+  //           resources: ['*'],
+  //           principals: [new cdk.aws_iam.AnyPrincipal()],
+  //         }),
+  //       );
+  //     }
+  //   }
 
-    return policyDocument;
-  }
-
-  /**
-   *
-   * @param vpcItem
-   * @param vpc
-   * @param routeTableMap
-   * @param organizationId
-   */
-  private createGatewayEndpoints(
-    vpcItem: VpcConfig,
-    vpc: Vpc,
-    routeTableMap: Map<string, RouteTable>,
-    organizationId?: string,
-  ) {
-    // Create a list of related route tables that will need to be updated with the gateway routes
-    const s3EndpointRouteTables: RouteTable[] = [];
-    const dynamodbEndpointRouteTables: RouteTable[] = [];
-    for (const routeTableItem of vpcItem.routeTables ?? []) {
-      const routeTable = routeTableMap.get(routeTableItem.name);
-
-      if (routeTable === undefined) {
-        throw new Error(`Route Table ${routeTableItem.name} not found`);
-      }
-
-      for (const routeTableEntryItem of routeTableItem.routes ?? []) {
-        // Route: S3 Gateway Endpoint
-        if (routeTableEntryItem.target === 's3') {
-          if (s3EndpointRouteTables.find(item => item.routeTableId === routeTable.routeTableId) === undefined) {
-            s3EndpointRouteTables.push(routeTable);
-          }
-        }
-
-        // Route: DynamoDb Gateway Endpoint
-        if (routeTableEntryItem.target === 'dynamodb') {
-          if (dynamodbEndpointRouteTables.find(item => item.routeTableId === routeTable.routeTableId) === undefined) {
-            dynamodbEndpointRouteTables.push(routeTable);
-          }
-        }
-      }
-    }
-
-    //
-    // Add Gateway Endpoints (AWS Services)
-    //
-    for (const gatewayEndpointItem of vpcItem.gatewayEndpoints ?? []) {
-      Logger.info(`[network-vpc-stack] Adding Gateway Endpoint for ${gatewayEndpointItem}`);
-
-      if (gatewayEndpointItem === 's3') {
-        new VpcEndpoint(this, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(gatewayEndpointItem), {
-          vpc,
-          vpcEndpointType: cdk.aws_ec2.VpcEndpointType.GATEWAY,
-          service: gatewayEndpointItem,
-          routeTables: s3EndpointRouteTables,
-          policyDocument: this.createVpcEndpointPolicy(gatewayEndpointItem, organizationId),
-        });
-      }
-      if (gatewayEndpointItem === 'dynamodb') {
-        new VpcEndpoint(this, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(gatewayEndpointItem), {
-          vpc,
-          vpcEndpointType: cdk.aws_ec2.VpcEndpointType.GATEWAY,
-          service: gatewayEndpointItem,
-          routeTables: dynamodbEndpointRouteTables,
-          policyDocument: this.createVpcEndpointPolicy(gatewayEndpointItem, organizationId),
-        });
-      }
-    }
-  }
-
-  /**
-   *
-   * @param vpcItem
-   * @param vpc
-   * @param subnetMap
-   * @param route53QueryLogGroup
-   */
-  private createInterfaceEndpoints(
-    vpcItem: VpcConfig,
-    vpc: Vpc,
-    subnetMap: Map<string, Subnet>,
-    organizationId?: string,
-  ) {
-    //
-    // Add Interface Endpoints (AWS Services)
-    //
-    if (vpcItem.interfaceEndpoints) {
-      // Create list of subnet IDs for each interface endpoint
-      const subnets: Subnet[] = [];
-      for (const subnetItem of vpcItem.interfaceEndpoints.subnets ?? []) {
-        const subnet = subnetMap.get(subnetItem);
-        if (subnet) {
-          subnets.push(subnet);
-        } else {
-          throw new Error(`Attempting to add interface endpoints to subnet that does not exist (${subnetItem})`);
-        }
-      }
-
-      // Create the interface endpoint
-      for (const endpointItem of vpcItem.interfaceEndpoints.endpoints ?? []) {
-        Logger.info(`[network-vpc-stack] Adding Interface Endpoint for ${endpointItem}`);
-
-        let ingressRuleIndex = 0; // Used increment ingressRule id
-
-        // Create Security Group for each interfaceEndpoint
-        Logger.info(`[network-vpc-stack] Adding Security Group for interface endpoint ${endpointItem}`);
-        const securityGroup = new SecurityGroup(
-          this,
-          pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${endpointItem}EpSecurityGroup`),
-          {
-            securityGroupName: `ep_${endpointItem}_sg`,
-            description: `AWS Private Endpoint Zone - ${endpointItem}`,
-            vpc,
-          },
-        );
-
-        for (const ingressCidr of vpcItem.interfaceEndpoints.allowedCidrs || ['0.0.0.0/0']) {
-          let port = 443;
-          if (endpointItem === 'cassandra') {
-            port = 9142;
-          }
-
-          const ingressRuleId = `ep_${endpointItem}_sg-Ingress-${ingressRuleIndex++}`;
-          Logger.info(`[network-vpc-stack] Adding ingress cidr ${ingressCidr} TPC:${port} to ${ingressRuleId}`);
-          securityGroup.addIngressRule(ingressRuleId, {
-            ipProtocol: cdk.aws_ec2.Protocol.TCP,
-            fromPort: port,
-            toPort: port,
-            cidrIp: ingressCidr,
-          });
-
-          // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
-          // rule suppression with evidence for this permission.
-          NagSuppressions.addResourceSuppressionsByPath(
-            this,
-            `${this.stackName}/${pascalCase(vpcItem.name)}Vpc${pascalCase(
-              endpointItem,
-            )}EpSecurityGroup/${ingressRuleId}`,
-            [
-              {
-                id: 'AwsSolutions-EC23',
-                reason: 'Allowed access for cassandra',
-              },
-            ],
-          );
-        }
-
-        // Adding Egress '127.0.0.1/32' to avoid default Egress rule
-        securityGroup.addEgressRule(`ep_${endpointItem}_sg-Egress`, {
-          ipProtocol: cdk.aws_ec2.Protocol.ALL,
-          cidrIp: '127.0.0.1/32',
-        });
-
-        // Create the interface endpoint
-        const endpoint = new VpcEndpoint(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem)}Ep`, {
-          vpc,
-          vpcEndpointType: cdk.aws_ec2.VpcEndpointType.INTERFACE,
-          service: endpointItem,
-          subnets,
-          securityGroups: [securityGroup],
-          privateDnsEnabled: false,
-          policyDocument: this.createVpcEndpointPolicy(endpointItem, organizationId),
-        });
-
-        // Create the private hosted zone
-        const hostedZoneName = HostedZone.getHostedZoneNameForService(endpointItem, cdk.Stack.of(this).region);
-        const hostedZone = new HostedZone(
-          this,
-          `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem)}EpHostedZone`,
-          {
-            hostedZoneName,
-            vpc,
-          },
-        );
-        new cdk.aws_ssm.StringParameter(
-          this,
-          `SsmParam${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem)}EpHostedZone`,
-          {
-            parameterName: `/accelerator/network/vpc/${vpcItem.name}/route53/hostedZone/${endpointItem}/id`,
-            stringValue: hostedZone.hostedZoneId,
-          },
-        );
-
-        // Create the record set
-        let recordSetName = hostedZoneName;
-        if (endpointItem in ['ecr.dkr']) {
-          recordSetName = `*.${hostedZoneName}`;
-        }
-        new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem)}EpRecordSet`, {
-          type: 'A',
-          name: recordSetName,
-          hostedZone: hostedZone,
-          dnsName: endpoint.dnsName,
-          hostedZoneId: endpoint.hostedZoneId,
-        });
-      }
-    }
-  }
-
-  //
-  // Create Route 53 Resolver endpoints
-  //
-  private createResolverEndpoint(
-    endpointItem: ResolverEndpointConfig,
-    endpointMap: Map<string, ResolverEndpoint>,
-    vpc: Vpc,
-    subnets: string[],
-  ) {
-    // Validate there are no rules associated with an inbound endpoint
-    if (endpointItem.type === 'INBOUND' && endpointItem.rules) {
-      throw new Error('Route 53 Resolver inbound endpoints cannot have rules.');
-    }
-
-    // Create security group
-    Logger.info(`[network-vpc-stack] Adding Security Group for Route 53 Resolver endpoint ${endpointItem.name}`);
-    const securityGroup = new SecurityGroup(this, pascalCase(`${endpointItem.name}EpSecurityGroup`), {
-      securityGroupName: `ep_${endpointItem.name}_sg`,
-      description: `AWS Route 53 Resolver endpoint - ${endpointItem.name}`,
-      vpc,
-    });
-
-    if (endpointItem.type === 'INBOUND') {
-      let ingressRuleIndex = 0; // Used increment ingressRule id
-
-      for (const ingressCidr of endpointItem.allowedCidrs || ['0.0.0.0/0']) {
-        const port = 53;
-
-        let ingressRuleId = `ep_${endpointItem.name}_sg-Ingress-${ingressRuleIndex++}`;
-        Logger.info(`[network-vpc-stack] Adding ingress cidr ${ingressCidr} TCP:${port} to ${ingressRuleId}`);
-        securityGroup.addIngressRule(ingressRuleId, {
-          ipProtocol: cdk.aws_ec2.Protocol.TCP,
-          fromPort: port,
-          toPort: port,
-          cidrIp: ingressCidr,
-        });
-
-        // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
-        // rule suppression with evidence for this permission.
-        NagSuppressions.addResourceSuppressionsByPath(
-          this,
-          `${this.stackName}/${pascalCase(`${endpointItem.name}EpSecurityGroup`)}/${ingressRuleId}`,
-          [
-            {
-              id: 'AwsSolutions-EC23',
-              reason: 'Allowed access for TCP and UDP',
-            },
-          ],
-        );
-
-        ingressRuleId = `ep_${endpointItem.name}_sg-Ingress-${ingressRuleIndex++}`;
-        Logger.info(`[network-vpc-stack] Adding ingress cidr ${ingressCidr} UDP:${port} to ${ingressRuleId}`);
-        securityGroup.addIngressRule(ingressRuleId, {
-          ipProtocol: cdk.aws_ec2.Protocol.UDP,
-          fromPort: port,
-          toPort: port,
-          cidrIp: ingressCidr,
-        });
-
-        // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
-        // rule suppression with evidence for this permission.
-        NagSuppressions.addResourceSuppressionsByPath(
-          this,
-          `${this.stackName}/${pascalCase(`${endpointItem.name}EpSecurityGroup`)}/${ingressRuleId}`,
-          [
-            {
-              id: 'AwsSolutions-EC23',
-              reason: 'Allowed access for TCP and UDP',
-            },
-          ],
-        );
-      }
-
-      // Adding Egress '127.0.0.1/32' to avoid default Egress rule
-      securityGroup.addEgressRule(`ep_${endpointItem.name}_sg-Egress`, {
-        ipProtocol: cdk.aws_ec2.Protocol.ALL,
-        cidrIp: '127.0.0.1/32',
-      });
-    } else {
-      let egressRuleIndex = 0;
-
-      for (const egressCidr of endpointItem.allowedCidrs || ['0.0.0.0/0']) {
-        const port = 53;
-
-        let egressRuleId = `ep_${endpointItem.name}_sg-Egress-${egressRuleIndex++}`;
-        Logger.info(`[network-vpc-stack] Adding egress cidr ${egressCidr} TCP:${port} to ${egressRuleId}`);
-        securityGroup.addEgressRule(egressRuleId, {
-          ipProtocol: cdk.aws_ec2.Protocol.TCP,
-          fromPort: port,
-          toPort: port,
-          cidrIp: egressCidr,
-        });
-
-        egressRuleId = `ep_${endpointItem.name}_sg-Egress-${egressRuleIndex++}`;
-        Logger.info(`[network-vpc-stack] Adding egress cidr ${egressCidr} UDP:${port} to ${egressRuleId}`);
-        securityGroup.addEgressRule(egressRuleId, {
-          ipProtocol: cdk.aws_ec2.Protocol.UDP,
-          fromPort: port,
-          toPort: port,
-          cidrIp: egressCidr,
-        });
-      }
-    }
-
-    Logger.info(`[network-vpc-stack] Add Route 53 Resolver ${endpointItem.type} endpoint ${endpointItem.name}`);
-    const endpoint = new ResolverEndpoint(this, `${pascalCase(endpointItem.name)}ResolverEndpoint`, {
-      direction: endpointItem.type,
-      ipAddresses: subnets,
-      name: endpointItem.name,
-      securityGroupIds: [securityGroup.securityGroupId],
-      tags: endpointItem.tags ?? [],
-    });
-    new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${endpointItem.name}ResolverEndpoint`), {
-      parameterName: `/accelerator/network/route53Resolver/endpoints/${endpointItem.name}/id`,
-      stringValue: endpoint.endpointId,
-    });
-
-    // Create rules
-    for (const ruleItem of endpointItem.rules ?? []) {
-      Logger.info(`[network-vpc-stack] Add Route 53 Resolver rule ${ruleItem.name}`);
-
-      // Check whether there is an inbound endpoint target
-      let inboundTarget: ResolverEndpoint | undefined = undefined;
-      if (ruleItem.inboundEndpointTarget) {
-        inboundTarget = endpointMap.get(ruleItem.inboundEndpointTarget);
-        if (!inboundTarget) {
-          throw new Error(`[network-vpc-stack] Endpoint ${ruleItem.inboundEndpointTarget} not found in endpoint map`);
-        }
-      }
-
-      // Create resolver rule and SSM parameter
-      const rule = new ResolverRule(this, `${pascalCase(endpointItem.name)}ResolverRule${pascalCase(ruleItem.name)}`, {
-        domainName: ruleItem.domainName,
-        name: ruleItem.name,
-        ruleType: ruleItem.ruleType,
-        resolverEndpointId: endpoint.endpointId,
-        targetIps: ruleItem.targetIps,
-        tags: ruleItem.tags ?? [],
-        targetInbound: inboundTarget,
-        kmsKey: this.acceleratorKey,
-        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-      });
-      new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${ruleItem.name}ResolverRule`), {
-        parameterName: `/accelerator/network/route53Resolver/rules/${ruleItem.name}/id`,
-        stringValue: rule.ruleId,
-      });
-
-      if (ruleItem.shareTargets) {
-        Logger.info(`[network-vpc-stack] Share Route 53 Resolver rule ${ruleItem.name}`);
-        this.addResourceShare(ruleItem, `${ruleItem.name}_ResolverRule`, [rule.ruleArn]);
-      }
-    }
-    // Return endpoint object
-    return endpoint;
-  }
-
-  /**
-   * Create a Network Firewall in the specified VPC and subnets.
-   *
-   * @param firewallItem
-   * @param vpcId
-   * @param vpcItem
-   * @param subnets
-   * @param owningAccountId
-   * @returns
-   */
-  private createNetworkFirewall(
-    firewallItem: NfwFirewallConfig,
-    vpcId: string,
-    vpcItem: VpcConfig,
-    subnets: string[],
-    owningAccountId?: string,
-  ): NetworkFirewall {
-    // Get firewall policy ARN
-    let policyArn: string;
-
-    if (!owningAccountId) {
-      policyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        `/accelerator/network/networkFirewall/policies/${firewallItem.firewallPolicy}/arn`,
-      );
-    } else {
-      policyArn = this.getResourceShare(
-        `${firewallItem.firewallPolicy}_NetworkFirewallPolicyShare`,
-        'network-firewall:FirewallPolicy',
-        owningAccountId,
-      ).resourceShareItemArn;
-    }
-
-    Logger.info(`[network-vpc-stack] Add Network Firewall ${firewallItem.name} to VPC ${vpcItem.name}`);
-    const nfw = new NetworkFirewall(this, pascalCase(`${vpcItem.name}${firewallItem.name}NetworkFirewall`), {
-      firewallPolicyArn: policyArn,
-      name: firewallItem.name,
-      description: firewallItem.description,
-      subnets: subnets,
-      vpcId: vpcId,
-      deleteProtection: firewallItem.deleteProtection,
-      firewallPolicyChangeProtection: firewallItem.firewallPolicyChangeProtection,
-      subnetChangeProtection: firewallItem.subnetChangeProtection,
-      tags: firewallItem.tags ?? [],
-    });
-    // Create SSM parameters
-    new cdk.aws_ssm.StringParameter(
-      this,
-      pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(firewallItem.name)}FirewallArn`),
-      {
-        parameterName: `/accelerator/network/vpc/${vpcItem.name}/networkFirewall/${firewallItem.name}/arn`,
-        stringValue: nfw.firewallArn,
-      },
-    );
-    return nfw;
-  }
+  //   return policyDocument;
+  // }
 
   /**
    * Add RAM resource shares to the stack.

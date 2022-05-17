@@ -33,6 +33,8 @@ export enum AcceleratorStage {
   OPERATIONS = 'operations',
   NETWORK_PREP = 'network-prep',
   NETWORK_VPC = 'network-vpc',
+  NETWORK_VPC_ENDPOINTS = 'network-vpc-endpoints',
+  NETWORK_VPC_DNS = 'network-vpc-dns',
   NETWORK_ASSOCIATIONS = 'network-associations',
   SECURITY_AUDIT = 'security-audit',
   FINALIZE = 'finalize',

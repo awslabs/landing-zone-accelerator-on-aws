@@ -336,7 +336,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                 this,
                 `/accelerator/network/route53Resolver/firewall/ruleGroups/${firewallItem.name}/id`,
               );
-              Logger.info(`[network-associations-stack] Adding [${firewallItem.name}]: ${ruleId} to dnsFirewallMap`);
               dnsFirewallMap.set(firewallItem.name, ruleId);
             } else {
               // Get ID from the resource share
@@ -407,7 +406,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                   this,
                   `/accelerator/network/route53Resolver/queryLogConfigs/${nameItem}/id`,
                 );
-                Logger.info(`[network-associations-stack] Adding [${nameItem}]: ${configId} to queryLogMap`);
                 queryLogMap.set(nameItem, configId);
               } else {
                 // Get ID from the resource share
@@ -461,7 +459,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                 this,
                 `/accelerator/network/route53Resolver/rules/${ruleItem}/id`,
               );
-              Logger.info(`[network-associations-stack] Adding [${ruleItem}]: ${ruleId} to resolverRuleMap`);
               resolverRuleMap.set(ruleItem, ruleId);
             } else {
               // Get ID from the resource share
