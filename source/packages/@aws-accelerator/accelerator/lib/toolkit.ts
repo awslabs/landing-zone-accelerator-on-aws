@@ -21,9 +21,10 @@ import { ToolkitInfo } from 'aws-cdk/lib/api/toolkit-info';
 import { CdkToolkit } from 'aws-cdk/lib/cdk-toolkit';
 import { RequireApproval } from 'aws-cdk/lib/diff';
 import { Command, Configuration } from 'aws-cdk/lib/settings';
+
 import { AcceleratorStackNames } from './accelerator';
-import { Logger } from './logger';
 import { AcceleratorStage } from './accelerator-stage';
+import { Logger } from './logger';
 
 /**
  *
@@ -172,23 +173,33 @@ export class AcceleratorToolkit {
           throw new Error('trying to deploy with an undefined stage');
         }
 
-        let stackName = `${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`;
+        let stackName = [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`];
 
         if (options.stage === AcceleratorStage.PIPELINE) {
           stackName = process.env['ACCELERATOR_QUALIFIER']
-            ? `${process.env['ACCELERATOR_QUALIFIER']}-${AcceleratorStage.PIPELINE}-stack-${options.accountId}-${options.region}`
-            : `${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`;
+            ? [
+                `${process.env['ACCELERATOR_QUALIFIER']}-${AcceleratorStage.PIPELINE}-stack-${options.accountId}-${options.region}`,
+              ]
+            : [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`];
         }
 
         if (options.stage === AcceleratorStage.TESTER_PIPELINE) {
           stackName = process.env['ACCELERATOR_QUALIFIER']
-            ? `${process.env['ACCELERATOR_QUALIFIER']}-${AcceleratorStage.TESTER_PIPELINE}-stack-${options.accountId}-${options.region}`
-            : `${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`;
+            ? [
+                `${process.env['ACCELERATOR_QUALIFIER']}-${AcceleratorStage.TESTER_PIPELINE}-stack-${options.accountId}-${options.region}`,
+              ]
+            : [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`];
+        }
+
+        if (options.stage === AcceleratorStage.NETWORK_VPC) {
+          stackName = [
+            `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]}-${options.accountId}-${options.region}`,
+          ];
         }
 
         const selector: StackSelector = {
           // patterns: [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`],
-          patterns: [stackName],
+          patterns: stackName,
         };
 
         await cli.deploy({

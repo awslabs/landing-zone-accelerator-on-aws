@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+
 import { IHostedZone } from './hosted-zone';
 
 export interface IRecordSet extends cdk.IResource {
@@ -49,10 +50,11 @@ export class RecordSet extends cdk.Resource implements IRecordSet {
 
   static getHostedZoneNameFromService(service: string, region: string): string {
     let hostedZoneName = `${service}.${region}.amazonaws.com`;
-    if (service in ['notebook', 'studio']) {
+    const sagemakerArray = ['notebook', 'studio'];
+    if (sagemakerArray.includes(service)) {
       hostedZoneName = `${service}.${region}.sagemaker.aws`;
     }
-    if (service in ['s3-global.accesspoint']) {
+    if (service === 's3-global.accesspoint') {
       hostedZoneName = `${service}.aws.com`;
     }
     return hostedZoneName;

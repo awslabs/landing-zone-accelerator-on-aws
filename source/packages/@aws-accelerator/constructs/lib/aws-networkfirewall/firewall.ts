@@ -14,6 +14,8 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
+import { GetNetworkFirewallEndpoint } from './get-network-firewall-endpoint';
+
 interface INetworkFirewall extends cdk.IResource {
   /**
    * The unique IDs of the firewall endpoints for all of the subnets that you attached to the firewall.
@@ -124,6 +126,31 @@ export class NetworkFirewall extends cdk.Resource implements INetworkFirewall {
     new cdk.aws_networkfirewall.CfnLoggingConfiguration(this, 'LoggingConfig', {
       firewallArn: this.firewallArn,
       loggingConfiguration: config,
+    });
+  }
+
+  public addNetworkFirewallRoute(options: {
+    id: string;
+    destination: string;
+    endpointAz: string;
+    firewallArn: string;
+    kmsKey: cdk.aws_kms.Key;
+    logRetention: number;
+    routeTableId: string;
+  }): void {
+    // Get endpoint ID from custom resource
+    const endpointId = new GetNetworkFirewallEndpoint(this, `${options.id}Endpoint`, {
+      endpointAz: options.endpointAz,
+      firewallArn: options.firewallArn,
+      kmsKey: options.kmsKey,
+      logRetentionInDays: options.logRetention,
+      region: cdk.Stack.of(this).region,
+    }).endpointId;
+
+    new cdk.aws_ec2.CfnRoute(this, options.id, {
+      routeTableId: options.routeTableId,
+      destinationCidrBlock: options.destination,
+      vpcEndpointId: endpointId,
     });
   }
 }

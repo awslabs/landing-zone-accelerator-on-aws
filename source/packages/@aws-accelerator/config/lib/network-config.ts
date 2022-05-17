@@ -1636,7 +1636,7 @@ export class ResolverEndpointConfig implements t.TypeOf<typeof NetworkConfigType
    */
   readonly subnets: string[] = [];
   /**
-   * The allowed ingress CIDRs for the resolver endpoint security group.
+   * The allowed ingress/egress CIDRs for the resolver endpoint security group.
    */
   readonly allowedCidrs: string[] | undefined = undefined;
   /**

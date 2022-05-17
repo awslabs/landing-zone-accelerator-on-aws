@@ -10,14 +10,17 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { AccountsConfig, GlobalConfig } from '@aws-accelerator/config';
-import { throttlingBackOff } from '@aws-accelerator/utils';
-import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
+
 import { RequireApproval } from 'aws-cdk/lib/diff';
 import { PluginHost } from 'aws-cdk/lib/plugin';
 import { Command } from 'aws-cdk/lib/settings';
 import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
+
+import { AccountsConfig, GlobalConfig } from '@aws-accelerator/config';
+import { throttlingBackOff } from '@aws-accelerator/utils';
+import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
+
 import { AcceleratorStage } from './accelerator-stage';
 import { Logger } from './logger';
 import { AcceleratorToolkit } from './toolkit';
@@ -76,6 +79,8 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.OPERATIONS]: 'AWSAccelerator-OperationsStack',
   [AcceleratorStage.NETWORK_PREP]: 'AWSAccelerator-NetworkPrepStack',
   [AcceleratorStage.NETWORK_VPC]: 'AWSAccelerator-NetworkVpcStack',
+  [AcceleratorStage.NETWORK_VPC_ENDPOINTS]: 'AWSAccelerator-NetworkVpcEndpointsStack',
+  [AcceleratorStage.NETWORK_VPC_DNS]: 'AWSAccelerator-NetworkVpcDnsStack',
   [AcceleratorStage.NETWORK_ASSOCIATIONS]: 'AWSAccelerator-NetworkAssociationsStack',
   [AcceleratorStage.FINALIZE]: 'AWSAccelerator-FinalizeStack',
   [AcceleratorStage.SECURITY_AUDIT]: 'AWSAccelerator-SecurityAuditStack',

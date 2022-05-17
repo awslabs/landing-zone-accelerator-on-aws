@@ -1,6 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
-import { HostedZone, RecordSet, Vpc, VpcEndpoint, Subnet, RouteTable, SecurityGroup } from '../../index';
+
 import { SynthUtils } from '@aws-cdk/assert';
+
+import { HostedZone, RecordSet, SecurityGroup, VpcEndpoint } from '../../index';
 
 const testNamePrefix = 'Construct(RecordSet): ';
 
@@ -8,49 +10,24 @@ const testNamePrefix = 'Construct(RecordSet): ';
 const stack = new cdk.Stack();
 const hostedZoneName = HostedZone.getHostedZoneNameForService('s3-global.accesspoint', stack.region);
 
-const vpc = new Vpc(stack, 'TestVpc', {
-  name: 'Test',
-  ipv4CidrBlock: '10.0.0.0/16',
-  internetGateway: true,
-  enableDnsHostnames: false,
-  enableDnsSupport: true,
-  instanceTenancy: 'default',
-});
-
 const hostedZone = new HostedZone(stack, `TestHostedZone`, {
   hostedZoneName,
-  vpc,
-});
-
-const routeTable = new RouteTable(stack, 'TestRouteTable', {
-  name: 'Network-Endpoints-Default',
-  vpc,
-  tags: [],
-});
-
-const subnet = new Subnet(stack, 'TestSubnet', {
-  name: 'Network-Endpoints-A',
-  availabilityZone: `${stack.region}a`,
-  ipv4CidrBlock: '10.1.0.0/24',
-  mapPublicIpOnLaunch: true,
-  routeTable,
-  vpc,
-  tags: [],
+  vpcId: 'Test',
 });
 
 const securityGroup = new SecurityGroup(stack, 'TestSecurityGroup`', {
   securityGroupName: 'TestSecurityGroup',
   description: `AWS Private Endpoint Zone`,
-  vpc,
+  vpcId: 'Test',
   tags: [],
 });
 
 // Create the interface endpoint
 const endpoint = new VpcEndpoint(stack, `TestVpcEndpoint`, {
-  vpc,
+  vpcId: 'Test',
   vpcEndpointType: cdk.aws_ec2.VpcEndpointType.INTERFACE,
   service: 'ec2',
-  subnets: [subnet],
+  subnets: ['Test1', 'Test2'],
   securityGroups: [securityGroup],
   privateDnsEnabled: false,
   policyDocument: new cdk.aws_iam.PolicyDocument({
@@ -105,13 +82,6 @@ describe('RecordSet', () => {
   });
 
   /**
-   * Number of RouteTable test
-   */
-  test(`${testNamePrefix} RouteTable resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::RouteTable', 1);
-  });
-
-  /**
    * Number of SecurityGroup test
    */
   test(`${testNamePrefix} SecurityGroup resource count test`, () => {
@@ -119,45 +89,10 @@ describe('RecordSet', () => {
   });
 
   /**
-   * Number of Subnet test
-   */
-  test(`${testNamePrefix} SecurityGroup resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::Subnet', 1);
-  });
-
-  /**
-   * Number of SubnetRouteTableAssociation test
-   */
-  test(`${testNamePrefix} SubnetRouteTableAssociation resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::SubnetRouteTableAssociation', 1);
-  });
-
-  /**
-   * Number of VPC test
-   */
-  test(`${testNamePrefix} VPC resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::VPC', 1);
-  });
-
-  /**
    * Number of VPCEndpoint test
    */
   test(`${testNamePrefix} VPCEndpoint resource count test`, () => {
     cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::VPCEndpoint', 1);
-  });
-
-  /**
-   * Number of InternetGateway test
-   */
-  test(`${testNamePrefix} InternetGateway resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::InternetGateway', 1);
-  });
-
-  /**
-   * Number of VPCGatewayAttachment test
-   */
-  test(`${testNamePrefix} VPCGatewayAttachment resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::VPCGatewayAttachment', 1);
   });
 
   /**
@@ -183,9 +118,7 @@ describe('RecordSet', () => {
             },
             VPCs: [
               {
-                VPCId: {
-                  Ref: 'TestVpcE77CE678',
-                },
+                VPCId: 'Test',
                 VPCRegion: {
                   Ref: 'AWS::Region',
                 },
@@ -267,30 +200,6 @@ describe('RecordSet', () => {
   });
 
   /**
-   * RouteTable resource configuration test
-   */
-  test(`${testNamePrefix} RouteTable resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestRouteTableD3D1979F: {
-          Type: 'AWS::EC2::RouteTable',
-          Properties: {
-            Tags: [
-              {
-                Key: 'Name',
-                Value: 'Network-Endpoints-Default',
-              },
-            ],
-            VpcId: {
-              Ref: 'TestVpcE77CE678',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
    * SecurityGroup resource configuration test
    */
   test(`${testNamePrefix} SecurityGroup resource configuration test`, () => {
@@ -307,92 +216,7 @@ describe('RecordSet', () => {
                 Value: 'TestSecurityGroup',
               },
             ],
-            VpcId: {
-              Ref: 'TestVpcE77CE678',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * Subnet resource configuration test
-   */
-  test(`${testNamePrefix} Subnet resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestSubnet7ABA0E56: {
-          Type: 'AWS::EC2::Subnet',
-          Properties: {
-            AvailabilityZone: {
-              'Fn::Join': [
-                '',
-                [
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  'a',
-                ],
-              ],
-            },
-            CidrBlock: '10.1.0.0/24',
-            MapPublicIpOnLaunch: true,
-            Tags: [
-              {
-                Key: 'Name',
-                Value: 'Network-Endpoints-A',
-              },
-            ],
-            VpcId: {
-              Ref: 'TestVpcE77CE678',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * SubnetRouteTableAssociation resource configuration test
-   */
-  test(`${testNamePrefix} SubnetRouteTableAssociation resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestSubnetRouteTableAssociationFE267B30: {
-          Type: 'AWS::EC2::SubnetRouteTableAssociation',
-          Properties: {
-            RouteTableId: {
-              Ref: 'TestRouteTableD3D1979F',
-            },
-            SubnetId: {
-              Ref: 'TestSubnet7ABA0E56',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * VPC resource configuration test
-   */
-  test(`${testNamePrefix} VPC resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestVpcE77CE678: {
-          Type: 'AWS::EC2::VPC',
-          Properties: {
-            CidrBlock: '10.0.0.0/16',
-            EnableDnsHostnames: false,
-            EnableDnsSupport: true,
-            InstanceTenancy: 'default',
-            Tags: [
-              {
-                Key: 'Name',
-                Value: 'Test',
-              },
-            ],
+            VpcId: 'Test',
           },
         },
       },
@@ -445,49 +269,9 @@ describe('RecordSet', () => {
                 ],
               ],
             },
-            SubnetIds: [
-              {
-                Ref: 'TestSubnet7ABA0E56',
-              },
-            ],
+            SubnetIds: ['Test1', 'Test2'],
             VpcEndpointType: 'Interface',
-            VpcId: {
-              Ref: 'TestVpcE77CE678',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * InternetGateway resource configuration test
-   */
-  test(`${testNamePrefix} InternetGateway resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestVpcInternetGateway01360C82: {
-          Type: 'AWS::EC2::InternetGateway',
-        },
-      },
-    });
-  });
-
-  /**
-   * VPCGatewayAttachment resource configuration test
-   */
-  test(`${testNamePrefix} VPCGatewayAttachment resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestVpcInternetGatewayAttachment60E451D5: {
-          Type: 'AWS::EC2::VPCGatewayAttachment',
-          Properties: {
-            InternetGatewayId: {
-              Ref: 'TestVpcInternetGateway01360C82',
-            },
-            VpcId: {
-              Ref: 'TestVpcE77CE678',
-            },
+            VpcId: 'Test',
           },
         },
       },

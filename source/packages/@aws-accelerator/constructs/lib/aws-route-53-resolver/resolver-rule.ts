@@ -15,7 +15,6 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 import { EndpointAddresses } from './endpoint-addresses';
-import { IResolverEndpoint } from './resolver-endpoint';
 
 export interface IResolverRule extends cdk.IResource {
   /**
@@ -60,7 +59,7 @@ export interface ResolverRuleProps {
   /**
    * Choose to target an inbound resolver endpoint for name resolution.
    */
-  readonly targetInbound?: IResolverEndpoint;
+  readonly targetInbound?: string;
 
   /**
    * An array that contains the IP addresses and ports that an outbound endpoint forwards DNS queries to.
@@ -95,7 +94,7 @@ export class ResolverRule extends cdk.Resource implements IResolverRule {
     props.tags?.push({ key: 'Name', value: this.name });
 
     if (props.targetInbound) {
-      this.targetIps = this.lookupInbound(props.targetInbound.endpointId, props.kmsKey, props.logRetentionInDays);
+      this.targetIps = this.lookupInbound(props.targetInbound, props.kmsKey, props.logRetentionInDays);
     } else {
       this.targetIps = props.targetIps;
     }

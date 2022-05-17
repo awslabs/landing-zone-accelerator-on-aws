@@ -13,6 +13,12 @@
  *  and limitations under the License.
  */
 
+import 'source-map-support/register';
+
+import * as cdk from 'aws-cdk-lib';
+import { AwsSolutionsChecks } from 'cdk-nag';
+import { IConstruct } from 'constructs';
+
 import {
   AccountsConfig,
   GlobalConfig,
@@ -21,10 +27,7 @@ import {
   OrganizationConfig,
   SecurityConfig,
 } from '@aws-accelerator/config';
-import * as cdk from 'aws-cdk-lib';
-import { AwsSolutionsChecks } from 'cdk-nag';
-import { IConstruct } from 'constructs';
-import 'source-map-support/register';
+
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { Logger } from '../lib/logger';
@@ -34,14 +37,16 @@ import { KeyStack } from '../lib/stacks/key-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
 import { NetworkAssociationsStack } from '../lib/stacks/network-associations-stack';
 import { NetworkPrepStack } from '../lib/stacks/network-prep-stack';
+import { NetworkVpcDnsStack } from '../lib/stacks/network-vpc-dns-stack';
+import { NetworkVpcEndpointsStack } from '../lib/stacks/network-vpc-endpoints-stack';
 import { NetworkVpcStack } from '../lib/stacks/network-vpc-stack';
 import { OperationsStack } from '../lib/stacks/operations-stack';
 import { OrganizationsStack } from '../lib/stacks/organizations-stack';
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
 import { PrepareStack } from '../lib/stacks/prepare-stack';
-import { SecurityStack } from '../lib/stacks/security-stack';
 import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
+import { SecurityStack } from '../lib/stacks/security-stack';
 import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
 
 process.on(
@@ -429,7 +434,7 @@ async function main() {
         // NETWORK VPC Stack
         //
         if (includeStage({ stage: AcceleratorStage.NETWORK_VPC, account: accountId, region: enabledRegion })) {
-          new NetworkVpcStack(
+          const vpcStack = new NetworkVpcStack(
             app,
             `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC]}-${accountId}-${enabledRegion}`,
             {
@@ -441,6 +446,34 @@ async function main() {
               ...props,
             },
           );
+
+          const endpointsStack = new NetworkVpcEndpointsStack(
+            app,
+            `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_ENDPOINTS]}-${accountId}-${enabledRegion}`,
+            {
+              env,
+              description: `(SO0199) AWS Platform Accelerator - Network VPC Endpoints Stack`,
+              synthesizer: new cdk.DefaultStackSynthesizer({
+                generateBootstrapVersionRule: false,
+              }),
+              ...props,
+            },
+          );
+          endpointsStack.addDependency(vpcStack);
+
+          const dnsStack = new NetworkVpcDnsStack(
+            app,
+            `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]}-${accountId}-${enabledRegion}`,
+            {
+              env,
+              description: `(SO0199) AWS Platform Accelerator - Network VPC DNS Stack`,
+              synthesizer: new cdk.DefaultStackSynthesizer({
+                generateBootstrapVersionRule: false,
+              }),
+              ...props,
+            },
+          );
+          dnsStack.addDependency(endpointsStack);
         }
 
         //
