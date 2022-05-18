@@ -9,15 +9,17 @@ const testNamePrefix = 'Construct(PipelineStack): ';
  */
 const app = new cdk.App();
 const stack = new PipelineStack(app, 'PipelineStack', {
-  sourceRepositoryName: 'aws-platform-accelerator-source',
+  sourceRepository: 'codecommit',
+  sourceRepositoryOwner: 'awslabs',
+  sourceRepositoryName: 'accelerator-source',
   sourceBranchName: 'main',
   enableApprovalStage: true,
   qualifier: 'aws-accelerator',
   managementAccountId: app.account,
-  managementAccountRoleName: 'PlatformAcceleratorAccountAccessRole',
-  managementAccountEmail: 'aws-platform-accelerator-root@mydomain.com',
-  logArchiveAccountEmail: 'aws-platform-accelerator-log-archive@mydomain.com',
-  auditAccountEmail: 'aws-platform-accelerator-audit@mydomain.com',
+  managementAccountRoleName: 'AcceleratorAccountAccessRole',
+  managementAccountEmail: 'accelerator-root@mydomain.com',
+  logArchiveAccountEmail: 'accelerator-log-archive@mydomain.com',
+  auditAccountEmail: 'accelerator-audit@mydomain.com',
   partition: 'aws',
 });
 
@@ -124,7 +126,7 @@ describe('PipelineStack', () => {
                     Configuration: {
                       BranchName: 'main',
                       PollForSourceChanges: false,
-                      RepositoryName: 'aws-platform-accelerator-source',
+                      RepositoryName: 'accelerator-source',
                     },
                     Name: 'Source',
                     OutputArtifacts: [
@@ -1340,7 +1342,7 @@ describe('PipelineStack', () => {
                         {
                           Ref: 'AWS::AccountId',
                         },
-                        ':aws-platform-accelerator-source',
+                        ':accelerator-source',
                       ],
                     ],
                   },

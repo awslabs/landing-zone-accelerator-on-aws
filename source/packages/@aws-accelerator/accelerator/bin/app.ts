@@ -135,7 +135,9 @@ async function main() {
   // PIPELINE Stack
   //
   if (includeStage({ stage: AcceleratorStage.PIPELINE, account, region })) {
-    const sourceRepositoryName = process.env['ACCELERATOR_REPOSITORY_NAME'];
+    const sourceRepository = process.env['ACCELERATOR_REPOSITORY_SOURCE'] ?? 'github';
+    const sourceRepositoryOwner = process.env['ACCELERATOR_REPOSITORY_OWNER'] ?? 'awslabs';
+    const sourceRepositoryName = process.env['ACCELERATOR_REPOSITORY_NAME'] ?? 'landing-zone-accelerator-on-aws';
     const sourceBranchName = process.env['ACCELERATOR_REPOSITORY_BRANCH_NAME'];
     const enableApprovalStage = process.env['ACCELERATOR_ENABLE_APPROVAL_STAGE']
       ? process.env['ACCELERATOR_ENABLE_APPROVAL_STAGE'] === 'Yes'
@@ -156,6 +158,8 @@ async function main() {
       {
         env: { account, region },
         description: `(SO0199) AWS Platform Accelerator - Pipeline Stack`,
+        sourceRepository,
+        sourceRepositoryOwner,
         sourceRepositoryName,
         sourceBranchName,
         enableApprovalStage,

@@ -8,12 +8,12 @@ const testNamePrefix = 'Construct(TesterPipelineStack): ';
  */
 const app = new cdk.App();
 const stack = new TesterPipelineStack(app, 'TesterPipelineStack', {
-  sourceRepositoryName: 'aws-platform-accelerator-source',
+  sourceRepositoryName: 'accelerator-source',
   sourceBranchName: 'main',
   qualifier: 'aws-accelerator',
   managementCrossAccountRoleName: 'AWSControlTowerExecution',
   managementAccountId: app.account,
-  managementAccountRoleName: 'PlatformAcceleratorAccountAccessRole',
+  managementAccountRoleName: 'AcceleratorAccountAccessRole',
 });
 
 /**
@@ -115,7 +115,7 @@ describe('TesterPipelineStack', () => {
                     Configuration: {
                       BranchName: 'main',
                       PollForSourceChanges: false,
-                      RepositoryName: 'aws-platform-accelerator-source',
+                      RepositoryName: 'accelerator-source',
                     },
                     Name: 'Source',
                     OutputArtifacts: [
@@ -921,7 +921,7 @@ describe('TesterPipelineStack', () => {
                         {
                           Ref: 'AWS::AccountId',
                         },
-                        ':aws-platform-accelerator-source',
+                        ':accelerator-source',
                       ],
                     ],
                   },
@@ -1090,7 +1090,7 @@ describe('TesterPipelineStack', () => {
                 {
                   Name: 'ACCELERATOR_REPOSITORY_NAME',
                   Type: 'PLAINTEXT',
-                  Value: 'aws-platform-accelerator-source',
+                  Value: 'accelerator-source',
                 },
                 {
                   Name: 'ACCELERATOR_REPOSITORY_BRANCH_NAME',
@@ -1120,7 +1120,7 @@ describe('TesterPipelineStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    ' --context management-cross-account-role-name=AWSControlTowerExecution --context qualifier=aws-accelerator --context config-dir=$CODEBUILD_SRC_DIR_Config --context management-account-id=undefined --context management-account-role-name=PlatformAcceleratorAccountAccessRole; else yarn run cdk deploy --require-approval never --context account=',
+                    ' --context management-cross-account-role-name=AWSControlTowerExecution --context qualifier=aws-accelerator --context config-dir=$CODEBUILD_SRC_DIR_Config --context management-account-id=undefined --context management-account-role-name=AcceleratorAccountAccessRole; else yarn run cdk deploy --require-approval never --context account=',
                     {
                       Ref: 'AWS::AccountId',
                     },

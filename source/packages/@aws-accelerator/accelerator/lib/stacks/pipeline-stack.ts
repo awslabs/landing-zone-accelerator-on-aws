@@ -18,6 +18,8 @@ import { version } from '../../../../../package.json';
 import * as pipeline from '../pipeline';
 
 export interface PipelineStackProps extends cdk.StackProps {
+  readonly sourceRepository: string;
+  readonly sourceRepositoryOwner: string;
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
   readonly enableApprovalStage: boolean;
