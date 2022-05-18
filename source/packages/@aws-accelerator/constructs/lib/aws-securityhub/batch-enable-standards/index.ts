@@ -101,7 +101,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             .updateStandardsControl({
               StandardsControlArn: controlArnToModify,
               ControlStatus: 'DISABLED',
-              DisabledReason: 'Control disabled by Platform Accelerator',
+              DisabledReason: 'Control disabled by Accelerator',
             })
             .promise(),
         );

@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as yaml from 'js-yaml';
 
 /**
- * AWS Platform Accelerator SecurityConfig Types
+ * AWS Accelerator SecurityConfig Types
  */
 export class SecurityConfigTypes {
   /**
@@ -525,7 +525,7 @@ export class SsmAutomationConfig implements t.TypeOf<typeof SecurityConfigTypes.
 }
 
 /**
- * AWS Platform Accelerator central security services configuration
+ * AWS Accelerator central security services configuration
  */
 export class CentralSecurityServicesConfig
   implements t.TypeOf<typeof SecurityConfigTypes.centralSecurityServicesConfig>

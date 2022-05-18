@@ -19,7 +19,7 @@ if (enableTester && managementCrossAccountRoleName === undefined) {
 }
 
 new installer.InstallerStack(app, 'AWSAccelerator-InstallerStack', {
-  description: `(SO0199) AWS Platform Accelerator - Installer`,
+  description: `(SO0199) Landing Zone Accelerator on AWS`,
   synthesizer: new cdk.DefaultStackSynthesizer({
     generateBootstrapVersionRule: false,
   }),

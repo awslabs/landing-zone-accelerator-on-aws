@@ -1,7 +1,7 @@
 {
-  "name": "aws-platform-accelerator",
-  "version": "0.6.0-rc001",
-  "description": "AWS Platform Accelerator",
+  "name": "landing-zone-accelerator-on-aws",
+  "version": "1.0.0",
+  "description": "Landing Zone Accelerator on AWS",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
@@ -43,8 +43,8 @@
     "build": "lerna run build --stream",
     "test": "lerna run test --stream",
     "test:clean": "rm -f ./test-reports/*.xml",
-    "docs": "yarn run typedoc --entryPointStrategy packages './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' --name 'AWS Accelerator' --includeVersion --disableSources --logLevel Verbose",
-    "viper-scan" : "cd .. && wget -v \"https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip\" && unzip -qo viperlight.zip -d ../viperlight && rm -r ./viperlight.zip && ../viperlight/bin/viperlight scan",
+    "docs": "yarn run typedoc --entryPointStrategy packages './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' --name 'Landing Zone Accelerator on AWS' --includeVersion --disableSources --logLevel Verbose",
+    "viper-scan": "cd .. && wget -v \"https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip\" && unzip -qo viperlight.zip -d ../viperlight && rm -r ./viperlight.zip && ../viperlight/bin/viperlight scan",
     "prepare": "cd ../ && husky install source/.husky",
     "postinstall": "cd ../ && husky install source/.husky && cd source",
     "lint": "lerna run lint --stream",

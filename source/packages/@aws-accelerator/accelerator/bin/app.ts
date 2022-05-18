@@ -18,6 +18,7 @@ import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { AwsSolutionsChecks } from 'cdk-nag';
 import { IConstruct } from 'constructs';
+import { version } from '../../../../package.json';
 
 import {
   AccountsConfig,
@@ -88,7 +89,7 @@ export class IsobOverrides implements cdk.IAspect {
 }
 
 async function main() {
-  Logger.info('[app] Begin Platform Accelerator CDK App');
+  Logger.info('[app] Begin Accelerator CDK App');
   const app = new cdk.App();
   cdk.Aspects.of(app).add(new AwsSolutionsChecks());
 
@@ -157,7 +158,7 @@ async function main() {
         : `${AcceleratorStackNames[stage]}-${account}-${region}`,
       {
         env: { account, region },
-        description: `(SO0199) AWS Platform Accelerator - Pipeline Stack`,
+        description: `(SO0199-pipeline) Landing Zone Accelerator on AWS. Version ${version}.`,
         sourceRepository,
         sourceRepositoryOwner,
         sourceRepositoryName,
@@ -187,7 +188,7 @@ async function main() {
           : `${AcceleratorStackNames[stage]}-${account}-${region}`,
         {
           env: { account, region },
-          description: `(SO0199) AWS Platform Accelerator - Tester Pipeline Stack`,
+          description: `(SO0199-tester) Landing Zone Accelerator on AWS. Version ${version}.`,
           sourceRepositoryName: process.env['ACCELERATOR_REPOSITORY_NAME']!,
           sourceBranchName: process.env['ACCELERATOR_REPOSITORY_BRANCH_NAME']!,
           managementCrossAccountRoleName: process.env['MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME']!,
@@ -240,7 +241,7 @@ async function main() {
           account: managementAccountId,
           region: homeRegion,
         },
-        description: `(SO0199) AWS Platform Accelerator - Prepare Stack`,
+        description: `(SO0199-prepare) Landing Zone Accelerator on AWS. Version ${version}.`,
         synthesizer: new cdk.DefaultStackSynthesizer({
           generateBootstrapVersionRule: false,
         }),
@@ -260,7 +261,7 @@ async function main() {
             account: managementAccountId,
             region: globalRegion,
           },
-          description: `(SO0199) AWS Platform Accelerator - Finalize Stack`,
+          description: `(SO0199-finalize) Landing Zone Accelerator on AWS. Version ${version}.`,
           synthesizer: new cdk.DefaultStackSynthesizer({
             generateBootstrapVersionRule: false,
           }),
@@ -281,7 +282,7 @@ async function main() {
             account: managementAccountId,
             region: globalRegion,
           },
-          description: `(SO0199) AWS Platform Accelerator - Accounts Stack`,
+          description: `(SO0199-accounts) Landing Zone Accelerator on AWS. Version ${version}.`,
           ...props,
         },
       );
@@ -302,7 +303,7 @@ async function main() {
               account: managementAccountId,
               region: enabledRegion,
             },
-            description: `(SO0199) AWS Platform Accelerator - Organizations Stack`,
+            description: `(SO0199-organizations) Landing Zone Accelerator on AWS. Version ${version}.`,
             ...props,
           },
         );
@@ -319,7 +320,7 @@ async function main() {
             account: auditAccountId,
             region: enabledRegion,
           },
-          description: `(SO0199) AWS Platform Accelerator - Key Stack`,
+          description: `(SO0199-key) Landing Zone Accelerator on AWS. Version ${version}.`,
           ...props,
         });
       }
@@ -333,7 +334,7 @@ async function main() {
               account: auditAccountId,
               region: enabledRegion,
             },
-            description: `(SO0199) AWS Platform Accelerator - Security Audit Stack`,
+            description: `(SO0199-securityaudit) Landing Zone Accelerator on AWS. Version ${version}.`,
             ...props,
           },
         );
@@ -359,7 +360,7 @@ async function main() {
         if (includeStage({ stage: AcceleratorStage.LOGGING, account: accountId, region: enabledRegion })) {
           new LoggingStack(app, `${AcceleratorStackNames[AcceleratorStage.LOGGING]}-${accountId}-${enabledRegion}`, {
             env,
-            description: `(SO0199) AWS Platform Accelerator - Logging Stack`,
+            description: `(SO0199-logging) Landing Zone Accelerator on AWS. Version ${version}.`,
             synthesizer: new cdk.DefaultStackSynthesizer({
               generateBootstrapVersionRule: false,
             }),
@@ -373,7 +374,7 @@ async function main() {
         if (includeStage({ stage: AcceleratorStage.SECURITY, account: accountId, region: enabledRegion })) {
           new SecurityStack(app, `${AcceleratorStackNames[AcceleratorStage.SECURITY]}-${accountId}-${enabledRegion}`, {
             env,
-            description: `(SO0199) AWS Platform Accelerator - Security Stack`,
+            description: `(SO0199-security) Landing Zone Accelerator on AWS. Version ${version}.`,
             synthesizer: new cdk.DefaultStackSynthesizer({
               generateBootstrapVersionRule: false,
             }),
@@ -390,7 +391,7 @@ async function main() {
             `${AcceleratorStackNames[AcceleratorStage.OPERATIONS]}-${accountId}-${enabledRegion}`,
             {
               env,
-              description: `(SO0199) AWS Platform Accelerator - Operations Stack`,
+              description: `(SO0199-operations) Landing Zone Accelerator on AWS. Version ${version}.`,
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
@@ -408,7 +409,7 @@ async function main() {
             `${AcceleratorStackNames[AcceleratorStage.NETWORK_PREP]}-${accountId}-${enabledRegion}`,
             {
               env,
-              description: `(SO0199) AWS Platform Accelerator - Network Prep Stack`,
+              description: `(SO0199-networkprep) Landing Zone Accelerator on AWS. Version ${version}.`,
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
@@ -426,7 +427,7 @@ async function main() {
             `${AcceleratorStackNames[AcceleratorStage.SECURITY_RESOURCES]}-${accountId}-${enabledRegion}`,
             {
               env,
-              description: `(SO0199) AWS Platform Accelerator - Security Resources Stack`,
+              description: `(SO0199-securityresources) Landing Zone Accelerator on AWS. Version ${version}.`,
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
@@ -444,7 +445,7 @@ async function main() {
             `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC]}-${accountId}-${enabledRegion}`,
             {
               env,
-              description: `(SO0199) AWS Platform Accelerator - Network VPC Stack`,
+              description: `(SO0199-networkvpc) Landing Zone Accelerator on AWS. Version ${version}.`,
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
@@ -457,7 +458,7 @@ async function main() {
             `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_ENDPOINTS]}-${accountId}-${enabledRegion}`,
             {
               env,
-              description: `(SO0199) AWS Platform Accelerator - Network VPC Endpoints Stack`,
+              description: `(SO0199-networkendpoints) Landing Zone Accelerator on AWS. Version ${version}.`,
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
@@ -471,7 +472,7 @@ async function main() {
             `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]}-${accountId}-${enabledRegion}`,
             {
               env,
-              description: `(SO0199) AWS Platform Accelerator - Network VPC DNS Stack`,
+              description: `(SO0199-networkdns) Landing Zone Accelerator on AWS. Version ${version}.`,
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
@@ -490,7 +491,7 @@ async function main() {
             `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]}-${accountId}-${enabledRegion}`,
             {
               env,
-              description: `(SO0199) AWS Platform Accelerator - Network Associations Stack`,
+              description: `(SO0199-networkassociations) Landing Zone Accelerator on AWS. Version ${version}.`,
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
@@ -502,7 +503,7 @@ async function main() {
     }
   }
 
-  Logger.info('[app] End Platform Accelerator CDK App');
+  Logger.info('[app] End Accelerator CDK App');
 }
 
 main();
