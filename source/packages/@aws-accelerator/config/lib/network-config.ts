@@ -145,11 +145,27 @@ export class NetworkConfigTypes {
     'Value should be a gateway endpoint type',
   );
 
+  static readonly gatewayEndpointServiceConfig = t.interface({
+    service: this.gatewayEndpointEnum,
+    policy: t.optional(t.nonEmptyString),
+  });
+
+  static readonly gatewayEndpointConfig = t.interface({
+    defaultPolicy: t.nonEmptyString,
+    endpoints: t.array(this.gatewayEndpointServiceConfig),
+  });
+
+  static readonly interfaceEndpointServiceConfig = t.interface({
+    service: t.nonEmptyString,
+    policy: t.optional(t.nonEmptyString),
+  });
+
   static readonly interfaceEndpointConfig = t.interface({
+    defaultPolicy: t.nonEmptyString,
+    endpoints: t.array(this.interfaceEndpointServiceConfig),
+    subnets: t.array(t.nonEmptyString),
     central: t.optional(t.boolean),
     allowedCidrs: t.optional(t.array(t.nonEmptyString)),
-    subnets: t.array(t.nonEmptyString),
-    endpoints: t.array(t.nonEmptyString),
   });
 
   static readonly securityGroupRuleTypeEnum = t.enums(
@@ -268,6 +284,11 @@ export class NetworkConfigTypes {
     tags: t.optional(t.array(t.tag)),
   });
 
+  static readonly endpointPolicyConfig = t.interface({
+    name: t.nonEmptyString,
+    document: t.nonEmptyString,
+  });
+
   static readonly vpcConfig = t.interface({
     name: t.nonEmptyString,
     account: t.nonEmptyString,
@@ -277,7 +298,7 @@ export class NetworkConfigTypes {
     dnsFirewallRuleGroups: t.optional(t.array(this.vpcDnsFirewallAssociationConfig)),
     enableDnsHostnames: t.optional(t.boolean),
     enableDnsSupport: t.optional(t.boolean),
-    gatewayEndpoints: t.optional(t.array(this.gatewayEndpointEnum)),
+    gatewayEndpoints: t.optional(this.gatewayEndpointConfig),
     instanceTenancy: t.optional(this.instanceTenancyTypeEnum),
     interfaceEndpoints: t.optional(this.interfaceEndpointConfig),
     internetGateway: t.optional(t.boolean),
@@ -606,6 +627,7 @@ export class NetworkConfigTypes {
 
   static readonly networkConfig = t.interface({
     defaultVpc: this.defaultVpcsConfig,
+    endpointPolicies: t.array(this.endpointPolicyConfig),
     transitGateways: t.array(this.transitGatewayConfig),
     vpcs: t.array(this.vpcConfig),
     vpcFlowLogs: this.vpcFlowLogsConfig,
@@ -994,10 +1016,73 @@ export class TransitGatewayAttachmentConfig
 }
 
 /**
+ * VPC gateway endpoint service configuration.
+ * Used to define the service and policy for gateway endpoints.
+ */
+export class GatewayEndpointServiceConfig implements t.TypeOf<typeof NetworkConfigTypes.gatewayEndpointServiceConfig> {
+  /**
+   * The name of the service to create the endpoint for
+   *
+   * @see {@link NetworkConfigTypes.gatewayEndpointEnum}
+   */
+  readonly service: t.TypeOf<typeof NetworkConfigTypes.gatewayEndpointEnum> = 's3';
+  /**
+   * The friendly name of a policy for the gateway endpoint. If left undefined, the default policy will be used.
+   */
+  readonly policy: string | undefined = undefined;
+}
+
+/**
+ * VPC gateway endpoint configuration.
+ * Used to define a gateway endpoints.
+ */
+export class GatewayEndpointConfig implements t.TypeOf<typeof NetworkConfigTypes.gatewayEndpointConfig> {
+  /**
+   * The friendly name of the default policy for the gateway endpoints.
+   */
+  readonly defaultPolicy: string = '';
+  /**
+   * An array of endpoints to create.
+   */
+  readonly endpoints: GatewayEndpointServiceConfig[] = [];
+}
+
+/**
+ * VPC interface endpoint service configuration.
+ * Used to define the service and policy for interface endpoints.
+ */
+export class InterfaceEndpointServiceConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.interfaceEndpointServiceConfig>
+{
+  /**
+   * The name of the service to create the endpoint for.
+   */
+  readonly service: string = '';
+  /**
+   * The friendly name of a policy for the interface endpoint. If left undefined, the default policy will be used.
+   */
+  readonly policy: string | undefined = undefined;
+}
+
+/**
  * VPC interface endpoint configuration.
  * Used to define interface endpoints for a VPC.
  */
 export class InterfaceEndpointConfig implements t.TypeOf<typeof NetworkConfigTypes.interfaceEndpointConfig> {
+  /**
+   * The friendly name of the default policy for the interface endpoints.
+   */
+  readonly defaultPolicy: string = '';
+  /**
+   * An array of VPC interface endpoint service names to be deployed.
+   *
+   * @see {@link InterfaceEndpointServiceConfig}
+   */
+  readonly endpoints: InterfaceEndpointServiceConfig[] = [new InterfaceEndpointServiceConfig()];
+  /**
+   * An array of the friendly names of VPC subnets for the endpoints to be deployed.
+   */
+  readonly subnets: string[] = [];
   /**
    * Enable to define interface endpoints as centralized endpoints.
    *
@@ -1006,7 +1091,7 @@ export class InterfaceEndpointConfig implements t.TypeOf<typeof NetworkConfigTyp
    * created for each of them. These hosted zones are associated with any VPCs configured
    * with the `useCentralEndpoints` property enabled.
    */
-  readonly central: boolean = false;
+  readonly central: boolean | undefined = undefined;
   /**
    * An array of source CIDRs allowed to communicate with the endpoints.
    *
@@ -1014,14 +1099,6 @@ export class InterfaceEndpointConfig implements t.TypeOf<typeof NetworkConfigTyp
    * Use CIDR notation, i.e. 10.0.0.0/16
    */
   readonly allowedCidrs: string[] | undefined = undefined;
-  /**
-   * An array of the friendly names of VPC subnets for the endpoints to be deployed.
-   */
-  readonly subnets: string[] = [];
-  /**
-   * An array of VPC interface endpoint service names to be deployed.
-   */
-  readonly endpoints: string[] = [];
 }
 
 /**
@@ -1365,6 +1442,21 @@ export class DhcpOptsConfig implements t.TypeOf<typeof NetworkConfigTypes.dhcpOp
 }
 
 /**
+ * VPC endpoint policy configuration.
+ * Used to define VPC endpoint policies.
+ */
+export class EndpointPolicyConfig implements t.TypeOf<typeof NetworkConfigTypes.endpointPolicyConfig> {
+  /**
+   * A friendly name for the endpoint policy.
+   */
+  readonly name: string = '';
+  /**
+   * A file path for a JSON-formatted policy document.
+   */
+  readonly document: string = '';
+}
+
+/**
  * VPC configuration.
  * Used to define a VPC.
  */
@@ -1458,7 +1550,7 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
   /**
    * An array of gateway endpoints for the VPC.
    */
-  readonly gatewayEndpoints: t.TypeOf<typeof NetworkConfigTypes.gatewayEndpointEnum>[] | undefined = undefined;
+  readonly gatewayEndpoints: GatewayEndpointConfig | undefined = undefined;
 
   /**
    * A list of VPC interface endpoints.
@@ -1471,9 +1563,9 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
    * associated with this VPC. Centralized endpoints are configured per
    * region, and can span to spoke accounts
    *
-   * @default true
+   * @default false
    */
-  readonly useCentralEndpoints: boolean | undefined = true;
+  readonly useCentralEndpoints: boolean | undefined = false;
 
   /**
    * A list of Security Groups to deploy for this VPC
@@ -2592,6 +2684,13 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * @see {@link TransitGatewayConfig}
    */
   readonly transitGateways: TransitGatewayConfig[] = [];
+
+  /**
+   * An array of VPC endpoint policies.
+   *
+   * @see {@link EndpointPolicyConfig}
+   */
+  readonly endpointPolicies: EndpointPolicyConfig[] = [];
 
   /**
    * An array of VPC configurations.

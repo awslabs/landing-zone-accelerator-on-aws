@@ -164,7 +164,7 @@ transitGateways:
 #             domainName: example.com
 #             targetIps:
 #               - ip: 1.1.1.1
-#                 port: 5353 # only include if targeting a non-standard DNS port
+#                 port: '5353' # only include if targeting a non-standard DNS port
 #               - ip: 2.2.2.2
 #             shareTargets:
 #               organizationalUnits:
@@ -215,6 +215,13 @@ transitGateways:
 #     maxEntries: 1
 #     entries:
 #       - 10.1.0.1/32
+
+endpointPolicies:
+  - name: Default
+    document: vpc-endpoint-policies/default.json
+  - name: Ec2
+    document: vpc-endpoint-policies/ec2.json
+
 vpcs:
   - name: Network-Endpoints
     account: Network
@@ -282,75 +289,79 @@ vpcs:
           - Network-EndpointsTgwAttach-A
           - Network-EndpointsTgwAttach-B
     gatewayEndpoints:
-      - s3
-      - dynamodb
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
     interfaceEndpoints:
       central: true
+      defaultPolicy: Default
       subnets:
         - Network-Endpoints-A
         - Network-Endpoints-B
       endpoints:
-        - ec2
-        - ec2messages
-        - ssm
-        - ssmmessages
-        - kms
-        - logs
-        # - secretsmanager
-        # - cloudformation
-        # - access-analyzer
-        # - application-autoscaling
-        # - appmesh-envoy-management
-        # - athena
-        # - autoscaling
-        # - autoscaling-plans
-        # - clouddirectory
-        # - cloudtrail
-        # - codebuild
-        # - codecommit
-        # - codepipeline
-        # - config
-        # - datasync
-        # - ecr.dkr
-        # - ecs
-        # - ecs-agent
-        # - ecs-telemetry
-        # - elasticfilesystem
-        # - elasticloadbalancing
-        # - elasticmapreduce
-        # - events
-        # - execute-api
-        # - git-codecommit
-        # - glue
-        # - kinesis-streams
-        # - kms
-        # - logs
-        # - monitoring
-        # - sagemaker.api
-        # - sagemaker.runtime
-        # - servicecatalog
-        # - sms
-        # - sns
-        # - sqs
-        # - storagegateway
-        # - sts
-        # - transfer
-        # - workspaces
-        # - awsconnector
-        # - ecr.api
-        # - kinesis-firehose
-        # - states
-        # - acm-pca
-        # - cassandra
-        # - ebs
-        # - elasticbeanstalk
-        # - elasticbeanstalk-health
-        # - email-smtp
-        # - license-manager
-        # - macie2
-        # - notebook
-        # - synthetics
-        # - transfer.server
+        - service: ec2
+          policy: Ec2 # include a custom policy, or leave undefined to apply the default
+        - service: ec2messages
+        - service: ssm
+        - service: ssmmessages
+        - service: kms
+        - service: logs
+        # - service: secretsmanager
+        # - service: cloudformation
+        # - service: access-analyzer
+        # - service: application-autoscaling
+        # - service: appmesh-envoy-management
+        # - service: athena
+        # - service: autoscaling
+        # - service: autoscaling-plans
+        # - service: clouddirectory
+        # - service: cloudtrail
+        # - service: codebuild
+        # - service: codecommit
+        # - service: codepipeline
+        # - service: config
+        # - service: datasync
+        # - service: ecr.dkr
+        # - service: ecs
+        # - service: ecs-agent
+        # - service: ecs-telemetry
+        # - service: elasticfilesystem
+        # - service: elasticloadbalancing
+        # - service: elasticmapreduce
+        # - service: events
+        # - service: execute-api
+        # - service: git-codecommit
+        # - service: glue
+        # - service: kinesis-streams
+        # - service: kms
+        # - service: logs
+        # - service: monitoring
+        # - service: sagemaker.api
+        # - service: sagemaker.runtime
+        # - service: servicecatalog
+        # - service: sms
+        # - service: sns
+        # - service: sqs
+        # - service: storagegateway
+        # - service: sts
+        # - service: transfer
+        # - service: workspaces
+        # - service: awsconnector
+        # - service: ecr.api
+        # - service: kinesis-firehose
+        # - service: states
+        # - service: acm-pca
+        # - service: cassandra
+        # - service: ebs
+        # - service: elasticbeanstalk
+        # - service: elasticbeanstalk-health
+        # - service: email-smtp
+        # - service: license-manager
+        # - service: macie2
+        # - service: notebook
+        # - service: synthetics
+        # - service: transfer.server
   - name: Network-Inspection
     account: Network
     region: *HOME_REGION
@@ -421,8 +432,10 @@ vpcs:
           - Network-InspectionTgwAttach-A
           - Network-InspectionTgwAttach-B
     gatewayEndpoints:
-      - s3
-      - dynamodb
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
     useCentralEndpoints: true
   - name: SharedServices-Main
     account: SharedServices
@@ -478,8 +491,10 @@ vpcs:
           - SharedServices-MainTgwAttach-A
           - SharedServices-MainTgwAttach-B
     gatewayEndpoints:
-      - s3
-      - dynamodb
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
     useCentralEndpoints: true
   # - name: Test
   #   account: Audit
@@ -550,8 +565,10 @@ vpcs:
   #   dnsResolverLogging: true
   #   useCentralEndpoints: false
   #   gatewayEndpoints:
-  #     - s3
-  #     - dynamodb
+  #     defaultPolicy: Default
+  #     endpoints:
+  #       - service: s3
+  #       - service: dynamodb
   #   securityGroups:
   #     - name: Management
   #       description: Management Security Group

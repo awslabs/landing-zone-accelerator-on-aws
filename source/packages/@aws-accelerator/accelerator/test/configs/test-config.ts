@@ -352,6 +352,12 @@ const networkConfigJson = {
       entries: ['10.0.0.0/8', '100.96.252.0/23', '100.96.250.0/23'],
     },
   ],
+  endpointPolicies: [
+    {
+      name: 'Default',
+      document: 'vpc-endpoint-policies/default.json',
+    },
+  ],
   vpcs: [
     {
       name: 'Test',
@@ -455,7 +461,17 @@ const networkConfigJson = {
       ],
       dnsResolverLogging: true,
       useCentralEndpoints: false,
-      gatewayEndpoints: ['s3', 'dynamodb'],
+      gatewayEndpoints: {
+        defaultPolicy: 'Default',
+        endpoints: [
+          {
+            service: 's3',
+          },
+          {
+            service: 'dynamodb',
+          },
+        ],
+      },
       securityGroups: [
         {
           name: 'Management',
@@ -512,7 +528,6 @@ const networkConfigJson = {
       natGateways: [],
       transitGatewayAttachments: [],
       useCentralEndpoints: false,
-      gatewayEndpoints: [],
       securityGroups: [],
     },
   ],

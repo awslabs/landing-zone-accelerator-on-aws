@@ -72,14 +72,14 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
         for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
           const endpointDns = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
-            `/accelerator/network/vpc/${vpcItem.name}/endpoints/${endpointItem}/dns`,
+            `/accelerator/network/vpc/${vpcItem.name}/endpoints/${endpointItem.service}/dns`,
           );
           const zoneId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
-            `/accelerator/network/vpc/${vpcItem.name}/endpoints/${endpointItem}/hostedZoneId`,
+            `/accelerator/network/vpc/${vpcItem.name}/endpoints/${endpointItem.service}/hostedZoneId`,
           );
-          endpointMap.set(`${vpcItem.name}_${endpointItem}`, endpointDns);
-          zoneMap.set(`${vpcItem.name}_${endpointItem}`, zoneId);
+          endpointMap.set(`${vpcItem.name}_${endpointItem.service}`, endpointDns);
+          zoneMap.set(`${vpcItem.name}_${endpointItem.service}`, zoneId);
         }
 
         // Set Route 53 resolver endpoints
@@ -150,18 +150,22 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
     for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
       // Create the private hosted zone
       Logger.info(
-        `[network-vpc-dns-stack] Creating private hosted zone for VPC:${vpcItem.name} endpoint:${endpointItem}`,
+        `[network-vpc-dns-stack] Creating private hosted zone for VPC:${vpcItem.name} endpoint:${endpointItem.service}`,
       );
-      const hostedZoneName = HostedZone.getHostedZoneNameForService(endpointItem, cdk.Stack.of(this).region);
-      const hostedZone = new HostedZone(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem)}EpHostedZone`, {
-        hostedZoneName,
-        vpcId,
-      });
+      const hostedZoneName = HostedZone.getHostedZoneNameForService(endpointItem.service, cdk.Stack.of(this).region);
+      const hostedZone = new HostedZone(
+        this,
+        `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpHostedZone`,
+        {
+          hostedZoneName,
+          vpcId,
+        },
+      );
       new cdk.aws_ssm.StringParameter(
         this,
-        `SsmParam${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem)}EpHostedZone`,
+        `SsmParam${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpHostedZone`,
         {
-          parameterName: `/accelerator/network/vpc/${vpcItem.name}/route53/hostedZone/${endpointItem}/id`,
+          parameterName: `/accelerator/network/vpc/${vpcItem.name}/route53/hostedZone/${endpointItem.service}/id`,
           stringValue: hostedZone.hostedZoneId,
         },
       );
@@ -169,27 +173,29 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
       // Create the record set
       let recordSetName = hostedZoneName;
       const wildcardServices = ['ecr.dkr', 's3'];
-      if (wildcardServices.includes(endpointItem)) {
+      if (wildcardServices.includes(endpointItem.service)) {
         recordSetName = `*.${hostedZoneName}`;
       }
 
       // Check mapping for DNS name
-      const endpointKey = `${vpcItem.name}_${endpointItem}`;
+      const endpointKey = `${vpcItem.name}_${endpointItem.service}`;
       const dnsName = endpointMap.get(endpointKey);
       const zoneId = zoneMap.get(endpointKey);
       if (!dnsName) {
         throw new Error(
-          `[network-vpc-dns-stack] Unable to locate DNS name for VPC:${vpcItem.name} endpoint:${endpointItem}`,
+          `[network-vpc-dns-stack] Unable to locate DNS name for VPC:${vpcItem.name} endpoint:${endpointItem.service}`,
         );
       }
       if (!zoneId) {
         throw new Error(
-          `[network-vpc-dns-stack] Unable to locate hosted zone ID for VPC:${vpcItem.name} endpoint:${endpointItem}`,
+          `[network-vpc-dns-stack] Unable to locate hosted zone ID for VPC:${vpcItem.name} endpoint:${endpointItem.service}`,
         );
       }
 
-      Logger.info(`[network-vpc-dns-stack] Creating alias record for VPC:${vpcItem.name} endpoint:${endpointItem}`);
-      new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem)}EpRecordSet`, {
+      Logger.info(
+        `[network-vpc-dns-stack] Creating alias record for VPC:${vpcItem.name} endpoint:${endpointItem.service}`,
+      );
+      new RecordSet(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpRecordSet`, {
         type: 'A',
         name: recordSetName,
         hostedZone: hostedZone,
