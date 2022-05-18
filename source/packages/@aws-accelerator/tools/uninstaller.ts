@@ -16,7 +16,7 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { AcceleratorTool } from './lib/classes/accelerator-tool';
 /**
- * AWS Platform Accelerator Uninstaller tool entry point.
+ * AWS Accelerator Uninstaller tool entry point.
  * Script Options:
  * <ul>
  * <li>--installerStackName The name of the installer cloudformation stack

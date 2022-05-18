@@ -817,6 +817,14 @@ Object {
             },
           ],
         },
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W35",
+              "reason": "This is an access logging bucket.",
+            },
+          ],
+        },
       },
       "Properties": Object {
         "AccessControl": "LogDeliveryWrite",
@@ -1687,7 +1695,7 @@ phases:
           ],
         },
         "Type": "String",
-        "Value": "0.6.0-rc001",
+        "Value": "1.0.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -2533,6 +2541,14 @@ Object {
             },
           ],
         },
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W35",
+              "reason": "This is an access logging bucket.",
+            },
+          ],
+        },
       },
       "Properties": Object {
         "AccessControl": "LogDeliveryWrite",
@@ -3393,7 +3409,7 @@ phases:
           ],
         },
         "Type": "String",
-        "Value": "0.6.0-rc001",
+        "Value": "1.0.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -4173,6 +4189,14 @@ Object {
             Object {
               "id": "AwsSolutions-S1",
               "reason": "AccessLogsBucket has server access logs disabled till the task for access logging completed.",
+            },
+          ],
+        },
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W35",
+              "reason": "This is an access logging bucket.",
             },
           ],
         },
@@ -4969,7 +4993,7 @@ phases:
       "Properties": Object {
         "Name": "/accelerator/AWSAccelerator-Test-InstallerStack/version",
         "Type": "String",
-        "Value": "0.6.0-rc001",
+        "Value": "1.0.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -5738,6 +5762,14 @@ Object {
             Object {
               "id": "AwsSolutions-S1",
               "reason": "AccessLogsBucket has server access logs disabled till the task for access logging completed.",
+            },
+          ],
+        },
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W35",
+              "reason": "This is an access logging bucket.",
             },
           ],
         },
@@ -6524,7 +6556,7 @@ phases:
       "Properties": Object {
         "Name": "/accelerator/AWSAccelerator-Test-InstallerStack/version",
         "Type": "String",
-        "Value": "0.6.0-rc001",
+        "Value": "1.0.0",
       },
       "Type": "AWS::SSM::Parameter",
     },

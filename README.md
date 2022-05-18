@@ -1,17 +1,54 @@
-# AWS Platform Accelerator
+# Landing Zone Accelerator on AWS
 
-The AWS Platform Accelerator is provided by the AWS Solutions Library, a
-collection of cloud-based solutions for dozens of technical and business
-problems, vetted for you by AWS. This solution will accelerate the
-implementation of technical security controls and infrastructure foundation on
-AWS, in alignment with AWS best practices and in conformance with multiple,
-global compliance frameworks.
+The Landing Zone Accelerator on AWS solution helps you quickly deploy a secure,
+resilient, scalable, and fully automated cloud foundation that accelerates your
+readiness for your cloud compliance program. A landing zone is a cloud
+environment that offers a recommended starting point, including default
+accounts, account structure, network and security layouts, and so forth. From a
+landing zone, you can deploy workloads that utilize your solutions and
+applications.
 
-The AWS Platform Accelerator allows customers to define their environment in a
-set of configuration files. These files are ingested by a Cloud Development Kit
-(CDK) application that will deploy specified AWS resources, such as security
-services and networking services, into a multi-account and multi-region
-environment using CDK-generated AWS CloudFormation.
+The Landing Zone Accelerator (LZA) is architected to align with AWS best
+practices and in conformance with multiple, global compliance frameworks. When
+used in coordination with services such as AWS Control Tower, the Landing Zone
+Accelerator provides a comprehensive no-code solution across 35+ AWS services to
+manage and govern a multi-account environment built to support customers with
+highly-regulated workloads and complex compliance requirements. The LZA helps
+you establish platform readiness with security, compliance, and operational
+capabilities.
+
+This solution is provided as an open-source project that is built using the AWS
+Cloud Development Kit (CDK). You install directly into your environment giving
+you full access to the infrastructure as code (IaC) solution. Through a
+simplified set of configuration files, you are able to configure additional
+functionality, guardrails and security services (eg. AWS Managed Config Rules,
+and AWS SecurityHub), manage your foundational networking topology (eg. VPCs,
+Transit Gateways, and Network Firewall), and generate additional workload
+accounts using the AWS Control Tower Account Factory.
+
+There are no additional charges or upfront commitments required to use Landing
+Zone Accelerator on AWS. You pay only for AWS services enabled in order to set
+up your platform and operate your guardrails. This solution can also support
+non-standard AWS partitions, including AWS GovCloud (US), and the US Secret and
+Top Secret regions.
+
+For an overview and solution deployment guide, please visit
+[Landing Zone Accelerator on AWS](https://aws.amazon.com/solutions/implementations/landing-zone-accelerator-on-aws/)
+
+---
+
+IMPORTANT: This solution will not, by itself, make you compliant. It provides
+the foundational infrastructure from which additional complementary solutions
+can be integrated. The information contained in this solution implementation
+guide is not exhaustive. You must be review, evaluate, assess, and approve the
+solution in compliance with your organization’s particular security features,
+tools, and configurations. It is the sole responsibility of you and your
+organization to determine which regulatory requirements are applicable and to
+ensure that you comply with all requirements. Although this solution discusses
+both the technical and administrative requirements, this solution does not help
+you comply with the non-technical administrative requirements.
+
+---
 
 ---
 
@@ -61,7 +98,7 @@ within this repo and submitted to the CDK project as a pull request.
 
 ### @aws-cdk-extensions/tester
 
-Accelerator tester CDK app. This package creates AWS Config custom rules for every test cases defined in test case manifest file.  
+Accelerator tester CDK app. This package creates AWS Config custom rules for every test cases defined in test case manifest file.
 
 ---
 
