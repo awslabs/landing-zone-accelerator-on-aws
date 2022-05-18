@@ -112,9 +112,10 @@ export class PrepareStack extends AcceleratorStack {
       ]);
 
       Logger.info(`[prepare-stack] Load Config Table`);
+      const configRepoName = props.qualifier ? `${props.qualifier}-config` : 'aws-accelerator-config';
       const loadAcceleratorConfigTable = new LoadAcceleratorConfigTable(this, 'LoadAcceleratorConfigTable', {
         acceleratorConfigTable: configTable,
-        configRepositoryName: 'aws-accelerator-config',
+        configRepositoryName: configRepoName,
         managementAccountEmail: props.accountsConfig.getManagementAccount().email,
         auditAccountEmail: props.accountsConfig.getAuditAccount().email,
         logArchiveAccountEmail: props.accountsConfig.getLogArchiveAccount().email,

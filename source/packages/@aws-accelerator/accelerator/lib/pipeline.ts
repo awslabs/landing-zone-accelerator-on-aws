@@ -247,6 +247,10 @@ export class AcceleratorPipeline extends Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: '1',
           },
+          ACCELERATOR_QUALIFIER: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.qualifier ? props.qualifier : 'aws-accelerator',
+          },
           ...pipelineAccountEnvVariables,
         },
       },
