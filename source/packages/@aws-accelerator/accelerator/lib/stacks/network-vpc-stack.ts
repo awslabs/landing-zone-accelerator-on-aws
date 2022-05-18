@@ -41,6 +41,8 @@ import {
   ResourceShareOwner,
   RouteTable,
   SecurityGroup,
+  SecurityGroupEgressRuleProps,
+  SecurityGroupIngressRuleProps,
   Subnet,
   TransitGatewayAttachment,
   Vpc,
@@ -716,15 +718,70 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         const securityGroupMap = new Map<string, SecurityGroup>();
 
-        // Build all security groups first, then add rules so we can reference
-        // the created security groups by id
         for (const securityGroupItem of vpcItem.securityGroups ?? []) {
+          const processedIngressRules: SecurityGroupIngressRuleProps[] = [];
+          const processedEgressRules: SecurityGroupEgressRuleProps[] = [];
+
+          Logger.info(`[network-vpc-stack] Adding rules to ${securityGroupItem.name}`);
+
+          // Add ingress rules
+          for (const [ruleId, ingressRuleItem] of securityGroupItem.inboundRules.entries() ?? []) {
+            Logger.info(`[network-vpc-stack] Adding ingress rule ${ruleId} to ${securityGroupItem.name}`);
+
+            const ingressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
+              ingressRuleItem,
+              prefixListMap,
+            );
+
+            Logger.info(`[network-vpc-stack] Adding ${ingressRules.length} ingress rules`);
+
+            for (const ingressRule of ingressRules) {
+              if (ingressRule.targetPrefixList) {
+                processedIngressRules.push({
+                  description: ingressRule.description,
+                  fromPort: ingressRule.fromPort,
+                  ipProtocol: ingressRule.ipProtocol,
+                  sourcePrefixListId: ingressRule.targetPrefixList.prefixListId,
+                  toPort: ingressRule.toPort,
+                });
+              } else {
+                processedIngressRules.push({ ...ingressRule });
+              }
+            }
+          }
+
+          // Add egress rules
+          for (const [ruleId, egressRuleItem] of securityGroupItem.outboundRules.entries() ?? []) {
+            Logger.info(`[network-vpc-stack] Adding egress rule ${ruleId} to ${securityGroupItem.name}`);
+
+            const egressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(egressRuleItem, prefixListMap);
+
+            Logger.info(`[network-vpc-stack] Adding ${egressRules.length} egress rules`);
+
+            for (const egressRule of egressRules) {
+              if (egressRule.targetPrefixList) {
+                processedEgressRules.push({
+                  description: egressRule.description,
+                  destinationPrefixListId: egressRule.targetPrefixList.prefixListId,
+                  fromPort: egressRule.fromPort,
+                  ipProtocol: egressRule.ipProtocol,
+                  toPort: egressRule.toPort,
+                });
+              } else {
+                processedEgressRules.push({ ...egressRule });
+              }
+            }
+          }
+
+          // Create security group
           Logger.info(`[network-vpc-stack] Adding Security Group ${securityGroupItem.name}`);
           const securityGroup = new SecurityGroup(
             this,
             pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${securityGroupItem.name}Sg`),
             {
               securityGroupName: securityGroupItem.name,
+              securityGroupEgress: processedEgressRules,
+              securityGroupIngress: processedIngressRules,
               description: securityGroupItem.description,
               vpc,
               tags: securityGroupItem.tags,
@@ -742,76 +799,76 @@ export class NetworkVpcStack extends AcceleratorStack {
           );
         }
 
+        // Add security group references
         for (const securityGroupItem of vpcItem.securityGroups ?? []) {
-          const securityGroup = securityGroupMap.get(securityGroupItem.name);
-          if (!securityGroup) {
-            throw new Error(`${securityGroupItem.name} not in map`);
-          }
-          Logger.info(`[network-vpc-stack] Adding rules to ${securityGroupItem.name}`);
-
-          // Add ingress rules
           for (const [ruleId, ingressRuleItem] of securityGroupItem.inboundRules.entries() ?? []) {
-            Logger.info(`[network-vpc-stack] Adding ingress rule ${ruleId} to ${securityGroupItem.name}`);
+            // Check if rule sources include a security group reference
+            let includesSecurityGroupSource = false;
+            for (const source of ingressRuleItem.sources) {
+              if (NetworkConfigTypes.securityGroupSourceConfig.is(source)) {
+                includesSecurityGroupSource = true;
+              }
+            }
 
-            const ingressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
-              ingressRuleItem,
-              securityGroupMap,
-              prefixListMap,
-            );
+            // Add security group sources if they exist
+            if (includesSecurityGroupSource) {
+              const securityGroup = securityGroupMap.get(securityGroupItem.name);
 
-            Logger.info(`[network-vpc-stack] Adding ${ingressRules.length} ingress rules`);
+              if (!securityGroup) {
+                throw new Error(`[network-vpc-stack] Unable to locate security group ${securityGroupItem.name}`);
+              }
 
-            for (const [index, ingressRule] of ingressRules.entries()) {
-              if (ingressRule.targetSecurityGroup) {
-                securityGroup.addIngressRule(`${securityGroupItem.name}-Ingress-${ruleId}-${index}`, {
-                  sourceSecurityGroup: ingressRule.targetSecurityGroup,
-                  ...ingressRule,
-                });
-              } else if (ingressRule.targetPrefixList) {
-                securityGroup.addIngressRule(`${securityGroupItem.name}-Ingress-${ruleId}-${index}`, {
-                  sourcePrefixList: ingressRule.targetPrefixList,
-                  ...ingressRule,
-                });
-              } else {
-                securityGroup.addIngressRule(`${securityGroupItem.name}-Ingress-${ruleId}-${index}`, {
-                  ...ingressRule,
-                });
+              const ingressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
+                ingressRuleItem,
+                prefixListMap,
+                securityGroupMap,
+              );
+
+              for (const [index, ingressRule] of ingressRules.entries()) {
+                if (ingressRule.targetSecurityGroup) {
+                  securityGroup.addIngressRule(`${securityGroupItem.name}-Ingress-${ruleId}-${index}`, {
+                    sourceSecurityGroup: ingressRule.targetSecurityGroup,
+                    ...ingressRule,
+                  });
+                }
               }
             }
           }
 
-          // Add egress rules
           for (const [ruleId, egressRuleItem] of securityGroupItem.outboundRules.entries() ?? []) {
-            Logger.info(`[network-vpc-stack] Adding egress rule ${ruleId} to ${securityGroupItem.name}`);
+            // Check if rule destinations include a security group reference
+            let includesSecurityGroupSource = false;
+            for (const source of egressRuleItem.sources) {
+              if (NetworkConfigTypes.securityGroupSourceConfig.is(source)) {
+                includesSecurityGroupSource = true;
+              }
+            }
 
-            const egressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
-              egressRuleItem,
-              securityGroupMap,
-              prefixListMap,
-            );
+            // Add security group sources if they exist
+            if (includesSecurityGroupSource) {
+              const securityGroup = securityGroupMap.get(securityGroupItem.name);
 
-            Logger.info(`[network-vpc-stack] Adding ${egressRules.length} egress rules`);
+              if (!securityGroup) {
+                throw new Error(`[network-vpc-stack] Unable to locate security group ${securityGroupItem.name}`);
+              }
 
-            for (const [index, egressRule] of egressRules.entries()) {
-              if (egressRule.targetSecurityGroup) {
-                securityGroup.addEgressRule(`${securityGroupItem.name}-Egress-${ruleId}-${index}`, {
-                  destinationSecurityGroup: egressRule.targetSecurityGroup,
-                  ...egressRule,
-                });
-              } else if (egressRule.targetPrefixList) {
-                securityGroup.addEgressRule(`${securityGroupItem.name}-Egress-${ruleId}-${index}`, {
-                  destinationPrefixList: egressRule.targetPrefixList,
-                  ...egressRule,
-                });
-              } else {
-                securityGroup.addEgressRule(`${securityGroupItem.name}-Egress-${ruleId}-${index}`, {
-                  ...egressRule,
-                });
+              const egressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
+                egressRuleItem,
+                prefixListMap,
+                securityGroupMap,
+              );
+
+              for (const [index, egressRule] of egressRules.entries()) {
+                if (egressRule.targetSecurityGroup) {
+                  securityGroup.addEgressRule(`${securityGroupItem.name}-Egress-${ruleId}-${index}`, {
+                    destinationSecurityGroup: egressRule.targetSecurityGroup,
+                    ...egressRule,
+                  });
+                }
               }
             }
           }
         }
-
         //
         // Create NACLs
         //
@@ -945,8 +1002,8 @@ export class NetworkVpcStack extends AcceleratorStack {
 
   private processSecurityGroupRules(
     item: SecurityGroupRuleConfig,
-    securityGroupMap: Map<string, SecurityGroup>,
     prefixListMap: Map<string, PrefixList>,
+    securityGroupMap?: Map<string, SecurityGroup>,
   ): SecurityGroupRuleProps[] {
     const rules: SecurityGroupRuleProps[] = [];
 
@@ -957,24 +1014,34 @@ export class NetworkVpcStack extends AcceleratorStack {
       for (const port of item.tcpPorts ?? []) {
         Logger.debug(`[network-vpc-stack] Adding TCP port ${port}`);
         rules.push(
-          ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, prefixListMap, {
-            ipProtocol: cdk.aws_ec2.Protocol.TCP,
-            fromPort: port,
-            toPort: port,
-            description: item.description,
-          }),
+          ...this.processSecurityGroupRuleSources(
+            item.sources,
+            prefixListMap,
+            {
+              ipProtocol: cdk.aws_ec2.Protocol.TCP,
+              fromPort: port,
+              toPort: port,
+              description: item.description,
+            },
+            securityGroupMap,
+          ),
         );
       }
 
       for (const port of item.udpPorts ?? []) {
         Logger.debug(`[network-vpc-stack] Adding UDP port ${port}`);
         rules.push(
-          ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, prefixListMap, {
-            ipProtocol: cdk.aws_ec2.Protocol.UDP,
-            fromPort: port,
-            toPort: port,
-            description: item.description,
-          }),
+          ...this.processSecurityGroupRuleSources(
+            item.sources,
+            prefixListMap,
+            {
+              ipProtocol: cdk.aws_ec2.Protocol.UDP,
+              fromPort: port,
+              toPort: port,
+              description: item.description,
+            },
+            securityGroupMap,
+          ),
         );
       }
     }
@@ -983,28 +1050,43 @@ export class NetworkVpcStack extends AcceleratorStack {
       Logger.info(`[network-vpc-stack] Adding type ${type}`);
       if (type === 'ALL') {
         rules.push(
-          ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, prefixListMap, {
-            ipProtocol: cdk.aws_ec2.Protocol.ALL,
-            description: item.description,
-          }),
+          ...this.processSecurityGroupRuleSources(
+            item.sources,
+            prefixListMap,
+            {
+              ipProtocol: cdk.aws_ec2.Protocol.ALL,
+              description: item.description,
+            },
+            securityGroupMap,
+          ),
         );
       } else if (Object.keys(TCP_PROTOCOLS_PORT).includes(type)) {
         rules.push(
-          ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, prefixListMap, {
-            ipProtocol: cdk.aws_ec2.Protocol.TCP,
-            fromPort: TCP_PROTOCOLS_PORT[type],
-            toPort: TCP_PROTOCOLS_PORT[type],
-            description: item.description,
-          }),
+          ...this.processSecurityGroupRuleSources(
+            item.sources,
+            prefixListMap,
+            {
+              ipProtocol: cdk.aws_ec2.Protocol.TCP,
+              fromPort: TCP_PROTOCOLS_PORT[type],
+              toPort: TCP_PROTOCOLS_PORT[type],
+              description: item.description,
+            },
+            securityGroupMap,
+          ),
         );
       } else {
         rules.push(
-          ...this.processSecurityGroupRuleSources(item.sources, securityGroupMap, prefixListMap, {
-            ipProtocol: type,
-            fromPort: item.fromPort,
-            toPort: item.toPort,
-            description: item.description,
-          }),
+          ...this.processSecurityGroupRuleSources(
+            item.sources,
+            prefixListMap,
+            {
+              ipProtocol: type,
+              fromPort: item.fromPort,
+              toPort: item.toPort,
+              description: item.description,
+            },
+            securityGroupMap,
+          ),
         );
       }
     }
@@ -1012,9 +1094,17 @@ export class NetworkVpcStack extends AcceleratorStack {
     return rules;
   }
 
+  /**
+   * Processes individual security group source references.
+   *
+   * @param sources
+   * @param prefixListMap
+   * @param securityGroupMap
+   * @param props
+   * @returns
+   */
   private processSecurityGroupRuleSources(
     sources: string[] | SecurityGroupSourceConfig[] | PrefixListSourceConfig[] | SubnetSourceConfig[],
-    securityGroupMap: Map<string, SecurityGroup>,
     prefixListMap: Map<string, PrefixList>,
     props: {
       ipProtocol: string;
@@ -1022,94 +1112,100 @@ export class NetworkVpcStack extends AcceleratorStack {
       toPort?: number;
       description?: string;
     },
+    securityGroupMap?: Map<string, SecurityGroup>,
   ): SecurityGroupRuleProps[] {
     const rules: SecurityGroupRuleProps[] = [];
 
     Logger.info(`[network-vpc-stack] processSecurityGroupRuleSources`);
 
     for (const source of sources ?? []) {
-      //
-      // IP source
-      //
-      if (nonEmptyString.is(source)) {
-        Logger.info(`[network-vpc-stack] Evaluate IP Source ${source}`);
-        if (source.includes('::')) {
-          rules.push({
-            cidrIpv6: source,
-            ...props,
-          });
-        } else {
-          rules.push({
-            cidrIp: source,
-            ...props,
-          });
+      // Conditional to only process non-security group sources
+      if (!securityGroupMap) {
+        //
+        // IP source
+        //
+        if (nonEmptyString.is(source)) {
+          Logger.info(`[network-vpc-stack] Evaluate IP Source ${source}`);
+          if (source.includes('::')) {
+            rules.push({
+              cidrIpv6: source,
+              ...props,
+            });
+          } else {
+            rules.push({
+              cidrIp: source,
+              ...props,
+            });
+          }
+        }
+
+        //
+        // Subnet source
+        //
+        if (NetworkConfigTypes.subnetSourceConfig.is(source)) {
+          Logger.info(
+            `[network-vpc-stack] Evaluate Subnet Source account:${source.account} vpc:${source.vpc} subnets:[${source.subnets}]`,
+          );
+
+          // Locate the VPC
+          const vpcItem = this.props.networkConfig.vpcs?.find(
+            item => item.account === source.account && item.name === source.vpc,
+          );
+          if (!vpcItem) {
+            throw new Error(`Specified VPC ${source.vpc} not defined`);
+          }
+
+          // Loop through all subnets to add
+          for (const subnet of source.subnets) {
+            // Locate the Subnet
+            const subnetItem = vpcItem.subnets?.find(item => item.name === subnet);
+            if (!subnetItem) {
+              throw new Error(`Specified subnet ${subnet} not defined`);
+            }
+            rules.push({
+              // TODO: Add support for dynamic IP lookup
+              cidrIp: subnetItem.ipv4CidrBlock,
+              ...props,
+            });
+          }
+        }
+
+        //
+        // Prefix List Source
+        //
+        if (NetworkConfigTypes.prefixListSourceConfig.is(source)) {
+          Logger.info(`[network-vpc-stack] Evaluate Prefix List Source prefixLists:[${source.prefixLists}]`);
+
+          for (const prefixList of source.prefixLists ?? []) {
+            const targetPrefixList = prefixListMap.get(prefixList);
+            if (!targetPrefixList) {
+              throw new Error(`Specified Prefix List ${prefixList} not defined`);
+            }
+            rules.push({
+              targetPrefixList,
+              ...props,
+            });
+          }
         }
       }
 
-      //
-      // Subnet source
-      //
-      if (NetworkConfigTypes.subnetSourceConfig.is(source)) {
-        Logger.info(
-          `[network-vpc-stack] Evaluate Subnet Source account:${source.account} vpc:${source.vpc} subnets:[${source.subnets}]`,
-        );
+      if (securityGroupMap) {
+        //
+        // Security Group Source
+        //
+        if (NetworkConfigTypes.securityGroupSourceConfig.is(source)) {
+          Logger.info(`[network-vpc-stack] Evaluate Security Group Source securityGroups:[${source.securityGroups}]`);
 
-        // Locate the VPC
-        const vpcItem = this.props.networkConfig.vpcs?.find(
-          item => item.account === source.account && item.name === source.vpc,
-        );
-        if (vpcItem === undefined) {
-          throw new Error(`Specified VPC ${source.vpc} not defined`);
-        }
-
-        // Loop through all subnets to add
-        for (const subnet of source.subnets) {
-          // Locate the Subnet
-          const subnetItem = vpcItem.subnets?.find(item => item.name === subnet);
-          if (subnetItem === undefined) {
-            throw new Error(`Specified subnet ${subnet} not defined`);
+          for (const securityGroup of source.securityGroups ?? []) {
+            const targetSecurityGroup = securityGroupMap.get(securityGroup);
+            if (!targetSecurityGroup) {
+              throw new Error(`Specified Security Group ${securityGroup} not defined`);
+            }
+            rules.push({
+              targetSecurityGroup,
+              ...props,
+            });
           }
-          rules.push({
-            // TODO: Add support for dynamic IP lookup
-            cidrIp: subnetItem.ipv4CidrBlock,
-            ...props,
-          });
-        }
-      }
-
-      //
-      // Security Group Source
-      //
-      if (NetworkConfigTypes.securityGroupSourceConfig.is(source)) {
-        Logger.info(`[network-vpc-stack] Evaluate Security Group Source securityGroups:[${source.securityGroups}]`);
-
-        for (const securityGroup of source.securityGroups ?? []) {
-          const targetSecurityGroup = securityGroupMap.get(securityGroup);
-          if (targetSecurityGroup === undefined) {
-            throw new Error(`Specified Security Group ${securityGroup} not defined`);
-          }
-          rules.push({
-            targetSecurityGroup,
-            ...props,
-          });
-        }
-      }
-
-      //
-      // Prefix List Source
-      //
-      if (NetworkConfigTypes.prefixListSourceConfig.is(source)) {
-        Logger.info(`[network-vpc-stack] Evaluate Security Group Source prefixLists:[${source.prefixLists}]`);
-
-        for (const prefixList of source.prefixLists ?? []) {
-          const targetPrefixList = prefixListMap.get(prefixList);
-          if (targetPrefixList === undefined) {
-            throw new Error(`Specified Prefix List ${prefixList} not defined`);
-          }
-          rules.push({
-            targetPrefixList,
-            ...props,
-          });
         }
       }
     }

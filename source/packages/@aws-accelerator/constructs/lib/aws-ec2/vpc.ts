@@ -176,6 +176,16 @@ export interface SecurityGroupProps {
   readonly description?: string;
 
   /**
+   * The outbound rules associated with the security group.
+   */
+  readonly securityGroupEgress?: SecurityGroupEgressRuleProps[];
+
+  /**
+   * The inbound rules associated with the security group.
+   */
+  readonly securityGroupIngress?: SecurityGroupIngressRuleProps[];
+
+  /**
    * The tags that will be attached to the security group
    */
   readonly tags?: cdk.CfnTag[];
@@ -197,6 +207,7 @@ export interface SecurityGroupIngressRuleProps {
   readonly cidrIp?: string;
   readonly cidrIpv6?: string;
   readonly sourcePrefixList?: IPrefixList;
+  readonly sourcePrefixListId?: string;
   readonly sourceSecurityGroup?: ISecurityGroup;
   readonly fromPort?: number;
   readonly toPort?: number;
@@ -208,6 +219,7 @@ export interface SecurityGroupEgressRuleProps {
   readonly cidrIp?: string;
   readonly cidrIpv6?: string;
   readonly destinationPrefixList?: IPrefixList;
+  readonly destinationPrefixListId?: string;
   readonly destinationSecurityGroup?: ISecurityGroup;
   readonly fromPort?: number;
   readonly toPort?: number;
@@ -227,6 +239,8 @@ export class SecurityGroup extends cdk.Resource implements ISecurityGroup {
 
     this.securityGroup = new cdk.aws_ec2.CfnSecurityGroup(this, 'Resource', {
       groupDescription: props.description ?? '',
+      securityGroupEgress: props.securityGroupEgress,
+      securityGroupIngress: props.securityGroupIngress,
       groupName: props.securityGroupName,
       vpcId: props.vpc?.vpcId ?? props.vpcId,
       tags: props.tags,
