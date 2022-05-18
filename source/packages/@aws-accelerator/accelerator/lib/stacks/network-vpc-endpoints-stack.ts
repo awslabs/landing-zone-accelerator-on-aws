@@ -36,6 +36,8 @@ import {
   ResourceShareItem,
   ResourceShareOwner,
   SecurityGroup,
+  SecurityGroupEgressRuleProps,
+  SecurityGroupIngressRuleProps,
   VpcEndpoint,
 } from '@aws-accelerator/constructs';
 
@@ -491,27 +493,18 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         trafficType = 'cassandra';
       }
 
+      // Create Security Group if it doesn't exist
       if (!endpointSg) {
-        // Create Security Group if it doesn't exist
-        Logger.info(
-          `[network-vpc-endpoints-stack] Adding Security Group to VPC ${vpcItem.name} for interface endpoints -- ${trafficType} traffic`,
-        );
-        const securityGroup = new SecurityGroup(this, pascalCase(`${vpcItem.name}Vpc${trafficType}EpSecurityGroup`), {
-          securityGroupName: `interface_ep_${trafficType}_sg`,
-          description: `Security group for interface endpoints -- ${trafficType} traffic`,
-          vpcId,
-        });
-        endpointSg = securityGroup;
-        securityGroupMap.set(trafficType, securityGroup);
+        const ingressRules: SecurityGroupIngressRuleProps[] = [];
+        const egressRules: SecurityGroupEgressRuleProps[] = [];
+        let includeNagSuppression = false;
 
         // Add ingress and egress CIDRs
-        let ingressRuleIndex = 0; // Used increment ingressRule id
         for (const ingressCidr of vpcItem.interfaceEndpoints?.allowedCidrs || ['0.0.0.0/0']) {
-          const ingressRuleId = `interface_ep_${trafficType}_sg-Ingress-${ingressRuleIndex++}`;
           Logger.info(
-            `[network-vpc-endpoints-stack] Adding ingress cidr ${ingressCidr} TCP:${port} to ${ingressRuleId}`,
+            `[network-vpc-endpoints-stack] Interface endpoints: adding ingress cidr ${ingressCidr} TCP:${port}`,
           );
-          endpointSg.addIngressRule(ingressRuleId, {
+          ingressRules.push({
             ipProtocol: cdk.aws_ec2.Protocol.TCP,
             fromPort: port,
             toPort: port,
@@ -521,24 +514,44 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
           // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
           // rule suppression with evidence for this permission.
           if (ingressCidr === '0.0.0.0/0') {
-            NagSuppressions.addResourceSuppressionsByPath(
-              this,
-              `${this.stackName}/${pascalCase(vpcItem.name)}Vpc${trafficType}EpSecurityGroup/${ingressRuleId}`,
-              [
-                {
-                  id: 'AwsSolutions-EC23',
-                  reason: 'Allowed access for interface endpoints',
-                },
-              ],
-            );
+            includeNagSuppression = true;
           }
         }
 
         // Adding Egress '127.0.0.1/32' to avoid default Egress rule
-        securityGroup.addEgressRule(`interface_ep_${trafficType}_sg-Egress`, {
+        egressRules.push({
           ipProtocol: cdk.aws_ec2.Protocol.ALL,
           cidrIp: '127.0.0.1/32',
         });
+
+        // Create Security Group
+        Logger.info(
+          `[network-vpc-endpoints-stack] Adding Security Group to VPC ${vpcItem.name} for interface endpoints -- ${trafficType} traffic`,
+        );
+        const securityGroup = new SecurityGroup(this, pascalCase(`${vpcItem.name}Vpc${trafficType}EpSecurityGroup`), {
+          securityGroupName: `interface_ep_${trafficType}_sg`,
+          securityGroupEgress: egressRules,
+          securityGroupIngress: ingressRules,
+          description: `Security group for interface endpoints -- ${trafficType} traffic`,
+          vpcId,
+        });
+        endpointSg = securityGroup;
+        securityGroupMap.set(trafficType, securityGroup);
+
+        // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
+        // rule suppression with evidence for this permission.
+        if (includeNagSuppression) {
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(vpcItem.name)}Vpc${trafficType}EpSecurityGroup`,
+            [
+              {
+                id: 'AwsSolutions-EC23',
+                reason: 'Allowed access for interface endpoints',
+              },
+            ],
+          );
+        }
       }
 
       // Create the interface endpoint
@@ -571,49 +584,28 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       throw new Error('[network-vpc-endpoints-stack] Route 53 Resolver inbound endpoints cannot have rules.');
     }
 
-    // Create security group
+    // Begin creation of Route 53 resolver endpoint
     Logger.info(
-      `[network-vpc-endpoints-stack] Adding Security Group for Route 53 Resolver endpoint ${endpointItem.name}`,
+      `[network-vpc-endpoints-stack] Add Route 53 Resolver ${endpointItem.type} endpoint ${endpointItem.name}`,
     );
-    const securityGroup = new SecurityGroup(this, pascalCase(`${endpointItem.name}EpSecurityGroup`), {
-      securityGroupName: `ep_${endpointItem.name}_sg`,
-      description: `AWS Route 53 Resolver endpoint - ${endpointItem.name}`,
-      vpcId,
-    });
+    const ingressRules: SecurityGroupIngressRuleProps[] = [];
+    const egressRules: SecurityGroupEgressRuleProps[] = [];
+    let includeNagSuppression = false;
 
     if (endpointItem.type === 'INBOUND') {
-      let ingressRuleIndex = 0; // Used increment ingressRule id
-
       for (const ingressCidr of endpointItem.allowedCidrs || ['0.0.0.0/0']) {
         const port = 53;
 
-        let ingressRuleId = `ep_${endpointItem.name}_sg-Ingress-${ingressRuleIndex++}`;
-        Logger.info(`[network-vpc-endpoints-stack] Adding ingress cidr ${ingressCidr} TCP:${port} to ${ingressRuleId}`);
-        securityGroup.addIngressRule(ingressRuleId, {
+        Logger.info(`[network-vpc-endpoints-stack] Route 53 resolver: adding ingress cidr ${ingressCidr} TCP:${port}`);
+        ingressRules.push({
           ipProtocol: cdk.aws_ec2.Protocol.TCP,
           fromPort: port,
           toPort: port,
           cidrIp: ingressCidr,
         });
 
-        if (ingressCidr === '0.0.0.0/0') {
-          // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
-          // rule suppression with evidence for this permission.
-          NagSuppressions.addResourceSuppressionsByPath(
-            this,
-            `${this.stackName}/${pascalCase(`${endpointItem.name}EpSecurityGroup`)}/${ingressRuleId}`,
-            [
-              {
-                id: 'AwsSolutions-EC23',
-                reason: 'Allowed access for TCP and UDP',
-              },
-            ],
-          );
-        }
-
-        ingressRuleId = `ep_${endpointItem.name}_sg-Ingress-${ingressRuleIndex++}`;
-        Logger.info(`[network-vpc-endpoints-stack] Adding ingress cidr ${ingressCidr} UDP:${port} to ${ingressRuleId}`);
-        securityGroup.addIngressRule(ingressRuleId, {
+        Logger.info(`[network-vpc-endpoints-stack] Route 53 resolver: adding ingress cidr ${ingressCidr} UDP:${port}`);
+        ingressRules.push({
           ipProtocol: cdk.aws_ec2.Protocol.UDP,
           fromPort: port,
           toPort: port,
@@ -623,27 +615,16 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         if (ingressCidr === '0.0.0.0/0') {
           // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
           // rule suppression with evidence for this permission.
-          NagSuppressions.addResourceSuppressionsByPath(
-            this,
-            `${this.stackName}/${pascalCase(`${endpointItem.name}EpSecurityGroup`)}/${ingressRuleId}`,
-            [
-              {
-                id: 'AwsSolutions-EC23',
-                reason: 'Allowed access for TCP and UDP',
-              },
-            ],
-          );
+          includeNagSuppression = true;
         }
       }
 
       // Adding Egress '127.0.0.1/32' to avoid default Egress rule
-      securityGroup.addEgressRule(`ep_${endpointItem.name}_sg-Egress`, {
+      egressRules.push({
         ipProtocol: cdk.aws_ec2.Protocol.ALL,
         cidrIp: '127.0.0.1/32',
       });
     } else {
-      let egressRuleIndex = 0;
-
       // Check if non-standard ports exist in rules
       const portMap = new Map<string, string>();
       for (const ruleItem of endpointItem.rules ?? []) {
@@ -663,18 +644,16 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
           port = +nonStandardPort;
         }
 
-        let egressRuleId = `ep_${endpointItem.name}_sg-Egress-${egressRuleIndex++}`;
-        Logger.info(`[network-vpc-endpoints-stack] Adding egress cidr ${egressCidr} TCP:${port} to ${egressRuleId}`);
-        securityGroup.addEgressRule(egressRuleId, {
+        Logger.info(`[network-vpc-endpoints-stack] Route 53 resolver: adding egress cidr ${egressCidr} TCP:${port}`);
+        egressRules.push({
           ipProtocol: cdk.aws_ec2.Protocol.TCP,
           fromPort: port,
           toPort: port,
           cidrIp: egressCidr,
         });
 
-        egressRuleId = `ep_${endpointItem.name}_sg-Egress-${egressRuleIndex++}`;
-        Logger.info(`[network-vpc-endpoints-stack] Adding egress cidr ${egressCidr} UDP:${port} to ${egressRuleId}`);
-        securityGroup.addEgressRule(egressRuleId, {
+        Logger.info(`[network-vpc-endpoints-stack] Route 53 resolver: adding egress cidr ${egressCidr} UDP:${port}`);
+        egressRules.push({
           ipProtocol: cdk.aws_ec2.Protocol.UDP,
           fromPort: port,
           toPort: port,
@@ -683,9 +662,34 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       }
     }
 
+    // Create security group
     Logger.info(
-      `[network-vpc-endpoints-stack] Add Route 53 Resolver ${endpointItem.type} endpoint ${endpointItem.name}`,
+      `[network-vpc-endpoints-stack] Adding Security Group for Route 53 Resolver endpoint ${endpointItem.name}`,
     );
+    const securityGroup = new SecurityGroup(this, pascalCase(`${endpointItem.name}EpSecurityGroup`), {
+      securityGroupName: `ep_${endpointItem.name}_sg`,
+      securityGroupEgress: egressRules,
+      securityGroupIngress: ingressRules,
+      description: `AWS Route 53 Resolver endpoint - ${endpointItem.name}`,
+      vpcId,
+    });
+
+    // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
+    // rule suppression with evidence for this permission.
+    if (includeNagSuppression) {
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/${pascalCase(endpointItem.name)}EpSecurityGroup`,
+        [
+          {
+            id: 'AwsSolutions-EC23',
+            reason: 'Allowed access for interface endpoints',
+          },
+        ],
+      );
+    }
+
+    // Create resolver endpoint
     const endpoint = new ResolverEndpoint(this, `${pascalCase(endpointItem.name)}ResolverEndpoint`, {
       direction: endpointItem.type,
       ipAddresses: subnets,

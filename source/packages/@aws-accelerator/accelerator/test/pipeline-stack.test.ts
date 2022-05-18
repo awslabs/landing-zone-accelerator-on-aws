@@ -1504,6 +1504,11 @@ describe('PipelineStack', () => {
                   Type: 'PLAINTEXT',
                   Value: '1',
                 },
+                {
+                  Name: 'ACCELERATOR_QUALIFIER',
+                  Type: 'PLAINTEXT',
+                  Value: 'aws-accelerator',
+                },
               ],
               Image: 'aws/codebuild/standard:5.0',
               ImagePullCredentialsType: 'CODEBUILD',
@@ -1541,7 +1546,6 @@ describe('PipelineStack', () => {
       },
     });
   });
-
 
   /**
    * PipelineToolkitRole resource configuration test
