@@ -104,18 +104,7 @@ describe('RecordSet', () => {
         TestHostedZone68F306E4: {
           Type: 'AWS::Route53::HostedZone',
           Properties: {
-            Name: {
-              'Fn::Join': [
-                '',
-                [
-                  's3-global.accesspoint.',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  '.amazonaws.com',
-                ],
-              ],
-            },
+            Name: 's3-global.accesspoint.aws.com',
             VPCs: [
               {
                 VPCId: 'Test',
@@ -180,18 +169,7 @@ describe('RecordSet', () => {
             HostedZoneId: {
               Ref: 'TestHostedZone68F306E4',
             },
-            Name: {
-              'Fn::Join': [
-                '',
-                [
-                  's3-global.accesspoint.',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                  '.amazonaws.com',
-                ],
-              ],
-            },
+            Name: 's3-global.accesspoint.aws.com',
             Type: 'A',
           },
         },
