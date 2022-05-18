@@ -11,6 +11,22 @@ Object {
         "aws",
       ],
     },
+    "UseCodeCommitCondition": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Ref": "RepositorySource",
+        },
+        "codecommit",
+      ],
+    },
+    "UseGitHubCondition": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Ref": "RepositorySource",
+        },
+        "github",
+      ],
+    },
   },
   "Mappings": Object {
     "GlobalRegionMap": Object {
@@ -37,6 +53,7 @@ Object {
           },
           "Parameters": Array [
             "RepositorySource",
+            "RepositoryOwner",
             "RepositoryName",
             "RepositoryBranchName",
           ],
@@ -102,6 +119,9 @@ Object {
         "RepositoryName": Object {
           "default": "Repository Name",
         },
+        "RepositoryOwner": Object {
+          "default": "Repository Owner",
+        },
         "RepositorySource": Object {
           "default": "Source",
         },
@@ -152,7 +172,13 @@ Object {
       "Type": "String",
     },
     "RepositoryName": Object {
+      "Default": "landing-zone-accelerator-on-aws",
       "Description": "The name of the git repository hosting the accelerator code",
+      "Type": "String",
+    },
+    "RepositoryOwner": Object {
+      "Default": "awslabs",
+      "Description": "The owner of the repository containing the accelerator code. (GitHub Only)",
       "Type": "String",
     },
     "RepositorySource": Object {
@@ -189,6 +215,596 @@ Object {
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "CodeCommitPipeline2208527B": Object {
+      "Condition": "UseCodeCommitCondition",
+      "DependsOn": Array [
+        "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "CodeCommitPipelineRole5C35E76C",
+      ],
+      "Properties": Object {
+        "ArtifactStore": Object {
+          "EncryptionKey": Object {
+            "Id": Object {
+              "Fn::GetAtt": Array [
+                "InstallerKey2A6A8C6D",
+                "Arn",
+              ],
+            },
+            "Type": "KMS",
+          },
+          "Location": Object {
+            "Ref": "SecureBucket747CD8C0",
+          },
+          "Type": "S3",
+        },
+        "Name": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              Object {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-installer",
+            ],
+          ],
+        },
+        "RestartExecutionOnUpdate": true,
+        "RoleArn": Object {
+          "Fn::GetAtt": Array [
+            "CodeCommitPipelineRole5C35E76C",
+            "Arn",
+          ],
+        },
+        "Stages": Array [
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Source",
+                  "Owner": "AWS",
+                  "Provider": "CodeCommit",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "BranchName": Object {
+                    "Ref": "RepositoryBranchName",
+                  },
+                  "PollForSourceChanges": false,
+                  "RepositoryName": Object {
+                    "Ref": "RepositoryName",
+                  },
+                },
+                "Name": "Source",
+                "OutputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "RoleArn": Object {
+                  "Fn::GetAtt": Array [
+                    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Source",
+          },
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "ProjectName": Object {
+                    "Ref": "InstallerProject879FF821",
+                  },
+                },
+                "InputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "Name": "Install",
+                "RoleArn": Object {
+                  "Fn::GetAtt": Array [
+                    "CodeCommitPipelineRole5C35E76C",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Install",
+          },
+        ],
+      },
+      "Type": "AWS::CodePipeline::Pipeline",
+    },
+    "CodeCommitPipelineRole5C35E76C": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codepipeline.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CodeCommitPipelineRoleDefaultPolicyDE8B332B": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "CodeCommitPipelineRole5C35E76C",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "Roles": Array [
+          Object {
+            "Ref": "CodeCommitPipelineRole5C35E76C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "codecommit:GetBranch",
+                "codecommit:GetCommit",
+                "codecommit:UploadArchive",
+                "codecommit:GetUploadArchiveStatus",
+                "codecommit:CancelUploadArchive",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codecommit:",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":",
+                    Object {
+                      "Ref": "RepositoryName",
+                    },
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D",
+        "Roles": Array [
+          Object {
+            "Ref": "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GitHubPipeline7B79E906": Object {
+      "Condition": "UseGitHubCondition",
+      "DependsOn": Array [
+        "GitHubPipelineRoleDefaultPolicyD82457D6",
+        "GitHubPipelineRole6F4DEF1B",
+      ],
+      "Properties": Object {
+        "ArtifactStore": Object {
+          "EncryptionKey": Object {
+            "Id": Object {
+              "Fn::GetAtt": Array [
+                "InstallerKey2A6A8C6D",
+                "Arn",
+              ],
+            },
+            "Type": "KMS",
+          },
+          "Location": Object {
+            "Ref": "SecureBucket747CD8C0",
+          },
+          "Type": "S3",
+        },
+        "Name": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              Object {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-installer",
+            ],
+          ],
+        },
+        "RestartExecutionOnUpdate": true,
+        "RoleArn": Object {
+          "Fn::GetAtt": Array [
+            "GitHubPipelineRole6F4DEF1B",
+            "Arn",
+          ],
+        },
+        "Stages": Array [
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Source",
+                  "Owner": "ThirdParty",
+                  "Provider": "GitHub",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "Branch": Object {
+                    "Ref": "RepositoryBranchName",
+                  },
+                  "OAuthToken": "{{resolve:secretsmanager:accelerator/github-token:SecretString:::}}",
+                  "Owner": Object {
+                    "Ref": "RepositoryOwner",
+                  },
+                  "PollForSourceChanges": false,
+                  "Repo": Object {
+                    "Ref": "RepositoryName",
+                  },
+                },
+                "Name": "Source",
+                "OutputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Source",
+          },
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "ProjectName": Object {
+                    "Ref": "InstallerProject879FF821",
+                  },
+                },
+                "InputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "Name": "Install",
+                "RoleArn": Object {
+                  "Fn::GetAtt": Array [
+                    "GitHubPipelineRole6F4DEF1B",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Install",
+          },
+        ],
+      },
+      "Type": "AWS::CodePipeline::Pipeline",
+    },
+    "GitHubPipelineRole6F4DEF1B": Object {
+      "Condition": "UseGitHubCondition",
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codepipeline.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GitHubPipelineRoleDefaultPolicyD82457D6": Object {
+      "Condition": "UseGitHubCondition",
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "GitHubPipelineRole6F4DEF1B",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GitHubPipelineRoleDefaultPolicyD82457D6",
+        "Roles": Array [
+          Object {
+            "Ref": "GitHubPipelineRole6F4DEF1B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "InstallerAccessLogsBucket647700E9": Object {
       "DeletionPolicy": "Retain",
@@ -703,6 +1319,20 @@ Object {
               "Value": "1",
             },
             Object {
+              "Name": "ACCELERATOR_REPOSITORY_SOURCE",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "RepositorySource",
+              },
+            },
+            Object {
+              "Name": "ACCELERATOR_REPOSITORY_OWNER",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "RepositoryOwner",
+              },
+            },
+            Object {
               "Name": "ACCELERATOR_REPOSITORY_NAME",
               "Type": "PLAINTEXT",
               "Value": Object {
@@ -861,7 +1491,7 @@ phases:
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":iam::\\"$MANAGEMENT_ACCOUNT_ID\\":role/\\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" --role-session-name acceleratorAssumeRoleSession --query \\"Credentials.[AccessKeyId,SecretAccessKey,SessionToken]\\" --output text));  
+                ":iam::\\"$MANAGEMENT_ACCOUNT_ID\\":role/\\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" --role-session-name acceleratorAssumeRoleSession --query \\"Credentials.[AccessKeyId,SecretAccessKey,SessionToken]\\" --output text));
                           yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
                   "Ref": "AWS::Region",
@@ -880,7 +1510,7 @@ phases:
                 " --qualifier accel;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
-                          unset AWS_SESSION_TOKEN;                  
+                          unset AWS_SESSION_TOKEN;
                        fi
       - cd ../accelerator
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
@@ -913,380 +1543,6 @@ phases:
         },
       },
       "Type": "AWS::CodeBuild::Project",
-    },
-    "PipelineC660917D": Object {
-      "DependsOn": Array [
-        "PipelineRoleDefaultPolicy77A82A74",
-        "PipelineRoleDCFDBB91",
-      ],
-      "Properties": Object {
-        "ArtifactStore": Object {
-          "EncryptionKey": Object {
-            "Id": Object {
-              "Fn::GetAtt": Array [
-                "InstallerKey2A6A8C6D",
-                "Arn",
-              ],
-            },
-            "Type": "KMS",
-          },
-          "Location": Object {
-            "Ref": "SecureBucket747CD8C0",
-          },
-          "Type": "S3",
-        },
-        "Name": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              Object {
-                "Ref": "AcceleratorQualifier",
-              },
-              "-installer",
-            ],
-          ],
-        },
-        "RestartExecutionOnUpdate": true,
-        "RoleArn": Object {
-          "Fn::GetAtt": Array [
-            "PipelineRoleDCFDBB91",
-            "Arn",
-          ],
-        },
-        "Stages": Array [
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
-                  "Category": "Source",
-                  "Owner": "AWS",
-                  "Provider": "CodeCommit",
-                  "Version": "1",
-                },
-                "Configuration": Object {
-                  "BranchName": Object {
-                    "Ref": "RepositoryBranchName",
-                  },
-                  "PollForSourceChanges": false,
-                  "RepositoryName": Object {
-                    "Ref": "RepositoryName",
-                  },
-                },
-                "Name": "Source",
-                "OutputArtifacts": Array [
-                  Object {
-                    "Name": "Source",
-                  },
-                ],
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
-                    "PipelineSourceCodePipelineActionRoleC6F9E7F5",
-                    "Arn",
-                  ],
-                },
-                "RunOrder": 1,
-              },
-            ],
-            "Name": "Source",
-          },
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
-                  "Category": "Build",
-                  "Owner": "AWS",
-                  "Provider": "CodeBuild",
-                  "Version": "1",
-                },
-                "Configuration": Object {
-                  "ProjectName": Object {
-                    "Ref": "InstallerProject879FF821",
-                  },
-                },
-                "InputArtifacts": Array [
-                  Object {
-                    "Name": "Source",
-                  },
-                ],
-                "Name": "Install",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
-                    "PipelineRoleDCFDBB91",
-                    "Arn",
-                  ],
-                },
-                "RunOrder": 1,
-              },
-            ],
-            "Name": "Install",
-          },
-        ],
-      },
-      "Type": "AWS::CodePipeline::Pipeline",
-    },
-    "PipelineRoleDCFDBB91": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": Object {
-                "Service": "codepipeline.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineRoleDefaultPolicy77A82A74": Object {
-      "Metadata": Object {
-        "cfn_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
-              "id": "W76",
-              "reason": "This policy is generated by CDK which can cause a high SPCM score.",
-            },
-          ],
-        },
-      },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            Object {
-              "Action": Array [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "InstallerKey2A6A8C6D",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "PipelineSourceCodePipelineActionRoleC6F9E7F5",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "PipelineRoleDCFDBB91",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": Array [
-                "codebuild:BatchGetBuilds",
-                "codebuild:StartBuild",
-                "codebuild:StopBuild",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "InstallerProject879FF821",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineRoleDefaultPolicy77A82A74",
-        "Roles": Array [
-          Object {
-            "Ref": "PipelineRoleDCFDBB91",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineSourceCodePipelineActionRoleC6F9E7F5": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "arn:",
-                      Object {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineSourceCodePipelineActionRoleDefaultPolicy2D565925": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            Object {
-              "Action": Array [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "InstallerKey2A6A8C6D",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": Array [
-                "codecommit:GetBranch",
-                "codecommit:GetCommit",
-                "codecommit:UploadArchive",
-                "codecommit:GetUploadArchiveStatus",
-                "codecommit:CancelUploadArchive",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
-                  "",
-                  Array [
-                    "arn:",
-                    Object {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":codecommit:",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "RepositoryName",
-                    },
-                  ],
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineSourceCodePipelineActionRoleDefaultPolicy2D565925",
-        "Roles": Array [
-          Object {
-            "Ref": "PipelineSourceCodePipelineActionRoleC6F9E7F5",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": Object {
       "DeletionPolicy": "Retain",
@@ -1471,6 +1727,22 @@ Object {
         "aws",
       ],
     },
+    "UseCodeCommitCondition": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Ref": "RepositorySource",
+        },
+        "codecommit",
+      ],
+    },
+    "UseGitHubCondition": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Ref": "RepositorySource",
+        },
+        "github",
+      ],
+    },
   },
   "Mappings": Object {
     "GlobalRegionMap": Object {
@@ -1497,6 +1769,7 @@ Object {
           },
           "Parameters": Array [
             "RepositorySource",
+            "RepositoryOwner",
             "RepositoryName",
             "RepositoryBranchName",
           ],
@@ -1562,6 +1835,9 @@ Object {
         "RepositoryName": Object {
           "default": "Repository Name",
         },
+        "RepositoryOwner": Object {
+          "default": "Repository Owner",
+        },
         "RepositorySource": Object {
           "default": "Source",
         },
@@ -1612,7 +1888,13 @@ Object {
       "Type": "String",
     },
     "RepositoryName": Object {
+      "Default": "landing-zone-accelerator-on-aws",
       "Description": "The name of the git repository hosting the accelerator code",
+      "Type": "String",
+    },
+    "RepositoryOwner": Object {
+      "Default": "awslabs",
+      "Description": "The owner of the repository containing the accelerator code. (GitHub Only)",
       "Type": "String",
     },
     "RepositorySource": Object {
@@ -1649,6 +1931,596 @@ Object {
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "CodeCommitPipeline2208527B": Object {
+      "Condition": "UseCodeCommitCondition",
+      "DependsOn": Array [
+        "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "CodeCommitPipelineRole5C35E76C",
+      ],
+      "Properties": Object {
+        "ArtifactStore": Object {
+          "EncryptionKey": Object {
+            "Id": Object {
+              "Fn::GetAtt": Array [
+                "InstallerKey2A6A8C6D",
+                "Arn",
+              ],
+            },
+            "Type": "KMS",
+          },
+          "Location": Object {
+            "Ref": "SecureBucket747CD8C0",
+          },
+          "Type": "S3",
+        },
+        "Name": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              Object {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-installer",
+            ],
+          ],
+        },
+        "RestartExecutionOnUpdate": true,
+        "RoleArn": Object {
+          "Fn::GetAtt": Array [
+            "CodeCommitPipelineRole5C35E76C",
+            "Arn",
+          ],
+        },
+        "Stages": Array [
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Source",
+                  "Owner": "AWS",
+                  "Provider": "CodeCommit",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "BranchName": Object {
+                    "Ref": "RepositoryBranchName",
+                  },
+                  "PollForSourceChanges": false,
+                  "RepositoryName": Object {
+                    "Ref": "RepositoryName",
+                  },
+                },
+                "Name": "Source",
+                "OutputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "RoleArn": Object {
+                  "Fn::GetAtt": Array [
+                    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Source",
+          },
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "ProjectName": Object {
+                    "Ref": "InstallerProject879FF821",
+                  },
+                },
+                "InputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "Name": "Install",
+                "RoleArn": Object {
+                  "Fn::GetAtt": Array [
+                    "CodeCommitPipelineRole5C35E76C",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Install",
+          },
+        ],
+      },
+      "Type": "AWS::CodePipeline::Pipeline",
+    },
+    "CodeCommitPipelineRole5C35E76C": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codepipeline.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CodeCommitPipelineRoleDefaultPolicyDE8B332B": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "CodeCommitPipelineRole5C35E76C",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "Roles": Array [
+          Object {
+            "Ref": "CodeCommitPipelineRole5C35E76C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "codecommit:GetBranch",
+                "codecommit:GetCommit",
+                "codecommit:UploadArchive",
+                "codecommit:GetUploadArchiveStatus",
+                "codecommit:CancelUploadArchive",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codecommit:",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":",
+                    Object {
+                      "Ref": "RepositoryName",
+                    },
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D",
+        "Roles": Array [
+          Object {
+            "Ref": "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GitHubPipeline7B79E906": Object {
+      "Condition": "UseGitHubCondition",
+      "DependsOn": Array [
+        "GitHubPipelineRoleDefaultPolicyD82457D6",
+        "GitHubPipelineRole6F4DEF1B",
+      ],
+      "Properties": Object {
+        "ArtifactStore": Object {
+          "EncryptionKey": Object {
+            "Id": Object {
+              "Fn::GetAtt": Array [
+                "InstallerKey2A6A8C6D",
+                "Arn",
+              ],
+            },
+            "Type": "KMS",
+          },
+          "Location": Object {
+            "Ref": "SecureBucket747CD8C0",
+          },
+          "Type": "S3",
+        },
+        "Name": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              Object {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-installer",
+            ],
+          ],
+        },
+        "RestartExecutionOnUpdate": true,
+        "RoleArn": Object {
+          "Fn::GetAtt": Array [
+            "GitHubPipelineRole6F4DEF1B",
+            "Arn",
+          ],
+        },
+        "Stages": Array [
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Source",
+                  "Owner": "ThirdParty",
+                  "Provider": "GitHub",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "Branch": Object {
+                    "Ref": "RepositoryBranchName",
+                  },
+                  "OAuthToken": "{{resolve:secretsmanager:accelerator/github-token:SecretString:::}}",
+                  "Owner": Object {
+                    "Ref": "RepositoryOwner",
+                  },
+                  "PollForSourceChanges": false,
+                  "Repo": Object {
+                    "Ref": "RepositoryName",
+                  },
+                },
+                "Name": "Source",
+                "OutputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Source",
+          },
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "ProjectName": Object {
+                    "Ref": "InstallerProject879FF821",
+                  },
+                },
+                "InputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "Name": "Install",
+                "RoleArn": Object {
+                  "Fn::GetAtt": Array [
+                    "GitHubPipelineRole6F4DEF1B",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Install",
+          },
+        ],
+      },
+      "Type": "AWS::CodePipeline::Pipeline",
+    },
+    "GitHubPipelineRole6F4DEF1B": Object {
+      "Condition": "UseGitHubCondition",
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codepipeline.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GitHubPipelineRoleDefaultPolicyD82457D6": Object {
+      "Condition": "UseGitHubCondition",
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "GitHubPipelineRole6F4DEF1B",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GitHubPipelineRoleDefaultPolicyD82457D6",
+        "Roles": Array [
+          Object {
+            "Ref": "GitHubPipelineRole6F4DEF1B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "InstallerAccessLogsBucket647700E9": Object {
       "DeletionPolicy": "Retain",
@@ -2163,6 +3035,20 @@ Object {
               "Value": "1",
             },
             Object {
+              "Name": "ACCELERATOR_REPOSITORY_SOURCE",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "RepositorySource",
+              },
+            },
+            Object {
+              "Name": "ACCELERATOR_REPOSITORY_OWNER",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "RepositoryOwner",
+              },
+            },
+            Object {
               "Name": "ACCELERATOR_REPOSITORY_NAME",
               "Type": "PLAINTEXT",
               "Value": Object {
@@ -2311,7 +3197,7 @@ phases:
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":iam::\\"$MANAGEMENT_ACCOUNT_ID\\":role/\\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" --role-session-name acceleratorAssumeRoleSession --query \\"Credentials.[AccessKeyId,SecretAccessKey,SessionToken]\\" --output text));  
+                ":iam::\\"$MANAGEMENT_ACCOUNT_ID\\":role/\\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" --role-session-name acceleratorAssumeRoleSession --query \\"Credentials.[AccessKeyId,SecretAccessKey,SessionToken]\\" --output text));
                           yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
                   "Ref": "AWS::Region",
@@ -2330,7 +3216,7 @@ phases:
                 " --qualifier accel;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
-                          unset AWS_SESSION_TOKEN;                  
+                          unset AWS_SESSION_TOKEN;
                        fi
       - cd ../accelerator
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
@@ -2363,380 +3249,6 @@ phases:
         },
       },
       "Type": "AWS::CodeBuild::Project",
-    },
-    "PipelineC660917D": Object {
-      "DependsOn": Array [
-        "PipelineRoleDefaultPolicy77A82A74",
-        "PipelineRoleDCFDBB91",
-      ],
-      "Properties": Object {
-        "ArtifactStore": Object {
-          "EncryptionKey": Object {
-            "Id": Object {
-              "Fn::GetAtt": Array [
-                "InstallerKey2A6A8C6D",
-                "Arn",
-              ],
-            },
-            "Type": "KMS",
-          },
-          "Location": Object {
-            "Ref": "SecureBucket747CD8C0",
-          },
-          "Type": "S3",
-        },
-        "Name": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              Object {
-                "Ref": "AcceleratorQualifier",
-              },
-              "-installer",
-            ],
-          ],
-        },
-        "RestartExecutionOnUpdate": true,
-        "RoleArn": Object {
-          "Fn::GetAtt": Array [
-            "PipelineRoleDCFDBB91",
-            "Arn",
-          ],
-        },
-        "Stages": Array [
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
-                  "Category": "Source",
-                  "Owner": "AWS",
-                  "Provider": "CodeCommit",
-                  "Version": "1",
-                },
-                "Configuration": Object {
-                  "BranchName": Object {
-                    "Ref": "RepositoryBranchName",
-                  },
-                  "PollForSourceChanges": false,
-                  "RepositoryName": Object {
-                    "Ref": "RepositoryName",
-                  },
-                },
-                "Name": "Source",
-                "OutputArtifacts": Array [
-                  Object {
-                    "Name": "Source",
-                  },
-                ],
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
-                    "PipelineSourceCodePipelineActionRoleC6F9E7F5",
-                    "Arn",
-                  ],
-                },
-                "RunOrder": 1,
-              },
-            ],
-            "Name": "Source",
-          },
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
-                  "Category": "Build",
-                  "Owner": "AWS",
-                  "Provider": "CodeBuild",
-                  "Version": "1",
-                },
-                "Configuration": Object {
-                  "ProjectName": Object {
-                    "Ref": "InstallerProject879FF821",
-                  },
-                },
-                "InputArtifacts": Array [
-                  Object {
-                    "Name": "Source",
-                  },
-                ],
-                "Name": "Install",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
-                    "PipelineRoleDCFDBB91",
-                    "Arn",
-                  ],
-                },
-                "RunOrder": 1,
-              },
-            ],
-            "Name": "Install",
-          },
-        ],
-      },
-      "Type": "AWS::CodePipeline::Pipeline",
-    },
-    "PipelineRoleDCFDBB91": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": Object {
-                "Service": "codepipeline.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineRoleDefaultPolicy77A82A74": Object {
-      "Metadata": Object {
-        "cfn_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
-              "id": "W76",
-              "reason": "This policy is generated by CDK which can cause a high SPCM score.",
-            },
-          ],
-        },
-      },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            Object {
-              "Action": Array [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "InstallerKey2A6A8C6D",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "PipelineSourceCodePipelineActionRoleC6F9E7F5",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "PipelineRoleDCFDBB91",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": Array [
-                "codebuild:BatchGetBuilds",
-                "codebuild:StartBuild",
-                "codebuild:StopBuild",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "InstallerProject879FF821",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineRoleDefaultPolicy77A82A74",
-        "Roles": Array [
-          Object {
-            "Ref": "PipelineRoleDCFDBB91",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineSourceCodePipelineActionRoleC6F9E7F5": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "arn:",
-                      Object {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineSourceCodePipelineActionRoleDefaultPolicy2D565925": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            Object {
-              "Action": Array [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "InstallerKey2A6A8C6D",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": Array [
-                "codecommit:GetBranch",
-                "codecommit:GetCommit",
-                "codecommit:UploadArchive",
-                "codecommit:GetUploadArchiveStatus",
-                "codecommit:CancelUploadArchive",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
-                  "",
-                  Array [
-                    "arn:",
-                    Object {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":codecommit:",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "RepositoryName",
-                    },
-                  ],
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineSourceCodePipelineActionRoleDefaultPolicy2D565925",
-        "Roles": Array [
-          Object {
-            "Ref": "PipelineSourceCodePipelineActionRoleC6F9E7F5",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": Object {
       "DeletionPolicy": "Retain",
@@ -2921,6 +3433,22 @@ Object {
         "aws",
       ],
     },
+    "UseCodeCommitCondition": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Ref": "RepositorySource",
+        },
+        "codecommit",
+      ],
+    },
+    "UseGitHubCondition": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Ref": "RepositorySource",
+        },
+        "github",
+      ],
+    },
   },
   "Mappings": Object {
     "GlobalRegionMap": Object {
@@ -2947,6 +3475,7 @@ Object {
           },
           "Parameters": Array [
             "RepositorySource",
+            "RepositoryOwner",
             "RepositoryName",
             "RepositoryBranchName",
           ],
@@ -2993,6 +3522,9 @@ Object {
         "RepositoryName": Object {
           "default": "Repository Name",
         },
+        "RepositoryOwner": Object {
+          "default": "Repository Owner",
+        },
         "RepositorySource": Object {
           "default": "Source",
         },
@@ -3030,7 +3562,13 @@ Object {
       "Type": "String",
     },
     "RepositoryName": Object {
+      "Default": "landing-zone-accelerator-on-aws",
       "Description": "The name of the git repository hosting the accelerator code",
+      "Type": "String",
+    },
+    "RepositoryOwner": Object {
+      "Default": "awslabs",
+      "Description": "The owner of the repository containing the accelerator code. (GitHub Only)",
       "Type": "String",
     },
     "RepositorySource": Object {
@@ -3056,6 +3594,576 @@ Object {
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "CodeCommitPipeline2208527B": Object {
+      "Condition": "UseCodeCommitCondition",
+      "DependsOn": Array [
+        "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "CodeCommitPipelineRole5C35E76C",
+      ],
+      "Properties": Object {
+        "ArtifactStore": Object {
+          "EncryptionKey": Object {
+            "Id": Object {
+              "Fn::GetAtt": Array [
+                "InstallerKey2A6A8C6D",
+                "Arn",
+              ],
+            },
+            "Type": "KMS",
+          },
+          "Location": Object {
+            "Ref": "SecureBucket747CD8C0",
+          },
+          "Type": "S3",
+        },
+        "Name": "AWSAccelerator-Installer",
+        "RestartExecutionOnUpdate": true,
+        "RoleArn": Object {
+          "Fn::GetAtt": Array [
+            "CodeCommitPipelineRole5C35E76C",
+            "Arn",
+          ],
+        },
+        "Stages": Array [
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Source",
+                  "Owner": "AWS",
+                  "Provider": "CodeCommit",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "BranchName": Object {
+                    "Ref": "RepositoryBranchName",
+                  },
+                  "PollForSourceChanges": false,
+                  "RepositoryName": Object {
+                    "Ref": "RepositoryName",
+                  },
+                },
+                "Name": "Source",
+                "OutputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "RoleArn": Object {
+                  "Fn::GetAtt": Array [
+                    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Source",
+          },
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "ProjectName": Object {
+                    "Ref": "InstallerProject879FF821",
+                  },
+                },
+                "InputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "Name": "Install",
+                "RoleArn": Object {
+                  "Fn::GetAtt": Array [
+                    "CodeCommitPipelineRole5C35E76C",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Install",
+          },
+        ],
+      },
+      "Type": "AWS::CodePipeline::Pipeline",
+    },
+    "CodeCommitPipelineRole5C35E76C": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codepipeline.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CodeCommitPipelineRoleDefaultPolicyDE8B332B": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "CodeCommitPipelineRole5C35E76C",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "Roles": Array [
+          Object {
+            "Ref": "CodeCommitPipelineRole5C35E76C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "codecommit:GetBranch",
+                "codecommit:GetCommit",
+                "codecommit:UploadArchive",
+                "codecommit:GetUploadArchiveStatus",
+                "codecommit:CancelUploadArchive",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codecommit:",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":",
+                    Object {
+                      "Ref": "RepositoryName",
+                    },
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D",
+        "Roles": Array [
+          Object {
+            "Ref": "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GitHubPipeline7B79E906": Object {
+      "Condition": "UseGitHubCondition",
+      "DependsOn": Array [
+        "GitHubPipelineRoleDefaultPolicyD82457D6",
+        "GitHubPipelineRole6F4DEF1B",
+      ],
+      "Properties": Object {
+        "ArtifactStore": Object {
+          "EncryptionKey": Object {
+            "Id": Object {
+              "Fn::GetAtt": Array [
+                "InstallerKey2A6A8C6D",
+                "Arn",
+              ],
+            },
+            "Type": "KMS",
+          },
+          "Location": Object {
+            "Ref": "SecureBucket747CD8C0",
+          },
+          "Type": "S3",
+        },
+        "Name": "AWSAccelerator-Installer",
+        "RestartExecutionOnUpdate": true,
+        "RoleArn": Object {
+          "Fn::GetAtt": Array [
+            "GitHubPipelineRole6F4DEF1B",
+            "Arn",
+          ],
+        },
+        "Stages": Array [
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Source",
+                  "Owner": "ThirdParty",
+                  "Provider": "GitHub",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "Branch": Object {
+                    "Ref": "RepositoryBranchName",
+                  },
+                  "OAuthToken": "{{resolve:secretsmanager:accelerator/github-token:SecretString:::}}",
+                  "Owner": Object {
+                    "Ref": "RepositoryOwner",
+                  },
+                  "PollForSourceChanges": false,
+                  "Repo": Object {
+                    "Ref": "RepositoryName",
+                  },
+                },
+                "Name": "Source",
+                "OutputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Source",
+          },
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "ProjectName": Object {
+                    "Ref": "InstallerProject879FF821",
+                  },
+                },
+                "InputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "Name": "Install",
+                "RoleArn": Object {
+                  "Fn::GetAtt": Array [
+                    "GitHubPipelineRole6F4DEF1B",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Install",
+          },
+        ],
+      },
+      "Type": "AWS::CodePipeline::Pipeline",
+    },
+    "GitHubPipelineRole6F4DEF1B": Object {
+      "Condition": "UseGitHubCondition",
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codepipeline.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GitHubPipelineRoleDefaultPolicyD82457D6": Object {
+      "Condition": "UseGitHubCondition",
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "GitHubPipelineRole6F4DEF1B",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GitHubPipelineRoleDefaultPolicyD82457D6",
+        "Roles": Array [
+          Object {
+            "Ref": "GitHubPipelineRole6F4DEF1B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "InstallerAccessLogsBucket647700E9": Object {
       "DeletionPolicy": "Retain",
@@ -3541,6 +4649,20 @@ Object {
               "Value": "1",
             },
             Object {
+              "Name": "ACCELERATOR_REPOSITORY_SOURCE",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "RepositorySource",
+              },
+            },
+            Object {
+              "Name": "ACCELERATOR_REPOSITORY_OWNER",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "RepositoryOwner",
+              },
+            },
+            Object {
               "Name": "ACCELERATOR_REPOSITORY_NAME",
               "Type": "PLAINTEXT",
               "Value": Object {
@@ -3668,7 +4790,7 @@ phases:
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":iam::\\"$MANAGEMENT_ACCOUNT_ID\\":role/\\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" --role-session-name acceleratorAssumeRoleSession --query \\"Credentials.[AccessKeyId,SecretAccessKey,SessionToken]\\" --output text));  
+                ":iam::\\"$MANAGEMENT_ACCOUNT_ID\\":role/\\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" --role-session-name acceleratorAssumeRoleSession --query \\"Credentials.[AccessKeyId,SecretAccessKey,SessionToken]\\" --output text));
                           yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
                   "Ref": "AWS::Region",
@@ -3687,7 +4809,7 @@ phases:
                 " --qualifier accel;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
-                          unset AWS_SESSION_TOKEN;                  
+                          unset AWS_SESSION_TOKEN;
                        fi
       - cd ../accelerator
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
@@ -3720,370 +4842,6 @@ phases:
         },
       },
       "Type": "AWS::CodeBuild::Project",
-    },
-    "PipelineC660917D": Object {
-      "DependsOn": Array [
-        "PipelineRoleDefaultPolicy77A82A74",
-        "PipelineRoleDCFDBB91",
-      ],
-      "Properties": Object {
-        "ArtifactStore": Object {
-          "EncryptionKey": Object {
-            "Id": Object {
-              "Fn::GetAtt": Array [
-                "InstallerKey2A6A8C6D",
-                "Arn",
-              ],
-            },
-            "Type": "KMS",
-          },
-          "Location": Object {
-            "Ref": "SecureBucket747CD8C0",
-          },
-          "Type": "S3",
-        },
-        "Name": "AWSAccelerator-Installer",
-        "RestartExecutionOnUpdate": true,
-        "RoleArn": Object {
-          "Fn::GetAtt": Array [
-            "PipelineRoleDCFDBB91",
-            "Arn",
-          ],
-        },
-        "Stages": Array [
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
-                  "Category": "Source",
-                  "Owner": "AWS",
-                  "Provider": "CodeCommit",
-                  "Version": "1",
-                },
-                "Configuration": Object {
-                  "BranchName": Object {
-                    "Ref": "RepositoryBranchName",
-                  },
-                  "PollForSourceChanges": false,
-                  "RepositoryName": Object {
-                    "Ref": "RepositoryName",
-                  },
-                },
-                "Name": "Source",
-                "OutputArtifacts": Array [
-                  Object {
-                    "Name": "Source",
-                  },
-                ],
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
-                    "PipelineSourceCodePipelineActionRoleC6F9E7F5",
-                    "Arn",
-                  ],
-                },
-                "RunOrder": 1,
-              },
-            ],
-            "Name": "Source",
-          },
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
-                  "Category": "Build",
-                  "Owner": "AWS",
-                  "Provider": "CodeBuild",
-                  "Version": "1",
-                },
-                "Configuration": Object {
-                  "ProjectName": Object {
-                    "Ref": "InstallerProject879FF821",
-                  },
-                },
-                "InputArtifacts": Array [
-                  Object {
-                    "Name": "Source",
-                  },
-                ],
-                "Name": "Install",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
-                    "PipelineRoleDCFDBB91",
-                    "Arn",
-                  ],
-                },
-                "RunOrder": 1,
-              },
-            ],
-            "Name": "Install",
-          },
-        ],
-      },
-      "Type": "AWS::CodePipeline::Pipeline",
-    },
-    "PipelineRoleDCFDBB91": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": Object {
-                "Service": "codepipeline.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineRoleDefaultPolicy77A82A74": Object {
-      "Metadata": Object {
-        "cfn_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
-              "id": "W76",
-              "reason": "This policy is generated by CDK which can cause a high SPCM score.",
-            },
-          ],
-        },
-      },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            Object {
-              "Action": Array [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "InstallerKey2A6A8C6D",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "PipelineSourceCodePipelineActionRoleC6F9E7F5",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "PipelineRoleDCFDBB91",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": Array [
-                "codebuild:BatchGetBuilds",
-                "codebuild:StartBuild",
-                "codebuild:StopBuild",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "InstallerProject879FF821",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineRoleDefaultPolicy77A82A74",
-        "Roles": Array [
-          Object {
-            "Ref": "PipelineRoleDCFDBB91",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineSourceCodePipelineActionRoleC6F9E7F5": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "arn:",
-                      Object {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineSourceCodePipelineActionRoleDefaultPolicy2D565925": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            Object {
-              "Action": Array [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "InstallerKey2A6A8C6D",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": Array [
-                "codecommit:GetBranch",
-                "codecommit:GetCommit",
-                "codecommit:UploadArchive",
-                "codecommit:GetUploadArchiveStatus",
-                "codecommit:CancelUploadArchive",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
-                  "",
-                  Array [
-                    "arn:",
-                    Object {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":codecommit:",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "RepositoryName",
-                    },
-                  ],
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineSourceCodePipelineActionRoleDefaultPolicy2D565925",
-        "Roles": Array [
-          Object {
-            "Ref": "PipelineSourceCodePipelineActionRoleC6F9E7F5",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": Object {
       "DeletionPolicy": "Retain",
@@ -4240,6 +4998,22 @@ Object {
         "aws",
       ],
     },
+    "UseCodeCommitCondition": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Ref": "RepositorySource",
+        },
+        "codecommit",
+      ],
+    },
+    "UseGitHubCondition": Object {
+      "Fn::Equals": Array [
+        Object {
+          "Ref": "RepositorySource",
+        },
+        "github",
+      ],
+    },
   },
   "Mappings": Object {
     "GlobalRegionMap": Object {
@@ -4266,6 +5040,7 @@ Object {
           },
           "Parameters": Array [
             "RepositorySource",
+            "RepositoryOwner",
             "RepositoryName",
             "RepositoryBranchName",
           ],
@@ -4312,6 +5087,9 @@ Object {
         "RepositoryName": Object {
           "default": "Repository Name",
         },
+        "RepositoryOwner": Object {
+          "default": "Repository Owner",
+        },
         "RepositorySource": Object {
           "default": "Source",
         },
@@ -4349,7 +5127,13 @@ Object {
       "Type": "String",
     },
     "RepositoryName": Object {
+      "Default": "landing-zone-accelerator-on-aws",
       "Description": "The name of the git repository hosting the accelerator code",
+      "Type": "String",
+    },
+    "RepositoryOwner": Object {
+      "Default": "awslabs",
+      "Description": "The owner of the repository containing the accelerator code. (GitHub Only)",
       "Type": "String",
     },
     "RepositorySource": Object {
@@ -4375,6 +5159,576 @@ Object {
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "CodeCommitPipeline2208527B": Object {
+      "Condition": "UseCodeCommitCondition",
+      "DependsOn": Array [
+        "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "CodeCommitPipelineRole5C35E76C",
+      ],
+      "Properties": Object {
+        "ArtifactStore": Object {
+          "EncryptionKey": Object {
+            "Id": Object {
+              "Fn::GetAtt": Array [
+                "InstallerKey2A6A8C6D",
+                "Arn",
+              ],
+            },
+            "Type": "KMS",
+          },
+          "Location": Object {
+            "Ref": "SecureBucket747CD8C0",
+          },
+          "Type": "S3",
+        },
+        "Name": "AWSAccelerator-Installer",
+        "RestartExecutionOnUpdate": true,
+        "RoleArn": Object {
+          "Fn::GetAtt": Array [
+            "CodeCommitPipelineRole5C35E76C",
+            "Arn",
+          ],
+        },
+        "Stages": Array [
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Source",
+                  "Owner": "AWS",
+                  "Provider": "CodeCommit",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "BranchName": Object {
+                    "Ref": "RepositoryBranchName",
+                  },
+                  "PollForSourceChanges": false,
+                  "RepositoryName": Object {
+                    "Ref": "RepositoryName",
+                  },
+                },
+                "Name": "Source",
+                "OutputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "RoleArn": Object {
+                  "Fn::GetAtt": Array [
+                    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Source",
+          },
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "ProjectName": Object {
+                    "Ref": "InstallerProject879FF821",
+                  },
+                },
+                "InputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "Name": "Install",
+                "RoleArn": Object {
+                  "Fn::GetAtt": Array [
+                    "CodeCommitPipelineRole5C35E76C",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Install",
+          },
+        ],
+      },
+      "Type": "AWS::CodePipeline::Pipeline",
+    },
+    "CodeCommitPipelineRole5C35E76C": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codepipeline.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CodeCommitPipelineRoleDefaultPolicyDE8B332B": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "CodeCommitPipelineRole5C35E76C",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CodeCommitPipelineRoleDefaultPolicyDE8B332B",
+        "Roles": Array [
+          Object {
+            "Ref": "CodeCommitPipelineRole5C35E76C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "codecommit:GetBranch",
+                "codecommit:GetCommit",
+                "codecommit:UploadArchive",
+                "codecommit:GetUploadArchiveStatus",
+                "codecommit:CancelUploadArchive",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":codecommit:",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":",
+                    Object {
+                      "Ref": "RepositoryName",
+                    },
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D",
+        "Roles": Array [
+          Object {
+            "Ref": "CodeCommitPipelineSourceCodePipelineActionRoleFB176191",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CodeCommitPipelineSourceCodePipelineActionRoleFB176191": Object {
+      "Condition": "UseCodeCommitCondition",
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GitHubPipeline7B79E906": Object {
+      "Condition": "UseGitHubCondition",
+      "DependsOn": Array [
+        "GitHubPipelineRoleDefaultPolicyD82457D6",
+        "GitHubPipelineRole6F4DEF1B",
+      ],
+      "Properties": Object {
+        "ArtifactStore": Object {
+          "EncryptionKey": Object {
+            "Id": Object {
+              "Fn::GetAtt": Array [
+                "InstallerKey2A6A8C6D",
+                "Arn",
+              ],
+            },
+            "Type": "KMS",
+          },
+          "Location": Object {
+            "Ref": "SecureBucket747CD8C0",
+          },
+          "Type": "S3",
+        },
+        "Name": "AWSAccelerator-Installer",
+        "RestartExecutionOnUpdate": true,
+        "RoleArn": Object {
+          "Fn::GetAtt": Array [
+            "GitHubPipelineRole6F4DEF1B",
+            "Arn",
+          ],
+        },
+        "Stages": Array [
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Source",
+                  "Owner": "ThirdParty",
+                  "Provider": "GitHub",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "Branch": Object {
+                    "Ref": "RepositoryBranchName",
+                  },
+                  "OAuthToken": "{{resolve:secretsmanager:accelerator/github-token:SecretString:::}}",
+                  "Owner": Object {
+                    "Ref": "RepositoryOwner",
+                  },
+                  "PollForSourceChanges": false,
+                  "Repo": Object {
+                    "Ref": "RepositoryName",
+                  },
+                },
+                "Name": "Source",
+                "OutputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Source",
+          },
+          Object {
+            "Actions": Array [
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": Object {
+                  "ProjectName": Object {
+                    "Ref": "InstallerProject879FF821",
+                  },
+                },
+                "InputArtifacts": Array [
+                  Object {
+                    "Name": "Source",
+                  },
+                ],
+                "Name": "Install",
+                "RoleArn": Object {
+                  "Fn::GetAtt": Array [
+                    "GitHubPipelineRole6F4DEF1B",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 1,
+              },
+            ],
+            "Name": "Install",
+          },
+        ],
+      },
+      "Type": "AWS::CodePipeline::Pipeline",
+    },
+    "GitHubPipelineRole6F4DEF1B": Object {
+      "Condition": "UseGitHubCondition",
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codepipeline.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GitHubPipelineRoleDefaultPolicyD82457D6": Object {
+      "Condition": "UseGitHubCondition",
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SecureBucket747CD8C0",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SecureBucket747CD8C0",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerKey2A6A8C6D",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "GitHubPipelineRole6F4DEF1B",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "codebuild:BatchGetBuilds",
+                "codebuild:StartBuild",
+                "codebuild:StopBuild",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "InstallerProject879FF821",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GitHubPipelineRoleDefaultPolicyD82457D6",
+        "Roles": Array [
+          Object {
+            "Ref": "GitHubPipelineRole6F4DEF1B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "InstallerAccessLogsBucket647700E9": Object {
       "DeletionPolicy": "Retain",
@@ -4860,6 +6214,20 @@ Object {
               "Value": "1",
             },
             Object {
+              "Name": "ACCELERATOR_REPOSITORY_SOURCE",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "RepositorySource",
+              },
+            },
+            Object {
+              "Name": "ACCELERATOR_REPOSITORY_OWNER",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "RepositoryOwner",
+              },
+            },
+            Object {
               "Name": "ACCELERATOR_REPOSITORY_NAME",
               "Type": "PLAINTEXT",
               "Value": Object {
@@ -4977,7 +6345,7 @@ phases:
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":iam::\\"$MANAGEMENT_ACCOUNT_ID\\":role/\\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" --role-session-name acceleratorAssumeRoleSession --query \\"Credentials.[AccessKeyId,SecretAccessKey,SessionToken]\\" --output text));  
+                ":iam::\\"$MANAGEMENT_ACCOUNT_ID\\":role/\\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" --role-session-name acceleratorAssumeRoleSession --query \\"Credentials.[AccessKeyId,SecretAccessKey,SessionToken]\\" --output text));
                           yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
                   "Ref": "AWS::Region",
@@ -4996,7 +6364,7 @@ phases:
                 " --qualifier accel;
                           unset AWS_ACCESS_KEY_ID;
                           unset AWS_SECRET_ACCESS_KEY;
-                          unset AWS_SESSION_TOKEN;                  
+                          unset AWS_SESSION_TOKEN;
                        fi
       - cd ../accelerator
       - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ",
@@ -5029,370 +6397,6 @@ phases:
         },
       },
       "Type": "AWS::CodeBuild::Project",
-    },
-    "PipelineC660917D": Object {
-      "DependsOn": Array [
-        "PipelineRoleDefaultPolicy77A82A74",
-        "PipelineRoleDCFDBB91",
-      ],
-      "Properties": Object {
-        "ArtifactStore": Object {
-          "EncryptionKey": Object {
-            "Id": Object {
-              "Fn::GetAtt": Array [
-                "InstallerKey2A6A8C6D",
-                "Arn",
-              ],
-            },
-            "Type": "KMS",
-          },
-          "Location": Object {
-            "Ref": "SecureBucket747CD8C0",
-          },
-          "Type": "S3",
-        },
-        "Name": "AWSAccelerator-Installer",
-        "RestartExecutionOnUpdate": true,
-        "RoleArn": Object {
-          "Fn::GetAtt": Array [
-            "PipelineRoleDCFDBB91",
-            "Arn",
-          ],
-        },
-        "Stages": Array [
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
-                  "Category": "Source",
-                  "Owner": "AWS",
-                  "Provider": "CodeCommit",
-                  "Version": "1",
-                },
-                "Configuration": Object {
-                  "BranchName": Object {
-                    "Ref": "RepositoryBranchName",
-                  },
-                  "PollForSourceChanges": false,
-                  "RepositoryName": Object {
-                    "Ref": "RepositoryName",
-                  },
-                },
-                "Name": "Source",
-                "OutputArtifacts": Array [
-                  Object {
-                    "Name": "Source",
-                  },
-                ],
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
-                    "PipelineSourceCodePipelineActionRoleC6F9E7F5",
-                    "Arn",
-                  ],
-                },
-                "RunOrder": 1,
-              },
-            ],
-            "Name": "Source",
-          },
-          Object {
-            "Actions": Array [
-              Object {
-                "ActionTypeId": Object {
-                  "Category": "Build",
-                  "Owner": "AWS",
-                  "Provider": "CodeBuild",
-                  "Version": "1",
-                },
-                "Configuration": Object {
-                  "ProjectName": Object {
-                    "Ref": "InstallerProject879FF821",
-                  },
-                },
-                "InputArtifacts": Array [
-                  Object {
-                    "Name": "Source",
-                  },
-                ],
-                "Name": "Install",
-                "RoleArn": Object {
-                  "Fn::GetAtt": Array [
-                    "PipelineRoleDCFDBB91",
-                    "Arn",
-                  ],
-                },
-                "RunOrder": 1,
-              },
-            ],
-            "Name": "Install",
-          },
-        ],
-      },
-      "Type": "AWS::CodePipeline::Pipeline",
-    },
-    "PipelineRoleDCFDBB91": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": Object {
-                "Service": "codepipeline.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineRoleDefaultPolicy77A82A74": Object {
-      "Metadata": Object {
-        "cfn_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
-              "id": "W76",
-              "reason": "This policy is generated by CDK which can cause a high SPCM score.",
-            },
-          ],
-        },
-      },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            Object {
-              "Action": Array [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "InstallerKey2A6A8C6D",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "PipelineSourceCodePipelineActionRoleC6F9E7F5",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "PipelineRoleDCFDBB91",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": Array [
-                "codebuild:BatchGetBuilds",
-                "codebuild:StartBuild",
-                "codebuild:StopBuild",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "InstallerProject879FF821",
-                  "Arn",
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineRoleDefaultPolicy77A82A74",
-        "Roles": Array [
-          Object {
-            "Ref": "PipelineRoleDCFDBB91",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "PipelineSourceCodePipelineActionRoleC6F9E7F5": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "arn:",
-                      Object {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "PipelineSourceCodePipelineActionRoleDefaultPolicy2D565925": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-                "s3:DeleteObject*",
-                "s3:PutObject",
-                "s3:PutObjectLegalHold",
-                "s3:PutObjectRetention",
-                "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging",
-                "s3:Abort*",
-              ],
-              "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
-                    "SecureBucket747CD8C0",
-                    "Arn",
-                  ],
-                },
-                Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
-                          "SecureBucket747CD8C0",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-            Object {
-              "Action": Array [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:ReEncrypt*",
-                "kms:GenerateDataKey*",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
-                  "InstallerKey2A6A8C6D",
-                  "Arn",
-                ],
-              },
-            },
-            Object {
-              "Action": Array [
-                "codecommit:GetBranch",
-                "codecommit:GetCommit",
-                "codecommit:UploadArchive",
-                "codecommit:GetUploadArchiveStatus",
-                "codecommit:CancelUploadArchive",
-              ],
-              "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
-                  "",
-                  Array [
-                    "arn:",
-                    Object {
-                      "Ref": "AWS::Partition",
-                    },
-                    ":codecommit:",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "RepositoryName",
-                    },
-                  ],
-                ],
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "PipelineSourceCodePipelineActionRoleDefaultPolicy2D565925",
-        "Roles": Array [
-          Object {
-            "Ref": "PipelineSourceCodePipelineActionRoleC6F9E7F5",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": Object {
       "DeletionPolicy": "Retain",

@@ -14,7 +14,7 @@ const managementCrossAccountRoleName = app.node.tryGetContext('management-cross-
 if (enableTester && managementCrossAccountRoleName === undefined) {
   console.log(`Invalid --management-cross-account-role-name ${managementCrossAccountRoleName}`);
   throw new Error(
-    'Usage: app.ts [--context use-external-pipeline-account=BOOLEAN] [--context enable-tester=BOOLEAN] [--context managementCrossAccountRoleName=MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME]',
+    'Usage: app.ts [--context use-external-pipeline-account=BOOLEAN] [--context enable-tester=BOOLEAN] [--context management-cross-account-role-name=MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME]',
   );
 }
 

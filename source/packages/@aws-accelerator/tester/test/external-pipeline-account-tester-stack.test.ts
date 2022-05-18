@@ -31,7 +31,7 @@ const app = new cdk.App({
     'config-dir': path.join(__dirname, 'configs'),
     qualifier: 'aws-accelerator',
     'management-account-id': '111111111111',
-    'management-account-role-name': 'PlatformAcceleratorAccountAccessRole',
+    'management-account-role-name': 'AcceleratorAccountAccessRole',
   },
 });
 
@@ -125,7 +125,7 @@ describe('ExternalPipelineAccount-TesterStack', () => {
                 partition: {
                   Ref: 'AWS::Partition',
                 },
-                roleName: 'PlatformAcceleratorAccountAccessRole',
+                roleName: 'AcceleratorAccountAccessRole',
               },
               test: {
                 description: 'Validate Main Transit Gateway',
@@ -308,7 +308,7 @@ describe('ExternalPipelineAccount-TesterStack', () => {
                         {
                           Ref: 'AWS::Partition',
                         },
-                        ':iam::111111111111:role/PlatformAcceleratorAccountAccessRole',
+                        ':iam::111111111111:role/AcceleratorAccountAccessRole',
                       ],
                     ],
                   },

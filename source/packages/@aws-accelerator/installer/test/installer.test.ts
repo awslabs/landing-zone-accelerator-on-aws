@@ -122,7 +122,7 @@ describe('InstallerStack', () => {
               Label: {
                 default: 'Git Repository Configuration',
               },
-              Parameters: ['RepositorySource', 'RepositoryName', 'RepositoryBranchName'],
+              Parameters: ['RepositorySource', 'RepositoryOwner', 'RepositoryName', 'RepositoryBranchName'],
             },
             {
               Label: {
@@ -150,6 +150,9 @@ describe('InstallerStack', () => {
             RepositoryName: {
               default: 'Repository Name',
             },
+            RepositoryOwner: {
+              default: 'Repository Owner',
+            },
             RepositorySource: {
               default: 'Source',
             },
@@ -171,7 +174,7 @@ describe('InstallerStack', () => {
               Label: {
                 default: 'Git Repository Configuration',
               },
-              Parameters: ['RepositorySource', 'RepositoryName', 'RepositoryBranchName'],
+              Parameters: ['RepositorySource', 'RepositoryOwner', 'RepositoryName', 'RepositoryBranchName'],
             },
             {
               Label: {
@@ -213,6 +216,9 @@ describe('InstallerStack', () => {
             },
             RepositoryName: {
               default: 'Repository Name',
+            },
+            RepositoryOwner: {
+              default: 'Repository Owner',
             },
             RepositorySource: {
               default: 'Source',
@@ -317,9 +323,6 @@ describe('InstallerStack', () => {
             Artifacts: {
               Type: 'CODEPIPELINE',
             },
-            EncryptionKey: {
-              'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
-            },
             Environment: {
               ComputeType: 'BUILD_GENERAL1_MEDIUM',
               EnvironmentVariables: [
@@ -332,6 +335,20 @@ describe('InstallerStack', () => {
                   Name: 'CDK_NEW_BOOTSTRAP',
                   Type: 'PLAINTEXT',
                   Value: '1',
+                },
+                {
+                  Name: 'ACCELERATOR_REPOSITORY_SOURCE',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'RepositorySource',
+                  },
+                },
+                {
+                  Name: 'ACCELERATOR_REPOSITORY_OWNER',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'RepositoryOwner',
+                  },
                 },
                 {
                   Name: 'ACCELERATOR_REPOSITORY_NAME',
@@ -403,7 +420,6 @@ describe('InstallerStack', () => {
               PrivilegedMode: true,
               Type: 'LINUX_CONTAINER',
             },
-            Name: 'AWSAccelerator-InstallerProject',
             ServiceRole: {
               'Fn::GetAtt': ['InstallerAdminRole7DEE4AC8', 'Arn'],
             },
@@ -438,7 +454,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Partition',
                     },
-                    ':iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  \n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
+                    ':iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
                     {
                       Ref: 'AWS::Region',
                     },
@@ -452,7 +468,7 @@ describe('InstallerStack', () => {
                         'regionName',
                       ],
                     },
-                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
+                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;\n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
                     {
                       Ref: 'AWS::AccountId',
                     },
@@ -478,6 +494,13 @@ describe('InstallerStack', () => {
               },
               Type: 'CODEPIPELINE',
             },
+            Cache: {
+              Type: 'NO_CACHE',
+            },
+            EncryptionKey: {
+              'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
+            },
+            Name: 'AWSAccelerator-InstallerProject',
           },
         },
       },
@@ -496,9 +519,6 @@ describe('InstallerStack', () => {
             Artifacts: {
               Type: 'CODEPIPELINE',
             },
-            EncryptionKey: {
-              'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
-            },
             Environment: {
               ComputeType: 'BUILD_GENERAL1_MEDIUM',
               EnvironmentVariables: [
@@ -511,6 +531,20 @@ describe('InstallerStack', () => {
                   Name: 'CDK_NEW_BOOTSTRAP',
                   Type: 'PLAINTEXT',
                   Value: '1',
+                },
+                {
+                  Name: 'ACCELERATOR_REPOSITORY_SOURCE',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'RepositorySource',
+                  },
+                },
+                {
+                  Name: 'ACCELERATOR_REPOSITORY_OWNER',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'RepositoryOwner',
+                  },
                 },
                 {
                   Name: 'ACCELERATOR_REPOSITORY_NAME',
@@ -603,17 +637,6 @@ describe('InstallerStack', () => {
               PrivilegedMode: true,
               Type: 'LINUX_CONTAINER',
             },
-            Name: {
-              'Fn::Join': [
-                '',
-                [
-                  {
-                    Ref: 'AcceleratorQualifier',
-                  },
-                  '-installer-project',
-                ],
-              ],
-            },
             ServiceRole: {
               'Fn::GetAtt': ['InstallerAdminRole7DEE4AC8', 'Arn'],
             },
@@ -648,7 +671,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Partition',
                     },
-                    ':iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  \n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
+                    ':iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
                     {
                       Ref: 'AWS::Region',
                     },
@@ -662,7 +685,7 @@ describe('InstallerStack', () => {
                         'regionName',
                       ],
                     },
-                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
+                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;\n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
                     {
                       Ref: 'AWS::AccountId',
                     },
@@ -687,6 +710,12 @@ describe('InstallerStack', () => {
                 ],
               },
               Type: 'CODEPIPELINE',
+            },
+            Cache: {
+              Type: 'NO_CACHE',
+            },
+            EncryptionKey: {
+              'Fn::GetAtt': ['InstallerKey2A6A8C6D', 'Arn'],
             },
           },
         },
@@ -721,6 +750,20 @@ describe('InstallerStack', () => {
                   Name: 'CDK_NEW_BOOTSTRAP',
                   Type: 'PLAINTEXT',
                   Value: '1',
+                },
+                {
+                  Name: 'ACCELERATOR_REPOSITORY_SOURCE',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'RepositorySource',
+                  },
+                },
+                {
+                  Name: 'ACCELERATOR_REPOSITORY_OWNER',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'RepositoryOwner',
+                  },
                 },
                 {
                   Name: 'ACCELERATOR_REPOSITORY_NAME',
@@ -817,7 +860,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Partition',
                     },
-                    ':iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  \n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
+                    ':iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
                     {
                       Ref: 'AWS::Region',
                     },
@@ -831,7 +874,7 @@ describe('InstallerStack', () => {
                         'regionName',
                       ],
                     },
-                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
+                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;\n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
                     {
                       Ref: 'AWS::AccountId',
                     },
@@ -895,6 +938,20 @@ describe('InstallerStack', () => {
                   Value: '1',
                 },
                 {
+                  Name: 'ACCELERATOR_REPOSITORY_SOURCE',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'RepositorySource',
+                  },
+                },
+                {
+                  Name: 'ACCELERATOR_REPOSITORY_OWNER',
+                  Type: 'PLAINTEXT',
+                  Value: {
+                    Ref: 'RepositoryOwner',
+                  },
+                },
+                {
                   Name: 'ACCELERATOR_REPOSITORY_NAME',
                   Type: 'PLAINTEXT',
                   Value: {
@@ -1020,7 +1077,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Partition',
                     },
-                    ':iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));  \n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
+                    ':iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));\n                          yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/',
                     {
                       Ref: 'AWS::Region',
                     },
@@ -1034,7 +1091,7 @@ describe('InstallerStack', () => {
                         'regionName',
                       ],
                     },
-                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;                  \n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
+                    ' --qualifier accel;\n                          unset AWS_ACCESS_KEY_ID;\n                          unset AWS_SECRET_ACCESS_KEY;\n                          unset AWS_SESSION_TOKEN;\n                       fi\n      - cd ../accelerator\n      - yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ',
                     {
                       Ref: 'AWS::AccountId',
                     },
@@ -1072,18 +1129,8 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} Management account pipeline stack - CodePipeline iam role default policy resource test`, () => {
     cdk.assertions.Template.fromStack(managementAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        PipelineRoleDefaultPolicy77A82A74: {
+        CodeCommitPipelineRoleDefaultPolicyDE8B332B: {
           Type: 'AWS::IAM::Policy',
-          Metadata: {
-            cfn_nag: {
-              rules_to_suppress: [
-                {
-                  id: 'W76',
-                  reason: 'This policy is generated by CDK which can cause a high SPCM score.',
-                },
-              ],
-            },
-          },
           Properties: {
             PolicyDocument: {
               Statement: [
@@ -1129,14 +1176,14 @@ describe('InstallerStack', () => {
                   Action: 'sts:AssumeRole',
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['PipelineSourceCodePipelineActionRoleC6F9E7F5', 'Arn'],
+                    'Fn::GetAtt': ['CodeCommitPipelineSourceCodePipelineActionRoleFB176191', 'Arn'],
                   },
                 },
                 {
                   Action: 'sts:AssumeRole',
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['PipelineRoleDCFDBB91', 'Arn'],
+                    'Fn::GetAtt': ['CodeCommitPipelineRole5C35E76C', 'Arn'],
                   },
                 },
                 {
@@ -1149,13 +1196,14 @@ describe('InstallerStack', () => {
               ],
               Version: '2012-10-17',
             },
-            PolicyName: 'PipelineRoleDefaultPolicy77A82A74',
+            PolicyName: 'CodeCommitPipelineRoleDefaultPolicyDE8B332B',
             Roles: [
               {
-                Ref: 'PipelineRoleDCFDBB91',
+                Ref: 'CodeCommitPipelineRole5C35E76C',
               },
             ],
           },
+          Condition: 'UseCodeCommitCondition',
         },
       },
     });
@@ -1167,18 +1215,8 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} External pipeline account stack - CodePipeline iam role default policy resource test`, () => {
     cdk.assertions.Template.fromStack(externalPipelineAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        PipelineRoleDefaultPolicy77A82A74: {
+        CodeCommitPipelineRoleDefaultPolicyDE8B332B: {
           Type: 'AWS::IAM::Policy',
-          Metadata: {
-            cfn_nag: {
-              rules_to_suppress: [
-                {
-                  id: 'W76',
-                  reason: 'This policy is generated by CDK which can cause a high SPCM score.',
-                },
-              ],
-            },
-          },
           Properties: {
             PolicyDocument: {
               Statement: [
@@ -1224,14 +1262,14 @@ describe('InstallerStack', () => {
                   Action: 'sts:AssumeRole',
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['PipelineSourceCodePipelineActionRoleC6F9E7F5', 'Arn'],
+                    'Fn::GetAtt': ['CodeCommitPipelineSourceCodePipelineActionRoleFB176191', 'Arn'],
                   },
                 },
                 {
                   Action: 'sts:AssumeRole',
                   Effect: 'Allow',
                   Resource: {
-                    'Fn::GetAtt': ['PipelineRoleDCFDBB91', 'Arn'],
+                    'Fn::GetAtt': ['CodeCommitPipelineRole5C35E76C', 'Arn'],
                   },
                 },
                 {
@@ -1244,13 +1282,14 @@ describe('InstallerStack', () => {
               ],
               Version: '2012-10-17',
             },
-            PolicyName: 'PipelineRoleDefaultPolicy77A82A74',
+            PolicyName: 'CodeCommitPipelineRoleDefaultPolicyDE8B332B',
             Roles: [
               {
-                Ref: 'PipelineRoleDCFDBB91',
+                Ref: 'CodeCommitPipelineRole5C35E76C',
               },
             ],
           },
+          Condition: 'UseCodeCommitCondition',
         },
       },
     });
@@ -1777,7 +1816,7 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} Management account pipeline stack - CodePipeline action iam role default policy resource test`, () => {
     cdk.assertions.Template.fromStack(managementAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        PipelineSourceCodePipelineActionRoleDefaultPolicy2D565925: {
+        CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D: {
           Type: 'AWS::IAM::Policy',
           Properties: {
             PolicyDocument: {
@@ -1856,10 +1895,10 @@ describe('InstallerStack', () => {
               ],
               Version: '2012-10-17',
             },
-            PolicyName: 'PipelineSourceCodePipelineActionRoleDefaultPolicy2D565925',
+            PolicyName: 'CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D',
             Roles: [
               {
-                Ref: 'PipelineSourceCodePipelineActionRoleC6F9E7F5',
+                Ref: 'CodeCommitPipelineSourceCodePipelineActionRoleFB176191',
               },
             ],
           },
@@ -1874,7 +1913,7 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} External pipeline account stack - CodePipeline action iam role default policy resource test`, () => {
     cdk.assertions.Template.fromStack(externalPipelineAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        PipelineSourceCodePipelineActionRoleDefaultPolicy2D565925: {
+        CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D: {
           Type: 'AWS::IAM::Policy',
           Properties: {
             PolicyDocument: {
@@ -1953,10 +1992,10 @@ describe('InstallerStack', () => {
               ],
               Version: '2012-10-17',
             },
-            PolicyName: 'PipelineSourceCodePipelineActionRoleDefaultPolicy2D565925',
+            PolicyName: 'CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D',
             Roles: [
               {
-                Ref: 'PipelineSourceCodePipelineActionRoleC6F9E7F5',
+                Ref: 'CodeCommitPipelineSourceCodePipelineActionRoleFB176191',
               },
             ],
           },
@@ -1971,7 +2010,7 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} Management account pipeline stack - CodePipeline action iam role resource test`, () => {
     cdk.assertions.Template.fromStack(managementAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        PipelineSourceCodePipelineActionRoleC6F9E7F5: {
+        CodeCommitPipelineSourceCodePipelineActionRoleFB176191: {
           Type: 'AWS::IAM::Role',
           Properties: {
             AssumeRolePolicyDocument: {
@@ -2013,7 +2052,7 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} External pipeline account stack - CodePipeline action iam role resource test`, () => {
     cdk.assertions.Template.fromStack(externalPipelineAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        PipelineSourceCodePipelineActionRoleC6F9E7F5: {
+        CodeCommitPipelineSourceCodePipelineActionRoleFB176191: {
           Type: 'AWS::IAM::Role',
           Properties: {
             AssumeRolePolicyDocument: {
@@ -2055,7 +2094,7 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} Management account pipeline stack - CodePipeline iam role resource test`, () => {
     cdk.assertions.Template.fromStack(managementAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        PipelineRoleDCFDBB91: {
+        CodeCommitPipelineRole5C35E76C: {
           Type: 'AWS::IAM::Role',
           Properties: {
             AssumeRolePolicyDocument: {
@@ -2082,7 +2121,7 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} External pipeline account stack - CodePipeline iam role resource test`, () => {
     cdk.assertions.Template.fromStack(externalPipelineAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        PipelineRoleDCFDBB91: {
+        CodeCommitPipelineRole5C35E76C: {
           Type: 'AWS::IAM::Role',
           Properties: {
             AssumeRolePolicyDocument: {
@@ -2109,9 +2148,9 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} Management account pipeline stack - CodePipeline resource test`, () => {
     cdk.assertions.Template.fromStack(managementAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        PipelineC660917D: {
+        CodeCommitPipeline2208527B: {
           Type: 'AWS::CodePipeline::Pipeline',
-          DependsOn: ['PipelineRoleDefaultPolicy77A82A74', 'PipelineRoleDCFDBB91'],
+          DependsOn: ['CodeCommitPipelineRoleDefaultPolicyDE8B332B', 'CodeCommitPipelineRole5C35E76C'],
           Properties: {
             ArtifactStore: {
               EncryptionKey: {
@@ -2127,7 +2166,7 @@ describe('InstallerStack', () => {
             },
             Name: 'AWSAccelerator-Installer',
             RoleArn: {
-              'Fn::GetAtt': ['PipelineRoleDCFDBB91', 'Arn'],
+              'Fn::GetAtt': ['CodeCommitPipelineRole5C35E76C', 'Arn'],
             },
             Stages: [
               {
@@ -2155,7 +2194,7 @@ describe('InstallerStack', () => {
                       },
                     ],
                     RoleArn: {
-                      'Fn::GetAtt': ['PipelineSourceCodePipelineActionRoleC6F9E7F5', 'Arn'],
+                      'Fn::GetAtt': ['CodeCommitPipelineSourceCodePipelineActionRoleFB176191', 'Arn'],
                     },
                     RunOrder: 1,
                   },
@@ -2183,7 +2222,7 @@ describe('InstallerStack', () => {
                     ],
                     Name: 'Install',
                     RoleArn: {
-                      'Fn::GetAtt': ['PipelineRoleDCFDBB91', 'Arn'],
+                      'Fn::GetAtt': ['CodeCommitPipelineRole5C35E76C', 'Arn'],
                     },
                     RunOrder: 1,
                   },
@@ -2203,9 +2242,9 @@ describe('InstallerStack', () => {
   test(`${testNamePrefix} External pipeline account stack - CodePipeline resource test`, () => {
     cdk.assertions.Template.fromStack(externalPipelineAccountStackWithTesterPipeline).templateMatches({
       Resources: {
-        PipelineC660917D: {
+        CodeCommitPipeline2208527B: {
           Type: 'AWS::CodePipeline::Pipeline',
-          DependsOn: ['PipelineRoleDefaultPolicy77A82A74', 'PipelineRoleDCFDBB91'],
+          DependsOn: ['CodeCommitPipelineRoleDefaultPolicyDE8B332B', 'CodeCommitPipelineRole5C35E76C'],
           Properties: {
             ArtifactStore: {
               EncryptionKey: {
@@ -2232,7 +2271,7 @@ describe('InstallerStack', () => {
             },
             RestartExecutionOnUpdate: true,
             RoleArn: {
-              'Fn::GetAtt': ['PipelineRoleDCFDBB91', 'Arn'],
+              'Fn::GetAtt': ['CodeCommitPipelineRole5C35E76C', 'Arn'],
             },
             Stages: [
               {
@@ -2260,7 +2299,7 @@ describe('InstallerStack', () => {
                       },
                     ],
                     RoleArn: {
-                      'Fn::GetAtt': ['PipelineSourceCodePipelineActionRoleC6F9E7F5', 'Arn'],
+                      'Fn::GetAtt': ['CodeCommitPipelineSourceCodePipelineActionRoleFB176191', 'Arn'],
                     },
                     RunOrder: 1,
                   },
@@ -2288,7 +2327,7 @@ describe('InstallerStack', () => {
                     ],
                     Name: 'Install',
                     RoleArn: {
-                      'Fn::GetAtt': ['PipelineRoleDCFDBB91', 'Arn'],
+                      'Fn::GetAtt': ['CodeCommitPipelineRole5C35E76C', 'Arn'],
                     },
                     RunOrder: 1,
                   },

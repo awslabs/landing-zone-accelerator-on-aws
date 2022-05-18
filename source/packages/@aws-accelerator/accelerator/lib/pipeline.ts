@@ -30,6 +30,8 @@ import { AcceleratorToolkitCommand } from './toolkit';
  */
 export interface AcceleratorPipelineProps {
   readonly toolkitRole: cdk.aws_iam.Role;
+  readonly sourceRepository: string;
+  readonly sourceRepositoryOwner: string;
   readonly sourceRepositoryName: string;
   readonly sourceBranchName: string;
   readonly enableApprovalStage: boolean;
@@ -127,16 +129,34 @@ export class AcceleratorPipeline extends Construct {
     this.acceleratorRepoArtifact = new codepipeline.Artifact('Source');
     this.configRepoArtifact = new codepipeline.Artifact('Config');
 
+    let sourceAction:
+      | cdk.aws_codepipeline_actions.CodeCommitSourceAction
+      | cdk.aws_codepipeline_actions.GitHubSourceAction;
+
+    if (props.sourceRepository === 'codecommit') {
+      sourceAction = new codepipeline_actions.CodeCommitSourceAction({
+        actionName: 'Source',
+        repository: codecommit.Repository.fromRepositoryName(this, 'SourceRepo', props.sourceRepositoryName),
+        branch: props.sourceBranchName,
+        output: this.acceleratorRepoArtifact,
+        trigger: codepipeline_actions.CodeCommitTrigger.NONE,
+      });
+    } else {
+      sourceAction = new cdk.aws_codepipeline_actions.GitHubSourceAction({
+        actionName: 'Source',
+        owner: props.sourceRepositoryOwner,
+        repo: props.sourceRepositoryName,
+        branch: props.sourceBranchName,
+        oauthToken: cdk.SecretValue.secretsManager('accelerator/github-token'),
+        output: this.acceleratorRepoArtifact,
+        trigger: cdk.aws_codepipeline_actions.GitHubTrigger.NONE,
+      });
+    }
+
     pipeline.addStage({
       stageName: 'Source',
       actions: [
-        new codepipeline_actions.CodeCommitSourceAction({
-          actionName: 'Source',
-          repository: codecommit.Repository.fromRepositoryName(this, 'SourceRepo', props.sourceRepositoryName),
-          branch: props.sourceBranchName,
-          output: this.acceleratorRepoArtifact,
-          trigger: codepipeline_actions.CodeCommitTrigger.NONE,
-        }),
+        sourceAction,
         new codepipeline_actions.CodeCommitSourceAction({
           actionName: 'Configuration',
           repository: configRepository.getRepository(),
