@@ -1,4 +1,5 @@
-aws-compliance-accelerator
+Landing Zone Accelerator on AWS
+
 Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 Licensed under the Apache License Version 2.0 (the "License"). You may not use this file except
 in compliance with the License. A copy of the License is located at http://www.apache.org/licenses/
@@ -11,4 +12,10 @@ THIRD PARTY COMPONENTS
 **********************
 This software includes third party software subject to the following copyrights:
 
-AWS SDK under the Apache License Version 2.0
+AWS CDK - Apache-2.0
+AWS SDK - Apache-2.0
+jest - MIT license
+node - MIT license
+ts-jest - MIT license
+ts-node - MIT license
+typescript - Apache-2.0
