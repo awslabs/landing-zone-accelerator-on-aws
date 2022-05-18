@@ -461,9 +461,35 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
   /**
    *
    * @param values
+   * @param configDir
    */
-  constructor(values?: t.TypeOf<typeof IamConfigTypes.iamConfig>) {
+  constructor(values?: t.TypeOf<typeof IamConfigTypes.iamConfig>, configDir?: string) {
+    //
+    // Validation errors
+    //
+    const errors: string[] = [];
+
     if (values) {
+      const policies: { name: string; policyFile: string }[] = [];
+      for (const policySet of values.policySets ?? []) {
+        for (const policy of policySet.policies) {
+          policies.push({ name: policy.name, policyFile: policy.policy });
+        }
+      }
+
+      // Validate policy file existence
+      if (configDir) {
+        for (const policy of policies) {
+          if (!fs.existsSync(path.join(configDir, policy.policyFile))) {
+            errors.push(`Policy definition file ${policy.policyFile} not found, for ${policy.name} !!!`);
+          }
+        }
+      }
+
+      if (errors.length) {
+        throw new Error(`${IamConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      }
+
       Object.assign(this, values);
     }
   }
@@ -476,7 +502,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
   static load(dir: string): IamConfig {
     const buffer = fs.readFileSync(path.join(dir, IamConfig.FILENAME), 'utf8');
     const values = t.parse(IamConfigTypes.iamConfig, yaml.load(buffer));
-    return new IamConfig(values);
+    return new IamConfig(values, dir);
   }
 
   /**
