@@ -1,22 +1,28 @@
 import * as cdk from 'aws-cdk-lib';
-import { OrganizationalUnit } from '../../index';
+import { OrganizationalUnits } from '../../index';
+//import { SynthUtils } from '@aws-cdk/assert';
 
 const testNamePrefix = 'Construct(OrganizationalUnit): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new OrganizationalUnit(stack, 'OrganizationalUnit', {
-  name: 'root',
-  path: '/',
+new OrganizationalUnits(stack, 'OrganizationalUnits', {
+  acceleratorConfigTable: new cdk.aws_dynamodb.Table(stack, 'ConfigTable', {
+    partitionKey: { name: 'dataType', type: cdk.aws_dynamodb.AttributeType.STRING },
+  }),
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-  logRetentionInDays: 3653,
+  logRetentionInDays: 365,
 });
 
 /**
  * OrganizationalUnit construct test
  */
-describe('OrganizationalUnit', () => {
+describe('OrganizationalUnits', () => {
+  //   test(`${testNamePrefix} Snapshot Test`, () => {
+  //    expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
+  //   });
+
   /**
    * Number of IAM role resource test
    */
@@ -34,8 +40,8 @@ describe('OrganizationalUnit', () => {
   /**
    * Number of CreateOrganizationalUnit custom resource test
    */
-  test(`${testNamePrefix} CreateOrganizationalUnit custom resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::CreateOrganizationalUnit', 1);
+  test(`${testNamePrefix} CreateOrganizationalUnits custom resource count test`, () => {
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::CreateOrganizationalUnits', 1);
   });
 
   /**
@@ -44,9 +50,9 @@ describe('OrganizationalUnit', () => {
   test(`${testNamePrefix} Lambda Function resource configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        CustomOrganizationsCreateOrganizationalUnitCustomResourceProviderHandler1A0ECAD6: {
+        CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderHandler4596F0BC: {
           Type: 'AWS::Lambda::Function',
-          DependsOn: ['CustomOrganizationsCreateOrganizationalUnitCustomResourceProviderRoleF6B0D3A0'],
+          DependsOn: ['CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderRole4B8B81B0'],
           Properties: {
             Code: {
               S3Bucket: {
@@ -56,7 +62,7 @@ describe('OrganizationalUnit', () => {
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
             Role: {
-              'Fn::GetAtt': ['CustomOrganizationsCreateOrganizationalUnitCustomResourceProviderRoleF6B0D3A0', 'Arn'],
+              'Fn::GetAtt': ['CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderRole4B8B81B0', 'Arn'],
             },
             Runtime: 'nodejs14.x',
             Timeout: 900,
@@ -72,7 +78,7 @@ describe('OrganizationalUnit', () => {
   test(`${testNamePrefix} IAM role resource configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        CustomOrganizationsCreateOrganizationalUnitCustomResourceProviderRoleF6B0D3A0: {
+        CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderRole4B8B81B0: {
           Type: 'AWS::IAM::Role',
           Properties: {
             AssumeRolePolicyDocument: {
@@ -105,6 +111,16 @@ describe('OrganizationalUnit', () => {
                       ],
                       Effect: 'Allow',
                       Resource: '*',
+                      Sid: 'organizations',
+                    },
+                    {
+                      Action: ['dynamodb:UpdateItem', 'dynamodb:Query'],
+                      Effect: 'Allow',
+                      Resource: [
+                        {
+                          'Fn::GetAtt': ['ConfigTable5CD72349', 'Arn'],
+                        },
+                      ],
                     },
                   ],
                   Version: '2012-10-17',
@@ -121,19 +137,22 @@ describe('OrganizationalUnit', () => {
   /**
    * CreateOrganizationalUnit custom resource configuration test
    */
-  test(`${testNamePrefix} CreateOrganizationalUnit custom resource configuration test`, () => {
+  test(`${testNamePrefix} CreateOrganizationalUnits custom resource configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        OrganizationalUnitCDD34C84: {
-          Type: 'Custom::CreateOrganizationalUnit',
+        OrganizationalUnits30245726: {
+          Type: 'Custom::CreateOrganizationalUnits',
           DeletionPolicy: 'Delete',
           UpdateReplacePolicy: 'Delete',
           Properties: {
             ServiceToken: {
-              'Fn::GetAtt': ['CustomOrganizationsCreateOrganizationalUnitCustomResourceProviderHandler1A0ECAD6', 'Arn'],
+              'Fn::GetAtt': [
+                'CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderHandler4596F0BC',
+                'Arn',
+              ],
             },
-            name: 'root',
-            path: '/',
+            configTableName: { Ref: 'ConfigTable5CD72349' },
+            partition: { Ref: 'AWS::Partition' },
           },
         },
       },

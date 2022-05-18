@@ -23,7 +23,6 @@ import * as t from './common-types';
 export abstract class OrganizationConfigTypes {
   static readonly organizationalUnitConfig = t.interface({
     name: t.nonEmptyString,
-    path: t.nonEmptyString,
   });
 
   static readonly organizationalUnitIdConfig = t.interface({
@@ -76,17 +75,18 @@ export abstract class OrganizationalUnitConfig
   implements t.TypeOf<typeof OrganizationConfigTypes.organizationalUnitConfig>
 {
   /**
-   * The new name that you want to assign to the OU.
-   * The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range.
+   * The name and nested path that you want to assign to the OU.
+   * When referring to OU's in the other configuration files ensure
+   * that the name matches what has been provided here.
+   * For example if you wanted an OU directly off of root just supply the OU name.
+   * Always configure all of the OUs in the path.
+   * A nested OU configuration would be like this
+   * - name: Sandbox
+   * - name: Sandbox/Pipeline
+   * - name: Sandbox/Development
+   * - name: Sandbox/Development/Application1
    */
   readonly name: string = '';
-  /**
-   * The unique identifier (ID) of the parent root or OU that you want to create the new OU in. The regex pattern for a parent ID string requires one of the following:
-   * Root - A string that begins with "r-" followed by from 4 to 32 lowercase letters or digits.
-   * Organizational unit (OU) - A string that begins with "ou-" followed by from 4 to 32 lowercase letters or digits (the ID of the root that the OU is in).
-   * This string is followed by a second "-" dash and from 8 to 32 additional lowercase letters or digits.
-   */
-  readonly path: string = '/';
 }
 
 /**
@@ -229,25 +229,26 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    *
    * @see OrganizationalUnitConfig
    *
-   * To create Security and Infrastructure OU in / path , you need to provide following values for this parameter.
+   * To create Security and Infrastructure OU in root , you need to provide following values for this parameter.
+   * Nested OU's start at root and configure all of the ou's in the path
    *
    * @example
    * ```
    * organizationalUnits:
    *   - name: Security
-   *     path: /
    *   - name: Infrastructure
-   *     path: /
+   *   - name: Sandbox
+   *   - name: Sandbox/Pipeline
+   *   - name: Sandbox/Development
+   *   - name: Sandbox/Development/Application1
    * ```
    */
   readonly organizationalUnits: OrganizationalUnitConfig[] = [
     {
       name: 'Security',
-      path: '/',
     },
     {
       name: 'Infrastructure',
-      path: '/',
     },
   ];
 
@@ -372,10 +373,10 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
       let nextToken: string | undefined = undefined;
       do {
         const page = await throttlingBackOff(() => organizationsClient.listRoots({ NextToken: nextToken }).promise());
-        for (const item of page.Roots ?? []) {
-          if (item.Name === 'Root' && item.Id && item.Arn) {
-            this.organizationalUnitIds?.push({ name: item.Name, id: item.Id, arn: item.Arn });
-            rootId = item.Id;
+        for (const root of page.Roots ?? []) {
+          if (root.Name === 'Root' && root.Id && root.Arn) {
+            this.organizationalUnitIds?.push({ name: root.Name, id: root.Id, arn: root.Arn });
+            rootId = root.Id;
           }
         }
         nextToken = page.NextToken;
@@ -383,8 +384,10 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
 
       for (const item of this.organizationalUnits) {
         let parentId = rootId;
+        let parentName = '';
 
-        for (const parent of item.path.split('/')) {
+        const parentPath = this.getPath(item.name);
+        for (const parent of parentPath.split('/')) {
           if (parent) {
             let nextToken: string | undefined = undefined;
             do {
@@ -396,6 +399,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
               for (const ou of page.OrganizationalUnits ?? []) {
                 if (ou.Name === parent && ou.Id) {
                   parentId = ou.Id;
+                  parentName = ou.Name;
                 }
               }
               nextToken = page.NextToken;
@@ -411,7 +415,9 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
               .promise(),
           );
           for (const ou of page.OrganizationalUnits ?? []) {
-            if (ou.Name === item.name && ou.Id && ou.Arn) {
+            const ouName = this.getOuName(item.name);
+            const ouParent = this.getParentOuName(item.name);
+            if (ou.Name === ouName && ouParent === parentName && ou.Id && ou.Arn) {
               this.organizationalUnitIds?.push({ name: item.name, id: ou.Id, arn: ou.Arn });
             }
           }
@@ -430,7 +436,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
         return ou.id;
       }
     }
-    throw new Error('Attempting to access Organizations info when not enabled');
+    throw new Error("Organizations not enabled or OU doesn't exist");
   }
 
   public getOrganizationalUnitArn(name: string): string {
@@ -442,14 +448,33 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
         return ou.arn;
       }
     }
-    throw new Error('Attempting to access Organizations info when not enabled');
+    throw new Error("Organizations not enabled or OU doesn't exist");
   }
 
   public getPath(name: string): string {
-    const ou = this.organizationalUnits.find(item => item.name === name);
-    if (ou) {
-      return ou.path;
+    //get the parent path
+    const pathIndex = name.lastIndexOf('/');
+    const path = name.slice(0, pathIndex + 1).slice(0, -1);
+    if (path === '') {
+      return '/';
     }
-    throw new Error(`OU ${name} not found`);
+    return '/' + path;
+  }
+
+  public getOuName(name: string): string {
+    const result = name.split('/').pop();
+    if (result === undefined) {
+      return name;
+    }
+    return result;
+  }
+
+  public getParentOuName(name: string): string {
+    const path = this.getPath(name);
+    const result = path.split('/').pop();
+    if (result === undefined) {
+      return '/';
+    }
+    return result;
   }
 }

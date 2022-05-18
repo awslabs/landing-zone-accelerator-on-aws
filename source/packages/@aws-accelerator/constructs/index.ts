@@ -43,7 +43,7 @@ export * from './lib/aws-organizations/create-accounts';
 export * from './lib/aws-organizations/enable-aws-service-access';
 export * from './lib/aws-organizations/enable-policy-type';
 export * from './lib/aws-organizations/organization';
-export * from './lib/aws-organizations/organizational-unit';
+export * from './lib/aws-organizations/organizational-units';
 export * from './lib/aws-organizations/policy';
 export * from './lib/aws-organizations/policy-attachment';
 export * from './lib/aws-organizations/register-delegated-administrator';

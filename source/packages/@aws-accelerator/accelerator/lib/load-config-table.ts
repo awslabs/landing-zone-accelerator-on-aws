@@ -17,16 +17,16 @@ import { Construct } from 'constructs';
 import { Duration } from 'aws-cdk-lib';
 import path = require('path');
 
-export interface ValidateEnvironmentConfigProps {
+export interface LoadAcceleratorConfigTableProps {
   readonly acceleratorConfigTable: cdk.aws_dynamodb.ITable;
-  readonly newOrgAccountsTable: cdk.aws_dynamodb.ITable;
-  readonly newCTAccountsTable: cdk.aws_dynamodb.ITable;
-  readonly controlTowerEnabled: boolean;
-  readonly commitId: string;
-  readonly stackName: string;
-  readonly region: string;
-  readonly managementAccountId: string;
+  readonly configRepositoryName: string;
+  readonly managementAccountEmail: string;
+  readonly logArchiveAccountEmail: string;
+  readonly auditAccountEmail: string;
   readonly partition: string;
+  readonly managementAccountId: string;
+  readonly region: string;
+  readonly stackName: string;
   /**
    * Custom resource lambda log group encryption key
    */
@@ -38,54 +38,56 @@ export interface ValidateEnvironmentConfigProps {
 }
 
 /**
- * Class Validate Environment Config
+ * Class Load Accelerator Config Table
  */
-export class ValidateEnvironmentConfig extends Construct {
+export class LoadAcceleratorConfigTable extends Construct {
   public readonly id: string;
 
-  constructor(scope: Construct, id: string, props: ValidateEnvironmentConfigProps) {
+  constructor(scope: Construct, id: string, props: LoadAcceleratorConfigTableProps) {
     super(scope, id);
 
-    const VALIDATE_ENVIRONMENT_RESOURCE_TYPE = 'Custom::ValidateEnvironmentConfig';
+    const LOAD_CONFIG_TABLE_RESOURCE_TYPE = 'Custom::LoadAcceleratorConfigTable';
 
     //
     // Function definition for the custom resource
     //
-    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, VALIDATE_ENVIRONMENT_RESOURCE_TYPE, {
-      codeDirectory: path.join(__dirname, 'lambdas/validate-environment/dist'),
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, LOAD_CONFIG_TABLE_RESOURCE_TYPE, {
+      codeDirectory: path.join(__dirname, 'lambdas/load-config-table/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-      timeout: Duration.minutes(10),
+      timeout: Duration.minutes(15),
       policyStatements: [
         {
           Sid: 'organizations',
           Effect: 'Allow',
           Action: [
             'organizations:ListAccounts',
-            'servicecatalog:SearchProvisionedProducts',
-            'organizations:ListChildren',
+            'organizations:ListRoots',
+            'organizations:ListOrganizationalUnitsForParent',
           ],
           Resource: '*',
         },
         {
-          Sid: 'dynamodb',
+          Sid: 'configTable',
           Effect: 'Allow',
-          Action: ['dynamodb:PutItem'],
-          Resource: [props.newOrgAccountsTable.tableArn, props.newCTAccountsTable?.tableArn],
-        },
-        {
-          Sid: 'dynamodbConfigTable',
-          Effect: 'Allow',
-          Action: ['dynamodb:Query', 'dynamodb:UpdateItem'],
+          Action: ['dynamodb:UpdateItem', 'dynamodb:PutItem'],
           Resource: [props.acceleratorConfigTable.tableArn],
         },
         {
           Sid: 'kms',
           Effect: 'Allow',
           Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
-          Resource: [props.newOrgAccountsTable.encryptionKey?.keyArn, props.newCTAccountsTable.encryptionKey?.keyArn],
+          Resource: [props.acceleratorConfigTable.encryptionKey?.keyArn],
         },
         {
-          Sid: 'cloudformation',
+          Sid: 'codeCommit',
+          Effect: 'Allow',
+          Action: ['codecommit:GetFile'],
+          Resource: [
+            `arn:${props.partition}:codecommit:${props.region}:${props.managementAccountId}:${props.configRepositoryName}`,
+          ],
+        },
+        {
+          Sid: 'cloudFormation',
           Effect: 'Allow',
           Action: ['cloudformation:DescribeStacks'],
           Resource: [
@@ -101,14 +103,15 @@ export class ValidateEnvironmentConfig extends Construct {
     // re-evaluation.
     //
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: VALIDATE_ENVIRONMENT_RESOURCE_TYPE,
+      resourceType: LOAD_CONFIG_TABLE_RESOURCE_TYPE,
       serviceToken: provider.serviceToken,
       properties: {
         configTableName: props.acceleratorConfigTable.tableName,
-        newOrgAccountsTableName: props.newOrgAccountsTable.tableName,
-        newCTAccountsTableName: props.newCTAccountsTable?.tableName || '',
-        controlTowerEnabled: props.controlTowerEnabled,
-        commitId: props.commitId,
+        configRepositoryName: props.configRepositoryName,
+        managementAccountEmail: props.managementAccountEmail,
+        auditAccountEmail: props.auditAccountEmail,
+        logArchiveAccountEmail: props.logArchiveAccountEmail,
+        partition: props.partition,
         stackName: props.stackName,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },

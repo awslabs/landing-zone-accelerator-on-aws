@@ -13,22 +13,15 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { v4 as uuidv4 } from 'uuid';
 
 const path = require('path');
-
-export interface IOrganizationalUnit extends cdk.IResource {
-  readonly organizationalUnitName: string;
-  readonly organizationalUnitPath: string;
-  readonly organizationalUnitId: string;
-  readonly organizationalUnitArn: string;
-}
 
 /**
  * Initialized OrganizationalUnit properties
  */
-export interface OrganizationalUnitProps {
-  readonly name: string;
-  readonly path: string;
+export interface OrganizationalUnitsProps {
+  readonly acceleratorConfigTable: cdk.aws_dynamodb.Table;
   /**
    * Custom resource lambda log group encryption key
    */
@@ -40,28 +33,23 @@ export interface OrganizationalUnitProps {
 }
 
 /**
- * Class to initialize OrganizationalUnit
+ * Class to initialize OrganizationalUnits
  */
-export class OrganizationalUnit extends cdk.Resource implements IOrganizationalUnit {
-  public readonly organizationalUnitName: string;
-  public readonly organizationalUnitPath: string;
-  public readonly organizationalUnitId: string;
-  public readonly organizationalUnitArn: string;
+export class OrganizationalUnits extends Construct {
+  public readonly id: string;
 
-  constructor(scope: Construct, id: string, props: OrganizationalUnitProps) {
+  constructor(scope: Construct, id: string, props: OrganizationalUnitsProps) {
     super(scope, id);
-
-    this.organizationalUnitName = props.name;
-    this.organizationalUnitPath = props.path;
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(
       this,
-      'Custom::OrganizationsCreateOrganizationalUnit',
+      'Custom::OrganizationsCreateOrganizationalUnits',
       {
-        codeDirectory: path.join(__dirname, 'create-organizational-unit/dist'),
+        codeDirectory: path.join(__dirname, 'create-organizational-units/dist'),
         runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
         policyStatements: [
           {
+            Sid: 'organizations',
             Effect: 'Allow',
             Action: [
               'organizations:CreateOrganizationalUnit',
@@ -71,17 +59,23 @@ export class OrganizationalUnit extends cdk.Resource implements IOrganizationalU
             ],
             Resource: '*',
           },
+          {
+            Sid: 'dynamodb',
+            Effect: 'Allow',
+            Action: ['dynamodb:UpdateItem', 'dynamodb:Query'],
+            Resource: [props.acceleratorConfigTable.tableArn],
+          },
         ],
       },
     );
 
     const resource = new cdk.CustomResource(this, 'Resource', {
-      resourceType: 'Custom::CreateOrganizationalUnit',
+      resourceType: 'Custom::CreateOrganizationalUnits',
       serviceToken: provider.serviceToken,
       properties: {
+        configTableName: props.acceleratorConfigTable.tableName,
         partition: cdk.Aws.PARTITION,
-        name: props.name,
-        path: props.path,
+        uuid: uuidv4(),
       },
     });
 
@@ -100,7 +94,6 @@ export class OrganizationalUnit extends cdk.Resource implements IOrganizationalU
       });
     resource.node.addDependency(logGroup);
 
-    this.organizationalUnitId = resource.ref;
-    this.organizationalUnitArn = resource.getAttString('arn');
+    this.id = resource.ref;
   }
 }
