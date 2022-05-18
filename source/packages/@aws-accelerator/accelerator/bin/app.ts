@@ -208,6 +208,7 @@ async function main() {
       organizationConfig: OrganizationConfig.load(configDirPath),
       securityConfig: SecurityConfig.load(configDirPath),
       partition: partition,
+      qualifier: process.env['ACCELERATOR_QUALIFIER'],
     };
 
     //

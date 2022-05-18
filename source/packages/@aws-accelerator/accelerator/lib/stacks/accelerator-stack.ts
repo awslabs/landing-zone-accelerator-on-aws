@@ -35,6 +35,7 @@ export interface AcceleratorStackProps extends cdk.StackProps {
   readonly organizationConfig: OrganizationConfig;
   readonly securityConfig: SecurityConfig;
   readonly partition: string;
+  readonly qualifier?: string;
 }
 
 export abstract class AcceleratorStack extends cdk.Stack {
