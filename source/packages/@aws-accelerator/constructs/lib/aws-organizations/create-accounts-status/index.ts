@@ -31,7 +31,6 @@ interface AccountConfig {
   description: string;
   email: string;
   enableGovCloud: string;
-  organizationalUnit: string;
   organizationalUnitId: string;
   createRequestId?: string | undefined;
 }
@@ -50,95 +49,102 @@ export async function handler(event: any): Promise<
   console.log(event);
   // get a single accountConfig from table and attempt to create
   // if no record is returned then all new accounts are provisioned
-  const accountToAdd = await getSingleAccountConfigFromTable();
-  if (accountToAdd.length === 0) {
-    console.log('Finished adding accounts');
-    return {
-      IsComplete: true,
-    };
-  }
-
-  const singleAccountToAdd = accountToAdd[0];
-  console.log(`enablegovcloud value: ${singleAccountToAdd.enableGovCloud}`);
-  let createAccountResponse: CreateAccountResponse;
-  // if the createRequestId is empty then we need to create the account
-  if (singleAccountToAdd.createRequestId === '' || singleAccountToAdd.createRequestId === undefined) {
-    if (singleAccountToAdd.enableGovCloud === 'true') {
-      createAccountResponse = await createGovCloudAccount(singleAccountToAdd.email, singleAccountToAdd.name);
-    } else {
-      createAccountResponse = await createOrganizationAccount(singleAccountToAdd.email, singleAccountToAdd.name);
+  try {
+    const accountToAdd = await getSingleAccountConfigFromTable();
+    if (accountToAdd.length === 0) {
+      console.log('Finished adding accounts');
+      return {
+        IsComplete: true,
+      };
     }
-    switch (createAccountResponse.CreateAccountStatus?.State) {
-      case 'IN_PROGRESS':
-        console.log(`Initiated account creation for ${accountToAdd[0].email}`);
-        singleAccountToAdd.createRequestId = createAccountResponse.CreateAccountStatus.Id;
-        const updateAccountConfigResponse = await updateAccountConfig(singleAccountToAdd);
-        if (!updateAccountConfigResponse) {
-          throw new Error('Unable to update DynamoDB account record with request id');
-        } else {
+
+    const singleAccountToAdd = accountToAdd[0];
+    console.log(`enablegovcloud value: ${singleAccountToAdd.enableGovCloud}`);
+    let createAccountResponse: CreateAccountResponse;
+    // if the createRequestId is empty then we need to create the account
+    if (singleAccountToAdd.createRequestId === '' || singleAccountToAdd.createRequestId === undefined) {
+      if (singleAccountToAdd.enableGovCloud === 'true') {
+        createAccountResponse = await createGovCloudAccount(singleAccountToAdd.email, singleAccountToAdd.name);
+      } else {
+        createAccountResponse = await createOrganizationAccount(singleAccountToAdd.email, singleAccountToAdd.name);
+      }
+      switch (createAccountResponse.CreateAccountStatus?.State) {
+        case 'IN_PROGRESS':
+          console.log(`Initiated account creation for ${accountToAdd[0].email}`);
+          singleAccountToAdd.createRequestId = createAccountResponse.CreateAccountStatus.Id;
+          const updateAccountConfigResponse = await updateAccountConfig(singleAccountToAdd);
+          if (!updateAccountConfigResponse) {
+            throw new Error('Unable to update DynamoDB account record with request id');
+          } else {
+            return {
+              IsComplete: false,
+            };
+          }
+        case 'SUCCEEDED':
+          if (createAccountResponse.CreateAccountStatus.GovCloudAccountId) {
+            console.log(
+              `GovCloud account created with id ${createAccountResponse.CreateAccountStatus.GovCloudAccountId}`,
+            );
+            await saveGovCloudAccountMapping(
+              createAccountResponse.CreateAccountStatus.AccountId!,
+              createAccountResponse.CreateAccountStatus.GovCloudAccountId,
+              createAccountResponse.CreateAccountStatus.AccountName!,
+            );
+          }
+          console.log(
+            `Account with id ${createAccountResponse.CreateAccountStatus.AccountId} was created for email ${singleAccountToAdd.email}`,
+          );
+          await moveAccountToOrgIdFromRoot(
+            createAccountResponse.CreateAccountStatus.AccountId!,
+            singleAccountToAdd.organizationalUnitId,
+          );
+          await deleteSingleAccountConfigFromTable(singleAccountToAdd.email);
+          break;
+        default:
+          throw new Error(
+            `Could not create account ${singleAccountToAdd.email}. Response state: ${createAccountResponse.CreateAccountStatus?.State}. Failure reason: ${createAccountResponse.CreateAccountStatus?.FailureReason}`,
+          );
+      }
+    } else {
+      // check status of account creation
+      const createAccountStatusResponse = await getAccountCreationStatus(singleAccountToAdd.createRequestId);
+      switch (createAccountStatusResponse.CreateAccountStatus?.State) {
+        case 'IN_PROGRESS':
+          console.log(`Account is still being created`);
           return {
             IsComplete: false,
           };
-        }
-      case 'SUCCEEDED':
-        if (createAccountResponse.CreateAccountStatus.GovCloudAccountId) {
-          console.log(
-            `GovCloud account created with id ${createAccountResponse.CreateAccountStatus.GovCloudAccountId}`,
-          );
-          await saveGovCloudAccountMapping(
-            createAccountResponse.CreateAccountStatus.AccountId!,
-            createAccountResponse.CreateAccountStatus.GovCloudAccountId,
-            createAccountResponse.CreateAccountStatus.AccountName!,
-          );
-        }
-        console.log(
-          `Account with id ${createAccountResponse.CreateAccountStatus.AccountId} was created for email ${singleAccountToAdd.email}`,
-        );
-        await moveAccountToOrgIdFromRoot(
-          createAccountResponse.CreateAccountStatus.AccountId!,
-          singleAccountToAdd.organizationalUnitId,
-        );
-        await deleteSingleAccountConfigFromTable(singleAccountToAdd.email);
-        break;
-      default:
-        throw new Error(
-          `Could not create account ${singleAccountToAdd.email}. Response state: ${createAccountResponse.CreateAccountStatus?.State}. Failure reason: ${createAccountResponse.CreateAccountStatus?.FailureReason}`,
-        );
-    }
-  } else {
-    // check status of account creation
-    const createAccountStatusResponse = await getAccountCreationStatus(singleAccountToAdd.createRequestId);
-    switch (createAccountStatusResponse.CreateAccountStatus?.State) {
-      case 'IN_PROGRESS':
-        console.log(`Account is still being created`);
-        return {
-          IsComplete: false,
-        };
-      case 'SUCCEEDED':
-        console.log(`Account with id ${createAccountStatusResponse.CreateAccountStatus?.AccountId} is complete`);
-        if (createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId) {
-          console.log(createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId);
-          await saveGovCloudAccountMapping(
+        case 'SUCCEEDED':
+          console.log(`Account with id ${createAccountStatusResponse.CreateAccountStatus?.AccountId} is complete`);
+          if (createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId) {
+            console.log(createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId);
+            await saveGovCloudAccountMapping(
+              createAccountStatusResponse.CreateAccountStatus.AccountId!,
+              createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId,
+              singleAccountToAdd.name,
+            );
+          }
+          await moveAccountToOrgIdFromRoot(
             createAccountStatusResponse.CreateAccountStatus.AccountId!,
-            createAccountStatusResponse.CreateAccountStatus.GovCloudAccountId,
-            singleAccountToAdd.name,
+            singleAccountToAdd.organizationalUnitId,
           );
-        }
-        await moveAccountToOrgIdFromRoot(
-          createAccountStatusResponse.CreateAccountStatus.AccountId!,
-          singleAccountToAdd.organizationalUnitId,
-        );
-        await deleteSingleAccountConfigFromTable(singleAccountToAdd.email);
-        break;
-      default:
-        throw new Error(
-          `Could not create account ${singleAccountToAdd.email}. Response state: ${createAccountStatusResponse.CreateAccountStatus?.State}, Failure reason: ${createAccountStatusResponse.CreateAccountStatus?.FailureReason}`,
-        );
+          await deleteSingleAccountConfigFromTable(singleAccountToAdd.email);
+          break;
+        default:
+          throw new Error(
+            `Could not create account ${singleAccountToAdd.email}. Response state: ${createAccountStatusResponse.CreateAccountStatus?.State}, Failure reason: ${createAccountStatusResponse.CreateAccountStatus?.FailureReason}`,
+          );
+      }
     }
+    return {
+      IsComplete: false,
+    };
+  } catch (e) {
+    console.log(e);
+    console.log(`Create accounts failed. Deleting pending account creation records`);
+    await deleteAllRecordsFromTable(newOrgAccountsTableName);
+    throw new Error(`Account creation failed. ${e}`);
   }
-  return {
-    IsComplete: false,
-  };
 }
 
 async function getSingleAccountConfigFromTable(): Promise<AccountConfigs> {
@@ -275,5 +281,25 @@ async function saveGovCloudAccountMapping(
   } else {
     console.log(response);
     return false;
+  }
+}
+
+async function deleteAllRecordsFromTable(tableName: string) {
+  const params = {
+    TableName: tableName,
+    ProjectionExpression: 'accountEmail',
+  };
+  const response = await documentClient.scan(params).promise();
+  if (response.Items) {
+    for (const item of response.Items) {
+      console.log(item['accountEmail']);
+      const params = {
+        TableName: tableName,
+        Key: {
+          accountEmail: item['accountEmail'],
+        },
+      };
+      await documentClient.delete(params).promise();
+    }
   }
 }

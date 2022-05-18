@@ -31,7 +31,6 @@ interface AccountConfig {
   description: string;
   email: string;
   enableGovCloud?: boolean | undefined;
-  organizationalUnit: string;
   organizationalUnitId: string | undefined;
   createRequestId?: string | undefined;
 }
@@ -56,32 +55,39 @@ export async function handler(event: any): Promise<
     };
   }
 
-  //get a single accountConfig from table and attempt to provision
-  //if no record is returned then all new accounts are provisioned
-  const accountToAdd: AccountConfigs = await getSingleAccountConfigFromTable();
-  if (accountToAdd.length === 0) {
-    //check if any accounts in error or tainted state
-    if (await provisionSuccess()) {
-      console.log('Control Tower account provisioning complete.');
-    } else {
-      console.log('Control Tower account provisioning failed.');
-      throw new Error('Accounts failed to enroll in Control Tower. Check Service Catalog Console');
+  try {
+    //get a single accountConfig from table and attempt to provision
+    //if no record is returned then all new accounts are provisioned
+    const accountToAdd: AccountConfigs = await getSingleAccountConfigFromTable();
+    if (accountToAdd.length === 0) {
+      //check if any accounts in error or tainted state
+      if (await provisionSuccess()) {
+        console.log('Control Tower account provisioning complete.');
+      } else {
+        console.log('Control Tower account provisioning failed.');
+        throw new Error('Accounts failed to enroll in Control Tower. Check Service Catalog Console');
+      }
+
+      return {
+        IsComplete: true,
+      };
     }
 
+    const provisionResponse = await provisionAccount(accountToAdd[0]);
+    console.log(`Provision response: ${JSON.stringify(provisionResponse)}`);
+
+    const deleteResponse = await deleteSingleAccountConfigFromTable(accountToAdd[0].email);
+    console.log(`Delete response: ${JSON.stringify(deleteResponse)}`);
+
     return {
-      IsComplete: true,
+      IsComplete: false,
     };
+  } catch (e) {
+    console.log(e);
+    console.log(`Create accounts failed. Deleting pending account creation records`);
+    await deleteAllRecordsFromTable(tableName);
+    throw new Error(`Account creation failed. ${e}`);
   }
-
-  const provisionResponse = await provisionAccount(accountToAdd[0]);
-  console.log(`Provision response: ${JSON.stringify(provisionResponse)}`);
-
-  const deleteResponse = await deleteSingleAccountConfigFromTable(accountToAdd[0].email);
-  console.log(`Delete response: ${JSON.stringify(deleteResponse)}`);
-
-  return {
-    IsComplete: false,
-  };
 }
 
 async function inProgress(): Promise<boolean> {
@@ -157,7 +163,6 @@ async function getSingleAccountConfigFromTable(): Promise<AccountConfigs> {
     TableName: tableName,
     Limit: 1,
   };
-
   const response = await throttlingBackOff(() => documentClient.scan(scanParams).promise());
 
   console.log(`getSingleAccount response ${JSON.stringify(response)}`);
@@ -217,7 +222,7 @@ async function provisionAccount(accountToAdd: AccountConfig): Promise<AWS.Servic
       },
       {
         Key: 'ManagedOrganizationalUnit',
-        Value: accountToAdd.organizationalUnit,
+        Value: accountToAdd.organizationalUnitId,
       },
       {
         Key: 'SSOUserEmail',
@@ -254,4 +259,24 @@ async function provisionAccount(accountToAdd: AccountConfig): Promise<AWS.Servic
     serviceCatalogClient.provisionProduct(provisionInput).promise(),
   );
   return response;
+}
+
+async function deleteAllRecordsFromTable(tableName: string) {
+  const params = {
+    TableName: tableName,
+    ProjectionExpression: 'accountEmail',
+  };
+  const response = await documentClient.scan(params).promise();
+  if (response.Items) {
+    for (const item of response.Items) {
+      console.log(item['accountEmail']);
+      const params = {
+        TableName: tableName,
+        Key: {
+          accountEmail: item['accountEmail'],
+        },
+      };
+      await documentClient.delete(params).promise();
+    }
+  }
 }

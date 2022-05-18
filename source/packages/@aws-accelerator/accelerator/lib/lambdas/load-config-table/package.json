@@ -1,5 +1,5 @@
 {
-  "name": "@aws-accelerator/lambdas-validate-environment-config",
+  "name": "@aws-accelerator/load-config-table",
   "version": "0.0.0",
   "license": "Apache-2.0",
   "author": {
@@ -21,7 +21,6 @@
   "devDependencies": {
     "@types/jest": "27.0.3",
     "@types/node": "16.11.12",
-    "@aws-sdk/types": "3.78.0",
     "eslint": "8.4.1",
     "eslint-config-prettier": "8.3.0",
     "eslint-config-standard": "16.0.3",
@@ -35,16 +34,19 @@
     "prettier": "2.5.1",
     "ts-jest": "27.1.1",
     "typescript": "4.5.2",
-    "ts-node": "10.4.0"
+    "ts-node": "10.7.0"
   },
   "peerDependencies": {
     "eslint": "8.4.1"
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-sdk": "2.1001.0",
-    "@aws-sdk/lib-dynamodb": "3.87.0",
+    "@aws-accelerator/config": "^0.0.0",
+    "t": "file:../../../../config/lib/common-types",
     "@aws-sdk/client-dynamodb": "3.87.0",
-    "@aws-sdk/client-cloudformation": "3.87.0"
+    "@aws-sdk/lib-dynamodb": "3.87.0",
+    "@aws-sdk/client-codecommit": "3.87.0",
+    "@aws-sdk/client-cloudformation": "3.87.0",
+    "js-yaml": "4.1.0"
   }
 }

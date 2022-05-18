@@ -13,18 +13,18 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
-import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
 import {
   CreateControlTowerAccounts,
   CreateOrganizationAccounts,
   GetPortfolioId,
-  OrganizationalUnit,
+  OrganizationalUnits,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { ValidateEnvironmentConfig } from '../validate-environment-config';
+import { LoadAcceleratorConfigTable } from '../load-config-table';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class PrepareStack extends AcceleratorStack {
@@ -88,31 +88,53 @@ export class PrepareStack extends AcceleratorStack {
         stringValue: key.keyArn,
       });
 
+      const configTable = new cdk.aws_dynamodb.Table(this, 'AcceleratorConfigTable', {
+        partitionKey: { name: 'dataType', type: cdk.aws_dynamodb.AttributeType.STRING },
+        sortKey: { name: 'acceleratorKey', type: cdk.aws_dynamodb.AttributeType.STRING },
+        billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
+        encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
+        encryptionKey: key,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+
+      configTable.addLocalSecondaryIndex({
+        indexName: 'awsResourceKeys',
+        sortKey: { name: 'awsKey', type: cdk.aws_dynamodb.AttributeType.STRING },
+        projectionType: cdk.aws_dynamodb.ProjectionType.KEYS_ONLY,
+      });
+
+      // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
+      NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/AcceleratorConfigTable/Resource`, [
+        {
+          id: 'AwsSolutions-DDB3',
+          reason: 'AcceleratorConfigTable DynamoDB table do not need point in time recovery, data can be re-created',
+        },
+      ]);
+
+      Logger.info(`[prepare-stack] Load Config Table`);
+      const loadAcceleratorConfigTable = new LoadAcceleratorConfigTable(this, 'LoadAcceleratorConfigTable', {
+        acceleratorConfigTable: configTable,
+        configRepositoryName: 'aws-accelerator-config',
+        managementAccountEmail: props.accountsConfig.getManagementAccount().email,
+        auditAccountEmail: props.accountsConfig.getAuditAccount().email,
+        logArchiveAccountEmail: props.accountsConfig.getLogArchiveAccount().email,
+        partition: props.partition,
+        region: cdk.Stack.of(this).region,
+        managementAccountId: props.accountsConfig.getManagementAccountId(),
+        stackName: cdk.Stack.of(this).stackName,
+        kmsKey: key,
+        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      });
+
+      // Create organizational units if control tower is not enabled
       if (props.organizationConfig.enable && !props.globalConfig.controlTower.enable) {
-        //
-        // Loop through list of organizational-units in the configuration file and
-        // create them.
-        //
-        // Note: The Accelerator will only create new Organizational Units if they
-        //       do not already exist. If Organizational Units are found outside of
-        //       those that are listed in the configuration file, they are ignored
-        //       and left in place
-        //
-        const organizationalUnitList: { [key: string]: OrganizationalUnit } = {};
+        const createOrganizationalUnits = new OrganizationalUnits(this, 'CreateOrganizationalUnits', {
+          acceleratorConfigTable: configTable,
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+        });
 
-        for (const organizationalUnit of props.organizationConfig.organizationalUnits) {
-          const name = organizationalUnit.name;
-
-          Logger.info(`[prepare-stack] Adding organizational unit (${name}) with path (${organizationalUnit.path})`);
-
-          // Create Organizational Unit
-          organizationalUnitList[name] = new OrganizationalUnit(this, pascalCase(name), {
-            name,
-            path: organizationalUnit.path,
-            kmsKey: key,
-            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-          });
-        }
+        createOrganizationalUnits.node.addDependency(configTable);
       }
 
       if (props.partition == 'aws') {
@@ -258,15 +280,20 @@ export class PrepareStack extends AcceleratorStack {
 
         Logger.info(`[prepare-stack] Validate Environment`);
         const validation = new ValidateEnvironmentConfig(this, 'ValidateEnvironmentConfig', {
-          workloadAccounts: workloadAccounts,
-          mandatoryAccounts: mandatoryAccounts,
-          existingAccounts: existingAccounts,
+          acceleratorConfigTable: configTable,
           newOrgAccountsTable: newOrgAccountsTable,
           newCTAccountsTable: newCTAccountsTable,
           controlTowerEnabled: props.globalConfig.controlTower.enable,
+          commitId: loadAcceleratorConfigTable.id,
+          stackName: cdk.Stack.of(this).stackName,
+          region: cdk.Stack.of(this).region,
+          managementAccountId: props.accountsConfig.getManagementAccountId(),
+          partition: props.partition,
           kmsKey: key,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
+
+        validation.node.addDependency(loadAcceleratorConfigTable);
 
         Logger.info(`[prepare-stack] Create new organization accounts`);
         const organizationAccounts = new CreateOrganizationAccounts(this, 'CreateOrganizationAccounts', {

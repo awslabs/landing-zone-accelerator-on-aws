@@ -84,7 +84,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
       if (props.securityConfig.awsConfig.enableConfigurationRecorder) {
         const configRecorderRole = new iam.Role(this, 'ConfigRecorderRole', {
           assumedBy: new iam.ServicePrincipal('config.amazonaws.com'),
-          managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSConfigRole')],
+          managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWS_ConfigRole')],
         });
 
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
@@ -92,7 +92,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/ConfigRecorderRole/Resource`, [
           {
             id: 'AwsSolutions-IAM4',
-            reason: 'ConfigRecorderRole needs managed policy service-role/AWSConfigRole to administer config rules',
+            reason: 'ConfigRecorderRole needs managed policy service-role/AWS_ConfigRole to administer config rules',
           },
         ]);
 

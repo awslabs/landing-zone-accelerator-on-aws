@@ -767,11 +767,9 @@ export const ORGANIZATION_CONFIG = {
   organizationalUnits: [
     {
       name: 'Security',
-      path: '/',
     },
     {
       name: 'Sandbox',
-      path: '/',
     },
   ],
   organizationalUnitIds: [{ name: 'Security', id: 'securityOrgId', arn: 'securityOrgArn' }],
@@ -843,6 +841,12 @@ export const ORGANIZATION_CONFIG = {
   },
   getPath: function (name: string) {
     return name + '-path';
+  },
+  getOuName: function (name: string) {
+    return name;
+  },
+  getParentOuName: function (name: string) {
+    return name + '-parent';
   },
 };
 

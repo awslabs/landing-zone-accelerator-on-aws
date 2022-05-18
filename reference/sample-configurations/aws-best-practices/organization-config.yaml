@@ -1,21 +1,17 @@
+# If using AWS Control Tower, ensure that all the specified Organizational Units (OU) 
+# have been created and enrolled as the accelerator will verify that the OU layout 
+# matches before continuing to execute the deployment pipeline.
+
 enable: true
 organizationalUnits:
   - name: Security
-    path: /
   - name: Infrastructure
-    path: /
   - name: Policy Staging
-    path: /
   - name: Suspended
-    path: /
   - name: Sandbox
-    path: /
   - name: Dev
-    path: /
   - name: Test
-    path: /
   - name: Prod
-    path: /
 quarantineNewAccounts:
     enable: true
     scpPolicyName: QuarantineAccounts
