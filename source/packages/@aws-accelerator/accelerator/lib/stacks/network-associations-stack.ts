@@ -263,7 +263,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       // Generate list of accounts with VPCs that needed to set up share
       const accountIds: string[] = [];
       for (const vpcItem of props.networkConfig.vpcs ?? []) {
-        if (vpcItem.region == cdk.Stack.of(this).region) {
+        if (vpcItem.region === cdk.Stack.of(this).region && vpcItem.useCentralEndpoints) {
           const accountId = props.accountsConfig.getAccountId(vpcItem.account);
           if (!accountIds.includes(accountId)) {
             accountIds.push(accountId);
@@ -276,7 +276,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       for (const endpointItem of centralEndpointVpc.interfaceEndpoints?.endpoints ?? []) {
         const hostedZoneId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/network/vpc/${centralEndpointVpc.name}/route53/hostedZone/${endpointItem}/id`,
+          `/accelerator/network/vpc/${centralEndpointVpc.name}/route53/hostedZone/${endpointItem.service}/id`,
         );
         hostedZoneIds.push(hostedZoneId);
       }

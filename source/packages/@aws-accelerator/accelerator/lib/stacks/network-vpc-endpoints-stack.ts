@@ -15,10 +15,14 @@ import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
+import * as fs from 'fs';
+import * as path from 'path';
 
 import {
   AccountsConfig,
+  GatewayEndpointServiceConfig,
   GlobalConfig,
+  InterfaceEndpointServiceConfig,
   NfwFirewallConfig,
   ResolverEndpointConfig,
   VpcConfig,
@@ -415,25 +419,25 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     //
     // Add Gateway Endpoints (AWS Services)
     //
-    for (const gatewayEndpointItem of vpcItem.gatewayEndpoints ?? []) {
-      Logger.info(`[network-vpc-endpoints-stack] Adding Gateway Endpoint for ${gatewayEndpointItem}`);
+    for (const gatewayEndpointItem of vpcItem.gatewayEndpoints?.endpoints ?? []) {
+      Logger.info(`[network-vpc-endpoints-stack] Adding Gateway Endpoint for ${gatewayEndpointItem.service}`);
 
-      if (gatewayEndpointItem === 's3') {
-        new VpcEndpoint(this, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(gatewayEndpointItem), {
+      if (gatewayEndpointItem.service === 's3') {
+        new VpcEndpoint(this, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(gatewayEndpointItem.service), {
           vpcId,
           vpcEndpointType: cdk.aws_ec2.VpcEndpointType.GATEWAY,
-          service: gatewayEndpointItem,
+          service: gatewayEndpointItem.service,
           routeTables: s3EndpointRouteTables,
-          //policyDocument: this.createVpcEndpointPolicy(gatewayEndpointItem, organizationId),
+          policyDocument: this.createVpcEndpointPolicy(vpcItem, gatewayEndpointItem, true),
         });
       }
-      if (gatewayEndpointItem === 'dynamodb') {
-        new VpcEndpoint(this, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(gatewayEndpointItem), {
+      if (gatewayEndpointItem.service === 'dynamodb') {
+        new VpcEndpoint(this, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(gatewayEndpointItem.service), {
           vpcId,
           vpcEndpointType: cdk.aws_ec2.VpcEndpointType.GATEWAY,
-          service: gatewayEndpointItem,
+          service: gatewayEndpointItem.service,
           routeTables: dynamodbEndpointRouteTables,
-          //policyDocument: this.createVpcEndpointPolicy(gatewayEndpointItem, organizationId),
+          policyDocument: this.createVpcEndpointPolicy(vpcItem, gatewayEndpointItem, true),
         });
       }
     }
@@ -475,9 +479,9 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     let port: number;
     let trafficType: string;
     for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
-      Logger.info(`[network-vpc-endpoints-stack] Adding Interface Endpoint for ${endpointItem}`);
+      Logger.info(`[network-vpc-endpoints-stack] Adding Interface Endpoint for ${endpointItem.service}`);
 
-      if (endpointItem !== 'cassandra') {
+      if (endpointItem.service !== 'cassandra') {
         endpointSg = securityGroupMap.get('https');
         port = 443;
         trafficType = 'https';
@@ -538,21 +542,21 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       }
 
       // Create the interface endpoint
-      const endpoint = new VpcEndpoint(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem)}Ep`, {
+      const endpoint = new VpcEndpoint(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}Ep`, {
         vpcId,
         vpcEndpointType: cdk.aws_ec2.VpcEndpointType.INTERFACE,
-        service: endpointItem,
+        service: endpointItem.service,
         subnets,
         securityGroups: [endpointSg],
         privateDnsEnabled: false,
-        //policyDocument: this.createVpcEndpointPolicy(endpointItem, organizationId),
+        policyDocument: this.createVpcEndpointPolicy(vpcItem, endpointItem),
       });
-      new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${vpcItem.name}${endpointItem}Dns`), {
-        parameterName: `/accelerator/network/vpc/${vpcItem.name}/endpoints/${endpointItem}/dns`,
+      new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${vpcItem.name}${endpointItem.service}Dns`), {
+        parameterName: `/accelerator/network/vpc/${vpcItem.name}/endpoints/${endpointItem.service}/dns`,
         stringValue: endpoint.dnsName!,
       });
-      new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${vpcItem.name}${endpointItem}Phz`), {
-        parameterName: `/accelerator/network/vpc/${vpcItem.name}/endpoints/${endpointItem}/hostedZoneId`,
+      new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${vpcItem.name}${endpointItem.service}Phz`), {
+        parameterName: `/accelerator/network/vpc/${vpcItem.name}/endpoints/${endpointItem.service}/hostedZoneId`,
         stringValue: endpoint.hostedZoneId!,
       });
     }
@@ -693,6 +697,97 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       parameterName: `/accelerator/network/route53Resolver/endpoints/${endpointItem.name}/id`,
       stringValue: endpoint.endpointId,
     });
+  }
+
+  /**
+   * Creates a cdk.aws_iam.PolicyDocument for the given endpoint.
+   * @param vpcItem
+   * @param endpointItem
+   * @param isGatewayEndpoint
+   * @returns
+   */
+  private createVpcEndpointPolicy(
+    vpcItem: VpcConfig,
+    endpointItem: GatewayEndpointServiceConfig | InterfaceEndpointServiceConfig,
+    isGatewayEndpoint?: boolean,
+  ): cdk.aws_iam.PolicyDocument | undefined {
+    // See https://docs.aws.amazon.com/vpc/latest/privatelink/integrated-services-vpce-list.html
+    // for the services that integrates with AWS PrivateLink, but does not support VPC endpoint policies
+    const policiesUnsupported = [
+      'appmesh-envoy-management',
+      'appstream.api',
+      'appstream.streaming',
+      'cloudtrail',
+      'codeguru-profiler',
+      'codeguru-reviewer',
+      'codepipeline',
+      'datasync',
+      'ebs',
+      'elastic-inference.runtime',
+      'iot.data',
+      'iotwireless.api',
+      'lorawan.cups',
+      'lorawan.lns',
+      'iotsitewise.api',
+      'iotsitewise.data',
+      'macie2',
+      'aps',
+      'aps-workspaces',
+      'awsconnector',
+      'sms',
+      'sms-fips',
+      'email-smtp',
+      'storagegateway',
+      'transfer',
+      'transfer.server',
+    ];
+
+    if (policiesUnsupported.includes(endpointItem.service)) {
+      return undefined;
+    }
+
+    // Identify if custom policy is specified, create custom or default policy
+    let policyName: string | undefined;
+    let policyDocument: cdk.aws_iam.PolicyDocument | undefined = undefined;
+    if (endpointItem.policy) {
+      Logger.info(`[network-vpc-endpoints-stack] Add custom endpoint policy for ${endpointItem.service}`);
+      policyName = endpointItem.policy;
+    } else if (!endpointItem.policy && isGatewayEndpoint) {
+      Logger.info(
+        `[network-vpc-endpoints-stack] Add default endpoint policy for gateway endpoint ${endpointItem.service}`,
+      );
+      policyName = vpcItem.gatewayEndpoints?.defaultPolicy;
+    } else {
+      Logger.info(
+        `[network-vpc-endpoints-stack] Add default endpoint policy for interface endpoint ${endpointItem.service}`,
+      );
+      policyName = vpcItem.interfaceEndpoints?.defaultPolicy;
+    }
+
+    // Find matching endpoint policy item
+    if (!policyName) {
+      throw new Error(`[network-vpc-endpoints-stack] Create endpoint policy: unable to set a policy name.`);
+    }
+    const policyItem = this.props.networkConfig.endpointPolicies.filter(item => item.name === policyName);
+
+    // Verify there is only one endpoint policy with the same name
+    if (policyItem.length > 1) {
+      throw new Error(
+        `[network-vpc-endpoints-stack] Create endpoint policy: more than one policy with the name ${policyName} is configured.`,
+      );
+    } else if (policyItem.length === 0) {
+      throw new Error(
+        `[network-vpc-endpoints-stack] Create endpoint policy: unable to locate policy with the name ${policyName}.`,
+      );
+    }
+
+    // Set location and fetch document
+    const location = path.join(this.props.configDirPath, policyItem[0].document);
+    const document = fs.readFileSync(location, 'utf-8');
+
+    // Set and return policy document
+    policyDocument = cdk.aws_iam.PolicyDocument.fromJson(JSON.parse(document));
+    return policyDocument;
   }
 
   /**

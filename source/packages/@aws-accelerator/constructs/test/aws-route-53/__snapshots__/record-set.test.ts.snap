@@ -5,18 +5,7 @@ Object {
   "Resources": Object {
     "TestHostedZone68F306E4": Object {
       "Properties": Object {
-        "Name": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "s3-global.accesspoint.",
-              Object {
-                "Ref": "AWS::Region",
-              },
-              ".amazonaws.com",
-            ],
-          ],
-        },
+        "Name": "s3-global.accesspoint.aws.com",
         "VPCs": Array [
           Object {
             "VPCId": "Test",
@@ -77,18 +66,7 @@ Object {
         "HostedZoneId": Object {
           "Ref": "TestHostedZone68F306E4",
         },
-        "Name": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "s3-global.accesspoint.",
-              Object {
-                "Ref": "AWS::Region",
-              },
-              ".amazonaws.com",
-            ],
-          ],
-        },
+        "Name": "s3-global.accesspoint.aws.com",
         "Type": "A",
       },
       "Type": "AWS::Route53::RecordSet",

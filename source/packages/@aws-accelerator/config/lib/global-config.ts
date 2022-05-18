@@ -16,7 +16,6 @@ import * as yaml from 'js-yaml';
 import * as path from 'path';
 
 import * as t from './common-types';
-import { Region } from './common-types';
 
 /**
  * Global configuration items.
@@ -42,25 +41,6 @@ export abstract class GlobalConfigTypes {
     account: t.nonEmptyString,
     cloudtrail: GlobalConfigTypes.cloudtrailConfig,
     sessionManager: GlobalConfigTypes.sessionManagerConfig,
-  });
-
-  static readonly identityPerimeterConfig = t.interface({
-    enable: t.boolean,
-  });
-
-  static readonly resourcePerimeterConfig = t.interface({
-    enable: t.boolean,
-  });
-
-  static readonly networkPerimeterConfig = t.interface({
-    enable: t.boolean,
-  });
-
-  static readonly dataProtectionConfig = t.interface({
-    enable: t.boolean,
-    identityPerimeter: this.identityPerimeterConfig,
-    resourcePerimeter: this.resourcePerimeterConfig,
-    networkPerimeter: this.networkPerimeterConfig,
   });
 
   static readonly artifactTypeEnum = t.enums('ArtifactType', ['REDSHIFT', 'QUICKSIGHT', 'ATHENA']);
@@ -125,7 +105,6 @@ export abstract class GlobalConfigTypes {
     cloudwatchLogRetentionInDays: t.number,
     controlTower: GlobalConfigTypes.controlTowerConfig,
     logging: GlobalConfigTypes.loggingConfig,
-    dataProtection: t.optional(GlobalConfigTypes.dataProtectionConfig),
     reports: t.optional(GlobalConfigTypes.reportConfig),
   });
 }
@@ -174,7 +153,7 @@ export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.s
   /**
    * Indicates whether sending SessionManager logs to S3 enabled.
    *
-   * When this flag is on, accelerator will send session manager logs to Central log bucket in Logarchvie account.
+   * When this flag is on, accelerator will send session manager logs to Central log bucket in LogArchive account.
    */
   readonly sendToS3 = false;
   /**
@@ -205,60 +184,6 @@ export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingC
    * SessionManager logging configuration
    */
   readonly sessionManager: SessionManagerConfig = new SessionManagerConfig();
-}
-
-/**
- * IdentityPerimeter configuration
- */
-export class IdentityPerimeterConfig implements t.TypeOf<typeof GlobalConfigTypes.identityPerimeterConfig> {
-  /**
-   * Indicates whether IdentityPerimeter configuration enabled.
-   */
-  readonly enable = false;
-}
-
-/**
- * ResourcePerimeter configuration
- */
-export class ResourcePerimeterConfig implements t.TypeOf<typeof GlobalConfigTypes.resourcePerimeterConfig> {
-  /**
-   * Indicates whether ResourcePerimeter configuration enabled.
-   */
-  readonly enable = false;
-}
-
-/**
- * NetworkPerimeter configuration
- */
-export class NetworkPerimeterConfig implements t.TypeOf<typeof GlobalConfigTypes.networkPerimeterConfig> {
-  /**
-   * Indicates whether NetworkPerimeter configuration enabled.
-   */
-  readonly enable = false;
-}
-
-/**
- * DataProtection configuration
- */
-export class DataProtectionConfig implements t.TypeOf<typeof GlobalConfigTypes.dataProtectionConfig> {
-  /**
-   * Indicates whether DataProtection configuration enabled.
-   *
-   * When this flag is on, accelerator applies the Identity Perimeter controls for VPC Endpoints
-   */
-  readonly enable = false;
-  /**
-   * IdentityPerimeter configuration
-   */
-  readonly identityPerimeter = new IdentityPerimeterConfig();
-  /**
-   * ResourcePerimeter configuration
-   */
-  readonly resourcePerimeter = new ResourcePerimeterConfig();
-  /**
-   * NetworkPerimeter configuration
-   */
-  readonly networkPerimeter = new NetworkPerimeterConfig();
 }
 
 /**
@@ -564,27 +489,6 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   readonly logging: LoggingConfig = new LoggingConfig();
 
   /**
-   * DataProtection configuration
-   *
-   * To enable data protection for Root organizational unit, and enable identityPerimeter, resourcePerimeter and networkPerimeter, you need to provide below value for this parameter.
-   *
-   * @example
-   * ```
-   * dataProtection:
-   *   enable: true
-   *   deploymentTargets:
-   *     organizationalUnits:
-   *       - Root
-   *   identityPerimeter:
-   *     enable: true
-   *   resourcePerimeter:
-   *     enable: true
-   *   networkPerimeter:
-   *     enable: true
-   * ```
-   */
-  readonly dataProtection: DataProtectionConfig | undefined = undefined;
-  /**
    * Report configuration
    *
    * To enable budget report along with cost and usage report, you need to provide below value for this parameter.
@@ -643,7 +547,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       Object.assign(this, values);
     } else {
       this.homeRegion = props.homeRegion;
-      this.enabledRegions = [props.homeRegion as Region];
+      this.enabledRegions = [props.homeRegion as t.Region];
     }
 
     //
