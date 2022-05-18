@@ -350,6 +350,20 @@ export class InstallerStack extends cdk.Stack {
       }-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
     });
 
+    // cfn_nag: Suppress warning related to high S3 Bucket should have access logging configured
+    const cfnInstallerServerAccessLogsBucket = installerServerAccessLogsBucket.getS3Bucket().node
+      .defaultChild as cdk.aws_s3.CfnBucket;
+    cfnInstallerServerAccessLogsBucket.cfnOptions.metadata = {
+      cfn_nag: {
+        rules_to_suppress: [
+          {
+            id: 'W35',
+            reason: 'This is an access logging bucket.',
+          },
+        ],
+      },
+    };
+
     // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
     NagSuppressions.addResourceSuppressionsByPath(
       this,
