@@ -211,6 +211,24 @@ export class SecurityConfigTypes {
     triggeringResources: this.triggeringResourceType,
   });
 
+  /**
+   * Config rule remediation input parameter configuration type
+   */
+  static readonly remediationParametersConfigType = t.interface({
+    /**
+     * Name of the parameter
+     */
+    name: t.nonEmptyString,
+    /**
+     * Parameter value
+     */
+    value: t.nonEmptyString,
+    /**
+     * Data type of the parameter, allowed value (StringList or String)
+     */
+    type: t.enums('ParameterDataType', ['String', 'StringList']),
+  });
+
   static readonly configRuleRemediationType = t.interface({
     /**
      * SSM document execution role policy definition file
@@ -233,6 +251,10 @@ export class SecurityConfigTypes {
      */
     targetVersion: t.optional(t.nonEmptyString),
     /**
+     * Optional target SSM document lambda function details. This is required when remediation SSM document uses action as aws:invokeLambdaFunction for remediation
+     */
+    targetDocumentLambda: t.optional(SecurityConfigTypes.customRuleLambdaType),
+    /**
      * Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.
      */
     retryAttemptSeconds: t.optional(t.number),
@@ -243,7 +265,8 @@ export class SecurityConfigTypes {
     /**
      * An object of the RemediationParameterValue.
      */
-    parameters: t.optional(t.dictionary(t.nonEmptyString, t.nonEmptyString)),
+    // parameters: t.optional(t.dictionary(t.nonEmptyString, t.nonEmptyString)),
+    parameters: t.optional(t.array(SecurityConfigTypes.remediationParametersConfigType)),
   });
 
   static readonly configRule = t.interface({
@@ -887,6 +910,24 @@ export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRul
      */
     targetVersion: '',
     /**
+     * Target SSM document remediation lambda function
+     */
+    targetDocumentLambda: {
+      /**
+       * The source code file path of your Lambda function. This is a zip file containing lambda function, this file must be available in config repository.
+       */
+      sourceFilePath: '',
+      /**
+       * The name of the method within your code that Lambda calls to execute your function. The format includes the file name. It can also include namespaces and other qualifiers, depending on the runtime.
+       * For more information, see https://docs.aws.amazon.com/lambda/latest/dg/gettingstarted-features.html#gettingstarted-features-programmingmodel.
+       */
+      handler: '',
+      /**
+       * The runtime environment for the Lambda function that you are uploading. For valid values, see the Runtime property in the AWS Lambda Developer Guide.
+       */
+      runtime: '',
+    },
+    /**
      * Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.
      *
      * For example, if you specify RetryAttemptSeconds as 50 seconds and MaximumAutomaticAttempts as 5, AWS Config will run auto-remediations 5 times within 50 seconds before throwing an exception.
@@ -899,11 +940,10 @@ export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRul
      */
     maximumAutomaticAttempts: 0,
     /**
-     * An object of the RemediationParameterValue.
+     * List of remediation parameters
      *
-     * The type is a map of strings to RemediationParameterValue.
      */
-    parameters: {},
+    parameters: [],
   };
 }
 
@@ -1216,26 +1256,69 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
   readonly awsConfig: AwsConfig = new AwsConfig();
   readonly cloudWatch: CloudWatchConfig = new CloudWatchConfig();
 
-  constructor(values?: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
+  constructor(values?: t.TypeOf<typeof SecurityConfigTypes.securityConfig>, configDir?: string) {
+    //
+    // Validation errors
+    //
+    const errors: string[] = [];
+
     if (values) {
       //
-      // Validate presence of SSM document before used as remediation target
-      const ssmDocuments: string[] = [];
+      // SSM Document validations
+
+      const ssmDocuments: { name: string; template: string }[] = [];
       for (const documentSet of values.centralSecurityServices.ssmAutomation.documentSets) {
         for (const document of documentSet.documents ?? []) {
-          ssmDocuments.push(document.name);
+          ssmDocuments.push(document);
         }
       }
-      for (const ruleSet of values.awsConfig.ruleSets ?? []) {
-        for (const rule of ruleSet.rules) {
-          if (rule.remediation) {
-            if (!ssmDocuments.includes(rule.remediation.targetId)) {
-              throw new Error(
-                `Invalid remediation target document for ${rule.name} rule. Remediation target SSM document ${rule.remediation.targetId} not found in ssm automation document lists`,
-              );
+
+      // Validate presence of SSM document files
+      if (configDir) {
+        for (const ssmDocument of ssmDocuments) {
+          if (!fs.existsSync(path.join(configDir, ssmDocument.template))) {
+            errors.push(`SSM document ${ssmDocument.name} template file ${ssmDocument.template} not found !!!`);
+          }
+        }
+
+        for (const ruleSet of values.awsConfig.ruleSets ?? []) {
+          for (const rule of ruleSet.rules) {
+            if (rule.type === 'Custom' && rule.customRule) {
+              // Validate presence of custom rule lambda function
+              if (!fs.existsSync(path.join(configDir, rule.customRule.lambda.sourceFilePath))) {
+                errors.push(
+                  `Custom rule: ${rule.name} lambda function file ${rule.customRule.lambda.sourceFilePath} not found`,
+                );
+              }
+            }
+            if (rule.remediation) {
+              // Validate presence of rule remediation assume role definition file
+              if (!fs.existsSync(path.join(configDir, rule.remediation.rolePolicyFile))) {
+                errors.push(
+                  `Rule: ${rule.name}, remediation assume role definition file ${rule.remediation.rolePolicyFile} not found`,
+                );
+              }
+              // Validate presence of SSM document before used as remediation target
+              if (!ssmDocuments.find(item => item.name === rule.remediation?.targetId)) {
+                errors.push(
+                  `Rule: ${rule.name}, remediation target SSM document ${rule.remediation?.targetId} not found in ssm automation document lists`,
+                );
+                // Validate presence of custom rule's remediation SSMS document invoke lambda function zip file
+                if (rule.remediation.targetDocumentLambda) {
+                  if (!fs.existsSync(path.join(configDir, rule.remediation.targetDocumentLambda.sourceFilePath))) {
+                    errors.push(
+                      `Rule: ${rule.name}, remediation target SSM document lambda function file ${rule.remediation.targetDocumentLambda.sourceFilePath} not found`,
+                    );
+                  }
+                }
+              }
             }
           }
         }
+      }
+
+      if (errors.length) {
+        throw new Error(`${SecurityConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
       }
 
       Object.assign(this, values);
@@ -1257,7 +1340,7 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
   static load(dir: string): SecurityConfig {
     const buffer = fs.readFileSync(path.join(dir, SecurityConfig.FILENAME), 'utf8');
     const values = t.parse(SecurityConfigTypes.securityConfig, yaml.load(buffer));
-    return new SecurityConfig(values);
+    return new SecurityConfig(values, dir);
   }
 
   /**

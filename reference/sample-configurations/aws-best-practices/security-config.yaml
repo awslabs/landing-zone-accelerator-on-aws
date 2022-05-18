@@ -118,8 +118,12 @@ awsConfig:
             retryAttemptSeconds: 60
             maximumAutomaticAttempts: 5
             parameters:
-              IamInstanceProfile: ${ACCEL_LOOKUP::InstanceProfile:EC2-Default-SSM-AD-Role}
-              InstanceId: RESOURCE_ID
+              - name: InstanceId
+                value: RESOURCE_ID
+                type: String
+              - name: IamInstanceProfile
+                value: ${ACCEL_LOOKUP::InstanceProfile:EC2-Default-SSM-AD-Role}
+                type: StringList
         - name: accelerator-ec2-instance-profile-permission
           type: Custom
           description: Custom role to remediate EC2 instance profile permission
@@ -149,9 +153,15 @@ awsConfig:
             retryAttemptSeconds: 60
             maximumAutomaticAttempts: 5
             parameters:
-              AWSManagedPolicies: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
-#              CustomerManagedPolicies: ${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>},${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>}
-              ResourceId: RESOURCE_ID
+              - name: ResourceId
+                value: RESOURCE_ID
+                type: String
+              - name: AWSManagedPolicies
+                value: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
+                type: StringList
+              # - name: CustomerManagedPolicies
+              #   value: ${ACCEL_LOOKUP::CustomerManagedPolicy:policy-00},${ACCEL_LOOKUP::CustomerManagedPolicy:policy-01}
+              #   type: StringList
         - name: accelerator-s3-bucket-server-side-encryption-enabled
           identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
           complianceResourceTypes:
@@ -163,8 +173,12 @@ awsConfig:
             retryAttemptSeconds: 60
             maximumAutomaticAttempts: 5
             parameters:
-              BucketName: RESOURCE_ID
-              KMSMasterKey: ${ACCEL_LOOKUP::KMS}
+              - name: BucketName
+                value: RESOURCE_ID
+                type: String
+              - name: KMSMasterKey
+                value: ${ACCEL_LOOKUP::KMS}
+                type: StringList
         - name: accelerator-elb-logging-enabled
           identifier: ELB_LOGGING_ENABLED
           complianceResourceTypes:
@@ -179,8 +193,12 @@ awsConfig:
             retryAttemptSeconds: 60
             maximumAutomaticAttempts: 5
             parameters:
-              LoadBalancerArn: RESOURCE_ID
-              LogDestination: ${ACCEL_LOOKUP::Bucket:elbLogs}
+              - name: LoadBalancerArn
+                value: RESOURCE_ID
+                type: String
+              - name: LogDestination
+                value: ${ACCEL_LOOKUP::Bucket:elbLogs}
+                type: StringList
         - name: accelerator-iam-user-group-membership-check
           complianceResourceTypes:
             - AWS::IAM::User

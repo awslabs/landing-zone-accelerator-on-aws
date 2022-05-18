@@ -331,9 +331,42 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
   /**
    *
    * @param values
+   * @param configDir
    */
-  constructor(values?: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>) {
+  constructor(values?: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>, configDir?: string) {
+    //
+    // Validation errors
+    //
+    const errors: string[] = [];
     if (values) {
+      if (configDir) {
+        for (const serviceControlPolicy of values.serviceControlPolicies ?? []) {
+          // Validate presence of service control policy file
+          if (!fs.existsSync(path.join(configDir, serviceControlPolicy.policy))) {
+            errors.push(
+              `Invalid policy file ${serviceControlPolicy.policy} for service control policy ${serviceControlPolicy.name} !!!`,
+            );
+          }
+        }
+
+        // Validate presence of tagging policy file
+        for (const taggingPolicy of values.taggingPolicies ?? []) {
+          if (!fs.existsSync(path.join(configDir, taggingPolicy.policy))) {
+            errors.push(`Invalid policy file ${taggingPolicy.policy} for tagging policy ${taggingPolicy.name} !!!`);
+          }
+        }
+
+        // Validate presence of backup policy file
+        for (const backupPolicy of values.backupPolicies ?? []) {
+          if (!fs.existsSync(path.join(configDir, backupPolicy.policy))) {
+            errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name} !!!`);
+          }
+        }
+      }
+
+      if (errors.length) {
+        throw new Error(`${OrganizationConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      }
       Object.assign(this, values);
     }
   }
@@ -346,7 +379,7 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
   static load(dir: string): OrganizationConfig {
     const buffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
     const values = t.parse(OrganizationConfigTypes.organizationConfig, yaml.load(buffer));
-    return new OrganizationConfig(values);
+    return new OrganizationConfig(values, dir);
   }
 
   /**

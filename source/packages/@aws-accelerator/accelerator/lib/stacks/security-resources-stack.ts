@@ -19,7 +19,7 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import path from 'path';
 
-import { KeyLookup } from '@aws-accelerator/constructs';
+import { KeyLookup, Organization } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
@@ -30,6 +30,9 @@ enum ACCEL_LOOKUP_TYPE {
   Bucket = 'Bucket',
   CUSTOMER_MANAGED_POLICY = 'CustomerManagedPolicy',
   INSTANCE_PROFILE = 'InstanceProfile',
+  ORGANIZATION_ID = 'OrgId',
+  ACCOUNT_ID = 'AccountId',
+  REMEDIATION_FUNCTION_NAME = 'RemediationFunctionName',
 }
 
 interface RemediationParameters {
@@ -50,13 +53,19 @@ export class SecurityResourcesStack extends AcceleratorStack {
   readonly acceleratorKey: cdk.aws_kms.Key;
   readonly auditAccountId: string;
   readonly logArchiveAccountId: string;
+  readonly organizationId: string | undefined;
+  readonly stackProperties: AcceleratorStackProps;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    // const auditAccountName = props.securityConfig.getDelegatedAccountName();
+    this.stackProperties = props;
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
+
+    if (props.organizationConfig.enable) {
+      this.organizationId = new Organization(this, 'Organization').id;
+    }
 
     this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
       accountId: props.accountsConfig.getAuditAccountId(),
@@ -258,7 +267,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         if (configRule) {
           // Create remediation for config rule
           if (rule.remediation) {
-            const role = this.createRemediationRole(
+            const remediationRole = this.createRemediationRole(
               rule.name,
               path.join(props.configDirPath, rule.remediation.rolePolicyFile),
               `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
@@ -266,7 +275,47 @@ export class SecurityResourcesStack extends AcceleratorStack {
                   ? props.accountsConfig.getAccountId(rule.remediation.targetAccountName)
                   : props.accountsConfig.getAuditAccountId()
               }:document/${rule.remediation.targetId}`,
+              !!rule.remediation.targetDocumentLambda,
             );
+
+            // If remediation document use action as aws:invokeLambdaFunction, create the lambda function
+            let remediationLambdaFunction: cdk.aws_lambda.Function | undefined;
+            if (rule.remediation.targetDocumentLambda) {
+              remediationLambdaFunction = new cdk.aws_lambda.Function(
+                this,
+                pascalCase(rule.name) + '-RemediationFunction',
+                {
+                  role: remediationRole,
+                  runtime: new cdk.aws_lambda.Runtime(rule.remediation.targetDocumentLambda.runtime),
+                  handler: rule.remediation.targetDocumentLambda.handler,
+                  code: cdk.aws_lambda.Code.fromAsset(
+                    path.join(props.configDirPath, rule.remediation.targetDocumentLambda.sourceFilePath),
+                  ),
+                  description: `Function used in ${rule.remediation.targetId} SSM document for "${rule.name}" custom config rule to remediation`,
+                },
+              );
+
+              // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+              // rule suppression with evidence for this permission.
+              NagSuppressions.addResourceSuppressionsByPath(
+                this,
+                `${this.stackName}/${pascalCase(rule.name)}-RemediationFunction/ServiceRole/Resource`,
+                [
+                  {
+                    id: 'AwsSolutions-IAM4',
+                    reason: 'AWS Config custom rule needs managed readonly access policy',
+                  },
+                ],
+              );
+
+              // Configure lambda log file with encryption and log retention
+              new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-RemediationLogGroup', {
+                logGroupName: `/aws/lambda/${remediationLambdaFunction.functionName}`,
+                retention: props.globalConfig.cloudwatchLogRetentionInDays,
+                encryptionKey: this.acceleratorKey,
+                removalPolicy: cdk.RemovalPolicy.DESTROY,
+              });
+            }
 
             new config.CfnRemediationConfiguration(this, pascalCase(rule.name) + '-Remediation', {
               configRuleName: rule.name,
@@ -281,7 +330,12 @@ export class SecurityResourcesStack extends AcceleratorStack {
               automatic: rule.remediation.automatic,
               maximumAutomaticAttempts: rule.remediation.maximumAutomaticAttempts,
               retryAttemptSeconds: rule.remediation.retryAttemptSeconds,
-              parameters: this.getRemediationParameters(rule.name, rule.remediation.parameters, [role.roleArn]),
+              parameters: this.getRemediationParameters(
+                rule.name,
+                rule.remediation.parameters as string[],
+                [remediationRole.roleArn],
+                remediationLambdaFunction ? remediationLambdaFunction.functionName : undefined,
+              ),
             }).node.addDependency(configRule);
           } else {
             Logger.info(`[security-resources-stack] No remediation provided for custom config rule ${rule.name}`);
@@ -454,16 +508,19 @@ export class SecurityResourcesStack extends AcceleratorStack {
    * @param ruleName
    * @param params
    * @param assumeRoleArn
+   * @param configFunctionName
    * @private
    */
   private getRemediationParameters(
     ruleName: string,
-    params?: { [key: string]: string | string[] },
+    params?: string[],
     assumeRoleArn?: string[],
+    configFunctionName?: string,
   ): RemediationParameters | undefined {
     if (!params) {
       return undefined;
     }
+
     const returnParams: RemediationParameters = {};
     if (assumeRoleArn) {
       returnParams['AutomationAssumeRole'] = {
@@ -473,37 +530,63 @@ export class SecurityResourcesStack extends AcceleratorStack {
       };
     }
 
-    for (const [key, value] of Object.entries(params)) {
+    for (const param of params) {
+      let parameterName: string | undefined;
+      let parameterValue: string | undefined;
+      let parameterType = 'List';
+      for (const [key, value] of Object.entries(param)) {
+        if (key === 'name') {
+          parameterName = value;
+        }
+        if (key === 'value') {
+          parameterValue = value as string;
+        }
+        if (key === 'type') {
+          parameterType = value;
+        }
+      }
+
       const replacementValues: string[] = [];
-      for (const item of (value as string).split(',')) {
+      for (const item of (parameterValue as string).split(',')) {
         const parameterReplacementNeeded = (item as string).match('\\${ACCEL_LOOKUP::([a-zA-Z0-9-/:]*)}');
         if (parameterReplacementNeeded) {
           const replacementValue = this.getReplacementValue(
             ruleName,
             parameterReplacementNeeded,
             'Remediation-Parameter',
+            configFunctionName,
           );
           replacementValues.push(replacementValue ?? '');
         }
       }
+
       if (replacementValues.length > 0) {
-        returnParams[key] = {
-          StaticValue: {
-            Values: replacementValues,
-          },
-        };
+        if (parameterType === 'StringList') {
+          returnParams[parameterName!] = {
+            StaticValue: {
+              Values: replacementValues,
+            },
+          };
+        }
+
+        if (parameterType === 'String') {
+          returnParams[parameterName!] = {
+            StaticValue: {
+              Values: [replacementValues.join(',')],
+            },
+          };
+        }
       } else {
-        if (value === 'RESOURCE_ID') {
-          returnParams[key] = {
+        if (parameterValue === 'RESOURCE_ID') {
+          returnParams[parameterName!] = {
             ResourceValue: {
               Value: 'RESOURCE_ID',
             },
           };
         } else {
-          returnParams[key] = {
+          returnParams[parameterName!] = {
             StaticValue: {
-              // Values: [value as string],
-              Values: (value as string).split(','),
+              Values: parameterValue!.split(','),
             },
           };
         }
@@ -517,62 +600,83 @@ export class SecurityResourcesStack extends AcceleratorStack {
    * @param ruleName
    * @param replacement
    * @param replacementType
+   * @param remediationFunctionName
    * @private
    */
   private getReplacementValue(
     ruleName: string,
     replacement: RegExpMatchArray,
     replacementType: string,
+    remediationFunctionName?: string,
   ): string | undefined {
     const replacementArray = replacement[1].split(':');
     const lookupType = replacementArray[0];
 
-    if (lookupType === ACCEL_LOOKUP_TYPE.INSTANCE_PROFILE) {
+    if (lookupType === ACCEL_LOOKUP_TYPE.REMEDIATION_FUNCTION_NAME && replacementArray.length === 1) {
+      if (remediationFunctionName) {
+        return remediationFunctionName;
+      } else {
+        throw new Error(
+          `Remediation function for ${ruleName} rule is undefined. Invalid lookup value ${replacementArray[1]}`,
+        );
+      }
+    }
+
+    if (lookupType === ACCEL_LOOKUP_TYPE.ORGANIZATION_ID && replacementArray.length === 1) {
+      if (this.organizationId) {
+        return this.organizationId;
+      } else {
+        throw new Error(`${ruleName} parameter error !! Organization not enabled can not retrieve organization id`);
+      }
+    }
+
+    if (lookupType === ACCEL_LOOKUP_TYPE.ACCOUNT_ID) {
+      return this.stackProperties.accountsConfig.getAccountId(replacementArray[1]);
+    }
+
+    if (lookupType === ACCEL_LOOKUP_TYPE.INSTANCE_PROFILE && replacementArray.length === 2) {
       return replacementArray[1];
     }
 
-    if (lookupType === ACCEL_LOOKUP_TYPE.CUSTOMER_MANAGED_POLICY) {
-      if (replacementArray.length === 2) {
-        return cdk.aws_iam.ManagedPolicy.fromManagedPolicyName(
+    if (lookupType === ACCEL_LOOKUP_TYPE.CUSTOMER_MANAGED_POLICY && replacementArray.length === 2) {
+      return cdk.aws_iam.ManagedPolicy.fromManagedPolicyName(
+        this,
+        `${pascalCase(ruleName)} + ${pascalCase(replacementArray[1])}-${pascalCase(replacementType)}`,
+        replacementArray[1],
+      ).managedPolicyArn;
+    }
+
+    if (lookupType === ACCEL_LOOKUP_TYPE.KMS && replacementArray.length === 1) {
+      return this.acceleratorKey.keyArn;
+    }
+
+    if (lookupType === ACCEL_LOOKUP_TYPE.Bucket && replacementArray.length === 2) {
+      if (replacementArray[1].toLowerCase() === 'elbLogs'.toLowerCase()) {
+        return `aws-accelerator-elb-access-logs-${this.logArchiveAccountId}-${cdk.Stack.of(this).region}`;
+      } else {
+        return cdk.aws_s3.Bucket.fromBucketName(
           this,
-          `${pascalCase(ruleName)} + ${pascalCase(replacementArray[1])}-${pascalCase(replacementType)}`,
-          replacementArray[1],
-        ).managedPolicyArn;
+          `${pascalCase(ruleName)}-${pascalCase(replacementType)}-InputBucket`,
+          replacementArray[1].toLowerCase(),
+        ).bucketName;
       }
-
-      return this.acceleratorKey.keyArn;
     }
-
-    if (lookupType === ACCEL_LOOKUP_TYPE.KMS) {
-      return this.acceleratorKey.keyArn;
-    }
-
-    if (lookupType === ACCEL_LOOKUP_TYPE.Bucket) {
-      if (replacementArray.length === 2) {
-        if (replacementArray[1].toLowerCase() === 'elbLogs'.toLowerCase()) {
-          return `aws-accelerator-elb-access-logs-${this.logArchiveAccountId}-${cdk.Stack.of(this).region}`;
-        } else {
-          return cdk.aws_s3.Bucket.fromBucketName(
-            this,
-            `${pascalCase(ruleName)}-${pascalCase(replacementType)}-InputBucket`,
-            replacementArray[1].toLowerCase(),
-          ).bucketName;
-        }
-      }
-
-      throw new Error(`Config rule replacement key ${replacement.input} not found`);
-    }
-    return undefined;
+    throw new Error(`Config rule replacement key ${replacement.input} not found`);
   }
-
   /**
    * Function to create remediation role
    * @param ruleName
    * @param policyFilePath
    * @param resources
+   * @param isLambdaRole
    * @private
    */
-  private createRemediationRole(ruleName: string, policyFilePath: string, resources?: string): iam.Role {
+  private createRemediationRole(
+    ruleName: string,
+    policyFilePath: string,
+    resources?: string,
+    isLambdaRole = false,
+  ): cdk.aws_iam.IRole {
     // Read in the policy document which should be properly formatted json
     const policyDocument = require(policyFilePath);
     // Create a statements list using the PolicyStatement factory
@@ -580,8 +684,14 @@ export class SecurityResourcesStack extends AcceleratorStack {
     for (const statement of policyDocument.Statement) {
       policyStatements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
     }
+
+    const principals: cdk.aws_iam.PrincipalBase[] = [new iam.ServicePrincipal('ssm.amazonaws.com')];
+    if (isLambdaRole) {
+      principals.push(new iam.ServicePrincipal('lambda.amazonaws.com'));
+    }
+
     const role = new iam.Role(this, pascalCase(ruleName) + '-RemediationRole', {
-      assumedBy: new iam.ServicePrincipal('ssm.amazonaws.com'),
+      assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
     });
 
     role.addToPolicy(
