@@ -80,6 +80,7 @@ export interface ITransitGatewayAttachment extends cdk.IResource {
 
 export interface TransitGatewayAttachmentProps {
   readonly name: string;
+  readonly partition: string;
   readonly transitGatewayId: string;
   readonly subnetIds: string[];
   readonly vpcId: string;
@@ -175,7 +176,7 @@ export class TransitGatewayAttachment extends cdk.Resource implements ITransitGa
     super(scope, id);
 
     let resource: cdk.aws_ec2.CfnTransitGatewayVpcAttachment | cdk.aws_ec2.CfnTransitGatewayAttachment;
-    if (cdk.Stack.of(this).partition === 'aws') {
+    if (props.partition === 'aws') {
       resource = new cdk.aws_ec2.CfnTransitGatewayVpcAttachment(this, 'Resource', {
         vpcId: props.vpcId,
         transitGatewayId: props.transitGatewayId,

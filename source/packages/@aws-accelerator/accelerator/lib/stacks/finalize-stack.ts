@@ -26,7 +26,7 @@ export class FinalizeStack extends AcceleratorStack {
     Logger.debug(`[finalize-stack] Region: ${cdk.Stack.of(this).region}`);
 
     let globalRegion = 'us-east-1';
-    if (this.partition === 'aws-us-gov') {
+    if (props.partition === 'aws-us-gov') {
       globalRegion = 'us-gov-west-1';
     }
 
