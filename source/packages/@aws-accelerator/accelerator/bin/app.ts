@@ -214,6 +214,7 @@ async function main() {
       securityConfig: SecurityConfig.load(configDirPath),
       partition: partition,
       qualifier: process.env['ACCELERATOR_QUALIFIER'],
+      configCommitId: process.env['CONFIG_COMMIT_ID'],
     };
 
     //

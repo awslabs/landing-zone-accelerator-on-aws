@@ -13,8 +13,8 @@
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, UpdateCommand, UpdateCommandInput } from '@aws-sdk/lib-dynamodb';
-import { CodeCommitClient, GetFileCommand } from '@aws-sdk/client-codecommit';
 import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as yaml from 'js-yaml';
 import {
@@ -26,16 +26,18 @@ import {
   OrganizationConfigTypes,
 } from '@aws-accelerator/config';
 import * as t from '@aws-accelerator/config/';
+import { Readable } from 'stream';
 
 export {};
 declare global {
   type File = unknown;
+  type ReadableStream = unknown;
 }
 
 const dynamodbClient = new DynamoDBClient({});
 const documentClient = DynamoDBDocumentClient.from(dynamodbClient);
-const codeCommitClient = new CodeCommitClient({});
 const cloudformationClient = new CloudFormationClient({});
+const s3Client = new S3Client({});
 
 /**
  * load-config-table - lambda handler
@@ -56,6 +58,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const managementAccountEmail: string = event.ResourceProperties['managementAccountEmail' ?? ''];
   const auditAccountEmail: string = event.ResourceProperties['auditAccountEmail' ?? ''];
   const logArchiveAccountEmail: string = event.ResourceProperties['logArchiveAccountEmail' ?? ''];
+  const configS3Bucket: string = event.ResourceProperties['configS3Bucket' ?? ''];
+  const organizationsConfigS3Key: string = event.ResourceProperties['organizationsConfigS3Key' ?? ''];
+  const accountConfigS3Key: string = event.ResourceProperties['accountConfigS3Key' ?? ''];
+  const commitId: string = event.ResourceProperties['commitId' ?? ''];
   const partition = event.ResourceProperties['partition'];
   const stackName = event.ResourceProperties['stackName'];
 
@@ -78,8 +84,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           Status: 'SUCCESS',
         };
       }
-      const commitId = await getCommitId(configRepositoryName);
-      const organizationConfigContent = await getConfigFileContents('organization-config.yaml', configRepositoryName);
+      const organizationConfigContent = await getConfigFileContents(configS3Bucket, organizationsConfigS3Key);
       const organizationValues = t.parse(
         OrganizationConfigTypes.organizationConfig,
         yaml.load(organizationConfigContent),
@@ -90,7 +95,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         const awsKey = organizationConfig.getOrganizationalUnitId(organizationalUnit.name) || '';
         await putOrganizationConfigInTable(organizationalUnit, configTableName, awsKey, commitId);
       }
-      const accountsConfigContent = await getConfigFileContents('accounts-config.yaml', configRepositoryName);
+      const accountsConfigContent = await getConfigFileContents(configS3Bucket, accountConfigS3Key);
       const accountsValues = t.parse(AccountsConfigTypes.accountsConfig, yaml.load(accountsConfigContent));
       const accountsConfig = new AccountsConfig(
         {
@@ -175,17 +180,22 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
 }
 
-async function getConfigFileContents(configFileName: string, configRepositoryName: string): Promise<string> {
+async function getConfigFileContents(configFileS3Bucket: string, configFileS3Key: string): Promise<string> {
   const response = await throttlingBackOff(() =>
-    codeCommitClient.send(
-      new GetFileCommand({ filePath: configFileName, repositoryName: configRepositoryName, commitSpecifier: 'main' }),
-    ),
+    s3Client.send(new GetObjectCommand({ Bucket: configFileS3Bucket, Key: configFileS3Key })),
   );
-  if (response.fileContent) {
-    const contents = Buffer.from(response.fileContent).toString();
-    return contents; //decodedContents;
-  }
-  return '';
+  const stream = response.Body as Readable;
+  const contents = await streamToString(stream);
+  return contents;
+}
+
+async function streamToString(stream: Readable): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const chunks: Uint8Array[] = [];
+    stream.on('data', chunk => chunks.push(chunk));
+    stream.on('error', reject);
+    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+  });
 }
 
 async function putOrganizationConfigInTable(
@@ -265,23 +275,6 @@ async function putAccountConfigInTable(
       },
     };
     await throttlingBackOff(() => documentClient.send(new UpdateCommand(params)));
-  }
-}
-
-async function getCommitId(configRepositoryName: string): Promise<string> {
-  const response = await throttlingBackOff(() =>
-    codeCommitClient.send(
-      new GetFileCommand({
-        filePath: 'global-config.yaml',
-        repositoryName: configRepositoryName,
-        commitSpecifier: 'main',
-      }),
-    ),
-  );
-  if (response.commitId) {
-    return response.commitId.slice(0, 8);
-  } else {
-    return '';
   }
 }
 

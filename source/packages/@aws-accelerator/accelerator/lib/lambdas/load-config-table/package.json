@@ -43,10 +43,10 @@
     "@aws-accelerator/utils": "^0.0.0",
     "@aws-accelerator/config": "^0.0.0",
     "t": "file:../../../../config/lib/common-types",
-    "@aws-sdk/client-dynamodb": "3.87.0",
-    "@aws-sdk/lib-dynamodb": "3.87.0",
-    "@aws-sdk/client-codecommit": "3.87.0",
-    "@aws-sdk/client-cloudformation": "3.87.0",
+    "@aws-sdk/client-dynamodb": "3.92.0",
+    "@aws-sdk/lib-dynamodb": "3.92.0",
+    "@aws-sdk/client-cloudformation": "3.92.0",
+    "@aws-sdk/client-s3": "3.92.0",
     "js-yaml": "4.1.0"
   }
 }

@@ -163,6 +163,7 @@ export class AcceleratorPipeline extends Construct {
           branch: 'main',
           output: this.configRepoArtifact,
           trigger: codepipeline_actions.CodeCommitTrigger.NONE,
+          variablesNamespace: 'Config-Vars',
         }),
       ],
     });
@@ -508,6 +509,10 @@ export class AcceleratorPipeline extends Construct {
       CDK_OPTIONS: {
         type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
         value: cdkOptions,
+      },
+      CONFIG_COMMIT_ID: {
+        type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+        value: '#{Config-Vars.CommitId}',
       },
     };
 
