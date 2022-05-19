@@ -210,6 +210,7 @@ export class SecurityConfigTypes {
     sourceFilePath: t.nonEmptyString,
     handler: t.nonEmptyString,
     runtime: t.nonEmptyString,
+    rolePolicyFile: t.nonEmptyString,
   });
 
   static readonly triggeringResourceType = t.interface({
@@ -864,6 +865,10 @@ export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRul
        * The runtime environment for the Lambda function that you are uploading. For valid values, see the Runtime property in the AWS Lambda Developer Guide.
        */
       runtime: '',
+      /**
+       * Lambda execution role policy definition file
+       */
+      rolePolicyFile: '',
     },
     /**
      * Whether to run the rule on a fixed frequency.
@@ -955,6 +960,10 @@ export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRul
        * The runtime environment for the Lambda function that you are uploading. For valid values, see the Runtime property in the AWS Lambda Developer Guide.
        */
       runtime: '',
+      /**
+       * Lambda execution role policy definition file
+       */
+      rolePolicyFile: '',
     },
     /**
      * Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.
@@ -1313,10 +1322,16 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
         for (const ruleSet of values.awsConfig.ruleSets ?? []) {
           for (const rule of ruleSet.rules) {
             if (rule.type === 'Custom' && rule.customRule) {
-              // Validate presence of custom rule lambda function
+              // Validate presence of custom rule lambda function zip file
               if (!fs.existsSync(path.join(configDir, rule.customRule.lambda.sourceFilePath))) {
                 errors.push(
                   `Custom rule: ${rule.name} lambda function file ${rule.customRule.lambda.sourceFilePath} not found`,
+                );
+              }
+              // Validate presence of custom rule lambda function role policy file
+              if (!fs.existsSync(path.join(configDir, rule.customRule.lambda.rolePolicyFile))) {
+                errors.push(
+                  `Custom rule: ${rule.name} lambda function role policy file ${rule.customRule.lambda.rolePolicyFile} not found`,
                 );
               }
             }
