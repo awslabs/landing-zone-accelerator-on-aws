@@ -42,7 +42,7 @@ export class AccountsStack extends AcceleratorStack {
     Logger.debug(`[accounts-stack] Region: ${cdk.Stack.of(this).region}`);
 
     let globalRegion = 'us-east-1';
-    if (this.partition === 'aws-us-gov') {
+    if (props.partition === 'aws-us-gov') {
       globalRegion = 'us-gov-west-1';
     }
 

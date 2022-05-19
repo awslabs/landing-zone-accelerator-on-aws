@@ -634,6 +634,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             pascalCase(`${tgwAttachmentItem.name}VpcTransitGatewayAttachment`),
             {
               name: tgwAttachmentItem.name,
+              partition: this.props.partition,
               transitGatewayId,
               subnetIds,
               vpcId: vpc.vpcId,
