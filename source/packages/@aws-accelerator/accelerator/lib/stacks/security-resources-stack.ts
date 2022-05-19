@@ -215,8 +215,32 @@ export class SecurityResourcesStack extends AcceleratorStack {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
           });
 
-          // Grant read only access to lambda rule to evaluate config rule
-          lambdaFunction.role?.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('ReadOnlyAccess'));
+          // Read in the policy document which should be properly formatted json
+          const policyDocument = require(path.join(props.configDirPath, rule.customRule.lambda.rolePolicyFile));
+          // Create a statements list using the PolicyStatement factory
+          const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
+          for (const statement of policyDocument.Statement) {
+            policyStatements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+          }
+
+          // Assign policy to Lambda
+          lambdaFunction.role?.attachInlinePolicy(
+            new cdk.aws_iam.Policy(this, pascalCase(rule.name) + '-LambdaRolePolicy', {
+              statements: [...policyStatements],
+            }),
+          );
+
+          // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(rule.name)}-LambdaRolePolicy/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM5',
+                reason: 'AWS Config rule custom lambda role, created by the permission provided in config repository',
+              },
+            ],
+          );
 
           // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
           // rule suppression with evidence for this permission.
