@@ -27,6 +27,7 @@ import {
   SsmSessionManagerSettings,
 } from '@aws-accelerator/constructs';
 
+import { LifecycleRule } from '@aws-accelerator/constructs/lib/aws-s3/bucket';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { KeyStack } from './key-stack';
 
@@ -71,9 +72,39 @@ export class LoggingStack extends AcceleratorStack {
     //
     // Create S3 Bucket for Access Logs - this is required
     //
+    const lifecycleRules: LifecycleRule[] = [];
+    for (const lifecycleRule of props.globalConfig.logging.accessLogBucket.lifecycleRules) {
+      const noncurrentVersionTransitions = [];
+      for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
+        noncurrentVersionTransitions.push({
+          storageClass: noncurrentVersionTransition.storageClass,
+          transitionAfter: noncurrentVersionTransition.transitionAfter,
+        });
+      }
+      const transitions = [];
+      for (const transition of lifecycleRule.transitions) {
+        transitions.push({
+          storageClass: transition.storageClass,
+          transitionAfter: transition.transitionAfter,
+        });
+      }
+      const rule: LifecycleRule = {
+        abortIncompleteMultipartUploadAfter: lifecycleRule.abortIncompleteMultipartUpload,
+        enabled: lifecycleRule.enabled,
+        expiration: lifecycleRule.expiration,
+        expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
+        id: lifecycleRule.id,
+        noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
+        noncurrentVersionTransitions,
+        transitions,
+      };
+      lifecycleRules.push(rule);
+    }
+
     const serverAccessLogsBucket = new Bucket(this, 'AccessLogsBucket', {
       encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
       s3BucketName: `aws-accelerator-s3-access-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
+      lifecycleRules,
     });
 
     // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
@@ -192,10 +223,40 @@ export class LoggingStack extends AcceleratorStack {
     // Logs. Addition logs can also be sent to this bucket through AWS CloudWatch Logs, such as
     // application logs, OS logs, or server logs.
     //
+    //
     if (
       cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
       cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()
     ) {
+      const lifecycleRules: LifecycleRule[] = [];
+      for (const lifecycleRule of props.globalConfig.logging.accessLogBucket.lifecycleRules) {
+        const noncurrentVersionTransitions = [];
+        for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
+          noncurrentVersionTransitions.push({
+            storageClass: noncurrentVersionTransition.storageClass,
+            transitionAfter: noncurrentVersionTransition.transitionAfter,
+          });
+        }
+        const transitions = [];
+        for (const transition of lifecycleRule.transitions) {
+          transitions.push({
+            storageClass: transition.storageClass,
+            transitionAfter: transition.transitionAfter,
+          });
+        }
+        const rule: LifecycleRule = {
+          abortIncompleteMultipartUploadAfter: lifecycleRule.abortIncompleteMultipartUpload,
+          enabled: lifecycleRule.enabled,
+          expiration: lifecycleRule.expiration,
+          expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
+          id: lifecycleRule.id,
+          noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
+          noncurrentVersionTransitions,
+          transitions,
+        };
+        lifecycleRules.push(rule);
+      }
+
       new CentralLogsBucket(this, 'CentralLogsBucket', {
         s3BucketName: `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
           props.globalConfig.homeRegion
@@ -204,6 +265,7 @@ export class LoggingStack extends AcceleratorStack {
         kmsAliasName: 'alias/accelerator/central-logs/s3',
         kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
         organizationId,
+        lifecycleRules,
       });
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.

@@ -19,6 +19,19 @@ centralSecurityServices:
     excludeRegions: []
     policyFindingsPublishingFrequency: FIFTEEN_MINUTES
     publishSensitiveDataFindings: true
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 1
+        expiration: 1825
+        expiredObjectDeleteMarker: false
+        id: MacieLifecycleRule
+        transitions:
+          - storageClass: DEEP_ARCHIVE
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: DEEP_ARCHIVE
+            transitionAfter: 365
+        noncurrentVersionExpiration: 366
   guardduty:
     enable: true
     excludeRegions: []
@@ -29,6 +42,19 @@ centralSecurityServices:
       enable: true
       destinationType: S3
       exportFrequency: FIFTEEN_MINUTES
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 1
+        expiration: 1825
+        expiredObjectDeleteMarker: false
+        id: GuardDutyLifecycleRule
+        transitions:
+          - storageClass: DEEP_ARCHIVE
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: DEEP_ARCHIVE
+            transitionAfter: 365
+        noncurrentVersionExpiration: 366
   securityHub:
     enable: true
     regionAggregation: true
@@ -129,7 +155,7 @@ awsConfig:
           description: Custom role to remediate EC2 instance profile permission
           inputParameters:
             AWSManagedPolicies: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
-#            CustomerManagedPolicies: ${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>},${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>}
+            #            CustomerManagedPolicies: ${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>},${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>}
             ResourceId: RESOURCE_ID
           customRule:
             lambda:

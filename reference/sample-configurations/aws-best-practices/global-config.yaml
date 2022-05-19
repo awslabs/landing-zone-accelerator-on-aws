@@ -13,6 +13,34 @@ logging:
   sessionManager:
     sendToCloudWatchLogs: false
     sendToS3: true
+  accessLogBucket:
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 1
+        expiration: 1825
+        expiredObjectDeleteMarker: false
+        id: AccessLogBucketLifecycleRule
+        transitions:
+          - storageClass: DEEP_ARCHIVE
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: DEEP_ARCHIVE
+            transitionAfter: 365
+        noncurrentVersionExpiration: 366
+  centralLogBucket:
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 1
+        expiration: 1825
+        expiredObjectDeleteMarker: false
+        id: CentralLogBucketLifecycleRule
+        transitions:
+          - storageClass: DEEP_ARCHIVE
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: DEEP_ARCHIVE
+            transitionAfter: 365
+        noncurrentVersionExpiration: 366
 dataProtection:
   enable: true
   deploymentTargets:
@@ -33,6 +61,19 @@ reports:
     timeUnit: DAILY
     refreshClosedReports: true
     reportVersioning: CREATE_NEW_REPORT
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 1
+        expiration: 1825
+        expiredObjectDeleteMarker: false
+        id: CostAndUsageLifecycleRule
+        transitions:
+          - storageClass: DEEP_ARCHIVE
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: DEEP_ARCHIVE
+            transitionAfter: 365
+        noncurrentVersionExpiration: 366
   budgets:
     - name: accel-budget
       timeUnit: MONTHLY
@@ -51,33 +92,33 @@ reports:
       useAmortized: false
       unit: USD
       notifications:
-      - type: ACTUAL
-        thresholdType: PERCENTAGE
-        threshold: 100
-        comparisonOperator: GREATER_THAN
-        subscriptionType: EMAIL
-        address: myemail+pa-budg@example.com
-      - type: ACTUAL
-        thresholdType: PERCENTAGE
-        threshold: 90
-        comparisonOperator: GREATER_THAN
-        subscriptionType: EMAIL
-        address: myemail+pa-budg@example.com
-      - type: ACTUAL
-        thresholdType: PERCENTAGE
-        threshold: 80
-        comparisonOperator: GREATER_THAN
-        subscriptionType: EMAIL
-        address: myemail+pa-budg@example.com
-      - type: ACTUAL
-        thresholdType: PERCENTAGE
-        threshold: 75
-        comparisonOperator: GREATER_THAN
-        subscriptionType: EMAIL
-        address: myemail+pa-budg@example.com
-      - type: ACTUAL
-        thresholdType: PERCENTAGE
-        threshold: 50
-        comparisonOperator: GREATER_THAN
-        subscriptionType: EMAIL
-        address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 100
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 90
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 80
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 75
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 50
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com

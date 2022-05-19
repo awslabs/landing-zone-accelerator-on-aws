@@ -37,10 +37,20 @@ export abstract class GlobalConfigTypes {
     excludeAccounts: t.optional(t.array(t.string)),
   });
 
+  static readonly accessLogBucketConfig = t.interface({
+    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
+  });
+
+  static readonly centralLogBucketConfig = t.interface({
+    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
+  });
+
   static readonly loggingConfig = t.interface({
     account: t.nonEmptyString,
     cloudtrail: GlobalConfigTypes.cloudtrailConfig,
     sessionManager: GlobalConfigTypes.sessionManagerConfig,
+    accessLogBucket: GlobalConfigTypes.accessLogBucketConfig,
+    centralLogBucket: GlobalConfigTypes.centralLogBucketConfig,
   });
 
   static readonly artifactTypeEnum = t.enums('ArtifactType', ['REDSHIFT', 'QUICKSIGHT', 'ATHENA']);
@@ -55,6 +65,7 @@ export abstract class GlobalConfigTypes {
     additionalArtifacts: t.optional(t.array(this.artifactTypeEnum)),
     refreshClosedReports: t.boolean,
     reportVersioning: t.enums('VersioningType', ['CREATE_NEW_REPORT', 'OVERWRITE_REPORT']),
+    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
   });
 
   static readonly notificationConfig = t.interface({
@@ -169,6 +180,18 @@ export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.s
 /**
  * Accelerator global logging configuration
  */
+export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.accessLogBucketConfig> {
+  /**
+   * Declaration of (S3 Bucket) Lifecycle rules.
+   */
+  readonly lifecycleRules: t.LifecycleRule[] = [new t.LifecycleRule()];
+}
+export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.centralLogBucketConfig> {
+  /**
+   * Declaration of (S3 Bucket) Lifecycle rules.
+   */
+  readonly lifecycleRules: t.LifecycleRule[] = [new t.LifecycleRule()];
+}
 export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingConfig> {
   /**
    * Accelerator logging account name.
@@ -184,6 +207,14 @@ export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingC
    * SessionManager logging configuration
    */
   readonly sessionManager: SessionManagerConfig = new SessionManagerConfig();
+  /**
+   * Declaration of a (S3 Bucket) Lifecycle rule configuration.
+   */
+  readonly accessLogBucket: AccessLogBucketConfig = new AccessLogBucketConfig();
+  /**
+   * Declaration of a (S3 Bucket) Lifecycle rule configuration.
+   */
+  readonly centralLogBucket: CentralLogBucketConfig = new CentralLogBucketConfig();
 }
 
 /**
@@ -226,6 +257,10 @@ export class CostAndUsageReportConfig implements t.TypeOf<typeof GlobalConfigTyp
    * Whether you want Amazon Web Services to overwrite the previous version of each report or to deliver the report in addition to the previous versions.
    */
   readonly reportVersioning = '';
+  /**
+   * Declaration of (S3 Bucket) Lifecycle rules.
+   */
+  readonly lifecycleRules: t.LifecycleRule[] = [new t.LifecycleRule()];
 }
 
 /**
@@ -366,6 +401,14 @@ export class ReportConfig implements t.TypeOf<typeof GlobalConfigTypes.reportCon
    *     timeUnit: DAILY
    *     refreshClosedReports: true
    *     reportVersioning: CREATE_NEW_REPORT
+   *     lifecycleRules:
+   *       storageClass: DEEP_ARCHIVE
+   *       enabled: true
+   *       multiPart: 1
+   *       expiration: 1825
+   *       deleteMarker: false
+   *       nonCurrentExpiration: 366
+   *       transitionAfter: 365
    * ```
    */
   readonly costAndUsageReport = new CostAndUsageReportConfig();

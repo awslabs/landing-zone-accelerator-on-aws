@@ -37,6 +37,7 @@ import {
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { KeyStack } from './key-stack';
+import { LifecycleRule } from '@aws-accelerator/constructs/lib/aws-s3/bucket';
 
 export class SecurityAuditStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -62,12 +63,42 @@ export class SecurityAuditStack extends AcceleratorStack {
       Logger.info(
         `[security-audit-stack] Creating macie export config bucket - aws-accelerator-securitymacie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
       );
+      const lifecycleRules: LifecycleRule[] = [];
+      for (const lifecycleRule of props.securityConfig.centralSecurityServices.macie.lifecycleRules) {
+        const noncurrentVersionTransitions = [];
+        for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
+          noncurrentVersionTransitions.push({
+            storageClass: noncurrentVersionTransition.storageClass,
+            transitionAfter: noncurrentVersionTransition.transitionAfter,
+          });
+        }
+        const transitions = [];
+        for (const transition of lifecycleRule.transitions) {
+          transitions.push({
+            storageClass: transition.storageClass,
+            transitionAfter: transition.transitionAfter,
+          });
+        }
+        const rule: LifecycleRule = {
+          abortIncompleteMultipartUploadAfter: lifecycleRule.abortIncompleteMultipartUpload,
+          enabled: lifecycleRule.enabled,
+          expiration: lifecycleRule.expiration,
+          expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
+          id: lifecycleRule.id,
+          noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
+          noncurrentVersionTransitions,
+          transitions,
+        };
+        lifecycleRules.push(rule);
+      }
+
       const S3ServerAccessLogsBucketNamePrefix = 'aws-accelerator-s3-access-logs';
       const bucket = new Bucket(this, 'AwsMacieExportConfigBucket', {
         encryptionType: BucketEncryptionType.SSE_KMS,
         s3BucketName: `aws-accelerator-org-macie-disc-repo-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         kmsKey: key,
         serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        lifecycleRules,
       });
 
       new cdk.aws_ssm.StringParameter(this, 'SsmParamOrganizationMacieExportConfigBucketName', {
@@ -120,11 +151,41 @@ export class SecurityAuditStack extends AcceleratorStack {
     );
 
     if (props.securityConfig.centralSecurityServices.guardduty.enable) {
+      const lifecycleRules: LifecycleRule[] = [];
+      for (const lifecycleRule of props.securityConfig.centralSecurityServices.guardduty.lifecycleRules) {
+        const noncurrentVersionTransitions = [];
+        for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
+          noncurrentVersionTransitions.push({
+            storageClass: noncurrentVersionTransition.storageClass,
+            transitionAfter: noncurrentVersionTransition.transitionAfter,
+          });
+        }
+        const transitions = [];
+        for (const transition of lifecycleRule.transitions) {
+          transitions.push({
+            storageClass: transition.storageClass,
+            transitionAfter: transition.transitionAfter,
+          });
+        }
+        const rule: LifecycleRule = {
+          abortIncompleteMultipartUploadAfter: lifecycleRule.abortIncompleteMultipartUpload,
+          enabled: lifecycleRule.enabled,
+          expiration: lifecycleRule.expiration,
+          expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
+          id: lifecycleRule.id,
+          noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
+          noncurrentVersionTransitions,
+          transitions,
+        };
+        lifecycleRules.push(rule);
+      }
+
       const bucket = new Bucket(this, 'GuardDutyPublishingDestinationBucket', {
         encryptionType: BucketEncryptionType.SSE_KMS,
         s3BucketName: `aws-accelerator-org-gduty-pub-dest-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         kmsKey: key,
         serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        lifecycleRules,
       });
 
       // AwsSolutions-S1: The S3 Bucket has server access logs disabled.

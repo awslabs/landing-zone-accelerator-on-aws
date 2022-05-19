@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import { StorageClass } from '@aws-accelerator/config/lib/common-types/types';
 import { Construct } from 'constructs';
 import { pascalCase } from 'change-case';
 
@@ -27,6 +28,22 @@ export enum BucketAccessType {
 export enum BucketEncryptionType {
   SSE_S3 = 'sse-s3',
   SSE_KMS = 'sse-kms',
+}
+
+interface Transition {
+  storageClass: StorageClass;
+  transitionAfter: number;
+}
+
+export interface LifecycleRule {
+  abortIncompleteMultipartUploadAfter: number;
+  enabled: boolean;
+  expiration: number;
+  expiredObjectDeleteMarker: boolean;
+  id: string;
+  noncurrentVersionExpiration: number;
+  transitions: Transition[];
+  noncurrentVersionTransitions: Transition[];
 }
 
 /**
@@ -75,6 +92,11 @@ export interface BucketProps {
    *
    */
   serverAccessLogsBucketName?: string;
+
+  /**
+   *
+   */
+  lifecycleRules?: LifecycleRule[];
 
   /**
    * Prefix to use in the target bucket for server access logs.
@@ -149,6 +171,66 @@ export class Bucket extends Construct {
       throw new Error('serverAccessLogsBucketName or serverAccessLogsBucket (only one property) should be defined.');
     }
 
+    // Lifecycle rules
+    const lifecycleRules: cdk.aws_s3.LifecycleRule[] = [];
+
+    if (props.lifecycleRules) {
+      for (const lifecycleRuleConfig of props.lifecycleRules) {
+        const transitions = [];
+        const noncurrentVersionTransitions = [];
+
+        for (const transition of lifecycleRuleConfig.transitions) {
+          const transitionConfig = {
+            storageClass: new cdk.aws_s3.StorageClass(transition.storageClass),
+            transitionAfter: cdk.Duration.days(transition.transitionAfter),
+          };
+          transitions.push(transitionConfig);
+        }
+
+        for (const nonCurrentTransition of lifecycleRuleConfig.noncurrentVersionTransitions) {
+          const noncurrentVersionTransitionsConfig = {
+            storageClass: new cdk.aws_s3.StorageClass(nonCurrentTransition.storageClass),
+            transitionAfter: cdk.Duration.days(nonCurrentTransition.transitionAfter),
+          };
+          noncurrentVersionTransitions.push(noncurrentVersionTransitionsConfig);
+        }
+
+        lifecycleRules.push({
+          abortIncompleteMultipartUploadAfter: cdk.Duration.days(
+            lifecycleRuleConfig.abortIncompleteMultipartUploadAfter,
+          ),
+          enabled: lifecycleRuleConfig.enabled,
+          expiration: cdk.Duration.days(lifecycleRuleConfig.expiration),
+          transitions,
+          noncurrentVersionTransitions,
+          noncurrentVersionExpiration: cdk.Duration.days(lifecycleRuleConfig.noncurrentVersionExpiration),
+          expiredObjectDeleteMarker: lifecycleRuleConfig.expiredObjectDeleteMarker,
+          id: `LifecycleRule${props.s3BucketName}`,
+        });
+      }
+    } else {
+      lifecycleRules.push({
+        abortIncompleteMultipartUploadAfter: cdk.Duration.days(1),
+        enabled: true,
+        expiration: cdk.Duration.days(1825),
+        expiredObjectDeleteMarker: false,
+        id: `LifecycleRule${props.s3BucketName}`,
+        noncurrentVersionExpiration: cdk.Duration.days(1825),
+        noncurrentVersionTransitions: [
+          {
+            storageClass: cdk.aws_s3.StorageClass.DEEP_ARCHIVE,
+            transitionAfter: cdk.Duration.days(366),
+          },
+        ],
+        transitions: [
+          {
+            storageClass: cdk.aws_s3.StorageClass.DEEP_ARCHIVE,
+            transitionAfter: cdk.Duration.days(365),
+          },
+        ],
+      });
+    }
+
     this.bucket = new s3.Bucket(this, 'Resource', {
       encryption: this.encryptionType,
       encryptionKey: this.cmk,
@@ -156,6 +238,7 @@ export class Bucket extends Construct {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       bucketName: props.s3BucketName,
       versioned: true,
+      lifecycleRules,
       objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
       serverAccessLogsBucket: serverAccessLogBucket,
       // Trailing slash for folder-like prefix in S3
