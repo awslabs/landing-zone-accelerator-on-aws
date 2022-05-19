@@ -34,6 +34,7 @@ source_template_dir="$PWD"
 dist_dir="$source_template_dir/open-source"
 source_dir="$source_template_dir/../source"
 github_dir="$source_template_dir/../.github"
+deployment_dir="$source_template_dir/../deployment"
 reference_dir="$source_template_dir/../reference"
 
 echo "------------------------------------------------------------------------------"
@@ -58,6 +59,14 @@ echo "--------------------------------------------------------------------------
 
 echo "cp -r $source_dir $dist_dir"
 cp -r $source_dir $dist_dir
+
+
+echo "------------------------------------------------------------------------------"
+echo "[Packing] Deployment folder"
+echo "------------------------------------------------------------------------------"
+
+echo "cp -r $deployment_dir $dist_dir"
+cp -r $deployment_dir $dist_dir
 
 echo "------------------------------------------------------------------------------"
 echo "[Packing] Reference folder"
