@@ -64,6 +64,10 @@ export class SecurityConfigTypes {
      * Specifies whether to publish sensitive data findings to Security Hub. If you set this value to true, Amazon Macie automatically publishes all sensitive data findings that weren't suppressed by a findings filter. The default value is false.
      */
     publishSensitiveDataFindings: t.boolean,
+    /**
+     * Declaration of a (S3 Bucket) Lifecycle rule.
+     */
+    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
   });
 
   /**
@@ -119,6 +123,10 @@ export class SecurityConfigTypes {
      * AWS GuardDuty Export Findings configuration.
      */
     exportConfiguration: this.guardDutyExportFindingsConfig,
+    /**
+     * Declaration of a (S3 Bucket) Life cycle rule.
+     */
+    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
   });
 
   /**
@@ -389,6 +397,10 @@ export class MacieConfig implements t.TypeOf<typeof SecurityConfigTypes.macieCon
    * Specifies whether to publish sensitive data findings to Security Hub. If you set this value to true, Amazon Macie automatically publishes all sensitive data findings that weren't suppressed by a findings filter. The default value is false.
    */
   readonly publishSensitiveDataFindings = true;
+  /**
+   * Declaration of a (S3 Bucket) Life cycle rule.
+   */
+  readonly lifecycleRules: t.LifecycleRule[] = [new t.LifecycleRule()];
 }
 
 /**
@@ -448,6 +460,10 @@ export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guar
    * @type object
    */
   readonly exportConfiguration: GuardDutyExportFindingsConfig = new GuardDutyExportFindingsConfig();
+  /**
+   * Declaration of a (S3 Bucket) Life cycle rule.
+   */
+  readonly lifecycleRules: t.LifecycleRule[] = [new t.LifecycleRule()];
 }
 
 /**

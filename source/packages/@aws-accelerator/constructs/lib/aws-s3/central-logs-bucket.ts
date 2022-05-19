@@ -13,8 +13,24 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-
+import { StorageClass } from '@aws-accelerator/config/lib/common-types/types';
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
+
+interface Transition {
+  storageClass: StorageClass;
+  transitionAfter: number;
+}
+
+interface CentralLogBucketLifecycleRule {
+  abortIncompleteMultipartUploadAfter: number;
+  enabled: boolean;
+  expiration: number;
+  expiredObjectDeleteMarker: boolean;
+  id: string;
+  noncurrentVersionExpiration: number;
+  transitions: Transition[];
+  noncurrentVersionTransitions: Transition[];
+}
 
 export interface CentralLogsBucketProps {
   s3BucketName: string;
@@ -22,6 +38,7 @@ export interface CentralLogsBucketProps {
   kmsDescription: string;
   serverAccessLogsBucket: Bucket;
   organizationId?: string;
+  lifecycleRules?: CentralLogBucketLifecycleRule[];
 }
 
 /**
@@ -38,6 +55,7 @@ export class CentralLogsBucket extends Construct {
       kmsAliasName: props.kmsAliasName,
       kmsDescription: props.kmsDescription,
       serverAccessLogsBucket: props.serverAccessLogsBucket.getS3Bucket(),
+      //lifecycleRules: props.lifecycleRules,
     });
 
     bucket.getKey().addToResourcePolicy(

@@ -260,6 +260,46 @@ export class DeploymentTargets implements t.TypeOf<typeof deploymentTargets> {
   readonly excludedAccounts: string[] = [];
 }
 
+export const storageClass = enums('storageClass', [
+  'DEEP_ARCHIVE',
+  'GLACIER',
+  'GLACIER_INSTANT_RETRIEVAL',
+  'INFREQUENT_ACCESS',
+  'INTELLIGENT_TIERING',
+  'ONE_ZONE_INFREQUENT_ACCESS',
+  'Value should be an AWS S3 Storage Class.',
+]);
+export type StorageClass = t.TypeOf<typeof storageClass>;
+
+export const transition = t.interface({
+  storageClass: storageClass,
+  transitionAfter: t.number,
+});
+
+export type Transition = t.TypeOf<typeof transition>;
+
+export const lifecycleRule = t.interface({
+  abortIncompleteMultipartUpload: optional(t.number),
+  enabled: optional(t.boolean),
+  expiration: optional(t.number),
+  expiredObjectDeleteMarker: optional(t.boolean),
+  id: optional(t.string),
+  noncurrentVersionExpiration: optional(t.number),
+  noncurrentVersionTransitions: optional(t.array(transition)),
+  transitions: optional(t.array(transition)),
+});
+
+export class LifecycleRule implements t.TypeOf<typeof lifecycleRule>{
+  readonly abortIncompleteMultipartUpload: number = 1;
+  readonly enabled: boolean = true;
+  readonly expiration: number = 1825;
+  readonly expiredObjectDeleteMarker: boolean = false;
+  readonly id: string = '';
+  readonly noncurrentVersionExpiration: number = 366;
+  readonly noncurrentVersionTransitions: Transition[] = [];
+  readonly transitions: Transition[] = [];
+}
+
 export const shareTargets = t.interface({
   organizationalUnits: optional(t.array(nonEmptyString)),
   accounts: optional(t.array(nonEmptyString)),

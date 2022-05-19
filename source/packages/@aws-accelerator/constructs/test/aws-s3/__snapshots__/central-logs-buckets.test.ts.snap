@@ -86,6 +86,46 @@ Object {
             ],
           ],
         },
+        "LifecycleConfiguration": Object {
+          "Rules": Array [
+            Object {
+              "AbortIncompleteMultipartUpload": Object {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpirationInDays": 1825,
+              "ExpiredObjectDeleteMarker": false,
+              "Id": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "LifecycleRuleaws-accelerator-s3-access-logs-",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionTransitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 366,
+                },
+              ],
+              "Status": "Enabled",
+              "Transitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 365,
+                },
+              ],
+            },
+          ],
+        },
         "OwnershipControls": Object {
           "Rules": Array [
             Object {
@@ -185,6 +225,46 @@ Object {
                 "Ref": "AWS::Region",
               },
             ],
+          ],
+        },
+        "LifecycleConfiguration": Object {
+          "Rules": Array [
+            Object {
+              "AbortIncompleteMultipartUpload": Object {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpirationInDays": 1825,
+              "ExpiredObjectDeleteMarker": false,
+              "Id": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "LifecycleRuleaws-accelerator-central-logs-",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionTransitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 366,
+                },
+              ],
+              "Status": "Enabled",
+              "Transitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 365,
+                },
+              ],
+            },
           ],
         },
         "LoggingConfiguration": Object {

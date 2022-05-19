@@ -47,6 +47,7 @@ import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { KeyStack } from './key-stack';
 import { S3ServerAccessLogsBucketNamePrefix } from '../accelerator';
+import { LifecycleRule } from '@aws-accelerator/constructs/lib/aws-s3/bucket';
 
 export interface OrganizationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
@@ -231,10 +232,40 @@ export class OrganizationsStack extends AcceleratorStack {
       if (props.globalConfig.reports?.costAndUsageReport) {
         Logger.info('[organizations-stack] Adding Cost and Usage Reports');
 
+        const lifecycleRules: LifecycleRule[] = [];
+        for (const lifecycleRule of props.globalConfig.logging.accessLogBucket.lifecycleRules) {
+          const noncurrentVersionTransitions = [];
+          for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
+            noncurrentVersionTransitions.push({
+              storageClass: noncurrentVersionTransition.storageClass,
+              transitionAfter: noncurrentVersionTransition.transitionAfter,
+            });
+          }
+          const transitions = [];
+          for (const transition of lifecycleRule.transitions) {
+            transitions.push({
+              storageClass: transition.storageClass,
+              transitionAfter: transition.transitionAfter,
+            });
+          }
+          const rule: LifecycleRule = {
+            abortIncompleteMultipartUploadAfter: lifecycleRule.abortIncompleteMultipartUpload,
+            enabled: lifecycleRule.enabled,
+            expiration: lifecycleRule.expiration,
+            expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
+            id: lifecycleRule.id,
+            noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
+            noncurrentVersionTransitions,
+            transitions,
+          };
+          lifecycleRules.push(rule);
+        }
+
         const reportBucket = new Bucket(this, 'ReportBucket', {
           encryptionType: BucketEncryptionType.SSE_S3, // CUR does not support KMS CMK
           s3BucketName: `aws-accelerator-cur-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
           serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+          lifecycleRules,
         });
 
         new ReportDefinition(this, 'ReportDefinition', {
