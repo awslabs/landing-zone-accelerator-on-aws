@@ -23,6 +23,10 @@ export interface LoadAcceleratorConfigTableProps {
   readonly managementAccountEmail: string;
   readonly logArchiveAccountEmail: string;
   readonly auditAccountEmail: string;
+  readonly configS3Bucket: string;
+  readonly organizationsConfigS3Key: string;
+  readonly accountConfigS3Key: string;
+  readonly commitId: string;
   readonly partition: string;
   readonly managementAccountId: string;
   readonly region: string;
@@ -79,11 +83,13 @@ export class LoadAcceleratorConfigTable extends Construct {
           Resource: [props.acceleratorConfigTable.encryptionKey?.keyArn],
         },
         {
-          Sid: 'codeCommit',
+          Sid: 's3',
           Effect: 'Allow',
-          Action: ['codecommit:GetFile'],
+          Action: ['s3:GetObject'],
           Resource: [
-            `arn:${props.partition}:codecommit:${props.region}:${props.managementAccountId}:${props.configRepositoryName}`,
+            `arn:${cdk.Stack.of(this).partition}:s3:::cdk-accel-assets-${cdk.Stack.of(this).account}-${
+              cdk.Stack.of(this).region
+            }/*`,
           ],
         },
         {
@@ -111,6 +117,10 @@ export class LoadAcceleratorConfigTable extends Construct {
         managementAccountEmail: props.managementAccountEmail,
         auditAccountEmail: props.auditAccountEmail,
         logArchiveAccountEmail: props.logArchiveAccountEmail,
+        configS3Bucket: props.configS3Bucket,
+        organizationsConfigS3Key: props.organizationsConfigS3Key,
+        accountConfigS3Key: props.accountConfigS3Key,
+        commitId: props.commitId,
         partition: props.partition,
         stackName: props.stackName,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update

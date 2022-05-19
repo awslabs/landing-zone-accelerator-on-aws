@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+//import { SynthUtils } from '@aws-cdk/assert';
 
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
 
@@ -40,6 +41,12 @@ const stack = new PipelineStack(app, 'PipelineStack', {
  * PipelineStack construct test
  */
 describe('PipelineStack', () => {
+  /**
+   * Snapshot test
+   */
+  // test(`${testNamePrefix} Snapshot Test`, () => {
+  //   expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
+  // });
   /**
    * Number of CodePipeline resource test
    */
@@ -228,7 +235,7 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
-                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage prepare"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"prepare"}]',
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage prepare"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"prepare"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -262,7 +269,7 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
-                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage accounts"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"accounts"}]',
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage accounts"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"accounts"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -295,7 +302,8 @@ describe('PipelineStack', () => {
                       Version: '1',
                     },
                     Configuration: {
-                      EnvironmentVariables: '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"}]',
+                      EnvironmentVariables:
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"bootstrap"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -328,7 +336,8 @@ describe('PipelineStack', () => {
                       Version: '1',
                     },
                     Configuration: {
-                      EnvironmentVariables: '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"diff"}]',
+                      EnvironmentVariables:
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"diff"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -378,7 +387,7 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
-                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage key"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"key"}]',
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage key"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"key"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -407,7 +416,7 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
-                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage logging"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"logging"}]',
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage logging"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"logging"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -441,7 +450,7 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
-                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage organizations"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"organizations"}]',
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage organizations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"organizations"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -475,7 +484,7 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
-                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security-audit"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-audit"}]',
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security-audit"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-audit"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -509,7 +518,7 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
-                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-prep"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-prep"}]',
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-prep"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-prep"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -538,7 +547,7 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
-                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security"}]',
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -567,7 +576,7 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
-                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage operations"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"operations"}]',
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage operations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"operations"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -596,7 +605,7 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
-                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-vpc"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-vpc"}]',
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-vpc"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-vpc"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -625,7 +634,7 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
-                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security-resources"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-resources"}]',
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage security-resources"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"security-resources"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -654,7 +663,7 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
-                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-associations"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-associations"}]',
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage network-associations"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"network-associations"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',
@@ -683,7 +692,7 @@ describe('PipelineStack', () => {
                     },
                     Configuration: {
                       EnvironmentVariables:
-                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage finalize"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"finalize"}]',
+                        '[{"name":"CDK_OPTIONS","type":"PLAINTEXT","value":"deploy --stage finalize"},{"name":"CONFIG_COMMIT_ID","type":"PLAINTEXT","value":"#{Config-Vars.CommitId}"},{"name":"ACCELERATOR_STAGE","type":"PLAINTEXT","value":"finalize"}]',
                       PrimarySource: 'Build',
                       ProjectName: {
                         Ref: 'PipelineToolkitProjectBCBD6910',

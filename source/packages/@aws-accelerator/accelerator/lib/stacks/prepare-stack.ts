@@ -26,6 +26,7 @@ import { Logger } from '../logger';
 import { ValidateEnvironmentConfig } from '../validate-environment-config';
 import { LoadAcceleratorConfigTable } from '../load-config-table';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import path from 'path';
 
 export class PrepareStack extends AcceleratorStack {
   public static readonly MANAGEMENT_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
@@ -47,6 +48,15 @@ export class PrepareStack extends AcceleratorStack {
         description: 'AWS Accelerator Management Account Kms Key',
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
+      });
+
+      // Make assets from the configuration directory
+      const accountConfigAsset = new cdk.aws_s3_assets.Asset(this, 'AccountConfigAsset', {
+        path: path.join(props.configDirPath, 'accounts-config.yaml'),
+      });
+      console.log(accountConfigAsset);
+      const organzationsConfigAsset = new cdk.aws_s3_assets.Asset(this, 'OrganizationConfigAsset', {
+        path: path.join(props.configDirPath, 'organization-config.yaml'),
       });
 
       // Allow Accelerator Role to use the encryption key
@@ -119,6 +129,10 @@ export class PrepareStack extends AcceleratorStack {
         managementAccountEmail: props.accountsConfig.getManagementAccount().email,
         auditAccountEmail: props.accountsConfig.getAuditAccount().email,
         logArchiveAccountEmail: props.accountsConfig.getLogArchiveAccount().email,
+        configS3Bucket: organzationsConfigAsset.s3BucketName,
+        organizationsConfigS3Key: organzationsConfigAsset.s3ObjectKey,
+        accountConfigS3Key: accountConfigAsset.s3ObjectKey,
+        commitId: props.configCommitId || '',
         partition: props.partition,
         region: cdk.Stack.of(this).region,
         managementAccountId: props.accountsConfig.getManagementAccountId(),
@@ -210,74 +224,6 @@ export class PrepareStack extends AcceleratorStack {
           parameterName: `/accelerator/prepare-stack/NewOrgAccountsTableName`,
           stringValue: newOrgAccountsTable.tableName,
         });
-
-        const mandatoryAccounts: {
-          name: string;
-          description: string;
-          email: string;
-          organizationalUnit: string;
-          organizationalUnitId: string;
-        }[] = [];
-
-        const workloadAccounts: {
-          name: string;
-          description: string;
-          email: string;
-          enableGovCloud?: boolean;
-          organizationalUnit: string;
-          organizationalUnitId: string;
-        }[] = [];
-
-        const existingAccounts: {
-          email: string;
-          accountId: string;
-        }[] = [];
-
-        for (const mandatoryAccount of props.accountsConfig.mandatoryAccounts) {
-          mandatoryAccounts.push({
-            name: mandatoryAccount.name,
-            description: mandatoryAccount.description,
-            email: mandatoryAccount.email,
-            organizationalUnit: mandatoryAccount.organizationalUnit,
-            organizationalUnitId: props.organizationConfig.getOrganizationalUnitId(mandatoryAccount.organizationalUnit),
-          });
-        }
-
-        for (const workloadAccount of props.accountsConfig.workloadAccounts) {
-          if (
-            props.accountsConfig.isGovCloudAccount(workloadAccount) &&
-            props.accountsConfig.isGovCloudEnabled(workloadAccount)
-          ) {
-            workloadAccounts.push({
-              name: workloadAccount.name,
-              description: workloadAccount.description,
-              email: workloadAccount.email,
-              enableGovCloud: true,
-              organizationalUnit: workloadAccount.organizationalUnit,
-              organizationalUnitId: props.organizationConfig.getOrganizationalUnitId(
-                workloadAccount.organizationalUnit,
-              ),
-            });
-          } else {
-            workloadAccounts.push({
-              name: workloadAccount.name,
-              description: workloadAccount.description,
-              email: workloadAccount.email,
-              enableGovCloud: false,
-              organizationalUnit: workloadAccount.organizationalUnit,
-              organizationalUnitId: props.organizationConfig.getOrganizationalUnitId(
-                workloadAccount.organizationalUnit,
-              ),
-            });
-          }
-        }
-
-        for (const accountId of props.accountsConfig.accountIds || []) {
-          existingAccounts.push({
-            email: accountId.email,
-            accountId: accountId.accountId,
-          });
-        }
 
         Logger.info(`[prepare-stack] Validate Environment`);
         const validation = new ValidateEnvironmentConfig(this, 'ValidateEnvironmentConfig', {

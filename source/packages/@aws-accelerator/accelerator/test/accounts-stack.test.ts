@@ -742,7 +742,7 @@ describe('AccountsStack', () => {
           Properties: {
             Name: '/accelerator/AWSAccelerator-AccountsStack-333333333333-us-east-1/version',
             Type: 'String',
-            Value: '0.6.0-rc001',
+            Value: '1.0.0',
           },
         },
       },
