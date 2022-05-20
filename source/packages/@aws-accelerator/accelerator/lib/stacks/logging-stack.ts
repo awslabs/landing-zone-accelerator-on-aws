@@ -73,7 +73,7 @@ export class LoggingStack extends AcceleratorStack {
     // Create S3 Bucket for Access Logs - this is required
     //
     const lifecycleRules: LifecycleRule[] = [];
-    for (const lifecycleRule of props.globalConfig.logging.accessLogBucket.lifecycleRules) {
+    for (const lifecycleRule of props.globalConfig.logging.accessLogBucket?.lifecycleRules ?? []) {
       const noncurrentVersionTransitions = [];
       for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
         noncurrentVersionTransitions.push({
@@ -229,7 +229,7 @@ export class LoggingStack extends AcceleratorStack {
       cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()
     ) {
       const lifecycleRules: LifecycleRule[] = [];
-      for (const lifecycleRule of props.globalConfig.logging.accessLogBucket.lifecycleRules) {
+      for (const lifecycleRule of props.globalConfig.logging.accessLogBucket?.lifecycleRules ?? []) {
         const noncurrentVersionTransitions = [];
         for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
           noncurrentVersionTransitions.push({

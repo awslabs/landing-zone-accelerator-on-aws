@@ -401,7 +401,7 @@ export class MacieConfig implements t.TypeOf<typeof SecurityConfigTypes.macieCon
   /**
    * Declaration of a (S3 Bucket) Life cycle rule.
    */
-  readonly lifecycleRules: t.LifecycleRule[] = [new t.LifecycleRule()];
+  readonly lifecycleRules: t.LifecycleRule[] | undefined = undefined;
 }
 
 /**
@@ -464,7 +464,7 @@ export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guar
   /**
    * Declaration of a (S3 Bucket) Life cycle rule.
    */
-  readonly lifecycleRules: t.LifecycleRule[] = [new t.LifecycleRule()];
+  readonly lifecycleRules: t.LifecycleRule[] | undefined = undefined;
 }
 
 /**

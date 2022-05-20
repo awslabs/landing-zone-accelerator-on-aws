@@ -254,55 +254,6 @@ Object {
           "Fn::GetAtt": Array [
             "CodeCommitPipelineRole5C35E76C",
             "Arn",
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
-                "DaysAfterInitiation": 1,
-              },
-              "ExpirationInDays": 1825,
-              "ExpiredObjectDeleteMarker": false,
-              "Id": Object {
-                "Fn::Join": Array [
-                  "",
-                  Array [
-                    "LifecycleRule",
-                    Object {
-                      "Ref": "AcceleratorQualifier",
-                    },
-                    "-s3-logs-",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    "-",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                  ],
-                ],
-              },
-              "NoncurrentVersionExpirationInDays": 1825,
-              "NoncurrentVersionTransitions": Array [
-                Object {
-                  "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 366,
-                },
-              ],
-              "Status": "Enabled",
-              "Transitions": Array [
-                Object {
-                  "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
-                },
-              ],
-            },
-          ],
-        },
-        "OwnershipControls": Object {
-          "Rules": Array [
-            Object {
-              "ObjectOwnership": "BucketOwnerPreferred",
-            },
           ],
         },
         "Stages": Array [
@@ -904,6 +855,50 @@ Object {
             ],
           ],
         },
+        "LifecycleConfiguration": Object {
+          "Rules": Array [
+            Object {
+              "AbortIncompleteMultipartUpload": Object {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpirationInDays": 1825,
+              "ExpiredObjectDeleteMarker": false,
+              "Id": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "LifecycleRule",
+                    Object {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-s3-logs-",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionTransitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 366,
+                },
+              ],
+              "Status": "Enabled",
+              "Transitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 365,
+                },
+              ],
+            },
+          ],
+        },
         "OwnershipControls": Object {
           "Rules": Array [
             Object {
@@ -1343,79 +1338,6 @@ Object {
           "Fn::GetAtt": Array [
             "InstallerKey2A6A8C6D",
             "Arn",
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
-                "DaysAfterInitiation": 1,
-              },
-              "ExpirationInDays": 1825,
-              "ExpiredObjectDeleteMarker": false,
-              "Id": Object {
-                "Fn::Join": Array [
-                  "",
-                  Array [
-                    "LifecycleRule",
-                    Object {
-                      "Ref": "AcceleratorQualifier",
-                    },
-                    "-installer-",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    "-",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                  ],
-                ],
-              },
-              "NoncurrentVersionExpirationInDays": 1825,
-              "NoncurrentVersionTransitions": Array [
-                Object {
-                  "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 366,
-                },
-              ],
-              "Status": "Enabled",
-              "Transitions": Array [
-                Object {
-                  "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
-                },
-              ],
-            },
-          ],
-        },
-        "LoggingConfiguration": Object {
-          "DestinationBucketName": Object {
-            "Ref": "InstallerAccessLogsBucket647700E9",
-          },
-          "LogFilePrefix": Object {
-            "Fn::Join": Array [
-              "",
-              Array [
-                Object {
-                  "Ref": "AcceleratorQualifier",
-                },
-                "-installer-",
-                Object {
-                  "Ref": "AWS::AccountId",
-                },
-                "-",
-                Object {
-                  "Ref": "AWS::Region",
-                },
-                "/",
-              ],
-            ],
-          },
-        },
-        "OwnershipControls": Object {
-          "Rules": Array [
-            Object {
-              "ObjectOwnership": "BucketOwnerPreferred",
-            },
           ],
         },
       },
@@ -1708,6 +1630,50 @@ phases:
                 "Ref": "AWS::Region",
               },
             ],
+          ],
+        },
+        "LifecycleConfiguration": Object {
+          "Rules": Array [
+            Object {
+              "AbortIncompleteMultipartUpload": Object {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpirationInDays": 1825,
+              "ExpiredObjectDeleteMarker": false,
+              "Id": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "LifecycleRule",
+                    Object {
+                      "Ref": "AcceleratorQualifier",
+                    },
+                    "-installer-",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionTransitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 366,
+                },
+              ],
+              "Status": "Enabled",
+              "Transitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 365,
+                },
+              ],
+            },
           ],
         },
         "LoggingConfiguration": Object {
@@ -3805,118 +3771,6 @@ Object {
       "Default": "github",
       "Description": "Specify the git host",
       "Type": "String",
-  },
-  "Resources": Object {
-    "AcceleratorManagementKmsArnParameter1E6975BF": Object {
-      "Properties": Object {
-        "Name": "/accelerator/installer/kms/key-arn",
-        "Type": "String",
-        "Value": Object {
-          "Fn::GetAtt": Array [
-            "InstallerKey2A6A8C6D",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "InstallerAccessLogsBucket647700E9": Object {
-      "DeletionPolicy": "Retain",
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
-              "id": "AwsSolutions-S1",
-              "reason": "AccessLogsBucket has server access logs disabled till the task for access logging completed.",
-            },
-          ],
-        },
-      },
-      "Properties": Object {
-        "AccessControl": "LogDeliveryWrite",
-        "BucketEncryption": Object {
-          "ServerSideEncryptionConfiguration": Array [
-            Object {
-              "ServerSideEncryptionByDefault": Object {
-                "SSEAlgorithm": "AES256",
-              },
-            },
-          ],
-        },
-        "BucketName": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "aws-accelerator-s3-logs-",
-              Object {
-                "Ref": "AWS::AccountId",
-              },
-              "-",
-              Object {
-                "Ref": "AWS::Region",
-              },
-            ],
-          ],
-        },
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
-                "DaysAfterInitiation": 1,
-              },
-              "ExpirationInDays": 1825,
-              "ExpiredObjectDeleteMarker": false,
-              "Id": Object {
-                "Fn::Join": Array [
-                  "",
-                  Array [
-                    "LifecycleRuleaws-accelerator-s3-logs-",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    "-",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                  ],
-                ],
-              },
-              "NoncurrentVersionExpirationInDays": 1825,
-              "NoncurrentVersionTransitions": Array [
-                Object {
-                  "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 366,
-                },
-              ],
-              "Status": "Enabled",
-              "Transitions": Array [
-                Object {
-                  "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
-                },
-              ],
-            },
-          ],
-        },
-        "OwnershipControls": Object {
-          "Rules": Array [
-            Object {
-              "ObjectOwnership": "BucketOwnerPreferred",
-            },
-          ],
-        },
-        "PublicAccessBlockConfiguration": Object {
-          "BlockPublicAcls": true,
-          "BlockPublicPolicy": true,
-          "IgnorePublicAcls": true,
-          "RestrictPublicBuckets": true,
-        },
-        "VersioningConfiguration": Object {
-          "Status": "Enabled",
-        },
-      },
-      "Type": "AWS::S3::Bucket",
-      "UpdateReplacePolicy": "Retain",
     },
   },
   "Resources": Object {
@@ -4547,6 +4401,46 @@ Object {
                 "Ref": "AWS::Region",
               },
             ],
+          ],
+        },
+        "LifecycleConfiguration": Object {
+          "Rules": Array [
+            Object {
+              "AbortIncompleteMultipartUpload": Object {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpirationInDays": 1825,
+              "ExpiredObjectDeleteMarker": false,
+              "Id": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "LifecycleRuleaws-accelerator-s3-logs-",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionTransitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 366,
+                },
+              ],
+              "Status": "Enabled",
+              "Transitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 365,
+                },
+              ],
+            },
           ],
         },
         "OwnershipControls": Object {
@@ -5574,51 +5468,6 @@ Object {
           "Fn::GetAtt": Array [
             "CodeCommitPipelineRole5C35E76C",
             "Arn",
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
-                "DaysAfterInitiation": 1,
-              },
-              "ExpirationInDays": 1825,
-              "ExpiredObjectDeleteMarker": false,
-              "Id": Object {
-                "Fn::Join": Array [
-                  "",
-                  Array [
-                    "LifecycleRuleaws-accelerator-s3-logs-",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    "-",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                  ],
-                ],
-              },
-              "NoncurrentVersionExpirationInDays": 1825,
-              "NoncurrentVersionTransitions": Array [
-                Object {
-                  "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 366,
-                },
-              ],
-              "Status": "Enabled",
-              "Transitions": Array [
-                Object {
-                  "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
-                },
-              ],
-            },
-          ],
-        },
-        "OwnershipControls": Object {
-          "Rules": Array [
-            Object {
-              "ObjectOwnership": "BucketOwnerPreferred",
-            },
           ],
         },
         "Stages": Array [
@@ -6205,6 +6054,46 @@ Object {
                 "Ref": "AWS::Region",
               },
             ],
+          ],
+        },
+        "LifecycleConfiguration": Object {
+          "Rules": Array [
+            Object {
+              "AbortIncompleteMultipartUpload": Object {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpirationInDays": 1825,
+              "ExpiredObjectDeleteMarker": false,
+              "Id": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "LifecycleRuleaws-accelerator-s3-logs-",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "-",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                  ],
+                ],
+              },
+              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionTransitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 366,
+                },
+              ],
+              "Status": "Enabled",
+              "Transitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 365,
+                },
+              ],
+            },
           ],
         },
         "OwnershipControls": Object {

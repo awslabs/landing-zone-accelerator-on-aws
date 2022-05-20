@@ -64,7 +64,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         `[security-audit-stack] Creating macie export config bucket - aws-accelerator-securitymacie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
       );
       const lifecycleRules: LifecycleRule[] = [];
-      for (const lifecycleRule of props.securityConfig.centralSecurityServices.macie.lifecycleRules) {
+      for (const lifecycleRule of props.securityConfig.centralSecurityServices.macie.lifecycleRules ?? []) {
         const noncurrentVersionTransitions = [];
         for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
           noncurrentVersionTransitions.push({
@@ -152,7 +152,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
     if (props.securityConfig.centralSecurityServices.guardduty.enable) {
       const lifecycleRules: LifecycleRule[] = [];
-      for (const lifecycleRule of props.securityConfig.centralSecurityServices.guardduty.lifecycleRules) {
+      for (const lifecycleRule of props.securityConfig.centralSecurityServices.guardduty.lifecycleRules ?? []) {
         const noncurrentVersionTransitions = [];
         for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
           noncurrentVersionTransitions.push({

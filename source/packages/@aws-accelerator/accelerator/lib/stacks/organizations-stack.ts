@@ -233,7 +233,7 @@ export class OrganizationsStack extends AcceleratorStack {
         Logger.info('[organizations-stack] Adding Cost and Usage Reports');
 
         const lifecycleRules: LifecycleRule[] = [];
-        for (const lifecycleRule of props.globalConfig.logging.accessLogBucket.lifecycleRules) {
+        for (const lifecycleRule of props.globalConfig.reports.costAndUsageReport.lifecycleRules ?? []) {
           const noncurrentVersionTransitions = [];
           for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
             noncurrentVersionTransitions.push({

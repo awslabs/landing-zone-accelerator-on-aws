@@ -38,19 +38,19 @@ export abstract class GlobalConfigTypes {
   });
 
   static readonly accessLogBucketConfig = t.interface({
-    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
+    lifecycleRules: t.array(t.lifecycleRule),
   });
 
   static readonly centralLogBucketConfig = t.interface({
-    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
+    lifecycleRules: t.array(t.lifecycleRule),
   });
 
   static readonly loggingConfig = t.interface({
     account: t.nonEmptyString,
     cloudtrail: GlobalConfigTypes.cloudtrailConfig,
     sessionManager: GlobalConfigTypes.sessionManagerConfig,
-    accessLogBucket: GlobalConfigTypes.accessLogBucketConfig,
-    centralLogBucket: GlobalConfigTypes.centralLogBucketConfig,
+    accessLogBucket: t.optional(GlobalConfigTypes.accessLogBucketConfig),
+    centralLogBucket: t.optional(GlobalConfigTypes.centralLogBucketConfig),
   });
 
   static readonly artifactTypeEnum = t.enums('ArtifactType', ['REDSHIFT', 'QUICKSIGHT', 'ATHENA']);
@@ -184,13 +184,13 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
   /**
    * Declaration of (S3 Bucket) Lifecycle rules.
    */
-  readonly lifecycleRules: t.LifecycleRule[] = [new t.LifecycleRule()];
+  readonly lifecycleRules: t.LifecycleRule[] = [];
 }
 export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.centralLogBucketConfig> {
   /**
    * Declaration of (S3 Bucket) Lifecycle rules.
    */
-  readonly lifecycleRules: t.LifecycleRule[] = [new t.LifecycleRule()];
+  readonly lifecycleRules: t.LifecycleRule[] = [];
 }
 export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingConfig> {
   /**
@@ -210,11 +210,11 @@ export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingC
   /**
    * Declaration of a (S3 Bucket) Lifecycle rule configuration.
    */
-  readonly accessLogBucket: AccessLogBucketConfig = new AccessLogBucketConfig();
+  readonly accessLogBucket: AccessLogBucketConfig | undefined = undefined;
   /**
    * Declaration of a (S3 Bucket) Lifecycle rule configuration.
    */
-  readonly centralLogBucket: CentralLogBucketConfig = new CentralLogBucketConfig();
+  readonly centralLogBucket: CentralLogBucketConfig | undefined = undefined;
 }
 
 /**
@@ -260,7 +260,7 @@ export class CostAndUsageReportConfig implements t.TypeOf<typeof GlobalConfigTyp
   /**
    * Declaration of (S3 Bucket) Lifecycle rules.
    */
-  readonly lifecycleRules: t.LifecycleRule[] = [new t.LifecycleRule()];
+  readonly lifecycleRules: t.LifecycleRule[] | undefined = undefined;
 }
 
 /**
