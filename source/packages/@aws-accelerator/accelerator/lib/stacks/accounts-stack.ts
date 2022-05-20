@@ -128,27 +128,6 @@ export class AccountsStack extends AcceleratorStack {
           accountMap.set(account.name, organizationAccount);
         }
 
-        //
-        // Attach FullAWSAccess SCP to all accounts
-        //
-        for (const account of [...props.accountsConfig.mandatoryAccounts, ...props.accountsConfig.workloadAccounts]) {
-          Logger.info(`[accounts-stack] Attaching FullAWSAccess service control policy to account (${account.name})`);
-          const policyAttachment = new PolicyAttachment(this, pascalCase(`Attach_FullAWSAccess_${account.name}`), {
-            policyId: 'p-FullAWSAccess',
-            targetId: props.accountsConfig.getAccountId(account.name),
-            type: PolicyType.SERVICE_CONTROL_POLICY,
-            kmsKey: key,
-            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-          });
-
-          // Add dependency to ensure that account is part of the OU before
-          // attempting to add the SCP
-          const organizationAccount = accountMap.get(account.name);
-          if (organizationAccount) {
-            policyAttachment.node.addDependency(organizationAccount);
-          }
-        }
-
         // Deploy SCPs
         let quarantineScpId = '';
         for (const serviceControlPolicy of props.organizationConfig.serviceControlPolicies) {

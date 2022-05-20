@@ -13,10 +13,40 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as AWS from 'aws-sdk';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  UpdateCommand,
+  UpdateCommandInput,
+  paginateQuery,
+  DynamoDBDocumentPaginationConfiguration,
+} from '@aws-sdk/lib-dynamodb';
 AWS.config.logger = console;
 
 let organizationsClient: AWS.Organizations;
-const dynamodbClient = new AWS.DynamoDB.DocumentClient();
+const marshallOptions = {
+  convertEmptyValues: false,
+  //overriding default value of false
+  removeUndefinedValues: true,
+  convertClassInstanceToMap: false,
+};
+const unmarshallOptions = {
+  wrapNumbers: false,
+};
+const translateConfig = { marshallOptions, unmarshallOptions };
+const dynamodbClient1 = new DynamoDBClient({});
+const documentClient = DynamoDBDocumentClient.from(dynamodbClient1, translateConfig);
+const paginationConfig: DynamoDBDocumentPaginationConfiguration = {
+  client: documentClient,
+  pageSize: 100,
+};
+
+type DDBItem = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+};
+type DDBItems = Array<DDBItem>;
+
 /**
  * create-organizational-units - lambda handler
  *
@@ -30,6 +60,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const configTableName = event.ResourceProperties['configTableName'];
+  const commitId = event.ResourceProperties['commitId'];
+  const controlTowerEnabled = event.ResourceProperties['controlTowerEnabled'];
+  const organizationsEnabled = event.ResourceProperties['organizationsEnabled'];
   const partition = event.ResourceProperties['partition'];
 
   const organizationalUnitsToCreate: AWS.DynamoDB.DocumentClient.AttributeMap = [];
@@ -37,6 +70,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
+      if (organizationsEnabled == 'false' || controlTowerEnabled == 'true') {
+        return {
+          Status: 'SUCCESS',
+        };
+      }
       if (partition === 'aws-us-gov') {
         organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
       } else {
@@ -44,7 +82,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       }
 
       //read config from table
-      const organizationalUnitList = (await getConfigFromTable(configTableName)).Items;
+      const organizationalUnitList = await getConfigFromTable(configTableName, commitId);
       console.log(`Organizational Units retrieved from config table: ${JSON.stringify(organizationalUnitList)}`);
 
       //build list of organizational units that need to be created
@@ -98,8 +136,8 @@ async function lookupOrganizationalUnit(name: string, parentId: string): Promise
     organizationsClient.listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: nextToken }).promise(),
   );
   for (const ou of page.OrganizationalUnits ?? []) {
-    if (ou.Name == name && ou.Id) {
-      return ou.Id;
+    if (ou.Name == name) {
+      return ou.Id!;
     }
     nextToken = page.NextToken;
   }
@@ -107,17 +145,26 @@ async function lookupOrganizationalUnit(name: string, parentId: string): Promise
   return '';
 }
 
-async function getConfigFromTable(configTableName: string): Promise<AWS.DynamoDB.DocumentClient.QueryOutput> {
+async function getConfigFromTable(configTableName: string, commitId: string): Promise<DDBItems> {
   const params = {
     TableName: configTableName,
     KeyConditionExpression: 'dataType = :hkey',
     ExpressionAttributeValues: {
       ':hkey': 'organization',
+      ':commitId': commitId,
     },
-    Select: 'ALL_ATTRIBUTES',
+    FilterExpression: 'contains (commitId, :commitId)',
   };
-  const response = await throttlingBackOff(() => dynamodbClient.query(params).promise());
-  return response;
+  const items: DDBItems = [];
+  const paginator = paginateQuery(paginationConfig, params);
+  for await (const page of paginator) {
+    if (page.Items) {
+      for (const item of page.Items) {
+        items.push(item);
+      }
+    }
+  }
+  return items;
 }
 
 async function getRootId(): Promise<string> {
@@ -164,7 +211,6 @@ async function createOrganizationalUnitFromPath(
   const path = getPath(acceleratorKey);
   const name = getOuName(acceleratorKey);
   //find parent for ou
-  // create parent ou's if needed - maybe
   for (const parent of path.split('/')) {
     if (parent) {
       const orgId = await lookupOrganizationalUnit(parent, parentId);
@@ -189,7 +235,7 @@ async function createOrganizationalUnitFromPath(
         .promise(),
     );
     console.log(`Created OU with id: ${organizationsResponse.OrganizationalUnit?.Id}`);
-    const params = {
+    const params: UpdateCommandInput = {
       TableName: configTableName,
       Key: {
         dataType: 'organization',
@@ -199,8 +245,8 @@ async function createOrganizationalUnitFromPath(
       ExpressionAttributeNames: { '#attribute': 'awsKey' },
       ExpressionAttributeValues: { ':x': organizationsResponse.OrganizationalUnit?.Id },
     };
-    const dynamodbResponse = await throttlingBackOff(() => dynamodbClient.update(params).promise());
-    console.log(dynamodbResponse);
+    const updateConfigReponse = await throttlingBackOff(() => documentClient.send(new UpdateCommand(params)));
+    console.log(updateConfigReponse);
     return true;
   } catch (error) {
     console.log(error);

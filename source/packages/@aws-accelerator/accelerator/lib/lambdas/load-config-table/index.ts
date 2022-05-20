@@ -92,7 +92,18 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       const organizationConfig = new OrganizationConfig(organizationValues);
       await organizationConfig.loadOrganizationalUnitIds(partition);
       for (const organizationalUnit of organizationConfig.organizationalUnits) {
-        const awsKey = organizationConfig.getOrganizationalUnitId(organizationalUnit.name) || '';
+        let awsKey = '';
+        try {
+          awsKey = organizationConfig.getOrganizationalUnitId(organizationalUnit.name);
+        } catch (error) {
+          let message;
+
+          if (error instanceof Error) message = error.message;
+          else message = String(error);
+
+          if (message.startsWith('Organizations not enabled or')) awsKey = '';
+          else throw error;
+        }
         await putOrganizationConfigInTable(organizationalUnit, configTableName, awsKey, commitId);
       }
       const accountsConfigContent = await getConfigFileContents(configS3Bucket, accountConfigS3Key);
@@ -204,25 +215,45 @@ async function putOrganizationConfigInTable(
   awsKey: string,
   commitId: string,
 ): Promise<void> {
-  const params: UpdateCommandInput = {
-    TableName: configTableName,
-    Key: {
-      dataType: 'organization',
-      acceleratorKey: configData.name,
-    },
-    UpdateExpression: 'set #awsKey = :v_awsKey, #dataBag = :v_dataBag, #commitId = :v_commitId',
-    ExpressionAttributeNames: {
-      '#awsKey': 'awsKey',
-      '#dataBag': 'dataBag',
-      '#commitId': 'commitId',
-    },
-    ExpressionAttributeValues: {
-      ':v_awsKey': awsKey,
-      ':v_dataBag': JSON.stringify(configData),
-      ':v_commitId': commitId,
-    },
-  };
-  await throttlingBackOff(() => documentClient.send(new UpdateCommand(params)));
+  if (awsKey != '') {
+    const params: UpdateCommandInput = {
+      TableName: configTableName,
+      Key: {
+        dataType: 'organization',
+        acceleratorKey: configData.name,
+      },
+      UpdateExpression: 'set #awsKey = :v_awsKey, #dataBag = :v_dataBag, #commitId = :v_commitId',
+      ExpressionAttributeNames: {
+        '#awsKey': 'awsKey',
+        '#dataBag': 'dataBag',
+        '#commitId': 'commitId',
+      },
+      ExpressionAttributeValues: {
+        ':v_awsKey': awsKey,
+        ':v_dataBag': JSON.stringify(configData),
+        ':v_commitId': commitId,
+      },
+    };
+    await throttlingBackOff(() => documentClient.send(new UpdateCommand(params)));
+  } else {
+    const params: UpdateCommandInput = {
+      TableName: configTableName,
+      Key: {
+        dataType: 'organization',
+        acceleratorKey: configData.name,
+      },
+      UpdateExpression: 'set #dataBag = :v_dataBag, #commitId = :v_commitId',
+      ExpressionAttributeNames: {
+        '#dataBag': 'dataBag',
+        '#commitId': 'commitId',
+      },
+      ExpressionAttributeValues: {
+        ':v_dataBag': JSON.stringify(configData),
+        ':v_commitId': commitId,
+      },
+    };
+    await throttlingBackOff(() => documentClient.send(new UpdateCommand(params)));
+  }
 }
 
 async function putAccountConfigInTable(
