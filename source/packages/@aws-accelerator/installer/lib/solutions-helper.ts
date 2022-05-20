@@ -139,6 +139,26 @@ export class SolutionHelper extends Construct {
       true,
     );
 
+    const cfnLambdaFunction = helperFunction.node.findChild('Resource') as lambda.CfnFunction;
+    cfnLambdaFunction.cfnOptions.metadata = {
+      cfn_nag: {
+        rules_to_suppress: [
+          {
+            id: 'W58',
+            reason: `CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole`,
+          },
+          {
+            id: 'W89',
+            reason: `This function supports infrastructure deployment and is not deployed inside a VPC.`,
+          },
+          {
+            id: 'W92',
+            reason: `This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.`,
+          },
+        ],
+      },
+    };
+
     const createIdFunction = new cdk.CustomResource(this, 'CreateUniqueID', {
       serviceToken: helperFunction.functionArn,
       properties: {
