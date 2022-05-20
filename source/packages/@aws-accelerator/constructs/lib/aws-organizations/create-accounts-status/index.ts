@@ -222,6 +222,7 @@ async function getAccountCreationStatus(
   return response;
 }
 
+// TODO: Fix use update
 async function updateAccountConfig(accountConfig: AccountConfig): Promise<boolean> {
   const params = {
     TableName: newOrgAccountsTableName,

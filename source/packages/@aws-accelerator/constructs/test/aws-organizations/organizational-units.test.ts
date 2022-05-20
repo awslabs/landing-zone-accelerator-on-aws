@@ -24,6 +24,9 @@ new OrganizationalUnits(stack, 'OrganizationalUnits', {
   acceleratorConfigTable: new cdk.aws_dynamodb.Table(stack, 'ConfigTable', {
     partitionKey: { name: 'dataType', type: cdk.aws_dynamodb.AttributeType.STRING },
   }),
+  commitId: 'bda32a39',
+  controlTowerEnabled: true,
+  organizationsEnabled: true,
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 365,
 });

@@ -74,7 +74,7 @@ describe('AccountsStack', () => {
    * Number of AttachPolicy custom resource test
    */
   test(`${testNamePrefix} AttachPolicy custom resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::AttachPolicy', 5);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::AttachPolicy', 2);
   });
 
   /**
@@ -169,87 +169,6 @@ describe('AccountsStack', () => {
               Ref: 'DenyDeleteVpcFlowLogsD2E9D6EC',
             },
             targetId: 'Security-id',
-            type: 'SERVICE_CONTROL_POLICY',
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * AttachFullAwsAccessAudit custom resource configuration test
-   */
-  test(`${testNamePrefix} AttachFullAwsAccessAudit custom resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        AttachFullAwsAccessAuditD72CAF85: {
-          Type: 'Custom::AttachPolicy',
-          UpdateReplacePolicy: 'Delete',
-          DeletionPolicy: 'Delete',
-          DependsOn: [
-            'AuditOrganizationAccount11304D9B',
-            'CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039',
-          ],
-          Properties: {
-            ServiceToken: {
-              'Fn::GetAtt': ['CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202', 'Arn'],
-            },
-            policyId: 'p-FullAWSAccess',
-            targetId: '222222222222',
-            type: 'SERVICE_CONTROL_POLICY',
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * AttachFullAwsAccessLogArchive custom resource configuration test
-   */
-  test(`${testNamePrefix} AttachFullAwsAccessLogArchive custom resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        AttachFullAwsAccessLogArchive603D0C9F: {
-          Type: 'Custom::AttachPolicy',
-          UpdateReplacePolicy: 'Delete',
-          DeletionPolicy: 'Delete',
-          DependsOn: [
-            'CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039',
-            'LogArchiveOrganizationAccount09183FEA',
-          ],
-          Properties: {
-            ServiceToken: {
-              'Fn::GetAtt': ['CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202', 'Arn'],
-            },
-            policyId: 'p-FullAWSAccess',
-            targetId: '111111111111',
-            type: 'SERVICE_CONTROL_POLICY',
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * AttachFullAwsAccessManagement custom resource configuration test
-   */
-  test(`${testNamePrefix} AttachFullAwsAccessManagement custom resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        AttachFullAwsAccessManagementBAAE8D88: {
-          Type: 'Custom::AttachPolicy',
-          UpdateReplacePolicy: 'Delete',
-          DeletionPolicy: 'Delete',
-          DependsOn: [
-            'CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039',
-            'ManagementOrganizationAccount93F8866A',
-          ],
-          Properties: {
-            ServiceToken: {
-              'Fn::GetAtt': ['CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202', 'Arn'],
-            },
-            policyId: 'p-FullAWSAccess',
-            targetId: '333333333333',
             type: 'SERVICE_CONTROL_POLICY',
           },
         },

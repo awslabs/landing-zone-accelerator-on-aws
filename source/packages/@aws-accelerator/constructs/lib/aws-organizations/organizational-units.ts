@@ -22,6 +22,9 @@ const path = require('path');
  */
 export interface OrganizationalUnitsProps {
   readonly acceleratorConfigTable: cdk.aws_dynamodb.Table;
+  readonly commitId: string;
+  readonly controlTowerEnabled: boolean;
+  readonly organizationsEnabled: boolean;
   /**
    * Custom resource lambda log group encryption key
    */
@@ -74,6 +77,9 @@ export class OrganizationalUnits extends Construct {
       serviceToken: provider.serviceToken,
       properties: {
         configTableName: props.acceleratorConfigTable.tableName,
+        commitId: props.commitId,
+        controlTowerEnabled: props.controlTowerEnabled,
+        organizationsEnabled: props.organizationsEnabled,
         partition: cdk.Aws.PARTITION,
         uuid: uuidv4(),
       },

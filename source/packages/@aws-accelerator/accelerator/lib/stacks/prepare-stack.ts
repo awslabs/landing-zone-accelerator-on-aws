@@ -54,7 +54,6 @@ export class PrepareStack extends AcceleratorStack {
       const accountConfigAsset = new cdk.aws_s3_assets.Asset(this, 'AccountConfigAsset', {
         path: path.join(props.configDirPath, 'accounts-config.yaml'),
       });
-      console.log(accountConfigAsset);
       const organzationsConfigAsset = new cdk.aws_s3_assets.Asset(this, 'OrganizationConfigAsset', {
         path: path.join(props.configDirPath, 'organization-config.yaml'),
       });
@@ -141,16 +140,17 @@ export class PrepareStack extends AcceleratorStack {
         logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });
 
-      // Create organizational units if control tower is not enabled
-      if (props.organizationConfig.enable && !props.globalConfig.controlTower.enable) {
-        const createOrganizationalUnits = new OrganizationalUnits(this, 'CreateOrganizationalUnits', {
-          acceleratorConfigTable: configTable,
-          kmsKey: key,
-          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-        });
+      Logger.info(`[prepare-stack] Call create ou construct`);
+      const createOrganizationalUnits = new OrganizationalUnits(this, 'CreateOrganizationalUnits', {
+        acceleratorConfigTable: configTable,
+        commitId: props.configCommitId || '',
+        controlTowerEnabled: props.globalConfig.controlTower.enable,
+        organizationsEnabled: props.organizationConfig.enable,
+        kmsKey: key,
+        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      });
 
-        createOrganizationalUnits.node.addDependency(configTable);
-      }
+      createOrganizationalUnits.node.addDependency(configTable);
 
       if (props.partition == 'aws') {
         let govCloudAccountMappingTable: cdk.aws_dynamodb.ITable | undefined;
@@ -205,15 +205,6 @@ export class PrepareStack extends AcceleratorStack {
             pointInTimeRecovery: true,
           });
 
-          // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
-          NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/govCloudAccountMapping/Resource`, [
-            {
-              id: 'AwsSolutions-DDB3',
-              reason:
-                'govCloudAccountMapping DynamoDB table do not need point in time recovery, data can be re-created',
-            },
-          ]);
-
           new cdk.aws_ssm.StringParameter(this, 'GovCloudAccountMappingTableNameParameter', {
             parameterName: `/accelerator/prepare-stack/govCloudAccountMappingTableName`,
             stringValue: govCloudAccountMappingTable.tableName,
@@ -241,6 +232,7 @@ export class PrepareStack extends AcceleratorStack {
         });
 
         validation.node.addDependency(loadAcceleratorConfigTable);
+        validation.node.addDependency(createOrganizationalUnits);
 
         Logger.info(`[prepare-stack] Create new organization accounts`);
         const organizationAccounts = new CreateOrganizationAccounts(this, 'CreateOrganizationAccounts', {
