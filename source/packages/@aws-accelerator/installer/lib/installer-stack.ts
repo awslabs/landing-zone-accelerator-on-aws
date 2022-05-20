@@ -16,6 +16,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
+import { SolutionHelper } from './solutions-helper';
 
 import { version } from '../../../../package.json';
 
@@ -258,6 +259,19 @@ export class InstallerStack extends cdk.Stack {
         : `/accelerator/${cdk.Stack.of(this).stackName}/version`,
       stringValue: version,
       simpleName: false,
+    });
+
+    /**
+     * Solutions Metrics
+     * We use this data to better understand how customers use this
+     * solution and related services and products
+     */
+    new SolutionHelper(this, 'SolutionHelper', {
+      solutionId: 'SO0199',
+      repositorySource: this.repositorySource,
+      repositoryOwner: this.repositoryOwner,
+      repositoryBranchName: this.repositoryBranchName,
+      repositoryName: this.repositoryName,
     });
 
     // Create Accelerator Installer KMS Key

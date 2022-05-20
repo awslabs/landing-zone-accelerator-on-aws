@@ -289,7 +289,7 @@ export const lifecycleRule = t.interface({
   transitions: optional(t.array(transition)),
 });
 
-export class LifecycleRule implements t.TypeOf<typeof lifecycleRule>{
+export class LifecycleRule implements t.TypeOf<typeof lifecycleRule> {
   readonly abortIncompleteMultipartUpload: number = 1;
   readonly enabled: boolean = true;
   readonly expiration: number = 1825;
