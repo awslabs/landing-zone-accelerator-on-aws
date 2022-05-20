@@ -63,7 +63,7 @@ export async function handler(event: any): Promise<
     let createAccountResponse: CreateAccountResponse;
     // if the createRequestId is empty then we need to create the account
     if (singleAccountToAdd.createRequestId === '' || singleAccountToAdd.createRequestId === undefined) {
-      if (singleAccountToAdd.enableGovCloud === 'true') {
+      if (singleAccountToAdd.enableGovCloud == 'true' || singleAccountToAdd.enableGovCloud) {
         createAccountResponse = await createGovCloudAccount(singleAccountToAdd.email, singleAccountToAdd.name);
       } else {
         createAccountResponse = await createOrganizationAccount(singleAccountToAdd.email, singleAccountToAdd.name);

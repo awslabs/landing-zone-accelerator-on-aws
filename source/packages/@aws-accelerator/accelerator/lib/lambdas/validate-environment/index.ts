@@ -49,6 +49,7 @@ type AccountToAdd = {
   name: string;
   description: string;
   email: string;
+  enableGovCloud?: boolean;
   organizationalUnitId: string;
 };
 
@@ -64,11 +65,11 @@ type DDBItem = {
 type DDBItems = Array<DDBItem>;
 
 /**
- * validate-environment - lambda handler
- *
- * @param event
- * @returns
- */
+* validate-environment - lambda handler
+*
+* @param event
+* @returns
+*/
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string;
@@ -219,7 +220,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             }
           } else {
             const accountConfig = JSON.parse(workloadAccount['dataBag']);
-            if (controlTowerEnabled === 'false' || accountConfig['enableGovCloud'] == 'true') {
+            if (controlTowerEnabled === 'false' || accountConfig['enableGovCloud']) {
               orgAccountsToAdd.push(workloadAccount);
             }
           }
@@ -238,6 +239,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             name: parsedDataBag['name'],
             email: account['acceleratorKey'],
             description: parsedDataBag['description'],
+            enableGovCloud: parsedDataBag['enableGovCloud'] || false,
             organizationalUnitId: accountOu?.awsKey,
           };
           const params: PutCommandInput = {
