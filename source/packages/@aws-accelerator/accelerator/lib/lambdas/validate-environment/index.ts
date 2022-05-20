@@ -218,10 +218,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
               );
             }
           } else {
-            console.log('2', workloadAccount);
             const accountConfig = JSON.parse(workloadAccount['dataBag']);
             if (controlTowerEnabled === 'false' || accountConfig['enableGovCloud'] == 'true') {
-              orgAccountsToAdd.push(workloadAccount['acceleratorKey'], workloadAccount['dataBag']);
+              orgAccountsToAdd.push(workloadAccount);
             }
           }
         }
