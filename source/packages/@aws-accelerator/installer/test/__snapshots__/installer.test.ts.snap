@@ -1791,11 +1791,19 @@ phases:
         "SolutionHelperServiceRoleF70C0E2A",
       ],
       "Metadata": Object {
-        "cdk_nag": Object {
+        "cfn_nag": Object {
           "rules_to_suppress": Array [
             Object {
-              "id": "AwsSolutions-IAM4",
-              "reason": "Needed to write to CWL group",
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            Object {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            Object {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
             },
           ],
         },
@@ -3825,11 +3833,19 @@ phases:
         "SolutionHelperServiceRoleF70C0E2A",
       ],
       "Metadata": Object {
-        "cdk_nag": Object {
+        "cfn_nag": Object {
           "rules_to_suppress": Array [
             Object {
-              "id": "AwsSolutions-IAM4",
-              "reason": "Needed to write to CWL group",
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            Object {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            Object {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
             },
           ],
         },
@@ -5732,11 +5748,19 @@ phases:
         "SolutionHelperServiceRoleF70C0E2A",
       ],
       "Metadata": Object {
-        "cdk_nag": Object {
+        "cfn_nag": Object {
           "rules_to_suppress": Array [
             Object {
-              "id": "AwsSolutions-IAM4",
-              "reason": "Needed to write to CWL group",
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            Object {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            Object {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
             },
           ],
         },
@@ -7607,11 +7631,19 @@ phases:
         "SolutionHelperServiceRoleF70C0E2A",
       ],
       "Metadata": Object {
-        "cdk_nag": Object {
+        "cfn_nag": Object {
           "rules_to_suppress": Array [
             Object {
-              "id": "AwsSolutions-IAM4",
-              "reason": "Needed to write to CWL group",
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            Object {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            Object {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
             },
           ],
         },
