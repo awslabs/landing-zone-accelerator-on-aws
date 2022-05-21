@@ -6,29 +6,29 @@ enable: true
 organizationalUnits:
   - name: Security
   - name: Infrastructure
-  - name: Policy Staging
-  - name: Suspended
-  - name: Sandbox
-  - name: Dev
-  - name: Test
-  - name: Prod
 quarantineNewAccounts:
-    enable: true
-    scpPolicyName: QuarantineAccounts
+  enable: true
+  scpPolicyName: Quarantine
 serviceControlPolicies:
-  - name: DenyDeleteVpcFlowLogs
+  - name: AcceleratorGuardrails1
     description: >
-      This SCP prevents users or roles in any affected account from deleting
-      Amazon Elastic Compute Cloud (Amazon EC2) flow logs or CloudWatch log
-      groups or log streams.
-    policy: service-control-policies/deny-delete-vpc-flow-logs.json
+      Accelerator GuardRails 1
+    policy: service-control-policies/guardrails-1.json
     type: customerManaged
     deploymentTargets:
       organizationalUnits:
-        - Security
-  - name: QuarantineAccounts
+        - Infrastructure
+  - name: AcceleratorGuardrails2
     description: >
-      This SCP is used to prevent changes to new accounts until the accelerator
+      Accelerator GuardRails 2
+    policy: service-control-policies/guardrails-2.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+  - name: Quarantine
+    description: >
+      This SCP is used to prevent changes to new accounts until the Accelerator
       has been executed successfully.
       This policy will be applied upon account creation if enabled.
     policy: service-control-policies/quarantine.json
@@ -40,12 +40,12 @@ taggingPolicies:
     description: Organization Tagging Policy
     policy: tagging-policies/org-tag-policy.json
     deploymentTargets:
-        organizationalUnits:
-          - Root
+      organizationalUnits:
+        - Root
 backupPolicies:
   - name: BackupPolicy
     description: Organization Backup Policy
     policy: backup-policies/org-backup-policies.json
     deploymentTargets:
-        organizationalUnits:
-          - Root
+      organizationalUnits:
+        - Root

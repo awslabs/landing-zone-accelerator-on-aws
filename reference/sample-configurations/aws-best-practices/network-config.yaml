@@ -9,9 +9,6 @@ transitGateways:
     shareTargets:
       organizationalUnits:
         - Infrastructure
-        - Dev
-        - Test
-        - Prod
     asn: 65521
     dnsSupport: enable
     vpnEcmpSupport: enable
@@ -20,7 +17,7 @@ transitGateways:
     autoAcceptSharingAttachments: enable
     routeTables:
       - name: Network-Main-Core
-        routes: [ ]
+        routes: []
         # - destinationCidrBlock: 10.100.0.0/16
         #     attachment:
         #       vpcName: Network-Endpoints
@@ -28,11 +25,11 @@ transitGateways:
         # - destinationCidrBlock: 1.1.1.1/32
         #     blackhole: true
       - name: Network-Main-Segregated
-        routes: [ ]
+        routes: []
       - name: Network-Main-Shared
-        routes: [ ]
+        routes: []
       - name: Network-Main-Standalone
-        routes: [ ]
+        routes: []
 # dhcpOptions:
 #   - name: accelerator-dhcp-opts
 #     accounts:
@@ -150,7 +147,7 @@ transitGateways:
 #       - name: accelerator-inbound
 #         type: INBOUND
 #         vpc: Network-Endpoints
-#         subnets: 
+#         subnets:
 #           - Network-Endpoints-A
 #           - Network-Endpoints-B
 #       - name: accelerator-outbound
@@ -301,7 +298,6 @@ vpcs:
         - Network-Endpoints-B
       endpoints:
         - service: ec2
-          policy: Ec2 # include a custom policy, or leave undefined to apply the default
         - service: ec2messages
         - service: ssm
         - service: ssmmessages
@@ -496,113 +492,9 @@ vpcs:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
-  # - name: Test
-  #   account: Audit
-  #   region: *HOME_REGION
-  #   cidrs:
-  #     - 10.0.0.0/16
-  #   internetGateway: true
-  #   enableDnsHostnames: false
-  #   enableDnsSupport: true
-  #   instanceTenancy: default
-  #   routeTables:
-  #     - name: CentralVpc_Common
-  #       routes:
-  #         - name: TgwRoute
-  #           destination: 10.0.0.0/8
-  #           type: transitGateway
-  #           target: Main
-  #         - name: NatRoute
-  #           destination: 192.168.0.0/16
-  #           type: natGateway
-  #           target: Web-A
-  #         - name: IgwRoute
-  #           destination: 0.0.0.0/0
-  #           type: internetGateway
-  #           target: IGW
-  #         - name: s3
-  #           target: s3
-  #         - name: dynamodb
-  #           target: dynamodb
-  #   subnets:
-  #     - name: public-a
-  #       availabilityZone: a
-  #       mapPublicIpOnLaunch: true
-  #       routeTable: CentralVpc_Common
-  #       ipv4CidrBlock: 10.0.0.0/24
-  #     - name: public-b
-  #       availabilityZone: b
-  #       mapPublicIpOnLaunch: true
-  #       routeTable: CentralVpc_Common
-  #       ipv4CidrBlock: 10.0.1.0/24
-  #     - name: tgw-attach-a
-  #       availabilityZone: a
-  #       routeTable: CentralVpc_Common
-  #       ipv4CidrBlock: 10.0.2.0/24
-  #     - name: tgw-attach-b
-  #       availabilityZone: b
-  #       routeTable: CentralVpc_Common
-  #       ipv4CidrBlock: 10.0.3.0/24
-  #   natGateways:
-  #     - name: Web-A
-  #       subnet: public-a
-  #     - name: Web-B
-  #       subnet: public-b
-  #   transitGatewayAttachments:
-  #     - name: Test
-  #       transitGateway:
-  #         name: Main
-  #         account: Management
-  #       routeTableAssociations:
-  #         - shared
-  #       routeTablePropagations:
-  #         - core
-  #         - shared
-  #         - segregated
-  #       subnets:
-  #         - tgw-attach-a
-  #         - tgw-attach-b
-  #   dnsResolverLogging: true
-  #   useCentralEndpoints: false
-  #   gatewayEndpoints:
-  #     defaultPolicy: Default
-  #     endpoints:
-  #       - service: s3
-  #       - service: dynamodb
-  #   securityGroups:
-  #     - name: Management
-  #       description: Management Security Group
-  #       inboundRules:
-  #         - description: Management RDP Traffic Inbound
-  #           types:
-  #             - RDP
-  #           sources:
-  #             - 10.0.0.0/8
-  #             - 100.96.252.0/23
-  #             - 100.96.250.0/23
-  #             - account: Audit
-  #               vpc: Test
-  #               subnets:
-  #                 - tgw-attach-a
-  #                 - tgw-attach-b
-  #             - securityGroups:
-  #                 - Management
-  #         - description: Management SSH Traffic Inbound
-  #           types:
-  #             - SSH
-  #           sources:
-  #             - 10.0.0.0/8
-  #             - 100.96.252.0/23
-  #             - 100.96.250.0/23
-  #       outboundRules:
-  #         - description: All Outbound
-  #           types:
-  #             - ALL
-  #           sources:
-  #             - 0.0.0.0/0
 vpcFlowLogs:
   trafficType: ALL
-  maxAggregationInterval: 60
+  maxAggregationInterval: 600
   destinations:
     - s3
     - cloud-watch-logs
