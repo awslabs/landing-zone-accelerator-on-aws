@@ -57,8 +57,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       console.log(content);
 
       // Minify and update placeholder values
-      let policyContent: string | undefined;
-      policyContent = JSON.stringify(JSON.parse(content));
+      let policyContent: string = JSON.stringify(JSON.parse(content));
       policyContent = replaceDefaults({
         content: policyContent,
         acceleratorPrefix: acceleratorPrefix,
@@ -107,7 +106,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       //
       const response = await throttlingBackOff(() =>
         organizationsClient
-          .createPolicy({ Content: content, Description: description, Name: name, Tags: tags, Type: type })
+          .createPolicy({ Content: policyContent, Description: description, Name: name, Tags: tags, Type: type })
           .promise(),
       );
 
