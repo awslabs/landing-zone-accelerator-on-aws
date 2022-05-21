@@ -19,19 +19,6 @@ centralSecurityServices:
     excludeRegions: []
     policyFindingsPublishingFrequency: FIFTEEN_MINUTES
     publishSensitiveDataFindings: true
-    lifecycleRules:
-      - enabled: true
-        abortIncompleteMultipartUpload: 1
-        expiration: 1825
-        expiredObjectDeleteMarker: false
-        id: MacieLifecycleRule
-        transitions:
-          - storageClass: DEEP_ARCHIVE
-            transitionAfter: 365
-        noncurrentVersionTransitions:
-          - storageClass: DEEP_ARCHIVE
-            transitionAfter: 365
-        noncurrentVersionExpiration: 366
   guardduty:
     enable: true
     excludeRegions: []
@@ -42,19 +29,6 @@ centralSecurityServices:
       enable: true
       destinationType: S3
       exportFrequency: FIFTEEN_MINUTES
-    lifecycleRules:
-      - enabled: true
-        abortIncompleteMultipartUpload: 1
-        expiration: 1825
-        expiredObjectDeleteMarker: false
-        id: GuardDutyLifecycleRule
-        transitions:
-          - storageClass: DEEP_ARCHIVE
-            transitionAfter: 365
-        noncurrentVersionTransitions:
-          - storageClass: DEEP_ARCHIVE
-            transitionAfter: 365
-        noncurrentVersionExpiration: 366
   securityHub:
     enable: true
     regionAggregation: true
@@ -80,13 +54,10 @@ centralSecurityServices:
           - CIS.1.22
           - CIS.2.6
   ssmAutomation:
-    # excludeRegions: []
     documentSets:
       - shareTargets:
           organizationalUnits:
             - Root
-          # accounts:
-          #   - Network
         documents:
           # Calls the AWS CLI to enable access logs on a specified ELB
           - name: SSM-ELB-Enable-Logging
