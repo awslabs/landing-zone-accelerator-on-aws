@@ -23,4 +23,4 @@
 ## Examples
 <!-- Are there any examples of this which exist in other solutions? !-->
 
-/label ~"feature request" ~"To Do"
+/label ~"feature request" ~"New"
