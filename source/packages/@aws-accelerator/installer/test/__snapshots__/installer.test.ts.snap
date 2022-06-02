@@ -185,7 +185,10 @@ Object {
       "Type": "String",
     },
     "RepositoryBranchName": Object {
-      "Description": "The name of the git branch to use for installation",
+      "AllowedPattern": ".+",
+      "ConstraintDescription": "The repository branch name must not be empty",
+      "Default": "release/v1.0.1",
+      "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
     "RepositoryName": Object {
@@ -2023,7 +2026,7 @@ phases:
           ],
         },
         "Type": "String",
-        "Value": "1.0.0",
+        "Value": "1.0.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -2237,7 +2240,10 @@ Object {
       "Type": "String",
     },
     "RepositoryBranchName": Object {
-      "Description": "The name of the git branch to use for installation",
+      "AllowedPattern": ".+",
+      "ConstraintDescription": "The repository branch name must not be empty",
+      "Default": "release/v1.0.1",
+      "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
     "RepositoryName": Object {
@@ -4065,7 +4071,7 @@ phases:
           ],
         },
         "Type": "String",
-        "Value": "1.0.0",
+        "Value": "1.0.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -4247,7 +4253,10 @@ Object {
       "Type": "String",
     },
     "RepositoryBranchName": Object {
-      "Description": "The name of the git branch to use for installation",
+      "AllowedPattern": ".+",
+      "ConstraintDescription": "The repository branch name must not be empty",
+      "Default": "release/v1.0.1",
+      "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
     "RepositoryName": Object {
@@ -5969,7 +5978,7 @@ phases:
       "Properties": Object {
         "Name": "/accelerator/AWSAccelerator-Test-InstallerStack/version",
         "Type": "String",
-        "Value": "1.0.0",
+        "Value": "1.0.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -6140,7 +6149,10 @@ Object {
       "Type": "String",
     },
     "RepositoryBranchName": Object {
-      "Description": "The name of the git branch to use for installation",
+      "AllowedPattern": ".+",
+      "ConstraintDescription": "The repository branch name must not be empty",
+      "Default": "release/v1.0.1",
+      "Description": "The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.",
       "Type": "String",
     },
     "RepositoryName": Object {
@@ -7852,7 +7864,7 @@ phases:
       "Properties": Object {
         "Name": "/accelerator/AWSAccelerator-Test-InstallerStack/version",
         "Type": "String",
-        "Value": "1.0.0",
+        "Value": "1.0.1",
       },
       "Type": "AWS::SSM::Parameter",
     },

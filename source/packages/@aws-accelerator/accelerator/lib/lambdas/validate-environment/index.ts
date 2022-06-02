@@ -65,11 +65,11 @@ type DDBItem = {
 type DDBItems = Array<DDBItem>;
 
 /**
-* validate-environment - lambda handler
-*
-* @param event
-* @returns
-*/
+ * validate-environment - lambda handler
+ *
+ * @param event
+ * @returns
+ */
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string;
@@ -266,7 +266,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             name: parsedDataBag['name'],
             email: account['acceleratorKey'],
             description: parsedDataBag['description'],
-            organizationalUnitId: await getOuName(account['ouName']),
+            // formatting for CT requirements to support nested ou's
+            organizationalUnitId: (await getOuName(account['ouName'])) + ` (${accountOu.awsKey})`,
           };
           const params: PutCommandInput = {
             TableName: newCTAccountsTableName,
