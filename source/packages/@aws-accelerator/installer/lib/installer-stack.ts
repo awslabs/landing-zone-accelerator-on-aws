@@ -64,7 +64,11 @@ export class InstallerStack extends cdk.Stack {
 
   private readonly repositoryBranchName = new cdk.CfnParameter(this, 'RepositoryBranchName', {
     type: 'String',
-    description: 'The name of the git branch to use for installation',
+    description:
+      'The name of the git branch to use for installation. To determine the branch name, navigate to the Landing Zone Accelerator GitHub branches page and choose the release branch you would like to deploy. Release branch names will align with the semantic versioning of our GitHub releases. New release branches will be available as the open source project is updated with new features.',
+    default: `release/v${version}`,
+    allowedPattern: '.+',
+    constraintDescription: 'The repository branch name must not be empty',
   });
 
   private readonly enableApprovalStage = new cdk.CfnParameter(this, 'EnableApprovalStage', {
