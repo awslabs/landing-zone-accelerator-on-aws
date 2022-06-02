@@ -325,7 +325,10 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     if (accountId) {
       return accountId;
     }
-    throw new Error(`name(${name}) not found`);
+    throw new Error(`Account not found for ${name}. \
+    Validate that the emails in the parameter ManagementAccountEmail \
+    of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) \
+    match the correct account emails shown in AWS Organizations.`);
   }
 
   public getAccount(name: string): AccountConfig {
@@ -333,7 +336,10 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     if (value) {
       return value;
     }
-    throw new Error(`Account not found for ${name}`);
+    throw new Error(`Account not found for ${name}. \
+    Validate that the emails in the parameter ManagementAccountEmail \
+    of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) \
+    match the correct account emails shown in AWS Organizations.`);
   }
 
   public containsAccount(name: string): boolean {
