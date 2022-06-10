@@ -104,6 +104,7 @@ export class PrepareStack extends AcceleratorStack {
         encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
         encryptionKey: key,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
+        pointInTimeRecovery: true,
       });
 
       configTable.addLocalSecondaryIndex({
