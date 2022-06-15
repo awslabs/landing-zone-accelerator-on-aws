@@ -39,6 +39,6 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-sdk": "2.1001.0"
+    "aws-sdk": "2.1152.0"
   }
 }
