@@ -11,8 +11,8 @@
  *  and limitations under the License.
  */
 
+import { PluginHost } from 'aws-cdk/lib/api/plugin';
 import { RequireApproval } from 'aws-cdk/lib/diff';
-import { PluginHost } from 'aws-cdk/lib/plugin';
 import { Command } from 'aws-cdk/lib/settings';
 import * as AWS from 'aws-sdk';
 import * as fs from 'fs';

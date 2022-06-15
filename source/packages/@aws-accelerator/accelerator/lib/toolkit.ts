@@ -172,7 +172,6 @@ export class AcceleratorToolkit {
         if (options.stage === undefined) {
           throw new Error('trying to deploy with an undefined stage');
         }
-
         let stackName = [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`];
 
         if (options.stage === AcceleratorStage.PIPELINE) {

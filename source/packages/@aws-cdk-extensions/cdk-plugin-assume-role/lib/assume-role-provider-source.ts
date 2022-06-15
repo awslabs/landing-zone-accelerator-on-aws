@@ -11,9 +11,10 @@
  *  and limitations under the License.
  */
 
-import { CredentialProviderSource } from 'aws-cdk/lib/api/aws-auth/credentials';
+import { CredentialProviderSource } from 'aws-cdk/lib/api/plugin';
 import * as AWS from 'aws-sdk';
 import { green } from 'colors/safe';
+
 import { throttlingBackOff } from './backoff';
 
 export interface AssumeRoleProviderSourceProps {

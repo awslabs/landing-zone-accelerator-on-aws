@@ -119,7 +119,7 @@ describe('QueryLoggingConfig', () => {
               'Fn::Join': [
                 '',
                 [
-                  '{"Statement":[{"Action":["logs:CreateLogStream","logs:PutLogEvents"],"Condition":{"StringEquals":{"aws:PrincipalOrgId":"o-123test"}},"Effect":"Allow","Principal":{"Service":"delivery.logs.amazonaws.com"},"Resource":"',
+                  '{"Statement":[{"Action":["logs:CreateLogStream","logs:PutLogEvents"],"Effect":"Allow","Principal":{"Service":"delivery.logs.amazonaws.com"},"Resource":"',
                   {
                     'Fn::GetAtt': ['TestLogGroup4EEF7AD4', 'Arn'],
                   },
