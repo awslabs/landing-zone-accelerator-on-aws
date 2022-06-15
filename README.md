@@ -123,6 +123,58 @@ Accelerator tester CDK app. This package creates AWS Config custom rules for eve
 | Core Networking     | VPC Endpoints                                         | Defined in the network-config.yaml and deployed to all specified accounts and regions. The accelerator will also deploy AWS Route53 Hosted Zones to specified VPCs to support centralized VPC endpoint usage                                                                                                                                              |
 | Core Networking     | VPC Flow Logs                                         | Defined in the network-config.yaml and deployed to all specified accounts and regions. VPC Flow Logs can be configured on all defined VPCs to send to S3 for centralized logging and/or CloudWatch Logs                                                                                                                                                   |
 
+## Creating an Installer Stack
+
+The Installer Stack, a CDK Application, can be deployed through a CloudFormation template produced by your CLI by
+navigating to the directory for the installer and running a CDK synthesis. The template can either be deployed 
+directly via the AWS CLI or console. Below are the commands for completing the deployment of the Installer stack.
+
+### 1. Build the Installer stack for deployment
+
+-   To run the CDK synthesis
+
+```
+cd <rootDir>/source/packages/@aws-accelerator/installer
+yarn cdk synth
+```
+
+-  Configure the AWS CLI CloudFormation command for the Installer stack
+
+```
+aws cloudformation create-stack --stack-name AWSAccelerator-InstallerStack --template-body file://cdk.out/AWSAccelerator-InstallerStack.template.json \
+--parameters ParameterKey=RepositoryName,ParameterValue=<Repository_Name> \
+ParameterKey=RepositoryBranchName,ParameterValue=<Branch_Name> \
+ParameterKey=AcceleratorQualifier,ParameterValue=<Accelerator_Qualifier> \
+ParameterKey=ManagementAccountId,ParameterValue=<Management_Id> \
+ParameterKey=ManagementAccountEmail,ParameterValue=<Management_Email> \
+ParameterKey=ManagementAccountRoleName,ParameterValue= \
+ParameterKey=LogArchiveAccountEmail,ParameterValue=<LogArchive_Email> \
+ParameterKey=AuditAccountEmail,ParameterValue=<Audit_Email> \
+ParameterKey=EnableApprovalStage,ParameterValue=Yes 
+ParameterKey=ApprovalStageNotifyEmailList,ParameterValue=comma-delimited-notify-emails
+--capabilities CAPABILITY_IAM
+```
+
+-  Alternate deployment of CloudFormation via AWS console:
+
+```
+- Navigate to CloudFormation page in the AWS console
+- Select ‘Create Stack’ and from the dropdown pick ‘with new resources (standard)’
+- For the prerequisite template, select ‘Template is ready’
+- When specifying the template, select ‘Upload a template file’
+- Ensure that you select the correct file ‘AWSLandingZoneAccelerator-InstallerStack.template.json’
+- Fill out the required parameters in the UI, and create the stack once the parameters are inputted.
+```
+
+-   Dependencies for the Installer stack
+
+```
+- [Node](https://nodejs.org/en/)
+- [AWS CDK](https://aws.amazon.com/cdk/)
+- [Yarn](https://yarnpkg.com/)
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+```
+
 ---
 
 Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
