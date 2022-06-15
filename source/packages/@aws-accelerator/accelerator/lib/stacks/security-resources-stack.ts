@@ -18,8 +18,10 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import path from 'path';
+import { Tag as ConfigRuleTag } from '@aws-sdk/client-config-service';
+import { Tag } from '@aws-accelerator/config';
 
-import { KeyLookup, Organization } from '@aws-accelerator/constructs';
+import { KeyLookup, Organization, ConfigServiceTags } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
@@ -289,6 +291,18 @@ export class SecurityResourcesStack extends AcceleratorStack {
         }
 
         if (configRule) {
+          // Tag rule
+          if (rule.tags) {
+            const configRuleTags = this.convertAcceleratorTags(rule.tags);
+            new ConfigServiceTags(this, pascalCase(rule.name + 'tags'), {
+              resourceArn: configRule.configRuleArn,
+              tags: configRuleTags,
+              logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+              kmsKey: this.acceleratorKey,
+              partition: props.partition,
+              accountId: cdk.Stack.of(this).account,
+            });
+          }
           // Create remediation for config rule
           if (rule.remediation) {
             const remediationRole = this.createRemediationRole(
@@ -749,5 +763,13 @@ export class SecurityResourcesStack extends AcceleratorStack {
       ],
     );
     return role;
+  }
+
+  private convertAcceleratorTags(acceleratorTags: Tag[]): ConfigRuleTag[] {
+    const tags: ConfigRuleTag[] = [];
+    for (const tag of acceleratorTags) {
+      tags.push({ Key: tag.key, Value: tag.value });
+    }
+    return tags;
   }
 }
