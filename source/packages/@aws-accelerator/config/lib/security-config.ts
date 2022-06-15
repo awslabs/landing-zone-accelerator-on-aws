@@ -300,6 +300,7 @@ export class SecurityConfigTypes {
     type: t.optional(t.nonEmptyString),
     customRule: t.optional(this.customRuleConfigType),
     remediation: t.optional(this.configRuleRemediationType),
+    tags: t.optional(t.array(t.tag)),
   });
 
   static readonly awsConfigRuleSet = t.interface({
@@ -844,6 +845,10 @@ export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRul
    * Config rule type Managed or Custom. For custom config rule, this parameter value is Custom, when creating managed config rule this parameter value can be undefined or empty string
    */
   readonly type = '';
+  /**
+   * Tags for the config rule
+   */
+  readonly tags = [];
   /**
    * A custom config rule is backed by AWS Lambda function. This is required when creating custom config rule.
    */

@@ -1,28 +1,28 @@
 {
-  "name": "@aws-accelerator/constructs",
+  "name": "@aws-accelerator/constructs-aws-configservice-update-tags",
   "version": "0.0.0",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com"
   },
-  "main": "index.js",
-  "types": "index.d.ts",
   "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest --coverage --ci",
-    "lint": "eslint --fix  --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
-    "precommit": "eslint --max-warnings 0 -c ../../../.eslintrc.json 'lib/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
+    "build": "esbuild --minify --bundle --outfile=./dist/index.js --platform=node --target=node14 --external:aws-sdk index.ts",
+    "test": "",
+    "testreport": "",
+    "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
+    "precommit": "eslint --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
   },
   "devDependencies": {
-    "aws-cdk-lib": "2.16.0",
-    "constructs": "10.0.12",
     "@types/jest": "27.0.3",
     "@types/node": "16.11.12",
+    "@aws-sdk/types": "3.78.0", 
+    "esbuild": "0.14.2",
     "eslint": "8.4.1",
     "eslint-config-prettier": "8.3.0",
     "eslint-config-standard": "16.0.3",
@@ -37,14 +37,8 @@
     "ts-jest": "27.1.1",
     "typescript": "4.5.2"
   },
-  "peerDependencies": {
-    "aws-cdk-lib": "2.16.0",
-    "es-lint": "8.4.1"
-  },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-cdk-lib": "2.16.0",
-    "@types/uuid": "8.3.3",
     "@aws-sdk/client-config-service": "3.100.0"
   }
 }
