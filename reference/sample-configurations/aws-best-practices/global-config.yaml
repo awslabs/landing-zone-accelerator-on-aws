@@ -3,6 +3,7 @@ enabledRegions:
   - *HOME_REGION
 managementAccountAccessRole: AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 3653
+terminationProtection: true
 controlTower:
   enable: true
 logging:

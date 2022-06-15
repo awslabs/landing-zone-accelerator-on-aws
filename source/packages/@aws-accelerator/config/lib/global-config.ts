@@ -114,6 +114,7 @@ export abstract class GlobalConfigTypes {
     enabledRegions: t.array(t.region),
     managementAccountAccessRole: t.nonEmptyString,
     cloudwatchLogRetentionInDays: t.number,
+    terminationProtection: t.optional(t.boolean),
     controlTower: GlobalConfigTypes.controlTowerConfig,
     logging: GlobalConfigTypes.loggingConfig,
     reports: t.optional(GlobalConfigTypes.reportConfig),
@@ -499,6 +500,11 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * CloudWatchLogs retention in days, accelerator's custom resource lambda function logs retention period is configured based on this value.
    */
   readonly cloudwatchLogRetentionInDays = 3653;
+
+  /**
+   * Whether to enable termination protection for this stack.
+   */
+  readonly terminationProtection = true;
 
   /**
    * AWS ControlTower configuration
