@@ -81,14 +81,14 @@ describe('SecurityAuditStack', () => {
    * Number of Lambda function resource test
    */
   test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 8);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 9);
   });
 
   /**
    * Number of IAM role resource test
    */
   test(`${testNamePrefix} IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 8);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 9);
   });
 
   /**
@@ -109,14 +109,7 @@ describe('SecurityAuditStack', () => {
    * Number of SNS subscription resource test
    */
   test(`${testNamePrefix} SNS subscription resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::SNS::Subscription', 3);
-  });
-
-  /**
-   * Number of SNS subscription resource test
-   */
-  test(`${testNamePrefix} SNS subscription resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::SNS::Subscription', 3);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::SNS::Subscription', 4);
   });
 
   /**

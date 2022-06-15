@@ -27,6 +27,8 @@ export interface ValidateEnvironmentConfigProps {
   readonly region: string;
   readonly managementAccountId: string;
   readonly partition: string;
+  readonly driftDetectionParameter: cdk.aws_ssm.IParameter;
+  readonly driftDetectionMessageParameter: cdk.aws_ssm.IParameter;
   /**
    * Custom resource lambda log group encryption key
    */
@@ -63,6 +65,7 @@ export class ValidateEnvironmentConfig extends Construct {
             'organizations:ListAccounts',
             'servicecatalog:SearchProvisionedProducts',
             'organizations:ListChildren',
+            'organizations:ListPoliciesForTarget',
           ],
           Resource: '*',
         },
@@ -92,8 +95,16 @@ export class ValidateEnvironmentConfig extends Construct {
             `arn:${props.partition}:cloudformation:${props.region}:${props.managementAccountId}:stack/${props.stackName}*`,
           ],
         },
+        {
+          Sid: 'sms',
+          Effect: 'Allow',
+          Action: ['ssm:GetParameter'],
+          Resource: [props.driftDetectionParameter.parameterArn, props.driftDetectionMessageParameter.parameterArn],
+        },
       ],
     });
+
+    //TODO: Add permissions for drift ssm parameters
 
     //
     // Custom Resource definition. We want this resource to be evaluated on
@@ -110,6 +121,8 @@ export class ValidateEnvironmentConfig extends Construct {
         controlTowerEnabled: props.controlTowerEnabled,
         commitId: props.commitId,
         stackName: props.stackName,
+        driftDetectionParameterName: props.driftDetectionParameter.parameterName,
+        driftDetectionMessageParameterName: props.driftDetectionMessageParameter.parameterName,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });
