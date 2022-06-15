@@ -164,6 +164,7 @@ async function main() {
         sourceRepositoryName,
         sourceBranchName,
         enableApprovalStage,
+        terminationProtection: true,
         qualifier: process.env['ACCELERATOR_QUALIFIER'],
         managementAccountId: process.env['MANAGEMENT_ACCOUNT_ID']!,
         managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']!,
@@ -195,6 +196,7 @@ async function main() {
           qualifier: process.env['ACCELERATOR_QUALIFIER'],
           managementAccountId: process.env['MANAGEMENT_ACCOUNT_ID'],
           managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'],
+          terminationProtection: true,
         },
       );
     }
@@ -246,6 +248,7 @@ async function main() {
         synthesizer: new cdk.DefaultStackSynthesizer({
           generateBootstrapVersionRule: false,
         }),
+        terminationProtection: props.globalConfig.terminationProtection ?? true,
         ...props,
       });
     }
@@ -266,6 +269,7 @@ async function main() {
           synthesizer: new cdk.DefaultStackSynthesizer({
             generateBootstrapVersionRule: false,
           }),
+          terminationProtection: props.globalConfig.terminationProtection ?? true,
           ...props,
         },
       );
@@ -284,6 +288,7 @@ async function main() {
             region: globalRegion,
           },
           description: `(SO0199-accounts) Landing Zone Accelerator on AWS. Version ${version}.`,
+          terminationProtection: props.globalConfig.terminationProtection ?? true,
           ...props,
         },
       );
@@ -305,6 +310,7 @@ async function main() {
               region: enabledRegion,
             },
             description: `(SO0199-organizations) Landing Zone Accelerator on AWS. Version ${version}.`,
+            terminationProtection: props.globalConfig.terminationProtection ?? true,
             ...props,
           },
         );
@@ -322,6 +328,7 @@ async function main() {
             region: enabledRegion,
           },
           description: `(SO0199-key) Landing Zone Accelerator on AWS. Version ${version}.`,
+          terminationProtection: props.globalConfig.terminationProtection ?? true,
           ...props,
         });
       }
@@ -336,6 +343,7 @@ async function main() {
               region: enabledRegion,
             },
             description: `(SO0199-securityaudit) Landing Zone Accelerator on AWS. Version ${version}.`,
+            terminationProtection: props.globalConfig.terminationProtection ?? true,
             ...props,
           },
         );
@@ -365,6 +373,7 @@ async function main() {
             synthesizer: new cdk.DefaultStackSynthesizer({
               generateBootstrapVersionRule: false,
             }),
+            terminationProtection: props.globalConfig.terminationProtection ?? true,
             ...props,
           });
         }
@@ -379,6 +388,7 @@ async function main() {
             synthesizer: new cdk.DefaultStackSynthesizer({
               generateBootstrapVersionRule: false,
             }),
+            terminationProtection: props.globalConfig.terminationProtection ?? true,
             ...props,
           });
         }
@@ -396,6 +406,7 @@ async function main() {
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
+              terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
           );
@@ -414,6 +425,7 @@ async function main() {
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
+              terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
           );
@@ -432,6 +444,7 @@ async function main() {
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
+              terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
           );
@@ -450,6 +463,7 @@ async function main() {
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
+              terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
           );
@@ -463,6 +477,7 @@ async function main() {
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
+              terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
           );
@@ -496,6 +511,7 @@ async function main() {
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
+              terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
           );
