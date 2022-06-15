@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-sdk": "2.1101.0"
+    "aws-sdk": "2.1152.0"
   },
   "devDependencies": {
     "@types/jest": "27.0.3",
