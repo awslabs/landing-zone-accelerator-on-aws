@@ -17,6 +17,7 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
+import * as iam from 'aws-cdk-lib/aws-iam';
 import {
   Account,
   EnablePolicyType,
@@ -186,6 +187,34 @@ export class AccountsStack extends AcceleratorStack {
               policyAttachment.node.addDependency(organizationAccount);
             }
           }
+        }
+
+        if (props.securityConfig.accessAnalyzer.enable) {
+          Logger.debug('[accounts-stack] Enable Service Access for access-analyzer.amazonaws.com');
+          new iam.CfnServiceLinkedRole(this, 'AccessAnalyzerServiceLinkedRole', {
+            awsServiceName: 'access-analyzer.amazonaws.com',
+          });
+        }
+
+        if (props.securityConfig.centralSecurityServices.guardduty.enable) {
+          Logger.debug('[accounts-stack] Enable Service Access for guardduty.amazonaws.com');
+          new iam.CfnServiceLinkedRole(this, 'GuardDutyServiceLinkedRole', {
+            awsServiceName: 'guardduty.amazonaws.com',
+          });
+        }
+
+        if (props.securityConfig.centralSecurityServices.securityHub.enable) {
+          Logger.debug('[accounts-stack] Enable Service Access for securityhub.amazonaws.com');
+          new iam.CfnServiceLinkedRole(this, 'SecurityHubServiceLinkedRole', {
+            awsServiceName: 'securityhub.amazonaws.com',
+          });
+        }
+
+        if (props.securityConfig.centralSecurityServices.macie.enable) {
+          Logger.debug('[accounts-stack] Enable Service Access for macie.amazonaws.com');
+          new iam.CfnServiceLinkedRole(this, 'MacieServiceLinkedRole', {
+            awsServiceName: 'macie.amazonaws.com',
+          });
         }
 
         if (props.organizationConfig.quarantineNewAccounts?.enable === true && props.partition == 'aws') {

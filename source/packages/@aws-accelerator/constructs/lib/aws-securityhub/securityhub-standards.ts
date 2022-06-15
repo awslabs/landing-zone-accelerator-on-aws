@@ -64,6 +64,17 @@ export class SecurityHubStandards extends Construct {
           ],
           Resource: '*',
         },
+        {
+          Sid: 'SecurityHubServiceLinkedRole',
+          Effect: 'Allow',
+          Action: ['iam:CreateServiceLinkedRole'],
+          Resource: '*',
+          Condition: {
+            StringLike: {
+              'iam:AWSServiceName': 'securityhub.amazonaws.com',
+            },
+          },
+        },
       ],
     });
 
