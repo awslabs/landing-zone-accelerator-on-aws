@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { delay, throttlingBackOff } from '@aws-accelerator/utils';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
 
@@ -71,9 +71,19 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         console.log(
           `Started enableOrganizationAdminAccount function in ${event.ResourceProperties['region']} region for account ${adminAccountId}`,
         );
-        await throttlingBackOff(() =>
-          macie2Client.enableOrganizationAdminAccount({ adminAccountId: adminAccountId }).promise(),
-        );
+        let retries = 0;
+        while (retries < 10) {
+          await delay(retries ** 2 * 1000);
+          try {
+            await throttlingBackOff(() =>
+              macie2Client.enableOrganizationAdminAccount({ adminAccountId: adminAccountId }).promise(),
+            );
+            break;
+          } catch (error) {
+            console.log(error);
+            retries = retries + 1;
+          }
+        }
       }
 
       return { Status: 'Success', StatusCode: 200 };
