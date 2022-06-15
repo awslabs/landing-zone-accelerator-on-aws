@@ -23,6 +23,7 @@ import {
   DynamoDBDocumentPaginationConfiguration,
 } from '@aws-sdk/lib-dynamodb';
 import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-cloudformation';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 
 const marshallOptions = {
@@ -39,6 +40,7 @@ const dynamodbClient = new DynamoDBClient({});
 const documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
 const serviceCatalogClient = new AWS.ServiceCatalog();
 const cloudformationClient = new CloudFormationClient({});
+const ssmClient = new SSMClient({});
 let organizationsClient: AWS.Organizations;
 const paginationConfig: DynamoDBDocumentPaginationConfiguration = {
   client: documentClient,
@@ -56,6 +58,7 @@ type AccountToAdd = {
 type OrganizationalUnitKeys = {
   acceleratorKey: string;
   awsKey: string;
+  registered: boolean | undefined;
 };
 
 type DDBItem = {
@@ -83,6 +86,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const controlTowerEnabled = event.ResourceProperties['controlTowerEnabled'];
   const commitId = event.ResourceProperties['commitId'];
   const stackName = event.ResourceProperties['stackName'];
+  const driftDetectionParameterName = event.ResourceProperties['driftDetectionParameterName'];
+  const driftDetectionMessageParameterName = event.ResourceProperties['driftDetectionMessageParameterName'];
   const validationErrors: string[] = [];
   const ctAccountsToAdd = [];
   const orgAccountsToAdd = [];
@@ -126,11 +131,32 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           }
         }
 
-        const validateOrganizationalUnits = await validateOrganizationalUnitsExist(configTableName, commitId);
-        validationErrors.push(...validateOrganizationalUnits);
+        // validate that no ou's are deregistered
+        const validateOrganizationalUnitsRegistered = await validateOrganizationalUnitsAreRegistered(
+          configTableName,
+          commitId,
+        );
+        validationErrors.push(...validateOrganizationalUnitsRegistered);
 
-        const validateAccountsAreInOu = await validateAccountsInOu(configTableName, commitId);
-        validationErrors.push(...validateAccountsAreInOu);
+        // check for control tower drift
+        const driftDetected = await throttlingBackOff(() =>
+          ssmClient.send(
+            new GetParameterCommand({
+              Name: driftDetectionParameterName,
+            }),
+          ),
+        );
+
+        if (driftDetected.Parameter?.Value == 'true') {
+          const driftDetectedMessage = await throttlingBackOff(() =>
+            ssmClient.send(
+              new GetParameterCommand({
+                Name: driftDetectionMessageParameterName,
+              }),
+            ),
+          );
+          validationErrors.push(driftDetectedMessage.Parameter?.Value ?? '');
+        }
 
         // retrieve all of the accounts provisioned in control tower
         const provisionedControlTowerAccounts = await getControlTowerProvisionedAccounts();
@@ -188,6 +214,12 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           }
         }
       }
+
+      const validateOrganizationalUnits = await validateOrganizationalUnitsExist(configTableName, commitId);
+      validationErrors.push(...validateOrganizationalUnits);
+
+      const validateAccountsAreInOu = await validateAccountsInOu(configTableName, commitId);
+      validationErrors.push(...validateAccountsAreInOu);
 
       // find organization accounts that need to be created
       console.log(`controlTowerEnabled value: ${controlTowerEnabled}`);
@@ -394,6 +426,40 @@ async function validateOrganizationalUnitsExist(configTableName: string, commitI
   return errors;
 }
 
+async function validateOrganizationalUnitsAreRegistered(configTableName: string, commitId: string): Promise<string[]> {
+  const errors: string[] = [];
+  const organizationalUnitKeys = await getOUKeys(configTableName, commitId);
+  const deregisteredOrganizationalUnits = organizationalUnitKeys.filter(item => item.registered === false);
+  if (deregisteredOrganizationalUnits.length > 0) {
+    for (const item of deregisteredOrganizationalUnits) {
+      console.log(`Organizational Unit ${item.acceleratorKey} may not be registered in Control Tower`);
+      errors.push(
+        `Organizational Unit ${item.acceleratorKey} may not be registered in Control Tower. Re-register OU in Control Tower to resolve`,
+      );
+    }
+  }
+  // look for ou's that don't have a registration status
+  // confirm top level ou's have at least one guardrail attached
+  for (const ouKey of organizationalUnitKeys) {
+    console.log(ouKey);
+    console.log(ouKey.acceleratorKey.split('/').length);
+    if (ouKey.registered !== undefined || ouKey.acceleratorKey.split('/').length >>> 1) {
+      continue;
+    }
+    console.log('not registered');
+    const isGuardRailAttached = await isGuardRailAttachedToOu(ouKey.awsKey);
+    if (!isGuardRailAttached) {
+      console.log(
+        `Organizational Unit ${ouKey.acceleratorKey} may not be registered in Control Tower. No guardrail attached and may not be registered.`,
+      );
+      errors.push(
+        `Organizational Unit ${ouKey.acceleratorKey} may not be registered in Control Tower. No guardrail is attached and registration status is not available.`,
+      );
+    }
+  }
+  return errors;
+}
+
 async function validateAccountsInOu(configTableName: string, commitId: string): Promise<string[]> {
   const errors: string[] = [];
   let nextToken: string | undefined = undefined;
@@ -486,17 +552,33 @@ async function getOUKeys(configTableName: string, commitId: string): Promise<Org
       ':commitId': commitId,
     },
     FilterExpression: 'contains (commitId, :commitId)',
-    ProjectionExpression: 'acceleratorKey, awsKey',
+    ProjectionExpression: 'acceleratorKey, awsKey, registered',
   };
   const organizationResponse = await throttlingBackOff(() => documentClient.send(new QueryCommand(organizationParams)));
   const ouKeys: OrganizationalUnitKeys[] = [];
   if (organizationResponse.Items) {
     for (const item of organizationResponse.Items) {
-      ouKeys.push({ acceleratorKey: item['acceleratorKey'], awsKey: item['awsKey'] });
+      ouKeys.push({
+        acceleratorKey: item['acceleratorKey'],
+        awsKey: item['awsKey'],
+        registered: item['registered'] ?? undefined,
+      });
     }
   }
   //console.log(ouKeys);
   return ouKeys;
+}
+
+async function isGuardRailAttachedToOu(ouId: string): Promise<boolean> {
+  const response = await throttlingBackOff(() =>
+    organizationsClient.listPoliciesForTarget({ TargetId: ouId, Filter: 'SERVICE_CONTROL_POLICY' }).promise(),
+  );
+  for (const policy of response.Policies ?? []) {
+    if (policy.Name?.startsWith('aws-guardrails-') && policy.AwsManaged === false) {
+      return true;
+    }
+  }
+  return false;
 }
 
 async function isStackInRollback(stackName: string): Promise<boolean> {
