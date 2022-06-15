@@ -48,6 +48,7 @@ export class SecurityHubOrganizationAdminAccount extends Construct {
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'enable-organization-admin-account/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      timeout: cdk.Duration.seconds(180),
       policyStatements: [
         {
           Sid: 'SecurityHubEnableOrganizationAdminAccountTaskOrganizationActions',
