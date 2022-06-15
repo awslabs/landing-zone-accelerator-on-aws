@@ -367,6 +367,16 @@ Object {
     },
     "CodeCommitPipelineRoleDefaultPolicyDE8B332B": Object {
       "Condition": "UseCodeCommitCondition",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -471,6 +481,16 @@ Object {
     },
     "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": Object {
       "Condition": "UseCodeCommitCondition",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -734,6 +754,16 @@ Object {
     },
     "GitHubPipelineRoleDefaultPolicyD82457D6": Object {
       "Condition": "UseGitHubCondition",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -902,7 +932,9 @@ Object {
                   ],
                 ],
               },
-              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionExpiration": Object {
+                "NoncurrentDays": 1825,
+              },
               "NoncurrentVersionTransitions": Array [
                 Object {
                   "StorageClass": "DEEP_ARCHIVE",
@@ -1009,6 +1041,16 @@ Object {
       "Type": "AWS::S3::BucketPolicy",
     },
     "InstallerAdminRole7DEE4AC8": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
           "Statement": Array [
@@ -1040,6 +1082,20 @@ Object {
       "Type": "AWS::IAM::Role",
     },
     "InstallerAdminRoleDefaultPolicy7EEE1AAB": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -1364,6 +1420,16 @@ Object {
       "Type": "AWS::KMS::Alias",
     },
     "InstallerProject879FF821": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-CB3",
+              "reason": "Project requires access to the Docker daemon.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Artifacts": Object {
           "Type": "CODEPIPELINE",
@@ -1679,7 +1745,9 @@ phases:
                   ],
                 ],
               },
-              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionExpiration": Object {
+                "NoncurrentDays": 1825,
+              },
               "NoncurrentVersionTransitions": Array [
                 Object {
                   "StorageClass": "DEEP_ARCHIVE",
@@ -2422,6 +2490,16 @@ Object {
     },
     "CodeCommitPipelineRoleDefaultPolicyDE8B332B": Object {
       "Condition": "UseCodeCommitCondition",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -2526,6 +2604,16 @@ Object {
     },
     "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": Object {
       "Condition": "UseCodeCommitCondition",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -2789,6 +2877,16 @@ Object {
     },
     "GitHubPipelineRoleDefaultPolicyD82457D6": Object {
       "Condition": "UseGitHubCondition",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -2957,7 +3055,9 @@ Object {
                   ],
                 ],
               },
-              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionExpiration": Object {
+                "NoncurrentDays": 1825,
+              },
               "NoncurrentVersionTransitions": Array [
                 Object {
                   "StorageClass": "DEEP_ARCHIVE",
@@ -3064,6 +3164,16 @@ Object {
       "Type": "AWS::S3::BucketPolicy",
     },
     "InstallerAdminRole7DEE4AC8": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
           "Statement": Array [
@@ -3095,6 +3205,20 @@ Object {
       "Type": "AWS::IAM::Role",
     },
     "InstallerAdminRoleDefaultPolicy7EEE1AAB": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -3419,6 +3543,16 @@ Object {
       "Type": "AWS::KMS::Alias",
     },
     "InstallerProject879FF821": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-CB3",
+              "reason": "Project requires access to the Docker daemon.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Artifacts": Object {
           "Type": "CODEPIPELINE",
@@ -3724,7 +3858,9 @@ phases:
                   ],
                 ],
               },
-              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionExpiration": Object {
+                "NoncurrentDays": 1825,
+              },
               "NoncurrentVersionTransitions": Array [
                 Object {
                   "StorageClass": "DEEP_ARCHIVE",
@@ -4414,6 +4550,16 @@ Object {
     },
     "CodeCommitPipelineRoleDefaultPolicyDE8B332B": Object {
       "Condition": "UseCodeCommitCondition",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -4518,6 +4664,16 @@ Object {
     },
     "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": Object {
       "Condition": "UseCodeCommitCondition",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -4771,6 +4927,16 @@ Object {
     },
     "GitHubPipelineRoleDefaultPolicyD82457D6": Object {
       "Condition": "UseGitHubCondition",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -4932,7 +5098,9 @@ Object {
                   ],
                 ],
               },
-              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionExpiration": Object {
+                "NoncurrentDays": 1825,
+              },
               "NoncurrentVersionTransitions": Array [
                 Object {
                   "StorageClass": "DEEP_ARCHIVE",
@@ -5028,6 +5196,16 @@ Object {
       "Type": "AWS::S3::BucketPolicy",
     },
     "InstallerAdminRole7DEE4AC8": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
           "Statement": Array [
@@ -5059,6 +5237,20 @@ Object {
       "Type": "AWS::IAM::Role",
     },
     "InstallerAdminRoleDefaultPolicy7EEE1AAB": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -5368,6 +5560,16 @@ Object {
       "Type": "AWS::KMS::Alias",
     },
     "InstallerProject879FF821": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-CB3",
+              "reason": "Project requires access to the Docker daemon.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Artifacts": Object {
           "Type": "CODEPIPELINE",
@@ -5645,7 +5847,9 @@ phases:
                   ],
                 ],
               },
-              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionExpiration": Object {
+                "NoncurrentDays": 1825,
+              },
               "NoncurrentVersionTransitions": Array [
                 Object {
                   "StorageClass": "DEEP_ARCHIVE",
@@ -6310,6 +6514,16 @@ Object {
     },
     "CodeCommitPipelineRoleDefaultPolicyDE8B332B": Object {
       "Condition": "UseCodeCommitCondition",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -6414,6 +6628,16 @@ Object {
     },
     "CodeCommitPipelineSourceCodePipelineActionRoleDefaultPolicyF71E0C0D": Object {
       "Condition": "UseCodeCommitCondition",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -6667,6 +6891,16 @@ Object {
     },
     "GitHubPipelineRoleDefaultPolicyD82457D6": Object {
       "Condition": "UseGitHubCondition",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -6828,7 +7062,9 @@ Object {
                   ],
                 ],
               },
-              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionExpiration": Object {
+                "NoncurrentDays": 1825,
+              },
               "NoncurrentVersionTransitions": Array [
                 Object {
                   "StorageClass": "DEEP_ARCHIVE",
@@ -6924,6 +7160,16 @@ Object {
       "Type": "AWS::S3::BucketPolicy",
     },
     "InstallerAdminRole7DEE4AC8": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
           "Statement": Array [
@@ -6955,6 +7201,20 @@ Object {
       "Type": "AWS::IAM::Role",
     },
     "InstallerAdminRoleDefaultPolicy7EEE1AAB": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -7264,6 +7524,16 @@ Object {
       "Type": "AWS::KMS::Alias",
     },
     "InstallerProject879FF821": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-CB3",
+              "reason": "Project requires access to the Docker daemon.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Artifacts": Object {
           "Type": "CODEPIPELINE",
@@ -7531,7 +7801,9 @@ phases:
                   ],
                 ],
               },
-              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionExpiration": Object {
+                "NoncurrentDays": 1825,
+              },
               "NoncurrentVersionTransitions": Array [
                 Object {
                   "StorageClass": "DEEP_ARCHIVE",

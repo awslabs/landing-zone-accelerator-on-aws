@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
+import path from 'path';
 
 import {
   CreateControlTowerAccounts,
@@ -22,11 +23,10 @@ import {
   OrganizationalUnits,
 } from '@aws-accelerator/constructs';
 
+import { LoadAcceleratorConfigTable } from '../load-config-table';
 import { Logger } from '../logger';
 import { ValidateEnvironmentConfig } from '../validate-environment-config';
-import { LoadAcceleratorConfigTable } from '../load-config-table';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import path from 'path';
 
 export class PrepareStack extends AcceleratorStack {
   public static readonly MANAGEMENT_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
@@ -245,6 +245,37 @@ export class PrepareStack extends AcceleratorStack {
         });
         organizationAccounts.node.addDependency(validation);
 
+        // cdk-nag suppressions
+        const iam4SuppressionPaths = [
+          'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onEvent/ServiceRole/Resource',
+          'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onTimeout/ServiceRole/Resource',
+          'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-isComplete/ServiceRole/Resource',
+          'CreateOrganizationAccounts/CreateOrganizationAccounts/ServiceRole/Resource',
+          'CreateOrganizationAccounts/CreateOrganizationAccountStatus/ServiceRole/Resource',
+        ];
+
+        const iam5SuppressionPaths = [
+          'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
+          'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
+          'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
+          'CreateOrganizationAccounts/CreateOrganizationAccountStatus/ServiceRole/DefaultPolicy/Resource',
+          'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
+        ];
+
+        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+        for (const path of iam4SuppressionPaths) {
+          NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${path}`, [
+            { id: 'AwsSolutions-IAM4', reason: 'AWS Custom resource provider role created by cdk.' },
+          ]);
+        }
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+        for (const path of iam5SuppressionPaths) {
+          NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${path}`, [
+            { id: 'AwsSolutions-IAM5', reason: 'AWS Custom resource provider role created by cdk.' },
+          ]);
+        }
+
         if (props.globalConfig.controlTower.enable) {
           Logger.info(`[prepare-stack] Get Portfolio Id`);
           const portfolioResults = new GetPortfolioId(this, 'GetPortFolioId', {
@@ -262,154 +293,40 @@ export class PrepareStack extends AcceleratorStack {
           });
           controlTowerAccounts.node.addDependency(validation);
           controlTowerAccounts.node.addDependency(organizationAccounts);
+
+          // cdk-nag suppressions
+          const iam4SuppressionPaths = [
+            'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/Resource',
+            'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/Resource',
+            'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/Resource',
+            'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/Resource',
+            'CreateCTAccounts/CreateControlTowerAccount/ServiceRole/Resource',
+          ];
+
+          const iam5SuppressionPaths = [
+            'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/DefaultPolicy/Resource',
+            'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
+            'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
+            'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
+            'CreateCTAccounts/CreateControlTowerAcccountsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
+          ];
+
+          // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+          for (const path of iam4SuppressionPaths) {
+            NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${path}`, [
+              { id: 'AwsSolutions-IAM4', reason: 'AWS Custom resource provider role created by cdk.' },
+            ]);
+          }
+
+          // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+          for (const path of iam5SuppressionPaths) {
+            NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${path}`, [
+              { id: 'AwsSolutions-IAM5', reason: 'AWS Custom resource provider role created by cdk.' },
+            ]);
+          }
         }
       }
     }
-
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onEvent/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Custom resource provider framework-onEvent role created by cdk.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Custom resource provider framework-onTimeout role created by cdk.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason:
-            'AWS Custom resource provider framework-isComplete role created by cdk. Provisioning products and service catalog needs AWSServiceCatalogEndUserFullAccess managed policy access.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Custom resource provider framework-onEvent role created by cdk.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/DefaultPolicy/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'AWS Custom resource provider service role created by cdk.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Custom resource provider service role created by cdk.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/CreateCTAccounts/CreateControlTowerAccount/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Custom resource provider service role created by cdk.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onTimeout/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Custom resource provider framework-onTimeout role created by cdk.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-isComplete/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Custom resource provider framework-isComplete role created by cdk.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/CreateOrganizationAccounts/CreateOrganizationAccountStatus/ServiceRole/DefaultPolicy/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'AWS Custom resource provider service role created by cdk.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/CreateOrganizationAccounts/CreateOrganizationAccountStatus/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Custom resource provider service role created by cdk.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/CreateOrganizationAccounts/CreateOrganizationAccounts/ServiceRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason: 'AWS Custom resource provider service role created by cdk.',
-        },
-      ],
-    );
 
     Logger.info('[prepare-stack] Completed stack synthesis');
   }

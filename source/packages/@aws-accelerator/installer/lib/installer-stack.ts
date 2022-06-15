@@ -16,9 +16,9 @@ import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
-import { SolutionHelper } from './solutions-helper';
 
 import { version } from '../../../../package.json';
+import { SolutionHelper } from './solutions-helper';
 
 export enum RepositorySources {
   GITHUB = 'github',
@@ -665,83 +665,39 @@ export class InstallerStack extends cdk.Stack {
     //
     // cdk-nag suppressions
     //
+    const iam4SuppressionPaths = ['InstallerAdminRole/Resource', 'InstallerAdminRole/DefaultPolicy/Resource'];
 
-    // [Error at /AWSAccelerator-InstallerStack/SecureBucket/Resource/Resource]
-    // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      'AWSAccelerator-InstallerStack/SecureBucket/Resource/Resource',
-      [
-        {
-          id: 'AwsSolutions-S1',
-          reason: 'S3 Bucket access logging is not enabled for the pipeline artifacts bucket.',
-        },
-      ],
-    );
+    const iam5SuppressionPaths = [
+      'InstallerAdminRole/DefaultPolicy/Resource',
+      'CodeCommitPipelineRole/DefaultPolicy/Resource',
+      'CodeCommitPipeline/Source/Source/CodePipelineActionRole/DefaultPolicy/Resource',
+      'GitHubPipelineRole/DefaultPolicy/Resource',
+    ];
 
-    // [Error at /AWSAccelerator-InstallerStack/GitHubPipelineRole/DefaultPolicy/Resource]
-    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag
-    // rule suppression with evidence for those permission.
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      'AWSAccelerator-InstallerStack/GitHubPipelineRole/DefaultPolicy/Resource',
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'PipelineRole DefaultPolicy is built by cdk',
-        },
-      ],
-    );
+    const cb3SuppressionPaths = ['InstallerProject/Resource'];
 
-    // [Error at /AWSAccelerator-InstallerStack/CodeCommitPipelineRole/DefaultPolicy/Resource]
-    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag
-    // rule suppression with evidence for those permission.
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      'AWSAccelerator-InstallerStack/CodeCommitPipelineRole/DefaultPolicy/Resource',
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'PipelineRole DefaultPolicy is built by cdk',
-        },
-      ],
-    );
-
-    // [Error at /AWSAccelerator-InstallerStack/CodeCommitPipeline/Source/Source/CodePipelineActionRole/DefaultPolicy/Resource]
-    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag
-    // rule suppression with evidence for those permission.
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      '/AWSAccelerator-InstallerStack/CodeCommitPipeline/Source/Source/CodePipelineActionRole/DefaultPolicy/Resource',
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'Source CodePipelineActionRole DefaultPolicy is built by cdk',
-        },
-      ],
-    );
-
-    // [Error at /AWSAccelerator-InstallerStack/InstallerRole/Resource]
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
-    NagSuppressions.addResourceSuppressionsByPath(this, '/AWSAccelerator-InstallerStack/InstallerAdminRole/Resource', [
-      {
-        id: 'AwsSolutions-IAM4',
-        reason: 'Using AdministratorAccessRole to deploy accelerator pipeline',
-      },
-    ]);
+    for (const path of iam4SuppressionPaths) {
+      NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${path}`, [
+        { id: 'AwsSolutions-IAM4', reason: 'Managed policies required for IAM role.' },
+      ]);
+    }
 
-    // [Error at /AWSAccelerator-InstallerStack/InstallerRole/DefaultPolicy/Resource]
-    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag
-    // rule suppression with evidence for those permission.
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      '/AWSAccelerator-InstallerStack/InstallerAdminRole/DefaultPolicy/Resource',
-      [
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk-nag rule suppression with evidence for those permission.
+    for (const path of iam5SuppressionPaths) {
+      NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${path}`, [
+        { id: 'AwsSolutions-IAM5', reason: 'IAM role requires wildcard permissions.' },
+      ]);
+    }
+
+    // AwsSolutions-CB3: The CodeBuild project has privileged mode enabled.
+    for (const path of cb3SuppressionPaths) {
+      NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${path}`, [
         {
-          id: 'AwsSolutions-IAM5',
-          reason: 'InstallerRole DefaultPolicy is built by cdk',
+          id: 'AwsSolutions-CB3',
+          reason: 'Project requires access to the Docker daemon.',
         },
-      ],
-    );
+      ]);
+    }
   }
 }
