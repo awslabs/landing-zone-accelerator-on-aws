@@ -200,7 +200,7 @@ export class AccountsStack extends AcceleratorStack {
           Logger.debug('[accounts-stack] Enable Service Access for guardduty.amazonaws.com');
           new iam.CfnServiceLinkedRole(this, 'GuardDutyServiceLinkedRole', {
             awsServiceName: 'guardduty.amazonaws.com',
-            description: 'A service-linked role required for Amazon GuardDuty to access your resources.',
+            description: 'A service-linked role required for Amazon GuardDuty to access your resources. ',
           });
         }
 
