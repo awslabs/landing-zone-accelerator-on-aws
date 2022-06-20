@@ -78,7 +78,7 @@ export class NetworkConfigTypes {
     destination: t.optional(t.nonEmptyString),
     destinationPrefixList: t.optional(t.nonEmptyString),
     type: t.optional(this.routeTableEntryTypeEnum),
-    target: t.nonEmptyString,
+    target: t.optional(t.nonEmptyString),
     targetAvailabilityZone: t.optional(t.nonEmptyString),
   });
 
@@ -840,7 +840,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
   /**
    * The friendly name of the destination target.
    */
-  readonly target: string = '';
+  readonly target: string | undefined = undefined;
   /**
    * The Availability Zone (AZ) the target resides in.
    *

@@ -188,6 +188,12 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
                 );
               }
 
+              if (!routeTableEntryItem.target) {
+                throw new Error(
+                  `[network-vpc-endpoints-stack] Network Firewall route ${routeTableEntryItem.name} for route table ${routeTableItem.name} must include a target`,
+                );
+              }
+
               // Check for AZ input
               if (!routeTableEntryItem.targetAvailabilityZone) {
                 throw new Error(
