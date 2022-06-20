@@ -195,6 +195,18 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
                 );
               }
 
+              // Check if using a CIDR or prefix list as the destination
+              if (routeTableEntryItem.destinationPrefixList) {
+                throw new Error(
+                  `[network-vpc-endpoints-stack] ${routeTableEntryItem.name} using destinationPrefixList. Prefix list destinations cannot be used for networkFirewall targets.`,
+                );
+              }
+              if (!routeTableEntryItem.destination) {
+                throw new Error(
+                  `[network-vpc-endpoints-stack] ${routeTableEntryItem.name} does not have a destination defined`,
+                );
+              }
+
               // Get Network Firewall and SSM parameter storing endpoint values
               const firewall = firewallMap.get(routeTableEntryItem.target);
               const endpointAz = `${cdk.Stack.of(this).region}${routeTableEntryItem.targetAvailabilityZone}`;
@@ -208,16 +220,14 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
               Logger.info(
                 `[network-vpc-endpoints-stack] Adding Network Firewall Route Table Entry ${routeTableEntryItem.name}`,
               );
-              const routeOptions = {
-                id: id,
-                destination: routeTableEntryItem.destination,
-                endpointAz: endpointAz,
-                firewallArn: firewall.firewallArn,
-                kmsKey: this.acceleratorKey,
-                logRetention: this.logRetention,
-                routeTableId: routeTableId,
-              };
-              firewall.addNetworkFirewallRoute(routeOptions);
+              firewall.addNetworkFirewallRoute(
+                id,
+                routeTableEntryItem.destination,
+                endpointAz,
+                this.acceleratorKey,
+                this.logRetention,
+                routeTableId,
+              );
             }
           }
         }

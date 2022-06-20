@@ -30,6 +30,7 @@ import {
   SsmParameter,
   SsmParameterType,
   TransitGatewayAttachment,
+  TransitGatewayPrefixListReference,
   TransitGatewayRouteTableAssociation,
   TransitGatewayRouteTablePropagation,
   TransitGatewayStaticRoute,
@@ -176,63 +177,146 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       }
     }
 
+    //
+    // Build prefix list map
+    //
+    const prefixListMap = new Map<string, string>();
+    for (const prefixListItem of props.networkConfig.prefixLists ?? []) {
+      // Check if the set belongs in this account/region
+      const accountIds = prefixListItem.accounts.map(item => {
+        return props.accountsConfig.getAccountId(item);
+      });
+      const regions = prefixListItem.regions.map(item => {
+        return item.toString();
+      });
+
+      if (accountIds.includes(cdk.Stack.of(this).account) && regions.includes(cdk.Stack.of(this).region)) {
+        const prefixListId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          `/accelerator/network/prefixList/${prefixListItem.name}/id`,
+        );
+        prefixListMap.set(prefixListItem.name, prefixListId);
+      }
+    }
+
+    //
     // Evaluate Transit Gateway Static Routes
+    // and prefix list references
+    //
     for (const tgwItem of props.networkConfig.transitGateways ?? []) {
       if (
         cdk.Stack.of(this).account === props.accountsConfig.getAccountId(tgwItem.account) &&
         cdk.Stack.of(this).region === tgwItem.region
       ) {
         for (const routeTableItem of tgwItem.routeTables ?? []) {
+          const transitGatewayRouteTableId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            `/accelerator/network/transitGateways/${tgwItem.name}/routeTables/${routeTableItem.name}/id`,
+          );
+
           for (const routeItem of routeTableItem.routes ?? []) {
             // Throw exception when a blackhole route and a VPC attachment is presented.
             if (routeItem.blackhole && routeItem.attachment) {
-              throw new Error('Cannot specify blackhole route and an attachment!');
+              throw new Error(
+                `[network-associations-stack] Transit gateway route specifies both blackhole and attachment target. Please choose only one.`,
+              );
             }
-            // Build a static route when a route is being blackholed.
-            if (routeItem.blackhole) {
-              Logger.info(
-                `[network-associations-stack] Adding blackhole route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
-              );
-              new TransitGatewayStaticRoute(
-                this,
-                `${routeTableItem.name}-${routeItem.destinationCidrBlock}-blackhole`,
-                {
-                  transitGatewayRouteTableId: cdk.aws_ssm.StringParameter.valueForStringParameter(
-                    this,
-                    `/accelerator/network/transitGateways/${tgwItem.name}/routeTables/${routeTableItem.name}/id`,
-                  ),
-                  blackhole: routeItem.blackhole,
-                  destinationCidrBlock: routeItem.destinationCidrBlock,
-                },
-              );
-            } else if (routeItem.attachment) {
-              // Get TGW attachment ID
-              const transitGatewayAttachmentId = transitGatewayAttachments.get(
-                `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
-              );
 
-              if (transitGatewayAttachmentId) {
+            if (routeItem.destinationCidrBlock && routeItem.destinationPrefixList) {
+              throw new Error(
+                `[network-associations-stack] Transit gateway route using destination and destinationPrefixList. Please choose only one destination type`,
+              );
+            }
+
+            //
+            // Create static routes
+            //
+            if (routeItem.destinationCidrBlock) {
+              let id = '';
+              let transitGatewayAttachmentId: string | undefined = undefined;
+              if (routeItem.blackhole) {
                 Logger.info(
-                  `[network-associations-stack] Adding static route ${routeItem.destinationCidrBlock} to VPC attachment ${routeItem.attachment.vpcName} in account ${routeItem.attachment.account} to route table ${routeTableItem.name} for TGW ${tgwItem.name}`,
+                  `[network-associations-stack] Adding blackhole route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+                );
+                id = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-blackhole`;
+              }
+
+              if (routeItem.attachment) {
+                Logger.info(
+                  `[network-associations-stack] Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+                );
+                id = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`;
+
+                // Get TGW attachment ID
+                transitGatewayAttachmentId = transitGatewayAttachments.get(
+                  `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
                 );
 
-                new TransitGatewayStaticRoute(
-                  this,
-                  `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`,
-                  {
-                    transitGatewayRouteTableId: cdk.aws_ssm.StringParameter.valueForStringParameter(
-                      this,
-                      `/accelerator/network/transitGateways/${tgwItem.name}/routeTables/${routeTableItem.name}/id`,
-                    ),
-                    destinationCidrBlock: routeItem.destinationCidrBlock,
-                    transitGatewayAttachmentId: transitGatewayAttachmentId,
-                  },
-                );
-              } else {
+                if (!transitGatewayAttachmentId) {
+                  throw new Error(
+                    `[network-associations-stack] Unable to locate transit gateway attachment ID for route table item ${routeTableItem.name}`,
+                  );
+                }
+              }
+
+              // Create static route
+              new TransitGatewayStaticRoute(this, id, {
+                transitGatewayRouteTableId,
+                blackhole: routeItem.blackhole,
+                destinationCidrBlock: routeItem.destinationCidrBlock,
+                transitGatewayAttachmentId,
+              });
+            }
+
+            //
+            // Create prefix list references
+            //
+            if (routeItem.destinationPrefixList) {
+              // Get PL ID from map
+              const prefixListId = prefixListMap.get(routeItem.destinationPrefixList);
+              if (!prefixListId) {
                 throw new Error(
-                  `[network-associations-stack] Unable to locate transit gateway attachment ID for route table item ${routeTableItem.name}`,
+                  `[network-associations-stack] Prefix list ${routeItem.destinationPrefixList} not found`,
                 );
               }
+
+              let id = '';
+              let transitGatewayAttachmentId: string | undefined = undefined;
+              if (routeItem.blackhole) {
+                Logger.info(
+                  `[network-associations-stack] Adding blackhole prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+                );
+                id = pascalCase(`${routeTableItem.name}${routeItem.destinationPrefixList}Blackhole`);
+              }
+              if (routeItem.attachment) {
+                Logger.info(
+                  `[network-associations-stack] Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+                );
+                id = pascalCase(
+                  `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.vpcName}${routeItem.attachment.account}`,
+                );
+
+                // Get TGW attachment ID
+                transitGatewayAttachmentId = transitGatewayAttachments.get(
+                  `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
+                );
+
+                if (!transitGatewayAttachmentId) {
+                  throw new Error(
+                    `[network-associations-stack] Unable to locate transit gateway attachment ID for route table item ${routeTableItem.name}`,
+                  );
+                }
+              }
+
+              // Create prefix list reference
+              new TransitGatewayPrefixListReference(this, id, {
+                prefixListId,
+                blackhole: routeItem.blackhole,
+                transitGatewayAttachmentId,
+                transitGatewayRouteTableId,
+                logGroupKmsKey: this.key,
+                logRetentionInDays: this.logRetention,
+              });
             }
           }
         }

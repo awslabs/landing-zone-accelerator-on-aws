@@ -671,6 +671,32 @@ export class NetworkVpcStack extends AcceleratorStack {
               pascalCase(`${routeTableItem.name}RouteTable`) +
               pascalCase(routeTableEntryItem.name);
 
+            // Check if using a prefix list or CIDR as the destination
+            let destination: string | undefined = undefined;
+            let destinationPrefixListId: string | undefined = undefined;
+            if (routeTableEntryItem.destinationPrefixList) {
+              // Check if a CIDR destination is also defined
+              if (routeTableEntryItem.destination) {
+                throw new Error(
+                  `[network-vpc-stack] ${routeTableEntryItem.name} using destination and destinationPrefixList. Please choose only one destination type`,
+                );
+              }
+
+              // Get PL ID from map
+              const prefixList = prefixListMap.get(routeTableEntryItem.destinationPrefixList);
+              if (!prefixList) {
+                throw new Error(
+                  `[network-vpc-stack] Prefix list ${routeTableEntryItem.destinationPrefixList} not found`,
+                );
+              }
+              destinationPrefixListId = prefixList.prefixListId;
+            } else {
+              if (!routeTableEntryItem.destination) {
+                throw new Error(`[network-vpc-stack] ${routeTableEntryItem.name} does not have a destination defined`);
+              }
+              destination = routeTableEntryItem.destination;
+            }
+
             // Route: Transit Gateway
             if (routeTableEntryItem.type === 'transitGateway') {
               Logger.info(`[network-vpc-stack] Adding Transit Gateway Route Table Entry ${routeTableEntryItem.name}`);
@@ -687,10 +713,13 @@ export class NetworkVpcStack extends AcceleratorStack {
 
               routeTable.addTransitGatewayRoute(
                 id,
-                routeTableEntryItem.destination,
                 transitGatewayId,
                 // TODO: Implement correct dependency relationships without need for escape hatch
                 transitGatewayAttachment.node.defaultChild as cdk.aws_ec2.CfnTransitGatewayAttachment,
+                destination,
+                destinationPrefixListId,
+                this.acceleratorKey,
+                this.logRetention,
               );
             }
 
@@ -703,13 +732,26 @@ export class NetworkVpcStack extends AcceleratorStack {
                 throw new Error(`NAT Gateway ${routeTableEntryItem.target} not found`);
               }
 
-              routeTable.addNatGatewayRoute(id, routeTableEntryItem.destination, natGateway.natGatewayId);
+              routeTable.addNatGatewayRoute(
+                id,
+                natGateway.natGatewayId,
+                destination,
+                destinationPrefixListId,
+                this.acceleratorKey,
+                this.logRetention,
+              );
             }
 
             // Route: Internet Gateway
             if (routeTableEntryItem.type === 'internetGateway') {
               Logger.info(`[network-vpc-stack] Adding Internet Gateway Route Table Entry ${routeTableEntryItem.name}`);
-              routeTable.addInternetGatewayRoute(id, routeTableEntryItem.destination);
+              routeTable.addInternetGatewayRoute(
+                id,
+                destination,
+                destinationPrefixListId,
+                this.acceleratorKey,
+                this.logRetention,
+              );
             }
           }
         }
