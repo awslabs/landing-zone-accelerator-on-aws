@@ -129,28 +129,27 @@ export class NetworkFirewall extends cdk.Resource implements INetworkFirewall {
     });
   }
 
-  public addNetworkFirewallRoute(options: {
-    id: string;
-    destination: string;
-    endpointAz: string;
-    firewallArn: string;
-    kmsKey: cdk.aws_kms.Key;
-    logRetention: number;
-    routeTableId: string;
-  }): void {
+  public addNetworkFirewallRoute(
+    id: string,
+    destination: string,
+    endpointAz: string,
+    logGroupKmsKey: cdk.aws_kms.Key,
+    logRetentionInDays: number,
+    routeTableId: string,
+  ): void {
     // Get endpoint ID from custom resource
-    const endpointId = new GetNetworkFirewallEndpoint(this, `${options.id}Endpoint`, {
-      endpointAz: options.endpointAz,
-      firewallArn: options.firewallArn,
-      kmsKey: options.kmsKey,
-      logRetentionInDays: options.logRetention,
+    const vpcEndpointId = new GetNetworkFirewallEndpoint(this, `${id}Endpoint`, {
+      endpointAz: endpointAz,
+      firewallArn: this.firewallArn,
+      kmsKey: logGroupKmsKey,
+      logRetentionInDays: logRetentionInDays,
       region: cdk.Stack.of(this).region,
     }).endpointId;
 
-    new cdk.aws_ec2.CfnRoute(this, options.id, {
-      routeTableId: options.routeTableId,
-      destinationCidrBlock: options.destination,
-      vpcEndpointId: endpointId,
+    new cdk.aws_ec2.CfnRoute(this, id, {
+      routeTableId,
+      destinationCidrBlock: destination,
+      vpcEndpointId,
     });
   }
 }

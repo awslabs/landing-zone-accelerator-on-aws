@@ -24,6 +24,10 @@ transitGateways:
         #       account: Network
         # - destinationCidrBlock: 1.1.1.1/32
         #     blackhole: true
+        # - destinationPrefixList: accelerator-prefix-list
+        #   attachment:
+        #     vpcName: Network-Endpoints
+        #     account: Network
       - name: Network-Main-Segregated
         routes: []
       - name: Network-Main-Shared
@@ -202,7 +206,7 @@ transitGateways:
 #         shareTargets:
 #           organizationalUnits:
 #             - Infrastructure
-# prefixList:
+# prefixLists:
 #   - name: accelerator-prefix-list
 #     accounts:
 #       - Network
@@ -248,12 +252,20 @@ vpcs:
             destination: 0.0.0.0/0
             type: transitGateway
             target: Network-Main
+          # - name: PlRoute
+          #   destinationPrefixList: accelerator-prefix-list
+          #   type: transitGateway
+          #   target: Network-Main
       - name: Network-Endpoints-B
         routes:
           - name: TgwRoute
             destination: 0.0.0.0/0
             type: transitGateway
             target: Network-Main
+          # - name: PlRoute
+          #   destinationPrefixList: accelerator-prefix-list
+          #   type: transitGateway
+          #   target: Network-Main
     subnets:
       - name: Network-Endpoints-A
         availabilityZone: a
