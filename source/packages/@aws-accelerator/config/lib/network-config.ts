@@ -32,7 +32,8 @@ export class NetworkConfigTypes {
   });
 
   static readonly transitGatewayRouteEntryConfig = t.interface({
-    destinationCidrBlock: t.nonEmptyString,
+    destinationCidrBlock: t.optional(t.nonEmptyString),
+    destinationPrefixList: t.optional(t.nonEmptyString),
     blackhole: t.optional(t.boolean),
     attachment: t.optional(this.transitGatewayRouteTableVpcEntryConfig),
   });
@@ -75,6 +76,7 @@ export class NetworkConfigTypes {
   static readonly routeTableEntryConfig = t.interface({
     name: t.nonEmptyString,
     destination: t.optional(t.nonEmptyString),
+    destinationPrefixList: t.optional(t.nonEmptyString),
     type: t.optional(this.routeTableEntryTypeEnum),
     target: t.nonEmptyString,
     targetAvailabilityZone: t.optional(t.nonEmptyString),
@@ -683,7 +685,11 @@ export class TransitGatewayRouteEntryConfig
    * @remarks
    * Use CIDR notation, i.e. 10.0.0.0/16
    */
-  readonly destinationCidrBlock = '';
+  readonly destinationCidrBlock: string | undefined = undefined;
+  /**
+   * The friendly name of a prefix list for the route table entry.
+   */
+  readonly destinationPrefixList: string | undefined = undefined;
   /**
    * Enable to create a blackhole for the destination CIDR.
    * Leave undefined if specifying a VPC destination.
@@ -820,7 +826,11 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    * @remarks
    * Use CIDR notation, i.e. 10.0.0.0/16
    */
-  readonly destination: string = '';
+  readonly destination: string | undefined = undefined;
+  /**
+   * The friendly name of the destination prefix list for the route table entry.
+   */
+  readonly destinationPrefixList: string | undefined = undefined;
   /**
    * The destination type of route table entry.
    *
