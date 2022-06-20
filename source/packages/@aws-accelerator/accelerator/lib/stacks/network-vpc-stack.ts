@@ -701,6 +701,12 @@ export class NetworkVpcStack extends AcceleratorStack {
             if (routeTableEntryItem.type === 'transitGateway') {
               Logger.info(`[network-vpc-stack] Adding Transit Gateway Route Table Entry ${routeTableEntryItem.name}`);
 
+              if (!routeTableEntryItem.target) {
+                throw new Error(
+                  `[network-vpc-stack] Transit gateway route ${routeTableEntryItem.name} for route table ${routeTableItem.name} must include a target`,
+                );
+              }
+
               const transitGatewayId = transitGatewayIds.get(routeTableEntryItem.target);
               if (transitGatewayId === undefined) {
                 throw new Error(`Transit Gateway ${routeTableEntryItem.target} not found`);
@@ -726,6 +732,12 @@ export class NetworkVpcStack extends AcceleratorStack {
             // Route: NAT Gateway
             if (routeTableEntryItem.type === 'natGateway') {
               Logger.info(`[network-vpc-stack] Adding NAT Gateway Route Table Entry ${routeTableEntryItem.name}`);
+
+              if (!routeTableEntryItem.target) {
+                throw new Error(
+                  `[network-vpc-stack] NAT gateway route ${routeTableEntryItem.name} for route table ${routeTableItem.name} must include a target`,
+                );
+              }
 
               const natGateway = natGatewayMap.get(routeTableEntryItem.target);
               if (natGateway === undefined) {
