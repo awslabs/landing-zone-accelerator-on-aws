@@ -14,13 +14,18 @@
 import * as cdk from 'aws-cdk-lib';
 import { Account } from '../../index';
 
+//import { SynthUtils } from '@aws-cdk/assert';
+
 const testNamePrefix = 'Construct(Account): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
 new Account(stack, 'Account', {
-  accountId: stack.account,
+  acceleratorConfigTable: new cdk.aws_dynamodb.Table(stack, 'ConfigTable', {
+    partitionKey: { name: 'dataType', type: cdk.aws_dynamodb.AttributeType.STRING },
+  }),
+  commitId: 'abcd123456789',
   assumeRoleName: 'AWSControlTowerExecution',
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
@@ -30,6 +35,9 @@ new Account(stack, 'Account', {
  * Account construct test
  */
 describe('Account', () => {
+  // test(`${testNamePrefix} Snapshot Test`, () => {
+  //   expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
+  // });
   /**
    * Number of IAM role resource test
    */
@@ -47,43 +55,32 @@ describe('Account', () => {
   /**
    * Number of InviteAccountToOrganization custom resource test
    */
-  test(`${testNamePrefix} InviteAccountToOrganization custom resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::InviteAccountToOrganization', 1);
+  test(`${testNamePrefix} InviteAccountsToOrganization custom resource count test`, () => {
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::InviteAccountsToOrganization', 1);
   });
 
   /**
    * InviteAccountToOrganization custom resource configuration test
    */
-  test(`${testNamePrefix} InviteAccountToOrganization custom resource configuration test`, () => {
+  test(`${testNamePrefix} InviteAccountsToOrganization custom resource configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
         Account0D856946: {
-          Type: 'Custom::InviteAccountToOrganization',
+          Type: 'Custom::InviteAccountsToOrganization',
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
           Properties: {
             ServiceToken: {
-              'Fn::GetAtt': ['CustomInviteAccountToOrganizationCustomResourceProviderHandlerAEB26818', 'Arn'],
+              'Fn::GetAtt': ['CustomInviteAccountsToOrganizationCustomResourceProviderHandlerC9A5BAC1', 'Arn'],
             },
-            accountId: {
-              Ref: 'AWS::AccountId',
+            commitId: 'abcd123456789',
+            configTableName: {
+              Ref: 'ConfigTable5CD72349',
             },
-            roleArn: {
-              'Fn::Join': [
-                '',
-                [
-                  'arn:',
-                  {
-                    Ref: 'AWS::Partition',
-                  },
-                  ':iam::',
-                  {
-                    Ref: 'AWS::AccountId',
-                  },
-                  ':role/AWSControlTowerExecution',
-                ],
-              ],
+            partition: {
+              Ref: 'AWS::Partition',
             },
+            assumeRoleName: 'AWSControlTowerExecution',
           },
         },
       },
@@ -96,9 +93,9 @@ describe('Account', () => {
   test(`${testNamePrefix} Lambda Function resource configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        CustomInviteAccountToOrganizationCustomResourceProviderHandlerAEB26818: {
+        CustomInviteAccountsToOrganizationCustomResourceProviderHandlerC9A5BAC1: {
           Type: 'AWS::Lambda::Function',
-          DependsOn: ['CustomInviteAccountToOrganizationCustomResourceProviderRole0F64F419'],
+          DependsOn: ['CustomInviteAccountsToOrganizationCustomResourceProviderRole88663193'],
           Properties: {
             Code: {
               S3Bucket: {
@@ -108,7 +105,7 @@ describe('Account', () => {
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
             Role: {
-              'Fn::GetAtt': ['CustomInviteAccountToOrganizationCustomResourceProviderRole0F64F419', 'Arn'],
+              'Fn::GetAtt': ['CustomInviteAccountsToOrganizationCustomResourceProviderRole88663193', 'Arn'],
             },
             Runtime: 'nodejs14.x',
             Timeout: 900,
@@ -124,7 +121,7 @@ describe('Account', () => {
   test(`${testNamePrefix} Lambda Function resource configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        CustomInviteAccountToOrganizationCustomResourceProviderRole0F64F419: {
+        CustomInviteAccountsToOrganizationCustomResourceProviderRole88663193: {
           Type: 'AWS::IAM::Role',
           Properties: {
             AssumeRolePolicyDocument: {
@@ -154,10 +151,31 @@ describe('Account', () => {
                         'organizations:ListAccounts',
                         'organizations:InviteAccountToOrganization',
                         'organizations:MoveAccount',
-                        'sts:AssumeRole',
+                        'organizations:ListRoots',
                       ],
                       Effect: 'Allow',
                       Resource: '*',
+                    },
+                    {
+                      Action: ['dynamodb:Query'],
+                      Effect: 'Allow',
+                      Resource: [
+                        {
+                          'Fn::GetAtt': ['ConfigTable5CD72349', 'Arn'],
+                        },
+                      ],
+                    },
+                    {
+                      Action: ['sts:AssumeRole'],
+                      Effect: 'Allow',
+                      Resource: [
+                        {
+                          'Fn::Join': [
+                            '',
+                            ['arn:', { Ref: 'AWS::Partition' }, ':iam::*:role/AWSControlTowerExecution'],
+                          ],
+                        },
+                      ],
                     },
                   ],
                   Version: '2012-10-17',

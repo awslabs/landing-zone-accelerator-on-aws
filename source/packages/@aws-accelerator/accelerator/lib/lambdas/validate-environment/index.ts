@@ -420,7 +420,6 @@ async function validateAccountsInOu(configTableName: string, commitId: string): 
       });
     }
   }
-  //console.log(workloadAccountKeys);
 
   const mandatoryAccountParams: QueryCommandInput = {
     TableName: configTableName,
@@ -443,7 +442,6 @@ async function validateAccountsInOu(configTableName: string, commitId: string): 
       });
     }
   }
-  //console.log(mandatoryAccountKeys);
 
   const accountKeys = mandatoryAccountKeys;
   accountKeys.push(...workloadAccountKeys);

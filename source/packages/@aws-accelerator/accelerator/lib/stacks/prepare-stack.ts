@@ -17,6 +17,7 @@ import { Construct } from 'constructs';
 import path from 'path';
 
 import {
+  Account,
   CreateControlTowerAccounts,
   CreateOrganizationAccounts,
   GetPortfolioId,
@@ -152,6 +153,18 @@ export class PrepareStack extends AcceleratorStack {
       });
 
       createOrganizationalUnits.node.addDependency(configTable);
+      createOrganizationalUnits.node.addDependency(loadAcceleratorConfigTable);
+
+      // Invite Accounts to Organization (GovCloud)
+      const inviteAccountsToOu = new Account(this, 'InviteAccountsToOu', {
+        acceleratorConfigTable: configTable,
+        commitId: props.configCommitId || '',
+        assumeRoleName: props.globalConfig.managementAccountAccessRole,
+        kmsKey: key,
+        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      });
+      inviteAccountsToOu.node.addDependency(loadAcceleratorConfigTable);
+      inviteAccountsToOu.node.addDependency(createOrganizationalUnits);
 
       if (props.partition == 'aws') {
         let govCloudAccountMappingTable: cdk.aws_dynamodb.ITable | undefined;
@@ -234,6 +247,7 @@ export class PrepareStack extends AcceleratorStack {
 
         validation.node.addDependency(loadAcceleratorConfigTable);
         validation.node.addDependency(createOrganizationalUnits);
+        validation.node.addDependency(inviteAccountsToOu);
 
         Logger.info(`[prepare-stack] Create new organization accounts`);
         const organizationAccounts = new CreateOrganizationAccounts(this, 'CreateOrganizationAccounts', {

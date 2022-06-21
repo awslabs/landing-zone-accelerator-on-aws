@@ -38,6 +38,9 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-sdk": "2.1152.0"
+    "@aws-sdk/client-dynamodb": "3.110.0",
+    "@aws-sdk/lib-dynamodb": "3.110.0",
+    "@aws-sdk/client-organizations": "3.110.0",
+    "@aws-sdk/client-sts": "3.110.0"
   }
 }

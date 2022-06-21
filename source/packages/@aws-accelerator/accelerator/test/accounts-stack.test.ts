@@ -88,21 +88,21 @@ describe('AccountsStack', () => {
    * Number of InviteAccountToOrganization custom resource test
    */
   test(`${testNamePrefix} InviteAccountToOrganization custom resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::InviteAccountToOrganization', 3);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::InviteAccountToOrganization', 0);
   });
 
   /**
    * Number of Lambda Function resource test
    */
   test(`${testNamePrefix} Lambda Function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 5);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 4);
   });
 
   /**
    * Number of IAM role resource test
    */
   test(`${testNamePrefix} IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 5);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 4);
   });
 
   /**
@@ -129,10 +129,7 @@ describe('AccountsStack', () => {
           Type: 'Custom::AttachPolicy',
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
-          DependsOn: [
-            'CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039',
-            'ManagementOrganizationAccount93F8866A',
-          ],
+          DependsOn: ['CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039'],
           Properties: {
             ServiceToken: {
               'Fn::GetAtt': ['CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202', 'Arn'],
@@ -176,38 +173,38 @@ describe('AccountsStack', () => {
     });
   });
 
-  /**
-   * AuditOrganizationAccount custom resource configuration test
-   */
-  test(`${testNamePrefix} AuditOrganizationAccount custom resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        AuditOrganizationAccount11304D9B: {
-          Type: 'Custom::InviteAccountToOrganization',
-          UpdateReplacePolicy: 'Delete',
-          DeletionPolicy: 'Delete',
-          Properties: {
-            ServiceToken: {
-              'Fn::GetAtt': ['CustomInviteAccountToOrganizationCustomResourceProviderHandlerAEB26818', 'Arn'],
-            },
-            accountId: '222222222222',
-            roleArn: {
-              'Fn::Join': [
-                '',
-                [
-                  'arn:',
-                  {
-                    Ref: 'AWS::Partition',
-                  },
-                  ':iam::222222222222:role/AWSControlTowerExecution',
-                ],
-              ],
-            },
-          },
-        },
-      },
-    });
-  });
+  // /**
+  //  * AuditOrganizationAccount custom resource configuration test
+  //  */
+  // test(`${testNamePrefix} AuditOrganizationAccount custom resource configuration test`, () => {
+  //   cdk.assertions.Template.fromStack(stack).templateMatches({
+  //     Resources: {
+  //       AuditOrganizationAccount11304D9B: {
+  //         Type: 'Custom::InviteAccountToOrganization',
+  //         UpdateReplacePolicy: 'Delete',
+  //         DeletionPolicy: 'Delete',
+  //         Properties: {
+  //           ServiceToken: {
+  //             'Fn::GetAtt': ['CustomInviteAccountToOrganizationCustomResourceProviderHandlerAEB26818', 'Arn'],
+  //           },
+  //           accountId: '222222222222',
+  //           roleArn: {
+  //             'Fn::Join': [
+  //               '',
+  //               [
+  //                 'arn:',
+  //                 {
+  //                   Ref: 'AWS::Partition',
+  //                 },
+  //                 ':iam::222222222222:role/AWSControlTowerExecution',
+  //               ],
+  //             ],
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
+  // });
 
   /**
    * CustomEnablePolicyTypeCustomResourceProviderHandler lambda function resource configuration test
@@ -308,84 +305,84 @@ describe('AccountsStack', () => {
     });
   });
 
-  /**
-   * CustomInviteAccountToOrganizationCustomResourceProviderHandler lambda function resource configuration test
-   */
-  test(`${testNamePrefix} CustomInviteAccountToOrganizationCustomResourceProviderHandler lambda function resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        CustomInviteAccountToOrganizationCustomResourceProviderHandlerAEB26818: {
-          Type: 'AWS::Lambda::Function',
-          DependsOn: ['CustomInviteAccountToOrganizationCustomResourceProviderRole0F64F419'],
-          Properties: {
-            Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
-            },
-            Handler: '__entrypoint__.handler',
-            MemorySize: 128,
-            Role: {
-              'Fn::GetAtt': ['CustomInviteAccountToOrganizationCustomResourceProviderRole0F64F419', 'Arn'],
-            },
-            Runtime: 'nodejs14.x',
-            Timeout: 900,
-          },
-        },
-      },
-    });
-  });
+  // /**
+  //  * CustomInviteAccountToOrganizationCustomResourceProviderHandler lambda function resource configuration test
+  //  */
+  // test(`${testNamePrefix} CustomInviteAccountToOrganizationCustomResourceProviderHandler lambda function resource configuration test`, () => {
+  //   cdk.assertions.Template.fromStack(stack).templateMatches({
+  //     Resources: {
+  //       CustomInviteAccountToOrganizationCustomResourceProviderHandlerAEB26818: {
+  //         Type: 'AWS::Lambda::Function',
+  //         DependsOn: ['CustomInviteAccountToOrganizationCustomResourceProviderRole0F64F419'],
+  //         Properties: {
+  //           Code: {
+  //             S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+  //           },
+  //           Handler: '__entrypoint__.handler',
+  //           MemorySize: 128,
+  //           Role: {
+  //             'Fn::GetAtt': ['CustomInviteAccountToOrganizationCustomResourceProviderRole0F64F419', 'Arn'],
+  //           },
+  //           Runtime: 'nodejs14.x',
+  //           Timeout: 900,
+  //         },
+  //       },
+  //     },
+  //   });
+  // });
 
-  /**
-   * CustomInviteAccountToOrganizationCustomResourceProviderRole resource configuration test
-   */
-  test(`${testNamePrefix} CustomInviteAccountToOrganizationCustomResourceProviderRole resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        CustomInviteAccountToOrganizationCustomResourceProviderRole0F64F419: {
-          Type: 'AWS::IAM::Role',
-          Properties: {
-            AssumeRolePolicyDocument: {
-              Statement: [
-                {
-                  Action: 'sts:AssumeRole',
-                  Effect: 'Allow',
-                  Principal: {
-                    Service: 'lambda.amazonaws.com',
-                  },
-                },
-              ],
-              Version: '2012-10-17',
-            },
-            ManagedPolicyArns: [
-              {
-                'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
-              },
-            ],
-            Policies: [
-              {
-                PolicyDocument: {
-                  Statement: [
-                    {
-                      Action: [
-                        'organizations:AcceptHandshake',
-                        'organizations:ListAccounts',
-                        'organizations:InviteAccountToOrganization',
-                        'organizations:MoveAccount',
-                        'sts:AssumeRole',
-                      ],
-                      Effect: 'Allow',
-                      Resource: '*',
-                    },
-                  ],
-                  Version: '2012-10-17',
-                },
-                PolicyName: 'Inline',
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
+  // /**
+  //  * CustomInviteAccountToOrganizationCustomResourceProviderRole resource configuration test
+  //  */
+  // test(`${testNamePrefix} CustomInviteAccountToOrganizationCustomResourceProviderRole resource configuration test`, () => {
+  //   cdk.assertions.Template.fromStack(stack).templateMatches({
+  //     Resources: {
+  //       CustomInviteAccountToOrganizationCustomResourceProviderRole0F64F419: {
+  //         Type: 'AWS::IAM::Role',
+  //         Properties: {
+  //           AssumeRolePolicyDocument: {
+  //             Statement: [
+  //               {
+  //                 Action: 'sts:AssumeRole',
+  //                 Effect: 'Allow',
+  //                 Principal: {
+  //                   Service: 'lambda.amazonaws.com',
+  //                 },
+  //               },
+  //             ],
+  //             Version: '2012-10-17',
+  //           },
+  //           ManagedPolicyArns: [
+  //             {
+  //               'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+  //             },
+  //           ],
+  //           Policies: [
+  //             {
+  //               PolicyDocument: {
+  //                 Statement: [
+  //                   {
+  //                     Action: [
+  //                       'organizations:AcceptHandshake',
+  //                       'organizations:ListAccounts',
+  //                       'organizations:InviteAccountToOrganization',
+  //                       'organizations:MoveAccount',
+  //                       'sts:AssumeRole',
+  //                     ],
+  //                     Effect: 'Allow',
+  //                     Resource: '*',
+  //                   },
+  //                 ],
+  //                 Version: '2012-10-17',
+  //               },
+  //               PolicyName: 'Inline',
+  //             },
+  //           ],
+  //         },
+  //       },
+  //     },
+  //   });
+  // });
 
   /**
    * CustomOrganizationsAttachPolicyCustomResourceProviderHandler lambda function resource configuration test
@@ -584,71 +581,71 @@ describe('AccountsStack', () => {
     });
   });
 
-  /**
-   * LogArchiveOrganizationAccount custom resource configuration test
-   */
-  test(`${testNamePrefix} LogArchiveOrganizationAccount custom resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        LogArchiveOrganizationAccount09183FEA: {
-          Type: 'Custom::InviteAccountToOrganization',
-          UpdateReplacePolicy: 'Delete',
-          DeletionPolicy: 'Delete',
-          Properties: {
-            ServiceToken: {
-              'Fn::GetAtt': ['CustomInviteAccountToOrganizationCustomResourceProviderHandlerAEB26818', 'Arn'],
-            },
-            accountId: '111111111111',
-            roleArn: {
-              'Fn::Join': [
-                '',
-                [
-                  'arn:',
-                  {
-                    Ref: 'AWS::Partition',
-                  },
-                  ':iam::111111111111:role/AWSControlTowerExecution',
-                ],
-              ],
-            },
-          },
-        },
-      },
-    });
-  });
+  // /**
+  //  * LogArchiveOrganizationAccount custom resource configuration test
+  //  */
+  // test(`${testNamePrefix} LogArchiveOrganizationAccount custom resource configuration test`, () => {
+  //   cdk.assertions.Template.fromStack(stack).templateMatches({
+  //     Resources: {
+  //       LogArchiveOrganizationAccount09183FEA: {
+  //         Type: 'Custom::InviteAccountToOrganization',
+  //         UpdateReplacePolicy: 'Delete',
+  //         DeletionPolicy: 'Delete',
+  //         Properties: {
+  //           ServiceToken: {
+  //             'Fn::GetAtt': ['CustomInviteAccountToOrganizationCustomResourceProviderHandlerAEB26818', 'Arn'],
+  //           },
+  //           accountId: '111111111111',
+  //           roleArn: {
+  //             'Fn::Join': [
+  //               '',
+  //               [
+  //                 'arn:',
+  //                 {
+  //                   Ref: 'AWS::Partition',
+  //                 },
+  //                 ':iam::111111111111:role/AWSControlTowerExecution',
+  //               ],
+  //             ],
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
+  // });
 
-  /**
-   * ManagementOrganizationAccount custom resource configuration test
-   */
-  test(`${testNamePrefix} ManagementOrganizationAccount custom resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        ManagementOrganizationAccount93F8866A: {
-          Type: 'Custom::InviteAccountToOrganization',
-          UpdateReplacePolicy: 'Delete',
-          DeletionPolicy: 'Delete',
-          Properties: {
-            ServiceToken: {
-              'Fn::GetAtt': ['CustomInviteAccountToOrganizationCustomResourceProviderHandlerAEB26818', 'Arn'],
-            },
-            accountId: '333333333333',
-            roleArn: {
-              'Fn::Join': [
-                '',
-                [
-                  'arn:',
-                  {
-                    Ref: 'AWS::Partition',
-                  },
-                  ':iam::333333333333:role/AWSControlTowerExecution',
-                ],
-              ],
-            },
-          },
-        },
-      },
-    });
-  });
+  // /**
+  //  * ManagementOrganizationAccount custom resource configuration test
+  //  */
+  // test(`${testNamePrefix} ManagementOrganizationAccount custom resource configuration test`, () => {
+  //   cdk.assertions.Template.fromStack(stack).templateMatches({
+  //     Resources: {
+  //       ManagementOrganizationAccount93F8866A: {
+  //         Type: 'Custom::InviteAccountToOrganization',
+  //         UpdateReplacePolicy: 'Delete',
+  //         DeletionPolicy: 'Delete',
+  //         Properties: {
+  //           ServiceToken: {
+  //             'Fn::GetAtt': ['CustomInviteAccountToOrganizationCustomResourceProviderHandlerAEB26818', 'Arn'],
+  //           },
+  //           accountId: '333333333333',
+  //           roleArn: {
+  //             'Fn::Join': [
+  //               '',
+  //               [
+  //                 'arn:',
+  //                 {
+  //                   Ref: 'AWS::Partition',
+  //                 },
+  //                 ':iam::333333333333:role/AWSControlTowerExecution',
+  //               ],
+  //             ],
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
+  // });
 
   /**
    * SSM parameter SsmParamAcceleratorVersion resource configuration test
