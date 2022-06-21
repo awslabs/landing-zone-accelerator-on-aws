@@ -12,20 +12,18 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { ITable } from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
+import { v4 as uuidv4 } from 'uuid';
 
 const path = require('path');
-
-export interface IAccount extends cdk.IResource {
-  readonly accountId: string;
-  readonly assumeRoleName: string;
-}
 
 /**
  * Account properties
  */
 export interface AccountProps {
-  readonly accountId: string;
+  readonly acceleratorConfigTable: ITable;
+  readonly commitId: string;
   readonly assumeRoleName: string;
   /**
    * Custom resource lambda log group encryption key
@@ -40,17 +38,11 @@ export interface AccountProps {
 /**
  * Class to initialize an Organizations Account
  */
-export class Account extends cdk.Resource implements IAccount {
-  public readonly accountId: string;
-  public readonly assumeRoleName: string;
-
+export class Account extends cdk.Resource {
   constructor(scope: Construct, id: string, props: AccountProps) {
     super(scope, id);
 
-    this.accountId = props.accountId;
-    this.assumeRoleName = props.assumeRoleName;
-
-    const ENROLL_ACCOUNT_TYPE = 'Custom::InviteAccountToOrganization';
+    const ENROLL_ACCOUNT_TYPE = 'Custom::InviteAccountsToOrganization';
 
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, ENROLL_ACCOUNT_TYPE, {
       codeDirectory: path.join(__dirname, 'invite-account-to-organization/dist'),
@@ -63,9 +55,28 @@ export class Account extends cdk.Resource implements IAccount {
             'organizations:ListAccounts',
             'organizations:InviteAccountToOrganization',
             'organizations:MoveAccount',
-            'sts:AssumeRole',
+            'organizations:ListRoots',
           ],
           Resource: '*',
+        },
+        {
+          Effect: 'Allow',
+          Action: ['dynamodb:Query'],
+          Resource: [props.acceleratorConfigTable.tableArn],
+        },
+        {
+          Effect: 'Allow',
+          Action: ['sts:AssumeRole'],
+          Resource: [
+            cdk.Stack.of(this).formatArn({
+              service: 'iam',
+              region: '',
+              account: '*',
+              resource: 'role',
+              arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
+              resourceName: props.assumeRoleName,
+            }),
+          ],
         },
       ],
     });
@@ -74,16 +85,11 @@ export class Account extends cdk.Resource implements IAccount {
       resourceType: ENROLL_ACCOUNT_TYPE,
       serviceToken: provider.serviceToken,
       properties: {
-        accountId: props.accountId,
+        configTableName: props.acceleratorConfigTable.tableName,
         partition: cdk.Aws.PARTITION,
-        roleArn: cdk.Stack.of(this).formatArn({
-          service: 'iam',
-          region: '',
-          account: props.accountId,
-          resource: 'role',
-          arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
-          resourceName: props.assumeRoleName,
-        }),
+        commitId: props.commitId,
+        assumeRoleName: props.assumeRoleName,
+        uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });
 

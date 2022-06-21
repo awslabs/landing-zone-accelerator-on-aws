@@ -18,14 +18,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 
 import * as iam from 'aws-cdk-lib/aws-iam';
-import {
-  Account,
-  EnablePolicyType,
-  Policy,
-  PolicyAttachment,
-  PolicyType,
-  PolicyTypeEnum,
-} from '@aws-accelerator/constructs';
+import { EnablePolicyType, Policy, PolicyAttachment, PolicyType, PolicyTypeEnum } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
@@ -114,21 +107,6 @@ export class AccountsStack extends AcceleratorStack {
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
 
-        // Invite Accounts to Organization (GovCloud)
-        const accountMap: Map<string, Account> = new Map<string, Account>();
-        for (const account of [...props.accountsConfig.mandatoryAccounts, ...props.accountsConfig.workloadAccounts]) {
-          Logger.info(`[accounts-stack] Ensure ${account.name} is part of the Organization`);
-
-          const organizationAccount = new Account(this, pascalCase(`${account.name}OrganizationAccount`), {
-            accountId: props.accountsConfig.getAccountId(account.name),
-            assumeRoleName: props.globalConfig.managementAccountAccessRole,
-            kmsKey: key,
-            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-          });
-
-          accountMap.set(account.name, organizationAccount);
-        }
-
         // Deploy SCPs
         let quarantineScpId = '';
         for (const serviceControlPolicy of props.organizationConfig.serviceControlPolicies) {
@@ -172,20 +150,13 @@ export class AccountsStack extends AcceleratorStack {
           }
 
           for (const account of serviceControlPolicy.deploymentTargets.accounts ?? []) {
-            const policyAttachment = new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${account}`), {
+            new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${account}`), {
               policyId: scp.id,
               targetId: props.accountsConfig.getAccountId(account),
               type: PolicyType.SERVICE_CONTROL_POLICY,
               kmsKey: key,
               logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             });
-
-            // Add dependency to ensure that account is part of the OU before
-            // attempting to add the SCP
-            const organizationAccount = accountMap.get(account);
-            if (organizationAccount) {
-              policyAttachment.node.addDependency(organizationAccount);
-            }
           }
         }
 
@@ -200,7 +171,7 @@ export class AccountsStack extends AcceleratorStack {
           Logger.debug('[accounts-stack] Enable Service Access for guardduty.amazonaws.com');
           new iam.CfnServiceLinkedRole(this, 'GuardDutyServiceLinkedRole', {
             awsServiceName: 'guardduty.amazonaws.com',
-            description: 'A service-linked role required for Amazon GuardDuty to access your resources.',
+            description: 'A service-linked role required for Amazon GuardDuty to access your resources. ',
           });
         }
 

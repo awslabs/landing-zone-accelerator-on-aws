@@ -34,8 +34,8 @@ const unmarshallOptions = {
   wrapNumbers: false,
 };
 const translateConfig = { marshallOptions, unmarshallOptions };
-const dynamodbClient1 = new DynamoDBClient({});
-const documentClient = DynamoDBDocumentClient.from(dynamodbClient1, translateConfig);
+const dynamodbClient = new DynamoDBClient({});
+const documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
 const paginationConfig: DynamoDBDocumentPaginationConfiguration = {
   client: documentClient,
   pageSize: 100,
@@ -71,6 +71,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Create':
     case 'Update':
       if (organizationsEnabled == 'false' || controlTowerEnabled == 'true') {
+        console.log('Stopping, either Organizations not enabled or ControlTower is enabled.');
         return {
           Status: 'SUCCESS',
         };
@@ -104,7 +105,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         a['acceleratorKey'].split('/').length > b['acceleratorKey'].split('/').length ? 1 : -1,
       );
 
-      console.log(`Sorted list of OU's to create ${sortedOrganizationalUnits}`);
+      console.log(`Sorted list of OU's to create ${JSON.stringify(sortedOrganizationalUnits)}`);
       for (const organizationalUnit of sortedOrganizationalUnits) {
         console.log(`Creating organizational unit ${organizationalUnit['acceleratorKey']}`);
         const createResponse = await createOrganizationalUnitFromPath(
@@ -151,9 +152,7 @@ async function getConfigFromTable(configTableName: string, commitId: string): Pr
     KeyConditionExpression: 'dataType = :hkey',
     ExpressionAttributeValues: {
       ':hkey': 'organization',
-      ':commitId': commitId,
     },
-    FilterExpression: 'contains (commitId, :commitId)',
   };
   const items: DDBItems = [];
   const paginator = paginateQuery(paginationConfig, params);
@@ -164,7 +163,8 @@ async function getConfigFromTable(configTableName: string, commitId: string): Pr
       }
     }
   }
-  return items;
+  const filterCommitIdResults = items.filter(item => item['commitId'] == commitId);
+  return filterCommitIdResults;
 }
 
 async function getRootId(): Promise<string> {

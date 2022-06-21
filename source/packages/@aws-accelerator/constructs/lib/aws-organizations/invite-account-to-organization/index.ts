@@ -11,9 +11,48 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as AWS from 'aws-sdk';
-AWS.config.logger = console;
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import {
+  OrganizationsClient,
+  ListRootsCommand,
+  ListRootsCommandOutput,
+  ListAccountsCommand,
+  ListAccountsCommandOutput,
+  InviteAccountToOrganizationCommand,
+  AcceptHandshakeCommand,
+  MoveAccountCommand,
+} from '@aws-sdk/client-organizations';
+import { DynamoDBDocumentClient, paginateQuery, DynamoDBDocumentPaginationConfiguration } from '@aws-sdk/lib-dynamodb';
+import { AssumeRoleCommand, STSClient } from '@aws-sdk/client-sts';
+
+const marshallOptions = {
+  convertEmptyValues: false,
+  //overriding default value of false
+  removeUndefinedValues: true,
+  convertClassInstanceToMap: false,
+};
+const unmarshallOptions = {
+  wrapNumbers: false,
+};
+const translateConfig = { marshallOptions, unmarshallOptions };
+const dynamodbClient = new DynamoDBClient({});
+const documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
+const paginationConfig: DynamoDBDocumentPaginationConfiguration = {
+  client: documentClient,
+  pageSize: 100,
+};
+
+type OrganizationIdentifier = {
+  acceleratorKey: string;
+  awsKey: string;
+};
+type OrganizationIdentifiers = Array<OrganizationIdentifier>;
+
+type AccountDetail = {
+  accountId: string;
+  ouName: string;
+};
+type AccountDetails = Array<AccountDetail>;
 
 /**
  * invite-account-to-organization - lambda handler
@@ -23,95 +62,224 @@ AWS.config.logger = console;
  */
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
   | {
-      PhysicalResourceId: string | undefined;
       Status: string;
     }
   | undefined
 > {
+  const configTableName = event.ResourceProperties['configTableName'];
+  const commitId = event.ResourceProperties['commitId'];
+  const assumeRoleName = event.ResourceProperties['assumeRoleName'];
+  const partition = event.ResourceProperties['partition'];
+
+  let organizationsClient: OrganizationsClient;
+  if (partition === 'aws-us-gov') {
+    organizationsClient = new OrganizationsClient({ region: 'us-gov-west-1' });
+  } else {
+    organizationsClient = new OrganizationsClient({ region: 'us-east-1' });
+  }
+
+  if (partition !== 'aws-us-gov') {
+    return {
+      Status: 'SUCCESS',
+    };
+  }
+  console.log('CommitId: ', commitId);
+
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const accountId = event.ResourceProperties['accountId'];
-      const roleArn = event.ResourceProperties['roleArn'];
-      const partition = event.ResourceProperties['partition'];
+      const rootId = await getRootId(organizationsClient);
+      console.log('Organizations Root Id: ', rootId);
+      const accountsInOu = await listAccountsInOrganization(organizationsClient);
+      const accountsInConfig = await getAccountsFromTable(configTableName, commitId);
+      const organizationalUnitsInConfig = await getOrganizationsFromTable(configTableName, commitId);
 
-      //
-      // Obtain an Organizations client
-      //
-      let organizationsClient: AWS.Organizations;
-      if (partition === 'aws-us-gov') {
-        organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
-      } else {
-        organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
-      }
-
-      let nextToken: string | undefined = undefined;
-      do {
-        const page = await throttlingBackOff(() =>
-          organizationsClient.listAccounts({ NextToken: nextToken }).promise(),
-        );
-        for (const item of page.Accounts ?? []) {
-          if (item.Id === accountId) {
-            console.log(`Account ${accountId} already added to organization`);
-            if (item.Status)
-              return {
-                PhysicalResourceId: accountId,
-                Status: 'SUCCESS',
-              };
-          }
+      for (const account of accountsInConfig) {
+        if (accountsInOu.find(item => item == account.accountId)) {
+          console.log(`Account ${account.accountId} already added to organization`);
+          continue;
         }
-        nextToken = page.NextToken;
-      } while (nextToken);
-
-      // Account was not found, invite it
-      console.log('InviteAccountToOrganizationCommand');
-      const invite = await throttlingBackOff(() =>
-        organizationsClient.inviteAccountToOrganization({ Target: { Type: 'ACCOUNT', Id: accountId } }).promise(),
-      );
-      console.log(invite);
-      console.log(`Invite handshake id: ${invite.Handshake?.Id}`);
-
-      const stsClient = new AWS.STS({});
-
-      const assumeRoleResponse = await throttlingBackOff(() =>
-        stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: 'AcceptHandshakeSession' }).promise(),
-      );
-
-      if (partition === 'aws-us-gov') {
-        organizationsClient = new AWS.Organizations({
-          credentials: {
-            accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
-            secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
-            sessionToken: assumeRoleResponse.Credentials?.SessionToken,
-          },
-        });
-      } else {
-        organizationsClient = new AWS.Organizations({
-          credentials: {
-            accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
-            secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
-            sessionToken: assumeRoleResponse.Credentials?.SessionToken,
-          },
-          region: 'us-east-1',
-        });
+        const ouForAccount = organizationalUnitsInConfig.find(ou => ou.acceleratorKey === account.ouName);
+        if (ouForAccount?.awsKey) {
+          const roleArn = `arn:${partition}:iam::${account.accountId}:role/${assumeRoleName}`;
+          await inviteAccountToOu(
+            organizationsClient,
+            account.accountId,
+            roleArn,
+            partition,
+            rootId,
+            ouForAccount?.awsKey,
+          );
+        } else {
+          return {
+            Status: 'FAILURE',
+          };
+        }
       }
-
-      console.log('AcceptHandshakeCommand');
-      const response = await throttlingBackOff(() =>
-        organizationsClient.acceptHandshake({ HandshakeId: invite.Handshake!.Id! }).promise(),
-      );
-      console.log(response);
-
       return {
-        PhysicalResourceId: accountId,
         Status: 'SUCCESS',
       };
 
     case 'Delete':
-      // Do Nothing, leave Policy Type enabled
+      // Do Nothing
       return {
-        PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',
       };
   }
+}
+
+async function inviteAccountToOu(
+  organizationsClient: OrganizationsClient,
+  accountId: string,
+  roleArn: string,
+  partition: string,
+  rootId: string,
+  organizationalUnitId: string,
+): Promise<boolean> {
+  console.log('InviteAccountToOrganizationCommand');
+  const invite = await organizationsClient.send(
+    new InviteAccountToOrganizationCommand({ Target: { Type: 'ACCOUNT', Id: accountId } }),
+  );
+  console.log(`Invite handshake id: ${invite.Handshake?.Id}`);
+
+  const stsClient = new STSClient({});
+
+  const assumeRoleResponse = await stsClient.send(
+    new AssumeRoleCommand({ RoleArn: roleArn, RoleSessionName: 'AcceptHandshakeSession' }),
+  );
+
+  let acceptOrganizationsClient: OrganizationsClient;
+  if (partition === 'aws-us-gov') {
+    acceptOrganizationsClient = new OrganizationsClient({
+      credentials: {
+        accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
+        secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
+        sessionToken: assumeRoleResponse.Credentials?.SessionToken,
+      },
+      region: 'us-gov-west-1',
+    });
+  } else {
+    acceptOrganizationsClient = new OrganizationsClient({
+      credentials: {
+        accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
+        secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
+        sessionToken: assumeRoleResponse.Credentials?.SessionToken,
+      },
+      region: 'us-east-1',
+    });
+  }
+
+  console.log('AcceptHandshakeCommand');
+  const acceptResponse = await acceptOrganizationsClient.send(
+    new AcceptHandshakeCommand({ HandshakeId: invite.Handshake!.Id! }),
+  );
+  console.log(acceptResponse);
+
+  console.log('Move account to OU');
+  const moveResponse = await organizationsClient.send(
+    new MoveAccountCommand({
+      AccountId: accountId,
+      SourceParentId: rootId,
+      DestinationParentId: organizationalUnitId,
+    }),
+  );
+  console.log(moveResponse);
+
+  return true;
+}
+
+async function getRootId(organizationsClient: OrganizationsClient): Promise<string> {
+  // get root ou id
+  let rootId = '';
+  let nextToken: string | undefined = undefined;
+  do {
+    const page: ListRootsCommandOutput = await organizationsClient.send(new ListRootsCommand({ NextToken: nextToken }));
+    for (const item of page.Roots ?? []) {
+      if (item.Name === 'Root' && item.Id && item.Arn) {
+        rootId = item.Id;
+      }
+    }
+    nextToken = page.NextToken;
+  } while (nextToken);
+  return rootId;
+}
+
+async function getOrganizationsFromTable(configTableName: string, commitId: string): Promise<OrganizationIdentifiers> {
+  const params = {
+    TableName: configTableName,
+    KeyConditionExpression: 'dataType = :hkey',
+    ExpressionAttributeValues: {
+      ':hkey': 'organization',
+      ':commitId': commitId,
+    },
+    FilterExpression: 'contains (commitId, :commitId)',
+  };
+
+  const items: OrganizationIdentifiers = [];
+  const paginator = paginateQuery(paginationConfig, params);
+  for await (const page of paginator) {
+    if (page.Items) {
+      for (const item of page.Items) {
+        items.push({ acceleratorKey: item['acceleratorKey'], awsKey: item['awsKey'] });
+      }
+    }
+  }
+  return items;
+}
+
+async function getAccountsFromTable(configTableName: string, commitId: string): Promise<AccountDetails> {
+  const workloadAccountParams = {
+    TableName: configTableName,
+    KeyConditionExpression: 'dataType = :hkey',
+    ExpressionAttributeValues: {
+      ':hkey': 'workloadAccount',
+      ':commitId': commitId,
+    },
+    FilterExpression: 'contains (commitId, :commitId)',
+  };
+
+  const items: AccountDetails = [];
+  const workloadPaginator = paginateQuery(paginationConfig, workloadAccountParams);
+  for await (const page of workloadPaginator) {
+    if (page.Items) {
+      for (const item of page.Items) {
+        items.push({ accountId: item['awsKey'], ouName: item['ouName'] });
+      }
+    }
+  }
+
+  const mandatoryAccountParams = {
+    TableName: configTableName,
+    KeyConditionExpression: 'dataType = :hkey',
+    ExpressionAttributeValues: {
+      ':hkey': 'mandatoryAccount',
+      ':commitId': commitId,
+    },
+    FilterExpression: 'contains (commitId, :commitId)',
+  };
+
+  const mandatoryPaginator = paginateQuery(paginationConfig, mandatoryAccountParams);
+  for await (const page of mandatoryPaginator) {
+    if (page.Items) {
+      for (const item of page.Items) {
+        items.push({ accountId: item['awsKey'], ouName: item['ouName'] });
+      }
+    }
+  }
+  return items;
+}
+
+async function listAccountsInOrganization(organizationsClient: OrganizationsClient): Promise<string[]> {
+  const accountsInOu: string[] = [];
+  let nextToken: string | undefined = undefined;
+  do {
+    const page: ListAccountsCommandOutput = await organizationsClient.send(
+      new ListAccountsCommand({ NextToken: nextToken }),
+    );
+    for (const item of page.Accounts ?? []) {
+      accountsInOu.push(item.Id!);
+    }
+    nextToken = page.NextToken;
+  } while (nextToken);
+  return accountsInOu;
 }
