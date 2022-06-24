@@ -103,6 +103,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
     //
     // Create private hosted zones
     //
+
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
       const accountId = this.accountsConfig.getAccountId(vpcItem.account);
       if (accountId === cdk.Stack.of(this).account && vpcItem.region === cdk.Stack.of(this).region) {
@@ -112,7 +113,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
           throw new Error(`[network-vpc-dns-stack] Unable to locate VPC ${vpcItem.name}`);
         }
         // Create private hosted zones
-        if (vpcItem.interfaceEndpoints) {
+        if (vpcItem.interfaceEndpoints?.central) {
           this.createHostedZones(vpcItem, vpcId, endpointMap, zoneMap);
         }
 
@@ -130,6 +131,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
         }
       }
     }
+
     Logger.info('[network-vpc-dns-stack] Completed stack synthesis');
   }
 
