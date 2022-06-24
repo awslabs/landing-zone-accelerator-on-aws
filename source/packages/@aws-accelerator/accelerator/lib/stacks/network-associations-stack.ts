@@ -334,6 +334,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         props.accountsConfig.getAccountId(item.account) === cdk.Stack.of(this).account &&
         item.region === cdk.Stack.of(this).region,
     );
+
+    if (props.partition !== 'aws' && centralEndpointVpcs.length > 0) {
+      throw new Error('Central Endpoint VPC is only possible in commercial regions');
+    }
+
     if (centralEndpointVpcs.length > 1) {
       throw new Error(`multiple (${centralEndpointVpcs.length}) central endpoint vpcs detected, should only be one`);
     }

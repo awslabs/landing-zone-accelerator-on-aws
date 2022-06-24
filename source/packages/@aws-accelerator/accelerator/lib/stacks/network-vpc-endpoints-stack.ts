@@ -496,6 +496,8 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     let endpointSg: SecurityGroup | undefined;
     let port: number;
     let trafficType: string;
+    const privateDnsValue = !vpcItem.interfaceEndpoints?.central ?? true;
+
     for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
       Logger.info(`[network-vpc-endpoints-stack] Adding Interface Endpoint for ${endpointItem.service}`);
 
@@ -577,7 +579,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         service: endpointItem.service,
         subnets,
         securityGroups: [endpointSg],
-        privateDnsEnabled: false,
+        privateDnsEnabled: privateDnsValue,
         policyDocument: this.createVpcEndpointPolicy(vpcItem, endpointItem),
       });
       new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${vpcItem.name}${endpointItem.service}Dns`), {

@@ -237,6 +237,12 @@ export class NetworkVpcStack extends AcceleratorStack {
       const accountId = this.accountsConfig.getAccountId(vpcItem.account);
       if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
         if (vpcItem.useCentralEndpoints) {
+          if (props.partition !== 'aws') {
+            throw new Error(
+              'useCentralEndpoints set to true, but AWS Partition is not commercial. Please change it to false.',
+            );
+          }
+
           useCentralEndpoints = true;
         }
       }
@@ -484,8 +490,14 @@ export class NetworkVpcStack extends AcceleratorStack {
         // identify which VPCs in a target account to create private hosted zone
         // associations for.
         //
+        if (vpcItem.useCentralEndpoints && props.partition !== 'aws') {
+          throw new Error(
+            'useCentralEndpoints set to true, but AWS Partition is not commercial. No tags will be added',
+          );
+        }
+
         if (vpcItem.useCentralEndpoints) {
-          if (centralEndpointVpc === undefined) {
+          if (!centralEndpointVpc) {
             throw new Error('Attempting to use central endpoints with no Central Endpoints defined');
           }
           cdk.Tags.of(vpc).add('accelerator:use-central-endpoints', 'true');
