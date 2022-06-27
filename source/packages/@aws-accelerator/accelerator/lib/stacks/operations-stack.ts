@@ -19,6 +19,7 @@ import * as path from 'path';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { BudgetDefinition } from '@aws-accelerator/constructs';
 
 export interface OperationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
@@ -48,6 +49,19 @@ export class OperationsStack extends AcceleratorStack {
             ),
           },
         );
+      }
+
+      //
+      // Enable Budget Reports
+      //
+      if (props.globalConfig.reports?.budgets) {
+        for (const budgets of props.globalConfig.reports.budgets ?? []) {
+          if (this.isIncluded(budgets.deploymentTargets)) {
+            new BudgetDefinition(this, `${budgets.name}BudgetDefinition`, {
+              budgets: props.globalConfig.reports?.budgets,
+            });
+          }
+        }
       }
 
       //

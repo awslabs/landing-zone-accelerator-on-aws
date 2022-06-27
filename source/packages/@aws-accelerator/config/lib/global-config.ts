@@ -102,6 +102,7 @@ export abstract class GlobalConfigTypes {
     useBlended: t.optional(t.boolean),
     unit: t.optional(t.nonEmptyString),
     notifications: t.optional(t.array(this.notificationConfig)),
+    deploymentTargets: t.optional(t.deploymentTargets),
   });
 
   static readonly reportConfig = t.interface({
@@ -381,6 +382,10 @@ export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.bud
       subscriptionType: '',
     },
   ];
+  /**
+   * List of OU's and accounts to be configured for Budgets configuration
+   */
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
 
 /**
