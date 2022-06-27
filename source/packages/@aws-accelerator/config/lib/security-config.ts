@@ -211,6 +211,7 @@ export class SecurityConfigTypes {
     handler: t.nonEmptyString,
     runtime: t.nonEmptyString,
     rolePolicyFile: t.nonEmptyString,
+    timeout: t.optional(t.number),
   });
 
   static readonly triggeringResourceType = t.interface({
@@ -874,6 +875,10 @@ export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRul
        * Lambda execution role policy definition file
        */
       rolePolicyFile: '',
+      /**
+       * Lambda timeout duration in seconds
+       */
+      timeout: 3,
     },
     /**
      * Whether to run the rule on a fixed frequency.
@@ -969,6 +974,10 @@ export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRul
        * Lambda execution role policy definition file
        */
       rolePolicyFile: '',
+      /**
+       * Lambda function execution timeout in seconds
+       */
+      timeout: 3,
     },
     /**
      * Maximum time in seconds that AWS Config runs auto-remediation. If you do not select a number, the default is 60 seconds.
@@ -1026,6 +1035,7 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
    *               sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
    *               handler: index.handler
    *               runtime: nodejs14.x
+   *               timeout: 3
    *             periodic: true
    *             maximumExecutionFrequency: Six_Hours
    *             configurationChanges: true
