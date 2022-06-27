@@ -26,6 +26,7 @@ import { KeyLookup, Organization, ConfigServiceTags } from '@aws-accelerator/con
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { KeyStack } from './key-stack';
+import { Duration } from 'aws-cdk-lib';
 
 enum ACCEL_LOOKUP_TYPE {
   KMS = 'KMS',
@@ -207,6 +208,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
             handler: rule.customRule.lambda.handler,
             code: cdk.aws_lambda.Code.fromAsset(path.join(props.configDirPath, rule.customRule.lambda.sourceFilePath)),
             description: `AWS Config custom rule function used for "${rule.name}" rule`,
+            timeout: Duration.seconds(rule.customRule.lambda.timeout ?? 3),
           });
 
           // Configure lambda log file with encryption and log retention
