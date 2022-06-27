@@ -24,7 +24,10 @@ reports:
     refreshClosedReports: true
     reportVersioning: CREATE_NEW_REPORT
   budgets:
-    - name: accel-budget
+    - deploymentTargets:
+        organizationalUnits:
+          - Root
+      name: accel-budget
       timeUnit: MONTHLY
       type: COST
       amount: 2000

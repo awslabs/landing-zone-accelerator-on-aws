@@ -26,7 +26,6 @@ import { Region } from '@aws-accelerator/config';
 import {
   Bucket,
   BucketEncryptionType,
-  BudgetDefinition,
   EnableAwsServiceAccess,
   EnablePolicyType,
   EnableSharingWithAwsOrganization,
@@ -282,16 +281,6 @@ export class OrganizationsStack extends AcceleratorStack {
           additionalSchemaElements: props.globalConfig.reports.costAndUsageReport.additionalSchemaElements,
           kmsKey: key,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-        });
-      }
-      //
-      // Enable Budget Reports
-      //
-      if (props.globalConfig.reports?.budgets) {
-        Logger.info('[organizations-stack] Adding Budget Reports');
-
-        new BudgetDefinition(this, 'BudgetDefinition', {
-          budgets: props.globalConfig.reports.budgets,
         });
       }
       //
