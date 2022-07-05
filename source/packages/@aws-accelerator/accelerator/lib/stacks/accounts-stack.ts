@@ -56,6 +56,22 @@ export class AccountsStack extends AcceleratorStack {
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
 
+      // Adding Backups to the permitted services for vaults
+      const allowedServicePrincipals: { name: string; principal: string }[] = [
+        { name: 'Backup', principal: 'backup.amazonaws.com' },
+      ];
+
+      allowedServicePrincipals!.forEach(item => {
+        key.addToResourcePolicy(
+          new cdk.aws_iam.PolicyStatement({
+            sid: `Allow ${item.name} service to use the encryption key`,
+            principals: [new cdk.aws_iam.ServicePrincipal(item.principal)],
+            actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+            resources: ['*'],
+          }),
+        );
+      });
+
       // Allow Accelerator Role to use the encryption key
       key.addToResourcePolicy(
         new cdk.aws_iam.PolicyStatement({

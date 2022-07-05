@@ -48,6 +48,7 @@ import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { KeyStack } from './key-stack';
 import { S3ServerAccessLogsBucketNamePrefix } from '../accelerator';
 import { LifecycleRule } from '@aws-accelerator/constructs/lib/aws-s3/bucket';
+import { PrepareStack } from './prepare-stack';
 
 export interface OrganizationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
@@ -178,6 +179,13 @@ export class OrganizationsStack extends AcceleratorStack {
         );
         role.addManagedPolicy(managedBackupPolicy);
 
+        const managementKey = new KeyLookup(this, 'AcceleratorManagementKeyLookup', {
+          accountId: props.accountsConfig.getManagementAccountId(),
+          roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+          keyArnParameterName: PrepareStack.MANAGEMENT_KEY_ARN_PARAMETER_NAME,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+        }).getKey();
+
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
         // rule suppression with evidence for this permission.
         NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/BackupRole/Resource`, [
@@ -190,6 +198,7 @@ export class OrganizationsStack extends AcceleratorStack {
 
         const vault = new cdk.aws_backup.BackupVault(this, 'BackupVault', {
           backupVaultName: 'BackupVault',
+          encryptionKey: managementKey,
         });
 
         vault.node.addDependency(role);
