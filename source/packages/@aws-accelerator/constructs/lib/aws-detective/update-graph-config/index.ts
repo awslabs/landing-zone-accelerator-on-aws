@@ -10,7 +10,13 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { DetectiveClient, UpdateOrganizationConfigurationCommand, ListGraphsCommand, ListMembersCommand, ListMembersCommandOutput } from '@aws-sdk/client-detective';
+import {
+  DetectiveClient,
+  UpdateOrganizationConfigurationCommand,
+  ListGraphsCommand,
+  ListMembersCommand,
+  ListMembersCommandOutput,
+} from '@aws-sdk/client-detective';
 //AWS.config.logger = console;
 /**
  * DetectiveUpdateGraph - lambda handler
@@ -18,12 +24,12 @@ import { DetectiveClient, UpdateOrganizationConfigurationCommand, ListGraphsComm
  * @param event
  * @returns
  */
- export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
- | {
-     Status: string | undefined;
-     StatusCode: number | undefined;
-   }
- | undefined
+export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+  | {
+      Status: string | undefined;
+      StatusCode: number | undefined;
+    }
+  | undefined
 > {
   const region = event.ResourceProperties['region'];
   const adminAccountId = event.ResourceProperties['adminAccountId'];
@@ -32,10 +38,12 @@ import { DetectiveClient, UpdateOrganizationConfigurationCommand, ListGraphsComm
   const existingMemberAccountIds: string[] = [adminAccountId];
   let nextToken: string | undefined = undefined;
   do {
-    const page: ListMembersCommandOutput = await detectiveClient.send(new ListMembersCommand({ GraphArn: graphArn!, NextToken: nextToken }));
+    const page: ListMembersCommandOutput = await detectiveClient.send(
+      new ListMembersCommand({ GraphArn: graphArn!, NextToken: nextToken }),
+    );
     for (const member of page.MemberDetails ?? []) {
-    console.log(member);
-    existingMemberAccountIds.push(member.AccountId!);
+      console.log(member);
+      existingMemberAccountIds.push(member.AccountId!);
     }
     nextToken = page.NextToken;
   } while (nextToken);
@@ -47,7 +55,9 @@ import { DetectiveClient, UpdateOrganizationConfigurationCommand, ListGraphsComm
       return { Status: 'Success', StatusCode: 200 };
     case 'Delete':
       console.log('deleting - CreateMembersCommand');
-      await detectiveClient.send(new UpdateOrganizationConfigurationCommand({ AutoEnable: false, GraphArn: graphArn! }));
+      await detectiveClient.send(
+        new UpdateOrganizationConfigurationCommand({ AutoEnable: false, GraphArn: graphArn! }),
+      );
       return { Status: 'Success', StatusCode: 200 };
   }
 }
