@@ -12,7 +12,13 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import { Administrator, DetectiveClient, ListOrganizationAdminAccountsCommand, DisableOrganizationAdminAccountCommand, EnableOrganizationAdminAccountCommand } from '@aws-sdk/client-detective';
+import {
+  Administrator,
+  DetectiveClient,
+  ListOrganizationAdminAccountsCommand,
+  DisableOrganizationAdminAccountCommand,
+  EnableOrganizationAdminAccountCommand,
+} from '@aws-sdk/client-detective';
 
 /**
  * enable-detective - lambda handler
@@ -51,7 +57,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             `Detective admin account ${detectiveAdminAccount.accountId} is already an admin account, in ${region} region. No action needed`,
           );
           return { Status: 'Success', StatusCode: 200 };
-        } 
+        }
         if (detectiveAdminAccount.accountId !== adminAccountId) {
           console.warn(
             `Detective delegated admin is already set to ${detectiveAdminAccount.accountId} account can not assign another delegated account`,
@@ -59,7 +65,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           return { Status: 'Success', StatusCode: 200 };
         }
 
-      return { Status: 'Success', StatusCode: 200 };
+        return { Status: 'Success', StatusCode: 200 };
       }
 
     case 'Delete':
@@ -68,7 +74,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           console.log(
             `Started disableOrganizationAdminAccount function in ${event.ResourceProperties['region']} region for account ${adminAccountId}`,
           );
-          detectiveClient.send(new DisableOrganizationAdminAccountCommand({ AccountId: adminAccountId }))
+          detectiveClient.send(new DisableOrganizationAdminAccountCommand({ AccountId: adminAccountId }));
         }
       } else {
         if (detectiveAdminAccount.accountId !== adminAccountId) {
@@ -82,17 +88,15 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
 }
 
-async function isDetectiveEnable(
-  detectiveClient: DetectiveClient,
-): Promise<{ accountId: string | undefined }> {
-  const adminAccounts:  Administrator[] = [];
+async function isDetectiveEnable(detectiveClient: DetectiveClient): Promise<{ accountId: string | undefined }> {
+  const adminAccounts: Administrator[] = [];
   let nextToken: string | undefined = undefined;
   do {
     const page = await throttlingBackOff(() =>
       detectiveClient.send(new ListOrganizationAdminAccountsCommand({ NextToken: nextToken })),
     );
     for (const account of page.Administrators ?? []) {
-      console.log(account)
+      console.log(account);
       adminAccounts.push(account);
     }
     nextToken = page.NextToken;

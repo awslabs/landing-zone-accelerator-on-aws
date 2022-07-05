@@ -277,11 +277,10 @@ export class SecurityAuditStack extends AcceleratorStack {
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
 
-         new DetectiveGraphConfig(this, 'DetectiveGraphConfig', {
+        new DetectiveGraphConfig(this, 'DetectiveGraphConfig', {
           kmsKey: key,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-          }).node.addDependency(detectiveMembers);
-
+        }).node.addDependency(detectiveMembers);
       }
     }
 
