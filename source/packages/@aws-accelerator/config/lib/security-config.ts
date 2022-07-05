@@ -130,6 +130,20 @@ export class SecurityConfigTypes {
   });
 
   /**
+   * AWS Detective configuration
+   */
+  static readonly detectiveConfig = t.interface({
+    /**
+     * Indicates whether Amazon Detective is enabled.
+     */
+    enable: t.boolean,
+    /**
+     * List of AWS Region names to be excluded from configuring Amazon Detective
+     */
+    excludeRegions: t.optional(t.array(t.region)),
+  });
+
+  /**
    * AWS SecurityHub standards configuration
    */
   static readonly securityHubStandardConfig = t.interface({
@@ -186,6 +200,7 @@ export class SecurityConfigTypes {
     s3PublicAccessBlock: SecurityConfigTypes.s3PublicAccessBlockConfig,
     macie: SecurityConfigTypes.macieConfig,
     guardduty: SecurityConfigTypes.guardDutyConfig,
+    detective: t.optional(SecurityConfigTypes.detectiveConfig),
     securityHub: SecurityConfigTypes.securityHubConfig,
     ssmAutomation: this.ssmAutomationConfig,
   });
@@ -469,6 +484,20 @@ export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guar
 }
 
 /**
+ * Amazon Detective configuration
+ */
+export class DetectiveConfig implements t.TypeOf<typeof SecurityConfigTypes.detectiveConfig> {
+  /**  
+   * Indicates whether Amazon Detective is enabled.
+   */   
+  readonly enable = false;
+  /**  
+   * List of AWS Region names to be excluded from configuring Amazon Detective
+   */   
+  readonly excludeRegions: t.Region[] = [];
+}
+
+/**
  * AWS SecurityHub standards configuration
  */
 export class SecurityHubStandardConfig implements t.TypeOf<typeof SecurityConfigTypes.securityHubStandardConfig> {
@@ -588,7 +617,7 @@ export class CentralSecurityServicesConfig
    * Designated administrator account name for accelerator security services.
    * AWS organizations designate a member account as a delegated administrator for the
    * organization users and roles from that account can perform administrative actions for security services like
-   * Macie, GuardDuty and SecurityHub. Without designated administrator account administrative tasks for
+   * Macie, GuardDuty, Detective and SecurityHub. Without designated administrator account administrative tasks for
    * security services are performed only by users or roles in the organization's management account.
    * This helps you to separate management of the organization from management of these security services.
    * Accelerator use Audit account as designated administrator account.
@@ -674,6 +703,10 @@ export class CentralSecurityServicesConfig
    * Amazon GuardDuty Configuration
    */
   readonly guardduty: GuardDutyConfig = new GuardDutyConfig();
+  /**  
+   * Amazon Detective Configuration
+   */   
+  readonly detective: DetectiveConfig | undefined = undefined;
   /**
    * AWS SecurityHub configuration
    *

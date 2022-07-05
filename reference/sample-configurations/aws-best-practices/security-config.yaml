@@ -29,6 +29,9 @@ centralSecurityServices:
       enable: true
       destinationType: S3
       exportFrequency: FIFTEEN_MINUTES
+  detective:
+    enable: true
+    excludeRegions: []
   securityHub:
     enable: true
     regionAggregation: true
