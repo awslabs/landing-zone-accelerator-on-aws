@@ -28,6 +28,8 @@ import {
   GuardDutyDetectorConfig,
   GuardDutyExportConfigDestinationTypes,
   GuardDutyMembers,
+  DetectiveGraphConfig,
+  DetectiveMembers,
   KeyLookup,
   MacieMembers,
   Organization,
@@ -252,6 +254,34 @@ export class SecurityAuditStack extends AcceleratorStack {
           kmsKey: key,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         }).node.addDependency(guardDutyMembers);
+      }
+    }
+
+    //
+    // Detective configuration
+    //
+    Logger.debug(
+      `[security-audit-stack] centralSecurityServices.detective?.enable: ${props.securityConfig.centralSecurityServices.detective?.enable}`,
+    );
+
+    if (props.securityConfig.centralSecurityServices.detective?.enable) {
+      if (
+        props.securityConfig.centralSecurityServices.detective?.excludeRegions!.indexOf(
+          cdk.Stack.of(this).region as Region,
+        ) === -1
+      ) {
+        Logger.info('[security-audit-stack] Adding Detective ');
+
+        const detectiveMembers = new DetectiveMembers(this, 'DetectiveMembers', {
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+        });
+
+         new DetectiveGraphConfig(this, 'DetectiveGraphConfig', {
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          }).node.addDependency(detectiveMembers);
+
       }
     }
 

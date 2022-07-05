@@ -629,6 +629,10 @@ const securityConfigJson = {
         exportFrequency: 'FIFTEEN_MINUTES',
       },
     },
+    detective: {
+      enable: true,
+      excludeRegions: [],
+    },
     securityHub: {
       enable: true,
       excludeRegions: [],
