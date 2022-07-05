@@ -30,6 +30,7 @@ import {
   EnablePolicyType,
   EnableSharingWithAwsOrganization,
   GuardDutyOrganizationAdminAccount,
+  DetectiveOrganizationAdminAccount,
   KeyLookup,
   MacieOrganizationAdminAccount,
   Policy,
@@ -379,6 +380,36 @@ export class OrganizationsStack extends AcceleratorStack {
           `[organizations-stack] ${
             cdk.Stack.of(this).region
           } region was in guardduty excluded list so ignoring this region for ${
+            props.accountsConfig.getAuditAccount().email
+          } account`,
+        );
+      }
+    }
+
+    //Detective Config
+    if (props.securityConfig.centralSecurityServices.detective?.enable) {
+      if (
+        props.securityConfig.centralSecurityServices.detective?.excludeRegions!.indexOf(
+          cdk.Stack.of(this).region as Region,
+        ) == -1
+      ) {
+        Logger.debug(
+          `[organizations-stack] Starts detective admin account delegation to the account with email ${
+            props.accountsConfig.getAuditAccount().email
+          } account in ${cdk.Stack.of(this).region} region`,
+        );
+
+        Logger.debug(`[organizations-stack] Detective Admin Account ID is ${adminAccountId}`);
+        new DetectiveOrganizationAdminAccount(this, 'DetectiveOrganizationAdminAccount', {
+          adminAccountId: adminAccountId,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          kmsKey: key,
+        });
+      } else {
+        Logger.debug(
+          `[organizations-stack] ${
+            cdk.Stack.of(this).region
+          } region was in detective excluded list so ignoring this region for ${
             props.accountsConfig.getAuditAccount().email
           } account`,
         );
