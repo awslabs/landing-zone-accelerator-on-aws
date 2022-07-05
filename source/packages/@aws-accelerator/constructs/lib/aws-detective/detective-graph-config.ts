@@ -78,11 +78,7 @@ export class DetectiveGraphConfig extends Construct {
         {
           Sid: 'DetectiveUpdateGraphTaskDetectiveActions',
           Effect: 'Allow',
-          Action: [
-            'detective:UpdateOrganizationConfiguration',
-            'detective:ListGraphs',
-            'detective:ListMembers',
-          ],
+          Action: ['detective:UpdateOrganizationConfiguration', 'detective:ListGraphs', 'detective:ListMembers'],
           Resource: '*',
         },
       ],

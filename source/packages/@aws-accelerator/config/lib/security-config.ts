@@ -488,13 +488,13 @@ export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guar
  * Amazon Detective configuration
  */
 export class DetectiveConfig implements t.TypeOf<typeof SecurityConfigTypes.detectiveConfig> {
-  /**  
+  /**
    * Indicates whether Amazon Detective is enabled.
-   */   
+   */
   readonly enable = false;
-  /**  
+  /**
    * List of AWS Region names to be excluded from configuring Amazon Detective
-   */   
+   */
   readonly excludeRegions: t.Region[] = [];
 }
 
@@ -704,9 +704,9 @@ export class CentralSecurityServicesConfig
    * Amazon GuardDuty Configuration
    */
   readonly guardduty: GuardDutyConfig = new GuardDutyConfig();
-  /**  
+  /**
    * Amazon Detective Configuration
-   */   
+   */
   readonly detective: DetectiveConfig | undefined = undefined;
   /**
    * AWS SecurityHub configuration

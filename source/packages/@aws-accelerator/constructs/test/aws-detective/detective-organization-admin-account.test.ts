@@ -104,83 +104,61 @@ describe('DetectiveOrganizationAdminAccount', () => {
                 'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
               },
             ],
-            "Policies": [
+            Policies: [
               {
-                "PolicyDocument": {
-                  "Statement": [
+                PolicyDocument: {
+                  Statement: [
                     {
-                      "Action": [
-                        "organizations:DeregisterDelegatedAdministrator",
-                        "organizations:DescribeOrganization",
-                        "organizations:EnableAWSServiceAccess",
-                        "organizations:ListAWSServiceAccessForOrganization",
-                        "organizations:ListAccounts",
-                        "organizations:ListDelegatedAdministrators",
-                        "organizations:RegisterDelegatedAdministrator",
-                        "organizations:ServicePrincipal",
-                        "organizations:UpdateOrganizationConfiguration",
+                      Action: [
+                        'organizations:DeregisterDelegatedAdministrator',
+                        'organizations:DescribeOrganization',
+                        'organizations:EnableAWSServiceAccess',
+                        'organizations:ListAWSServiceAccessForOrganization',
+                        'organizations:ListAccounts',
+                        'organizations:ListDelegatedAdministrators',
+                        'organizations:RegisterDelegatedAdministrator',
+                        'organizations:ServicePrincipal',
+                        'organizations:UpdateOrganizationConfiguration',
                       ],
-                      "Condition": {
-                        "StringLikeIfExists": {
-                          "organizations:DeregisterDelegatedAdministrator": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:DescribeOrganization": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:EnableAWSServiceAccess": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:ListAWSServiceAccessForOrganization": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:ListAccounts": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:ListDelegatedAdministrators": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:RegisterDelegatedAdministrator": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:ServicePrincipal": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:UpdateOrganizationConfiguration": [
-                            "detective.amazonaws.com",
-                          ],
+                      Condition: {
+                        StringLikeIfExists: {
+                          'organizations:DeregisterDelegatedAdministrator': ['detective.amazonaws.com'],
+                          'organizations:DescribeOrganization': ['detective.amazonaws.com'],
+                          'organizations:EnableAWSServiceAccess': ['detective.amazonaws.com'],
+                          'organizations:ListAWSServiceAccessForOrganization': ['detective.amazonaws.com'],
+                          'organizations:ListAccounts': ['detective.amazonaws.com'],
+                          'organizations:ListDelegatedAdministrators': ['detective.amazonaws.com'],
+                          'organizations:RegisterDelegatedAdministrator': ['detective.amazonaws.com'],
+                          'organizations:ServicePrincipal': ['detective.amazonaws.com'],
+                          'organizations:UpdateOrganizationConfiguration': ['detective.amazonaws.com'],
                         },
                       },
-                      "Effect": "Allow",
-                      "Resource": "*",
-                      "Sid": "DetectiveEnableOrganizationAdminAccountTaskOrganizationActions",
+                      Effect: 'Allow',
+                      Resource: '*',
+                      Sid: 'DetectiveEnableOrganizationAdminAccountTaskOrganizationActions',
                     },
                     {
-                      "Action": [
-                        "detective:EnableOrganizationAdminAccount",
-                        "detective:ListOrganizationAdminAccounts",
-                        "detective:DisableOrganizationAdminAccount",
-                        "detective:EnableOrganizationAdminAccount",
-                        "detective:ListOrganizationAdminAccount",
+                      Action: [
+                        'detective:EnableOrganizationAdminAccount',
+                        'detective:ListOrganizationAdminAccounts',
+                        'detective:DisableOrganizationAdminAccount',
+                        'detective:EnableOrganizationAdminAccount',
+                        'detective:ListOrganizationAdminAccount',
                       ],
-                      "Effect": "Allow",
-                      "Resource": "*",
-                      "Sid": "DetectiveEnableOrganizationAdminAccountTaskDetectiveActions",
+                      Effect: 'Allow',
+                      Resource: '*',
+                      Sid: 'DetectiveEnableOrganizationAdminAccountTaskDetectiveActions',
                     },
                     {
-                      "Action": [
-                        "iam:CreateServiceLinkedRole",
-                      ],
-                      "Effect": "Allow",
-                      "Resource": [
-                        "*",
-                      ],
-                      "Sid": "ServiceLinkedRoleDetective",
+                      Action: ['iam:CreateServiceLinkedRole'],
+                      Effect: 'Allow',
+                      Resource: ['*'],
+                      Sid: 'ServiceLinkedRoleDetective',
                     },
                   ],
-                  "Version": "2012-10-17",
+                  Version: '2012-10-17',
                 },
-                "PolicyName": "Inline",
+                PolicyName: 'Inline',
               },
             ],
           },
