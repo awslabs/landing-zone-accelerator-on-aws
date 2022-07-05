@@ -59,10 +59,14 @@ export class AccountIdConfig implements t.TypeOf<typeof AccountsConfigTypes.acco
  */
 export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accountConfig> {
   /**
-   * The friendly name that is assigned to the account. This name will be used when creating
-   * a new account. The name will be used to reference this account in other
-   * configuration files.
-   * The name should not contain any spaces.
+   * The friendly name that is assigned to the account for reference within the Accelerator. The name will be used to reference 
+   * this account in other configuration files and not to lookup the account in AWS. 
+   * 
+   * For pre-existing accounts this does not need to match the AWS account name.
+   * 
+   * When creating new accounts with the Accelerator, this name will be used as the AWS account name. 
+   * 
+   * The name should not contain any spaces as this isn't supported by the Accelerator.
    */
   readonly name: string = '';
   /**
@@ -99,10 +103,14 @@ export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accoun
  */
 export class GovCloudAccountConfig implements t.TypeOf<typeof AccountsConfigTypes.govCloudAccountConfig> {
   /**
-   * The friendly name that is assigned to the account. This name will be used when creating
-   * a new account. The name will be used to reference this account in other
-   * configuration files.
-   * The name should not contain any spaces.
+   * The friendly name that is assigned to the account for reference within the Accelerator. The name will be used to reference 
+   * this account in other configuration files and not to lookup the account in AWS. 
+   * 
+   * For pre-existing accounts this does not need to match the AWS account name.
+   * 
+   * When creating new accounts with the Accelerator, this name will be used as the AWS account name. 
+   * 
+   * The name should not contain any spaces as this isn't supported by the Accelerator.
    */
   readonly name: string = '';
   /**
@@ -191,20 +199,20 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
       this.mandatoryAccounts = [
         {
           name: AccountsConfig.MANAGEMENT_ACCOUNT,
-          description: 'The management (primary) account. Do not change the name field for this mandatory account.',
+          description: 'The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
           email: props.managementAccountEmail,
           organizationalUnit: 'Root',
         },
         {
           name: AccountsConfig.LOG_ARCHIVE_ACCOUNT,
-          description: 'The log archive account. Do not change the name field for this mandatory account.',
+          description: 'The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
           email: props.logArchiveAccountEmail,
           organizationalUnit: 'Security',
         },
         {
           name: AccountsConfig.AUDIT_ACCOUNT,
           description:
-            'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account.',
+            'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
           email: props.auditAccountEmail,
           organizationalUnit: 'Security',
         },

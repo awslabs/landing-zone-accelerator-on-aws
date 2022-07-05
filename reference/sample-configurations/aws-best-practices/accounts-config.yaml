@@ -1,14 +1,14 @@
 mandatoryAccounts:
   - name: Management
-    description: The management (primary) account. Do not change the name field for this mandatory account.
+    description: The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
     email: <management-account>@example.com <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Root
   - name: LogArchive
-    description: The log archive account. Do not change the name field for this mandatory account.
+    description: The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
     email: <log-archive>@example.com  <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Security
   - name: Audit
-    description: The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account.
+    description: The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
     email: <audit>@example.com  <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Security
 workloadAccounts:
