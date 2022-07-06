@@ -81,6 +81,7 @@ source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:930
 source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:938
 source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:946
 
+source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:33
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:34
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:35
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:36
