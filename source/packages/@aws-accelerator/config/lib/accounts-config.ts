@@ -76,7 +76,7 @@ export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accoun
   readonly description: string = '';
   /**
    * The email address of the owner to assign to the account. The email address
-   * must not already be associated with another AWS acccount. You must use a
+   * must not already be associated with another AWS account. You must use a
    * valid email address.
    * The address must be a minimum of 6 and a maximum of 64 characters long.
    * All characters must be 7-bit ASCII characters
@@ -120,7 +120,7 @@ export class GovCloudAccountConfig implements t.TypeOf<typeof AccountsConfigType
   readonly description: string = '';
   /**
    * The email address of the owner to assign to the account. The email address
-   * must not already be associated with another AWS acccount. You must use a
+   * must not already be associated with another AWS account. You must use a
    * valid email address.
    * The address must be a minimum of 6 and a maximum of 64 characters long.
    * All characters must be 7-bit ASCII characters
