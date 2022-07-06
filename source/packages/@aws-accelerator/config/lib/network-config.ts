@@ -825,10 +825,25 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    *
    * @remarks
    * Use CIDR notation, i.e. 10.0.0.0/16
+   *
+   * Either `destination` or `destinationPrefixList` must be specified for the following route entry types:
+   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`.
+   *
+   * `destination` MUST be specified for route entry type `networkFirewall`.
+   *
+   * Leave undefined for route entry type `gatewayEndpoint`.
    */
   readonly destination: string | undefined = undefined;
   /**
    * The friendly name of the destination prefix list for the route table entry.
+   *
+   * @remarks
+   * Either `destination` or `destinationPrefixList` must be specified for the following route entry types:
+   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`.
+   *
+   * Cannot be specified for route entry type `networkFirewall`. Use `destination` instead.
+   *
+   * Leave undefined for route entry type `gatewayEndpoint`.
    */
   readonly destinationPrefixList: string | undefined = undefined;
   /**
@@ -839,6 +854,11 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
   readonly type: t.TypeOf<typeof NetworkConfigTypes.routeTableEntryTypeEnum> | undefined = undefined;
   /**
    * The friendly name of the destination target.
+   *
+   * @remarks
+   * Use `s3` or `dynamodb` as the string when specifying a route entry type of `gatewayEndpoint`.
+   *
+   * Leave undefined for route entry type `internetGateway`.
    */
   readonly target: string | undefined = undefined;
   /**
@@ -847,7 +867,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    * @remarks
    * Include only the letter of the AZ name (i.e. 'a' for 'us-east-1a').
    *
-   * Leave undefined for targets of types other than `networkFirewall`.
+   * Leave undefined for targets of route entry types other than `networkFirewall`.
    */
   readonly targetAvailabilityZone: string | undefined = undefined;
 }
@@ -2741,8 +2761,56 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    *
    * @param values
    */
-  constructor(values?: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  constructor(values?: t.TypeOf<typeof NetworkConfigTypes.networkConfig>, configDir?: string) {
+    //
+    // Validation errors
+    //
+    const errors: string[] = [];
+
     if (values) {
+      //
+      // Endpoint policy validation
+      //
+      const endpointPolicies: { name: string; document: string }[] = [];
+      for (const policy of values.endpointPolicies ?? []) {
+        endpointPolicies.push(policy);
+      }
+
+      //
+      // DNS firewall custom domain list validation
+      //
+      const domainLists: { name: string; document: string }[] = [];
+      for (const ruleGroup of values.centralNetworkServices?.route53Resolver?.firewallRuleGroups ?? []) {
+        for (const rule of ruleGroup.rules) {
+          if (rule.customDomainList) {
+            domainLists.push({ name: rule.name, document: rule.customDomainList });
+          }
+        }
+      }
+
+      //
+      // Validate documents exist
+      //
+      if (configDir) {
+        // Endpoint policies
+        for (const policy of endpointPolicies) {
+          if (!fs.existsSync(path.join(configDir, policy.document))) {
+            errors.push(`Endpoint policy ${policy.name} document file ${policy.document} not found!`);
+          }
+        }
+
+        // Custom domain lists
+        for (const list of domainLists) {
+          if (!fs.existsSync(path.join(configDir, list.document))) {
+            errors.push(`DNS firewall custom domain list ${list.name} document file ${list.document} not found!`);
+          }
+        }
+      }
+
+      if (errors.length) {
+        throw new Error(`${NetworkConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      }
+
       Object.assign(this, values);
     }
   }
@@ -2760,7 +2828,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   static load(dir: string): NetworkConfig {
     const buffer = fs.readFileSync(path.join(dir, NetworkConfig.FILENAME), 'utf8');
     const values = t.parse(NetworkConfigTypes.networkConfig, yaml.load(buffer));
-    return new NetworkConfig(values);
+    return new NetworkConfig(values, dir);
   }
 
   /**
