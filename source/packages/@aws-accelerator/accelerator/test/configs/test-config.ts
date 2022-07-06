@@ -858,6 +858,10 @@ export const ORGANIZATION_CONFIG = {
       },
     },
   ],
+  backupVault: {
+    enableManagementKey: true,
+    name: 'DefaultVault',
+  },
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   loadOrganizationalUnitIds: async function (): Promise<void> {},
   getOrganizationalUnitId: function (name: string) {
