@@ -13,7 +13,6 @@
 
 import * as cdk from 'aws-cdk-lib';
 
-//import { SynthUtils } from '@aws-cdk/assert';
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
 
 const testNamePrefix = 'Construct(PipelineStack): ';
@@ -41,12 +40,6 @@ const stack = new PipelineStack(app, 'PipelineStack', {
  * PipelineStack construct test
  */
 describe('PipelineStack', () => {
-  /**
-   * Snapshot test
-   */
-  // test(`${testNamePrefix} Snapshot Test`, () => {
-  //   expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  // });
   /**
    * Number of CodePipeline resource test
    */
@@ -761,7 +754,7 @@ describe('PipelineStack', () => {
             },
             Source: {
               BuildSpec:
-                '{\n  "version": "0.2",\n  "phases": {\n    "install": {\n      "runtime-versions": {\n        "nodejs": 14\n      }\n    },\n    "build": {\n      "commands": [\n        "env",\n        "cd source",\n        "yarn install",\n        "yarn lerna link",\n        "yarn build"\n      ]\n    }\n  },\n  "artifacts": {\n    "files": [\n      "**/*"\n    ],\n    "enable-symlinks": "yes"\n  }\n}',
+                '{\n  "version": "0.2",\n  "phases": {\n    "install": {\n      "runtime-versions": {\n        "nodejs": 14\n      }\n    },\n    "build": {\n      "commands": [\n        "env",\n        "cd source",\n        "yarn install",\n        "yarn lerna link",\n        "yarn build",\n        "yarn validate-config $CODEBUILD_SRC_DIR_Config"\n      ]\n    }\n  },\n  "artifacts": {\n    "files": [\n      "**/*"\n    ],\n    "enable-symlinks": "yes"\n  }\n}',
               Type: 'CODEPIPELINE',
             },
           },
