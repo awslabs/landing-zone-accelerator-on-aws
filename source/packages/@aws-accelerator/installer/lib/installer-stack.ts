@@ -86,16 +86,22 @@ export class InstallerStack extends cdk.Stack {
   private readonly managementAccountEmail = new cdk.CfnParameter(this, 'ManagementAccountEmail', {
     type: 'String',
     description: 'The management (primary) account email',
+    allowedPattern: "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+    constraintDescription: 'Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"',
   });
 
   private readonly logArchiveAccountEmail = new cdk.CfnParameter(this, 'LogArchiveAccountEmail', {
     type: 'String',
     description: 'The log archive account email',
+    allowedPattern: "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+    constraintDescription: 'Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"',
   });
 
   private readonly auditAccountEmail = new cdk.CfnParameter(this, 'AuditAccountEmail', {
     type: 'String',
     description: 'The security audit account (also referred to as the audit account)',
+    allowedPattern: "[^\\s@]+@[^\\s@]+\\.[^\\s@]+",
+    constraintDescription: 'Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"',
   });
 
   /**

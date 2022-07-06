@@ -1,4 +1,7 @@
 mandatoryAccounts:
+  # We recommend you do not change mandatory account names. These are used within Landing Zone Accelerator to reference the accounts from other config files. 
+  # The "name" value does not currently support spaces
+  # The "name" value DOES NOT need to match the account name
   - name: Management
     description: The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
     email: <management-account>@example.com <----- UPDATE EMAIL ADDRESS
@@ -12,6 +15,9 @@ mandatoryAccounts:
     email: <audit>@example.com  <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Security
 workloadAccounts:
+  # The "name" will be used to set the AWS Account name
+  # The "name" value does not currently support spaces
+  # The "name" value DOES NOT need to match the account name
   - name: SharedServices
     description: The SharedServices account
     email: <shared-services>@example.com  <----- UPDATE EMAIL ADDRESS
