@@ -196,14 +196,24 @@ export class OrganizationsStack extends AcceleratorStack {
           },
         ]);
 
-        const vault = new cdk.aws_backup.BackupVault(this, 'BackupVault', {
-          backupVaultName: 'BackupVault',
-          encryptionKey: managementKey,
-        });
+        // Added enable value to allow customer to use default key or management key.
+        // Additionally, when creating the BackupVault if redeployed then a new name will be required.
+        if (props.organizationConfig.backupVault?.enableManagementKey) {
+          new cdk.aws_backup.BackupVault(
+            this,
+            `AcceleratorManagementBackupVault${props.organizationConfig.backupVault.name}`,
+            {
+              backupVaultName: `AcceleratorManagement${props.organizationConfig.backupVault.name}`,
+              encryptionKey: managementKey,
+            },
+          );
+        } else {
+          new cdk.aws_backup.BackupVault(this, `AcceleratorBackupVaultDefault`, {
+            backupVaultName: `AcceleratorBackupVaultDefault`,
+          });
+        }
 
-        vault.node.addDependency(role);
-
-        new EnablePolicyType(this, 'enablePolicyBackup', {
+        new EnablePolicyType(this, 'enableManagementKeyPolicyBackup', {
           policyType: PolicyTypeEnum.BACKUP_POLICY,
           kmsKey: key,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
@@ -221,8 +231,6 @@ export class OrganizationsStack extends AcceleratorStack {
               acceleratorPrefix: 'AWSAccelerator',
               managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
             });
-
-            policy.node.addDependency(vault);
 
             new PolicyAttachment(this, pascalCase(`Attach_${backupPolicies.name}_${orgUnit}`), {
               policyId: policy.id,

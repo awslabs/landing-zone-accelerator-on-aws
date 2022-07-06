@@ -52,6 +52,11 @@ export abstract class OrganizationConfigTypes {
     deploymentTargets: t.deploymentTargets,
   });
 
+  static readonly backupVaultConfig = t.interface({
+    enableManagementKey: t.optional(t.boolean),
+    name: t.optional(t.nonEmptyString),
+  });
+
   static readonly backupPolicyConfig = t.interface({
     name: t.nonEmptyString,
     description: t.nonEmptyString,
@@ -61,6 +66,7 @@ export abstract class OrganizationConfigTypes {
 
   static readonly organizationConfig = t.interface({
     enable: t.boolean,
+    backupVault: t.optional(this.backupVaultConfig),
     organizationalUnits: t.array(this.organizationalUnitConfig),
     organizationalUnitIds: t.optional(t.array(this.organizationalUnitIdConfig)),
     serviceControlPolicies: t.array(this.serviceControlPolicyConfig),
@@ -208,6 +214,18 @@ export abstract class BackupPolicyConfig implements t.TypeOf<typeof Organization
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
 
+export abstract class BackupVaultConfig implements t.TypeOf<typeof OrganizationConfigTypes.backupVaultConfig> {
+  /**
+   * Enable KMS key to be set to the management key, or utilize the default created by Backups.
+   * A reinstall is required if set to true to allow the acceleratorKey to have all the permissions.
+   */
+  readonly enableManagementKey: boolean = false;
+  /**
+   * Name of the Backups Vault being created by the Accelerator.
+   */
+  readonly name: string = '';
+}
+
 /**
  * Organization configuration
  */
@@ -329,6 +347,21 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * ```
    */
   readonly backupPolicies: BackupPolicyConfig[] = [];
+  /**
+   * A Record of Backup Policy configurations
+   *
+   * @see BackupVaultConfig
+   *
+   * To create backup policy named BackupPolicy from backup-policies/org-backup-policies.json file in config repository, you need to provide following values for this parameter.
+   *
+   * @example
+   * ```
+   * backupVault:
+   *     enableManagementKey: true
+   *     name: DefaultVault
+   * ```
+   */
+  readonly backupVault: BackupVaultConfig | undefined;
 
   /**
    *

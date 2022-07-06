@@ -1,5 +1,5 @@
-# If using AWS Control Tower, ensure that all the specified Organizational Units (OU) 
-# have been created and enrolled as the accelerator will verify that the OU layout 
+# If using AWS Control Tower, ensure that all the specified Organizational Units (OU)
+# have been created and enrolled as the accelerator will verify that the OU layout
 # matches before continuing to execute the deployment pipeline.
 
 enable: true
@@ -49,3 +49,6 @@ backupPolicies:
     deploymentTargets:
       organizationalUnits:
         - Root
+backupVault:
+  enableManagementKey: false
+  name: DefaultVault
