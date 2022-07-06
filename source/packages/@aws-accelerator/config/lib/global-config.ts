@@ -16,6 +16,7 @@ import * as yaml from 'js-yaml';
 import * as path from 'path';
 
 import * as t from './common-types';
+import * as emailValidator from 'email-validator';
 
 /**
  * Global configuration items.
@@ -597,17 +598,28 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     },
     values?: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
   ) {
-    if (values) {
-      Object.assign(this, values);
-    } else {
-      this.homeRegion = props.homeRegion;
-      this.enabledRegions = [props.homeRegion as t.Region];
-    }
-
     //
     // Validation errors
     //
     const errors: string[] = [];
+
+    if (values) {
+      Object.assign(this, values);
+
+      //
+      // budget notification email validation
+      //
+      values.reports!.budgets!.forEach(budget => {
+        budget.notifications!.forEach(notification => {
+          if (!emailValidator.validate(notification.address!)) {
+            errors.push(`Invalid report notification email ${notification.address!}.`);
+          }
+        });
+      });
+    } else {
+      this.homeRegion = props.homeRegion;
+      this.enabledRegions = [props.homeRegion as t.Region];
+    }
 
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
