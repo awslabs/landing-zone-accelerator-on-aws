@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { v4 as uuidv4 } from 'uuid';
 
 const path = require('path');
 
@@ -74,6 +75,7 @@ export class AssociateHostedZones extends cdk.Resource {
         hostedZoneAccountId: props.hostedZoneAccountId,
         roleName: props.roleName,
         tagFilters: props.tagFilters,
+        uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });
 
