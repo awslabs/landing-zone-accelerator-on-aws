@@ -56,7 +56,7 @@ export class OperationsStack extends AcceleratorStack {
       //
       if (props.globalConfig.reports?.budgets) {
         for (const budgets of props.globalConfig.reports.budgets ?? []) {
-          if (this.isIncluded(budgets.deploymentTargets)) {
+          if (this.isIncluded(budgets.deploymentTargets ?? [])) {
             new BudgetDefinition(this, `${budgets.name}BudgetDefinition`, {
               budgets: props.globalConfig.reports?.budgets,
             });

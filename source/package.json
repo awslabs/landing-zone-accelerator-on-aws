@@ -41,6 +41,7 @@
     "cleanup": "lerna run cleanup --stream && rm -rf node_modules",
     "cleanup:tsc": "lerna run cleanup:tsc --stream",
     "build": "lerna run build --stream",
+    "validate-config": "ts-node $PWD/packages/@aws-accelerator/accelerator/lib/config-validator.ts",
     "test": "lerna run test --stream",
     "test:clean": "rm -f ./test-reports/*.xml",
     "docs": "yarn run typedoc --entryPointStrategy packages './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' --name 'Landing Zone Accelerator on AWS' --includeVersion --disableSources --logLevel Verbose",

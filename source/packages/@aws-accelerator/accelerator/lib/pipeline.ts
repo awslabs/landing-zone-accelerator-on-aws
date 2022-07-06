@@ -188,7 +188,14 @@ export class AcceleratorPipeline extends Construct {
             },
           },
           build: {
-            commands: ['env', 'cd source', 'yarn install', 'yarn lerna link', 'yarn build'],
+            commands: [
+              'env',
+              'cd source',
+              'yarn install',
+              'yarn lerna link',
+              'yarn build',
+              'yarn validate-config $CODEBUILD_SRC_DIR_Config',
+            ],
           },
         },
         artifacts: {
