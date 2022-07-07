@@ -433,6 +433,10 @@ export class InstallerStack extends cdk.Stack {
 
     const globalRegion = globalRegionMap.findInMap(cdk.Aws.PARTITION, 'regionName');
 
+    const acceleratorPipelineName = this.acceleratorQualifier
+      ? `${this.acceleratorQualifier?.valueAsString}-pipeline`
+      : 'AWSAccelerator-Pipeline';
+
     const installerProject = new cdk.aws_codebuild.PipelineProject(this, 'InstallerProject', {
       projectName: this.acceleratorQualifier
         ? `${this.acceleratorQualifier.valueAsString}-installer-project`
@@ -480,6 +484,9 @@ export class InstallerStack extends cdk.Stack {
               `yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION} --partition ${cdk.Aws.PARTITION}`,
               `if [ "$ENABLE_TESTER" = "true" ]; then yarn run ts-node --transpile-only cdk.ts deploy --require-approval never --stage tester-pipeline --account ${cdk.Aws.ACCOUNT_ID} --region ${cdk.Aws.REGION}; fi`,
             ],
+          },
+          post_build: {
+            commands: [`aws codepipeline start-pipeline-execution --name ${acceleratorPipelineName}`],
           },
         },
       }),
