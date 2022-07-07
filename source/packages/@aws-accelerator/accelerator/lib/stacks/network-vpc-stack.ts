@@ -947,6 +947,12 @@ export class NetworkVpcStack extends AcceleratorStack {
             vpc,
             tags: naclItem.tags,
           });
+          // Suppression for AwsSolutions-VPC3: A Network ACL or Network ACL entry has been implemented.
+          NagSuppressions.addResourceSuppressions(
+            networkAcl,
+            [{ id: 'AwsSolutions-VPC3', reason: 'NACL added to VPC' }],
+            true,
+          );
 
           new cdk.aws_ssm.StringParameter(
             this,
@@ -992,6 +998,14 @@ export class NetworkVpcStack extends AcceleratorStack {
                 ...props,
               },
             );
+            // Suppression for AwsSolutions-VPC3: A Network ACL or Network ACL entry has been implemented.
+            NagSuppressions.addResourceSuppressionsByPath(
+              this,
+              `${this.stackName}/${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}Nacl/${pascalCase(
+                vpcItem.name,
+              )}Vpc${pascalCase(naclItem.name)}-Inbound-${inboundRuleItem.rule}`,
+              [{ id: 'AwsSolutions-VPC3', reason: 'NACL added to VPC' }],
+            );
           }
 
           for (const outboundRuleItem of naclItem.outboundRules ?? []) {
@@ -1004,7 +1018,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             networkAcl.addEntry(
               `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}-Outbound-${outboundRuleItem.rule}`,
               {
-                egress: false,
+                egress: true,
                 protocol: outboundRuleItem.protocol,
                 ruleAction: outboundRuleItem.action,
                 ruleNumber: outboundRuleItem.rule,
@@ -1014,6 +1028,14 @@ export class NetworkVpcStack extends AcceleratorStack {
                 },
                 ...props,
               },
+            );
+            // Suppression for AwsSolutions-VPC3: A Network ACL or Network ACL entry has been implemented.
+            NagSuppressions.addResourceSuppressionsByPath(
+              this,
+              `${this.stackName}/${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}Nacl/${pascalCase(
+                vpcItem.name,
+              )}Vpc${pascalCase(naclItem.name)}-Outbound-${outboundRuleItem.rule}`,
+              [{ id: 'AwsSolutions-VPC3', reason: 'NACL added to VPC' }],
             );
           }
         }
