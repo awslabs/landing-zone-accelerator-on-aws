@@ -76,6 +76,7 @@ export class KeyStack extends AcceleratorStack {
       { name: 'Sns', principal: 'sns.amazonaws.com' },
       { name: 'Lambda', principal: 'lambda.amazonaws.com' },
       { name: 'Cloudwatch', principal: 'cloudwatch.amazonaws.com' },
+      { name: 'Sqs', principal: 'sqs.amazonaws.com' },
       // Add similar objects for any other service principal needs access to this key
     ];
     if (props.securityConfig.centralSecurityServices.macie.enable) {

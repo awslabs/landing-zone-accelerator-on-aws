@@ -23,7 +23,6 @@ import {
   MacieExportConfigClassification,
   PasswordPolicy,
   SecurityHubStandards,
-  // SsmParameterLookup,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';

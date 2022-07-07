@@ -28,6 +28,7 @@ import { LoadAcceleratorConfigTable } from '../load-config-table';
 import { Logger } from '../logger';
 import { ValidateEnvironmentConfig } from '../validate-environment-config';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 export class PrepareStack extends AcceleratorStack {
   public static readonly MANAGEMENT_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
@@ -52,6 +53,7 @@ export class PrepareStack extends AcceleratorStack {
       });
 
       // Make assets from the configuration directory
+      Logger.debug(`[prepare-stack] Configuration assets creation`);
       const accountConfigAsset = new cdk.aws_s3_assets.Asset(this, 'AccountConfigAsset', {
         path: path.join(props.configDirPath, 'accounts-config.yaml'),
       });
@@ -93,10 +95,45 @@ export class PrepareStack extends AcceleratorStack {
         }),
       );
 
+      // Allow sns to use the encryption key
+      key.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'sns',
+          principals: [new cdk.aws_iam.ServicePrincipal('sns.amazonaws.com')],
+          actions: ['kms:GenerateDataKey', 'kms:Encrypt'],
+          resources: ['*'],
+        }),
+      );
+
+      // Allow security/audit account access
+      key.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'auditAccount',
+          principals: [new cdk.aws_iam.AccountPrincipal(props.accountsConfig.getAuditAccountId())],
+          actions: ['kms:GenerateDataKey', 'kms:Encrypt', 'kms:Decrypt', 'kms:DescribeKey'],
+          resources: ['*'],
+        }),
+      );
+
       new cdk.aws_ssm.StringParameter(this, 'AcceleratorManagementKmsArnParameter', {
         parameterName: PrepareStack.MANAGEMENT_KEY_ARN_PARAMETER_NAME,
         stringValue: key.keyArn,
       });
+
+      const driftDetectedParameter = new cdk.aws_ssm.StringParameter(this, 'AcceleratorControlTowerDriftParameter', {
+        parameterName: '/accelerator/controltower/driftDetected',
+        stringValue: 'false',
+        allowedPattern: '^(true|false)$',
+      });
+
+      const driftMessageParameter = new cdk.aws_ssm.StringParameter(
+        this,
+        'AcceleratorControlTowerDriftMessageParameter',
+        {
+          parameterName: '/accelerator/controltower/lastDriftMessage',
+          stringValue: 'none',
+        },
+      );
 
       const configTable = new cdk.aws_dynamodb.Table(this, 'AcceleratorConfigTable', {
         partitionKey: { name: 'dataType', type: cdk.aws_dynamodb.AttributeType.STRING },
@@ -243,6 +280,8 @@ export class PrepareStack extends AcceleratorStack {
           partition: props.partition,
           kmsKey: key,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          driftDetectionParameter: driftDetectedParameter,
+          driftDetectionMessageParameter: driftMessageParameter,
         });
 
         validation.node.addDependency(loadAcceleratorConfigTable);
@@ -338,6 +377,130 @@ export class PrepareStack extends AcceleratorStack {
               { id: 'AwsSolutions-IAM5', reason: 'AWS Custom resource provider role created by cdk.' },
             ]);
           }
+          // resources for control tower lifecycle events
+          const controlTowerOuEventsFunction = new cdk.aws_lambda.Function(this, 'ControlTowerOuEventsFunction', {
+            code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/control-tower-ou-events/dist')),
+            runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+            handler: 'index.handler',
+            description: 'Lambda function to process ControlTower OU events from CloudTrail',
+            timeout: cdk.Duration.minutes(5),
+            environment: {
+              CONFIG_TABLE_NAME: configTable.tableName,
+            },
+          });
+
+          controlTowerOuEventsFunction.addToRolePolicy(
+            new cdk.aws_iam.PolicyStatement({
+              sid: 'dynamodb',
+              effect: cdk.aws_iam.Effect.ALLOW,
+              actions: ['dynamodb:UpdateItem', 'dynamodb:PutItem'],
+              resources: [configTable.tableArn],
+            }),
+          );
+
+          controlTowerOuEventsFunction.addToRolePolicy(
+            new cdk.aws_iam.PolicyStatement({
+              sid: 'organizations',
+              effect: cdk.aws_iam.Effect.ALLOW,
+              actions: ['organizations:DescribeOrganizationalUnit', 'organizations:ListParents'],
+              resources: [`arn:aws:organizations::${props.accountsConfig.getManagementAccountId()}:account/o-*/*`],
+            }),
+          );
+
+          // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/ControlTowerOuEventsFunction/ServiceRole/DefaultPolicy/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM5',
+                reason: 'Requires access to all org units.',
+              },
+            ],
+          );
+
+          new cdk.aws_logs.LogGroup(this, `${controlTowerOuEventsFunction.node.id}LogGroup`, {
+            logGroupName: `/aws/lambda/${controlTowerOuEventsFunction.functionName}`,
+            retention: props.globalConfig.cloudwatchLogRetentionInDays,
+            encryptionKey: key,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+          });
+
+          // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/ControlTowerOuEventsFunction/ServiceRole/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM4',
+                reason: 'AWS Basic Lambda execution permissions.',
+              },
+            ],
+          );
+
+          const controlTowerOuEventsRule = new cdk.aws_events.Rule(this, 'ControlTowerOuEventsRule', {
+            description: 'Rule to monitor for Control Tower OU registration and de-registration events',
+            eventPattern: {
+              source: ['aws.controltower'],
+              detailType: ['AWS Service Event via CloudTrail'],
+              detail: {
+                eventName: ['RegisterOrganizationalUnit', 'DeregisterOrganizationalUnit'],
+              },
+            },
+          });
+
+          controlTowerOuEventsRule.addTarget(
+            new cdk.aws_events_targets.LambdaFunction(controlTowerOuEventsFunction, { retryAttempts: 3 }),
+          );
+
+          const controlTowerNofificationTopic = new cdk.aws_sns.Topic(this, 'ControlTowerNotification', {
+            topicName: 'AWSAccelerator-ControlTowerNotification',
+            displayName: 'ForwardedControlTowerNotifications',
+            masterKey: key,
+          });
+
+          controlTowerNofificationTopic.addToResourcePolicy(
+            new cdk.aws_iam.PolicyStatement({
+              sid: 'auditAccount',
+              principals: [new cdk.aws_iam.AccountPrincipal(props.accountsConfig.getAuditAccountId())],
+              actions: ['sns:Publish'],
+              resources: [controlTowerNofificationTopic.topicArn],
+            }),
+          );
+
+          // function to process control tower notifications
+          const controlTowerNotificationsFunction = new cdk.aws_lambda.Function(
+            this,
+            'ControlTowerNotificationsFunction',
+            {
+              code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/control-tower-notifications/dist')),
+              runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+              handler: 'index.handler',
+              description: 'Lambda function to process ControlTower notifications from audit account',
+              timeout: cdk.Duration.minutes(5),
+              environment: {
+                DRIFT_PARAMETER_NAME: driftDetectedParameter.parameterName,
+                DRIFT_MESSAGE_PARAMETER_NAME: driftMessageParameter.parameterName,
+              },
+            },
+          );
+
+          new cdk.aws_logs.LogGroup(this, `${controlTowerNotificationsFunction.node.id}LogGroup`, {
+            logGroupName: `/aws/lambda/${controlTowerNotificationsFunction.functionName}`,
+            retention: props.globalConfig.cloudwatchLogRetentionInDays,
+            encryptionKey: key,
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+          });
+
+          controlTowerNotificationsFunction.addEventSource(new SnsEventSource(controlTowerNofificationTopic));
+          controlTowerNotificationsFunction.addToRolePolicy(
+            new cdk.aws_iam.PolicyStatement({
+              sid: 'ssm',
+              effect: cdk.aws_iam.Effect.ALLOW,
+              actions: ['ssm:PutParameter'],
+              resources: [driftDetectedParameter.parameterArn, driftMessageParameter.parameterArn],
+            }),
+          );
         }
       }
     }
