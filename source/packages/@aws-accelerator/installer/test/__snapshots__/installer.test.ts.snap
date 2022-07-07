@@ -1673,6 +1673,13 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+  post_build:
+    commands:
+      - aws codepipeline start-pipeline-execution --name ",
+                Object {
+                  "Ref": "AcceleratorQualifier",
+                },
+                "-pipeline
 ",
               ],
             ],
@@ -3786,6 +3793,13 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+  post_build:
+    commands:
+      - aws codepipeline start-pipeline-execution --name ",
+                Object {
+                  "Ref": "AcceleratorQualifier",
+                },
+                "-pipeline
 ",
               ],
             ],
@@ -5782,6 +5796,9 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+  post_build:
+    commands:
+      - aws codepipeline start-pipeline-execution --name AWSAccelerator-Pipeline
 ",
               ],
             ],
@@ -7736,6 +7753,9 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 "; fi
+  post_build:
+    commands:
+      - aws codepipeline start-pipeline-execution --name AWSAccelerator-Pipeline
 ",
               ],
             ],
