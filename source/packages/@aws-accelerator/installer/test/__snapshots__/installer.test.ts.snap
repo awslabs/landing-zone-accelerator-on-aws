@@ -156,6 +156,8 @@ Object {
       "Type": "CommaDelimitedList",
     },
     "AuditAccountEmail": Object {
+      "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
@@ -169,10 +171,14 @@ Object {
       "Type": "String",
     },
     "LogArchiveAccountEmail": Object {
+      "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The log archive account email",
       "Type": "String",
     },
     "ManagementAccountEmail": Object {
+      "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The management (primary) account email",
       "Type": "String",
     },
@@ -2286,6 +2292,8 @@ Object {
       "Type": "CommaDelimitedList",
     },
     "AuditAccountEmail": Object {
+      "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
@@ -2299,10 +2307,14 @@ Object {
       "Type": "String",
     },
     "LogArchiveAccountEmail": Object {
+      "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The log archive account email",
       "Type": "String",
     },
     "ManagementAccountEmail": Object {
+      "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The management (primary) account email",
       "Type": "String",
     },
@@ -4382,6 +4394,8 @@ Object {
       "Type": "CommaDelimitedList",
     },
     "AuditAccountEmail": Object {
+      "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
@@ -4395,10 +4409,14 @@ Object {
       "Type": "String",
     },
     "LogArchiveAccountEmail": Object {
+      "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The log archive account email",
       "Type": "String",
     },
     "ManagementAccountEmail": Object {
+      "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The management (primary) account email",
       "Type": "String",
     },
@@ -6349,6 +6367,8 @@ Object {
       "Type": "CommaDelimitedList",
     },
     "AuditAccountEmail": Object {
+      "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
@@ -6362,10 +6382,14 @@ Object {
       "Type": "String",
     },
     "LogArchiveAccountEmail": Object {
+      "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The log archive account email",
       "Type": "String",
     },
     "ManagementAccountEmail": Object {
+      "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
+      "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The management (primary) account email",
       "Type": "String",
     },
