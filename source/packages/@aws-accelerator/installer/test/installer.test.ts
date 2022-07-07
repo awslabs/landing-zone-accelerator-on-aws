@@ -488,7 +488,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    '; fi\n  post-build:\n    commands:\n      - aws codepipeline start-pipeline-execution --name accelerator-pipeline\n',
+                    '; fi\n  post_build:\n    commands:\n      - aws codepipeline start-pipeline-execution --name AWSAccelerator-Pipeline\n',
                   ],
                 ],
               },
@@ -705,7 +705,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    '; fi\n  post-build:\n    commands:\n      - aws codepipeline start-pipeline-execution --name accelerator-pipeline\n',
+                    '; fi\n  post_build:\n    commands:\n      - aws codepipeline start-pipeline-execution --name ',
+                    {
+                      Ref: 'AcceleratorQualifier',
+                    },
+                    '-pipeline\n',
                   ],
                 ],
               },
@@ -894,7 +898,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    '; fi\n  post-build:\n    commands:\n      - aws codepipeline start-pipeline-execution --name accelerator-pipeline\n',
+                    '; fi\n  post_build:\n    commands:\n      - aws codepipeline start-pipeline-execution --name AWSAccelerator-Pipeline\n',
                   ],
                 ],
               },
@@ -1111,7 +1115,11 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    '; fi\n  post-build:\n    commands:\n      - aws codepipeline start-pipeline-execution --name accelerator-pipeline\n',
+                    '; fi\n  post_build:\n    commands:\n      - aws codepipeline start-pipeline-execution --name ',
+                    {
+                      Ref: 'AcceleratorQualifier',
+                    },
+                    '-pipeline\n',
                   ],
                 ],
               },
