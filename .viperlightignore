@@ -95,9 +95,9 @@ source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:34
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:35
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:36
 
-source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1061
-source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1184
-source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1329
+source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1054
+source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1177
+source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1322
 
 
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:763
