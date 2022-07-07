@@ -488,7 +488,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    '; fi\n',
+                    '; fi\n  post-build:\n    commands:\n      - aws codepipeline start-pipeline-execution --name accelerator-pipeline\n',
                   ],
                 ],
               },
@@ -705,7 +705,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    '; fi\n',
+                    '; fi\n  post-build:\n    commands:\n      - aws codepipeline start-pipeline-execution --name accelerator-pipeline\n',
                   ],
                 ],
               },
@@ -894,7 +894,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    '; fi\n',
+                    '; fi\n  post-build:\n    commands:\n      - aws codepipeline start-pipeline-execution --name accelerator-pipeline\n',
                   ],
                 ],
               },
@@ -1111,7 +1111,7 @@ describe('InstallerStack', () => {
                     {
                       Ref: 'AWS::Region',
                     },
-                    '; fi\n',
+                    '; fi\n  post-build:\n    commands:\n      - aws codepipeline start-pipeline-execution --name accelerator-pipeline\n',
                   ],
                 ],
               },
