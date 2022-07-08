@@ -1,0 +1,355 @@
+homeRegion: &HOME_REGION us-gov-west-1
+defaultVpc:
+  delete: true
+  excludeAccounts: []
+transitGateways:
+  - name: Network-Main
+    account: GovCloudNetwork
+    region: *HOME_REGION
+    shareTargets: 
+      organizationalUnits:
+        - Security
+        - Infrastructure
+        - Shared Services
+    asn: 65521
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    # empty routes are defined in transit gateway route tables
+    # these routes are populated later below
+    routeTables:
+      - name: Network-Main-Core
+        routes: [ ]
+      - name: Network-Main-Segregated
+        routes: [ ]
+      - name: Network-Main-Shared
+        routes: [ ]
+      - name: Network-Main-Standalone
+        routes: [ ]
+
+centralNetworkServices:
+  delegatedAdminAccount: GovCloudNetwork
+  networkFirewall:
+    firewalls:
+      - name: accelerator-firewall
+        region: *HOME_REGION
+        firewallPolicy: accelerator-policy
+        subnets:
+          - Network-Inspection-A
+          - Network-Inspection-B
+        vpc: Network-Inspection
+        loggingConfiguration:
+          - destination: s3
+            type: ALERT
+          # - destination: cloud-watch-logs
+          #   type: FLOW
+    policies:
+      - name: accelerator-policy
+        regions:
+          - *HOME_REGION
+        firewallPolicy:
+          statelessDefaultActions: ['aws:forward_to_sfe']
+          statelessFragmentDefaultActions: ['aws:forward_to_sfe']
+          statefulRuleGroups:
+            - name: accelerator-rule-group
+            - name: domain-list-group
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+    rules:
+      - name: accelerator-rule-group
+        regions:
+          - *HOME_REGION
+        capacity: 100
+        type: STATEFUL
+        ruleGroup:
+          rulesSource:
+            statefulRules:
+              - action: PASS
+                header:
+                  destination: 10.0.0.0/16
+                  destinationPort: ANY
+                  direction: FORWARD
+                  protocol: IP
+                  source: 10.1.0.0/16
+                  sourcePort: ANY
+                ruleOptions:
+                  - keyword: sid
+                    settings: ['100']
+              - action: DROP
+                header:
+                  destination: ANY
+                  destinationPort: ANY
+                  direction: ANY
+                  protocol: IP
+                  source: ANY
+                  sourcePort: ANY
+                ruleOptions:
+                  - keyword: sid
+                    settings: ['101']
+              - action: ALERT
+                header:
+                  destination: 1.1.1.1/32
+                  destinationPort: '80'
+                  direction: FORWARD
+                  protocol: TCP
+                  source: ANY
+                  sourcePort: ANY
+                ruleOptions:
+                  - keyword: msg
+                    settings: ['"example message"']
+                  - keyword: sid
+                    settings: ['102']
+      - name: domain-list-group
+        regions:
+          - *HOME_REGION
+        capacity: 10
+        type: STATEFUL
+        ruleGroup:
+          rulesSource:
+            rulesSourceList:
+              generatedRulesType: DENYLIST
+              targets: ['.example.com']
+              targetTypes: ['TLS_SNI', 'HTTP_HOST']
+          ruleVariables:
+            ipSets:
+              name: HOME_NET
+              definition:
+                - 10.0.0.0/16
+                - 10.1.0.0/16
+            portSets:
+              name: HOME_NET
+              definition:
+                - '80'
+                - '443'
+  route53Resolver:
+    endpoints:
+      - name: accelerator-inbound
+        type: INBOUND
+        vpc: Network-Endpoints
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
+      - name: accelerator-outbound
+        type: OUTBOUND
+        vpc: Network-Endpoints
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
+        rules:
+          - name: example-rule
+            domainName: example.com
+            targetIps:
+              - ip: 1.1.1.1
+                port: '5353' # only include if targeting a non-standard DNS port
+              - ip: 2.2.2.2
+            shareTargets:
+              organizationalUnits:
+                - Infrastructure
+          - name: inbound-target-rule
+            domainName: aws.internal.domain
+            inboundEndpointTarget: accelerator-inbound # This endpoint must be listed in the configuration before the outbound endpoint
+    queryLogs:
+      name: accelerator-query-logs
+      destinations:
+        - s3
+        # - cloud-watch-logs
+      shareTargets:
+        organizationalUnits:
+          - Infrastructure
+    firewallRuleGroups:
+      - name: accelerator-block-group
+        regions:
+          - *HOME_REGION
+        rules:
+          - name: nxdomain-block-rule
+            action: BLOCK
+            customDomainList: dns-firewall-domain-lists/domain-list-1.txt
+            priority: 100
+            blockResponse: NXDOMAIN
+          # - name: managed-rule
+          #   action: BLOCK
+          #   managedDomainList: AWSManagedDomainsBotnetCommandandControl
+          #   priority: 300
+          #   blockResponse: NODATA
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+
+endpointPolicies:
+  - name: Default
+    document: vpc-endpoint-policies/default.json
+  - name: Ec2
+    document: vpc-endpoint-policies/ec2.json
+
+vpcs:
+  - name: Network-Inspection
+    account: GovCloudNetwork
+    region: *HOME_REGION
+    cidrs:
+      - 10.2.0.0/22
+    routeTables:
+      # - name: Network-Inspection-Tgw-A
+      #   routes: []
+      # - name: Network-Inspection-Tgw-B
+      #   routes: []
+      - name: Network-Inspection-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: Network-Inspection-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: Network-Inspection-Tgw-A
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: accelerator-firewall
+            targetAvailabilityZone: a
+      - name: Network-Inspection-Tgw-B
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: accelerator-firewall
+            targetAvailabilityZone: b
+    subnets:
+      - name: Network-Inspection-A
+        availabilityZone: a
+        routeTable: Network-Inspection-A
+        ipv4CidrBlock: 10.2.0.0/24
+      - name: Network-Inspection-B
+        availabilityZone: b
+        routeTable: Network-Inspection-B
+        ipv4CidrBlock: 10.2.1.0/24
+      - name: Network-InspectionTgwAttach-A
+        availabilityZone: a
+        routeTable: Network-Inspection-Tgw-A
+        ipv4CidrBlock: 10.2.3.208/28
+      - name: Network-InspectionTgwAttach-B
+        availabilityZone: b
+        routeTable: Network-Inspection-Tgw-B
+        ipv4CidrBlock: 10.2.3.224/28
+    transitGatewayAttachments:
+      - name: Network-Inspection
+        transitGateway:
+          name: Network-Main
+          account: GovCloudNetwork
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+          - Network-Main-Segregated
+        subnets:
+          - Network-InspectionTgwAttach-A
+          - Network-InspectionTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: false
+  - name: SharedServices-Main
+    account: GovCloudSharedServices
+    region: *HOME_REGION
+    cidrs:
+      - 10.4.0.0/16
+    routeTables:
+      - name: SharedServices-Tgw-A
+        routes: []
+      - name: SharedServices-Tgw-B
+        routes: []
+      - name: SharedServices-App-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: SharedServices-App-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+    subnets:
+      - name: SharedServices-App-A
+        availabilityZone: a
+        routeTable: SharedServices-App-A
+        ipv4CidrBlock: 10.4.0.0/24
+      - name: SharedServices-App-B
+        availabilityZone: b
+        routeTable: SharedServices-App-B
+        ipv4CidrBlock: 10.4.1.0/24
+      - name: SharedServices-MainTgwAttach-A
+        availabilityZone: a
+        routeTable: SharedServices-Tgw-A
+        ipv4CidrBlock: 10.4.255.208/28
+      - name: SharedServices-MainTgwAttach-B
+        availabilityZone: b
+        routeTable: SharedServices-Tgw-B
+        ipv4CidrBlock: 10.4.255.224/28
+    transitGatewayAttachments:
+      - name: SharedServices-Main
+        transitGateway:
+          name: Network-Main
+          account: GovCloudNetwork
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+          - Network-Main-Segregated
+        subnets:
+          - SharedServices-MainTgwAttach-A
+          - SharedServices-MainTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: false
+
+vpcFlowLogs:
+  trafficType: ALL
+  maxAggregationInterval: 600
+  destinations:
+    - s3
+    - cloud-watch-logs
+  defaultFormat: false
+  customFields:
+    - version
+    - account-id
+    - interface-id
+    - srcaddr
+    - dstaddr
+    - srcport
+    - dstport
+    - protocol
+    - packets
+    - bytes
+    - start
+    - end
+    - action
+    - log-status
+    - vpc-id
+    - subnet-id
+    - instance-id
+    - tcp-flags
+    - type
+    - pkt-srcaddr
+    - pkt-dstaddr
+    - region
+    - az-id
+    - pkt-src-aws-service
+    - pkt-dst-aws-service
+    - flow-direction
+    - traffic-path
