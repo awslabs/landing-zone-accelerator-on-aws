@@ -1,0 +1,17 @@
+homeRegion: us-east-1
+enabledRegions:
+  - us-east-1
+managementAccountAccessRole: AWSControlTowerExecution
+cloudwatchLogRetentionInDays: 3653
+controlTower:
+  enable: true
+logging:
+  account: LogArchive
+  cloudtrail:
+    enable: true
+    organizationTrail: true
+  sessionManager:
+    sendToCloudWatchLogs: false
+    sendToS3: false
+    excludeRegions: []
+    excludeAccounts: []

@@ -388,7 +388,7 @@ cloudWatch:
         # CIS 3.2 – Ensure a log metric filter and alarm exist for AWS Management Console sign-in without MFA
         - filterName: ConsoleSigninWithoutMFAMetricFilter
           logGroupName: aws-controltower/CloudTrailLogs
-          filterPattern: '{($.eventName="ConsoleLogin") && ($.additionalEventData.MFAUsed !="Yes")}'
+          filterPattern: '{($.eventName = "ConsoleLogin") && ($.additionalEventData.MFAUsed != "Yes") && ($.userIdentity.type = "IAMUser") && ($.responseElements.ConsoleLogin = "Success")}'
           metricNamespace: LogMetrics
           metricName: ConsoleSigninWithoutMFA
           metricValue: "1"

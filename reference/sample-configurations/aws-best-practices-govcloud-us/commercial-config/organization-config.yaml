@@ -1,0 +1,22 @@
+enable: true
+organizationalUnits:
+  - name: Security
+  - name: GovCloud
+serviceControlPolicies: 
+  # this policy prevents the use of commercial accounts that are tied to GovCloud
+  # only actions by organization root management role AWSControlTowerExecution,
+  # cdk and landing zone accelerator roles are allowed.
+  # Further, API calls from AWS Service is also allowed via PrincipalIsAWSService boolean
+  # this allows background services like billingreports.amazonaws.com 
+  # to make the calls to the account but prevents admins to launch any workloads.
+  # It is highly recommended to leave these commercial accounts locked down
+  - name: Lockdown paired account
+    description: Paired commercial accounts tied to GovCloud locked down
+    policy: service-control-policies/lockdown-govCloud-accounts.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - GovCloud
+
+taggingPolicies: []
+backupPolicies: []

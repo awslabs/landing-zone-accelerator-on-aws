@@ -1,0 +1,46 @@
+mandatoryAccounts:
+  - name: Management
+    description: >-
+      The management (primary) account. Do not change the name field for this
+      mandatory account.
+    # account mapping: 000000000000 is GovCloud account ID, 999999999999 is commercial account ID
+    email: <landing-zone-management-email@example.com> <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Root
+  - name: LogArchive
+    description: >-
+      The log archive account. Do not change the name field for this mandatory
+      account.
+    # account mapping: 111111111111 is GovCloud account ID, 888888888888 is commercial account ID
+    email: <govCloud-log-archive-email@example.com> <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Security
+  - name: Audit
+    description: >-
+      The security audit account (also referred to as the audit account). Do not
+      change the name field for this mandatory account.
+    # account mapping: 222222222222 is GovCloud account ID, 777777777777 is commercial account ID
+    email: <govCloud-audit-email@example.com> <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Security
+workloadAccounts: 
+  - name: GovCloudSharedServices 
+    description: Shared services account for GovCloud. 
+    # account mapping: 333333333333 is GovCloud account ID, 666666666666 is commercial account ID
+    email: <govCloud-shared-services-email@example.com> <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Shared Services 
+  - name: GovCloudNetwork 
+    description: Network account for GovCloud. 
+    # account mapping: 444444444444 is GovCloud account ID, 555555555555 is commercial account ID
+    email: <govCloud-network-email@example.com> <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Shared Services 
+
+# this section enables LZA to invite the accounts into AWS Organization
+accountIds:
+  - email: <landing-zone-management-email@example.com> <----- UPDATE EMAIL ADDRESS
+    accountId: '000000000000'  <----- UPDATE GOVCLOUD ACCOUNT ID from Commercial GovCloud mapping table
+  - email: <govCloud-log-archive-email@example.com> <----- UPDATE EMAIL ADDRESS
+    accountId: '111111111111'  <----- UPDATE GOVCLOUD ACCOUNT ID from Commercial GovCloud mapping table
+  - email: <govCloud-audit-email@example.com> <----- UPDATE EMAIL ADDRESS
+    accountId: '222222222222'  <----- UPDATE GOVCLOUD ACCOUNT ID from Commercial GovCloud mapping table
+  - email: <govCloud-shared-services-email@example.com> <----- UPDATE EMAIL ADDRESS
+    accountId: '333333333333'
+  - email: <govCloud-network-email@example.com> <----- UPDATE EMAIL ADDRESS
+    accountId: '444444444444'
