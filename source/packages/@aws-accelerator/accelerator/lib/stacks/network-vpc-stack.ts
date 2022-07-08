@@ -468,22 +468,100 @@ export class NetworkVpcStack extends AcceleratorStack {
         Logger.info(`[network-vpc-stack] Adding VPC ${vpcItem.name}`);
 
         //
+        // Determine if using IPAM or manual CIDRs
+        //
+        let cidr: string | undefined = undefined;
+        let delegatedAdminAccountId: string | undefined = undefined;
+        let poolId: string | undefined = undefined;
+        let poolNetmask: number | undefined = undefined;
+        if (vpcItem.cidrs && vpcItem.ipamAllocations) {
+          throw new Error(
+            `[network-vpc-stack] Attempting to define both a CIDR and IPAM allocation for VPC ${vpcItem.name}. Please choose only one.`,
+          );
+        }
+
+        // Get first CIDR in array
+        if (vpcItem.cidrs) {
+          cidr = vpcItem.cidrs[0];
+        }
+
+        // Get IPAM details
+        if (vpcItem.ipamAllocations) {
+          if (!props.networkConfig.centralNetworkServices?.ipams) {
+            throw new Error(
+              `[network-vpc-stack] Attempting to add IPAM allocation to VPC ${vpcItem.name} without any IPAMs declared.`,
+            );
+          }
+
+          delegatedAdminAccountId = this.accountsConfig.getAccountId(
+            props.networkConfig.centralNetworkServices?.delegatedAdminAccount,
+          );
+
+          if (delegatedAdminAccountId === accountId) {
+            poolId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+              this,
+              `/accelerator/network/ipam/pools/${vpcItem.ipamAllocations[0].ipamPoolName}/id`,
+            );
+          } else {
+            poolId = this.getResourceShare(
+              `${vpcItem.ipamAllocations[0].ipamPoolName}_IpamPoolShare`,
+              'ec2:IpamPool',
+              delegatedAdminAccountId,
+            ).resourceShareItemId;
+          }
+
+          poolNetmask = vpcItem.ipamAllocations[0].netmaskLength;
+        }
+
+        //
         // Create the VPC
         //
         const vpc = new Vpc(this, pascalCase(`${vpcItem.name}Vpc`), {
           name: vpcItem.name,
-          ipv4CidrBlock: vpcItem.cidrs[0],
+          ipv4CidrBlock: cidr,
           internetGateway: vpcItem.internetGateway,
           dhcpOptions: dhcpOptionsIds.get(vpcItem.dhcpOptions ?? ''),
           enableDnsHostnames: vpcItem.enableDnsHostnames ?? true,
           enableDnsSupport: vpcItem.enableDnsSupport ?? true,
           instanceTenancy: vpcItem.instanceTenancy ?? 'default',
+          ipv4IpamPoolId: poolId,
+          ipv4NetmaskLength: poolNetmask,
           tags: vpcItem.tags,
         });
         new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${pascalCase(vpcItem.name)}VpcId`), {
           parameterName: `/accelerator/network/vpc/${vpcItem.name}/id`,
           stringValue: vpc.vpcId,
         });
+
+        // Create additional CIDRs or IPAM allocations as needed
+        if (vpcItem.cidrs && vpcItem.cidrs.length > 1) {
+          for (const cidr of vpcItem.cidrs.slice(1)) {
+            Logger.info(`[network-vpc-stack] Adding secondary CIDR ${cidr} to VPC ${vpcItem.name}`);
+            vpc.addCidr({ cidrBlock: cidr });
+          }
+        }
+
+        if (vpcItem.ipamAllocations && vpcItem.ipamAllocations.length > 1) {
+          for (const alloc of vpcItem.ipamAllocations.slice(1)) {
+            Logger.info(
+              `[network-vpc-stack] Adding secondary IPAM allocation with netmask ${alloc.netmaskLength} to VPC ${vpcItem.name}`,
+            );
+            // Get IPAM pool ID
+            if (delegatedAdminAccountId === accountId) {
+              poolId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                this,
+                `/accelerator/network/ipam/pools/${alloc.ipamPoolName}/id`,
+              );
+            } else {
+              poolId = this.getResourceShare(
+                `${alloc.ipamPoolName}_IpamPoolShare`,
+                'ec2:IpamPool',
+                delegatedAdminAccountId!,
+              ).resourceShareItemId;
+            }
+            vpc.addCidr({ ipv4IpamPoolId: poolId, ipv4NetmaskLength: alloc.netmaskLength });
+          }
+        }
 
         //
         // Tag the VPC if central endpoints are enabled. These tags are used to
@@ -553,18 +631,58 @@ export class NetworkVpcStack extends AcceleratorStack {
         // Create Subnets
         //
         const subnetMap = new Map<string, Subnet>();
+        const ipamSubnetMap = new Map<number, Subnet>();
+        let index = 0;
+
         for (const subnetItem of vpcItem.subnets ?? []) {
+          if (subnetItem.ipv4CidrBlock && subnetItem.ipamAllocation) {
+            throw new Error(
+              `[network-vpc-stack] Subnet ${subnetItem.name} includes ipv4CidrBlock and ipamAllocation properties. Please choose only one.`,
+            );
+          }
           Logger.info(`[network-vpc-stack] Adding subnet ${subnetItem.name}`);
 
+          // Get route table for subnet association
           const routeTable = routeTableMap.get(subnetItem.routeTable);
-          if (routeTable === undefined) {
-            throw new Error(`Route table ${subnetItem.routeTable} not defined`);
+          if (!routeTable) {
+            throw new Error(
+              `[network-vpc-stack] Error creating subnet ${subnetItem.name}: route table ${subnetItem.routeTable} not defined`,
+            );
           }
 
+          // Check for base IPAM pool CIDRs in config
+          let basePool: string[] | undefined = undefined;
+          if (subnetItem.ipamAllocation) {
+            if (!props.networkConfig.centralNetworkServices?.ipams) {
+              throw new Error(
+                `[network-vpc-stack] Attempting to add IPAM allocation to subnet ${subnetItem.name} without any IPAMs declared.`,
+              );
+            }
+
+            for (const ipam of props.networkConfig.centralNetworkServices.ipams) {
+              const pool = ipam.pools?.find(item => item.name === subnetItem.ipamAllocation!.ipamPoolName);
+
+              if (pool) {
+                basePool = pool.provisionedCidrs;
+              }
+            }
+
+            if (!basePool) {
+              throw new Error(
+                `[network-vpc-stack] Error creating subnet ${subnetItem.name}: IPAM pool ${subnetItem.ipamAllocation.ipamPoolName} not defined`,
+              );
+            }
+          }
+
+          // Create subnet
           const subnet = new Subnet(this, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`), {
             name: subnetItem.name,
             availabilityZone: `${cdk.Stack.of(this).region}${subnetItem.availabilityZone}`,
+            basePool,
+            ipamAllocation: subnetItem.ipamAllocation,
             ipv4CidrBlock: subnetItem.ipv4CidrBlock,
+            kmsKey: this.acceleratorKey,
+            logRetentionInDays: this.logRetention,
             mapPublicIpOnLaunch: subnetItem.mapPublicIpOnLaunch,
             routeTable,
             vpc,
@@ -579,6 +697,24 @@ export class NetworkVpcStack extends AcceleratorStack {
               stringValue: subnet.subnetId,
             },
           );
+
+          // Need to ensure IPAM subnets are created one at a time to avoid duplicate allocations
+          // Add dependency on previously-created IPAM subnet, if it exists
+          if (subnetItem.ipamAllocation) {
+            ipamSubnetMap.set(index, subnet);
+
+            if (index > 0) {
+              const lastSubnet = ipamSubnetMap.get(index - 1);
+
+              if (!lastSubnet) {
+                throw new Error(
+                  `[network-vpc-stack] Error creating subnet ${subnetItem.name}: previous IPAM subnet undefined`,
+                );
+              }
+              subnet.node.addDependency(lastSubnet);
+            }
+            index += 1;
+          }
 
           if (subnetItem.shareTargets) {
             Logger.info(`[network-vpc-stack] Share subnet`);
