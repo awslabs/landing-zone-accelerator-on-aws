@@ -629,6 +629,14 @@ const securityConfigJson = {
         exportFrequency: 'FIFTEEN_MINUTES',
       },
     },
+    auditManager: {
+      enable: true,
+      excludeRegions: [],
+      defaultReportsConfiguration: {
+        enable: true,
+        destinationType: 'S3',
+      },
+    },
     detective: {
       enable: true,
       excludeRegions: [],

@@ -27,6 +27,8 @@ import {
   Document,
   GuardDutyDetectorConfig,
   GuardDutyExportConfigDestinationTypes,
+  AuditManagerDefaultReportsDestination,
+  AuditManagerDefaultReportsDestinationTypes,
   GuardDutyMembers,
   DetectiveGraphConfig,
   DetectiveMembers,
@@ -259,6 +261,101 @@ export class SecurityAuditStack extends AcceleratorStack {
     }
 
     //
+    // Audit Manager configuration
+    //
+    Logger.debug(
+      `[security-audit-stack] centralSecurityServices.auditManager?.enable: ${props.securityConfig.centralSecurityServices.auditManager?.enable}`,
+    );
+
+    if (props.securityConfig.centralSecurityServices.auditManager?.enable) {
+      Logger.info('[security-audit-stack] Adding Audit Manager ');
+
+      const lifecycleRules: LifecycleRule[] = [];
+      for (const lifecycleRule of props.securityConfig.centralSecurityServices.auditManager?.lifecycleRules ?? []) {
+        const noncurrentVersionTransitions = [];
+        for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
+          noncurrentVersionTransitions.push({
+            storageClass: noncurrentVersionTransition.storageClass,
+            transitionAfter: noncurrentVersionTransition.transitionAfter,
+          });
+        }
+        const transitions = [];
+        for (const transition of lifecycleRule.transitions) {
+          transitions.push({
+            storageClass: transition.storageClass,
+            transitionAfter: transition.transitionAfter,
+          });
+        }
+        const rule: LifecycleRule = {
+          abortIncompleteMultipartUploadAfter: lifecycleRule.abortIncompleteMultipartUpload,
+          enabled: lifecycleRule.enabled,
+          expiration: lifecycleRule.expiration,
+          expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
+          id: lifecycleRule.id,
+          noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
+          noncurrentVersionTransitions,
+          transitions,
+        };
+        lifecycleRules.push(rule);
+      }
+
+      const bucket = new Bucket(this, 'AuditManagerPublishingDestinationBucket', {
+        encryptionType: BucketEncryptionType.SSE_KMS,
+        s3BucketName: `aws-accelerator-org-auditmgr-pub-dest-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        kmsKey: key,
+        serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        lifecycleRules,
+      });
+
+      // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/AuditManagerPublishingDestinationBucket/Resource/Resource`,
+        [
+          {
+            id: 'AwsSolutions-S1',
+            reason:
+              'AuditManagerPublishingDestinationBucket has server access logs disabled till the task for access logging completed.',
+          },
+        ],
+      );
+
+      new cdk.aws_ssm.StringParameter(this, 'SsmParamOrganizationAuditManagerPublishingDestinationBucketArn', {
+        parameterName: '/accelerator/organization/security/auditManager/publishing-destination/bucket-arn',
+        stringValue: bucket.getS3Bucket().bucketArn,
+      });
+
+      // Grant audit manager access to the bucket
+      bucket.getS3Bucket().grantReadWrite(new cdk.aws_iam.ServicePrincipal('auditmanager.amazonaws.com'));
+
+      // Grant organization principals to use the bucket
+      bucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow Organization principals to use of the bucket',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['s3:GetBucketLocation', 's3:PutObject'],
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          resources: [bucket.getS3Bucket().bucketArn, `${bucket.getS3Bucket().bucketArn}/*`],
+          conditions: {
+            StringEquals: {
+              'aws:PrincipalOrgID': organizationId,
+            },
+          },
+        }),
+      );
+
+      // We also tag the bucket to record the fact that it has access for guardduty principal.
+      cdk.Tags.of(bucket).add('aws-cdk:auto-auditManager-access-bucket', 'true');
+
+      if (props.securityConfig.centralSecurityServices.auditManager?.defaultReportsConfiguration.enable) {
+        new AuditManagerDefaultReportsDestination(this, 'AuditManagerDefaultReportsDestination', {
+          defaultReportsDestinationType: AuditManagerDefaultReportsDestinationTypes.S3,
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          bucket: 's3://'.concat(bucket.getS3Bucket().bucketName),
+        });
+      }
+    }
     // Detective configuration
     //
     Logger.debug(
