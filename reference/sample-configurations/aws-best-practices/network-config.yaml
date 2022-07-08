@@ -53,6 +53,45 @@ transitGateways:
 #       - 2.2.2.2
 # centralNetworkServices:
 #   delegatedAdminAccount: Network
+#   ipams:
+#     - name: accelerator-ipam
+#       region: *HOME_REGION
+#       description: Accelerator IPAM
+#       operatingRegions:
+#         - *HOME_REGION
+#         - us-west-2
+#       pools:
+#         - name: &BASE_POOL base-pool
+#           description: accelerator-base
+#           provisionedCidrs:
+#             - 10.0.0.0/8
+#             - 172.16.0.0/12
+#             - 192.168.0.0/16
+#         - name: home-region-pool
+#           description: Pool for us-east-1
+#           locale: *HOME_REGION
+#           provisionedCidrs:
+#             - 10.0.0.0/16
+#           sourceIpamPool: *BASE_POOL
+#         - name: home-region-prod-pool
+#           description: Pool for prod environment
+#           allocationResourceTags:
+#             - key: env
+#               value: prod
+#           locale: *HOME_REGION
+#           provisionedCidrs:
+#             - 10.0.0.0/24
+#           shareTargets:
+#             organizationalUnits:
+#               - Infrastructure
+#           sourceIpamPool: home-region-pool
+#         - name: west-region-pool
+#           description: Pool for us-west-2
+#           locale: us-west-2
+#           provisionedCidrs:
+#             - 10.1.0.0/16
+#           sourceIpamPool: *BASE_POOL
+#
 #   networkFirewall:
 #     firewalls:
 #       - name: accelerator-firewall
@@ -229,6 +268,9 @@ vpcs:
     region: *HOME_REGION
     cidrs:
       - 10.1.0.0/22
+    # ipamAllocations:
+    #   - ipamPoolName: home-region-prod-pool
+    #     netmaskLength: 25
     internetGateway: false
     # dhcpOptions: accelerator-dhcp-opts
     enableDnsHostnames: true
@@ -283,6 +325,9 @@ vpcs:
         availabilityZone: a
         routeTable: Network-Endpoints-A
         ipv4CidrBlock: 10.1.0.0/24
+        # ipamAllocation:
+        #   ipamPoolName: home-region-prod-pool
+        #   netmaskLength: 27
       - name: Network-Endpoints-B
         availabilityZone: b
         routeTable: Network-Endpoints-B
