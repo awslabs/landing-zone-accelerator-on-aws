@@ -11,10 +11,11 @@
  *  and limitations under the License.
  */
 
-import * as t from './common-types';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as yaml from 'js-yaml';
+import * as path from 'path';
+
+import * as t from './common-types';
 
 /**
  * AWS Accelerator SecurityConfig Types
@@ -130,6 +131,42 @@ export class SecurityConfigTypes {
   });
 
   /**
+   * AWS Audit Manager Default Report configuration.
+   */
+  static readonly auditManagerDefaultReportsDestinationConfig = t.interface({
+    /**
+     * Indicates whether AWS GuardDuty Export Findings enabled.
+     */
+    enable: t.boolean,
+    /**
+     * The type of resource for the publishing destination. Currently only Amazon S3 buckets are supported.
+     */
+    destinationType: t.enums('DestinationType', ['S3']),
+  });
+
+  /**
+   * AWS Audit Manager configuration
+   */
+  static readonly auditManagerConfig = t.interface({
+    /**
+     * Indicates whether AWS Audit Manager enabled.
+     */
+    enable: t.boolean,
+    /**
+     * List of AWS Region names to be excluded from configuring Amazon GuardDuty S3 Protection
+     */
+    excludeRegions: t.optional(t.array(t.region)),
+    /**
+     * AWS GuardDuty Export Findings configuration.
+     */
+    defaultReportsConfiguration: this.auditManagerDefaultReportsDestinationConfig,
+    /**
+     * Declaration of a (S3 Bucket) Life cycle rule for default audit report destination.
+     */
+    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
+  });
+
+  /**
    * AWS Detective configuration
    */
   static readonly detectiveConfig = t.interface({
@@ -200,6 +237,7 @@ export class SecurityConfigTypes {
     s3PublicAccessBlock: SecurityConfigTypes.s3PublicAccessBlockConfig,
     macie: SecurityConfigTypes.macieConfig,
     guardduty: SecurityConfigTypes.guardDutyConfig,
+    auditManager: t.optional(SecurityConfigTypes.auditManagerConfig),
     detective: t.optional(SecurityConfigTypes.detectiveConfig),
     securityHub: SecurityConfigTypes.securityHubConfig,
     ssmAutomation: this.ssmAutomationConfig,
@@ -485,6 +523,46 @@ export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guar
 }
 
 /**
+ * AWS Audit Manager Default Reports Destination configuration.
+ */
+export class AuditManagerDefaultReportsDestinationConfig
+  implements t.TypeOf<typeof SecurityConfigTypes.auditManagerDefaultReportsDestinationConfig>
+{
+  /**
+   * Indicates whether AWS Audit Manager Default Reports enabled.
+   */
+  readonly enable = false;
+  /**
+   * The type of resource for the publishing destination. Currently only Amazon S3 buckets are supported.
+   */
+  readonly destinationType = 'S3';
+}
+
+/**
+ * AWS Audit Manager configuration
+ */
+export class AuditManagerConfig implements t.TypeOf<typeof SecurityConfigTypes.auditManagerConfig> {
+  /**
+   * Indicates whether AWS Audit Manager enabled.
+   */
+  readonly enable = false;
+  /**
+   * List of AWS Region names to be excluded from configuring AWS Audit Manager
+   */
+  readonly excludeRegions: t.Region[] = [];
+  /**
+   * AWS Audit Manager Default Reports configuration.
+   * @type object
+   */
+  readonly defaultReportsConfiguration: AuditManagerDefaultReportsDestinationConfig =
+    new AuditManagerDefaultReportsDestinationConfig();
+  /**
+   * Declaration of a (S3 Bucket) Life cycle rule.
+   */
+  readonly lifecycleRules: t.LifecycleRule[] | undefined = undefined;
+}
+
+/**
  * Amazon Detective configuration
  */
 export class DetectiveConfig implements t.TypeOf<typeof SecurityConfigTypes.detectiveConfig> {
@@ -704,6 +782,10 @@ export class CentralSecurityServicesConfig
    * Amazon GuardDuty Configuration
    */
   readonly guardduty: GuardDutyConfig = new GuardDutyConfig();
+  /**
+   * Amazon Audit Manager Configuration
+   */
+  readonly auditManager: AuditManagerConfig | undefined = undefined;
   /**
    * Amazon Detective Configuration
    */

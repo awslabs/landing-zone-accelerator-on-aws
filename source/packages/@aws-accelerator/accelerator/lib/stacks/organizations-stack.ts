@@ -30,6 +30,7 @@ import {
   EnablePolicyType,
   EnableSharingWithAwsOrganization,
   GuardDutyOrganizationAdminAccount,
+  AuditManagerOrganizationAdminAccount,
   DetectiveOrganizationAdminAccount,
   KeyLookup,
   MacieOrganizationAdminAccount,
@@ -397,6 +398,36 @@ export class OrganizationsStack extends AcceleratorStack {
           `[organizations-stack] ${
             cdk.Stack.of(this).region
           } region was in guardduty excluded list so ignoring this region for ${
+            props.accountsConfig.getAuditAccount().email
+          } account`,
+        );
+      }
+    }
+
+    //Audit Manager Config
+    if (props.securityConfig.centralSecurityServices.auditManager?.enable) {
+      if (
+        props.securityConfig.centralSecurityServices.auditManager?.excludeRegions!.indexOf(
+          cdk.Stack.of(this).region as Region,
+        ) == -1
+      ) {
+        Logger.debug(
+          `[organizations-stack] Starts audit manager admin account delegation to the account with email ${
+            props.accountsConfig.getAuditAccount().email
+          } account in ${cdk.Stack.of(this).region} region`,
+        );
+
+        Logger.debug(`[organizations-stack] auditmanager Admin Account ID is ${adminAccountId}`);
+        new AuditManagerOrganizationAdminAccount(this, 'AuditManagerEnableOrganizationAdminAccount', {
+          adminAccountId: adminAccountId,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          kmsKey: key,
+        });
+      } else {
+        Logger.debug(
+          `[organizations-stack] ${
+            cdk.Stack.of(this).region
+          } region was in auditmanager excluded list so ignoring this region for ${
             props.accountsConfig.getAuditAccount().email
           } account`,
         );

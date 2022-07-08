@@ -11,6 +11,13 @@
  *  and limitations under the License.
  */
 
+import * as cdk from 'aws-cdk-lib';
+import * as path from 'path';
+
+import { AcceleratorStackNames } from '../lib/accelerator';
+import { AcceleratorStage } from '../lib/accelerator-stage';
+import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
+import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import {
   ACCOUNT_CONFIG,
   GLOBAL_CONFIG,
@@ -19,12 +26,6 @@ import {
   ORGANIZATION_CONFIG,
   SECURITY_CONFIG,
 } from './configs/test-config';
-import * as cdk from 'aws-cdk-lib';
-import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
-import { AcceleratorStackNames } from '../lib/accelerator';
-import { AcceleratorStage } from '../lib/accelerator-stage';
-import * as path from 'path';
-import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 
 const testNamePrefix = 'Construct(SecurityAuditStack): ';
 
@@ -67,28 +68,28 @@ describe('SecurityAuditStack', () => {
    * Number of S3 bucket resource test
    */
   test(`${testNamePrefix} S3 bucket resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::Bucket', 2);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::Bucket', 3);
   });
 
   /**
    * Number of S3 bucket policy resource test
    */
   test(`${testNamePrefix} S3 bucket policy resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::BucketPolicy', 2);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::BucketPolicy', 3);
   });
 
   /**
    * Number of Lambda function resource test
    */
   test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 9);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 10);
   });
 
   /**
    * Number of IAM role resource test
    */
   test(`${testNamePrefix} IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 9);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 10);
   });
 
   /**
@@ -138,6 +139,20 @@ describe('SecurityAuditStack', () => {
    */
   test(`${testNamePrefix} DetectiveUpdateGraph custom resource count test`, () => {
     cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::DetectiveUpdateGraph', 1);
+  });
+
+  /**
+   * Number of DetectiveUpdateGraph custom resource test
+   */
+  test(`${testNamePrefix} DetectiveUpdateGraph custom resource count test`, () => {
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::DetectiveUpdateGraph', 1);
+  });
+
+  /**
+   * Number of AuditManagerDefaultReportsDestination custom resource test
+   */
+  test(`${testNamePrefix} AuditManagerCreateDefaultReportsDestination custom resource count test`, () => {
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::AuditManagerCreateDefaultReportsDestination', 1);
   });
 
   /**
@@ -358,6 +373,83 @@ describe('SecurityAuditStack', () => {
   });
 
   /**
+   * AuditManagerCreateDefaultReportsDestinationCustomResourceProviderHandler resource configuration test
+   */
+  test(`${testNamePrefix} AuditManagerCreateDefaultReportsDestinationCustomResourceProviderHandler resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderHandler6BCBC433: {
+          Type: 'AWS::Lambda::Function',
+          DependsOn: ['CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5'],
+          Properties: {
+            Code: {
+              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+            },
+            Handler: '__entrypoint__.handler',
+            MemorySize: 128,
+            Role: {
+              'Fn::GetAtt': [
+                'CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5',
+                'Arn',
+              ],
+            },
+            Runtime: 'nodejs14.x',
+            Timeout: 900,
+          },
+        },
+      },
+    });
+  });
+
+  /**
+   * AuditManagerCreateDefaultReportsDestinationCustomResourceProviderRole resource configuration test
+   */
+  test(`${testNamePrefix} AuditManagerCreateDefaultReportsDestinationCustomResourceProviderRole resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5: {
+          Type: 'AWS::IAM::Role',
+          Properties: {
+            AssumeRolePolicyDocument: {
+              Statement: [
+                {
+                  Action: 'sts:AssumeRole',
+                  Effect: 'Allow',
+                  Principal: {
+                    Service: 'lambda.amazonaws.com',
+                  },
+                },
+              ],
+              Version: '2012-10-17',
+            },
+            ManagedPolicyArns: [
+              {
+                'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+              },
+            ],
+            Policies: [
+              {
+                PolicyDocument: {
+                  Statement: [
+                    {
+                      Action: ['auditmanager:UpdateSettings'],
+                      Effect: 'Allow',
+                      Resource: '*',
+                      Sid: 'AuditManagerCreatePublishingDestinationCommandTaskAuditManagerActions',
+                    },
+                  ],
+                  Version: '2012-10-17',
+                },
+                PolicyName: 'Inline',
+              },
+            ],
+          },
+        },
+      },
+    });
+  });
+
+  /**
    * CustomDetectiveCreateMembersCustomResourceProviderHandler resource configuration test
    */
   test(`${testNamePrefix} CustomDetectiveCreateMembersCustomResourceProviderHandler resource configuration test`, () => {
@@ -409,81 +501,73 @@ describe('SecurityAuditStack', () => {
     });
   });
 
-    /**
+  /**
    * CustomDetectiveCreateMembersCustomResourceProviderRole resource configuration test
    */
-     test(`${testNamePrefix} CustomDetectiveCreateMembersCustomResourceProviderRole resource configuration test`, () => {
-      cdk.assertions.Template.fromStack(stack).templateMatches({
-        Resources: {
-          CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D: {
-            Type: 'AWS::IAM::Role',
-            Properties: {
-              AssumeRolePolicyDocument: {
-                Statement: [
-                  {
-                    Action: 'sts:AssumeRole',
-                    Effect: 'Allow',
-                    Principal: {
-                      Service: 'lambda.amazonaws.com',
-                    },
-                  },
-                ],
-                Version: '2012-10-17',
-              },
-              ManagedPolicyArns: [
+  test(`${testNamePrefix} CustomDetectiveCreateMembersCustomResourceProviderRole resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D: {
+          Type: 'AWS::IAM::Role',
+          Properties: {
+            AssumeRolePolicyDocument: {
+              Statement: [
                 {
-                  'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+                  Action: 'sts:AssumeRole',
+                  Effect: 'Allow',
+                  Principal: {
+                    Service: 'lambda.amazonaws.com',
+                  },
                 },
               ],
-              "Policies": [
-                {
-                  "PolicyDocument": {
-                    "Statement": [
-                      {
-                        "Action": [
-                          "detective:ListOrganizationAdminAccounts",
-                          "detective:UpdateOrganizationConfiguration",
-                          "detective:CreateMembers",
-                          "detective:DeleteMembers",
-                          "detective:DisassociateMembership",
-                          "detective:ListMembers",
-                          "detective:ListGraphs",
-                        ],
-                        "Effect": "Allow",
-                        "Resource": "*",
-                        "Sid": "DetectiveCreateMembersTaskDetectiveActions",
-                      },
-                      {
-                        "Action": [
-                          "iam:CreateServiceLinkedRole",
-                        ],
-                        "Effect": "Allow",
-                        "Resource": [
-                          "*",
-                        ],
-                        "Sid": "ServiceLinkedRoleDetective",
-                      },
-                      {
-                        "Action": [
-                          "organizations:ListAccounts",
-                        ],
-                        "Effect": "Allow",
-                        "Resource": [
-                          "*",
-                        ],
-                        "Sid": "OrganisationsListDetective",
-                      },
-                    ],
-                    "Version": "2012-10-17",
-                  },
-                  "PolicyName": "Inline",
-                },
-              ],
+              Version: '2012-10-17',
             },
+            ManagedPolicyArns: [
+              {
+                'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+              },
+            ],
+            Policies: [
+              {
+                PolicyDocument: {
+                  Statement: [
+                    {
+                      Action: [
+                        'detective:ListOrganizationAdminAccounts',
+                        'detective:UpdateOrganizationConfiguration',
+                        'detective:CreateMembers',
+                        'detective:DeleteMembers',
+                        'detective:DisassociateMembership',
+                        'detective:ListMembers',
+                        'detective:ListGraphs',
+                      ],
+                      Effect: 'Allow',
+                      Resource: '*',
+                      Sid: 'DetectiveCreateMembersTaskDetectiveActions',
+                    },
+                    {
+                      Action: ['iam:CreateServiceLinkedRole'],
+                      Effect: 'Allow',
+                      Resource: ['*'],
+                      Sid: 'ServiceLinkedRoleDetective',
+                    },
+                    {
+                      Action: ['organizations:ListAccounts'],
+                      Effect: 'Allow',
+                      Resource: ['*'],
+                      Sid: 'OrganisationsListDetective',
+                    },
+                  ],
+                  Version: '2012-10-17',
+                },
+                PolicyName: 'Inline',
+              },
+            ],
           },
         },
-      });
+      },
     });
+  });
 
   /**
    * CustomDetectiveUpdateGraphCustomResourceProviderRole resource configuration test
@@ -517,60 +601,243 @@ describe('SecurityAuditStack', () => {
                   Statement: [
                     {
                       Action: [
-                        "organizations:DeregisterDelegatedAdministrator",
-                        "organizations:DescribeOrganization",
-                        "organizations:EnableAWSServiceAccess",
-                        "organizations:ListAWSServiceAccessForOrganization",
-                        "organizations:ListAccounts",
-                        "organizations:ListDelegatedAdministrators",
-                        "organizations:RegisterDelegatedAdministrator",
-                        "organizations:ServicePrincipal",
-                        "organizations:UpdateOrganizationConfiguration",
+                        'organizations:DeregisterDelegatedAdministrator',
+                        'organizations:DescribeOrganization',
+                        'organizations:EnableAWSServiceAccess',
+                        'organizations:ListAWSServiceAccessForOrganization',
+                        'organizations:ListAccounts',
+                        'organizations:ListDelegatedAdministrators',
+                        'organizations:RegisterDelegatedAdministrator',
+                        'organizations:ServicePrincipal',
+                        'organizations:UpdateOrganizationConfiguration',
                       ],
                       Effect: 'Allow',
                       Resource: '*',
                       Sid: 'DetectiveConfigureOrganizationAdminAccountTaskOrganizationActions',
-                      "Condition": {
-                        "StringLikeIfExists": {
-                          "organizations:DeregisterDelegatedAdministrator": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:DescribeOrganization": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:EnableAWSServiceAccess": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:ListAWSServiceAccessForOrganization": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:ListAccounts": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:ListDelegatedAdministrators": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:RegisterDelegatedAdministrator": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:ServicePrincipal": [
-                            "detective.amazonaws.com",
-                          ],
-                          "organizations:UpdateOrganizationConfiguration": [
-                            "detective.amazonaws.com",
-                          ],
+                      Condition: {
+                        StringLikeIfExists: {
+                          'organizations:DeregisterDelegatedAdministrator': ['detective.amazonaws.com'],
+                          'organizations:DescribeOrganization': ['detective.amazonaws.com'],
+                          'organizations:EnableAWSServiceAccess': ['detective.amazonaws.com'],
+                          'organizations:ListAWSServiceAccessForOrganization': ['detective.amazonaws.com'],
+                          'organizations:ListAccounts': ['detective.amazonaws.com'],
+                          'organizations:ListDelegatedAdministrators': ['detective.amazonaws.com'],
+                          'organizations:RegisterDelegatedAdministrator': ['detective.amazonaws.com'],
+                          'organizations:ServicePrincipal': ['detective.amazonaws.com'],
+                          'organizations:UpdateOrganizationConfiguration': ['detective.amazonaws.com'],
                         },
                       },
                     },
                     {
-                      "Action": [
-                        "detective:UpdateOrganizationConfiguration",
-                        "detective:ListGraphs",
-                        "detective:ListMembers",
+                      Action: [
+                        'detective:UpdateOrganizationConfiguration',
+                        'detective:ListGraphs',
+                        'detective:ListMembers',
                       ],
-                      "Effect": "Allow",
-                      "Resource": "*",
-                      "Sid": "DetectiveUpdateGraphTaskDetectiveActions",
+                      Effect: 'Allow',
+                      Resource: '*',
+                      Sid: 'DetectiveUpdateGraphTaskDetectiveActions',
+                    },
+                  ],
+                  Version: '2012-10-17',
+                },
+                PolicyName: 'Inline',
+              },
+            ],
+          },
+        },
+      },
+    });
+  });
+
+  /**
+   * CustomDetectiveCreateMembersCustomResourceProviderHandler resource configuration test
+   */
+  test(`${testNamePrefix} CustomDetectiveCreateMembersCustomResourceProviderHandler resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        CustomDetectiveCreateMembersCustomResourceProviderHandler0A0D060D: {
+          Type: 'AWS::Lambda::Function',
+          DependsOn: ['CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D'],
+          Properties: {
+            Code: {
+              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+            },
+            Handler: '__entrypoint__.handler',
+            MemorySize: 128,
+            Role: {
+              'Fn::GetAtt': ['CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D', 'Arn'],
+            },
+            Runtime: 'nodejs14.x',
+            Timeout: 900,
+          },
+        },
+      },
+    });
+  });
+
+  /**
+   * CustomDetectiveUpdateGraphCustomResourceProviderHandler resource configuration test
+   */
+  test(`${testNamePrefix} CustomDetectiveUpdateGraphCustomResourceProviderHandler resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        CustomDetectiveUpdateGraphCustomResourceProviderHandlerD4473EC1: {
+          Type: 'AWS::Lambda::Function',
+          DependsOn: ['CustomDetectiveUpdateGraphCustomResourceProviderRole54CD7295'],
+          Properties: {
+            Code: {
+              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+            },
+            Handler: '__entrypoint__.handler',
+            MemorySize: 128,
+            Role: {
+              'Fn::GetAtt': ['CustomDetectiveUpdateGraphCustomResourceProviderRole54CD7295', 'Arn'],
+            },
+            Runtime: 'nodejs14.x',
+            Timeout: 900,
+          },
+        },
+      },
+    });
+  });
+
+  /**
+   * CustomDetectiveCreateMembersCustomResourceProviderRole resource configuration test
+   */
+  test(`${testNamePrefix} CustomDetectiveCreateMembersCustomResourceProviderRole resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D: {
+          Type: 'AWS::IAM::Role',
+          Properties: {
+            AssumeRolePolicyDocument: {
+              Statement: [
+                {
+                  Action: 'sts:AssumeRole',
+                  Effect: 'Allow',
+                  Principal: {
+                    Service: 'lambda.amazonaws.com',
+                  },
+                },
+              ],
+              Version: '2012-10-17',
+            },
+            ManagedPolicyArns: [
+              {
+                'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+              },
+            ],
+            Policies: [
+              {
+                PolicyDocument: {
+                  Statement: [
+                    {
+                      Action: [
+                        'detective:ListOrganizationAdminAccounts',
+                        'detective:UpdateOrganizationConfiguration',
+                        'detective:CreateMembers',
+                        'detective:DeleteMembers',
+                        'detective:DisassociateMembership',
+                        'detective:ListMembers',
+                        'detective:ListGraphs',
+                      ],
+                      Effect: 'Allow',
+                      Resource: '*',
+                      Sid: 'DetectiveCreateMembersTaskDetectiveActions',
+                    },
+                    {
+                      Action: ['iam:CreateServiceLinkedRole'],
+                      Effect: 'Allow',
+                      Resource: ['*'],
+                      Sid: 'ServiceLinkedRoleDetective',
+                    },
+                    {
+                      Action: ['organizations:ListAccounts'],
+                      Effect: 'Allow',
+                      Resource: ['*'],
+                      Sid: 'OrganisationsListDetective',
+                    },
+                  ],
+                  Version: '2012-10-17',
+                },
+                PolicyName: 'Inline',
+              },
+            ],
+          },
+        },
+      },
+    });
+  });
+
+  /**
+   * CustomDetectiveUpdateGraphCustomResourceProviderRole resource configuration test
+   */
+  test(`${testNamePrefix} CustomDetectiveUpdateGraphCustomResourceProviderRole resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        CustomDetectiveUpdateGraphCustomResourceProviderRole54CD7295: {
+          Type: 'AWS::IAM::Role',
+          Properties: {
+            AssumeRolePolicyDocument: {
+              Statement: [
+                {
+                  Action: 'sts:AssumeRole',
+                  Effect: 'Allow',
+                  Principal: {
+                    Service: 'lambda.amazonaws.com',
+                  },
+                },
+              ],
+              Version: '2012-10-17',
+            },
+            ManagedPolicyArns: [
+              {
+                'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+              },
+            ],
+            Policies: [
+              {
+                PolicyDocument: {
+                  Statement: [
+                    {
+                      Action: [
+                        'organizations:DeregisterDelegatedAdministrator',
+                        'organizations:DescribeOrganization',
+                        'organizations:EnableAWSServiceAccess',
+                        'organizations:ListAWSServiceAccessForOrganization',
+                        'organizations:ListAccounts',
+                        'organizations:ListDelegatedAdministrators',
+                        'organizations:RegisterDelegatedAdministrator',
+                        'organizations:ServicePrincipal',
+                        'organizations:UpdateOrganizationConfiguration',
+                      ],
+                      Effect: 'Allow',
+                      Resource: '*',
+                      Sid: 'DetectiveConfigureOrganizationAdminAccountTaskOrganizationActions',
+                      Condition: {
+                        StringLikeIfExists: {
+                          'organizations:DeregisterDelegatedAdministrator': ['detective.amazonaws.com'],
+                          'organizations:DescribeOrganization': ['detective.amazonaws.com'],
+                          'organizations:EnableAWSServiceAccess': ['detective.amazonaws.com'],
+                          'organizations:ListAWSServiceAccessForOrganization': ['detective.amazonaws.com'],
+                          'organizations:ListAccounts': ['detective.amazonaws.com'],
+                          'organizations:ListDelegatedAdministrators': ['detective.amazonaws.com'],
+                          'organizations:RegisterDelegatedAdministrator': ['detective.amazonaws.com'],
+                          'organizations:ServicePrincipal': ['detective.amazonaws.com'],
+                          'organizations:UpdateOrganizationConfiguration': ['detective.amazonaws.com'],
+                        },
+                      },
+                    },
+                    {
+                      Action: [
+                        'detective:UpdateOrganizationConfiguration',
+                        'detective:ListGraphs',
+                        'detective:ListMembers',
+                      ],
+                      Effect: 'Allow',
+                      Resource: '*',
+                      Sid: 'DetectiveUpdateGraphTaskDetectiveActions',
                     },
                   ],
                   Version: '2012-10-17',
@@ -894,9 +1161,37 @@ describe('SecurityAuditStack', () => {
   });
 
   /**
+   * AuditManagerDefaultReportsDestination resource configuration test
+   */
+  test(`${testNamePrefix} AuditManagerDefaultReportsDestination resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        AuditManagerDefaultReportsDestinationAFD20D60: {
+          Type: 'Custom::AuditManagerCreateDefaultReportsDestination',
+          UpdateReplacePolicy: 'Delete',
+          DeletionPolicy: 'Delete',
+          DependsOn: ['CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderLogGroupF5AC3566'],
+          Properties: {
+            ServiceToken: {
+              'Fn::GetAtt': [
+                'CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderHandler6BCBC433',
+                'Arn',
+              ],
+            },
+            defaultReportsDestinationType: 'S3',
+            kmsKeyArn: { Ref: 'AcceleratorKeyLookup0C18DA36' },
+            bucket: { 'Fn::Join': ['', ['s3://', { Ref: 'AuditManagerPublishingDestinationBucket74974FCF' }]] },
+            region: 'us-east-1',
+          },
+        },
+      },
+    });
+  });
+
+  /**
    * DetectiveMembers resource configuration test
    */
-  test(`${testNamePrefix} DetectiveMembers resource configuration test`, () => { 
+  test(`${testNamePrefix} DetectiveMembers resource configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
         DetectiveMembers42A16137: {
@@ -905,39 +1200,36 @@ describe('SecurityAuditStack', () => {
           DeletionPolicy: 'Delete',
           Properties: {
             ServiceToken: {
-              'Fn::GetAtt': ['CustomDetectiveCreateMembersCustomResourceProviderHandler0A0D060D', 'Arn'], 
-            },      
+              'Fn::GetAtt': ['CustomDetectiveCreateMembersCustomResourceProviderHandler0A0D060D', 'Arn'],
+            },
             region: 'us-east-1',
-          },      
-        },      
-      },      
+          },
+        },
+      },
     });
   });
 
-    /**
+  /**
    * DetectiveGraphConfig resource configuration test
    */
-     test(`${testNamePrefix} DetectiveGraphConfig resource configuration test`, () => {
-      cdk.assertions.Template.fromStack(stack).templateMatches({
-        Resources: {
-          DetectiveGraphConfig248C4B9F: {
-            Type: 'Custom::DetectiveUpdateGraph',
-            UpdateReplacePolicy: 'Delete',
-            DeletionPolicy: 'Delete',
-            DependsOn: [
-              'CustomDetectiveUpdateGraphCustomResourceProviderLogGroupDF150426',
-              'DetectiveMembers42A16137',
-            ],
-            Properties: {
-              ServiceToken: {
-                'Fn::GetAtt': ['CustomDetectiveUpdateGraphCustomResourceProviderHandlerD4473EC1', 'Arn'],
-              },
-              region: 'us-east-1',
+  test(`${testNamePrefix} DetectiveGraphConfig resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        DetectiveGraphConfig248C4B9F: {
+          Type: 'Custom::DetectiveUpdateGraph',
+          UpdateReplacePolicy: 'Delete',
+          DeletionPolicy: 'Delete',
+          DependsOn: ['CustomDetectiveUpdateGraphCustomResourceProviderLogGroupDF150426', 'DetectiveMembers42A16137'],
+          Properties: {
+            ServiceToken: {
+              'Fn::GetAtt': ['CustomDetectiveUpdateGraphCustomResourceProviderHandlerD4473EC1', 'Arn'],
             },
+            region: 'us-east-1',
           },
         },
-      });
+      },
     });
+  });
 
   /**
    * HighSnsTopic resource configuration test

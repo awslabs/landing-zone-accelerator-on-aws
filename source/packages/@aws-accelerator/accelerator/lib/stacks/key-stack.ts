@@ -85,6 +85,21 @@ export class KeyStack extends AcceleratorStack {
     if (props.securityConfig.centralSecurityServices.guardduty.enable) {
       allowedServicePrincipals.push({ name: 'Guardduty', principal: 'guardduty.amazonaws.com' });
     }
+    if (props.securityConfig.centralSecurityServices.auditManager?.enable) {
+      allowedServicePrincipals.push({ name: 'AuditManager', principal: 'auditmanager.amazonaws.com' });
+      key.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: `Allow Audit Manager service to provision encryption key grants`,
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          actions: ['kms:CreateGrant'],
+          conditions: {
+            StringLike: { 'kms:ViaService': 'auditmanager.*.amazonaws.com', 'aws:PrincipalOrgID': organizationId },
+            Bool: { 'kms:GrantIsForAWSResource': 'true' },
+          },
+          resources: ['*'],
+        }),
+      );
+    }
 
     allowedServicePrincipals!.forEach(item => {
       key.addToResourcePolicy(
