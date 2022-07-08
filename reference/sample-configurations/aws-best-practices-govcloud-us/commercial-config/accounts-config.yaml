@@ -1,0 +1,45 @@
+mandatoryAccounts:
+- name: Management
+    description: >-
+      The management (primary) account. Do not change the name field for this
+      mandatory account.
+    email: <landing-zone-management-email@example.com> <----- UPDATE EMAIL ADDRESS 
+    organizationalUnit: Root
+  - name: LogArchive
+    description: >-
+      The log archive account. Do not change the name field for this mandatory
+      account.
+    email: <commercial-log-archive-email@example.com> <----- UPDATE EMAIL ADDRESS 
+    organizationalUnit: Security
+  - name: Audit
+    description: >-
+      The security audit account (also referred to as the audit account). Do not
+      change the name field for this mandatory account.
+    email: <commercial-audit-email@example.com> <----- UPDATE EMAIL ADDRESS 
+    organizationalUnit: Security 
+workloadAccounts:
+ - name: GovCloudLogArchive 
+   description: The log archive account for GovCloud. 
+   email: <govCloud-log-archive-email@example.com> <----- UPDATE EMAIL ADDRESS 
+   # this OU has all GovCloud accounts. 
+   # OU was created from Control Tower
+   # in organization-config.yaml this OU was added.
+   organizationalUnit: GovCloud 
+   # enableGovCloud is a one-time non-reversible option
+   # which only works with creation of new accounts
+   enableGovCloud: true 
+ - name: GovCloudAudit 
+   description: The security audit account (also referred to as the audit account) for GovCloud. 
+   email: <govCloud-audit-email@example.com> <----- UPDATE EMAIL ADDRESS
+   organizationalUnit: GovCloud 
+   enableGovCloud: true
+ - name: GovCloudSharedServices 
+    description: Shared services account for GovCloud. 
+    email: <govCloud-shared-services-email@example.com> <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: GovCloud 
+    enableGovCloud: true
+  - name: GovCloudNetwork 
+    description: Network account for GovCloud. 
+    email: <govCloud-network-email@example.com> <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: GovCloud 
+    enableGovCloud: true

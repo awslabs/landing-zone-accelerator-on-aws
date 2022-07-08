@@ -1,0 +1,20 @@
+homeRegion: &HOME_REGION us-gov-west-1
+enabledRegions:
+  - *HOME_REGION
+managementAccountAccessRole: AWSControlTowerExecution
+cloudwatchLogRetentionInDays: 365
+# Setting controlTower to false will enable accelerator to 
+# configure resources like AWS Config. 
+# If set to true, accelerator will assume Control Tower 
+# will manage resources.
+controlTower:
+  enable: false 
+logging:
+  account: LogArchive
+  cloudtrail:
+    enable: true
+    organizationTrail: true
+  sessionManager:
+    sendToCloudWatchLogs: true
+    sendToS3: true
+

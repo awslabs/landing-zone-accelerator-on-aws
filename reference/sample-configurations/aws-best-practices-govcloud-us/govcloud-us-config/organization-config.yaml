@@ -1,0 +1,42 @@
+# If using AWS Control Tower, ensure that all the specified Organizational Units (OU) 
+# have been created and enrolled as the accelerator will verify that the OU layout 
+# matches before continuing to execute the deployment pipeline.
+
+enable: true
+organizationalUnits:
+  - name: Security
+  - name: Infrastructure
+quarantineNewAccounts:
+  enable: true
+  scpPolicyName: Quarantine
+serviceControlPolicies:
+  - name: AcceleratorGuardrails1
+    description: >
+      Accelerator GuardRails 1
+    policy: service-control-policies/guardrails-1.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+  - name: AcceleratorGuardrails2
+    description: >
+      Accelerator GuardRails 2
+    policy: service-control-policies/guardrails-2.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+  - name: Quarantine
+    description: >
+      This SCP is used to prevent changes to new accounts until the Accelerator
+      has been executed successfully.
+      This policy will be applied upon account creation if enabled.
+    policy: service-control-policies/quarantine.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits: []
+
+# Tagging and backup policies are not present in GovCloud
+
+taggingPolicies: []
+backupPolicies: []
