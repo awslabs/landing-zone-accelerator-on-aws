@@ -14,6 +14,9 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
+import { IpamAllocationConfig } from '@aws-accelerator/config';
+
+import { IpamSubnet } from './ipam-subnet';
 import { IPrefixList } from './prefix-list';
 import { IRouteTable } from './route-table';
 
@@ -50,10 +53,14 @@ export interface ISubnet extends cdk.IResource {
 export interface SubnetProps {
   readonly name: string;
   readonly availabilityZone: string;
-  readonly ipv4CidrBlock: string;
   readonly mapPublicIpOnLaunch?: boolean;
   readonly routeTable: IRouteTable;
   readonly vpc: IVpc;
+  readonly basePool?: string[];
+  readonly ipamAllocation?: IpamAllocationConfig;
+  readonly ipv4CidrBlock?: string;
+  readonly kmsKey?: cdk.aws_kms.Key;
+  readonly logRetentionInDays?: number;
   readonly tags?: cdk.CfnTag[];
   // readonly nacl: INacl;
 }
@@ -72,29 +79,74 @@ export class Subnet extends cdk.Resource implements ISubnet {
 
     this.subnetName = props.name;
     this.availabilityZone = props.availabilityZone;
-    this.ipv4CidrBlock = props.ipv4CidrBlock;
     this.mapPublicIpOnLaunch = props.mapPublicIpOnLaunch;
     this.routeTable = props.routeTable;
 
-    //props.tags?.push({ key: 'Name', value: props.name });
+    // Determine if IPAM subnet or native
+    let resource: cdk.aws_ec2.CfnSubnet | IpamSubnet;
 
-    const resource = new cdk.aws_ec2.CfnSubnet(this, 'Resource', {
-      vpcId: props.vpc.vpcId,
-      cidrBlock: props.ipv4CidrBlock,
-      availabilityZone: props.availabilityZone,
-      mapPublicIpOnLaunch: props.mapPublicIpOnLaunch,
-      tags: props.tags,
-    });
+    if (props.ipv4CidrBlock) {
+      this.ipv4CidrBlock = props.ipv4CidrBlock;
 
-    cdk.Tags.of(this).add('Name', props.name);
+      resource = new cdk.aws_ec2.CfnSubnet(this, 'Resource', {
+        vpcId: props.vpc.vpcId,
+        cidrBlock: props.ipv4CidrBlock,
+        availabilityZone: props.availabilityZone,
+        mapPublicIpOnLaunch: props.mapPublicIpOnLaunch,
+        tags: props.tags,
+      });
 
-    this.subnetId = resource.ref;
-    this.subnetArn = cdk.Stack.of(this).formatArn({
-      service: 'ec2',
-      resource: 'subnet',
-      arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
-      resourceName: resource.ref,
-    });
+      cdk.Tags.of(this).add('Name', props.name);
+      this.subnetId = resource.ref;
+      this.subnetArn = cdk.Stack.of(this).formatArn({
+        service: 'ec2',
+        resource: 'subnet',
+        arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
+        resourceName: resource.ref,
+      });
+    } else {
+      if (!props.basePool) {
+        throw new Error(
+          `Error creating subnet ${props.name}: must specify basePool property when using ipamAllocation`,
+        );
+      }
+      if (!props.ipamAllocation) {
+        throw new Error(
+          `Error creating subnet ${props.name}: ipamAllocation property must be defined if not specifying ipv4CidrBlock`,
+        );
+      }
+      if (!props.logRetentionInDays) {
+        throw new Error(
+          `Error creating subnet ${props.name}: logRetentionInDays property must be defined if not specifying ipv4CidrBlock`,
+        );
+      }
+      if (!props.kmsKey) {
+        throw new Error(
+          `Error creating subnet ${props.name}: kmsKey property must be defined if not specifying ipv4CidrBlock`,
+        );
+      }
+
+      resource = new IpamSubnet(this, 'Resource', {
+        name: props.name,
+        availabilityZone: props.availabilityZone,
+        basePool: props.basePool,
+        ipamAllocation: props.ipamAllocation,
+        vpcId: props.vpc.vpcId,
+        mapPublicIpOnLaunch: props.mapPublicIpOnLaunch,
+        kmsKey: props.kmsKey,
+        logRetentionInDays: props.logRetentionInDays,
+        tags: props.tags,
+      });
+
+      this.ipv4CidrBlock = resource.ipv4CidrBlock;
+      this.subnetId = resource.subnetId;
+      this.subnetArn = cdk.Stack.of(this).formatArn({
+        service: 'ec2',
+        resource: 'subnet',
+        arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
+        resourceName: resource.subnetId,
+      });
+    }
 
     new cdk.aws_ec2.CfnSubnetRouteTableAssociation(this, 'RouteTableAssociation', {
       subnetId: this.subnetId,
@@ -419,12 +471,14 @@ export interface IVpc extends cdk.IResource {
  */
 export interface VpcProps {
   readonly name: string;
-  readonly ipv4CidrBlock: string;
   readonly dhcpOptions?: string;
   readonly enableDnsHostnames?: boolean;
   readonly enableDnsSupport?: boolean;
   readonly instanceTenancy?: 'default' | 'dedicated';
   readonly internetGateway?: boolean;
+  readonly ipv4CidrBlock?: string;
+  readonly ipv4IpamPoolId?: string;
+  readonly ipv4NetmaskLength?: number;
   readonly tags?: cdk.CfnTag[];
 }
 
@@ -445,6 +499,8 @@ export class Vpc extends cdk.Resource implements IVpc {
       enableDnsHostnames: props.enableDnsHostnames,
       enableDnsSupport: props.enableDnsSupport,
       instanceTenancy: props.instanceTenancy,
+      ipv4IpamPoolId: props.ipv4IpamPoolId,
+      ipv4NetmaskLength: props.ipv4NetmaskLength,
       tags: props.tags,
     });
     cdk.Tags.of(this).add('Name', props.name);
@@ -541,5 +597,28 @@ export class Vpc extends cdk.Resource implements IVpc {
         logFormat: options.logFormat,
       });
     }
+  }
+
+  public addCidr(options: {
+    amazonProvidedIpv6CidrBlock?: boolean;
+    cidrBlock?: string;
+    ipv4IpamPoolId?: string;
+    ipv4NetmaskLength?: number;
+    ipv6CidrBlock?: string;
+    ipv6IpamPoolId?: string;
+    ipv6NetmaskLength?: number;
+    ipv6Pool?: string;
+  }) {
+    // Create a secondary VPC CIDR
+    new cdk.aws_ec2.CfnVPCCidrBlock(this, 'VpcCidrBlock', {
+      amazonProvidedIpv6CidrBlock: options.amazonProvidedIpv6CidrBlock,
+      cidrBlock: options.cidrBlock,
+      ipv4IpamPoolId: options.ipv4IpamPoolId,
+      ipv4NetmaskLength: options.ipv4NetmaskLength,
+      ipv6CidrBlock: options.ipv6CidrBlock,
+      ipv6IpamPoolId: options.ipv6IpamPoolId,
+      ipv6Pool: options.ipv6Pool,
+      vpcId: this.vpcId,
+    });
   }
 }

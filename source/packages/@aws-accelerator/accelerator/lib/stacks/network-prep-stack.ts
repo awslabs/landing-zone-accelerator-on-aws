@@ -21,6 +21,7 @@ import {
   AccountsConfig,
   DnsFirewallRuleGroupConfig,
   DnsQueryLogsConfig,
+  IpamPoolConfig,
   NfwFirewallPolicyConfig,
   NfwRuleGroupConfig,
   OrganizationConfig,
@@ -28,6 +29,9 @@ import {
 } from '@aws-accelerator/config';
 import {
   FirewallPolicyProperty,
+  Ipam,
+  IpamPool,
+  IpamScope,
   KeyLookup,
   NetworkFirewallPolicy,
   NetworkFirewallRuleGroup,
@@ -58,6 +62,7 @@ interface ResolverFirewallRuleProps {
 type ResourceShareType =
   | DnsFirewallRuleGroupConfig
   | DnsQueryLogsConfig
+  | IpamPoolConfig
   | NfwRuleGroupConfig
   | NfwFirewallPolicyConfig
   | TransitGatewayConfig;
@@ -143,6 +148,166 @@ export class NetworkPrepStack extends AcceleratorStack {
     if (props.networkConfig.centralNetworkServices) {
       const centralConfig = props.networkConfig.centralNetworkServices;
       const accountId = this.accountsConfig.getAccountId(centralConfig.delegatedAdminAccount);
+
+      //
+      // Generate IPAMs
+      //
+      for (const ipamItem of centralConfig.ipams ?? []) {
+        const poolMap = new Map<string, IpamPool>();
+        const scopeMap = new Map<string, IpamScope>();
+
+        if (accountId === cdk.Stack.of(this).account && ipamItem.region === cdk.Stack.of(this).region) {
+          Logger.info(`[network-prep-stack] Add IPAM ${ipamItem.name}`);
+
+          // Create IPAM
+          const ipam = new Ipam(this, pascalCase(`${ipamItem.name}Ipam`), {
+            name: ipamItem.name,
+            description: ipamItem.description,
+            operatingRegions: ipamItem.operatingRegions,
+            tags: ipamItem.tags,
+          });
+          new ssm.StringParameter(this, pascalCase(`SsmParam${ipamItem.name}IpamId`), {
+            parameterName: `/accelerator/network/ipam/${ipamItem.name}/id`,
+            stringValue: ipam.ipamId,
+          });
+
+          // Create scopes
+          for (const scopeItem of ipamItem.scopes ?? []) {
+            Logger.info(`[network-prep-stack] Add IPAM scope ${scopeItem.name}`);
+            const scope = new IpamScope(this, pascalCase(`${scopeItem.name}Scope`), {
+              ipamId: ipam.ipamId,
+              name: scopeItem.name,
+              description: scopeItem.description,
+              tags: scopeItem.tags ?? [],
+            });
+            scopeMap.set(scopeItem.name, scope);
+            new ssm.StringParameter(this, pascalCase(`SsmParam${scopeItem.name}ScopeId`), {
+              parameterName: `/accelerator/network/ipam/scopes/${scopeItem.name}/id`,
+              stringValue: scope.ipamScopeId,
+            });
+          }
+
+          // Create pools
+          if (ipamItem.pools) {
+            // Create base pools
+            const basePools = ipamItem.pools.filter(item => {
+              return !item.sourceIpamPool;
+            });
+            for (const poolItem of basePools ?? []) {
+              Logger.info(`[network-prep-stack] Add IPAM top-level pool ${poolItem.name}`);
+              let poolScope: string | undefined;
+
+              if (poolItem.scope) {
+                poolScope = scopeMap.get(poolItem.scope)?.ipamScopeId;
+
+                if (!poolScope) {
+                  throw new Error(
+                    `[network-prep-stack] Unable to locate IPAM scope ${poolItem.scope} for pool ${poolItem.name}`,
+                  );
+                }
+              }
+
+              const pool = new IpamPool(this, pascalCase(`${poolItem.name}Pool`), {
+                addressFamily: poolItem.addressFamily ?? 'ipv4',
+                ipamScopeId: poolScope ?? ipam.privateDefaultScopeId,
+                name: poolItem.name,
+                allocationDefaultNetmaskLength: poolItem.allocationDefaultNetmaskLength,
+                allocationMaxNetmaskLength: poolItem.allocationMaxNetmaskLength,
+                allocationMinNetmaskLength: poolItem.allocationMinNetmaskLength,
+                allocationResourceTags: poolItem.allocationResourceTags,
+                autoImport: poolItem.autoImport,
+                description: poolItem.description,
+                locale: poolItem.locale,
+                provisionedCidrs: poolItem.provisionedCidrs,
+                publiclyAdvertisable: poolItem.publiclyAdvertisable,
+                tags: poolItem.tags,
+              });
+              poolMap.set(poolItem.name, pool);
+              new ssm.StringParameter(this, pascalCase(`SsmParam${poolItem.name}PoolId`), {
+                parameterName: `/accelerator/network/ipam/pools/${poolItem.name}/id`,
+                stringValue: pool.ipamPoolId,
+              });
+
+              // Add resource shares
+              if (poolItem.shareTargets) {
+                Logger.info(`[network-prep-stack] Share IPAM pool ${poolItem.name}`);
+                this.addResourceShare(poolItem, `${poolItem.name}_IpamPoolShare`, [pool.ipamPoolArn]);
+              }
+            }
+
+            // Create nested pools
+            const nestedPools = ipamItem.pools.filter(item => {
+              return item.sourceIpamPool;
+            });
+
+            // Use while loop for iteration
+            while (poolMap.size < ipamItem.pools.length) {
+              for (const poolItem of nestedPools) {
+                // Check if source pool name has been created or exists in the config array
+                const sourcePool = poolMap.get(poolItem.sourceIpamPool!)?.ipamPoolId;
+                if (!sourcePool) {
+                  // Check for case where the source pool hasn't been created yet
+                  const sourcePoolExists = nestedPools.find(item => item.name === poolItem.sourceIpamPool);
+                  if (!sourcePoolExists) {
+                    throw new Error(
+                      `[network-prep-stack] Unable to locate source IPAM pool ${poolItem.sourceIpamPool} for pool ${poolItem.name}`,
+                    );
+                  }
+                  // Skip iteration if source pool exists but has not yet been created
+                  continue;
+                }
+
+                // Check if this item has already been created
+                const poolExists = poolMap.get(poolItem.name);
+
+                if (sourcePool && !poolExists) {
+                  Logger.info(`[network-prep-stack] Add IPAM nested pool ${poolItem.name}`);
+                  let poolScope: string | undefined;
+
+                  if (poolItem.scope) {
+                    poolScope = scopeMap.get(poolItem.scope)?.ipamScopeId;
+
+                    if (!poolScope) {
+                      throw new Error(
+                        `[network-prep-stack] Unable to locate IPAM scope ${poolItem.scope} for pool ${poolItem.name}`,
+                      );
+                    }
+                  }
+
+                  const pool = new IpamPool(this, pascalCase(`${poolItem.name}Pool`), {
+                    addressFamily: poolItem.addressFamily ?? 'ipv4',
+                    ipamScopeId: poolScope ?? ipam.privateDefaultScopeId,
+                    name: poolItem.name,
+                    allocationDefaultNetmaskLength: poolItem.allocationDefaultNetmaskLength,
+                    allocationMaxNetmaskLength: poolItem.allocationMaxNetmaskLength,
+                    allocationMinNetmaskLength: poolItem.allocationMinNetmaskLength,
+                    allocationResourceTags: poolItem.allocationResourceTags,
+                    autoImport: poolItem.autoImport,
+                    description: poolItem.description,
+                    locale: poolItem.locale,
+                    provisionedCidrs: poolItem.provisionedCidrs,
+                    publiclyAdvertisable: poolItem.publiclyAdvertisable,
+                    sourceIpamPoolId: sourcePool,
+                    tags: poolItem.tags,
+                  });
+                  // Record item in pool map
+                  poolMap.set(poolItem.name, pool);
+                  new ssm.StringParameter(this, pascalCase(`SsmParam${poolItem.name}PoolId`), {
+                    parameterName: `/accelerator/network/ipam/pools/${poolItem.name}/id`,
+                    stringValue: pool.ipamPoolId,
+                  });
+
+                  // Add resource shares
+                  if (poolItem.shareTargets) {
+                    Logger.info(`[network-prep-stack] Share IPAM pool ${poolItem.name}`);
+                    this.addResourceShare(poolItem, `${poolItem.name}_IpamPoolShare`, [pool.ipamPoolArn]);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
 
       //
       // DNS firewall
