@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import path from 'path';
@@ -28,7 +29,6 @@ import { LoadAcceleratorConfigTable } from '../load-config-table';
 import { Logger } from '../logger';
 import { ValidateEnvironmentConfig } from '../validate-environment-config';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 export class PrepareStack extends AcceleratorStack {
   public static readonly MANAGEMENT_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
@@ -500,6 +500,18 @@ export class PrepareStack extends AcceleratorStack {
               actions: ['ssm:PutParameter'],
               resources: [driftDetectedParameter.parameterArn, driftMessageParameter.parameterArn],
             }),
+          );
+
+          // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/ControlTowerNotificationsFunction/ServiceRole/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM4',
+                reason: 'AWS Basic Lambda execution permissions.',
+              },
+            ],
           );
         }
       }
