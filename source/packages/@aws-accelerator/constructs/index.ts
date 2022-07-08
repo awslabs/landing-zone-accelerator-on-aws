@@ -32,6 +32,8 @@ export * from './lib/aws-guardduty/guardduty-detector-config';
 export * from './lib/aws-guardduty/guardduty-members';
 export * from './lib/aws-guardduty/guardduty-organization-admin-account';
 export * from './lib/aws-guardduty/guardduty-publishing-destination';
+export * from './lib/aws-auditmanager/auditmanager-organization-admin-account';
+export * from './lib/aws-auditmanager/auditmanager-reports-destination';
 export * from './lib/aws-detective/detective-members';
 export * from './lib/aws-detective/detective-organization-admin-account';
 export * from './lib/aws-detective/detective-graph-config';
