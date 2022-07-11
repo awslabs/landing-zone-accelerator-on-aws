@@ -268,8 +268,7 @@ export class OperationsStack extends AcceleratorStack {
             [
               {
                 id: 'AwsSolutions-SMG4',
-                reason:
-                  'Accelerator users created as per iam-config file, upcoming change will take care of secret automatic rotation',
+                reason: 'Accelerator users created as per iam-config file, MFA usage is enforced with boundary policy',
               },
             ],
           );
