@@ -315,7 +315,7 @@ export class LoggingStack extends AcceleratorStack {
         new SsmSessionManagerSettings(this, 'SsmSessionManagerSettings', {
           s3BucketName: centralLogBucket ? centralLogBucket.bucketName : undefined,
           s3KeyPrefix: `AWSSessionManager/${cdk.Aws.ACCOUNT_ID}`,
-          s3BucketKeyArn: centralLogBucket ? centralLogBucket.encryptionKey?.keyArn : undefined,
+          s3BucketKeyArn: centralLogBucket ? key.keyArn : undefined,
           sendToCloudWatchLogs: props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
           sendToS3: props.globalConfig.logging.sessionManager.sendToS3,
           cloudWatchEncryptionEnabled:
