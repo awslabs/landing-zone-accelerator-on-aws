@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+
 import { SecurityHubStandards } from '../../index';
 
 const testNamePrefix = 'Construct(SecurityHubStandards): ';
@@ -132,6 +133,16 @@ describe('SecurityHubStandards', () => {
                       Effect: 'Allow',
                       Resource: '*',
                       Sid: 'SecurityHubCreateMembersTaskSecurityHubActions',
+                    },
+                    {
+                      Action: ['iam:CreateServiceLinkedRole'],
+                      Effect: 'Allow',
+                      Resource: '*',
+                      Condition: {
+                        StringLike: {
+                          'iam:AWSServiceName': 'securityhub.amazonaws.com',
+                        },
+                      },
                     },
                   ],
                   Version: '2012-10-17',

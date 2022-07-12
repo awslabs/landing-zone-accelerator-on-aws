@@ -13,6 +13,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
+
 import { TesterPipeline } from '../tester-pipeline';
 
 /**
@@ -75,26 +76,6 @@ export class TesterPipelineStack extends cdk.Stack {
         {
           id: 'AwsSolutions-IAM5',
           reason: 'Configuration source pipeline action DefaultPolicy is built by cdk.',
-        },
-      ],
-    );
-
-    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
-    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/TesterPipeline/DeployRole/Resource`, [
-      {
-        id: 'AwsSolutions-IAM4',
-        reason: 'Pipeline deploy project role is built by cdk.',
-      },
-    ]);
-
-    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/TesterPipeline/DeployRole/DefaultPolicy/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'Pipeline deploy project role is built by cdk.',
         },
       ],
     );

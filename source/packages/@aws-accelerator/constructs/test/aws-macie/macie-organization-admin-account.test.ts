@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+
 import { MacieOrganizationAdminAccount } from '../../index';
 
 const testNamePrefix = 'Construct(MacieOrganizationAdminAccount): ';
@@ -70,7 +71,7 @@ describe('MacieOrganizationAdminAccount', () => {
               'Fn::GetAtt': ['CustomMacieEnableOrganizationAdminAccountCustomResourceProviderRoleA386B194', 'Arn'],
             },
             Runtime: 'nodejs14.x',
-            Timeout: 900,
+            Timeout: 180,
           },
         },
       },

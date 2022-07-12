@@ -12,9 +12,12 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { SecurityStack } from '../lib/stacks/security-stack';
+import * as path from 'path';
+
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
+import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
+import { SecurityStack } from '../lib/stacks/security-stack';
 import {
   ACCOUNT_CONFIG,
   GLOBAL_CONFIG,
@@ -23,8 +26,6 @@ import {
   ORGANIZATION_CONFIG,
   SECURITY_CONFIG,
 } from './configs/test-config';
-import * as path from 'path';
-import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 
 const testNamePrefix = 'Construct(SecurityStack): ';
 
@@ -467,6 +468,16 @@ describe('SecurityStack', () => {
                       Effect: 'Allow',
                       Resource: '*',
                       Sid: 'SecurityHubCreateMembersTaskSecurityHubActions',
+                    },
+                    {
+                      Action: ['iam:CreateServiceLinkedRole'],
+                      Effect: 'Allow',
+                      Resource: '*',
+                      Condition: {
+                        StringLike: {
+                          'iam:AWSServiceName': 'securityhub.amazonaws.com',
+                        },
+                      },
                     },
                   ],
                   Version: '2012-10-17',

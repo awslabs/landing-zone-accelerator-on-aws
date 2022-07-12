@@ -1,5 +1,5 @@
 {
-  "name": "@aws-accelerator/constructs-aws-ssem-session-manager-settings",
+  "name": "@aws-accelerator/constructs-aws-ssm-session-manager-settings",
   "version": "0.0.0",
   "license": "Apache-2.0",
   "author": {

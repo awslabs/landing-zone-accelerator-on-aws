@@ -109,7 +109,9 @@ Object {
                   ],
                 ],
               },
-              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionExpiration": Object {
+                "NoncurrentDays": 1825,
+              },
               "NoncurrentVersionTransitions": Array [
                 Object {
                   "StorageClass": "DEEP_ARCHIVE",
@@ -250,7 +252,9 @@ Object {
                   ],
                 ],
               },
-              "NoncurrentVersionExpirationInDays": 1825,
+              "NoncurrentVersionExpiration": Object {
+                "NoncurrentDays": 1825,
+              },
               "NoncurrentVersionTransitions": Array [
                 Object {
                   "StorageClass": "DEEP_ARCHIVE",

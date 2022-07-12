@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-//import { SynthUtils } from '@aws-cdk/assert';
 
+//import { SynthUtils } from '@aws-cdk/assert';
 import { PipelineStack } from '../lib/stacks/pipeline-stack';
 
 const testNamePrefix = 'Construct(PipelineStack): ';
@@ -1014,16 +1014,6 @@ describe('PipelineStack', () => {
       Resources: {
         PipelinePipelineRoleDefaultPolicy7D262A22: {
           Type: 'AWS::IAM::Policy',
-          Metadata: {
-            cdk_nag: {
-              rules_to_suppress: [
-                {
-                  id: 'AwsSolutions-IAM5',
-                  reason: 'PipelineRole DefaultPolicy is built by cdk.',
-                },
-              ],
-            },
-          },
           Properties: {
             PolicyDocument: {
               Statement: [

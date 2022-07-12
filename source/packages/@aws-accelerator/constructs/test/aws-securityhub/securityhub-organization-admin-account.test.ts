@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+
 import { SecurityHubOrganizationAdminAccount } from '../../index';
 
 const testNamePrefix = 'Construct(SecurityHubOrganizationAdminAccount): ';
@@ -74,7 +75,7 @@ describe('SecurityHubOrganizationAdminAccount', () => {
               ],
             },
             Runtime: 'nodejs14.x',
-            Timeout: 900,
+            Timeout: 180,
           },
         },
       },

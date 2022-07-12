@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+
 import { GuardDutyOrganizationAdminAccount } from '../../lib/aws-guardduty/guardduty-organization-admin-account';
 
 const testNamePrefix = 'Construct(GuardDutyOrganizationAdminAccount): ';
@@ -71,7 +72,7 @@ describe('GuardDutyOrganizationAdminAccount', () => {
               'Fn::GetAtt': ['CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderRole30371E09', 'Arn'],
             },
             Runtime: 'nodejs14.x',
-            Timeout: 900,
+            Timeout: 180,
           },
         },
       },
