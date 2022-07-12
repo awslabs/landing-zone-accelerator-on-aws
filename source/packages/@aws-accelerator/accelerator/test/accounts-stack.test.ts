@@ -25,6 +25,7 @@ import {
 } from './configs/test-config';
 import * as path from 'path';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
+import { version } from '../../../../package.json';
 
 //import { SynthUtils } from '@aws-cdk/assert';
 
@@ -658,7 +659,7 @@ describe('AccountsStack', () => {
           Properties: {
             Name: '/accelerator/AWSAccelerator-AccountsStack-333333333333-us-east-1/version',
             Type: 'String',
-            Value: '1.0.1',
+            Value: version,
           },
         },
       },
