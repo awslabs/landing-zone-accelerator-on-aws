@@ -14,9 +14,10 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import 'source-map-support/register';
-import * as installer from '../lib/installer-stack';
 import { AwsSolutionsChecks } from 'cdk-nag';
+import 'source-map-support/register';
+import { version } from '../../../../package.json';
+import * as installer from '../lib/installer-stack';
 
 const app = new cdk.App();
 cdk.Aspects.of(app).add(new AwsSolutionsChecks());
@@ -33,7 +34,7 @@ if (enableTester && managementCrossAccountRoleName === undefined) {
 }
 
 new installer.InstallerStack(app, 'AWSAccelerator-InstallerStack', {
-  description: `(SO0199) Landing Zone Accelerator on AWS`,
+  description: `(SO0199) Landing Zone Accelerator on AWS. Version ${version}.`,
   synthesizer: new cdk.DefaultStackSynthesizer({
     generateBootstrapVersionRule: false,
   }),
