@@ -390,6 +390,7 @@ export class NetworkConfigTypes {
   static readonly resolverRuleConfig = t.interface({
     name: t.nonEmptyString,
     domainName: t.nonEmptyString,
+    excludedRegions: t.optional(t.array(t.region)),
     inboundEndpointTarget: t.optional(t.nonEmptyString),
     ruleType: t.optional(this.ruleTypeEnum),
     shareTargets: t.optional(t.shareTargets),
@@ -451,6 +452,7 @@ export class NetworkConfigTypes {
     endpoints: t.optional(t.array(this.resolverEndpointConfig)),
     firewallRuleGroups: t.optional(t.array(this.dnsFirewallRuleGroupConfig)),
     queryLogs: t.optional(this.dnsQueryLogsConfig),
+    rules: t.optional(t.array(this.resolverRuleConfig)),
   });
 
   static readonly nfwRuleType = t.enums('NfwRuleType', ['STATEFUL', 'STATELESS']);
@@ -1927,6 +1929,14 @@ export class ResolverRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.re
    */
   readonly domainName: string = '';
   /**
+   * Regions to exclude from deployment.
+   *
+   * @remarks
+   * Only define this property if creating a `SYSTEM` rule type.
+   * This does not apply to rules of type `FORWARD`.
+   */
+  readonly excludedRegions: t.Region[] | undefined = undefined;
+  /**
    * The friendly name of an inbound endpoint to target.
    *
    * @remarks
@@ -2134,6 +2144,14 @@ export class ResolverConfig implements t.TypeOf<typeof NetworkConfigTypes.resolv
    * @see {@link DnsQueryLogsConfig}
    */
   readonly queryLogs: DnsQueryLogsConfig | undefined = undefined;
+  /**
+   * An optional array of Route 53 resolver rules.
+   *
+   * @remarks
+   * This `rules` object should only be used for rules of type `SYSTEM`.
+   * For rules of type `FORWARD`, define under the `endpoints` configuration object.
+   */
+  readonly rules: ResolverRuleConfig[] | undefined = undefined;
 }
 
 /**
