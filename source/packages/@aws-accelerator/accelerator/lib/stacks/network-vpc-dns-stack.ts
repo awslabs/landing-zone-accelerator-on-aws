@@ -18,6 +18,7 @@ import { Construct } from 'constructs';
 import {
   AccountsConfig,
   OrganizationConfig,
+  Region,
   ResolverEndpointConfig,
   ResolverRuleConfig,
   VpcConfig,
@@ -120,15 +121,29 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
         //
         // Create resolver rules
         //
+
+        // FORWARD rules
         if (props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints) {
           const endpoints = props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints;
 
           for (const endpointItem of endpoints) {
             if (endpointItem.vpc === vpcItem.name && endpointItem.type === 'OUTBOUND') {
-              this.createResolverRules(vpcItem, endpointItem, resolverMap);
+              this.createForwardRules(vpcItem, endpointItem, resolverMap);
             }
           }
         }
+      }
+    }
+
+    // SYSTEM rules
+    if (props.networkConfig.centralNetworkServices?.route53Resolver?.rules) {
+      const delegatedAdminAccountId = this.accountsConfig.getAccountId(
+        props.networkConfig.centralNetworkServices.delegatedAdminAccount,
+      );
+
+      // Only deploy in the home region of the delegated admin account
+      if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
+        this.createSystemRules(props.networkConfig.centralNetworkServices?.route53Resolver?.rules);
       }
     }
 
@@ -208,13 +223,13 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
   }
 
   /**
-   * Create Route 53 resolver rules
+   * Create Route 53 resolver FORWARD rules
    *
    * @param vpcItem
    * @param endpointItem
    * @param resolverMap
    */
-  private createResolverRules(
+  private createForwardRules(
     vpcItem: VpcConfig,
     endpointItem: ResolverEndpointConfig,
     resolverMap: Map<string, string>,
@@ -231,7 +246,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
     // Create rules
     for (const ruleItem of endpointItem.rules ?? []) {
       Logger.info(
-        `[network-vpc-dns-stack] Add Route 53 Resolver rule ${ruleItem.name} to endpoint ${endpointItem.name}`,
+        `[network-vpc-dns-stack] Add Route 53 Resolver FORWARD rule ${ruleItem.name} to endpoint ${endpointItem.name}`,
       );
 
       // Check whether there is an inbound endpoint target
@@ -253,7 +268,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
         ruleType: ruleItem.ruleType,
         resolverEndpointId: endpointId,
         targetIps: ruleItem.targetIps,
-        tags: ruleItem.tags ?? [],
+        tags: ruleItem.tags,
         targetInbound: inboundTarget,
         kmsKey: this.acceleratorKey,
         logRetentionInDays: this.logRetention,
@@ -264,8 +279,37 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
       });
 
       if (ruleItem.shareTargets) {
-        Logger.info(`[network-vpc-dns-stack] Share Route 53 Resolver rule ${ruleItem.name}`);
+        Logger.info(`[network-vpc-dns-stack] Share Route 53 Resolver FORWARD rule ${ruleItem.name}`);
         this.addResourceShare(ruleItem, `${ruleItem.name}_ResolverRule`, [rule.ruleArn]);
+      }
+    }
+  }
+
+  /**
+   * Create Route 53 resolver SYSTEM rules
+   * @param rules
+   */
+  private createSystemRules(rules: ResolverRuleConfig[]): void {
+    // Process SYSTEM rules
+    for (const ruleItem of rules ?? []) {
+      if (!ruleItem.excludedRegions?.includes(cdk.Stack.of(this).region as Region) || !ruleItem.excludedRegions) {
+        Logger.info(`[network-vpc-dns-stack] Add Route 53 Resolver SYSTEM rule ${ruleItem.name}`);
+
+        const rule = new ResolverRule(this, `SystemResolverRule${pascalCase(ruleItem.name)}`, {
+          domainName: ruleItem.domainName,
+          name: ruleItem.name,
+          ruleType: ruleItem.ruleType ?? 'SYSTEM',
+          tags: ruleItem.tags,
+        });
+        new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${ruleItem.name}ResolverRule`), {
+          parameterName: `/accelerator/network/route53Resolver/rules/${ruleItem.name}/id`,
+          stringValue: rule.ruleId,
+        });
+
+        if (ruleItem.shareTargets) {
+          Logger.info(`[network-vpc-dns-stack] Share Route 53 Resolver SYSTEM rule ${ruleItem.name}`);
+          this.addResourceShare(ruleItem, `${ruleItem.name}_ResolverRule`, [rule.ruleArn]);
+        }
       }
     }
   }
