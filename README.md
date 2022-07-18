@@ -50,6 +50,10 @@ you comply with the non-technical administrative requirements.
 
 ---
 
+This solution collects anonymous operational metrics to help AWS improve the
+quality of features of the solution. For more information, including how to
+disable this capability, please see the [implementation guide](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/collection-of-operational-metrics.html).
+
 ---
 
 ## Package Structure
@@ -126,19 +130,19 @@ Accelerator tester CDK app. This package creates AWS Config custom rules for eve
 ## Creating an Installer Stack
 
 The Installer Stack, a CDK Application, can be deployed through a CloudFormation template produced by your CLI by
-navigating to the directory for the installer and running a CDK synthesis. The template can either be deployed 
+navigating to the directory for the installer and running a CDK synthesis. The template can either be deployed
 directly via the AWS CLI or console. Below are the commands for completing the deployment of the Installer stack.
 
 ### 1. Build the Installer stack for deployment
 
--   To run the CDK synthesis
+- To run the CDK synthesis
 
 ```
 cd <rootDir>/source/packages/@aws-accelerator/installer
 yarn cdk synth
 ```
 
--  Configure the AWS CLI CloudFormation command for the Installer stack
+- Configure the AWS CLI CloudFormation command for the Installer stack
 
 ```
 aws cloudformation create-stack --stack-name AWSAccelerator-InstallerStack --template-body file://cdk.out/AWSAccelerator-InstallerStack.template.json \
@@ -150,12 +154,12 @@ ParameterKey=ManagementAccountEmail,ParameterValue=<Management_Email> \
 ParameterKey=ManagementAccountRoleName,ParameterValue= \
 ParameterKey=LogArchiveAccountEmail,ParameterValue=<LogArchive_Email> \
 ParameterKey=AuditAccountEmail,ParameterValue=<Audit_Email> \
-ParameterKey=EnableApprovalStage,ParameterValue=Yes 
+ParameterKey=EnableApprovalStage,ParameterValue=Yes
 ParameterKey=ApprovalStageNotifyEmailList,ParameterValue=comma-delimited-notify-emails
 --capabilities CAPABILITY_IAM
 ```
 
--  Alternate deployment of CloudFormation via AWS console:
+- Alternate deployment of CloudFormation via AWS console:
 
 ```
 - Navigate to CloudFormation page in the AWS console
@@ -166,7 +170,7 @@ ParameterKey=ApprovalStageNotifyEmailList,ParameterValue=comma-delimited-notify-
 - Fill out the required parameters in the UI, and create the stack once the parameters are inputted.
 ```
 
--   Dependencies for the Installer stack
+- Dependencies for the Installer stack
 
 ```
 - [Node](https://nodejs.org/en/)

@@ -1,12 +1,12 @@
 {
   "name": "@aws-accelerator/constructs-aws-cur-cross-region-report-definition",
   "version": "0.0.0",
+  "description": "Custom resource Lambda",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com"
+    "url": "https://aws.amazon.com/solutions"
   },
-  "description": "A custom resource to create a CUR report definition",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "private": true,

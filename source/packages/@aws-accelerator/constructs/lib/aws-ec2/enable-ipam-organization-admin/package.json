@@ -1,12 +1,12 @@
 {
   "name": "@aws-accelerator/constructs-aws-ec2-enable-ipam-organization-admin",
   "version": "0.0.0",
+  "description": "Custom resource Lambda",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com"
+    "url": "https://aws.amazon.com/solutions"
   },
-  "description": "Enable VPC IPAM Organization Admin",
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.js",

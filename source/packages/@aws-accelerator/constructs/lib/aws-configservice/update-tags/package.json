@@ -1,10 +1,11 @@
 {
   "name": "@aws-accelerator/constructs-aws-configservice-update-tags",
   "version": "0.0.0",
+  "description": "Custom resource Lambda",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com"
+    "url": "https://aws.amazon.com/solutions"
   },
   "private": true,
   "main": "dist/index.js",
@@ -21,7 +22,7 @@
   "devDependencies": {
     "@types/jest": "27.0.3",
     "@types/node": "16.11.12",
-    "@aws-sdk/types": "3.78.0", 
+    "@aws-sdk/types": "3.78.0",
     "esbuild": "0.14.2",
     "eslint": "8.4.1",
     "eslint-config-prettier": "8.3.0",

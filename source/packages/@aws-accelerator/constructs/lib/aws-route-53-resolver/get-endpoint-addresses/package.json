@@ -1,12 +1,12 @@
 {
   "name": "@aws-accelerator/constructs-aws-route53-resolver-get-endpoint-addresses",
   "version": "0.0.0",
+  "description": "Custom resource Lambda",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com"
+    "url": "https://aws.amazon.com/solutions"
   },
-  "description": "A custom resource to describe Route 53 Resolver endpoint details",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "private": true,

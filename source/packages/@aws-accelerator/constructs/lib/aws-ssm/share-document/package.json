@@ -1,11 +1,12 @@
 {
   "name": "@aws-accelerator/constructs-aws-ssm-share-document",
   "version": "0.0.0",
+  "description": "Custom resource Lambda",
   "private": true,
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com"
+    "url": "https://aws.amazon.com/solutions"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
