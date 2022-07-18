@@ -86,7 +86,7 @@ export interface BucketProps {
   /**
    *
    */
-  serverAccessLogsBucket?: s3.IBucket | undefined;
+  serverAccessLogsBucket?: s3.IBucket;
 
   /**
    *
@@ -122,114 +122,34 @@ export interface BucketProps {
  */
 export class Bucket extends Construct {
   private readonly bucket: s3.Bucket;
-  private readonly encryptionType: s3.BucketEncryption;
-  private readonly cmk?: kms.Key;
-  private readonly serverAccessLogsPrefix?: string;
+  /**
+   * Bucket encryption type set to a default value of BucketEncryption.KMS,
+   * which will be determined later based on other properties
+   */
+  private encryptionType: s3.BucketEncryption = s3.BucketEncryption.KMS;
+  private cmk?: kms.Key;
+  private serverAccessLogsPrefix: string | undefined;
+  private serverAccessLogBucket: cdk.aws_s3.IBucket | undefined;
+  private lifecycleRules: cdk.aws_s3.LifecycleRule[] = [];
+
+  private readonly props: BucketProps;
 
   constructor(scope: Construct, id: string, props: BucketProps) {
     super(scope, id);
 
+    this.props = props;
+
+    //
     // Determine encryption type
-    if (props.encryptionType == BucketEncryptionType.SSE_KMS) {
-      if (props.kmsKey) {
-        this.cmk = props.kmsKey;
-      } else {
-        this.cmk = new kms.Key(this, 'Cmk', {
-          enableKeyRotation: true,
-          description: props.kmsDescription,
-        });
-        if (props.kmsAliasName) {
-          this.cmk.addAlias(props.kmsAliasName);
-        }
-      }
-      this.encryptionType = s3.BucketEncryption.KMS;
-    } else if (props.encryptionType == BucketEncryptionType.SSE_S3) {
-      this.encryptionType = s3.BucketEncryption.S3_MANAGED;
-    } else {
-      throw new Error(`encryptionType ${props.encryptionType} is not valid.`);
-    }
+    this.setEncryptionType();
 
-    let serverAccessLogBucket: cdk.aws_s3.IBucket | undefined;
+    //
+    // Set accesslog bucket properties
+    this.setAccesslogBucketProperties();
 
-    if (props.serverAccessLogsBucketName && !props.serverAccessLogsBucket) {
-      serverAccessLogBucket = s3.Bucket.fromBucketName(
-        this,
-        `${pascalCase(props.serverAccessLogsBucketName)}-S3LogsBucket`,
-        props.serverAccessLogsBucketName,
-      );
-    }
-    if (!props.serverAccessLogsBucketName && props.serverAccessLogsBucket) {
-      serverAccessLogBucket = props.serverAccessLogsBucket;
-      // Get server access logs prefix
-      if (!props.s3BucketName && !props.serverAccessLogsPrefix) {
-        throw new Error('s3BucketName or serverAccessLogsPrefix property must be defined when using serverAccessLogs.');
-      } else {
-        this.serverAccessLogsPrefix = props.serverAccessLogsPrefix ? props.s3BucketName : props.s3BucketName;
-      }
-    }
-    if (props.serverAccessLogsBucketName && props.serverAccessLogsBucket) {
-      throw new Error('serverAccessLogsBucketName or serverAccessLogsBucket (only one property) should be defined.');
-    }
-
-    // Lifecycle rules
-    const lifecycleRules: cdk.aws_s3.LifecycleRule[] = [];
-
-    if (props.lifecycleRules) {
-      for (const lifecycleRuleConfig of props.lifecycleRules) {
-        const transitions = [];
-        const noncurrentVersionTransitions = [];
-
-        for (const transition of lifecycleRuleConfig.transitions) {
-          const transitionConfig = {
-            storageClass: new cdk.aws_s3.StorageClass(transition.storageClass),
-            transitionAfter: cdk.Duration.days(transition.transitionAfter),
-          };
-          transitions.push(transitionConfig);
-        }
-
-        for (const nonCurrentTransition of lifecycleRuleConfig.noncurrentVersionTransitions) {
-          const noncurrentVersionTransitionsConfig = {
-            storageClass: new cdk.aws_s3.StorageClass(nonCurrentTransition.storageClass),
-            transitionAfter: cdk.Duration.days(nonCurrentTransition.transitionAfter),
-          };
-          noncurrentVersionTransitions.push(noncurrentVersionTransitionsConfig);
-        }
-
-        lifecycleRules.push({
-          abortIncompleteMultipartUploadAfter: cdk.Duration.days(
-            lifecycleRuleConfig.abortIncompleteMultipartUploadAfter,
-          ),
-          enabled: lifecycleRuleConfig.enabled,
-          expiration: cdk.Duration.days(lifecycleRuleConfig.expiration),
-          transitions,
-          noncurrentVersionTransitions,
-          noncurrentVersionExpiration: cdk.Duration.days(lifecycleRuleConfig.noncurrentVersionExpiration),
-          expiredObjectDeleteMarker: lifecycleRuleConfig.expiredObjectDeleteMarker,
-          id: `LifecycleRule${props.s3BucketName}`,
-        });
-      }
-    } else {
-      lifecycleRules.push({
-        abortIncompleteMultipartUploadAfter: cdk.Duration.days(1),
-        enabled: true,
-        expiration: cdk.Duration.days(1825),
-        expiredObjectDeleteMarker: false,
-        id: `LifecycleRule${props.s3BucketName}`,
-        noncurrentVersionExpiration: cdk.Duration.days(1825),
-        noncurrentVersionTransitions: [
-          {
-            storageClass: cdk.aws_s3.StorageClass.DEEP_ARCHIVE,
-            transitionAfter: cdk.Duration.days(366),
-          },
-        ],
-        transitions: [
-          {
-            storageClass: cdk.aws_s3.StorageClass.DEEP_ARCHIVE,
-            transitionAfter: cdk.Duration.days(365),
-          },
-        ],
-      });
-    }
+    //
+    // set Lifecycle rules
+    this.setLifycycleRules();
 
     this.bucket = new s3.Bucket(this, 'Resource', {
       encryption: this.encryptionType,
@@ -238,9 +158,9 @@ export class Bucket extends Construct {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       bucketName: props.s3BucketName,
       versioned: true,
-      lifecycleRules,
+      lifecycleRules: this.lifecycleRules,
       objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
-      serverAccessLogsBucket: serverAccessLogBucket,
+      serverAccessLogsBucket: this.serverAccessLogBucket,
       // Trailing slash for folder-like prefix in S3
       serverAccessLogsPrefix: this.serverAccessLogsPrefix?.concat('/'),
     });
@@ -305,8 +225,115 @@ export class Bucket extends Construct {
   }
 
   protected addValidation(): string[] {
-    const errors: string[] = [];
+    return [];
+  }
 
-    return errors;
+  /**
+   * Function to set bucket encryption type
+   */
+  private setEncryptionType() {
+    // Determine encryption type
+    if (this.props.encryptionType == BucketEncryptionType.SSE_KMS) {
+      if (this.props.kmsKey) {
+        this.cmk = this.props.kmsKey;
+      } else {
+        this.cmk = new kms.Key(this, 'Cmk', {
+          enableKeyRotation: true,
+          description: this.props.kmsDescription,
+        });
+        if (this.props.kmsAliasName) {
+          this.cmk.addAlias(this.props.kmsAliasName);
+        }
+      }
+      this.encryptionType = s3.BucketEncryption.KMS;
+    } else if (this.props.encryptionType == BucketEncryptionType.SSE_S3) {
+      this.encryptionType = s3.BucketEncryption.S3_MANAGED;
+    } else {
+      throw new Error(`encryptionType ${this.props.encryptionType} is not valid.`);
+    }
+  }
+
+  /**
+   * Set Server access log bucket property
+   */
+  private setAccesslogBucketProperties() {
+    if (this.props.serverAccessLogsBucketName && !this.props.serverAccessLogsBucket) {
+      this.serverAccessLogBucket = s3.Bucket.fromBucketName(
+        this,
+        `${pascalCase(this.props.serverAccessLogsBucketName)}-S3LogsBucket`,
+        this.props.serverAccessLogsBucketName,
+      );
+    }
+    if (!this.props.serverAccessLogsBucketName && this.props.serverAccessLogsBucket) {
+      this.serverAccessLogBucket = this.props.serverAccessLogsBucket;
+      // Get server access logs prefix
+      if (!this.props.s3BucketName && !this.props.serverAccessLogsPrefix) {
+        throw new Error('s3BucketName or serverAccessLogsPrefix property must be defined when using serverAccessLogs.');
+      } else {
+        this.serverAccessLogsPrefix = this.props.serverAccessLogsPrefix ?? this.props.s3BucketName;
+      }
+    }
+    if (this.props.serverAccessLogsBucketName && this.props.serverAccessLogsBucket) {
+      throw new Error('serverAccessLogsBucketName or serverAccessLogsBucket (only one property) should be defined.');
+    }
+  }
+
+  private setLifycycleRules() {
+    if (this.props.lifecycleRules) {
+      for (const lifecycleRuleConfig of this.props.lifecycleRules) {
+        const transitions = [];
+        const noncurrentVersionTransitions = [];
+
+        for (const transition of lifecycleRuleConfig.transitions) {
+          const transitionConfig = {
+            storageClass: new cdk.aws_s3.StorageClass(transition.storageClass),
+            transitionAfter: cdk.Duration.days(transition.transitionAfter),
+          };
+          transitions.push(transitionConfig);
+        }
+
+        for (const nonCurrentTransition of lifecycleRuleConfig.noncurrentVersionTransitions) {
+          const noncurrentVersionTransitionsConfig = {
+            storageClass: new cdk.aws_s3.StorageClass(nonCurrentTransition.storageClass),
+            transitionAfter: cdk.Duration.days(nonCurrentTransition.transitionAfter),
+          };
+          noncurrentVersionTransitions.push(noncurrentVersionTransitionsConfig);
+        }
+
+        this.lifecycleRules.push({
+          abortIncompleteMultipartUploadAfter: cdk.Duration.days(
+            lifecycleRuleConfig.abortIncompleteMultipartUploadAfter,
+          ),
+          enabled: lifecycleRuleConfig.enabled,
+          expiration: cdk.Duration.days(lifecycleRuleConfig.expiration),
+          transitions,
+          noncurrentVersionTransitions,
+          noncurrentVersionExpiration: cdk.Duration.days(lifecycleRuleConfig.noncurrentVersionExpiration),
+          expiredObjectDeleteMarker: lifecycleRuleConfig.expiredObjectDeleteMarker,
+          id: `LifecycleRule${this.props.s3BucketName}`,
+        });
+      }
+    } else {
+      this.lifecycleRules.push({
+        abortIncompleteMultipartUploadAfter: cdk.Duration.days(1),
+        enabled: true,
+        expiration: cdk.Duration.days(1825),
+        expiredObjectDeleteMarker: false,
+        id: `LifecycleRule${this.props.s3BucketName}`,
+        noncurrentVersionExpiration: cdk.Duration.days(1825),
+        noncurrentVersionTransitions: [
+          {
+            storageClass: cdk.aws_s3.StorageClass.DEEP_ARCHIVE,
+            transitionAfter: cdk.Duration.days(366),
+          },
+        ],
+        transitions: [
+          {
+            storageClass: cdk.aws_s3.StorageClass.DEEP_ARCHIVE,
+            transitionAfter: cdk.Duration.days(365),
+          },
+        ],
+      });
+    }
   }
 }

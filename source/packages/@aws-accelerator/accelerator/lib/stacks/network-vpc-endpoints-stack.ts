@@ -171,7 +171,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         for (const routeTableItem of vpcItem.routeTables ?? []) {
           // Check if endpoint routes exist
           for (const routeTableEntryItem of routeTableItem.routes ?? []) {
-            const id =
+            const endPointId =
               pascalCase(`${vpcItem.name}Vpc`) +
               pascalCase(`${routeTableItem.name}RouteTable`) +
               pascalCase(routeTableEntryItem.name);
@@ -227,7 +227,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
                 `[network-vpc-endpoints-stack] Adding Network Firewall Route Table Entry ${routeTableEntryItem.name}`,
               );
               firewall.addNetworkFirewallRoute(
-                id,
+                endPointId,
                 routeTableEntryItem.destination,
                 endpointAz,
                 this.acceleratorKey,
@@ -832,12 +832,11 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     });
 
     // Represents the item shared by RAM
-    const item = ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
+    return ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
       resourceShare,
       resourceShareItemType: itemType,
       kmsKey: this.acceleratorKey,
       logRetentionInDays: this.logRetention,
     });
-    return item;
   }
 }

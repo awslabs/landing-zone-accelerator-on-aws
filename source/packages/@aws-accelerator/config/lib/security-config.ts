@@ -630,7 +630,7 @@ export class SnsSubscriptionConfig implements t.TypeOf<typeof SecurityConfigType
 /**
  * AWS EBS default encryption configuration
  */
-export class ebsDefaultVolumeEncryptionConfig
+export class EbsDefaultVolumeEncryptionConfig
   implements t.TypeOf<typeof SecurityConfigTypes.ebsDefaultVolumeEncryptionConfig>
 {
   /**
@@ -725,7 +725,7 @@ export class CentralSecurityServicesConfig
    *     excludeRegions: []
    * ```
    */
-  readonly ebsDefaultVolumeEncryption: ebsDefaultVolumeEncryptionConfig = new ebsDefaultVolumeEncryptionConfig();
+  readonly ebsDefaultVolumeEncryption: EbsDefaultVolumeEncryptionConfig = new EbsDefaultVolumeEncryptionConfig();
   /**
    * AWS S3 public access block configuration
    *

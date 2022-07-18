@@ -84,16 +84,16 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
               };
             }
 
-            const response = await throttlingBackOff(() =>
+            const updatePolicyResponse = await throttlingBackOff(() =>
               organizationsClient
                 .updatePolicy({ Name: name, Content: policyContent, Description: description, PolicyId: policy.Id! })
                 .promise(),
             );
 
-            console.log(response.Policy?.PolicySummary?.Id);
+            console.log(updatePolicyResponse.Policy?.PolicySummary?.Id);
 
             return {
-              PhysicalResourceId: response.Policy?.PolicySummary?.Id,
+              PhysicalResourceId: updatePolicyResponse.Policy?.PolicySummary?.Id,
               Status: 'SUCCESS',
             };
           }
@@ -104,16 +104,16 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       //
       // Create if not found
       //
-      const response = await throttlingBackOff(() =>
+      const createPolicyResponse = await throttlingBackOff(() =>
         organizationsClient
           .createPolicy({ Content: policyContent, Description: description, Name: name, Tags: tags, Type: type })
           .promise(),
       );
 
-      console.log(response.Policy?.PolicySummary?.Id);
+      console.log(createPolicyResponse.Policy?.PolicySummary?.Id);
 
       return {
-        PhysicalResourceId: response.Policy?.PolicySummary?.Id,
+        PhysicalResourceId: createPolicyResponse.Policy?.PolicySummary?.Id,
         Status: 'SUCCESS',
       };
 
@@ -147,9 +147,11 @@ function replaceDefaults(props: {
     '\\${PARTITION}': partition,
   };
 
-  Object.entries(replacements).map(([key, value]) => {
+  for (const [key, value] of Object.entries(replacements)) {
+    console.log(`key: ${key}, value: ${value}`);
     content = content.replace(new RegExp(key, 'g'), value);
-  });
+  }
+
   console.log(`Policy with placeholder values ${content}`);
 
   return content;

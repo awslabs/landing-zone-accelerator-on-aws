@@ -48,7 +48,6 @@ export async function handler(event: any): Promise<void> {
       console.log('No action taken');
       return;
   }
-  return;
 }
 
 async function setDriftDetected(driftMessage: string): Promise<void> {

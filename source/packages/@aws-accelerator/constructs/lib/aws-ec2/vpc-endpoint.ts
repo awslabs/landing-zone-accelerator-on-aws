@@ -73,8 +73,6 @@ export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
 
       let dnsEntriesIndex = 0;
       if (sagemakerArray.includes(this.service)) {
-        // TODO Top 3 DNS names are not valid so selecting the 4th DNS
-        // need to find a better way to identify the valid DNS for PHZ
         dnsEntriesIndex = 4;
       }
 

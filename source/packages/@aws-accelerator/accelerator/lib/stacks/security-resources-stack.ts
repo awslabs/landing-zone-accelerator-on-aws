@@ -19,14 +19,13 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import path from 'path';
 import { Tag as ConfigRuleTag } from '@aws-sdk/client-config-service';
-import { Tag } from '@aws-accelerator/config';
+import { AwsConfigRuleSet, ConfigRule, Tag } from '@aws-accelerator/config';
 
 import { KeyLookup, Organization, ConfigServiceTags } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { KeyStack } from './key-stack';
-import { Duration } from 'aws-cdk-lib';
 
 enum ACCEL_LOOKUP_TYPE {
   KMS = 'KMS',
@@ -56,8 +55,10 @@ export class SecurityResourcesStack extends AcceleratorStack {
   readonly acceleratorKey: cdk.aws_kms.Key;
   readonly auditAccountId: string;
   readonly logArchiveAccountId: string;
-  readonly organizationId: string | undefined;
   readonly stackProperties: AcceleratorStackProps;
+
+  organizationId: string | undefined;
+  configRecorder: config.CfnConfigurationRecorder | undefined;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -66,9 +67,9 @@ export class SecurityResourcesStack extends AcceleratorStack {
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
 
-    if (props.organizationConfig.enable) {
-      this.organizationId = new Organization(this, 'Organization').id;
-    }
+    //
+    // Set Organization ID
+    this.setOrganizationId();
 
     this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
       accountId: props.accountsConfig.getAuditAccountId(),
@@ -88,12 +89,119 @@ export class SecurityResourcesStack extends AcceleratorStack {
     // Organizations using Service Control Policies (SCPs) that disallows
     // configuration changes to AWS Config.
     //
-    let configRecorder: config.CfnConfigurationRecorder | undefined = undefined;
+    this.setupConfigRecorderAndDeliveryChannel();
+
+    //
+    // Config Rules
+    //
+    this.setupAwsConfigRules();
+
+    //
+    // CloudWatch Metrics
+    //
+    for (const metricSetItem of props.securityConfig.cloudWatch.metricSets ?? []) {
+      if (!metricSetItem.regions?.includes(cdk.Stack.of(this).region)) {
+        Logger.info(`[security-resources-stack] Current region not explicity specified for metric item, skip`);
+        continue;
+      }
+
+      if (!this.isIncluded(metricSetItem.deploymentTargets)) {
+        Logger.info(`[security-resources-stack] Item excluded`);
+        continue;
+      }
+
+      for (const metricItem of metricSetItem.metrics ?? []) {
+        Logger.info(`[security-resources-stack] Creating CloudWatch metric filter ${metricItem.filterName}`);
+
+        new cdk.aws_logs.MetricFilter(this, pascalCase(metricItem.filterName), {
+          logGroup: cdk.aws_logs.LogGroup.fromLogGroupName(
+            this,
+            `${pascalCase(metricItem.filterName)}_${pascalCase(metricItem.logGroupName)}`,
+            metricItem.logGroupName,
+          ),
+          metricNamespace: metricItem.metricNamespace,
+          metricName: metricItem.metricName,
+          filterPattern: cdk.aws_logs.FilterPattern.literal(metricItem.filterPattern),
+          metricValue: metricItem.metricValue,
+        });
+      }
+    }
+
+    //
+    // CloudWatch Alarms
+    //
+    this.configureCloudwatchAlarm();
+
+    Logger.info('[security-resources-stack] Completed stack synthesis');
+  }
+
+  /**
+   * Function to configure CW alarms
+   */
+  private configureCloudwatchAlarm() {
+    for (const alarmSetItem of this.props.securityConfig.cloudWatch.alarmSets ?? []) {
+      if (!alarmSetItem.regions?.includes(cdk.Stack.of(this).region)) {
+        Logger.info(`[security-resources-stack] Current region not explicity specified for alarm item, skip`);
+        continue;
+      }
+
+      if (!this.isIncluded(alarmSetItem.deploymentTargets)) {
+        Logger.info(`[security-resources-stack] Item excluded`);
+        continue;
+      }
+
+      for (const alarmItem of alarmSetItem.alarms ?? []) {
+        Logger.info(`[security-resources-stack] Creating CloudWatch alarm ${alarmItem.alarmName}`);
+
+        const alarm = new cdk.aws_cloudwatch.Alarm(this, pascalCase(alarmItem.alarmName), {
+          alarmName: alarmItem.alarmName,
+          alarmDescription: alarmItem.alarmDescription,
+          metric: new cdk.aws_cloudwatch.Metric({
+            metricName: alarmItem.metricName,
+            namespace: alarmItem.namespace,
+            period: cdk.Duration.seconds(alarmItem.period),
+            statistic: alarmItem.statistic,
+          }),
+          comparisonOperator: this.getComparisonOperator(alarmItem.comparisonOperator),
+          evaluationPeriods: alarmItem.evaluationPeriods,
+          threshold: alarmItem.threshold,
+          treatMissingData: this.getTreatMissingData(alarmItem.treatMissingData),
+        });
+
+        alarm.addAlarmAction(
+          new cdk.aws_cloudwatch_actions.SnsAction(
+            cdk.aws_sns.Topic.fromTopicArn(
+              this,
+              `${pascalCase(alarmItem.alarmName)}Topic`,
+              cdk.Stack.of(this).formatArn({
+                service: 'sns',
+                region: cdk.Stack.of(this).region,
+                account: this.props.accountsConfig.getAuditAccountId(),
+                resource: `aws-accelerator-${alarmItem.snsAlertLevel}Notifications`,
+                arnFormat: cdk.ArnFormat.NO_RESOURCE_NAME,
+              }),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  private setOrganizationId() {
+    if (this.props.organizationConfig.enable) {
+      this.organizationId = new Organization(this, 'Organization').id;
+    }
+  }
+
+  /**
+   * Function to setup AWS Config - recorder and delivery channel
+   */
+  private setupConfigRecorderAndDeliveryChannel() {
     if (
-      !props.globalConfig.controlTower.enable ||
-      props.accountsConfig.getManagementAccountId() === cdk.Stack.of(this).account
+      !this.props.globalConfig.controlTower.enable ||
+      this.props.accountsConfig.getManagementAccountId() === cdk.Stack.of(this).account
     ) {
-      if (props.securityConfig.awsConfig.enableConfigurationRecorder) {
+      if (this.props.securityConfig.awsConfig.enableConfigurationRecorder) {
         const configRecorderRole = new iam.Role(this, 'ConfigRecorderRole', {
           assumedBy: new iam.ServicePrincipal('config.amazonaws.com'),
           managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWS_ConfigRole')],
@@ -135,7 +243,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
           ],
         );
 
-        configRecorder = new config.CfnConfigurationRecorder(this, 'ConfigRecorder', {
+        this.configRecorder = new config.CfnConfigurationRecorder(this, 'ConfigRecorder', {
           roleArn: configRecorderRole.roleArn,
           recordingGroup: {
             allSupported: true,
@@ -144,22 +252,283 @@ export class SecurityResourcesStack extends AcceleratorStack {
         });
       }
 
-      if (props.securityConfig.awsConfig.enableDeliveryChannel) {
+      if (this.props.securityConfig.awsConfig.enableDeliveryChannel) {
         new config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
-          s3BucketName: `aws-accelerator-central-logs-${this.logArchiveAccountId}-${props.globalConfig.homeRegion}`,
+          s3BucketName: `aws-accelerator-central-logs-${this.logArchiveAccountId}-${this.props.globalConfig.homeRegion}`,
           configSnapshotDeliveryProperties: {
             deliveryFrequency: 'One_Hour',
           },
         });
       }
     }
+  }
 
-    //
-    // Config Rules
-    //
+  /**
+   * Function to create AWS Managed Config rule
+   * @param rule
+   * @returns
+   */
+  private createManagedConfigRule(rule: ConfigRule): config.ManagedRule | config.CustomRule | undefined {
+    Logger.info(`[security-resources-stack] Creating managed rule ${rule.name}`);
+
+    const resourceTypes: config.ResourceType[] = [];
+    for (const resourceType of rule.complianceResourceTypes ?? []) {
+      resourceTypes.push(config.ResourceType.of(resourceType));
+    }
+
+    const managedConfigRule = new config.ManagedRule(this, pascalCase(rule.name), {
+      configRuleName: rule.name,
+      description: rule.description,
+      identifier: rule.identifier ?? rule.name,
+      inputParameters: this.getRuleParameters(rule.name, rule.inputParameters),
+      ruleScope: {
+        resourceTypes,
+      },
+    });
+
+    return managedConfigRule;
+  }
+
+  /**
+   * Function to create AWS custom config rule
+   * @param rule
+   * @returns
+   */
+  private createCustomConfigRule(rule: ConfigRule): config.ManagedRule | config.CustomRule | undefined {
+    Logger.info(`[security-resources-stack] Creating custom rule ${rule.name}`);
+    let ruleScope: config.RuleScope | undefined;
+
+    if (rule.customRule.triggeringResources.lookupType == 'ResourceTypes') {
+      for (const item of rule.customRule.triggeringResources.lookupValue) {
+        ruleScope = config.RuleScope.fromResources([config.ResourceType.of(item)]);
+      }
+    }
+
+    if (rule.customRule.triggeringResources.lookupType == 'ResourceId') {
+      ruleScope = config.RuleScope.fromResource(
+        config.ResourceType.of(rule.customRule.triggeringResources.lookupKey),
+        rule.customRule.triggeringResources.lookupValue[0],
+      );
+    }
+
+    if (rule.customRule.triggeringResources.lookupType == 'Tag') {
+      ruleScope = config.RuleScope.fromTag(
+        rule.customRule.triggeringResources.lookupKey,
+        rule.customRule.triggeringResources.lookupValue[0],
+      );
+    }
+
+    /**
+     * Lambda function for config custom role
+     * Single lambda function can not be used for multiple config custom role, there is a pending issue with CDK team on this
+     * https://github.com/aws/aws-cdk/issues/17582
+     */
+    const lambdaFunction = new cdk.aws_lambda.Function(this, pascalCase(rule.name) + '-Function', {
+      runtime: new cdk.aws_lambda.Runtime(rule.customRule.lambda.runtime),
+      handler: rule.customRule.lambda.handler,
+      code: cdk.aws_lambda.Code.fromAsset(path.join(this.props.configDirPath, rule.customRule.lambda.sourceFilePath)),
+      description: `AWS Config custom rule function used for "${rule.name}" rule`,
+      timeout: cdk.Duration.seconds(rule.customRule.lambda.timeout ?? 3),
+    });
+
+    // Configure lambda log file with encryption and log retention
+    new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-LogGroup', {
+      logGroupName: `/aws/lambda/${lambdaFunction.functionName}`,
+      retention: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      encryptionKey: this.acceleratorKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // Read in the policy document which should be properly formatted json
+    const policyDocument = require(path.join(this.props.configDirPath, rule.customRule.lambda.rolePolicyFile));
+    // Create a statements list using the PolicyStatement factory
+    const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
+    for (const statement of policyDocument.Statement) {
+      policyStatements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+    }
+
+    // Assign policy to Lambda
+    lambdaFunction.role?.attachInlinePolicy(
+      new cdk.aws_iam.Policy(this, pascalCase(rule.name) + '-LambdaRolePolicy', {
+        statements: [...policyStatements],
+      }),
+    );
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${pascalCase(rule.name)}-LambdaRolePolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'AWS Config rule custom lambda role, created by the permission provided in config repository',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+    // rule suppression with evidence for this permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${pascalCase(rule.name)}-Function/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Config custom rule needs managed readonly access policy',
+        },
+      ],
+    );
+
+    const managedConfigRule = new config.CustomRule(this, pascalCase(rule.name), {
+      configRuleName: rule.name,
+      lambdaFunction: lambdaFunction,
+      periodic: rule.customRule.periodic,
+      inputParameters: this.getRuleParameters(rule.name, rule.inputParameters),
+      description: rule.description,
+      maximumExecutionFrequency:
+        rule.customRule.maximumExecutionFrequency === undefined
+          ? undefined
+          : (rule.customRule.maximumExecutionFrequency as cdk.aws_config.MaximumExecutionFrequency),
+      ruleScope: ruleScope,
+      configurationChanges: rule.customRule.configurationChanges,
+    });
+    managedConfigRule.node.addDependency(lambdaFunction);
+
+    return managedConfigRule;
+  }
+
+  /**
+   * Function to setup AWS Config rule remediation
+   * @param rule
+   * @param configRule
+   */
+  private setupConfigRuleRemediation(rule: ConfigRule, configRule: config.ManagedRule | config.CustomRule) {
+    const remediationRole = this.createRemediationRole(
+      rule.name,
+      path.join(this.props.configDirPath, rule.remediation.rolePolicyFile),
+      `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
+        rule.remediation.targetAccountName
+          ? this.props.accountsConfig.getAccountId(rule.remediation.targetAccountName)
+          : this.props.accountsConfig.getAuditAccountId()
+      }:document/${rule.remediation.targetId}`,
+      !!rule.remediation.targetDocumentLambda,
+    );
+
+    // If remediation document use action as aws:invokeLambdaFunction, create the lambda function
+    let remediationLambdaFunction: cdk.aws_lambda.Function | undefined;
+    if (rule.remediation.targetDocumentLambda) {
+      remediationLambdaFunction = new cdk.aws_lambda.Function(this, pascalCase(rule.name) + '-RemediationFunction', {
+        role: remediationRole,
+        runtime: new cdk.aws_lambda.Runtime(rule.remediation.targetDocumentLambda.runtime),
+        handler: rule.remediation.targetDocumentLambda.handler,
+        code: cdk.aws_lambda.Code.fromAsset(
+          path.join(this.props.configDirPath, rule.remediation.targetDocumentLambda.sourceFilePath),
+        ),
+        description: `Function used in ${rule.remediation.targetId} SSM document for "${rule.name}" custom config rule to remediation`,
+      });
+
+      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+      // rule suppression with evidence for this permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/${pascalCase(rule.name)}-RemediationFunction/ServiceRole/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM4',
+            reason: 'AWS Config custom rule needs managed readonly access policy',
+          },
+        ],
+      );
+
+      // Configure lambda log file with encryption and log retention
+      new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-RemediationLogGroup', {
+        logGroupName: `/aws/lambda/${remediationLambdaFunction.functionName}`,
+        retention: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        encryptionKey: this.acceleratorKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+    }
+
+    new config.CfnRemediationConfiguration(this, pascalCase(rule.name) + '-Remediation', {
+      configRuleName: rule.name,
+      targetId: `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
+        rule.remediation.targetAccountName
+          ? this.props.accountsConfig.getAccountId(rule.remediation.targetAccountName)
+          : this.props.accountsConfig.getAuditAccountId()
+      }:document/${rule.remediation.targetId}`,
+      targetVersion: rule.remediation.targetVersion,
+      targetType: 'SSM_DOCUMENT',
+
+      automatic: rule.remediation.automatic,
+      maximumAutomaticAttempts: rule.remediation.maximumAutomaticAttempts,
+      retryAttemptSeconds: rule.remediation.retryAttemptSeconds,
+      parameters: this.getRemediationParameters(
+        rule.name,
+        rule.remediation.parameters as string[],
+        [remediationRole.roleArn],
+        remediationLambdaFunction ? remediationLambdaFunction.functionName : undefined,
+      ),
+    }).node.addDependency(configRule);
+  }
+
+  /**
+   * Function to setup tagging for AWS Config services
+   * @param rule
+   * @param configRule
+   */
+  private setupConfigServicesTagging(rule: ConfigRule, configRule: config.ManagedRule | config.CustomRule) {
+    if (rule.tags) {
+      const configRuleTags = this.convertAcceleratorTags(rule.tags);
+      new ConfigServiceTags(this, pascalCase(rule.name + 'tags'), {
+        resourceArn: configRule.configRuleArn,
+        tags: configRuleTags,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        kmsKey: this.acceleratorKey,
+        partition: this.props.partition,
+        accountId: cdk.Stack.of(this).account,
+      });
+    }
+  }
+
+  /**
+   * Function to create AWS Config rules (Managed and Custom)
+   * @param ruleSet
+   */
+  private createAwsConfigRules(ruleSet: AwsConfigRuleSet) {
+    for (const rule of ruleSet.rules) {
+      let configRule: config.ManagedRule | config.CustomRule | undefined;
+
+      if (rule.type && rule.type === 'Custom') {
+        configRule = this.createCustomConfigRule(rule);
+      } else {
+        configRule = this.createManagedConfigRule(rule);
+      }
+
+      if (configRule) {
+        // Tag rule
+        this.setupConfigServicesTagging(rule, configRule);
+
+        // Create remediation for config rule
+        if (rule.remediation) {
+          this.setupConfigRuleRemediation(rule, configRule);
+        } else {
+          Logger.info(`[security-resources-stack] No remediation provided for custom config rule ${rule.name}`);
+        }
+
+        if (this.configRecorder) {
+          configRule.node.addDependency(this.configRecorder);
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to setup AWS Config rules
+   */
+  private setupAwsConfigRules() {
     Logger.info('[security-resources-stack] Evaluating AWS Config rule sets');
 
-    for (const ruleSet of props.securityConfig.awsConfig.ruleSets) {
+    for (const ruleSet of this.props.securityConfig.awsConfig.ruleSets) {
       if (!this.isIncluded(ruleSet.deploymentTargets)) {
         Logger.info('[security-resources-stack] Item excluded');
         continue;
@@ -170,305 +539,8 @@ export class SecurityResourcesStack extends AcceleratorStack {
           cdk.Stack.of(this).account
         }) should be included, deploying AWS Config Rules`,
       );
-
-      for (const rule of ruleSet.rules) {
-        let configRule: config.ManagedRule | config.CustomRule | undefined;
-
-        if (rule.type && rule.type === 'Custom') {
-          Logger.info(`[security-resources-stack] Creating custom rule ${rule.name}`);
-          let ruleScope: config.RuleScope | undefined;
-
-          if (rule.customRule.triggeringResources.lookupType == 'ResourceTypes') {
-            for (const item of rule.customRule.triggeringResources.lookupValue) {
-              ruleScope = config.RuleScope.fromResources([config.ResourceType.of(item)]);
-            }
-          }
-
-          if (rule.customRule.triggeringResources.lookupType == 'ResourceId') {
-            ruleScope = config.RuleScope.fromResource(
-              config.ResourceType.of(rule.customRule.triggeringResources.lookupKey),
-              rule.customRule.triggeringResources.lookupValue[0],
-            );
-          }
-
-          if (rule.customRule.triggeringResources.lookupType == 'Tag') {
-            ruleScope = config.RuleScope.fromTag(
-              rule.customRule.triggeringResources.lookupKey,
-              rule.customRule.triggeringResources.lookupValue[0],
-            );
-          }
-
-          /**
-           * Lambda function for config custom role
-           * Single lambda function can not be used for multiple config custom role, there is a pending issue with CDK team on this
-           * https://github.com/aws/aws-cdk/issues/17582
-           */
-          const lambdaFunction = new cdk.aws_lambda.Function(this, pascalCase(rule.name) + '-Function', {
-            runtime: new cdk.aws_lambda.Runtime(rule.customRule.lambda.runtime),
-            handler: rule.customRule.lambda.handler,
-            code: cdk.aws_lambda.Code.fromAsset(path.join(props.configDirPath, rule.customRule.lambda.sourceFilePath)),
-            description: `AWS Config custom rule function used for "${rule.name}" rule`,
-            timeout: Duration.seconds(rule.customRule.lambda.timeout ?? 3),
-          });
-
-          // Configure lambda log file with encryption and log retention
-          new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-LogGroup', {
-            logGroupName: `/aws/lambda/${lambdaFunction.functionName}`,
-            retention: props.globalConfig.cloudwatchLogRetentionInDays,
-            encryptionKey: this.acceleratorKey,
-            removalPolicy: cdk.RemovalPolicy.DESTROY,
-          });
-
-          // Read in the policy document which should be properly formatted json
-          const policyDocument = require(path.join(props.configDirPath, rule.customRule.lambda.rolePolicyFile));
-          // Create a statements list using the PolicyStatement factory
-          const policyStatements: cdk.aws_iam.PolicyStatement[] = [];
-          for (const statement of policyDocument.Statement) {
-            policyStatements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
-          }
-
-          // Assign policy to Lambda
-          lambdaFunction.role?.attachInlinePolicy(
-            new cdk.aws_iam.Policy(this, pascalCase(rule.name) + '-LambdaRolePolicy', {
-              statements: [...policyStatements],
-            }),
-          );
-
-          // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-          NagSuppressions.addResourceSuppressionsByPath(
-            this,
-            `${this.stackName}/${pascalCase(rule.name)}-LambdaRolePolicy/Resource`,
-            [
-              {
-                id: 'AwsSolutions-IAM5',
-                reason: 'AWS Config rule custom lambda role, created by the permission provided in config repository',
-              },
-            ],
-          );
-
-          // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
-          // rule suppression with evidence for this permission.
-          NagSuppressions.addResourceSuppressionsByPath(
-            this,
-            `${this.stackName}/${pascalCase(rule.name)}-Function/ServiceRole/Resource`,
-            [
-              {
-                id: 'AwsSolutions-IAM4',
-                reason: 'AWS Config custom rule needs managed readonly access policy',
-              },
-            ],
-          );
-
-          configRule = new config.CustomRule(this, pascalCase(rule.name), {
-            configRuleName: rule.name,
-            lambdaFunction: lambdaFunction,
-            periodic: rule.customRule.periodic,
-            inputParameters: this.getRuleParameters(rule.name, rule.inputParameters),
-            description: rule.description,
-            maximumExecutionFrequency:
-              rule.customRule.maximumExecutionFrequency === undefined
-                ? undefined
-                : (rule.customRule.maximumExecutionFrequency as cdk.aws_config.MaximumExecutionFrequency),
-            ruleScope: ruleScope,
-            configurationChanges: rule.customRule.configurationChanges,
-          });
-          configRule.node.addDependency(lambdaFunction);
-        } else {
-          Logger.info(`[security-resources-stack] Creating managed rule ${rule.name}`);
-
-          const resourceTypes: config.ResourceType[] = [];
-          for (const resourceType of rule.complianceResourceTypes ?? []) {
-            resourceTypes.push(config.ResourceType.of(resourceType));
-          }
-
-          configRule = new config.ManagedRule(this, pascalCase(rule.name), {
-            configRuleName: rule.name,
-            description: rule.description,
-            identifier: rule.identifier ?? rule.name,
-            inputParameters: this.getRuleParameters(rule.name, rule.inputParameters),
-            ruleScope: {
-              resourceTypes,
-            },
-          });
-        }
-
-        if (configRule) {
-          // Tag rule
-          if (rule.tags) {
-            const configRuleTags = this.convertAcceleratorTags(rule.tags);
-            new ConfigServiceTags(this, pascalCase(rule.name + 'tags'), {
-              resourceArn: configRule.configRuleArn,
-              tags: configRuleTags,
-              logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-              kmsKey: this.acceleratorKey,
-              partition: props.partition,
-              accountId: cdk.Stack.of(this).account,
-            });
-          }
-          // Create remediation for config rule
-          if (rule.remediation) {
-            const remediationRole = this.createRemediationRole(
-              rule.name,
-              path.join(props.configDirPath, rule.remediation.rolePolicyFile),
-              `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
-                rule.remediation.targetAccountName
-                  ? props.accountsConfig.getAccountId(rule.remediation.targetAccountName)
-                  : props.accountsConfig.getAuditAccountId()
-              }:document/${rule.remediation.targetId}`,
-              !!rule.remediation.targetDocumentLambda,
-            );
-
-            // If remediation document use action as aws:invokeLambdaFunction, create the lambda function
-            let remediationLambdaFunction: cdk.aws_lambda.Function | undefined;
-            if (rule.remediation.targetDocumentLambda) {
-              remediationLambdaFunction = new cdk.aws_lambda.Function(
-                this,
-                pascalCase(rule.name) + '-RemediationFunction',
-                {
-                  role: remediationRole,
-                  runtime: new cdk.aws_lambda.Runtime(rule.remediation.targetDocumentLambda.runtime),
-                  handler: rule.remediation.targetDocumentLambda.handler,
-                  code: cdk.aws_lambda.Code.fromAsset(
-                    path.join(props.configDirPath, rule.remediation.targetDocumentLambda.sourceFilePath),
-                  ),
-                  description: `Function used in ${rule.remediation.targetId} SSM document for "${rule.name}" custom config rule to remediation`,
-                },
-              );
-
-              // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
-              // rule suppression with evidence for this permission.
-              NagSuppressions.addResourceSuppressionsByPath(
-                this,
-                `${this.stackName}/${pascalCase(rule.name)}-RemediationFunction/ServiceRole/Resource`,
-                [
-                  {
-                    id: 'AwsSolutions-IAM4',
-                    reason: 'AWS Config custom rule needs managed readonly access policy',
-                  },
-                ],
-              );
-
-              // Configure lambda log file with encryption and log retention
-              new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-RemediationLogGroup', {
-                logGroupName: `/aws/lambda/${remediationLambdaFunction.functionName}`,
-                retention: props.globalConfig.cloudwatchLogRetentionInDays,
-                encryptionKey: this.acceleratorKey,
-                removalPolicy: cdk.RemovalPolicy.DESTROY,
-              });
-            }
-
-            new config.CfnRemediationConfiguration(this, pascalCase(rule.name) + '-Remediation', {
-              configRuleName: rule.name,
-              targetId: `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
-                rule.remediation.targetAccountName
-                  ? props.accountsConfig.getAccountId(rule.remediation.targetAccountName)
-                  : props.accountsConfig.getAuditAccountId()
-              }:document/${rule.remediation.targetId}`,
-              targetVersion: rule.remediation.targetVersion,
-              targetType: 'SSM_DOCUMENT',
-
-              automatic: rule.remediation.automatic,
-              maximumAutomaticAttempts: rule.remediation.maximumAutomaticAttempts,
-              retryAttemptSeconds: rule.remediation.retryAttemptSeconds,
-              parameters: this.getRemediationParameters(
-                rule.name,
-                rule.remediation.parameters as string[],
-                [remediationRole.roleArn],
-                remediationLambdaFunction ? remediationLambdaFunction.functionName : undefined,
-              ),
-            }).node.addDependency(configRule);
-          } else {
-            Logger.info(`[security-resources-stack] No remediation provided for custom config rule ${rule.name}`);
-          }
-
-          if (configRecorder) {
-            configRule.node.addDependency(configRecorder);
-          }
-        }
-      }
+      this.createAwsConfigRules(ruleSet);
     }
-
-    //
-    // CloudWatch Metrics
-    //
-    for (const metricSetItem of props.securityConfig.cloudWatch.metricSets ?? []) {
-      if (!metricSetItem.regions?.includes(cdk.Stack.of(this).region)) {
-        Logger.info(`[security-resources-stack] Current region not explicity specified for metric item, skip`);
-        continue;
-      }
-
-      if (!this.isIncluded(metricSetItem.deploymentTargets)) {
-        Logger.info(`[security-resources-stack] Item excluded`);
-        continue;
-      }
-
-      for (const metricItem of metricSetItem.metrics ?? []) {
-        Logger.info(`[security-resources-stack] Creating CloudWatch metric filter ${metricItem.filterName}`);
-
-        new cdk.aws_logs.MetricFilter(this, pascalCase(metricItem.filterName), {
-          logGroup: cdk.aws_logs.LogGroup.fromLogGroupName(
-            this,
-            `${pascalCase(metricItem.filterName)}_${pascalCase(metricItem.logGroupName)}`,
-            metricItem.logGroupName,
-          ),
-          metricNamespace: metricItem.metricNamespace,
-          metricName: metricItem.metricName,
-          filterPattern: cdk.aws_logs.FilterPattern.literal(metricItem.filterPattern),
-          metricValue: metricItem.metricValue,
-        });
-      }
-    }
-
-    //
-    // CloudWatch Alarms
-    //
-    for (const alarmSetItem of props.securityConfig.cloudWatch.alarmSets ?? []) {
-      if (!alarmSetItem.regions?.includes(cdk.Stack.of(this).region)) {
-        Logger.info(`[security-resources-stack] Current region not explicity specified for alarm item, skip`);
-        continue;
-      }
-
-      if (!this.isIncluded(alarmSetItem.deploymentTargets)) {
-        Logger.info(`[security-resources-stack] Item excluded`);
-        continue;
-      }
-
-      for (const alarmItem of alarmSetItem.alarms ?? []) {
-        Logger.info(`[security-resources-stack] Creating CloudWatch alarm ${alarmItem.alarmName}`);
-
-        const alarm = new cdk.aws_cloudwatch.Alarm(this, pascalCase(alarmItem.alarmName), {
-          alarmName: alarmItem.alarmName,
-          alarmDescription: alarmItem.alarmDescription,
-          metric: new cdk.aws_cloudwatch.Metric({
-            metricName: alarmItem.metricName,
-            namespace: alarmItem.namespace,
-            period: cdk.Duration.seconds(alarmItem.period),
-            statistic: alarmItem.statistic,
-          }),
-          comparisonOperator: this.getComparisonOperator(alarmItem.comparisonOperator),
-          evaluationPeriods: alarmItem.evaluationPeriods,
-          threshold: alarmItem.threshold,
-          treatMissingData: this.getTreatMissingData(alarmItem.treatMissingData),
-        });
-
-        alarm.addAlarmAction(
-          new cdk.aws_cloudwatch_actions.SnsAction(
-            cdk.aws_sns.Topic.fromTopicArn(
-              this,
-              `${pascalCase(alarmItem.alarmName)}Topic`,
-              cdk.Stack.of(this).formatArn({
-                service: 'sns',
-                region: cdk.Stack.of(this).region,
-                account: props.accountsConfig.getAuditAccountId(),
-                resource: `aws-accelerator-${alarmItem.snsAlertLevel}Notifications`,
-                arnFormat: cdk.ArnFormat.NO_RESOURCE_NAME,
-              }),
-            ),
-          ),
-        );
-      }
-    }
-    Logger.info('[security-resources-stack] Completed stack synthesis');
   }
 
   private getComparisonOperator(comparisonOperator: string): cdk.aws_cloudwatch.ComparisonOperator {
@@ -512,6 +584,35 @@ export class SecurityResourcesStack extends AcceleratorStack {
     return cdk.aws_cloudwatch.TreatMissingData.NOT_BREACHING;
   }
 
+  private getReplaceValues(value: string, ruleName: string): string[] {
+    const replacementValues: string[] = [];
+    for (const item of value.split(',')) {
+      const parameterReplacementNeeded = item.match('\\${ACCEL_LOOKUP::([a-zA-Z0-9-/:]*)}');
+      if (parameterReplacementNeeded) {
+        const replacementValue = this.getReplacementValue(ruleName, parameterReplacementNeeded, 'Rule-Parameter');
+        replacementValues.push(replacementValue?.split(',')[0] ?? '');
+      }
+    }
+    return replacementValues;
+  }
+
+  private getRemediationReplacementValues(value: string, ruleName: string, configFunctionName?: string): string[] {
+    const replacementValues: string[] = [];
+    for (const item of value.split(',')) {
+      const parameterReplacementNeeded = item.match('\\${ACCEL_LOOKUP::([a-zA-Z0-9-/:]*)}');
+      if (parameterReplacementNeeded) {
+        const replacementValue = this.getReplacementValue(
+          ruleName,
+          parameterReplacementNeeded,
+          'Remediation-Parameter',
+          configFunctionName,
+        );
+        replacementValues.push(replacementValue ?? '');
+      }
+    }
+
+    return replacementValues;
+  }
   /**
    * Function to prepare config rule parameters
    * @param ruleName
@@ -522,15 +623,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
     if (params) {
       const returnParams: { [key: string]: string } = {};
       for (const [key, value] of Object.entries(params)) {
-        const replacementValues: string[] = [];
-        for (const item of value.split(',')) {
-          const parameterReplacementNeeded = (item as string).match('\\${ACCEL_LOOKUP::([a-zA-Z0-9-/:]*)}');
-          if (parameterReplacementNeeded) {
-            const replacementValue = this.getReplacementValue(ruleName, parameterReplacementNeeded, 'Rule-Parameter');
-            replacementValues.push(replacementValue?.split(',')[0] ?? '');
-          }
-        }
-
+        const replacementValues: string[] = this.getReplaceValues(value, ruleName);
         if (replacementValues.length > 0) {
           returnParams[key] = replacementValues.join(',');
         } else {
@@ -540,6 +633,14 @@ export class SecurityResourcesStack extends AcceleratorStack {
       return returnParams;
     } else {
       return {};
+    }
+  }
+
+  private getParamValue(replacementValues: string[], parameterType: string): string[] {
+    if (parameterType === 'StringList') {
+      return replacementValues;
+    } else {
+      return [replacementValues.join(',')];
     }
   }
 
@@ -575,47 +676,31 @@ export class SecurityResourcesStack extends AcceleratorStack {
       let parameterValue: string | undefined;
       let parameterType = 'List';
       for (const [key, value] of Object.entries(param)) {
-        if (key === 'name') {
-          parameterName = value;
-        }
-        if (key === 'value') {
-          parameterValue = value as string;
-        }
-        if (key === 'type') {
-          parameterType = value;
+        switch (key) {
+          case 'name':
+            parameterName = value;
+            break;
+          case 'value':
+            parameterValue = value;
+            break;
+          case 'type':
+            parameterType = value;
+            break;
         }
       }
 
-      const replacementValues: string[] = [];
-      for (const item of (parameterValue as string).split(',')) {
-        const parameterReplacementNeeded = (item as string).match('\\${ACCEL_LOOKUP::([a-zA-Z0-9-/:]*)}');
-        if (parameterReplacementNeeded) {
-          const replacementValue = this.getReplacementValue(
-            ruleName,
-            parameterReplacementNeeded,
-            'Remediation-Parameter',
-            configFunctionName,
-          );
-          replacementValues.push(replacementValue ?? '');
-        }
-      }
+      const replacementValues: string[] = this.getRemediationReplacementValues(
+        parameterValue as string,
+        ruleName,
+        configFunctionName,
+      );
 
       if (replacementValues.length > 0) {
-        if (parameterType === 'StringList') {
-          returnParams[parameterName!] = {
-            StaticValue: {
-              Values: replacementValues,
-            },
-          };
-        }
-
-        if (parameterType === 'String') {
-          returnParams[parameterName!] = {
-            StaticValue: {
-              Values: [replacementValues.join(',')],
-            },
-          };
-        }
+        returnParams[parameterName!] = {
+          StaticValue: {
+            Values: this.getParamValue(replacementValues, parameterType),
+          },
+        };
       } else {
         if (parameterValue === 'RESOURCE_ID') {
           returnParams[parameterName!] = {

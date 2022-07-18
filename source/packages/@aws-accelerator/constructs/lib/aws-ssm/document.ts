@@ -41,13 +41,13 @@ export class Document extends cdk.Resource implements IDocument {
   constructor(scope: Construct, id: string, props: DocumentProps) {
     super(scope, id);
 
-    const resource = new cdk.aws_ssm.CfnDocument(this, 'Resource', {
+    const document = new cdk.aws_ssm.CfnDocument(this, 'Resource', {
       name: props.name,
       content: props.content,
       documentType: props.documentType,
     });
 
-    this.documentName = resource.ref;
+    this.documentName = document.ref;
 
     // Also need a custom resource to do the share
     if (props.sharedWithAccountIds.length > 0) {

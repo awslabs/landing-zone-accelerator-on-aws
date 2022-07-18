@@ -65,6 +65,7 @@
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-prettier": "4.0.0",
     "jest": "27.4.3",
+    "jest-sonar-reporter": "2.0.0",
     "mri": "1.2.0",
     "prettier": "2.5.1",
     "promptly": "3.0.2",
@@ -75,5 +76,10 @@
   },
   "peerDependencies": {
     "eslint": "8.4.1"
+  },
+  "jestSonar": {
+    "reportPath": "coverage",
+    "reportFile": "test-report.xml",
+    "indent": 4
   }
 }

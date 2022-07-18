@@ -157,7 +157,7 @@ export abstract class Accelerator {
         throw new Error(`Region set to ${props.region}, but region is undefined`);
       }
 
-      return await AcceleratorToolkit.execute({
+      return AcceleratorToolkit.execute({
         command: props.command,
         accountId: props.account,
         region: props.region,
@@ -171,7 +171,7 @@ export abstract class Accelerator {
 
     // Treat synthesize as a single - do not need parallel paths to generate all stacks
     if (props.command === Command.SYNTH || props.command === Command.SYNTHESIZE || props.command === Command.DIFF) {
-      return await AcceleratorToolkit.execute({
+      return AcceleratorToolkit.execute({
         command: props.command,
         accountId: props.account,
         region: props.region,

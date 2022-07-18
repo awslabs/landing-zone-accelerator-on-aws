@@ -266,7 +266,7 @@ do_cmd cd $source_dir
 # Install the global lerna package
 # Note: do not install using global (-g) option. This makes build-s3-dist.sh difficult
 # for customers and developers to use, as it globally changes their environment.
-do_cmd yarn add lerna@^4.0.0 -W
+do_cmd yarn add lerna@5.1.8 -W
 
 # Add local install to PATH
 export PATH=$(yarn bin):$PATH

@@ -58,10 +58,9 @@ export async function handler(event: any): Promise<any> {
 async function getAccountCreationStatus(
   requestId: string,
 ): Promise<AWS.Organizations.DescribeCreateAccountStatusResponse> {
-  const response = await throttlingBackOff(() =>
+  return throttlingBackOff(() =>
     organizationsClient.describeCreateAccountStatus({ CreateAccountRequestId: requestId }).promise(),
   );
-  return response;
 }
 
 async function getPolicyId(policyName: string) {

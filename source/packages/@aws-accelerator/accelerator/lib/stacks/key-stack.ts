@@ -101,7 +101,7 @@ export class KeyStack extends AcceleratorStack {
       );
     }
 
-    allowedServicePrincipals!.forEach(item => {
+    allowedServicePrincipals.forEach(item => {
       key.addToResourcePolicy(
         new cdk.aws_iam.PolicyStatement({
           sid: `Allow ${item.name} service to use the encryption key`,

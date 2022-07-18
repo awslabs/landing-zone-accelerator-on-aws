@@ -20,8 +20,8 @@ import { TransitGatewayAttachmentOptionsConfig } from '@aws-accelerator/config';
 const path = require('path');
 
 export interface ITransitGatewayRouteTableAssociation extends cdk.IResource {
-  readonly transitGatewayAttachmentId: string; // TODO: change to ITransitGatewayAttachment
-  readonly transitGatewayRouteTableId: string; // TODO: change to ITransitGatewayRouteTable
+  readonly transitGatewayAttachmentId: string;
+  readonly transitGatewayRouteTableId: string;
 }
 
 export interface TransitGatewayRouteTableAssociationProps {
@@ -47,8 +47,8 @@ export class TransitGatewayRouteTableAssociation extends cdk.Resource implements
 }
 
 export interface ITransitGatewayRouteTablePropagation extends cdk.IResource {
-  readonly transitGatewayAttachmentId: string; // TODO: change to ITransitGatewayAttachment
-  readonly transitGatewayRouteTableId: string; // TODO: change to ITransitGatewayRouteTable
+  readonly transitGatewayAttachmentId: string;
+  readonly transitGatewayRouteTableId: string;
 }
 
 export interface TransitGatewayRouteTablePropagationProps {
@@ -91,7 +91,7 @@ export interface TransitGatewayAttachmentProps {
 export interface TransitGatewayAttachmentLookupOptions {
   readonly name: string;
   readonly owningAccountId: string;
-  readonly transitGatewayId: string; // TODO: change to ITransitGateway
+  readonly transitGatewayId: string;
   readonly roleName?: string;
   /**
    * Custom resource lambda log group encryption key

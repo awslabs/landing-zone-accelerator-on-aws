@@ -13,7 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { SynthUtils } from '@aws-cdk/assert';
-import { ResourceShare } from '../../index';
+import { ResourceShare, ResourceShareOwner } from '../../index';
 
 const testNamePrefix = 'Construct(ResourceShare): ';
 
@@ -30,6 +30,15 @@ new ResourceShare(stack, 'ResourceShare', {
 
   principals: ['accountID', 'organizationUnitId'],
   resourceArns: ['ec2:TransitGateway'],
+});
+
+const stackLookup = new cdk.Stack();
+
+// Lookup resource share
+ResourceShare.fromLookup(stackLookup, 'ResourceShareLookup', {
+  resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
+  resourceShareName: 'ResourceShareName',
+  owningAccountId: '111111111111',
 });
 
 /**
@@ -107,6 +116,13 @@ describe('ResourceShare', () => {
         },
       },
     });
+  });
+
+  /**
+   * Number of Lambda function resource test
+   */
+  test(`${testNamePrefix} Lambda function resource count test`, () => {
+    cdk.assertions.Template.fromStack(stackLookup).resourceCountIs('AWS::Lambda::Function', 1);
   });
 
   //End of file

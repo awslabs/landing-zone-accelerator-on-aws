@@ -193,18 +193,18 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
               // look up by physical id if it exists
               const checkAccountId = organizationAccounts.find(oa => oa.Email == workloadAccount['acceleratorKey']);
               if (checkAccountId) {
-                const provisionedControlTowerAccount = provisionedControlTowerAccounts.find(
+                const provisionedControlTowerOrgAccount = provisionedControlTowerAccounts.find(
                   pcta => pcta.PhysicalId === checkAccountId.Id,
                 );
                 if (
-                  provisionedControlTowerAccount?.Status === 'TAINTED' ||
-                  provisionedControlTowerAccount?.Status === 'ERROR'
+                  provisionedControlTowerOrgAccount?.Status === 'TAINTED' ||
+                  provisionedControlTowerOrgAccount?.Status === 'ERROR'
                 ) {
                   validationErrors.push(
-                    `AWS Account ${workloadAccount['acceleratorKey']} is in ERROR state. Message: ${provisionedControlTowerAccount.StatusMessage}. Check Service Catalog`,
+                    `AWS Account ${workloadAccount['acceleratorKey']} is in ERROR state. Message: ${provisionedControlTowerOrgAccount.StatusMessage}. Check Service Catalog`,
                   );
                 }
-                if (!provisionedControlTowerAccount) {
+                if (!provisionedControlTowerOrgAccount) {
                   ctAccountsToAdd.push(workloadAccount);
                 }
               } else {
@@ -366,7 +366,6 @@ async function getControlTowerProvisionedAccounts(): Promise<AWS.ServiceCatalog.
     nextToken = page.NextPageToken;
   } while (nextToken);
 
-  //console.log(`Provisioned Control Tower Accounts ${JSON.stringify(provisionedProducts)}`);
   return provisionedProducts;
 }
 
@@ -565,7 +564,6 @@ async function getOUKeys(configTableName: string, commitId: string): Promise<Org
       });
     }
   }
-  //console.log(ouKeys);
   return ouKeys;
 }
 

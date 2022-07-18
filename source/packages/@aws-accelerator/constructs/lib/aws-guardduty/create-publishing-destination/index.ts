@@ -53,15 +53,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         detectorId = await getDetectorId(guardDutyClient);
       }
 
-      const listPublishingDestinationResponse = await throttlingBackOff(() =>
-        guardDutyClient
-          .listPublishingDestinations({
-            DetectorId: detectorId!,
-          })
-          .promise(),
-      );
+      const listPublishingDestinationResponse = await getPublishingDestinations(guardDutyClient, detectorId!);
 
-      if (listPublishingDestinationResponse.Destinations!.length === 0) {
+      if (listPublishingDestinationResponse.Destinations.length === 0) {
         console.log('starting CreatePublishingDestinationCommand');
 
         await throttlingBackOff(() =>
@@ -78,18 +72,12 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
-      const response = await throttlingBackOff(() =>
-        guardDutyClient
-          .listPublishingDestinations({
-            DetectorId: detectorId!,
-          })
-          .promise(),
-      );
+      const response = await getPublishingDestinations(guardDutyClient, detectorId!);
 
       const destinationId =
-        response.Destinations ?? [].length === 1 ? response.Destinations![0].DestinationId : undefined;
+        response.Destinations ?? [].length === 1 ? response.Destinations[0].DestinationId : undefined;
 
-      if (response.Destinations!.length === 1) {
+      if (response.Destinations.length === 1) {
         await throttlingBackOff(() =>
           guardDutyClient
             .deletePublishingDestination({
@@ -108,4 +96,17 @@ async function getDetectorId(guardDutyClient: AWS.GuardDuty): Promise<string | u
   const response = await throttlingBackOff(() => guardDutyClient.listDetectors({}).promise());
   console.log(response);
   return response.DetectorIds!.length === 1 ? response.DetectorIds![0] : undefined;
+}
+
+async function getPublishingDestinations(
+  guardDutyClient: AWS.GuardDuty,
+  detectorId: string,
+): Promise<AWS.GuardDuty.ListPublishingDestinationsResponse> {
+  return throttlingBackOff(() =>
+    guardDutyClient
+      .listPublishingDestinations({
+        DetectorId: detectorId,
+      })
+      .promise(),
+  );
 }

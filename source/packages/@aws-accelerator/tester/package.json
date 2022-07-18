@@ -35,6 +35,7 @@
     "eslint-plugin-prettier": "4.0.0",
     "fs-extra": "10.0.0",
     "jest": "27.4.3",
+    "jest-sonar-reporter": "2.0.0",
     "prettier": "2.5.1",
     "ts-jest": "27.1.1",
     "ts-node": "10.7.0",
@@ -46,6 +47,11 @@
   "peerDependencies": {
     "aws-cdk-lib": "2.25.0",
     "es-lint": "8.4.1"
+  },
+  "jestSonar": {
+    "reportPath": "coverage",
+    "reportFile": "test-report.xml",
+    "indent": 4
   },
   "dependencies": {
     "@types/fs-extra": "9.0.13",

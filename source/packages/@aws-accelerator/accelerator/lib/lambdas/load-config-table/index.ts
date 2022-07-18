@@ -53,17 +53,17 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   console.log(event);
-  const configTableName: string = event.ResourceProperties['configTableName'] ?? '';
-  const configRepositoryName: string = event.ResourceProperties['configRepositoryName' ?? ''];
-  const managementAccountEmail: string = event.ResourceProperties['managementAccountEmail' ?? ''];
-  const auditAccountEmail: string = event.ResourceProperties['auditAccountEmail' ?? ''];
-  const logArchiveAccountEmail: string = event.ResourceProperties['logArchiveAccountEmail' ?? ''];
-  const configS3Bucket: string = event.ResourceProperties['configS3Bucket' ?? ''];
-  const organizationsConfigS3Key: string = event.ResourceProperties['organizationsConfigS3Key' ?? ''];
-  const accountConfigS3Key: string = event.ResourceProperties['accountConfigS3Key' ?? ''];
-  const commitId: string = event.ResourceProperties['commitId' ?? ''];
-  const partition = event.ResourceProperties['partition'];
-  const stackName = event.ResourceProperties['stackName'];
+  const configTableName: string = event.ResourceProperties['configTableName'];
+  const configRepositoryName: string = event.ResourceProperties['configRepositoryName'];
+  const managementAccountEmail: string = event.ResourceProperties['managementAccountEmail'];
+  const auditAccountEmail: string = event.ResourceProperties['auditAccountEmail'];
+  const logArchiveAccountEmail: string = event.ResourceProperties['logArchiveAccountEmail'];
+  const configS3Bucket: string = event.ResourceProperties['configS3Bucket'];
+  const organizationsConfigS3Key: string = event.ResourceProperties['organizationsConfigS3Key'];
+  const accountConfigS3Key: string = event.ResourceProperties['accountConfigS3Key'];
+  const commitId: string = event.ResourceProperties['commitId'] ?? '';
+  const partition: string = event.ResourceProperties['partition'];
+  const stackName: string = event.ResourceProperties['stackName'];
 
   console.log(`Configuration Table Name: ${configTableName}`);
   console.log(`Configuration Repository Name: ${configRepositoryName}`);
@@ -84,105 +84,19 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           Status: 'SUCCESS',
         };
       }
-      const organizationConfigContent = await getConfigFileContents(configS3Bucket, organizationsConfigS3Key);
-      const organizationValues = t.parse(
-        OrganizationConfigTypes.organizationConfig,
-        yaml.load(organizationConfigContent),
-      );
-      const organizationConfig = new OrganizationConfig(organizationValues);
-      await organizationConfig.loadOrganizationalUnitIds(partition);
-      for (const organizationalUnit of organizationConfig.organizationalUnits) {
-        let awsKey = '';
-        try {
-          awsKey = organizationConfig.getOrganizationalUnitId(organizationalUnit.name);
-        } catch (error) {
-          let message;
 
-          if (error instanceof Error) message = error.message;
-          else message = String(error);
-
-          if (message.startsWith('Organizations not enabled or')) awsKey = '';
-          else throw error;
-        }
-        await putOrganizationConfigInTable(organizationalUnit, configTableName, awsKey, commitId);
-      }
-      const accountsConfigContent = await getConfigFileContents(configS3Bucket, accountConfigS3Key);
-      const accountsValues = t.parse(AccountsConfigTypes.accountsConfig, yaml.load(accountsConfigContent));
-      const accountsConfig = new AccountsConfig(
+      return onCreateUpdateFunction(
+        partition,
+        configTableName,
+        commitId,
+        { name: configS3Bucket, organizationsConfigS3Key, accountConfigS3Key },
         {
-          managementAccountEmail: managementAccountEmail,
-          auditAccountEmail: auditAccountEmail,
-          logArchiveAccountEmail: logArchiveAccountEmail,
+          managementAccount: managementAccountEmail,
+          auditAccount: auditAccountEmail,
+          logArchiveAccount: logArchiveAccountEmail,
         },
-        accountsValues,
       );
-      await accountsConfig.loadAccountIds(partition);
-      for (const account of accountsConfig.mandatoryAccounts) {
-        switch (account.name) {
-          case 'Management':
-            const managmentId = accountsConfig.getManagementAccountId();
-            await putAccountConfigInTable(
-              'mandatory',
-              account,
-              configTableName,
-              managmentId,
-              commitId,
-              account.organizationalUnit,
-            );
-            break;
-          case 'LogArchive':
-            const logArchiveId = accountsConfig.getLogArchiveAccountId();
-            await putAccountConfigInTable(
-              'mandatory',
-              account,
-              configTableName,
-              logArchiveId,
-              commitId,
-              account.organizationalUnit,
-            );
-            break;
-          case 'Audit':
-            const auditId = accountsConfig.getAuditAccountId();
-            await putAccountConfigInTable(
-              'mandatory',
-              account,
-              configTableName,
-              auditId,
-              commitId,
-              account.organizationalUnit,
-            );
-            break;
-        }
-        const awsKey = accountsConfig.getAccountId(account.name) || '';
-        await putAccountConfigInTable(
-          'mandatory',
-          account,
-          configTableName,
-          awsKey,
-          commitId,
-          account.organizationalUnit,
-        );
-      }
-      for (const account of accountsConfig.workloadAccounts) {
-        let accountId: string;
-        try {
-          accountId = accountsConfig.getAccountId(account.name);
-        } catch {
-          accountId = '';
-        }
-        await putAccountConfigInTable(
-          'workload',
-          account,
-          configTableName,
-          accountId,
-          commitId,
-          account.organizationalUnit,
-        );
-      }
-      return {
-        PhysicalResourceId: commitId,
-        Status: 'Success',
-      };
+
     case 'Delete':
       return {
         PhysicalResourceId: event.PhysicalResourceId,
@@ -196,12 +110,11 @@ async function getConfigFileContents(configFileS3Bucket: string, configFileS3Key
     s3Client.send(new GetObjectCommand({ Bucket: configFileS3Bucket, Key: configFileS3Key })),
   );
   const stream = response.Body as Readable;
-  const contents = await streamToString(stream);
-  return contents;
+  return streamToString(stream);
 }
 
 async function streamToString(stream: Readable): Promise<string> {
-  return await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const chunks: Uint8Array[] = [];
     stream.on('data', chunk => chunks.push(chunk));
     stream.on('error', reject);
@@ -318,4 +231,119 @@ async function isStackInRollback(stackName: string): Promise<boolean> {
     return true;
   }
   return false;
+}
+
+async function onCreateUpdateFunction(
+  partition: string,
+  configTableName: string,
+  commitId: string,
+  bucket: { name: string; organizationsConfigS3Key: string; accountConfigS3Key: string },
+  emails: {
+    managementAccount: string;
+    auditAccount: string;
+    logArchiveAccount: string;
+  },
+): Promise<{
+  PhysicalResourceId: string | undefined;
+  Status: string;
+}> {
+  const organizationConfigContent = await getConfigFileContents(bucket.name, bucket.organizationsConfigS3Key);
+  const organizationValues = t.parse(OrganizationConfigTypes.organizationConfig, yaml.load(organizationConfigContent));
+  const organizationConfig = new OrganizationConfig(organizationValues);
+  await organizationConfig.loadOrganizationalUnitIds(partition);
+
+  await putAllOrganizationConfigInTable(organizationConfig, configTableName, commitId);
+
+  const accountsConfigContent = await getConfigFileContents(bucket.name, bucket.accountConfigS3Key);
+  const accountsValues = t.parse(AccountsConfigTypes.accountsConfig, yaml.load(accountsConfigContent));
+  const accountsConfig = new AccountsConfig(
+    {
+      managementAccountEmail: emails.managementAccount,
+      auditAccountEmail: emails.auditAccount,
+      logArchiveAccountEmail: emails.logArchiveAccount,
+    },
+    accountsValues,
+  );
+  await accountsConfig.loadAccountIds(partition);
+  for (const account of accountsConfig.mandatoryAccounts) {
+    switch (account.name) {
+      case 'Management':
+        const managmentId = accountsConfig.getManagementAccountId();
+        await putAccountConfigInTable(
+          'mandatory',
+          account,
+          configTableName,
+          managmentId,
+          commitId,
+          account.organizationalUnit,
+        );
+        break;
+      case 'LogArchive':
+        const logArchiveId = accountsConfig.getLogArchiveAccountId();
+        await putAccountConfigInTable(
+          'mandatory',
+          account,
+          configTableName,
+          logArchiveId,
+          commitId,
+          account.organizationalUnit,
+        );
+        break;
+      case 'Audit':
+        const auditId = accountsConfig.getAuditAccountId();
+        await putAccountConfigInTable(
+          'mandatory',
+          account,
+          configTableName,
+          auditId,
+          commitId,
+          account.organizationalUnit,
+        );
+        break;
+    }
+    const awsKey = accountsConfig.getAccountId(account.name) || '';
+    await putAccountConfigInTable('mandatory', account, configTableName, awsKey, commitId, account.organizationalUnit);
+  }
+  for (const account of accountsConfig.workloadAccounts) {
+    let accountId: string;
+    try {
+      accountId = accountsConfig.getAccountId(account.name);
+    } catch {
+      accountId = '';
+    }
+    await putAccountConfigInTable(
+      'workload',
+      account,
+      configTableName,
+      accountId,
+      commitId,
+      account.organizationalUnit,
+    );
+  }
+  return {
+    PhysicalResourceId: commitId,
+    Status: 'Success',
+  };
+}
+
+async function putAllOrganizationConfigInTable(
+  organizationConfig: OrganizationConfig,
+  configTableName: string,
+  commitId: string,
+) {
+  for (const organizationalUnit of organizationConfig.organizationalUnits) {
+    let awsKey = '';
+    try {
+      awsKey = organizationConfig.getOrganizationalUnitId(organizationalUnit.name);
+    } catch (error) {
+      let message;
+
+      if (error instanceof Error) message = error.message;
+      else message = String(error);
+
+      if (message.startsWith('Organizations not enabled or')) awsKey = '';
+      else throw error;
+    }
+    await putOrganizationConfigInTable(organizationalUnit, configTableName, awsKey, commitId);
+  }
 }

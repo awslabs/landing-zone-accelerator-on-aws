@@ -76,8 +76,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         );
       }
 
-      for (const account of allAccounts.filter(account => account.Id !== adminAccountId) ?? []) {
-        if (!existingMembers!.find(member => member.accountId !== account.Id)) {
+      for (const account of allAccounts.filter(item => item.Id !== adminAccountId) ?? []) {
+        if (!existingMembers.find(member => member.accountId !== account.Id)) {
           console.log(`OU account - ${account.Id} macie membership status is "not a macie member", adding as a member`);
           await throttlingBackOff(() =>
             macie2Client
@@ -102,8 +102,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       }
       return { Status: 'Success', StatusCode: 200 };
     case 'Delete':
-      for (const account of allAccounts.filter(account => account.Id !== adminAccountId) ?? []) {
-        if (existingMembers!.find(member => member.accountId !== account.Id)) {
+      for (const account of allAccounts.filter(item => item.Id !== adminAccountId) ?? []) {
+        if (existingMembers.find(member => member.accountId !== account.Id)) {
           console.log(
             `OU account - ${account.Id} macie membership status is "a macie member", removing from member list`,
           );

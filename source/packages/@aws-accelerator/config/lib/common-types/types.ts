@@ -94,19 +94,19 @@ export class OptionalType<T extends t.Any> extends t.Type<
 
 export type WithSize = number | string | any[] | Map<any, any> | Set<any>;
 
-function getSize(sized: WithSize): number {
-  if (typeof sized === 'number') {
-    return sized;
-  } else if (typeof sized === 'string') {
-    return sized.length;
-  } else if (Array.isArray(sized)) {
-    return sized.length;
-  } else if (sized instanceof Set) {
-    return sized.size;
-  } else if (sized instanceof Map) {
-    return sized.size;
+function getSize(withSize: WithSize): number {
+  if (typeof withSize === 'number') {
+    return withSize;
+  } else if (typeof withSize === 'string') {
+    return withSize.length;
+  } else if (Array.isArray(withSize)) {
+    return withSize.length;
+  } else if (withSize instanceof Set) {
+    return withSize.size;
+  } else if (withSize instanceof Map) {
+    return withSize.size;
   }
-  throw new Error(`Unsupported size value ${sized}`);
+  throw new Error(`Unsupported size value ${withSize}`);
 }
 
 export interface SizedTypeProps {
@@ -117,8 +117,8 @@ export interface SizedTypeProps {
 }
 
 export class SizedType<A extends WithSize, T extends t.Type<A>> extends t.Type<T['_A'], T['_O'], T['_I']> {
-  readonly min?: number | undefined;
-  readonly max?: number | undefined;
+  readonly min?: number;
+  readonly max?: number;
 
   constructor(readonly type: T, readonly props: SizedTypeProps = {}) {
     super(

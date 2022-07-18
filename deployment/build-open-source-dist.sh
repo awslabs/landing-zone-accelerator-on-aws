@@ -31,7 +31,7 @@ fi
 
 # Get reference for all important folders
 source_template_dir="$PWD"
-dist_dir="$source_template_dir/../open-source"
+dist_dir="$source_template_dir/open-source"
 source_dir="$source_template_dir/../source"
 github_dir="$source_template_dir/../.github"
 deployment_dir="$source_template_dir/../deployment"
@@ -65,10 +65,19 @@ echo "--------------------------------------------------------------------------
 echo "[Packing] Deployment folder"
 echo "------------------------------------------------------------------------------"
 
-echo "cp -r $deployment_dir $dist_dir"
+echo "mkdir -p $dist_dir/deployment/"
+mkdir -p $dist_dir/deployment/
+
+echo "cp -r $deployment_dir/cdk-solution-helper $dist_dir/deployment/cdk-solution-helper"
 cp -r $deployment_dir/cdk-solution-helper $dist_dir/deployment/cdk-solution-helper
+
+echo "cp $deployment_dir/build-open-source-dist.sh $dist_dir/deployment/"
 cp $deployment_dir/build-open-source-dist.sh $dist_dir/deployment/
+
+echo "cp $deployment_dir/build-s3-dist.sh $dist_dir/deployment/"
 cp $deployment_dir/build-s3-dist.sh $dist_dir/deployment/
+
+echo "cp $deployment_dir/solution_config $dist_dir/deployment/"
 cp $deployment_dir/solution_config $dist_dir/deployment/
 
 echo "------------------------------------------------------------------------------"
@@ -115,23 +124,23 @@ find $dist_dir -iname "dist" -type d -exec rm -rf "{}" \; 2> /dev/null
 echo "find $dist_dir -iname "package-lock.json" -type f -exec rm -f "{}" \; 2> /dev/null"
 find $dist_dir -iname "package-lock.json" -type f -exec rm -f "{}" \; 2> /dev/null
 
-# echo "------------------------------------------------------------------------------"
-# echo "[Packing] Create GitHub (open-source) zip file"
-# echo "------------------------------------------------------------------------------"
+echo "------------------------------------------------------------------------------"
+echo "[Packing] Create GitHub (open-source) zip file"
+echo "------------------------------------------------------------------------------"
 
-# # Create the zip file
-# echo "cd $dist_dir"
-# cd $dist_dir
-# echo "zip -q -r9 ../$1.zip ."
-# zip -q -r9 ../$1.zip .
+# Create the zip file
+echo "cd $dist_dir"
+cd $dist_dir
+echo "zip -q -r9 ../$1.zip ."
+zip -q -r9 ../$1.zip .
 
-# # Cleanup any temporary/unnecessary files
-# echo "Clean up open-source folder"
-# echo "rm -rf * .*"
-# rm -rf * .*
+# Cleanup any temporary/unnecessary files
+echo "Clean up open-source folder"
+echo "rm -rf * .*"
+rm -rf * .*
 
-# # Place final zip file in $dist_dir
-# echo "mv ../$1.zip ."
-# mv ../$1.zip .
+# Place final zip file in $dist_dir
+echo "mv ../$1.zip ."
+mv ../$1.zip .
 
-# echo "Completed building $1.zip dist"
+echo "Completed building $1.zip dist"
