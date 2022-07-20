@@ -17,6 +17,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 import * as t from './common-types';
+import * as emailValidator from 'email-validator';
 
 /**
  * Accounts configuration items.
@@ -248,9 +249,34 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     }
 
     //
+    // Email validation
+    //
+
+    const emails = [...this.mandatoryAccounts, ...this.workloadAccounts].map(item => item.email);
+    const defaultEmails = ['management-account@example.com', 'log-archive@example.com', 'audit@example.com'];
+
+    //
+    // validate email format
+    //
+    emails.forEach(item => {
+      if (!emailValidator.validate(item)) {
+        errors.push(`Invalid email ${item}.`);
+      }
+    });
+
+    //
+    // default email check
+    //
+
+    defaultEmails.forEach(item => {
+      if (emails.indexOf(item) !== -1) {
+        errors.push(`Default email (${item}) found.`);
+      }
+    });
+
+    //
     // Verify names are unique
     //
-    const emails = [...this.mandatoryAccounts, ...this.workloadAccounts].map(item => item.email);
     if (new Set(emails).size !== emails.length) {
       errors.push(`Duplicate emails defined [${emails}].`);
     }
