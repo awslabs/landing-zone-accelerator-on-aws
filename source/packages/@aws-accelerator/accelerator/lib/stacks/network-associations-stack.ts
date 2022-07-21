@@ -405,6 +405,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
         // DNS firewall rule group associations
         for (const firewallItem of vpcItem.dnsFirewallRuleGroups ?? []) {
+          // Throw error if centralNetworkConfig is undefined
+          if (!centralNetworkConfig) {
+            throw new Error('[network-associations-stack] centralNetworkServices is undefined');
+          }
+
           // Get VPC ID
           const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
@@ -412,29 +417,27 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           );
 
           // Skip lookup if already added to map
-          if (dnsFirewallMap.has(firewallItem.name)) {
-            continue;
-          }
+          if (!dnsFirewallMap.has(firewallItem.name)) {
+            if (centralNetworkConfig?.delegatedAdminAccount) {
+              const owningAccountId = props.accountsConfig.getAccountId(centralNetworkConfig.delegatedAdminAccount);
 
-          if (centralNetworkConfig?.delegatedAdminAccount) {
-            const owningAccountId = props.accountsConfig.getAccountId(centralNetworkConfig.delegatedAdminAccount);
-
-            // Get SSM parameter if this is the owning account
-            if (owningAccountId === cdk.Stack.of(this).account) {
-              const ruleId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                this,
-                `/accelerator/network/route53Resolver/firewall/ruleGroups/${firewallItem.name}/id`,
-              );
-              dnsFirewallMap.set(firewallItem.name, ruleId);
-            } else {
-              // Get ID from the resource share
-              const ruleId = this.getResourceShare(
-                vpcItem.name,
-                `${firewallItem.name}_ResolverFirewallRuleGroupShare`,
-                'route53resolver:FirewallRuleGroup',
-                owningAccountId,
-              ).resourceShareItemId;
-              dnsFirewallMap.set(firewallItem.name, ruleId);
+              // Get SSM parameter if this is the owning account
+              if (owningAccountId === cdk.Stack.of(this).account) {
+                const ruleId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                  this,
+                  `/accelerator/network/route53Resolver/firewall/ruleGroups/${firewallItem.name}/id`,
+                );
+                dnsFirewallMap.set(firewallItem.name, ruleId);
+              } else {
+                // Get ID from the resource share
+                const ruleId = this.getResourceShare(
+                  vpcItem.name,
+                  `${firewallItem.name}_ResolverFirewallRuleGroupShare`,
+                  'route53resolver:FirewallRuleGroup',
+                  owningAccountId,
+                ).resourceShareItemId;
+                dnsFirewallMap.set(firewallItem.name, ruleId);
+              }
             }
           }
 
@@ -465,46 +468,49 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         // Route 53 query logging configuration associations
         //
         for (const configItem of vpcItem.queryLogs ?? []) {
+          // Throw error if centralNetworkConfig is undefined
+          if (!centralNetworkConfig) {
+            throw new Error('[network-associations-stack] centralNetworkServices is undefined');
+          }
+
           // Get VPC ID
           const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
             `/accelerator/network/vpc/${vpcItem.name}/id`,
           );
 
-          // Skip lookup if already added to map
-          if (queryLogMap.has(configItem)) {
-            continue;
+          // Determine query log destination(s)
+          const configNames: string[] = [];
+          if (centralNetworkConfig.route53Resolver?.queryLogs?.destinations.includes('s3')) {
+            configNames.push(`${configItem}-s3`);
+          }
+          if (centralNetworkConfig.route53Resolver?.queryLogs?.destinations.includes('cloud-watch-logs')) {
+            configNames.push(`${configItem}-cwl`);
           }
 
           if (centralNetworkConfig?.delegatedAdminAccount) {
             const owningAccountId = props.accountsConfig.getAccountId(centralNetworkConfig.delegatedAdminAccount);
 
-            // Determine query log destination(s)
-            const configNames: string[] = [];
-            if (centralNetworkConfig.route53Resolver?.queryLogs?.destinations.includes('s3')) {
-              configNames.push(`${configItem}-s3`);
-            }
-            if (centralNetworkConfig.route53Resolver?.queryLogs?.destinations.includes('cloud-watch-logs')) {
-              configNames.push(`${configItem}-cwl`);
-            }
-
             // Get SSM parameter if this is the owning account
             for (const nameItem of configNames) {
-              if (owningAccountId === cdk.Stack.of(this).account) {
-                const configId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                  this,
-                  `/accelerator/network/route53Resolver/queryLogConfigs/${nameItem}/id`,
-                );
-                queryLogMap.set(nameItem, configId);
-              } else {
-                // Get ID from the resource share
-                const configId = this.getResourceShare(
-                  vpcItem.name,
-                  `${nameItem}_QueryLogConfigShare`,
-                  'route53resolver:ResolverQueryLogConfig',
-                  owningAccountId,
-                ).resourceShareItemId;
-                queryLogMap.set(nameItem, configId);
+              // Skip lookup if already added to map
+              if (!queryLogMap.has(nameItem)) {
+                if (owningAccountId === cdk.Stack.of(this).account) {
+                  const configId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                    this,
+                    `/accelerator/network/route53Resolver/queryLogConfigs/${nameItem}/id`,
+                  );
+                  queryLogMap.set(nameItem, configId);
+                } else {
+                  // Get ID from the resource share
+                  const configId = this.getResourceShare(
+                    vpcItem.name,
+                    `${nameItem}_QueryLogConfigShare`,
+                    'route53resolver:ResolverQueryLogConfig',
+                    owningAccountId,
+                  ).resourceShareItemId;
+                  queryLogMap.set(nameItem, configId);
+                }
               }
             }
 
@@ -528,6 +534,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         // Route 53 resolver rule associations
         //
         for (const ruleItem of vpcItem.resolverRules ?? []) {
+          // Throw error if centralNetworkConfig is undefined
+          if (!centralNetworkConfig) {
+            throw new Error('[network-associations-stack] centralNetworkServices is undefined');
+          }
+
           // Get VPC ID
           const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
@@ -535,29 +546,27 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           );
 
           // Skip lookup if already added to map
-          if (resolverRuleMap.has(ruleItem)) {
-            continue;
-          }
+          if (!resolverRuleMap.has(ruleItem)) {
+            if (centralNetworkConfig?.delegatedAdminAccount) {
+              const owningAccountId = props.accountsConfig.getAccountId(centralNetworkConfig.delegatedAdminAccount);
 
-          if (centralNetworkConfig?.delegatedAdminAccount) {
-            const owningAccountId = props.accountsConfig.getAccountId(centralNetworkConfig.delegatedAdminAccount);
-
-            // Get SSM parameter if this is the owning account
-            if (owningAccountId === cdk.Stack.of(this).account) {
-              const ruleId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                this,
-                `/accelerator/network/route53Resolver/rules/${ruleItem}/id`,
-              );
-              resolverRuleMap.set(ruleItem, ruleId);
-            } else {
-              // Get ID from the resource share
-              const ruleId = this.getResourceShare(
-                vpcItem.name,
-                `${ruleItem}_ResolverRule`,
-                'route53resolver:ResolverRule',
-                owningAccountId,
-              ).resourceShareItemId;
-              resolverRuleMap.set(ruleItem, ruleId);
+              // Get SSM parameter if this is the owning account
+              if (owningAccountId === cdk.Stack.of(this).account) {
+                const ruleId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                  this,
+                  `/accelerator/network/route53Resolver/rules/${ruleItem}/id`,
+                );
+                resolverRuleMap.set(ruleItem, ruleId);
+              } else {
+                // Get ID from the resource share
+                const ruleId = this.getResourceShare(
+                  vpcItem.name,
+                  `${ruleItem}_ResolverRule`,
+                  'route53resolver:ResolverRule',
+                  owningAccountId,
+                ).resourceShareItemId;
+                resolverRuleMap.set(ruleItem, ruleId);
+              }
             }
           }
 
