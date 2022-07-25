@@ -34,7 +34,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
   // check if existing finding aggregator exists
   const result = await throttlingBackOff(() => securityHubClient.listFindingAggregators({}).promise());
-  const findingAggregatorArn = result['FindingAggregators']![0]['FindingAggregatorArn'] ?? '';
+
+  let findingAggregatorArn = '';
+  if (result['FindingAggregators']!.length > 0)
+    findingAggregatorArn = result['FindingAggregators']![0]['FindingAggregatorArn']!;
 
   switch (event.RequestType) {
     case 'Create':
