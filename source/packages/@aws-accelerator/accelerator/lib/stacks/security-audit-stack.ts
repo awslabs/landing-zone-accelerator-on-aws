@@ -36,6 +36,7 @@ import {
   MacieMembers,
   Organization,
   SecurityHubMembers,
+  SecurityHubRegionAggregation,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
@@ -459,6 +460,22 @@ export class SecurityAuditStack extends AcceleratorStack {
         kmsKey: this.key,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       });
+
+      Logger.debug(
+        `[security-audit-stack] centralSecurityServices.securityHub.regionAggregation: ${this.props.securityConfig.centralSecurityServices.securityHub.regionAggregation}`,
+      );
+      if (
+        this.props.securityConfig.centralSecurityServices.securityHub.enable &&
+        this.props.securityConfig.centralSecurityServices.securityHub.regionAggregation &&
+        this.props.globalConfig.homeRegion == cdk.Stack.of(this).region
+      ) {
+        Logger.info('[security-audit-stack] Enabling region aggregation for SecurityHub in the Home Region');
+
+        new SecurityHubRegionAggregation(this, 'SecurityHubRegionAggregation', {
+          kmsKey: this.key,
+          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        });
+      }
     }
   }
 
@@ -466,6 +483,9 @@ export class SecurityAuditStack extends AcceleratorStack {
    * Configure SSM Automation
    */
   private configureSsmAutomation() {
+    //
+    // SSM Automation Docs
+    //
     Logger.info(`[security-audit-stack] Adding SSM Automation Docs`);
     if (
       this.props.securityConfig.centralSecurityServices.ssmAutomation.excludeRegions === undefined ||
