@@ -36,6 +36,7 @@ import {
   MacieMembers,
   Organization,
   SecurityHubMembers,
+  SecurityHubRegionAggregation,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
@@ -397,6 +398,22 @@ export class SecurityAuditStack extends AcceleratorStack {
       Logger.info('[security-audit-stack] Adding SecurityHub ');
 
       new SecurityHubMembers(this, 'SecurityHubMembers', {
+        kmsKey: key,
+        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      });
+    }
+
+    Logger.debug(
+      `[security-audit-stack] centralSecurityServices.securityHub.regionAggregation: ${props.securityConfig.centralSecurityServices.securityHub.regionAggregation}`,
+    );
+    if (
+      props.securityConfig.centralSecurityServices.securityHub.enable &&
+      props.securityConfig.centralSecurityServices.securityHub.regionAggregation &&
+      props.globalConfig.homeRegion == cdk.Stack.of(this).region
+    ) {
+      Logger.info('[security-audit-stack] Enabling region aggregation for SecurityHub in the Home Region');
+
+      new SecurityHubRegionAggregation(this, 'SecurityHubRegionAggregation', {
         kmsKey: key,
         logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });

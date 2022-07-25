@@ -205,6 +205,7 @@ export class SecurityConfigTypes {
 
   static readonly securityHubConfig = t.interface({
     enable: t.boolean,
+    regionAggregation: t.optional(t.boolean),
     excludeRegions: t.optional(t.array(t.region)),
     standards: t.array(this.securityHubStandardConfig),
   });
@@ -603,6 +604,10 @@ export class SecurityHubConfig implements t.TypeOf<typeof SecurityConfigTypes.se
    * Indicates whether AWS SecurityHub enabled.
    */
   readonly enable = false;
+  /**
+   * Indicates whether SecurityHub results are aggregated in the Home Region
+   */
+  readonly regionAggregation = false;
   /**
    * List of AWS Region names to be excluded from configuring SecurityHub
    */
