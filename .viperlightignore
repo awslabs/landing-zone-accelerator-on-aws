@@ -69,20 +69,19 @@ source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.te
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:77
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:84
 
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:661
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:665
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:669
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:948
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:956
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:962
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:968
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:975
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:979
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:982
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:993
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1001
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1009
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1017
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:786
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:790
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:794
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1081
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1087
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1093
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1100
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1104
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1107
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1118
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1126
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1134
+source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1142
 
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:33
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:34

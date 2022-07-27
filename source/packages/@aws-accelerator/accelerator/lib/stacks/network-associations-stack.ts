@@ -16,7 +16,7 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
-import { VpcConfig } from '@aws-accelerator/config';
+import { AccountsConfig, NetworkConfigTypes, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
 import {
   AssociateHostedZones,
   IResourceShareItem,
@@ -49,10 +49,15 @@ interface Peering {
 }
 
 export class NetworkAssociationsStack extends AcceleratorStack {
+  private accountsConfig: AccountsConfig;
   private key: cdk.aws_kms.Key;
   private logRetention: number;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    // Set private properties
+    this.accountsConfig = props.accountsConfig;
+    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
     this.key = new KeyLookup(this, 'AcceleratorKeyLookup', {
       accountId: props.accountsConfig.getAuditAccountId(),
@@ -60,7 +65,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
-    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
     // Build Transit Gateway Maps
     const transitGateways = new Map<string, string>();
@@ -86,13 +90,14 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       }
     }
 
-    for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      if (vpcItem.region == cdk.Stack.of(this).region) {
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Only perform operations for this account and region
+      const accountNames = this.getVpcDeploymentDetails(vpcItem, true);
+
+      if (vpcItem.region === cdk.Stack.of(this).region) {
         for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
           const accountId = props.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
           if (accountId === cdk.Stack.of(this).account) {
-            const owningAccountId = props.accountsConfig.getAccountId(vpcItem.account);
-
             // Get the Transit Gateway ID
             const transitGatewayId = transitGateways.get(tgwAttachmentItem.transitGateway.name);
             if (transitGatewayId === undefined) {
@@ -100,77 +105,88 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             }
 
             // Get the Transit Gateway Attachment ID
-            let transitGatewayAttachmentId;
-            const key = `${vpcItem.account}_${vpcItem.name}`;
-            if (accountId === owningAccountId) {
-              Logger.info(
-                `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from local account ${owningAccountId}`,
-              );
-              transitGatewayAttachmentId = ssm.StringParameter.valueForStringParameter(
-                this,
-                `/accelerator/network/vpc/${vpcItem.name}/transitGatewayAttachment/${tgwAttachmentItem.name}/id`,
-              );
-              transitGatewayAttachments.set(key, transitGatewayAttachmentId);
-            } else {
-              Logger.info(
-                `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
-              );
+            for (const owningAccount of accountNames) {
+              let transitGatewayAttachmentId;
+              const owningAccountId = this.accountsConfig.getAccountId(owningAccount);
+              const key = `${owningAccount}_${vpcItem.name}`;
+              if (accountId === owningAccountId) {
+                Logger.info(
+                  `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from local account ${owningAccountId}`,
+                );
+                transitGatewayAttachmentId = ssm.StringParameter.valueForStringParameter(
+                  this,
+                  `/accelerator/network/vpc/${vpcItem.name}/transitGatewayAttachment/${tgwAttachmentItem.name}/id`,
+                );
+                transitGatewayAttachments.set(key, transitGatewayAttachmentId);
+              } else {
+                Logger.info(
+                  `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
+                );
 
-              const transitGatewayAttachment = TransitGatewayAttachment.fromLookup(
-                this,
-                pascalCase(`${tgwAttachmentItem.name}VpcTransitGatewayAttachment`),
-                {
-                  name: tgwAttachmentItem.name,
-                  owningAccountId,
-                  transitGatewayId,
-                  roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
-                  kmsKey: this.key,
-                  logRetentionInDays: this.logRetention,
-                },
-              );
-              // Build Transit Gateway Attachment Map
-              transitGatewayAttachmentId = transitGatewayAttachment.transitGatewayAttachmentId;
-              transitGatewayAttachments.set(key, transitGatewayAttachmentId);
-            }
-
-            // Evaluating TGW Routes
-
-            // Evaluate Route Table Associations
-            for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
-              const key = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
-
-              const transitGatewayRouteTableId = transitGatewayRouteTables.get(key);
-              if (transitGatewayRouteTableId === undefined) {
-                throw new Error(`Transit Gateway Route Table ${key} not found`);
+                const transitGatewayAttachment = TransitGatewayAttachment.fromLookup(
+                  this,
+                  pascalCase(`${tgwAttachmentItem.name}${owningAccount}VpcTransitGatewayAttachment`),
+                  {
+                    name: tgwAttachmentItem.name,
+                    owningAccountId,
+                    transitGatewayId,
+                    roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
+                    kmsKey: this.key,
+                    logRetentionInDays: this.logRetention,
+                  },
+                );
+                // Build Transit Gateway Attachment Map
+                transitGatewayAttachmentId = transitGatewayAttachment.transitGatewayAttachmentId;
+                transitGatewayAttachments.set(key, transitGatewayAttachmentId);
               }
 
-              new TransitGatewayRouteTableAssociation(
-                this,
-                `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Association`,
-                {
+              // Evaluating TGW Routes
+
+              // Evaluate Route Table Associations
+              for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
+                const key = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
+                let id: string;
+                if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+                  id = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Association`;
+                } else {
+                  id = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}${pascalCase(
+                    owningAccount,
+                  )}Association`;
+                }
+
+                const transitGatewayRouteTableId = transitGatewayRouteTables.get(key);
+                if (transitGatewayRouteTableId === undefined) {
+                  throw new Error(`Transit Gateway Route Table ${key} not found`);
+                }
+
+                new TransitGatewayRouteTableAssociation(this, id, {
                   transitGatewayAttachmentId,
                   transitGatewayRouteTableId,
-                },
-              );
-            }
-
-            // Evaluate Route Table Propagations
-            for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
-              const key = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
-
-              const transitGatewayRouteTableId = transitGatewayRouteTables.get(key);
-              if (transitGatewayRouteTableId === undefined) {
-                throw new Error(`Transit Gateway Route Table ${key} not found`);
+                });
               }
 
-              new TransitGatewayRouteTablePropagation(
-                this,
-                `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Propagation`,
-                {
+              // Evaluate Route Table Propagations
+              for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
+                const key = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
+                let id: string;
+                if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+                  id = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Propagation`;
+                } else {
+                  id = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}${pascalCase(
+                    owningAccount,
+                  )}Propagation`;
+                }
+
+                const transitGatewayRouteTableId = transitGatewayRouteTables.get(key);
+                if (transitGatewayRouteTableId === undefined) {
+                  throw new Error(`Transit Gateway Route Table ${key} not found`);
+                }
+
+                new TransitGatewayRouteTablePropagation(this, id, {
                   transitGatewayAttachmentId,
                   transitGatewayRouteTableId,
-                },
-              );
+                });
+              }
             }
           }
         }
@@ -246,11 +262,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                   `[network-associations-stack] Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
                 );
                 id = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`;
+                const key = `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`;
 
                 // Get TGW attachment ID
-                transitGatewayAttachmentId = transitGatewayAttachments.get(
-                  `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
-                );
+                transitGatewayAttachmentId = transitGatewayAttachments.get(key);
 
                 if (!transitGatewayAttachmentId) {
                   throw new Error(
@@ -295,11 +310,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                 id = pascalCase(
                   `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.vpcName}${routeItem.attachment.account}`,
                 );
+                const key = `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`;
 
                 // Get TGW attachment ID
-                transitGatewayAttachmentId = transitGatewayAttachments.get(
-                  `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
-                );
+                transitGatewayAttachmentId = transitGatewayAttachments.get(key);
 
                 if (!transitGatewayAttachmentId) {
                   throw new Error(
@@ -351,11 +365,19 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
       // Generate list of accounts with VPCs that needed to set up share
       const accountIds: string[] = [];
-      for (const vpcItem of props.networkConfig.vpcs ?? []) {
-        if (vpcItem.region === cdk.Stack.of(this).region && vpcItem.useCentralEndpoints) {
-          const accountId = props.accountsConfig.getAccountId(vpcItem.account);
-          if (!accountIds.includes(accountId)) {
-            accountIds.push(accountId);
+      for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+        // Only perform operations for this account and region
+        const vpcAccountIds = this.getVpcDeploymentDetails(vpcItem);
+
+        if (
+          vpcAccountIds.has(cdk.Stack.of(this).account) &&
+          vpcItem.region === cdk.Stack.of(this).region &&
+          vpcItem.useCentralEndpoints
+        ) {
+          for (const accountId of vpcAccountIds) {
+            if (!accountIds.includes(accountId)) {
+              accountIds.push(accountId);
+            }
           }
         }
       }
@@ -399,10 +421,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     const resolverRuleMap = new Map<string, string>();
     const centralNetworkConfig = props.networkConfig.centralNetworkServices;
 
-    for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = props.accountsConfig.getAccountId(vpcItem.account);
-      // Only care about VPCs to be created in the current account and region
-      if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Only deploy to VPCs for this account and region
+      const vpcAccountIds = this.getVpcDeploymentDetails(vpcItem);
+
+      if (vpcAccountIds.has(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         // DNS firewall rule group associations
         for (const firewallItem of vpcItem.dnsFirewallRuleGroups ?? []) {
           // Get VPC ID
@@ -709,5 +732,67 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       logRetentionInDays: this.logRetention,
     });
     return item;
+  }
+
+  /**
+   * Get the account ID(s) a VPC will be deployed to.
+   * @param vpcItem
+   * @returns
+   */
+  private getVpcDeploymentDetails(vpcItem: VpcConfig | VpcTemplatesConfig, accountNames?: boolean): Set<string> {
+    const accounts = new Set<string>();
+
+    // Set account IDs
+    if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+      if (accountNames) {
+        accounts.add(vpcItem.account);
+      } else {
+        accounts.add(this.accountsConfig.getAccountId(vpcItem.account));
+      }
+    } else {
+      // Check if accounts/OUs are defined
+      if (!vpcItem.deploymentTargets.organizationalUnits && !vpcItem.deploymentTargets.accounts) {
+        throw new Error(
+          `[network-associations-stack] VPC ${vpcItem.name} does not specify account(s) or OU(s) for deployment. Please specify in deploymentTarget property.`,
+        );
+      }
+      // We ignore excluded regions for VPC templates since the region is explicit
+      if (vpcItem.deploymentTargets.excludedRegions) {
+        Logger.info(
+          `[network-associations-stack] VPC ${vpcItem.name} deployment target includes excludedRegions property. This property will be ignored.`,
+        );
+      }
+
+      // Filter relevant accounts based on OU mapping
+      let ouAccountNames: string[] = [];
+      if (vpcItem.deploymentTargets.organizationalUnits) {
+        let ouAccounts = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts];
+
+        if (!vpcItem.deploymentTargets.organizationalUnits.includes('Root')) {
+          ouAccounts = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts].filter(
+            item => vpcItem.deploymentTargets.organizationalUnits.includes(item.organizationalUnit),
+          );
+        }
+
+        ouAccountNames = ouAccounts.map(item => {
+          return item.name;
+        });
+      }
+
+      // Filter excluded accounts
+      let filteredAccounts = [...ouAccountNames, ...(vpcItem.deploymentTargets.accounts ?? [])];
+      if (vpcItem.deploymentTargets.excludedAccounts) {
+        filteredAccounts = [...ouAccountNames, ...(vpcItem.deploymentTargets.accounts ?? [])].filter(
+          item => !vpcItem.deploymentTargets.excludedAccounts.includes(item),
+        );
+      }
+
+      if (accountNames) {
+        filteredAccounts.forEach(item => accounts.add(item));
+      } else {
+        filteredAccounts.forEach(item => accounts.add(this.accountsConfig.getAccountId(item)));
+      }
+    }
+    return accounts;
   }
 }

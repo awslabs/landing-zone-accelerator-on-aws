@@ -18,7 +18,6 @@ import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { AwsSolutionsChecks } from 'cdk-nag';
 import { IConstruct } from 'constructs';
-import { version } from '../../../../package.json';
 
 import {
   AccountsConfig,
@@ -29,6 +28,7 @@ import {
   SecurityConfig,
 } from '@aws-accelerator/config';
 
+import { version } from '../../../../package.json';
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { Logger } from '../lib/logger';
@@ -492,6 +492,7 @@ async function main() {
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),
+              terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
           );

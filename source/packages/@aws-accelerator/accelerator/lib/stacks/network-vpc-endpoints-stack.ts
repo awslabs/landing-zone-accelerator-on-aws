@@ -23,9 +23,11 @@ import {
   GatewayEndpointServiceConfig,
   GlobalConfig,
   InterfaceEndpointServiceConfig,
+  NetworkConfigTypes,
   NfwFirewallConfig,
   ResolverEndpointConfig,
   VpcConfig,
+  VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import {
   IResourceShareItem,
@@ -72,9 +74,11 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     const vpcMap = new Map<string, string>();
     const subnetMap = new Map<string, string>();
     const routeTableMap = new Map<string, string>();
-    for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = this.accountsConfig.getAccountId(vpcItem.account);
-      if (accountId === cdk.Stack.of(this).account && vpcItem.region === cdk.Stack.of(this).region) {
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Only perform operations for this account and region
+      const accountIds = this.getVpcDeploymentDetails(vpcItem);
+
+      if (accountIds.has(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         // Set VPC ID
         const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
@@ -106,9 +110,11 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     // Iterate through VPCs in this account and region
     //
     const firewallMap = new Map<string, NetworkFirewall>();
-    for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = this.accountsConfig.getAccountId(vpcItem.account);
-      if (accountId === cdk.Stack.of(this).account && vpcItem.region === cdk.Stack.of(this).region) {
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Only perform operations for this account and region
+      const accountIds = this.getVpcDeploymentDetails(vpcItem);
+
+      if (accountIds.has(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         const vpcId = vpcMap.get(vpcItem.name);
         if (!vpcId) {
           throw new Error(`[network-vpc-endpoints-stack] Unable to locate VPC ${vpcItem.name}`);
@@ -253,7 +259,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
               const endpointSubnets: string[] = [];
 
               // Check if this is the delegated admin account
-              if (accountId !== delegatedAdminAccountId) {
+              if (cdk.Stack.of(this).account !== delegatedAdminAccountId) {
                 throw new Error(
                   '[network-vpc-endpoints-stack] VPC for Route 53 Resolver endpoints must be located in the delegated network administrator account',
                 );
@@ -401,7 +407,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
    * @param organizationId
    */
   private createGatewayEndpoints(
-    vpcItem: VpcConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
     vpcId: string,
     routeTableMap: Map<string, string>,
     //organizationId?: string,
@@ -469,7 +475,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
    * @param subnetMap
    */
   private createInterfaceEndpoints(
-    vpcItem: VpcConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
     vpcId: string,
     subnetMap: Map<string, string>,
     //organizationId?: string,
@@ -729,7 +735,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
    * @returns
    */
   private createVpcEndpointPolicy(
-    vpcItem: VpcConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
     endpointItem: GatewayEndpointServiceConfig | InterfaceEndpointServiceConfig,
     isGatewayEndpoint?: boolean,
   ): cdk.aws_iam.PolicyDocument | undefined {
@@ -839,5 +845,58 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       logRetentionInDays: this.logRetention,
     });
     return item;
+  }
+
+  /**
+   * Get the account ID(s) a VPC will be deployed to.
+   * @param vpcItem
+   * @returns
+   */
+  private getVpcDeploymentDetails(vpcItem: VpcConfig | VpcTemplatesConfig): Set<string> {
+    const accountIds = new Set<string>();
+
+    // Set account IDs
+    if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+      accountIds.add(this.accountsConfig.getAccountId(vpcItem.account));
+    } else {
+      // Check if accounts/OUs are defined
+      if (!vpcItem.deploymentTargets.organizationalUnits && !vpcItem.deploymentTargets.accounts) {
+        throw new Error(
+          `[network-vpc-endpoints-stack] VPC ${vpcItem.name} does not specify account(s) or OU(s) for deployment. Please specify in deploymentTarget property.`,
+        );
+      }
+      // We ignore excluded regions for VPC templates since the region is explicit
+      if (vpcItem.deploymentTargets.excludedRegions) {
+        Logger.info(
+          `[network-vpc-endpoints-stack] VPC ${vpcItem.name} deployment target includes excludedRegions property. This property will be ignored.`,
+        );
+      }
+
+      // Filter relevant accounts based on OU mapping
+      let ouAccountNames: string[] = [];
+      if (vpcItem.deploymentTargets.organizationalUnits) {
+        let ouAccounts = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts];
+
+        if (!vpcItem.deploymentTargets.organizationalUnits.includes('Root')) {
+          ouAccounts = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts].filter(
+            item => vpcItem.deploymentTargets.organizationalUnits.includes(item.organizationalUnit),
+          );
+        }
+
+        ouAccountNames = ouAccounts.map(item => {
+          return item.name;
+        });
+      }
+
+      // Filter excluded accounts
+      let filteredAccounts = [...ouAccountNames, ...(vpcItem.deploymentTargets.accounts ?? [])];
+      if (vpcItem.deploymentTargets.excludedAccounts) {
+        filteredAccounts = [...ouAccountNames, ...(vpcItem.deploymentTargets.accounts ?? [])].filter(
+          item => !vpcItem.deploymentTargets.excludedAccounts.includes(item),
+        );
+      }
+      filteredAccounts.forEach(item => accountIds.add(this.accountsConfig.getAccountId(item)));
+    }
+    return accountIds;
   }
 }

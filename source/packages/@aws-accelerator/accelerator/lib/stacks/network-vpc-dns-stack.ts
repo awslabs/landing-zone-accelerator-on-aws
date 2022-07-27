@@ -17,11 +17,13 @@ import { Construct } from 'constructs';
 
 import {
   AccountsConfig,
+  NetworkConfigTypes,
   OrganizationConfig,
   Region,
   ResolverEndpointConfig,
   ResolverRuleConfig,
   VpcConfig,
+  VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import { HostedZone, KeyLookup, RecordSet, ResolverRule, ResourceShare } from '@aws-accelerator/constructs';
 
@@ -59,9 +61,11 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
     const endpointMap = new Map<string, string>();
     const zoneMap = new Map<string, string>();
     const resolverMap = new Map<string, string>();
-    for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = this.accountsConfig.getAccountId(vpcItem.account);
-      if (accountId === cdk.Stack.of(this).account && vpcItem.region === cdk.Stack.of(this).region) {
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Only perform operations for this account and region
+      const accountIds = this.getVpcDeploymentDetails(vpcItem);
+
+      if (accountIds.has(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         // Set VPC ID
         const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
@@ -105,9 +109,11 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
     // Create private hosted zones
     //
 
-    for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = this.accountsConfig.getAccountId(vpcItem.account);
-      if (accountId === cdk.Stack.of(this).account && vpcItem.region === cdk.Stack.of(this).region) {
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Only deploy to VPCs for this account and region
+      const accountIds = this.getVpcDeploymentDetails(vpcItem);
+
+      if (accountIds.has(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         const vpcId = vpcMap.get(vpcItem.name);
 
         if (!vpcId) {
@@ -141,7 +147,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
         props.networkConfig.centralNetworkServices.delegatedAdminAccount,
       );
 
-      // Only deploy in the home region of the delegated admin account
+      // Only deploy in the delegated admin account
       if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
         this.createSystemRules(props.networkConfig.centralNetworkServices?.route53Resolver?.rules);
       }
@@ -159,7 +165,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
    * @param zoneMap
    */
   private createHostedZones(
-    vpcItem: VpcConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
     vpcId: string,
     endpointMap: Map<string, string>,
     zoneMap: Map<string, string>,
@@ -230,7 +236,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
    * @param resolverMap
    */
   private createForwardRules(
-    vpcItem: VpcConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
     endpointItem: ResolverEndpointConfig,
     resolverMap: Map<string, string>,
   ): void {
@@ -292,6 +298,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
   private createSystemRules(rules: ResolverRuleConfig[]): void {
     // Process SYSTEM rules
     for (const ruleItem of rules ?? []) {
+      // Only deploy if the region isn't excluded
       if (!ruleItem.excludedRegions?.includes(cdk.Stack.of(this).region as Region) || !ruleItem.excludedRegions) {
         Logger.info(`[network-vpc-dns-stack] Add Route 53 Resolver SYSTEM rule ${ruleItem.name}`);
 
@@ -350,5 +357,58 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
       principals,
       resourceArns: resourceArns,
     });
+  }
+
+  /**
+   * Get the account ID(s) a VPC will be deployed to.
+   * @param vpcItem
+   * @returns
+   */
+  private getVpcDeploymentDetails(vpcItem: VpcConfig | VpcTemplatesConfig): Set<string> {
+    const accountIds = new Set<string>();
+
+    // Set account IDs
+    if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+      accountIds.add(this.accountsConfig.getAccountId(vpcItem.account));
+    } else {
+      // Check if accounts/OUs are defined
+      if (!vpcItem.deploymentTargets.organizationalUnits && !vpcItem.deploymentTargets.accounts) {
+        throw new Error(
+          `[network-vpc-dns-stack] VPC ${vpcItem.name} does not specify account(s) or OU(s) for deployment. Please specify in deploymentTarget property.`,
+        );
+      }
+      // We ignore excluded regions for VPC templates since the region is explicit
+      if (vpcItem.deploymentTargets.excludedRegions) {
+        Logger.info(
+          `[network-vpc-dns-stack] VPC ${vpcItem.name} deployment target includes excludedRegions property. This property will be ignored.`,
+        );
+      }
+
+      // Filter relevant accounts based on OU mapping
+      let ouAccountNames: string[] = [];
+      if (vpcItem.deploymentTargets.organizationalUnits) {
+        let ouAccounts = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts];
+
+        if (!vpcItem.deploymentTargets.organizationalUnits.includes('Root')) {
+          ouAccounts = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts].filter(
+            item => vpcItem.deploymentTargets.organizationalUnits.includes(item.organizationalUnit),
+          );
+        }
+
+        ouAccountNames = ouAccounts.map(item => {
+          return item.name;
+        });
+      }
+
+      // Filter excluded accounts
+      let filteredAccounts = [...ouAccountNames, ...(vpcItem.deploymentTargets.accounts ?? [])];
+      if (vpcItem.deploymentTargets.excludedAccounts) {
+        filteredAccounts = [...ouAccountNames, ...(vpcItem.deploymentTargets.accounts ?? [])].filter(
+          item => !vpcItem.deploymentTargets.excludedAccounts.includes(item),
+        );
+      }
+      filteredAccounts.forEach(item => accountIds.add(this.accountsConfig.getAccountId(item)));
+    }
+    return accountIds;
   }
 }
