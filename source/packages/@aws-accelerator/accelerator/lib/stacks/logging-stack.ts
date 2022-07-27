@@ -16,10 +16,12 @@ import { NagSuppressions } from 'cdk-nag';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import { AcceleratorElbRootAccounts } from '../accelerator';
+import { pascalCase } from 'pascal-case';
 
 import {
   Bucket,
   BucketEncryptionType,
+  BucketReplicationProps,
   CentralLogsBucket,
   KeyLookup,
   Organization,
@@ -34,6 +36,10 @@ import { KeyStack } from './key-stack';
 export class LoggingStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    const centralLogsBucketName = `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
+      props.globalConfig.homeRegion
+    }`;
 
     const key = new KeyLookup(this, 'AcceleratorKeyLookup', {
       accountId: props.accountsConfig.getAuditAccountId(),
@@ -101,6 +107,7 @@ export class LoggingStack extends AcceleratorStack {
       lifecycleRules.push(rule);
     }
 
+    // S3 Access log buckets are not replicated
     const serverAccessLogsBucket = new Bucket(this, 'AccessLogsBucket', {
       encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
       s3BucketName: `aws-accelerator-s3-access-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
@@ -138,6 +145,95 @@ export class LoggingStack extends AcceleratorStack {
       },
     ]);
 
+    //
+    // Create Central Logs Bucket - This is done only in the home region of the log-archive account.
+    // This is the destination bucket for all logs such as AWS CloudTrail, AWS Config, and VPC Flow
+    // Logs. Addition logs can also be sent to this bucket through AWS CloudWatch Logs, such as
+    // application logs, OS logs, or server logs.
+    //
+    //
+    let centralLogsBucket: CentralLogsBucket | undefined;
+    if (
+      cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
+      cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()
+    ) {
+      const lifecycleRules: LifecycleRule[] = [];
+      for (const lifecycleRule of props.globalConfig.logging.accessLogBucket?.lifecycleRules ?? []) {
+        const noncurrentVersionTransitions = [];
+        for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
+          noncurrentVersionTransitions.push({
+            storageClass: noncurrentVersionTransition.storageClass,
+            transitionAfter: noncurrentVersionTransition.transitionAfter,
+          });
+        }
+        const transitions = [];
+        for (const transition of lifecycleRule.transitions) {
+          transitions.push({
+            storageClass: transition.storageClass,
+            transitionAfter: transition.transitionAfter,
+          });
+        }
+        const rule: LifecycleRule = {
+          abortIncompleteMultipartUploadAfter: lifecycleRule.abortIncompleteMultipartUpload,
+          enabled: lifecycleRule.enabled,
+          expiration: lifecycleRule.expiration,
+          expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
+          id: lifecycleRule.id,
+          noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
+          noncurrentVersionTransitions,
+          transitions,
+        };
+        lifecycleRules.push(rule);
+      }
+
+      centralLogsBucket = new CentralLogsBucket(this, 'CentralLogsBucket', {
+        s3BucketName: centralLogsBucketName,
+        serverAccessLogsBucket: serverAccessLogsBucket,
+        kmsAliasName: 'alias/accelerator/central-logs/s3',
+        kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
+        organizationId,
+        lifecycleRules,
+      });
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      // rule suppression with evidence for this permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/CentralLogsBucket/CrossAccountCentralBucketKMSArnSsmParamAccessRole/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Central logs bucket arn SSM parameter needs access from other accounts',
+          },
+        ],
+      );
+    }
+
+    //
+    // When home region central log bucket will be present to get key arn, custom resource will not be needed to get key arn from ssm parameter
+    let centralLogBucketkey: cdk.aws_kms.IKey | undefined;
+    if (centralLogsBucket) {
+      centralLogBucketkey = centralLogsBucket.getS3Bucket().getKey();
+    } else {
+      centralLogBucketkey = new KeyLookup(this, 'AcceleratorCentralLogBucketKeyLookup', {
+        accountId: props.accountsConfig.getLogArchiveAccountId(),
+        keyRegion: props.globalConfig.homeRegion,
+        roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
+        keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
+        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      }).getKey();
+    }
+
+    const replicationProps: BucketReplicationProps = {
+      destination: {
+        bucketName: centralLogsBucketName,
+        accountId: props.accountsConfig.getLogArchiveAccountId(),
+        keyArn: centralLogBucketkey.keyArn,
+      },
+      kmsKey: key,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    };
+
     /**
      * Create S3 Bucket for ELB Access Logs, this is created in log archive account
      * For ELB to write access logs bucket is needed to have SSE-S3 server-side encryption
@@ -146,7 +242,27 @@ export class LoggingStack extends AcceleratorStack {
       const elbAccessLogsBucket = new Bucket(this, 'ElbAccessLogsBucket', {
         encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
         s3BucketName: `aws-accelerator-elb-access-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
+        replicationProps,
       });
+
+      // To make sure central log bucket created before elb access log bucket, this is required when logging stack executes in home region
+      if (centralLogsBucket) {
+        elbAccessLogsBucket.node.addDependency(centralLogsBucket);
+      }
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `/${this.stackName}/ElbAccessLogsBucket/ElbAccessLogsBucketReplication/` +
+          pascalCase(centralLogsBucketName) +
+          '-ReplicationRole/DefaultPolicy/Resource',
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Allows only specific policy.',
+          },
+        ],
+      );
 
       const policies = [
         new cdk.aws_iam.PolicyStatement({
@@ -215,71 +331,6 @@ export class LoggingStack extends AcceleratorStack {
           reason: 'ElbAccessLogsBucket has server access logs disabled till the task for access logging completed.',
         },
       ]);
-    }
-
-    //
-    // Create Central Logs Bucket - This is done only in the home region of the log-archive account.
-    // This is the destination bucket for all logs such as AWS CloudTrail, AWS Config, and VPC Flow
-    // Logs. Addition logs can also be sent to this bucket through AWS CloudWatch Logs, such as
-    // application logs, OS logs, or server logs.
-    //
-    //
-    if (
-      cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
-      cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()
-    ) {
-      const lifecycleRules: LifecycleRule[] = [];
-      for (const lifecycleRule of props.globalConfig.logging.accessLogBucket?.lifecycleRules ?? []) {
-        const noncurrentVersionTransitions = [];
-        for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
-          noncurrentVersionTransitions.push({
-            storageClass: noncurrentVersionTransition.storageClass,
-            transitionAfter: noncurrentVersionTransition.transitionAfter,
-          });
-        }
-        const transitions = [];
-        for (const transition of lifecycleRule.transitions) {
-          transitions.push({
-            storageClass: transition.storageClass,
-            transitionAfter: transition.transitionAfter,
-          });
-        }
-        const rule: LifecycleRule = {
-          abortIncompleteMultipartUploadAfter: lifecycleRule.abortIncompleteMultipartUpload,
-          enabled: lifecycleRule.enabled,
-          expiration: lifecycleRule.expiration,
-          expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
-          id: lifecycleRule.id,
-          noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
-          noncurrentVersionTransitions,
-          transitions,
-        };
-        lifecycleRules.push(rule);
-      }
-
-      new CentralLogsBucket(this, 'CentralLogsBucket', {
-        s3BucketName: `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
-          props.globalConfig.homeRegion
-        }`,
-        serverAccessLogsBucket: serverAccessLogsBucket,
-        kmsAliasName: 'alias/accelerator/central-logs/s3',
-        kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
-        organizationId,
-        lifecycleRules,
-      });
-
-      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-      // rule suppression with evidence for this permission.
-      NagSuppressions.addResourceSuppressionsByPath(
-        this,
-        `${this.stackName}/CentralLogsBucket/CrossAccountCentralBucketKMSArnSsmParamAccessRole/Resource`,
-        [
-          {
-            id: 'AwsSolutions-IAM5',
-            reason: 'Central logs bucket arn SSM parameter needs access from other accounts',
-          },
-        ],
-      );
     }
 
     if (props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable) {

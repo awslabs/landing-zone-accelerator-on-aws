@@ -328,8 +328,56 @@ export abstract class Accelerator {
       }
     }
 
+    //
+    // Home region logging stack needs to complete first before other enable regions. Because CentralLog buckets is created in home region.
+    // ELB access log bucket is created in every region, ELB access log bucket needs to replicate to Central Log bucket, so home region must be completed
+    // before any other region.
+    if (props.stage === AcceleratorStage.LOGGING) {
+      const logAccountId = accountsConfig.getLogArchiveAccountId();
+      const logAccountName = accountsConfig.getAccountId(accountsConfig.getLogArchiveAccount().name);
+      const homeRegion = globalConfig.homeRegion;
+
+      // Execute home region before other region for LogArchive account
+      Logger.info(`[accelerator] Executing ${props.stage} for ${logAccountName} account in ${homeRegion} region.`);
+      await AcceleratorToolkit.execute({
+        command: props.command,
+        accountId: logAccountId,
+        region: homeRegion,
+        partition: props.partition,
+        stage: props.stage,
+        configDirPath: props.configDirPath,
+        requireApproval: props.requireApproval,
+        app: props.app,
+      });
+      // execute in all other regions for all accounts, except logging account home region
+      for (const region of globalConfig.enabledRegions) {
+        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+          Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
+          const accountId = accountsConfig.getAccountId(account.name);
+          await delay(1000);
+          if (!(accountId === logAccountId && homeRegion === region)) {
+            promises.push(
+              AcceleratorToolkit.execute({
+                command: props.command,
+                accountId,
+                region,
+                partition: props.partition,
+                stage: props.stage,
+                configDirPath: props.configDirPath,
+                requireApproval: props.requireApproval,
+                app: props.app,
+              }),
+            );
+          }
+
+          if (promises.length >= maxStacks) {
+            await Promise.all(promises);
+          }
+        }
+      }
+    }
+
     if (
-      props.stage === AcceleratorStage.LOGGING ||
       props.stage === AcceleratorStage.SECURITY ||
       props.stage === AcceleratorStage.SECURITY_RESOURCES ||
       props.stage === AcceleratorStage.OPERATIONS ||

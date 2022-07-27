@@ -13,7 +13,6 @@
 
 import * as cdk from 'aws-cdk-lib';
 import * as path from 'path';
-
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
@@ -82,14 +81,14 @@ describe('SecurityAuditStack', () => {
    * Number of Lambda function resource test
    */
   test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 10);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 11);
   });
 
   /**
    * Number of IAM role resource test
    */
   test(`${testNamePrefix} IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 10);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 14);
   });
 
   /**
@@ -226,72 +225,83 @@ describe('SecurityAuditStack', () => {
   });
 
   /**
-   * CustomGuardDutyCreateMembersCustomResourceProviderRole resource configuration test
+   * CustomS3PutBucketReplicationCustomResourceProviderHandler resource configuration test
    */
-  // test(`${testNamePrefix} CustomGuardDutyCreateMembersCustomResourceProviderRole resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stack).templateMatches({
-  //     Resources: {
-  //       CustomGuardDutyCreateMembersCustomResourceProviderRole2D82020E: {
-  //         Type: 'AWS::IAM::Role',
-  //         Properties: {
-  //           AssumeRolePolicyDocument: {
-  //             Statement: [
-  //               {
-  //                 Action: 'sts:AssumeRole',
-  //                 Effect: 'Allow',
-  //                 Principal: {
-  //                   Service: 'lambda.amazonaws.com',
-  //                 },
-  //               },
-  //             ],
-  //             Version: '2012-10-17',
-  //           },
-  //           ManagedPolicyArns: [
-  //             {
-  //               'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
-  //             },
-  //           ],
-  //           Policies: [
-  //             {
-  //               PolicyDocument: {
-  //                 Statement: [
-  //                   {
-  //                     Action: ['organizations:ListAccounts'],
-  //                     Condition: {
-  //                       StringLikeIfExists: {
-  //                         'organizations:ListAccounts': ['guardduty.amazonaws.com'],
-  //                       },
-  //                     },
-  //                     Effect: 'Allow',
-  //                     Resource: '*',
-  //                     Sid: 'GuardDutyCreateMembersTaskOrganizationAction',
-  //                   },
-  //                   {
-  //                     Action: [
-  //                       'guardDuty:ListDetectors',
-  //                       'guardDuty:ListOrganizationAdminAccounts',
-  //                       'guardDuty:UpdateOrganizationConfiguration',
-  //                       'guardduty:CreateMembers',
-  //                       'guardduty:DeleteMembers',
-  //                       'guardduty:DisassociateMembers',
-  //                       'guardduty:ListDetectors',
-  //                       'guardduty:ListMembers',
-  //                     ],
-  //                     Effect: 'Allow',
-  //                     Resource: '*',
-  //                     Sid: 'GuardDutyCreateMembersTaskGuardDutyActions',
-  //                   },
-  //                 ],
-  //                 Version: '2012-10-17',
-  //               },
-  //               PolicyName: 'Inline',
-  //             },
-  //           ],
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
+  test(`${testNamePrefix} CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C: {
+          DependsOn: ['CustomS3PutBucketReplicationCustomResourceProviderRole1C378488'],
+          Properties: {
+            Code: {
+              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+            },
+            Handler: '__entrypoint__.handler',
+            MemorySize: 128,
+            Role: {
+              'Fn::GetAtt': ['CustomS3PutBucketReplicationCustomResourceProviderRole1C378488', 'Arn'],
+            },
+            Runtime: 'nodejs14.x',
+            Timeout: 900,
+          },
+          Type: 'AWS::Lambda::Function',
+        },
+      },
+    });
+  });
+
+  /**
+   * CustomS3PutBucketReplicationCustomResourceProviderRole1C378488 resource configuration test
+   */
+  test(`${testNamePrefix} CustomS3PutBucketReplicationCustomResourceProviderRole1C378488 resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        CustomS3PutBucketReplicationCustomResourceProviderRole1C378488: {
+          Type: 'AWS::IAM::Role',
+          Properties: {
+            AssumeRolePolicyDocument: {
+              Statement: [
+                {
+                  Action: 'sts:AssumeRole',
+                  Effect: 'Allow',
+                  Principal: {
+                    Service: 'lambda.amazonaws.com',
+                  },
+                },
+              ],
+              Version: '2012-10-17',
+            },
+            ManagedPolicyArns: [
+              {
+                'Fn::Sub': 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
+              },
+            ],
+            Policies: [
+              {
+                PolicyDocument: {
+                  Statement: [
+                    {
+                      Action: [
+                        'iam:PassRole',
+                        's3:PutLifecycleConfiguration',
+                        's3:PutReplicationConfiguration',
+                        's3:PutBucketVersioning',
+                      ],
+                      Effect: 'Allow',
+                      Resource: '*',
+                      Sid: 'S3PutReplicationConfigurationTaskActions',
+                    },
+                  ],
+                  Version: '2012-10-17',
+                },
+                PolicyName: 'Inline',
+              },
+            ],
+          },
+        },
+      },
+    });
+  });
 
   /**
    * CustomGuardDutyUpdateDetectorCustomResourceProviderHandler resource configuration test
@@ -1178,9 +1188,22 @@ describe('SecurityAuditStack', () => {
                 'Arn',
               ],
             },
+            bucket: {
+              'Fn::Join': [
+                '',
+                [
+                  "s3://'",
+                  {
+                    Ref: 'AuditManagerPublishingDestinationBucket74974FCF',
+                  },
+                  '/audit-manager/333333333333/',
+                ],
+              ],
+            },
             defaultReportsDestinationType: 'S3',
-            kmsKeyArn: { Ref: 'AcceleratorKeyLookup0C18DA36' },
-            bucket: { 'Fn::Join': ['', ['s3://', { Ref: 'AuditManagerPublishingDestinationBucket74974FCF' }]] },
+            kmsKeyArn: {
+              Ref: 'AcceleratorKeyLookup0C18DA36',
+            },
             region: 'us-east-1',
           },
         },

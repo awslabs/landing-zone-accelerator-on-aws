@@ -58,16 +58,17 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:60
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:61
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:62
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:376
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:406
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:454
 
 
-source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:57
+source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:55
 
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:57
 
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:24
-source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:77
-source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:87
+source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:78
+source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:85
+
 
 source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:661
 source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:665
@@ -89,9 +90,10 @@ source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:34
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:35
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:36
 
-source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1346
-source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1469
-source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1614
+
+source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1369
+source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1492
+source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1637
 
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:763
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1156

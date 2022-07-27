@@ -25,9 +25,9 @@ export interface GuardDutyPublishingDestinationProps {
    */
   readonly exportDestinationType: string;
   /**
-   * Publishing destination bucket arn
+   * Publishing destination arn
    */
-  readonly bucketArn: string;
+  readonly destinationArn: string;
   /**
    * Custom resource lambda log group encryption key
    */
@@ -75,7 +75,7 @@ export class GuardDutyPublishingDestination extends Construct {
       properties: {
         region: cdk.Stack.of(this).region,
         exportDestinationType: props.exportDestinationType,
-        bucketArn: props.bucketArn,
+        destinationArn: props.destinationArn,
         kmsKeyArn: props.kmsKey.keyArn,
       },
     });

@@ -16,6 +16,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { StorageClass } from '@aws-accelerator/config/lib/common-types/types';
+import { BucketReplication, BucketReplicationProps } from './bucket-replication';
 import { Construct } from 'constructs';
 import { pascalCase } from 'change-case';
 
@@ -114,6 +115,11 @@ export interface BucketProps {
    * BucketAccessType.READWRITE
    */
   awsPrincipalAccesses?: { principalAccesses: [{ principal: string; accessType: string }] };
+
+  /**
+   * Optional bucket replication property
+   */
+  replicationProps?: BucketReplicationProps;
 }
 
 /**
@@ -290,6 +296,20 @@ export class Bucket extends Construct {
           throw new Error(`Invalid Access Type ${input.accessType} for ${input.principal} principal.`);
       }
     });
+
+    // Configure replication
+    if (props.replicationProps) {
+      new BucketReplication(this, id + 'Replication', {
+        source: { bucket: this.bucket },
+        destination: {
+          bucketName: props.replicationProps.destination.bucketName,
+          accountId: props.replicationProps.destination.accountId,
+          keyArn: props.replicationProps.destination.keyArn,
+        },
+        kmsKey: props.replicationProps.kmsKey,
+        logRetentionInDays: props.replicationProps.logRetentionInDays,
+      });
+    }
   }
 
   public getS3Bucket(): s3.IBucket {

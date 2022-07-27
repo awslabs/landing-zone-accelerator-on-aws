@@ -27,6 +27,8 @@ import {
   AuditManagerOrganizationAdminAccount,
   Bucket,
   BucketEncryptionType,
+  BucketReplicationProps,
+  CentralLogsBucket,
   DetectiveOrganizationAdminAccount,
   EnableAwsServiceAccess,
   EnablePolicyType,
@@ -77,6 +79,26 @@ export class OrganizationsStack extends AcceleratorStack {
       keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
+
+    const centralLogBucketkey = new KeyLookup(this, 'AcceleratorCentralLogBucketKeyLookup', {
+      accountId: props.accountsConfig.getLogArchiveAccountId(),
+      keyRegion: props.globalConfig.homeRegion,
+      roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
+      keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
+
+    const replicationProps: BucketReplicationProps = {
+      destination: {
+        bucketName: `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
+          props.globalConfig.homeRegion
+        }`,
+        accountId: props.accountsConfig.getLogArchiveAccountId(),
+        keyArn: centralLogBucketkey.keyArn,
+      },
+      kmsKey: this.acceleratorKey,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    };
 
     //
     // Global Organizations actions, only execute in the home region
@@ -290,7 +312,26 @@ export class OrganizationsStack extends AcceleratorStack {
           s3BucketName: `aws-accelerator-cur-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
           serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
           lifecycleRules,
+          replicationProps,
         });
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `/${this.stackName}/ReportBucket/ReportBucketReplication/` +
+            pascalCase(
+              `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
+                props.globalConfig.homeRegion
+              }`,
+            ) +
+            '-ReplicationRole/DefaultPolicy/Resource',
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason: 'Allows only specific policy.',
+            },
+          ],
+        );
 
         new ReportDefinition(this, 'ReportDefinition', {
           compression: props.globalConfig.reports.costAndUsageReport.compression,
@@ -299,7 +340,7 @@ export class OrganizationsStack extends AcceleratorStack {
           reportName: props.globalConfig.reports.costAndUsageReport.reportName,
           reportVersioning: props.globalConfig.reports.costAndUsageReport.reportVersioning,
           s3Bucket: reportBucket.getS3Bucket(),
-          s3Prefix: props.globalConfig.reports.costAndUsageReport.s3Prefix,
+          s3Prefix: `${props.globalConfig.reports.costAndUsageReport.s3Prefix}/${cdk.Stack.of(this).account}/`,
           s3Region: cdk.Stack.of(this).region,
           timeUnit: props.globalConfig.reports.costAndUsageReport.timeUnit,
           additionalArtifacts: props.globalConfig.reports.costAndUsageReport.additionalArtifacts,

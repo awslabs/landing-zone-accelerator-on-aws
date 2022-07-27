@@ -30,7 +30,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const region = event.ResourceProperties['region'];
   const exportDestinationType = event.ResourceProperties['exportDestinationType'];
-  const bucketArn = event.ResourceProperties['bucketArn'];
+  const destinationArn = event.ResourceProperties['destinationArn'];
   const kmsKeyArn = event.ResourceProperties['kmsKeyArn'];
 
   const guardDutyClient = new AWS.GuardDuty({ region: region });
@@ -69,7 +69,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             .createPublishingDestination({
               DetectorId: detectorId!,
               DestinationType: exportDestinationType,
-              DestinationProperties: { DestinationArn: bucketArn, KmsKeyArn: kmsKeyArn },
+              DestinationProperties: { DestinationArn: destinationArn, KmsKeyArn: kmsKeyArn },
             })
             .promise(),
         );

@@ -22,6 +22,7 @@ const stack = new cdk.Stack();
 new SsmParameterLookup(stack, 'SsmParameter', {
   name: 'TestParameter',
   accountId: '123123123123',
+  parameterRegion: 'us-east-1',
   roleName: 'TestRole',
   logRetentionInDays: 3653,
 });
@@ -81,11 +82,9 @@ describe('SsmParameterLookup', () => {
             invokingAccountID: {
               Ref: 'AWS::AccountId',
             },
-            invokingRegion: {
-              Ref: 'AWS::Region',
-            },
             parameterAccountID: '123123123123',
             parameterName: 'TestParameter',
+            parameterRegion: 'us-east-1',
           },
         },
       },
