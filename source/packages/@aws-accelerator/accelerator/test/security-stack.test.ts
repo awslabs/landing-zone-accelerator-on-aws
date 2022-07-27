@@ -18,6 +18,7 @@ import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
+
 import {
   ACCOUNT_CONFIG,
   GLOBAL_CONFIG,
@@ -149,7 +150,7 @@ describe('SecurityStack', () => {
                 ],
               ],
             },
-            keyPrefix: '333333333333-aws-macie-export-config',
+            keyPrefix: 'macie/333333333333/',
             kmsKeyArn: {
               Ref: 'AcceleratorKeyLookup0C18DA36',
             },
@@ -507,6 +508,18 @@ describe('SecurityStack', () => {
               'Fn::GetAtt': [
                 'CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8',
                 'Arn',
+              ],
+            },
+            destinationArn: {
+              'Fn::Join': [
+                '',
+                [
+                  'arn:',
+                  {
+                    Ref: 'AWS::Partition',
+                  },
+                  ':s3:::aws-accelerator-org-gduty-pub-dest-222222222222-us-east-1',
+                ],
               ],
             },
             exportDestinationType: 'S3',

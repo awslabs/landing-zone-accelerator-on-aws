@@ -66,7 +66,7 @@ export class SecurityStack extends AcceleratorStack {
         new MacieExportConfigClassification(this, 'AwsMacieUpdateExportConfigClassification', {
           bucketName: bucketName,
           kmsKey: this.acceleratorKey,
-          keyPrefix: `${cdk.Stack.of(this).account}-aws-macie-export-config`,
+          keyPrefix: `macie/${cdk.Stack.of(this).account}/`,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
       } else {
@@ -84,14 +84,14 @@ export class SecurityStack extends AcceleratorStack {
       ) === -1
     ) {
       if (props.accountsConfig.containsAccount(auditAccountName)) {
-        const bucketArn = `arn:${cdk.Stack.of(this).partition}:s3:::aws-accelerator-org-gduty-pub-dest-${
+        const destinationArn = `arn:${cdk.Stack.of(this).partition}:s3:::aws-accelerator-org-gduty-pub-dest-${
           this.auditAccountId
         }-${cdk.Stack.of(this).region}`;
 
         new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
           exportDestinationType:
             props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.destinationType,
-          bucketArn: bucketArn,
+          destinationArn,
           kmsKey: this.acceleratorKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });

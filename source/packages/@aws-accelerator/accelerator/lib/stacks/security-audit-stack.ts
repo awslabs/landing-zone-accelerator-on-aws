@@ -24,6 +24,8 @@ import { Region } from '@aws-accelerator/config';
 import {
   Bucket,
   BucketEncryptionType,
+  BucketReplicationProps,
+  CentralLogsBucket,
   Document,
   GuardDutyDetectorConfig,
   GuardDutyExportConfigDestinationTypes,
@@ -55,6 +57,28 @@ export class SecurityAuditStack extends AcceleratorStack {
       keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
+
+    const centralLogBucketkey = new KeyLookup(this, 'AcceleratorCentralLogBucketKeyLookup', {
+      accountId: props.accountsConfig.getLogArchiveAccountId(),
+      keyRegion: props.globalConfig.homeRegion,
+      roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
+      keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
+
+    const centralLogBucketName = `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
+      props.globalConfig.homeRegion
+    }`;
+
+    const replicationProps: BucketReplicationProps = {
+      destination: {
+        bucketName: centralLogBucketName,
+        accountId: props.accountsConfig.getLogArchiveAccountId(),
+        keyArn: centralLogBucketkey.keyArn,
+      },
+      kmsKey: key,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    };
 
     const organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
 
@@ -105,7 +129,22 @@ export class SecurityAuditStack extends AcceleratorStack {
         kmsKey: key,
         serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         lifecycleRules,
+        replicationProps,
       });
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `/${this.stackName}/AwsMacieExportConfigBucket/AwsMacieExportConfigBucketReplication/` +
+          pascalCase(centralLogBucketName) +
+          '-ReplicationRole/DefaultPolicy/Resource',
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Allows only specific policy.',
+          },
+        ],
+      );
 
       new cdk.aws_ssm.StringParameter(this, 'SsmParamOrganizationMacieExportConfigBucketName', {
         parameterName: '/accelerator/organization/security/macie/discovery-repository/bucket-name',
@@ -192,6 +231,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         kmsKey: key,
         serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         lifecycleRules,
+        replicationProps,
       });
 
       // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
@@ -203,6 +243,20 @@ export class SecurityAuditStack extends AcceleratorStack {
             id: 'AwsSolutions-S1',
             reason:
               'GuardDutyPublishingDestinationBucket has server access logs disabled till the task for access logging completed.',
+          },
+        ],
+      );
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `/${this.stackName}/GuardDutyPublishingDestinationBucket/GuardDutyPublishingDestinationBucketReplication/` +
+          pascalCase(centralLogBucketName) +
+          '-ReplicationRole/DefaultPolicy/Resource',
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Allows only specific policy.',
           },
         ],
       );
@@ -302,10 +356,11 @@ export class SecurityAuditStack extends AcceleratorStack {
 
       const bucket = new Bucket(this, 'AuditManagerPublishingDestinationBucket', {
         encryptionType: BucketEncryptionType.SSE_KMS,
-        s3BucketName: `aws-accelerator-org-auditmgr-pub-dest-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        s3BucketName: `aws-accelerator-audmgr-pub-dest-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         kmsKey: key,
         serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         lifecycleRules,
+        replicationProps,
       });
 
       // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
@@ -317,6 +372,20 @@ export class SecurityAuditStack extends AcceleratorStack {
             id: 'AwsSolutions-S1',
             reason:
               'AuditManagerPublishingDestinationBucket has server access logs disabled till the task for access logging completed.',
+          },
+        ],
+      );
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `/${this.stackName}/AuditManagerPublishingDestinationBucket/AuditManagerPublishingDestinationBucketReplication/` +
+          pascalCase(centralLogBucketName) +
+          '-ReplicationRole/DefaultPolicy/Resource',
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Allows only specific policy.',
           },
         ],
       );
@@ -353,7 +422,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           defaultReportsDestinationType: AuditManagerDefaultReportsDestinationTypes.S3,
           kmsKey: key,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-          bucket: 's3://'.concat(bucket.getS3Bucket().bucketName),
+          bucket: `s3://'${bucket.getS3Bucket().bucketName}/audit-manager/${cdk.Stack.of(this).account}/`,
         });
       }
     }
