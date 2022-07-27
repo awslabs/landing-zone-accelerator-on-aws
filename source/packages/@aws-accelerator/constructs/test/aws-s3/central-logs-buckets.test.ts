@@ -479,6 +479,27 @@ describe('CentralLogsBucket', () => {
                   Statement: [
                     {
                       Action: ['ssm:GetParameters', 'ssm:GetParameter'],
+                      Condition: {
+                        ArnLike: {
+                          'aws:PrincipalARN': [
+                            {
+                              'Fn::Join': [
+                                '',
+                                [
+                                  'arn:',
+                                  {
+                                    Ref: 'AWS::Partition',
+                                  },
+                                  ':iam::*:role/AWSAccelerator-*',
+                                ],
+                              ],
+                            },
+                          ],
+                        },
+                        StringEquals: {
+                          'aws:PrincipalOrgID': 'acceleratorOrg',
+                        },
+                      },
                       Effect: 'Allow',
                       Resource: {
                         'Fn::Join': [
@@ -506,6 +527,27 @@ describe('CentralLogsBucket', () => {
                     },
                     {
                       Action: 'ssm:DescribeParameters',
+                      Condition: {
+                        ArnLike: {
+                          'aws:PrincipalARN': [
+                            {
+                              'Fn::Join': [
+                                '',
+                                [
+                                  'arn:',
+                                  {
+                                    Ref: 'AWS::Partition',
+                                  },
+                                  ':iam::*:role/AWSAccelerator-*',
+                                ],
+                              ],
+                            },
+                          ],
+                        },
+                        StringEquals: {
+                          'aws:PrincipalOrgID': 'acceleratorOrg',
+                        },
+                      },
                       Effect: 'Allow',
                       Resource: '*',
                     },
@@ -515,17 +557,7 @@ describe('CentralLogsBucket', () => {
                 PolicyName: 'default',
               },
             ],
-            RoleName: {
-              'Fn::Join': [
-                '',
-                [
-                  'AWSAccelerator-CentralBucketKMSArnSsmParam-',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                ],
-              ],
-            },
+            RoleName: 'AWSAccelerator-CentralBucket-KeyArnParam-Role',
           },
           Type: 'AWS::IAM::Role',
         },
