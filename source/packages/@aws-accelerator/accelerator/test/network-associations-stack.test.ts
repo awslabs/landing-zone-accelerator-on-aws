@@ -243,7 +243,7 @@ describe('NetworkAssociationsStack', () => {
           Type: 'AWS::EC2::TransitGatewayRouteTablePropagation',
           Properties: {
             TransitGatewayAttachmentId: {
-              Ref: 'TestVpcTransitGatewayAttachmentA903FB56',
+              Ref: 'TestAuditVpcTransitGatewayAttachment00B1617D',
             },
             TransitGatewayRouteTableId: {
               Ref: 'SsmParameterValueacceleratornetworktransitGatewaysMainrouteTablescoreidC96584B6F00A464EAD1953AFF4B05118Parameter',
@@ -264,7 +264,7 @@ describe('NetworkAssociationsStack', () => {
           Type: 'AWS::EC2::TransitGatewayRouteTablePropagation',
           Properties: {
             TransitGatewayAttachmentId: {
-              Ref: 'TestVpcTransitGatewayAttachmentA903FB56',
+              Ref: 'TestAuditVpcTransitGatewayAttachment00B1617D',
             },
             TransitGatewayRouteTableId: {
               Ref: 'SsmParameterValueacceleratornetworktransitGatewaysMainrouteTablessegregatedidC96584B6F00A464EAD1953AFF4B05118Parameter',
@@ -285,7 +285,7 @@ describe('NetworkAssociationsStack', () => {
           Type: 'AWS::EC2::TransitGatewayRouteTableAssociation',
           Properties: {
             TransitGatewayAttachmentId: {
-              Ref: 'TestVpcTransitGatewayAttachmentA903FB56',
+              Ref: 'TestAuditVpcTransitGatewayAttachment00B1617D',
             },
             TransitGatewayRouteTableId: {
               Ref: 'SsmParameterValueacceleratornetworktransitGatewaysMainrouteTablessharedidC96584B6F00A464EAD1953AFF4B05118Parameter',
@@ -306,7 +306,7 @@ describe('NetworkAssociationsStack', () => {
           Type: 'AWS::EC2::TransitGatewayRouteTablePropagation',
           Properties: {
             TransitGatewayAttachmentId: {
-              Ref: 'TestVpcTransitGatewayAttachmentA903FB56',
+              Ref: 'TestAuditVpcTransitGatewayAttachment00B1617D',
             },
             TransitGatewayRouteTableId: {
               Ref: 'SsmParameterValueacceleratornetworktransitGatewaysMainrouteTablessharedidC96584B6F00A464EAD1953AFF4B05118Parameter',
@@ -323,7 +323,7 @@ describe('NetworkAssociationsStack', () => {
   test(`${testNamePrefix} GetTransitGatewayAttachment TestVpcTransitGatewayAttachment resource configuration test`, () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
-        TestVpcTransitGatewayAttachmentA903FB56: {
+        TestAuditVpcTransitGatewayAttachment00B1617D: {
           Type: 'Custom::GetTransitGatewayAttachment',
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',

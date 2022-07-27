@@ -10,7 +10,6 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-
 import {
   GlobalConfig,
   IamConfig,
@@ -388,6 +387,132 @@ const networkConfigJson = {
     {
       name: 'Default',
       document: 'vpc-endpoint-policies/default.json',
+    },
+  ],
+  vpcTemplates: [
+    {
+      name: 'Template-Test',
+      deploymentTargets: {
+        organizationalUnits: ['Infrastructure'],
+      },
+      region: 'us-east-1',
+      ipamAllocations: [
+        {
+          ipamPoolName: 'us-east-1-pool',
+          netmaskLength: 24,
+        },
+      ],
+      internetGateway: true,
+      enableDnsHostnames: false,
+      enableDnsSupport: true,
+      instanceTenancy: 'default',
+      routeTables: [
+        {
+          name: 'CentralVpc_Common',
+          routes: [
+            {
+              name: 'TgwRoute',
+              destination: '10.0.0.0/8',
+              type: 'transitGateway',
+              target: 'Main',
+            },
+            {
+              name: 'NatRoute',
+              destination: '192.168.0.0/16',
+              type: 'natGateway',
+              target: 'Web-A',
+            },
+            {
+              name: 'IgwRoute',
+              destination: '0.0.0.0/0',
+              type: 'internetGateway',
+              target: 'IGW',
+            },
+            {
+              name: 's3',
+              target: 's3',
+            },
+            {
+              name: 'dynamodb',
+              target: 'dynamodb',
+            },
+          ],
+        },
+      ],
+      subnets: [
+        {
+          name: 'public-a',
+          availabilityZone: 'a',
+          mapPublicIpOnLaunch: true,
+          routeTable: 'CentralVpc_Common',
+          ipamAllocation: {
+            ipamPoolName: 'us-east-1-pool',
+            netmaskLength: 26,
+          },
+        },
+        {
+          name: 'public-b',
+          availabilityZone: 'b',
+          mapPublicIpOnLaunch: true,
+          routeTable: 'CentralVpc_Common',
+          ipamAllocation: {
+            ipamPoolName: 'us-east-1-pool',
+            netmaskLength: 26,
+          },
+        },
+        {
+          name: 'tgw-attach-a',
+          availabilityZone: 'a',
+          routeTable: 'CentralVpc_Common',
+          ipamAllocation: {
+            ipamPoolName: 'us-east-1-pool',
+            netmaskLength: 26,
+          },
+        },
+        {
+          name: 'tgw-attach-b',
+          availabilityZone: 'b',
+          routeTable: 'CentralVpc_Common',
+          ipamAllocation: {
+            ipamPoolName: 'us-east-1-pool',
+            netmaskLength: 26,
+          },
+        },
+      ],
+      natGateways: [
+        {
+          name: 'Web-A',
+          subnet: 'public-a',
+        },
+        {
+          name: 'Web-B',
+          subnet: 'public-b',
+        },
+      ],
+      transitGatewayAttachments: [
+        {
+          name: 'Template-Test',
+          transitGateway: {
+            name: 'Main',
+            account: 'Management',
+          },
+          routeTableAssociations: ['shared'],
+          routeTablePropagations: ['core', 'shared', 'segregated'],
+          subnets: ['tgw-attach-a', 'tgw-attach-b'],
+        },
+      ],
+      useCentralEndpoints: false,
+      gatewayEndpoints: {
+        defaultPolicy: 'Default',
+        endpoints: [
+          {
+            service: 's3',
+          },
+          {
+            service: 'dynamodb',
+          },
+        ],
+      },
     },
   ],
   vpcs: [
