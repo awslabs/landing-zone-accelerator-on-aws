@@ -69,7 +69,7 @@ source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts
 
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:24
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:77
-source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:84
+source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:87
 
 source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:661
 source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:665

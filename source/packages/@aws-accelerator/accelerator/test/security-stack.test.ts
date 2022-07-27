@@ -530,18 +530,6 @@ describe('SecurityStack', () => {
                 'Arn',
               ],
             },
-            bucketArn: {
-              'Fn::Join': [
-                '',
-                [
-                  'arn:',
-                  {
-                    Ref: 'AWS::Partition',
-                  },
-                  ':s3:::aws-accelerator-org-gduty-pub-dest-222222222222-us-east-1',
-                ],
-              ],
-            },
             exportDestinationType: 'S3',
             kmsKeyArn: {
               Ref: 'AcceleratorKeyLookup0C18DA36',
