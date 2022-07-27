@@ -81,11 +81,11 @@ describe('SsmParameterLookup', () => {
             invokingAccountID: {
               Ref: 'AWS::AccountId',
             },
-            parameterAccountID: '123123123123',
-            parameterName: 'TestParameter',
-            region: {
+            invokingRegion: {
               Ref: 'AWS::Region',
             },
+            parameterAccountID: '123123123123',
+            parameterName: 'TestParameter',
           },
         },
       },

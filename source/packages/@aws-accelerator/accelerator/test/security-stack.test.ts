@@ -67,9 +67,9 @@ describe('SecurityStack', () => {
   /**
    * Snapshot test
    */
-  //test(`${testNamePrefix} Snapshot Test`, () => {
-  // expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  //});
+  // test(`${testNamePrefix} Snapshot Test`, () => {
+  //   expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
+  // });
 
   /**
    * Number of MaciePutClassificationExportConfiguration custom resource test
@@ -507,18 +507,6 @@ describe('SecurityStack', () => {
               'Fn::GetAtt': [
                 'CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8',
                 'Arn',
-              ],
-            },
-            bucketArn: {
-              'Fn::Join': [
-                '',
-                [
-                  'arn:',
-                  {
-                    Ref: 'AWS::Partition',
-                  },
-                  ':s3:::aws-accelerator-org-gduty-pub-dest-222222222222-us-east-1',
-                ],
               ],
             },
             exportDestinationType: 'S3',

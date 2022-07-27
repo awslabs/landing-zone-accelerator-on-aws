@@ -99,7 +99,7 @@ describe('NetworkVpcDnsStack', () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
         AcceleratorKeyLookup0C18DA36: {
-          Type: 'Custom::SsmGetParameterValue',
+          DeletionPolicy: 'Delete',
           DependsOn: ['CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D'],
           Properties: {
             ServiceToken: {
@@ -110,15 +110,18 @@ describe('NetworkVpcDnsStack', () => {
                 '',
                 [
                   'arn:',
-                  { Ref: 'AWS::Partition' },
+                  {
+                    Ref: 'AWS::Partition',
+                  },
                   ':iam::222222222222:role/AWSAccelerator-CrossAccount-SsmParameter-Role',
                 ],
               ],
             },
             invokingAccountID: '333333333333',
+            invokingRegion: 'us-east-1',
             parameterAccountID: '222222222222',
             parameterName: '/accelerator/kms/key-arn',
-            region: 'us-east-1',
+            parameterRegion: 'us-east-1',
           },
         },
       },
@@ -159,6 +162,7 @@ describe('NetworkVpcDnsStack', () => {
                       Action: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:DescribeParameters'],
                       Effect: 'Allow',
                       Resource: ['*'],
+                      Sid: 'SsmGetParameterActions',
                     },
                     {
                       Action: ['sts:AssumeRole'],
@@ -169,12 +173,15 @@ describe('NetworkVpcDnsStack', () => {
                             '',
                             [
                               'arn:',
-                              { Ref: 'AWS::Partition' },
-                              ':iam::222222222222:role/AWSAccelerator-CrossAccount-SsmParameter-Role',
+                              {
+                                Ref: 'AWS::Partition',
+                              },
+                              ':iam::*:role/AWSAccelerator*',
                             ],
                           ],
                         },
                       ],
+                      Sid: 'StsAssumeRoleActions',
                     },
                   ],
                   Version: '2012-10-17',
