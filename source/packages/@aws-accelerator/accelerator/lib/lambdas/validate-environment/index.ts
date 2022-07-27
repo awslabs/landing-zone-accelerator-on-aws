@@ -440,12 +440,10 @@ async function validateOrganizationalUnitsAreRegistered(configTableName: string,
   // look for ou's that don't have a registration status
   // confirm top level ou's have at least one guardrail attached
   for (const ouKey of organizationalUnitKeys) {
-    console.log(ouKey);
-    console.log(ouKey.acceleratorKey.split('/').length);
-    if (ouKey.registered !== undefined || ouKey.acceleratorKey.split('/').length >>> 1) {
+    if (ouKey.registered || !ouKey.awsKey || ouKey.acceleratorKey.split('/').length >>> 1) {
       continue;
     }
-    console.log('not registered');
+    console.log('OU without registration status in config table, checking guardrails', ouKey);
     const isGuardRailAttached = await isGuardRailAttachedToOu(ouKey.awsKey);
     if (!isGuardRailAttached) {
       console.log(
