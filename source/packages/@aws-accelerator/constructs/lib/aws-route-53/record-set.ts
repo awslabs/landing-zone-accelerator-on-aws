@@ -49,7 +49,7 @@ export class RecordSet extends cdk.Resource implements IRecordSet {
   }
 
   static getHostedZoneNameFromService(service: string, region: string): string {
-    let hostedZoneName = `${service}.${region}.amazonaws.com`;
+    let hostedZoneName = `${service}.${region}.amazonaws.com.cn`;
     const sagemakerArray = ['notebook', 'studio'];
     if (sagemakerArray.includes(service)) {
       hostedZoneName = `${service}.${region}.sagemaker.aws`;

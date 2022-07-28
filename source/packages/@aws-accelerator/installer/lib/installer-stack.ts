@@ -131,6 +131,9 @@ export class InstallerStack extends cdk.Stack {
         'aws-us-gov': {
           regionName: 'us-gov-west-1',
         },
+        'aws-cn': {
+          regionName: 'cn-north-1',
+        },
         'aws-iso-b': {
           regionName: 'us-isob-east-1',
         },
@@ -338,7 +341,7 @@ export class InstallerStack extends cdk.Stack {
             Resource: '*',
             Condition: {
               StringEquals: {
-                'kms:ViaService': `sns.${cdk.Stack.of(this).region}.amazonaws.com`,
+                'kms:ViaService': `sns.amazonaws.com`,
               },
             },
           },

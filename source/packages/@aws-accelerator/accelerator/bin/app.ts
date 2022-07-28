@@ -113,6 +113,10 @@ async function main() {
     cdk.Aspects.of(app).add(new IsobOverrides());
   }
 
+  if (partition === 'aws-cn') {
+    globalRegion = 'cn-north-1';
+  }
+
   const includeStage = (props: { stage: string; account: string; region: string }): boolean => {
     if (stage === undefined) {
       // Do not include PIPELINE or TESTER_PIPELINE in full synth/diff

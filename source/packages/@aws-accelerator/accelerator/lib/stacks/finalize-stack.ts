@@ -29,6 +29,9 @@ export class FinalizeStack extends AcceleratorStack {
     if (props.partition === 'aws-us-gov') {
       globalRegion = 'us-gov-west-1';
     }
+    if (props.partition === 'aws-cn') {
+      globalRegion = 'cn-north-1';
+    }
 
     if (globalRegion === cdk.Stack.of(this).region) {
       Logger.debug(`[finalize-stack] Retrieving kms key`);

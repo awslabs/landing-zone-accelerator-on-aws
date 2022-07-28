@@ -41,13 +41,10 @@ export class KeyStack extends AcceleratorStack {
       key.addToResourcePolicy(
         new cdk.aws_iam.PolicyStatement({
           sid: `Allow Accelerator Role to use the encryption key`,
-          principals: [new cdk.aws_iam.AnyPrincipal()],
+          principals: props?.accountsConfig?.accountIds?.map(item => (new cdk.aws_iam.AccountPrincipal(item.accountId))),
           actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
           resources: ['*'],
           conditions: {
-            StringEquals: {
-              'aws:PrincipalOrgID': organizationId,
-            },
             ArnLike: {
               'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
             },
@@ -60,14 +57,9 @@ export class KeyStack extends AcceleratorStack {
     key.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: `Allow Cloudwatch logs to use the encryption key`,
-        principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+        principals: [new cdk.aws_iam.ServicePrincipal(`logs.amazonaws.com.cn`)],
         actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
         resources: ['*'],
-        conditions: {
-          ArnLike: {
-            'kms:EncryptionContext:aws:logs:arn': `arn:aws:logs:${cdk.Stack.of(this).region}:*:log-group:*`,
-          },
-        },
       }),
     );
 
@@ -103,10 +95,16 @@ export class KeyStack extends AcceleratorStack {
 
     // IAM Role to get access to accelerator organization level SSM parameters
     // Only create this role in the home region stack
+    const accountPrincipals: cdk.aws_iam.PrincipalBase[] = []
+
+    for (const assumedByItem of props?.accountsConfig?.accountIds ?? []) {
+        accountPrincipals.push(new cdk.aws_iam.AccountPrincipal(assumedByItem.accountId));
+    }
+
     if (cdk.Stack.of(this).region === props.globalConfig.homeRegion && props.organizationConfig.enable) {
       new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
         roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-        assumedBy: new cdk.aws_iam.OrganizationPrincipal(organizationId),
+        assumedBy: (props.partition == "aws-cn" && props?.accountsConfig?.accountIds != undefined) ? new cdk.aws_iam.CompositePrincipal(...accountPrincipals) : new cdk.aws_iam.OrganizationPrincipal(organizationId),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
             statements: [
@@ -119,9 +117,6 @@ export class KeyStack extends AcceleratorStack {
                   }:parameter/accelerator/kms/key-arn`,
                 ],
                 conditions: {
-                  StringEquals: {
-                    'aws:PrincipalOrgID': organizationId,
-                  },
                   ArnLike: {
                     'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
                   },
@@ -132,9 +127,6 @@ export class KeyStack extends AcceleratorStack {
                 actions: ['ssm:DescribeParameters'],
                 resources: ['*'],
                 conditions: {
-                  StringEquals: {
-                    'aws:PrincipalOrgID': organizationId,
-                  },
                   ArnLike: {
                     'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
                   },

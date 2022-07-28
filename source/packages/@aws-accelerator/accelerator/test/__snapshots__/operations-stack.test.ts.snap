@@ -179,7 +179,7 @@ Object {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
               "Principal": Object {
-                "Service": "ec2.amazonaws.com",
+                "Service": "ec2.amazonaws.com.cn",
               },
             },
           ],

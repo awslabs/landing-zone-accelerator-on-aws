@@ -89,6 +89,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
   if (partition === 'aws-us-gov') {
     organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+  } else if (partition === 'aws-cn') {
+    organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
   } else {
     organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
   }

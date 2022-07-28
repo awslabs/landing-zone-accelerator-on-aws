@@ -108,15 +108,8 @@ export class OrganizationsStack extends AcceleratorStack {
           new iam.PolicyStatement({
             sid: 'Allow logs use of the key',
             actions: ['kms:*'],
-            principals: [new iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+            principals: [new iam.ServicePrincipal(`logs.amazonaws.com.cn`)],
             resources: ['*'],
-            conditions: {
-              ArnEquals: {
-                'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
-                  cdk.Stack.of(this).region
-                }:${cdk.Stack.of(this).account}:*`,
-              },
-            },
           }),
         );
 

@@ -194,16 +194,11 @@ export class LoggingStack extends AcceleratorStack {
             sid: 'Allow Organization principals to use of the bucket',
             effect: cdk.aws_iam.Effect.ALLOW,
             actions: ['s3:GetBucketLocation', 's3:PutObject'],
-            principals: [new cdk.aws_iam.AnyPrincipal()],
+            principals: props?.accountsConfig?.accountIds?.map(item => (new cdk.aws_iam.AccountPrincipal(item.accountId))),
             resources: [
               `${elbAccessLogsBucket.getS3Bucket().bucketArn}`,
               `${elbAccessLogsBucket.getS3Bucket().bucketArn}/*`,
             ],
-            conditions: {
-              StringEquals: {
-                'aws:PrincipalOrgID': organizationId,
-              },
-            },
           }),
         );
       }

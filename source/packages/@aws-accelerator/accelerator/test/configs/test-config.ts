@@ -91,7 +91,7 @@ export const iamConfigJson = {
           assumedBy: [
             {
               type: 'service',
-              principal: 'ec2.amazonaws.com',
+              principal: 'ec2.amazonaws.com.cn',
             },
           ],
           policies: {

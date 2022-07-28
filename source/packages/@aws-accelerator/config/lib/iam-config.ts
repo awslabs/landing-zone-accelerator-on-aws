@@ -407,7 +407,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *       - name: EC2-Default-SSM-AD-Role
    *         assumedBy:
    *           - type: service
-   *             principal: ec2.amazonaws.com
+   *             principal: ec2.amazonaws.com.cn
    *         policies:
    *           awsManaged:
    *             - AmazonSSMManagedInstanceCore

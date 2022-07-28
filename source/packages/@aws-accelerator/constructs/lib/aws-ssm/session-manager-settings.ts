@@ -78,7 +78,7 @@ export class SsmSessionManagerSettings extends Construct {
       sessionManagerLogsCmk.addToResourcePolicy(
         new cdk.aws_iam.PolicyStatement({
           sid: 'Allow Cloud Watch Logs access',
-          principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+          principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com.cn`)],
           actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
           resources: ['*'],
           conditions: {
@@ -170,7 +170,7 @@ export class SsmSessionManagerSettings extends Construct {
     sessionManagerSessionCmk.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: 'Allow Cloud Watch Logs access',
-        principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+        principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com.cn`)],
         actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
         resources: ['*'],
         conditions: {
@@ -199,7 +199,7 @@ export class SsmSessionManagerSettings extends Construct {
 
     //Create an EC2 role that can be used for Session Manager
     const sessionManagerEC2Role = new cdk.aws_iam.Role(this, 'SessionManagerEC2Role', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal('ec2.amazonaws.com'),
+      assumedBy: new cdk.aws_iam.ServicePrincipal('ec2.amazonaws.com.cn'),
       description: 'IAM Role for an EC2 configured for Session Manager Logging',
       managedPolicies: [sessionManagerEC2Policy],
       roleName: `SessionManagerEC2Role-${cdk.Stack.of(this).region}`,

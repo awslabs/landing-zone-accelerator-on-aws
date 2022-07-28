@@ -45,6 +45,9 @@ export class AccountsStack extends AcceleratorStack {
     if (props.partition === 'aws-us-gov') {
       globalRegion = 'us-gov-west-1';
     }
+    if (props.partition === 'aws-cn') {
+      globalRegion = 'cn-north-1';
+    }
 
     // Use existing management account key if in the home region
     // otherwise create new kms key
@@ -86,13 +89,6 @@ export class AccountsStack extends AcceleratorStack {
           principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
           actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
           resources: ['*'],
-          conditions: {
-            ArnLike: {
-              'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
-                cdk.Stack.of(this).region
-              }:${cdk.Stack.of(this).account}:log-group:*`,
-            },
-          },
         }),
       );
 
@@ -105,7 +101,7 @@ export class AccountsStack extends AcceleratorStack {
     //
     // Global Organizations actions
     //
-    if (globalRegion === cdk.Stack.of(this).region) {
+    if (globalRegion === cdk.Stack.of(this).region && props.partition != 'aws-cn') {
       if (props.organizationConfig.enable) {
         const enablePolicyTypeScp = new EnablePolicyType(this, 'enablePolicyTypeScp', {
           policyType: PolicyTypeEnum.SERVICE_CONTROL_POLICY,
