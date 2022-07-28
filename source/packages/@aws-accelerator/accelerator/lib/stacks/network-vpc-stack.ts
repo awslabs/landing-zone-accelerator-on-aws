@@ -1277,7 +1277,7 @@ export class NetworkVpcStack extends AcceleratorStack {
       }
     }
 
-    for (const type of item.types) {
+    for (const type of item.types ?? []) {
       Logger.info(`[network-vpc-stack] Adding type ${type}`);
       if (type === 'ALL') {
         rules.push(
