@@ -307,6 +307,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     firewallItem: NfwFirewallConfig,
     vpcId: string,
     subnets: string[],
+    firewallLogBucket: cdk.aws_s3.IBucket,
     owningAccountId?: string,
   ): NetworkFirewall {
     // Get firewall policy ARN
@@ -348,7 +349,6 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     );
 
     // Add logging configurations
-    let firewallLogBucket: cdk.aws_s3.IBucket | undefined;
     const destinationConfigs: cdk.aws_networkfirewall.CfnLoggingConfiguration.LogDestinationConfigProperty[] = [];
     for (const logItem of firewallItem.loggingConfiguration ?? []) {
       if (logItem.destination === 'cloud-watch-logs') {
@@ -373,16 +373,6 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         Logger.info(
           `[network-vpc-endpoints-stack] Add S3 ${logItem.type} logs for Network Firewall ${firewallItem.name}`,
         );
-
-        if (!firewallLogBucket) {
-          firewallLogBucket = cdk.aws_s3.Bucket.fromBucketName(
-            this,
-            'FirewallLogsBucket',
-            `aws-accelerator-central-logs-${this.accountsConfig.getLogArchiveAccountId()}-${
-              this.globalConfig.homeRegion
-            }`,
-          );
-        }
 
         destinationConfigs.push({
           logDestination: {
