@@ -15,6 +15,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
+import * as emailValidator from 'email-validator';
 import * as t from './common-types';
 
 /**
@@ -586,6 +587,11 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    */
   readonly reports: ReportConfig | undefined = undefined;
 
+  //
+  // Validation errors
+  //
+  private readonly errors: string[] = [];
+
   /**
    *
    * @param props
@@ -599,18 +605,32 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   ) {
     if (values) {
       Object.assign(this, values);
+
+      //
+      // budget notification email validation
+      //
+      this.validateBudgetNotificationEmailIds(values);
     } else {
       this.homeRegion = props.homeRegion;
       this.enabledRegions = [props.homeRegion as t.Region];
     }
 
-    //
-    // Validation errors
-    //
-    const errors: string[] = [];
+    if (this.errors.length) {
+      throw new Error(`${GlobalConfig.FILENAME} has ${this.errors.length} issues: ${this.errors.join(' ')}`);
+    }
+  }
 
-    if (errors.length) {
-      throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+  /**
+   * Function to validate budget notification email address
+   * @param values
+   */
+  private validateBudgetNotificationEmailIds(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>) {
+    for (const budget of values.reports?.budgets ?? []) {
+      for (const notification of budget.notifications ?? []) {
+        if (!emailValidator.validate(notification.address!)) {
+          this.errors.push(`Invalid report notification email ${notification.address!}.`);
+        }
+      }
     }
   }
 

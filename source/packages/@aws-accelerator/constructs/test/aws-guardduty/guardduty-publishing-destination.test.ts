@@ -147,30 +147,12 @@ describe('GuardDutyPublishingDestination', () => {
           Type: 'Custom::GuardDutyCreatePublishingDestinationCommand',
           UpdateReplacePolicy: 'Delete',
           DeletionPolicy: 'Delete',
+          DependsOn: ['CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderLogGroup118A06DB'],
           Properties: {
             ServiceToken: {
               'Fn::GetAtt': [
                 'CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8',
                 'Arn',
-              ],
-            },
-            bucketArn: {
-              'Fn::Join': [
-                '',
-                [
-                  'arn:',
-                  {
-                    Ref: 'AWS::Partition',
-                  },
-                  ':s3:::aws-accelerator-org-gduty-pub-dest-',
-                  {
-                    Ref: 'AWS::AccountId',
-                  },
-                  '-',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                ],
               ],
             },
             exportDestinationType: 'S3',
