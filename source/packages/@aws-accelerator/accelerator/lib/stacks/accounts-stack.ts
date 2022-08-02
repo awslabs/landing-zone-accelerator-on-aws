@@ -61,7 +61,7 @@ export class AccountsStack extends AcceleratorStack {
         { name: 'Backup', principal: 'backup.amazonaws.com' },
       ];
 
-      allowedServicePrincipals!.forEach(item => {
+      allowedServicePrincipals.forEach(item => {
         key.addToResourcePolicy(
           new cdk.aws_iam.PolicyStatement({
             sid: `Allow ${item.name} service to use the encryption key`,

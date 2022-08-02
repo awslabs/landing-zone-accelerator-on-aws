@@ -131,8 +131,8 @@ run_cdk_project_test() {
     # run unit tests
     yarn run test
 
-    # prepare coverage reports
-    prepare_jest_coverage_report $component_name
+    # # prepare coverage reports
+    # prepare_jest_coverage_report $component_name
 }
 
 # Run unit tests
@@ -144,13 +144,11 @@ coverage_reports_top_path=$source_dir/test/coverage-reports
 
 # Install lerna
 echo "Install lerna"
-yarn add lerna@^4.0.0 -W
+yarn add lerna@5.1.8 -W
 
-# TODO: Update to handle workspaces
 # Test the CDK project
-# run_cdk_project_test $source_dir
+run_cdk_project_test $source_dir
 
-# Test the attached Lambda function
 # run_javascript_test $source_dir/lambda/example-function-js example-function-js
 
 # Return to the source/ level

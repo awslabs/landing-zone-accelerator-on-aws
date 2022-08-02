@@ -108,8 +108,5 @@ export class EnablePolicyType extends cdk.Resource {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
     resource.node.addDependency(logGroup);
-
-    // this.organizationalUnitId = resource.ref;
-    // this.organizationalUnitArn = resource.getAttString('arn');
   }
 }

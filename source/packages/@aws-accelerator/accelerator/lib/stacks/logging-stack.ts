@@ -55,28 +55,7 @@ export class LoggingStack extends AcceleratorStack {
     }
 
     //
-    // Block Public Access; S3 is global, only need to call in home region. This is done in the
-    // logging-stack instead of the security-stack since initial buckets are created in this stack.
-    //
-    if (
-      cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
-      !this.isAccountExcluded(props.securityConfig.centralSecurityServices.s3PublicAccessBlock.excludeAccounts ?? [])
-    ) {
-      if (props.securityConfig.centralSecurityServices.s3PublicAccessBlock.enable) {
-        new S3PublicAccessBlock(this, 'S3PublicAccessBlock', {
-          blockPublicAcls: true,
-          blockPublicPolicy: true,
-          ignorePublicAcls: true,
-          restrictPublicBuckets: true,
-          accountId: cdk.Stack.of(this).account,
-          kmsKey: key,
-          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-        });
-      }
-    }
-
-    //
-    // Create S3 Bucket for Access Logs - this is required
+    // Lifecycle rule object creation
     //
     const lifecycleRules: LifecycleRule[] = [];
     for (const lifecycleRule of props.globalConfig.logging.accessLogBucket?.lifecycleRules ?? []) {
@@ -107,7 +86,30 @@ export class LoggingStack extends AcceleratorStack {
       lifecycleRules.push(rule);
     }
 
-    // S3 Access log buckets are not replicated
+    //
+    // Block Public Access; S3 is global, only need to call in home region. This is done in the
+    // logging-stack instead of the security-stack since initial buckets are created in this stack.
+    //
+    if (
+      cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
+      !this.isAccountExcluded(props.securityConfig.centralSecurityServices.s3PublicAccessBlock.excludeAccounts ?? [])
+    ) {
+      if (props.securityConfig.centralSecurityServices.s3PublicAccessBlock.enable) {
+        new S3PublicAccessBlock(this, 'S3PublicAccessBlock', {
+          blockPublicAcls: true,
+          blockPublicPolicy: true,
+          ignorePublicAcls: true,
+          restrictPublicBuckets: true,
+          accountId: cdk.Stack.of(this).account,
+          kmsKey: key,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+        });
+      }
+    }
+
+    //
+    // Create S3 Bucket for Access Logs - this is required
+    //
     const serverAccessLogsBucket = new Bucket(this, 'AccessLogsBucket', {
       encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
       s3BucketName: `aws-accelerator-s3-access-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,

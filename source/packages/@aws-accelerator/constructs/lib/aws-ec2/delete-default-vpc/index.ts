@@ -40,13 +40,13 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       console.log(`Starting - Deletion of default VPC and associated resources in ${region}`);
 
       // Retrieve default VPC(s)
-      let nextToken: string | undefined = undefined;
+      let describeVpcsNextToken: string | undefined = undefined;
       do {
         const page = await throttlingBackOff(() =>
           ec2Client
             .describeVpcs({
               Filters: [{ Name: 'is-default', Values: [`true`] }],
-              NextToken: nextToken,
+              NextToken: describeVpcsNextToken,
             })
             .promise(),
         );
@@ -56,8 +56,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             defaultVpcIds.push(vpc.VpcId);
           }
         }
-        nextToken = page.NextToken;
-      } while (nextToken);
+        describeVpcsNextToken = page.NextToken;
+      } while (describeVpcsNextToken);
 
       console.log(`List of VPCs: `, defaultVpcIds);
       if (defaultVpcIds.length == 0) {

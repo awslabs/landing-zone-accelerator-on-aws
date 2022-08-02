@@ -110,11 +110,14 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     // Iterate through VPCs in this account and region
     //
     const firewallMap = new Map<string, NetworkFirewall>();
-    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
-      // Only perform operations for this account and region
-      const accountIds = this.getVpcDeploymentDetails(vpcItem);
-
-      if (accountIds.has(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+    const firewallLogBucket = cdk.aws_s3.Bucket.fromBucketName(
+      this,
+      'FirewallLogsBucket',
+      `aws-accelerator-central-logs-${this.accountsConfig.getLogArchiveAccountId()}-${this.globalConfig.homeRegion}`,
+    );
+    for (const vpcItem of props.networkConfig.vpcs ?? []) {
+      const accountId = this.accountsConfig.getAccountId(vpcItem.account);
+      if (accountId === cdk.Stack.of(this).account && vpcItem.region === cdk.Stack.of(this).region) {
         const vpcId = vpcMap.get(vpcItem.name);
         if (!vpcId) {
           throw new Error(`[network-vpc-endpoints-stack] Unable to locate VPC ${vpcItem.name}`);
@@ -164,7 +167,13 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
 
               // Create firewall
               if (firewallSubnets.length > 0) {
-                const nfw = this.createNetworkFirewall(firewallItem, vpcId, firewallSubnets, owningAccountId);
+                const nfw = this.createNetworkFirewall(
+                  firewallItem,
+                  vpcId,
+                  firewallSubnets,
+                  firewallLogBucket,
+                  owningAccountId,
+                );
                 firewallMap.set(firewallItem.name, nfw);
               }
             }
@@ -177,7 +186,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         for (const routeTableItem of vpcItem.routeTables ?? []) {
           // Check if endpoint routes exist
           for (const routeTableEntryItem of routeTableItem.routes ?? []) {
-            const id =
+            const endPointId =
               pascalCase(`${vpcItem.name}Vpc`) +
               pascalCase(`${routeTableItem.name}RouteTable`) +
               pascalCase(routeTableEntryItem.name);
@@ -233,7 +242,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
                 `[network-vpc-endpoints-stack] Adding Network Firewall Route Table Entry ${routeTableEntryItem.name}`,
               );
               firewall.addNetworkFirewallRoute(
-                id,
+                endPointId,
                 routeTableEntryItem.destination,
                 endpointAz,
                 this.acceleratorKey,
@@ -302,6 +311,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     firewallItem: NfwFirewallConfig,
     vpcId: string,
     subnets: string[],
+    firewallLogBucket: cdk.aws_s3.IBucket,
     owningAccountId?: string,
   ): NetworkFirewall {
     // Get firewall policy ARN
@@ -343,7 +353,6 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     );
 
     // Add logging configurations
-    let firewallLogBucket: cdk.aws_s3.IBucket | undefined;
     const destinationConfigs: cdk.aws_networkfirewall.CfnLoggingConfiguration.LogDestinationConfigProperty[] = [];
     for (const logItem of firewallItem.loggingConfiguration ?? []) {
       if (logItem.destination === 'cloud-watch-logs') {
@@ -368,16 +377,6 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         Logger.info(
           `[network-vpc-endpoints-stack] Add S3 ${logItem.type} logs for Network Firewall ${firewallItem.name}`,
         );
-
-        if (!firewallLogBucket) {
-          firewallLogBucket = cdk.aws_s3.Bucket.fromBucketName(
-            this,
-            'FirewallLogsBucket',
-            `aws-accelerator-central-logs-${this.accountsConfig.getLogArchiveAccountId()}-${
-              this.globalConfig.homeRegion
-            }`,
-          );
-        }
 
         destinationConfigs.push({
           logDestination: {
@@ -838,13 +837,12 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     });
 
     // Represents the item shared by RAM
-    const item = ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
+    return ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
       resourceShare,
       resourceShareItemType: itemType,
       kmsKey: this.acceleratorKey,
       logRetentionInDays: this.logRetention,
     });
-    return item;
   }
 
   /**

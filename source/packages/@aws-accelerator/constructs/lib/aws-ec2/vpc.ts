@@ -530,7 +530,7 @@ export class Vpc extends cdk.Resource implements IVpc {
     maxAggregationInterval: number;
     logFormat?: string;
     logRetentionInDays?: number;
-    encryptionKey?: cdk.aws_kms.IKey | undefined;
+    encryptionKey?: cdk.aws_kms.IKey;
     bucketArn?: string;
   }) {
     // Validate maxAggregationInterval
@@ -574,7 +574,7 @@ export class Vpc extends cdk.Resource implements IVpc {
       );
 
       new cdk.aws_ec2.CfnFlowLog(this, 'CloudWatchFlowLog', {
-        deliverLogsPermissionArn: role.roleArn, // import * as logs from 'aws-cdk-lib/aws-logs';
+        deliverLogsPermissionArn: role.roleArn,
         logDestinationType: 'cloud-watch-logs',
         logDestination: logGroup.logGroupArn,
         resourceId: this.vpcId,

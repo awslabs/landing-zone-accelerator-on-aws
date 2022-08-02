@@ -459,6 +459,11 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
   readonly userSets: UserSetConfig[] = [];
 
   /**
+   * Validation error message list
+   */
+  readonly errors: string[] = [];
+
+  /**
    *
    * @param values
    * @param configDir
@@ -467,7 +472,6 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
     //
     // Validation errors
     //
-    const errors: string[] = [];
 
     if (values) {
       const policies: { name: string; policyFile: string }[] = [];
@@ -478,19 +482,35 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
       }
 
       // Validate policy file existence
-      if (configDir) {
-        for (const policy of policies) {
-          if (!fs.existsSync(path.join(configDir, policy.policyFile))) {
-            errors.push(`Policy definition file ${policy.policyFile} not found, for ${policy.name} !!!`);
-          }
-        }
-      }
+      this.validatePolicyFileExists(policies, configDir);
 
-      if (errors.length) {
-        throw new Error(`${IamConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      if (this.errors.length) {
+        throw new Error(`${IamConfig.FILENAME} has ${this.errors.length} issues: ${this.errors.join(' ')}`);
       }
 
       Object.assign(this, values);
+    }
+  }
+
+  /**
+   * Validate policy file existence
+   * @param policies
+   * @param configDir
+   * @returns
+   */
+  private validatePolicyFileExists(
+    policies: {
+      name: string;
+      policyFile: string;
+    }[],
+    configDir?: string,
+  ) {
+    if (configDir) {
+      for (const policy of policies) {
+        if (!fs.existsSync(path.join(configDir, policy.policyFile))) {
+          this.errors.push(`Policy definition file ${policy.policyFile} not found, for ${policy.name} !!!`);
+        }
+      }
     }
   }
 

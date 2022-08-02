@@ -368,7 +368,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   }
 
   public getAccount(name: string): AccountConfig {
-    const value = [...this.mandatoryAccounts, ...this.workloadAccounts].find(value => value.name == name);
+    const value = [...this.mandatoryAccounts, ...this.workloadAccounts].find(item => item.name == name);
     if (value) {
       return value;
     }
@@ -379,7 +379,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   }
 
   public containsAccount(name: string): boolean {
-    const value = [...this.mandatoryAccounts, ...this.workloadAccounts].find(value => value.name == name);
+    const value = [...this.mandatoryAccounts, ...this.workloadAccounts].find(item => item.name == name);
     if (value) {
       return true;
     }

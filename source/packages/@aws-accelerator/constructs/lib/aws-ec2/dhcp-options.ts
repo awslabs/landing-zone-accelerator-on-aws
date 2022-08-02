@@ -11,11 +11,10 @@
  *  and limitations under the License.
  */
 
-import { CfnTag, IResource, Resource } from 'aws-cdk-lib';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
-export interface IDhcpOptions extends IResource {
+export interface IDhcpOptions extends cdk.IResource {
   /**
    * The name of the DHCP options set.
    */
@@ -63,10 +62,10 @@ export interface DhcpOptionsProps {
   /**
    * Any tags assigned to the DHCP options set.
    */
-  readonly tags?: CfnTag[];
+  readonly tags?: cdk.CfnTag[];
 }
 
-export class DhcpOptions extends Resource implements IDhcpOptions {
+export class DhcpOptions extends cdk.Resource implements IDhcpOptions {
   public readonly name: string;
   public readonly dhcpOptionsId: string;
 
@@ -75,10 +74,7 @@ export class DhcpOptions extends Resource implements IDhcpOptions {
 
     this.name = props.name;
 
-    // Add name tag to tags
-    props.tags?.push({ key: 'Name', value: this.name });
-
-    const resource = new ec2.CfnDHCPOptions(this, 'Resource', {
+    const resource = new cdk.aws_ec2.CfnDHCPOptions(this, 'Resource', {
       domainName: props.domainName,
       domainNameServers: props.domainNameServers ?? ['AmazonProvidedDNS'],
       netbiosNameServers: props.netbiosNameServers,
@@ -86,7 +82,9 @@ export class DhcpOptions extends Resource implements IDhcpOptions {
       ntpServers: props.ntpServers,
       tags: props.tags,
     });
+    // Add name tag to tags
+    cdk.Tags.of(this).add('Name', this.name);
 
-    this.dhcpOptionsId = resource.attrDhcpOptionsId;
+    this.dhcpOptionsId = resource.ref;
   }
 }

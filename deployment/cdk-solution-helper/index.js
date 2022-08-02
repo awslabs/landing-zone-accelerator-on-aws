@@ -64,54 +64,6 @@ fs.readdirSync(global_s3_assets).forEach(file => {
       }
     })
 
-
-    // For the below code to work with nested templates, the nested template file has to
-    // be added as metadata to the construct in the CDK code.
-    //
-    // const myNestedTemplate = new MyNestedStack(this, 'NestedStack', {
-    //     parameters: {
-    //         "FirstParameter": <some parameter 1>,
-    //         "SecondParameter": <some parameter 2>,
-    //         "SolutionID": solutionID,
-    //         "SolutionName": solutionName,
-    //         "ParentStackName": Aws.STACK_NAME
-    //     }
-    // });
-    //
-    // The slice at the end of the statement is to remove the ".json" extension. Since all templates are published ".template"
-    // myNestedTemplate.nestedStackResource!.addMetadata('nestedStackFileName', myNestedTemplate.templateFile.slice(0, -(".json".length)));
-    //
-    // The below block of code has been tested to work with single nesting levels. This block of code has not been tested for multilevel
-    // nesting of stacks
-    // nestedStacks.forEach(function(f) {
-    //     const fn = template.Resources[f];
-    //     fn.Properties.TemplateURL = {
-    //          'Fn::Join': [
-    //             '',
-    //             [
-    //                 'https://%%TEMPLATE_BUCKET_NAME%%.s3.',
-    //                 {
-    //                     'Ref' : 'AWS::URLSuffix'
-    //                 },
-    //                 '/',
-    //                 `%%SOLUTION_NAME%%/%%VERSION%%/${fn.Metadata.nestedStackFileName}`
-    //             ]
-    //          ]
-    //     };
-
-    //     const params = fn.Properties.Parameters ? fn.Properties.Parameters : {};
-    //     const nestedStackParameters = Object.keys(params).filter(function(key) {
-    //         if (key.search(_regex) > -1) {
-    //             return true;
-    //         }
-    //         return false;
-    //     });
-
-    //     nestedStackParameters.forEach(function(stkParam) {
-    //         fn.Properties.Parameters[stkParam] = undefined;
-    //     })
-    // });
-
     // Clean-up parameters section
     const parameters = (template.Parameters) ? template.Parameters : {};
     const assetParameters = Object.keys(parameters).filter(function(key) {

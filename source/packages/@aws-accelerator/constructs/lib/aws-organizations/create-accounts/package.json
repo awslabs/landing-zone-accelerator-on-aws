@@ -1,10 +1,11 @@
 {
   "name": "@aws-accelerator/constructs-aws-organizations-create-accounts",
   "version": "0.0.0",
+  "description": "Custom resource Lambda",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com"
+    "url": "https://aws.amazon.com/solutions"
   },
   "private": true,
   "main": "dist/index.js",

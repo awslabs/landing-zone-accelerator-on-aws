@@ -14,7 +14,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
-import { Duration } from 'aws-cdk-lib';
 import path = require('path');
 
 export interface ValidateEnvironmentConfigProps {
@@ -56,7 +55,7 @@ export class ValidateEnvironmentConfig extends Construct {
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, VALIDATE_ENVIRONMENT_RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'lambdas/validate-environment/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-      timeout: Duration.minutes(10),
+      timeout: cdk.Duration.minutes(10),
       policyStatements: [
         {
           Sid: 'organizations',
@@ -103,8 +102,6 @@ export class ValidateEnvironmentConfig extends Construct {
         },
       ],
     });
-
-    //TODO: Add permissions for drift ssm parameters
 
     //
     // Custom Resource definition. We want this resource to be evaluated on

@@ -15,19 +15,19 @@ import * as cdk from 'aws-cdk-lib';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
+
 import {
-  ACCOUNT_CONFIG,
-  GLOBAL_CONFIG,
-  IAM_CONFIG,
-  NETWORK_CONFIG,
-  ORGANIZATION_CONFIG,
-  SECURITY_CONFIG,
-} from './configs/test-config';
+  AccountsConfig,
+  GlobalConfig,
+  IamConfig,
+  NetworkConfig,
+  OrganizationConfig,
+  SecurityConfig,
+} from '@aws-accelerator/config';
+
 import * as path from 'path';
 import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 import { version } from '../../../../package.json';
-
-//import { SynthUtils } from '@aws-cdk/assert';
 
 const testNamePrefix = 'Construct(AccountsStack): ';
 
@@ -35,31 +35,33 @@ const testNamePrefix = 'Construct(AccountsStack): ';
  * AccountsStack
  */
 const app = new cdk.App({
-  context: { 'config-dir': path.join(__dirname, 'configs') },
+  context: { 'config-dir': path.join(__dirname, 'configs/all-enabled') },
 });
 const configDirPath = app.node.tryGetContext('config-dir');
 
-const env = {
-  account: '333333333333',
-  region: 'us-east-1',
-};
-
 const props: AcceleratorStackProps = {
-  env,
   configDirPath,
-  accountsConfig: ACCOUNT_CONFIG,
-  globalConfig: GLOBAL_CONFIG,
-  iamConfig: IAM_CONFIG,
-  networkConfig: NETWORK_CONFIG,
-  organizationConfig: ORGANIZATION_CONFIG,
-  securityConfig: SECURITY_CONFIG,
+  accountsConfig: AccountsConfig.load(configDirPath),
+  globalConfig: GlobalConfig.load(configDirPath),
+  iamConfig: IamConfig.load(configDirPath),
+  networkConfig: NetworkConfig.load(configDirPath),
+  organizationConfig: OrganizationConfig.load(configDirPath),
+  securityConfig: SecurityConfig.load(configDirPath),
   partition: 'aws',
 };
 
+const accountId = props.accountsConfig.getAccountId('Management');
+
 const stack = new AccountsStack(
   app,
-  `${AcceleratorStackNames[AcceleratorStage.ACCOUNTS]}-${env.account}-${env.region}`,
-  props,
+  `${AcceleratorStackNames[AcceleratorStage.ACCOUNTS]}-${accountId}-${props.globalConfig.homeRegion}`,
+  {
+    env: {
+      account: accountId,
+      region: props.globalConfig.homeRegion,
+    },
+    ...props,
+  },
 );
 
 /**
@@ -110,7 +112,7 @@ describe('AccountsStack', () => {
    * Number of CreatePolicy custom resource test
    */
   test(`${testNamePrefix} CreatePolicy custom resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::CreatePolicy', 2);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::CreatePolicy', 3);
   });
 
   /**
@@ -120,59 +122,59 @@ describe('AccountsStack', () => {
     cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::EnablePolicyType', 1);
   });
 
-  /**
-   * AttachDenyDeleteVpcFlowLogsManagement custom resource configuration test
-   */
-  test(`${testNamePrefix} AttachDenyDeleteVpcFlowLogsManagement resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        AttachDenyDeleteVpcFlowLogsManagementEF9C9CA8: {
-          Type: 'Custom::AttachPolicy',
-          UpdateReplacePolicy: 'Delete',
-          DeletionPolicy: 'Delete',
-          DependsOn: ['CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039'],
-          Properties: {
-            ServiceToken: {
-              'Fn::GetAtt': ['CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202', 'Arn'],
-            },
-            policyId: {
-              Ref: 'DenyDeleteVpcFlowLogsD2E9D6EC',
-            },
-            targetId: '333333333333',
-            type: 'SERVICE_CONTROL_POLICY',
-          },
-        },
-      },
-    });
-  });
+  // /**
+  //  * AttachDenyDeleteVpcFlowLogsManagement custom resource configuration test
+  //  */
+  // test(`${testNamePrefix} AttachDenyDeleteVpcFlowLogsManagement resource configuration test`, () => {
+  //   cdk.assertions.Template.fromStack(stack).templateMatches({
+  //     Resources: {
+  //       AttachDenyDeleteVpcFlowLogsManagementEF9C9CA8: {
+  //         Type: 'Custom::AttachPolicy',
+  //         UpdateReplacePolicy: 'Delete',
+  //         DeletionPolicy: 'Delete',
+  //         DependsOn: ['CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039'],
+  //         Properties: {
+  //           ServiceToken: {
+  //             'Fn::GetAtt': ['CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202', 'Arn'],
+  //           },
+  //           policyId: {
+  //             Ref: 'DenyDeleteVpcFlowLogsD2E9D6EC',
+  //           },
+  //           targetId: '111111111111',
+  //           type: 'SERVICE_CONTROL_POLICY',
+  //         },
+  //       },
+  //     },
+  //   });
+  // });
 
-  /**
-   * AttachDenyDeleteVpcFlowLogsSecurity custom resource configuration test
-   */
-  test(`${testNamePrefix} AttachDenyDeleteVpcFlowLogsSecurity resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        AttachDenyDeleteVpcFlowLogsSecurity37915A30: {
-          Type: 'Custom::AttachPolicy',
-          UpdateReplacePolicy: 'Delete',
-          DeletionPolicy: 'Delete',
-          Properties: {
-            ServiceToken: {
-              'Fn::GetAtt': ['CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202', 'Arn'],
-            },
-            partition: {
-              Ref: 'AWS::Partition',
-            },
-            policyId: {
-              Ref: 'DenyDeleteVpcFlowLogsD2E9D6EC',
-            },
-            targetId: 'Security-id',
-            type: 'SERVICE_CONTROL_POLICY',
-          },
-        },
-      },
-    });
-  });
+  // /**
+  //  * AttachDenyDeleteVpcFlowLogsSecurity custom resource configuration test
+  //  */
+  // test(`${testNamePrefix} AttachDenyDeleteVpcFlowLogsSecurity resource configuration test`, () => {
+  //   cdk.assertions.Template.fromStack(stack).templateMatches({
+  //     Resources: {
+  //       AttachDenyDeleteVpcFlowLogsSecurity37915A30: {
+  //         Type: 'Custom::AttachPolicy',
+  //         UpdateReplacePolicy: 'Delete',
+  //         DeletionPolicy: 'Delete',
+  //         Properties: {
+  //           ServiceToken: {
+  //             'Fn::GetAtt': ['CustomOrganizationsAttachPolicyCustomResourceProviderHandlerB3233202', 'Arn'],
+  //           },
+  //           partition: {
+  //             Ref: 'AWS::Partition',
+  //           },
+  //           policyId: {
+  //             Ref: 'DenyDeleteVpcFlowLogsD2E9D6EC',
+  //           },
+  //           targetId: 'Security-id',
+  //           type: 'SERVICE_CONTROL_POLICY',
+  //         },
+  //       },
+  //     },
+  //   });
+  // });
 
   // /**
   //  * AuditOrganizationAccount custom resource configuration test
@@ -218,7 +220,7 @@ describe('AccountsStack', () => {
           DependsOn: ['CustomEnablePolicyTypeCustomResourceProviderRoleAE71B2CA'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-111111111111-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -317,7 +319,7 @@ describe('AccountsStack', () => {
   //         DependsOn: ['CustomInviteAccountToOrganizationCustomResourceProviderRole0F64F419'],
   //         Properties: {
   //           Code: {
-  //             S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+  //             S3Bucket: 'cdk-hnb659fds-assets-111111111111-us-east-1',
   //           },
   //           Handler: '__entrypoint__.handler',
   //           MemorySize: 128,
@@ -396,7 +398,7 @@ describe('AccountsStack', () => {
           DependsOn: ['CustomOrganizationsAttachPolicyCustomResourceProviderRole051E00A6'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-111111111111-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -473,7 +475,7 @@ describe('AccountsStack', () => {
           DependsOn: ['CustomOrganizationsCreatePolicyCustomResourceProviderRoleBA0ADB43'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-111111111111-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -538,7 +540,7 @@ describe('AccountsStack', () => {
                             {
                               Ref: 'AWS::Partition',
                             },
-                            ':s3:::cdk-hnb659fds-assets-333333333333-us-east-1/*',
+                            ':s3:::cdk-hnb659fds-assets-111111111111-us-east-1/*',
                           ],
                         ],
                       },
@@ -555,32 +557,32 @@ describe('AccountsStack', () => {
     });
   });
 
-  /**
-   * DenyDeleteVpcFlowLogs custom resource configuration test
-   */
-  test(`${testNamePrefix} DenyDeleteVpcFlowLogs custom resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        DenyDeleteVpcFlowLogsD2E9D6EC: {
-          Type: 'Custom::CreatePolicy',
-          UpdateReplacePolicy: 'Delete',
-          DeletionPolicy: 'Delete',
-          DependsOn: [
-            'CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9',
-            'enablePolicyTypeScpB4BC96BE',
-          ],
-          Properties: {
-            ServiceToken: {
-              'Fn::GetAtt': ['CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619', 'Arn'],
-            },
-            bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
-            name: 'DenyDeleteVpcFlowLogs',
-            type: 'SERVICE_CONTROL_POLICY',
-          },
-        },
-      },
-    });
-  });
+  // /**
+  //  * DenyDeleteVpcFlowLogs custom resource configuration test
+  //  */
+  // test(`${testNamePrefix} DenyDeleteVpcFlowLogs custom resource configuration test`, () => {
+  //   cdk.assertions.Template.fromStack(stack).templateMatches({
+  //     Resources: {
+  //       DenyDeleteVpcFlowLogsD2E9D6EC: {
+  //         Type: 'Custom::CreatePolicy',
+  //         UpdateReplacePolicy: 'Delete',
+  //         DeletionPolicy: 'Delete',
+  //         DependsOn: [
+  //           'CustomOrganizationsCreatePolicyCustomResourceProviderLogGroup019B74A9',
+  //           'enablePolicyTypeScpB4BC96BE',
+  //         ],
+  //         Properties: {
+  //           ServiceToken: {
+  //             'Fn::GetAtt': ['CustomOrganizationsCreatePolicyCustomResourceProviderHandler7A188619', 'Arn'],
+  //           },
+  //           bucket: 'cdk-hnb659fds-assets-111111111111-us-east-1',
+  //           name: 'DenyDeleteVpcFlowLogs',
+  //           type: 'SERVICE_CONTROL_POLICY',
+  //         },
+  //       },
+  //     },
+  //   });
+  // });
 
   // /**
   //  * LogArchiveOrganizationAccount custom resource configuration test
@@ -629,7 +631,7 @@ describe('AccountsStack', () => {
   //           ServiceToken: {
   //             'Fn::GetAtt': ['CustomInviteAccountToOrganizationCustomResourceProviderHandlerAEB26818', 'Arn'],
   //           },
-  //           accountId: '333333333333',
+  //           accountId: '111111111111',
   //           roleArn: {
   //             'Fn::Join': [
   //               '',
@@ -638,7 +640,7 @@ describe('AccountsStack', () => {
   //                 {
   //                   Ref: 'AWS::Partition',
   //                 },
-  //                 ':iam::333333333333:role/AWSControlTowerExecution',
+  //                 ':iam::111111111111:role/AWSControlTowerExecution',
   //               ],
   //             ],
   //           },
@@ -657,7 +659,7 @@ describe('AccountsStack', () => {
         SsmParamAcceleratorVersionFF83282D: {
           Type: 'AWS::SSM::Parameter',
           Properties: {
-            Name: '/accelerator/AWSAccelerator-AccountsStack-333333333333-us-east-1/version',
+            Name: '/accelerator/AWSAccelerator-AccountsStack-111111111111-us-east-1/version',
             Type: 'String',
             Value: version,
           },
@@ -675,7 +677,7 @@ describe('AccountsStack', () => {
         SsmParamStackId521A78D3: {
           Type: 'AWS::SSM::Parameter',
           Properties: {
-            Name: '/accelerator/AWSAccelerator-AccountsStack-333333333333-us-east-1/stack-id',
+            Name: '/accelerator/AWSAccelerator-AccountsStack-111111111111-us-east-1/stack-id',
             Type: 'String',
             Value: {
               Ref: 'AWS::StackId',

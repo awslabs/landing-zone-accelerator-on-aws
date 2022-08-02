@@ -104,6 +104,45 @@ export class Vpc implements IVpc {
     this.name = nameTag;
   }
 
+  private validateSubnet(subnet: AWS.EC2.Subnet) {
+    if (!subnet.SubnetId) {
+      throw new Error(`Unable to retrieve subnet ID`);
+    }
+    if (!subnet.CidrBlock) {
+      throw new Error(`Unable to retrieve CIDR block for subnet ${subnet.SubnetId}`);
+    }
+  }
+
+  private getSubnets(subnetLists: AWS.EC2.SubnetList | undefined): Subnet[] {
+    const subnets: Subnet[] = [];
+
+    for (const subnet of subnetLists ?? []) {
+      this.validateSubnet(subnet);
+
+      // Determine if subnet is in scope of IPAM
+      const subnetCidr = IPv4CidrRange.fromCidr(subnet.CidrBlock!);
+      for (const vpcRange of this.allocatedCidrs) {
+        if (subnetCidr.inside(vpcRange) || subnetCidr.isEquals(vpcRange)) {
+          // Get name tag
+          const nameTag = subnet.Tags?.filter(item => item.Key === 'Name')[0].Value;
+
+          // Push object to array
+          subnets.push(
+            new Subnet({
+              allocatedCidr: subnetCidr,
+              mapPublicIpOnLaunch: subnet.MapPublicIpOnLaunch ?? false,
+              name: nameTag,
+              subnetId: subnet.SubnetId!,
+              tags: subnet.Tags,
+            }),
+          );
+        }
+      }
+    }
+
+    return subnets;
+  }
+
   private async subnetDetails(): Promise<void> {
     let nextToken: string | undefined = undefined;
     const subnets: Subnet[] = [];
@@ -116,34 +155,8 @@ export class Vpc implements IVpc {
       );
 
       // Iterate through subnets
-      for (const subnet of page.Subnets ?? []) {
-        if (!subnet.SubnetId) {
-          throw new Error(`Unable to retrieve subnet ID`);
-        }
-        if (!subnet.CidrBlock) {
-          throw new Error(`Unable to retrieve CIDR block for subnet ${subnet.SubnetId}`);
-        }
+      subnets.push(...this.getSubnets(page.Subnets));
 
-        // Determine if subnet is in scope of IPAM
-        const subnetCidr = IPv4CidrRange.fromCidr(subnet.CidrBlock);
-        for (const vpcRange of this.allocatedCidrs) {
-          if (subnetCidr.inside(vpcRange) || subnetCidr.isEquals(vpcRange)) {
-            // Get name tag
-            const nameTag = subnet.Tags?.filter(item => item.Key === 'Name')[0].Value;
-
-            // Push object to array
-            subnets.push(
-              new Subnet({
-                allocatedCidr: subnetCidr,
-                mapPublicIpOnLaunch: subnet.MapPublicIpOnLaunch ?? false,
-                name: nameTag,
-                subnetId: subnet.SubnetId,
-                tags: subnet.Tags,
-              }),
-            );
-          }
-        }
-      }
       nextToken = page.NextToken;
     } while (nextToken);
 

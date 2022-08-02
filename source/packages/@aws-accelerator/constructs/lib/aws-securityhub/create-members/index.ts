@@ -65,7 +65,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
     case 'Delete':
       const existingMemberAccountIds: string[] = [];
-      let nextToken: string | undefined = undefined;
       do {
         const page = await throttlingBackOff(() => securityHubClient.listMembers({ NextToken: nextToken }).promise());
         for (const member of page.Members ?? []) {

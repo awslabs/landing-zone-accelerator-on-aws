@@ -26,6 +26,8 @@ reference/sample-configurations/aws-best-practices/custom-config-rules/attach-ec
 reference/sample-configurations/aws-best-practices/custom-config-rules/ec2-instance-profile-permissions.zip
 reference/sample-configurations/aws-best-practices-govcloud-us/govcloud-us-config/custom-config-rules/attach-ec2-instance-profile.zip
 reference/sample-configurations/aws-best-practices-govcloud-us/govcloud-us-config/custom-config-rules/ec2-instance-profile-permissions.zip
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/custom-config-rules/attach-ec2-instance-profile.zip
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/custom-config-rules/ec2-instance-profile-permissions.zip
 
 source/packages/@aws-accelerator/installer/bin/installer.ts:18
 source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:59
@@ -67,7 +69,7 @@ source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts
 
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:24
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:78
-source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:85
+source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:88
 
 
 source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:786
@@ -94,12 +96,12 @@ source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1
 source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1492
 source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1637
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:763
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1156
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1165
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1174
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1183
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1192
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:768
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1142
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1151
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1160
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1169
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1178
 
 source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:68
 source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:82

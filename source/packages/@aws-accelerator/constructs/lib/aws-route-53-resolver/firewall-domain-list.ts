@@ -141,9 +141,9 @@ export class ResolverFirewallDomainList extends cdk.Resource implements IResolve
     }
   }
 
-  private getAssetUrl(path: string): string {
+  private getAssetUrl(assetUrlPath: string): string {
     const asset = new cdk.aws_s3_assets.Asset(this, 'Asset', {
-      path: path,
+      path: assetUrlPath,
     });
     return asset.s3ObjectUrl;
   }

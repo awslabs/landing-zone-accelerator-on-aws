@@ -155,25 +155,6 @@ describe('GuardDutyPublishingDestination', () => {
                 'Arn',
               ],
             },
-            destinationArn: {
-              'Fn::Join': [
-                '',
-                [
-                  'arn:',
-                  {
-                    Ref: 'AWS::Partition',
-                  },
-                  ':s3:::aws-accelerator-org-gduty-pub-dest-',
-                  {
-                    Ref: 'AWS::AccountId',
-                  },
-                  '-',
-                  {
-                    Ref: 'AWS::Region',
-                  },
-                ],
-              ],
-            },
             exportDestinationType: 'S3',
             kmsKeyArn: {
               'Fn::GetAtt': ['CustomKey1E6D0D07', 'Arn'],

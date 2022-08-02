@@ -65,8 +65,20 @@ echo "--------------------------------------------------------------------------
 echo "[Packing] Deployment folder"
 echo "------------------------------------------------------------------------------"
 
-echo "cp -r $deployment_dir $dist_dir"
-cp -r $deployment_dir $dist_dir
+echo "mkdir -p $dist_dir/deployment/"
+mkdir -p $dist_dir/deployment/
+
+echo "cp -r $deployment_dir/cdk-solution-helper $dist_dir/deployment/cdk-solution-helper"
+cp -r $deployment_dir/cdk-solution-helper $dist_dir/deployment/cdk-solution-helper
+
+echo "cp $deployment_dir/build-open-source-dist.sh $dist_dir/deployment/"
+cp $deployment_dir/build-open-source-dist.sh $dist_dir/deployment/
+
+echo "cp $deployment_dir/build-s3-dist.sh $dist_dir/deployment/"
+cp $deployment_dir/build-s3-dist.sh $dist_dir/deployment/
+
+echo "cp $deployment_dir/solution_config $dist_dir/deployment/"
+cp $deployment_dir/solution_config $dist_dir/deployment/
 
 echo "------------------------------------------------------------------------------"
 echo "[Packing] Reference folder"
@@ -107,6 +119,8 @@ echo $dist_dir
 # General cleanup of node_modules and package-lock.json files
 echo "find $dist_dir -iname "node_modules" -type d -exec rm -rf "{}" \; 2> /dev/null"
 find $dist_dir -iname "node_modules" -type d -exec rm -rf "{}" \; 2> /dev/null
+echo "find $dist_dir -iname "dist" -type d -exec rm -rf "{}" \; 2> /dev/null"
+find $dist_dir -iname "dist" -type d -exec rm -rf "{}" \; 2> /dev/null
 echo "find $dist_dir -iname "package-lock.json" -type f -exec rm -f "{}" \; 2> /dev/null"
 find $dist_dir -iname "package-lock.json" -type f -exec rm -f "{}" \; 2> /dev/null
 

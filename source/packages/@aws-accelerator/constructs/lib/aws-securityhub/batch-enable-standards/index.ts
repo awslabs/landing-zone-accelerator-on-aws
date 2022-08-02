@@ -173,7 +173,6 @@ async function getExistingEnabledStandards(
   // Get list of  existing enabled standards within securityhub
   const existingEnabledStandardArns: AWS.SecurityHub.StandardsSubscription[] = [];
   response.StandardsSubscriptions!.forEach(item => {
-    // if (item.StandardsStatus === StandardsStatus.READY) {
     existingEnabledStandardArns.push({
       StandardsArn: item.StandardsArn!,
       StandardsInput: item.StandardsInput!,
@@ -201,6 +200,7 @@ async function getControlArnsToModify(
   const disableStandardControls: string[] = [];
   const enableStandardControls: string[] = [];
 
+  let nextToken: string | undefined = undefined;
   for (const inputStandard of inputStandards) {
     if (inputStandard.enable) {
       for (const awsSecurityHubStandard of awsSecurityHubStandards) {
@@ -213,15 +213,11 @@ async function getControlArnsToModify(
 
             const standardsControl: AWS.SecurityHub.StandardsControl[] = [];
 
-            let nextToken: string | undefined = undefined;
             do {
-              const page = await throttlingBackOff(() =>
-                securityHubClient
-                  .describeStandardsControls({
-                    StandardsSubscriptionArn: existingEnabledStandard?.StandardsSubscriptionArn,
-                    NextToken: nextToken,
-                  })
-                  .promise(),
+              const page: AWS.SecurityHub.DescribeStandardsControlsResponse = await getDescribeStandardsControls(
+                securityHubClient,
+                existingEnabledStandard?.StandardsSubscriptionArn,
+                nextToken,
               );
               for (const control of page.Controls ?? []) {
                 standardsControl.push(control);
@@ -235,15 +231,12 @@ async function getControlArnsToModify(
               );
               await delay(10000);
               console.warn(`Rechecking - Getting controls for ${existingEnabledStandard?.StandardsSubscriptionArn}`);
-              let nextToken: string | undefined = undefined;
+              nextToken = undefined;
               do {
-                const page = await throttlingBackOff(() =>
-                  securityHubClient
-                    .describeStandardsControls({
-                      StandardsSubscriptionArn: existingEnabledStandard?.StandardsSubscriptionArn,
-                      NextToken: nextToken,
-                    })
-                    .promise(),
+                const page: AWS.SecurityHub.DescribeStandardsControlsResponse = await getDescribeStandardsControls(
+                  securityHubClient,
+                  existingEnabledStandard?.StandardsSubscriptionArn,
+                  nextToken,
                 );
                 for (const control of page.Controls ?? []) {
                   standardsControl.push(control);
@@ -331,4 +324,19 @@ async function getStandardsModificationList(
 
 async function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function getDescribeStandardsControls(
+  securityHubClient: AWS.SecurityHub,
+  standardsSubscriptionArn: string,
+  nextToken?: string,
+): Promise<AWS.SecurityHub.DescribeStandardsControlsResponse> {
+  return throttlingBackOff(() =>
+    securityHubClient
+      .describeStandardsControls({
+        StandardsSubscriptionArn: standardsSubscriptionArn,
+        NextToken: nextToken,
+      })
+      .promise(),
+  );
 }

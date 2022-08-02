@@ -51,9 +51,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       let nextToken: string | undefined = undefined;
       do {
         const page = await throttlingBackOff(() => organizationsClient.listRoots({ NextToken: nextToken }).promise());
-        for (const item of page.Roots ?? []) {
-          if (item.Name === 'Root') {
-            if (item.PolicyTypes?.find(item => item.Type === policyType && item.Status === 'ENABLED')) {
+        for (const orgRoot of page.Roots ?? []) {
+          if (orgRoot.Name === 'Root') {
+            if (orgRoot.PolicyTypes?.find(item => item.Type === policyType && item.Status === 'ENABLED')) {
               return {
                 PhysicalResourceId: policyType,
                 Status: 'SUCCESS',
@@ -61,7 +61,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             }
 
             await throttlingBackOff(() =>
-              organizationsClient.enablePolicyType({ PolicyType: policyType, RootId: item.Id! }).promise(),
+              organizationsClient.enablePolicyType({ PolicyType: policyType, RootId: orgRoot.Id! }).promise(),
             );
 
             return {

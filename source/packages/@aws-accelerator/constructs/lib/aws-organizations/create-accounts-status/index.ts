@@ -32,7 +32,7 @@ interface AccountConfig {
   email: string;
   enableGovCloud: string;
   organizationalUnitId: string;
-  createRequestId?: string | undefined;
+  createRequestId?: string;
 }
 
 type AccountConfigs = Array<AccountConfig>;
@@ -157,7 +157,8 @@ async function getSingleAccountConfigFromTable(): Promise<AccountConfigs> {
   const response = await throttlingBackOff(() => documentClient.scan(scanParams).promise());
 
   console.log(`getSingleAccount response ${JSON.stringify(response)}`);
-  if (response.Items?.length ?? 0 > 0) {
+  const itemCount = response.Items?.length ?? 0;
+  if (itemCount > 0) {
     const account: AccountConfig = JSON.parse(response.Items![0]['accountConfig']);
     accountToAdd.push(account);
     console.log(`Account to add ${JSON.stringify(accountToAdd)}`);
@@ -216,13 +217,11 @@ async function createGovCloudAccount(
 async function getAccountCreationStatus(
   requestId: string,
 ): Promise<AWS.Organizations.DescribeCreateAccountStatusResponse> {
-  const response = await throttlingBackOff(() =>
+  return throttlingBackOff(() =>
     organizationsClient.describeCreateAccountStatus({ CreateAccountRequestId: requestId }).promise(),
   );
-  return response;
 }
 
-// TODO: Fix use update
 async function updateAccountConfig(accountConfig: AccountConfig): Promise<boolean> {
   const params = {
     TableName: newOrgAccountsTableName,
@@ -285,22 +284,22 @@ async function saveGovCloudAccountMapping(
   }
 }
 
-async function deleteAllRecordsFromTable(tableName: string) {
+async function deleteAllRecordsFromTable(paramTableName: string) {
   const params = {
-    TableName: tableName,
+    TableName: paramTableName,
     ProjectionExpression: 'accountEmail',
   };
   const response = await documentClient.scan(params).promise();
   if (response.Items) {
     for (const item of response.Items) {
       console.log(item['accountEmail']);
-      const params = {
-        TableName: tableName,
+      const itemParams = {
+        TableName: paramTableName,
         Key: {
           accountEmail: item['accountEmail'],
         },
       };
-      await documentClient.delete(params).promise();
+      await documentClient.delete(itemParams).promise();
     }
   }
 }

@@ -1,0 +1,736 @@
+homeRegion: &HOME_REGION us-east-1
+defaultVpc:
+  delete: true
+  excludeAccounts: []
+transitGateways:
+  - name: Network-Main
+    account: Network
+    region: *HOME_REGION
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 65521
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    routeTables:
+      - name: Network-Main-Core
+        routes:
+          - destinationCidrBlock: 10.100.0.0/16
+            attachment:
+              vpcName: Network-Endpoints
+              account: Network
+          - destinationCidrBlock: 1.1.1.1/32
+            blackhole: true
+          - destinationPrefixList: accelerator-prefix-list
+            attachment:
+              vpcName: Network-Endpoints
+              account: Network
+      - name: Network-Main-Segregated
+        routes: []
+      - name: Network-Main-Shared
+        routes: []
+      - name: Network-Main-Standalone
+        routes: []
+dhcpOptions:
+  - name: accelerator-dhcp-opts
+    accounts:
+      - Network
+    regions:
+      - *HOME_REGION
+    domainName: example.com
+    domainNameServers:
+      - 1.1.1.1
+      - 2.2.2.2
+    netbiosNameServers:
+      - 1.1.1.1
+      - 2.2.2.2
+    netbiosNodeType: 2
+    ntpServers:
+      - 1.1.1.1
+      - 2.2.2.2
+centralNetworkServices:
+  delegatedAdminAccount: Network
+  ipams:
+    - name: accelerator-ipam
+      region: *HOME_REGION
+      description: Accelerator IPAM
+      operatingRegions:
+        - *HOME_REGION
+        - us-west-2
+      pools:
+        - name: &BASE_POOL base-pool
+          description: accelerator-base
+          provisionedCidrs:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+        - name: home-region-pool
+          description: Pool for us-east-1
+          locale: *HOME_REGION
+          provisionedCidrs:
+            - 10.0.0.0/16
+          sourceIpamPool: *BASE_POOL
+        - name: home-region-prod-pool
+          description: Pool for prod environment
+          allocationResourceTags:
+            - key: env
+              value: prod
+          locale: *HOME_REGION
+          provisionedCidrs:
+            - 10.0.0.0/24
+          shareTargets:
+            organizationalUnits:
+              - Infrastructure
+          sourceIpamPool: home-region-pool
+        - name: west-region-pool
+          description: Pool for us-west-2
+          locale: us-west-2
+          provisionedCidrs:
+            - 10.1.0.0/16
+          sourceIpamPool: *BASE_POOL
+
+  networkFirewall:
+    firewalls:
+      - name: accelerator-firewall
+        region: *HOME_REGION
+        firewallPolicy: accelerator-policy
+        subnets:
+          - Network-Inspection-A
+          - Network-Inspection-B
+        vpc: Network-Inspection
+        loggingConfiguration:
+          - destination: s3
+            type: ALERT
+          - destination: cloud-watch-logs
+            type: FLOW
+    policies:
+      - name: accelerator-policy
+        regions:
+          - *HOME_REGION
+        firewallPolicy:
+          statelessDefaultActions: ["aws:forward_to_sfe"]
+          statelessFragmentDefaultActions: ["aws:forward_to_sfe"]
+          statefulRuleGroups:
+            - name: accelerator-rule-group
+            - name: domain-list-group
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+    rules:
+      - name: accelerator-rule-group
+        regions:
+          - *HOME_REGION
+        capacity: 100
+        type: STATEFUL
+        ruleGroup:
+          rulesSource:
+            statefulRules:
+              - action: PASS
+                header:
+                  destination: 10.0.0.0/16
+                  destinationPort: ANY
+                  direction: FORWARD
+                  protocol: IP
+                  source: 10.1.0.0/16
+                  sourcePort: ANY
+                ruleOptions:
+                  - keyword: sid
+                    settings: ["100"]
+              - action: DROP
+                header:
+                  destination: ANY
+                  destinationPort: ANY
+                  direction: ANY
+                  protocol: IP
+                  source: ANY
+                  sourcePort: ANY
+                ruleOptions:
+                  - keyword: sid
+                    settings: ["101"]
+              - action: ALERT
+                header:
+                  destination: 1.1.1.1/32
+                  destinationPort: "80"
+                  direction: FORWARD
+                  protocol: TCP
+                  source: ANY
+                  sourcePort: ANY
+                ruleOptions:
+                  - keyword: msg
+                    settings: ['"example message"']
+                  - keyword: sid
+                    settings: ["102"]
+      - name: domain-list-group
+        regions:
+          - *HOME_REGION
+        capacity: 10
+        type: STATEFUL
+        ruleGroup:
+          rulesSource:
+            rulesSourceList:
+              generatedRulesType: DENYLIST
+              targets: [".example.com"]
+              targetTypes: ["TLS_SNI", "HTTP_HOST"]
+          ruleVariables:
+            ipSets:
+              name: HOME_NET
+              definition:
+                - 10.0.0.0/16
+                - 10.1.0.0/16
+            portSets:
+              name: HOME_NET
+              definition:
+                - "80"
+                - "443"
+  route53Resolver:
+    endpoints:
+      - name: accelerator-inbound
+        type: INBOUND
+        vpc: Network-Endpoints
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
+      - name: accelerator-outbound
+        type: OUTBOUND
+        vpc: Network-Endpoints
+        subnets:
+          - Network-Endpoints-A
+          - Network-Endpoints-B
+        rules:
+          - name: example-rule
+            domainName: example.com
+            targetIps:
+              - ip: 1.1.1.1
+                port: "5353" # only include if targeting a non-standard DNS port
+              - ip: 2.2.2.2
+            shareTargets:
+              organizationalUnits:
+                - Infrastructure
+          - name: inbound-target-rule
+            domainName: aws.internal.domain
+            inboundEndpointTarget: accelerator-inbound # This endpoint must be listed in the configuration before the outbound endpoint
+    queryLogs:
+      name: accelerator-query-logs
+      destinations:
+        - s3
+        - cloud-watch-logs
+      shareTargets:
+        organizationalUnits:
+          - Infrastructure
+    firewallRuleGroups:
+      - name: accelerator-block-group
+        regions:
+          - *HOME_REGION
+        rules:
+          - name: nxdomain-block-rule
+            action: BLOCK
+            customDomainList: dns-firewall-domain-lists/domain-list-1.txt
+            priority: 100
+            blockResponse: NXDOMAIN
+          - name: override-block-rule
+            action: BLOCK
+            customDomainList: dns-firewall-domain-lists/domain-list-1.txt
+            priority: 200
+            blockResponse: OVERRIDE
+            blockOverrideDomain: amazon.com
+            blockOverrideTtl: 3600
+          - name: managed-rule
+            action: BLOCK
+            managedDomainList: AWSManagedDomainsBotnetCommandandControl
+            priority: 300
+            blockResponse: NODATA
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+prefixLists:
+  - name: accelerator-prefix-list
+    accounts:
+      - Network
+    regions:
+      - *HOME_REGION
+    addressFamily: "IPv4"
+    maxEntries: 1
+    entries:
+      - 10.1.0.1/32
+
+endpointPolicies:
+  - name: Default
+    document: vpc-endpoint-policies/default.json
+  - name: Ec2
+    document: vpc-endpoint-policies/ec2.json
+
+vpcs:
+  - name: Network-Endpoints
+    account: Network
+    region: *HOME_REGION
+    ipamAllocations:
+      - ipamPoolName: home-region-prod-pool
+        netmaskLength: 25
+      - ipamPoolName: home-region-prod-pool
+        netmaskLength: 25
+    internetGateway: false
+    dhcpOptions: accelerator-dhcp-opts
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    dnsFirewallRuleGroups:
+      - name: accelerator-block-group
+        priority: 101
+    queryLogs:
+      - accelerator-query-logs
+    resolverRules:
+      - example-rule
+    routeTables:
+      - name: Network-Endpoints-Tgw-A
+        routes: []
+      - name: Network-Endpoints-Tgw-B
+        routes: []
+      - name: Network-Endpoints-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: PlRoute
+            destinationPrefixList: accelerator-prefix-list
+            type: transitGateway
+            target: Network-Main
+      - name: Network-Endpoints-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+          - name: PlRoute
+            destinationPrefixList: accelerator-prefix-list
+            type: transitGateway
+            target: Network-Main
+    subnets:
+      - name: Network-Endpoints-A
+        availabilityZone: a
+        routeTable: Network-Endpoints-A
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 27
+        shareTargets:
+          organizationalUnits:
+            - Infrastructure
+          accounts:
+            - Network
+      - name: Network-Endpoints-B
+        availabilityZone: b
+        routeTable: Network-Endpoints-B
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 27
+      - name: Network-EndpointsTgwAttach-A
+        availabilityZone: a
+        routeTable: Network-Endpoints-Tgw-A
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+      - name: Network-EndpointsTgwAttach-B
+        availabilityZone: b
+        routeTable: Network-Endpoints-Tgw-B
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+    transitGatewayAttachments:
+      - name: Network-Endpoints
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+          - Network-Main-Segregated
+        subnets:
+          - Network-EndpointsTgwAttach-A
+          - Network-EndpointsTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    interfaceEndpoints:
+      central: true
+      defaultPolicy: Default
+      subnets:
+        - Network-Endpoints-A
+        - Network-Endpoints-B
+      endpoints:
+        - service: ec2
+        - service: ec2messages
+        - service: ssm
+        - service: ssmmessages
+        - service: kms
+        - service: logs
+        # - service: secretsmanager
+        # - service: cloudformation
+        # - service: access-analyzer
+        # - service: application-autoscaling
+        # - service: appmesh-envoy-management
+        # - service: athena
+        # - service: autoscaling
+        # - service: autoscaling-plans
+        # - service: clouddirectory
+        # - service: cloudtrail
+        # - service: codebuild
+        # - service: codecommit
+        # - service: codepipeline
+        # - service: config
+        # - service: datasync
+        # - service: ecr.dkr
+        # - service: ecs
+        # - service: ecs-agent
+        # - service: ecs-telemetry
+        # - service: elasticfilesystem
+        # - service: elasticloadbalancing
+        # - service: elasticmapreduce
+        # - service: events
+        # - service: execute-api
+        # - service: git-codecommit
+        # - service: glue
+        # - service: kinesis-streams
+        # - service: kms
+        # - service: logs
+        # - service: monitoring
+        # - service: sagemaker.api
+        # - service: sagemaker.runtime
+        # - service: servicecatalog
+        # - service: sms
+        # - service: sns
+        # - service: sqs
+        # - service: storagegateway
+        # - service: sts
+        # - service: transfer
+        # - service: workspaces
+        # - service: awsconnector
+        # - service: ecr.api
+        # - service: kinesis-firehose
+        # - service: states
+        # - service: acm-pca
+        # - service: cassandra
+        # - service: ebs
+        # - service: elasticbeanstalk
+        # - service: elasticbeanstalk-health
+        # - service: email-smtp
+        # - service: license-manager
+        # - service: macie2
+        # - service: notebook
+        # - service: synthetics
+        # - service: transfer.server
+    securityGroups:
+      - name: "Management"
+        description: "Management Security Group"
+        inboundRules:
+          - description: "Management RDP Traffic Inbound"
+            types:
+              - RDP
+            sources:
+              - "10.0.0.0/8"
+              - "100.96.252.0/23"
+              - "100.96.250.0/23"
+              - account: "Network"
+                vpc: "Network-Endpoints"
+                subnets:
+                  - "Network-EndpointsTgwAttach-A"
+                  - "Network-EndpointsTgwAttach-B"
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - accelerator-prefix-list
+          - description: "Management SSH Traffic Inbound"
+            types: []
+            tcpPorts:
+              - 22
+            udpPorts:
+              - 22
+            sources:
+              - 10.0.0.0/8
+              - 100.96.252.0/23
+              - 100.96.250.0/23
+              - account: Network
+                vpc: Network-Endpoints
+                subnets:
+                  - Network-EndpointsTgwAttach-A
+                  - Network-EndpointsTgwAttach-B
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - accelerator-prefix-list
+        outboundRules:
+          - description: "All Outbound"
+            types:
+              - ALL
+            sources:
+              - 10.0.0.0/8
+              - 100.96.252.0/23
+              - 100.96.250.0/23
+              - account: Network
+                vpc: Network-Endpoints
+                subnets:
+                  - Network-EndpointsTgwAttach-A
+                  - Network-EndpointsTgwAttach-B
+              - securityGroups:
+                  - Management
+              - prefixLists:
+                  - accelerator-prefix-list
+          - description: "All Outbound"
+            types: []
+            tcpPorts:
+              - 22
+            udpPorts:
+              - 22
+            sources:
+              - 10.0.0.0/8
+    networkAcls:
+      - name: TestNACL
+        subnetAssociations:
+          - Network-Endpoints-A
+        inboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source: 10.0.0.0/8
+          - action: allow
+            rule: 20
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-A
+        outboundRules:
+          - action: allow
+            rule: 10
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination: 0.0.0.0/0
+          - action: allow
+            rule: 20
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-A
+
+  - name: Network-Inspection
+    account: Network
+    region: *HOME_REGION
+    cidrs:
+      - 10.2.0.0/22
+      - 192.168.0.0/16
+    routeTables:
+      - name: Network-Inspection-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: Network-Inspection-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: Network-Inspection-Tgw-A
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: accelerator-firewall
+            targetAvailabilityZone: a
+      - name: Network-Inspection-Tgw-B
+        routes:
+          - name: NfwRoute
+            destination: 0.0.0.0/0
+            type: networkFirewall
+            target: accelerator-firewall
+            targetAvailabilityZone: b
+    subnets:
+      - name: Network-Inspection-A
+        availabilityZone: a
+        routeTable: Network-Inspection-A
+        ipv4CidrBlock: 10.2.0.0/24
+      - name: Network-Inspection-B
+        availabilityZone: b
+        routeTable: Network-Inspection-B
+        ipv4CidrBlock: 10.2.1.0/24
+      - name: Network-InspectionTgwAttach-A
+        availabilityZone: a
+        routeTable: Network-Inspection-Tgw-A
+        ipv4CidrBlock: 10.2.3.208/28
+      - name: Network-InspectionTgwAttach-B
+        availabilityZone: b
+        routeTable: Network-Inspection-Tgw-B
+        ipv4CidrBlock: 10.2.3.224/28
+    transitGatewayAttachments:
+      - name: Network-Inspection
+        transitGateway:
+          name: Network-Main
+          account: Network
+        options:
+          applianceModeSupport: enable
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+          - Network-Main-Segregated
+        subnets:
+          - Network-InspectionTgwAttach-A
+          - Network-InspectionTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: true
+  - name: SharedServices-Main
+    account: SharedServices
+    region: *HOME_REGION
+    cidrs:
+      - 10.4.0.0/16
+    routeTables:
+      - name: SharedServices-Tgw-A
+        routes: []
+      - name: SharedServices-Tgw-B
+        routes: []
+      - name: SharedServices-App-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+      - name: SharedServices-App-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+          - name: S3Gateway
+            type: gatewayEndpoint
+            target: s3
+          - name: DynamoDBGateway
+            type: gatewayEndpoint
+            target: dynamodb
+    subnets:
+      - name: SharedServices-App-A
+        availabilityZone: a
+        routeTable: SharedServices-App-A
+        ipv4CidrBlock: 10.4.0.0/24
+      - name: SharedServices-App-B
+        availabilityZone: b
+        routeTable: SharedServices-App-B
+        ipv4CidrBlock: 10.4.1.0/24
+      - name: SharedServices-MainTgwAttach-A
+        availabilityZone: a
+        routeTable: SharedServices-Tgw-A
+        ipv4CidrBlock: 10.4.255.208/28
+      - name: SharedServices-MainTgwAttach-B
+        availabilityZone: b
+        routeTable: SharedServices-Tgw-B
+        ipv4CidrBlock: 10.4.255.224/28
+    transitGatewayAttachments:
+      - name: SharedServices-Main
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+          - Network-Main-Segregated
+        subnets:
+          - SharedServices-MainTgwAttach-A
+          - SharedServices-MainTgwAttach-B
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+    useCentralEndpoints: true
+vpcFlowLogs:
+  trafficType: ALL
+  maxAggregationInterval: 600
+  destinations:
+    - s3
+    - cloud-watch-logs
+  defaultFormat: false
+  customFields:
+    - version
+    - account-id
+    - interface-id
+    - srcaddr
+    - dstaddr
+    - srcport
+    - dstport
+    - protocol
+    - packets
+    - bytes
+    - start
+    - end
+    - action
+    - log-status
+    - vpc-id
+    - subnet-id
+    - instance-id
+    - tcp-flags
+    - type
+    - pkt-srcaddr
+    - pkt-dstaddr
+    - region
+    - az-id
+    - pkt-src-aws-service
+    - pkt-dst-aws-service
+    - flow-direction
+    - traffic-path
+
+vpcPeering:
+  - name: NetworkEndpointsToInspection
+    vpcs:
+      - Network-Endpoints
+      - Network-Inspection

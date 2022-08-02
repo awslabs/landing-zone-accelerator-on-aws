@@ -84,7 +84,6 @@ describe('SsmParameterLookup', () => {
             },
             parameterAccountID: '123123123123',
             parameterName: 'TestParameter',
-            parameterRegion: 'us-east-1',
           },
         },
       },

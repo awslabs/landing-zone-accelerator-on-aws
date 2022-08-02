@@ -14,8 +14,36 @@ This software includes third party software subject to the following copyrights:
 
 AWS CDK - Apache-2.0
 AWS SDK - Apache-2.0
+cdk-nag - Apache-2.0
+change-case - MIT license
+chokidar - MIT license
+colors - MIT license
+esbuild - MIT license
+eslint - MIT license
+exponential-backoff - Apache-2.0
+fp-ts - MIT license
+fs-extra - MIT license
+hash-sum - MIT license
+husky - MIT license
+io-ts - MIT license
+ip-num - MIT license
 jest - MIT license
+jest-junit - Apache-2.0
+js-yaml - MIT license
+lerna - MIT license
+lint-staged - MIT license
+mri - MIT license
 node - MIT license
+pascal-case - MIT license
+prettier - MIT license
+proxy-agent - MIT license
+proxy-agent - MIT license
+semver - MIT license
+tempy - MIT license
+ts-jest - MIT license
 ts-jest - MIT license
 ts-node - MIT license
+typedoc - Apache-2.0
 typescript - Apache-2.0
+winston - MIT license
+yargs - MIT license

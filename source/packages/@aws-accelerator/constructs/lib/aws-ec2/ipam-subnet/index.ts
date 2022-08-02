@@ -11,7 +11,7 @@
  *  and limitations under the License.
  */
 import * as AWS from 'aws-sdk';
-import { IPv4Prefix, Pool } from 'ip-num';
+import { IPv4CidrRange, IPv4Prefix, Pool } from 'ip-num';
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
 
@@ -158,22 +158,50 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
 function nextCidr(netmaskLength: bigint, vpc: Vpc): string {
   // Instantiate the pool
-  const pool = Pool.fromCidrRanges(vpc.allocatedCidrs);
+  const subnetPool = Pool.fromCidrRanges(vpc.allocatedCidrs);
+  const subnetPrefix = IPv4Prefix.fromNumber(netmaskLength);
+  let subnetCidrRange: IPv4CidrRange | undefined = subnetPool.getCidrRange(subnetPrefix);
 
-  // Remove existing CIDRs from pool
-  for (const subnet of vpc.subnets) {
-    const removeCidr = pool.removeOverlapping(subnet.allocatedCidr.toRangeSet());
+  // Get next CIDR from pool
+  let alreadyUsed = false;
+  do {
+    for (const subnet of vpc.subnets) {
+      if (!subnetCidrRange) {
+        throw new Error('Next CIDR is undefined. Cannot allocate a CIDR from the pool.');
+      }
+      if (
+        subnet.allocatedCidr.isEquals(subnetCidrRange) ||
+        subnet.allocatedCidr.contains(subnetCidrRange) ||
+        subnetCidrRange.contains(subnet.allocatedCidr)
+      ) {
+        subnetCidrRange = subnetCidrRange.nextRange();
+        alreadyUsed = true;
+        break;
+      } else {
+        alreadyUsed = false;
+      }
+    }
+  } while (alreadyUsed);
 
-    if (!removeCidr) {
-      throw new Error(
-        `Unable to remove existing subnet CIDR ${subnet.allocatedCidr.toCidrString()} from available CIDR pool`,
-      );
+  // Do error checking against CIDR
+  if (!subnetCidrRange) {
+    throw new Error('Next CIDR is undefined. Cannot allocate a CIDR from the pool.');
+  }
+
+  let isValidCidr = false;
+  for (const vpcCidrRange of vpc.allocatedCidrs) {
+    if (subnetCidrRange.inside(vpcCidrRange) || subnetCidrRange.isEquals(vpcCidrRange)) {
+      isValidCidr = true;
     }
   }
 
-  // Return next CIDR
-  const prefix = IPv4Prefix.fromNumber(netmaskLength);
-  return pool.getCidrRange(prefix).toCidrString();
+  if (!isValidCidr) {
+    throw new Error(
+      `VPC is exhausted of address space. Cannot allocate a CIDR with /${netmaskLength.toString()} prefix.`,
+    );
+  }
+
+  return subnetCidrRange.toCidrString();
 }
 
 function returnBoolean(input: string): boolean | undefined {

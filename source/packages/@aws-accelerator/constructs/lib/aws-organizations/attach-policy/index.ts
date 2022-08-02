@@ -40,18 +40,20 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
   }
 
+  let nextToken: string | undefined = undefined;
+
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
       //
       // Check if already exists, update and return the ID
       //
-      let nextToken: string | undefined = undefined;
       do {
-        const page = await throttlingBackOff(() =>
-          organizationsClient
-            .listPoliciesForTarget({ Filter: type, TargetId: targetId, NextToken: nextToken })
-            .promise(),
+        const page: AWS.Organizations.ListPoliciesForTargetResponse = await getListPoliciesForTarget(
+          organizationsClient,
+          type,
+          targetId,
+          nextToken,
         );
         for (const policy of page.Policies ?? []) {
           if (policy.Id === policyId) {
@@ -81,15 +83,14 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       //
       // Detach policy, let CDK manage where it's deployed,
       //
-
       // do not remove FullAWSAccess
       if (policyId !== 'p-FullAWSAccess') {
-        let nextToken: string | undefined = undefined;
         do {
-          const page = await throttlingBackOff(() =>
-            organizationsClient
-              .listPoliciesForTarget({ Filter: type, TargetId: targetId, NextToken: nextToken })
-              .promise(),
+          const page: AWS.Organizations.ListPoliciesForTargetResponse = await getListPoliciesForTarget(
+            organizationsClient,
+            type,
+            targetId,
+            nextToken,
           );
           for (const policy of page.Policies ?? []) {
             if (policy.Id === policyId) {
@@ -107,4 +108,15 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         Status: 'SUCCESS',
       };
   }
+}
+
+async function getListPoliciesForTarget(
+  organizationsClient: AWS.Organizations,
+  type: string,
+  targetId: string,
+  nextToken?: string,
+): Promise<AWS.Organizations.ListPoliciesForTargetResponse> {
+  return throttlingBackOff(() =>
+    organizationsClient.listPoliciesForTarget({ Filter: type, TargetId: targetId, NextToken: nextToken }).promise(),
+  );
 }

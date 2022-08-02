@@ -174,16 +174,16 @@ export class NetworkPrepStack extends AcceleratorStack {
           // Create scopes
           for (const scopeItem of ipamItem.scopes ?? []) {
             Logger.info(`[network-prep-stack] Add IPAM scope ${scopeItem.name}`);
-            const scope = new IpamScope(this, pascalCase(`${scopeItem.name}Scope`), {
+            const ipamScope = new IpamScope(this, pascalCase(`${scopeItem.name}Scope`), {
               ipamId: ipam.ipamId,
               name: scopeItem.name,
               description: scopeItem.description,
               tags: scopeItem.tags ?? [],
             });
-            scopeMap.set(scopeItem.name, scope);
+            scopeMap.set(scopeItem.name, ipamScope);
             new ssm.StringParameter(this, pascalCase(`SsmParam${scopeItem.name}ScopeId`), {
               parameterName: `/accelerator/network/ipam/scopes/${scopeItem.name}/id`,
-              stringValue: scope.ipamScopeId,
+              stringValue: ipamScope.ipamScopeId,
             });
           }
 
@@ -370,26 +370,26 @@ export class NetworkPrepStack extends AcceleratorStack {
 
           // Build new rule list with domain list ID
           const ruleList: ResolverFirewallRuleProps[] = [];
-          let listName: string;
+          let domainListName: string;
           for (const ruleItem of firewallItem.rules) {
             // Check the type of domain list
             if (ruleItem.customDomainList) {
               try {
-                listName = ruleItem.customDomainList.split('/')[1].split('.')[0];
+                domainListName = ruleItem.customDomainList.split('/')[1].split('.')[0];
               } catch (e) {
                 throw new Error(`[network-prep-stack] Error parsing list name from ${ruleItem.customDomainList}`);
               }
             } else {
-              listName = ruleItem.managedDomainList!;
+              domainListName = ruleItem.managedDomainList!;
             }
 
             // Create the DNS firewall rule list
 
-            if (domainMap.get(listName)) {
+            if (domainMap.get(domainListName)) {
               if (ruleItem.action === 'BLOCK' && ruleItem.blockResponse === 'OVERRIDE') {
                 ruleList.push({
                   action: ruleItem.action.toString(),
-                  firewallDomainListId: domainMap.get(listName)!,
+                  firewallDomainListId: domainMap.get(domainListName)!,
                   priority: ruleItem.priority,
                   blockOverrideDnsType: 'CNAME',
                   blockOverrideDomain: ruleItem.blockOverrideDomain,
@@ -399,13 +399,13 @@ export class NetworkPrepStack extends AcceleratorStack {
               } else {
                 ruleList.push({
                   action: ruleItem.action.toString(),
-                  firewallDomainListId: domainMap.get(listName)!,
+                  firewallDomainListId: domainMap.get(domainListName)!,
                   priority: ruleItem.priority,
                   blockResponse: ruleItem.blockResponse,
                 });
               }
             } else {
-              throw new Error(`Domain list ${listName} not found in domain map`);
+              throw new Error(`Domain list ${domainListName} not found in domain map`);
             }
           }
 

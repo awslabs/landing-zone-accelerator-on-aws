@@ -57,7 +57,6 @@ export class PipelineStack extends cdk.Stack {
       managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
     });
 
-    // TODO: Add event to launch the Pipeline for new account events
     new pipeline.AcceleratorPipeline(this, 'Pipeline', {
       toolkitRole,
       ...props,

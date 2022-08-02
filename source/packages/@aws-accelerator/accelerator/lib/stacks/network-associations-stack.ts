@@ -16,7 +16,7 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
-import { AccountsConfig, NetworkConfigTypes, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import { VpcConfig } from '@aws-accelerator/config';
 import {
   AssociateHostedZones,
   IResourceShareItem,
@@ -49,15 +49,10 @@ interface Peering {
 }
 
 export class NetworkAssociationsStack extends AcceleratorStack {
-  private accountsConfig: AccountsConfig;
   private key: cdk.aws_kms.Key;
   private logRetention: number;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
-
-    // Set private properties
-    this.accountsConfig = props.accountsConfig;
-    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
     this.key = new KeyLookup(this, 'AcceleratorKeyLookup', {
       accountId: props.accountsConfig.getAuditAccountId(),
@@ -65,6 +60,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
+    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
     // Build Transit Gateway Maps
     const transitGateways = new Map<string, string>();
@@ -90,14 +86,13 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       }
     }
 
-    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
-      // Only perform operations for this account and region
-      const accountNames = this.getVpcDeploymentDetails(vpcItem, true);
-
-      if (vpcItem.region === cdk.Stack.of(this).region) {
+    for (const vpcItem of props.networkConfig.vpcs ?? []) {
+      if (vpcItem.region == cdk.Stack.of(this).region) {
         for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
           const accountId = props.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
           if (accountId === cdk.Stack.of(this).account) {
+            const owningAccountId = props.accountsConfig.getAccountId(vpcItem.account);
+
             // Get the Transit Gateway ID
             const transitGatewayId = transitGateways.get(tgwAttachmentItem.transitGateway.name);
             if (transitGatewayId === undefined) {
@@ -105,88 +100,77 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             }
 
             // Get the Transit Gateway Attachment ID
-            for (const owningAccount of accountNames) {
-              let transitGatewayAttachmentId;
-              const owningAccountId = this.accountsConfig.getAccountId(owningAccount);
-              const key = `${owningAccount}_${vpcItem.name}`;
-              if (accountId === owningAccountId) {
-                Logger.info(
-                  `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from local account ${owningAccountId}`,
-                );
-                transitGatewayAttachmentId = ssm.StringParameter.valueForStringParameter(
-                  this,
-                  `/accelerator/network/vpc/${vpcItem.name}/transitGatewayAttachment/${tgwAttachmentItem.name}/id`,
-                );
-                transitGatewayAttachments.set(key, transitGatewayAttachmentId);
-              } else {
-                Logger.info(
-                  `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
-                );
+            let transitGatewayAttachmentId;
+            const key = `${vpcItem.account}_${vpcItem.name}`;
+            if (accountId === owningAccountId) {
+              Logger.info(
+                `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from local account ${owningAccountId}`,
+              );
+              transitGatewayAttachmentId = ssm.StringParameter.valueForStringParameter(
+                this,
+                `/accelerator/network/vpc/${vpcItem.name}/transitGatewayAttachment/${tgwAttachmentItem.name}/id`,
+              );
+              transitGatewayAttachments.set(key, transitGatewayAttachmentId);
+            } else {
+              Logger.info(
+                `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
+              );
 
-                const transitGatewayAttachment = TransitGatewayAttachment.fromLookup(
-                  this,
-                  pascalCase(`${tgwAttachmentItem.name}${owningAccount}VpcTransitGatewayAttachment`),
-                  {
-                    name: tgwAttachmentItem.name,
-                    owningAccountId,
-                    transitGatewayId,
-                    roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
-                    kmsKey: this.key,
-                    logRetentionInDays: this.logRetention,
-                  },
-                );
-                // Build Transit Gateway Attachment Map
-                transitGatewayAttachmentId = transitGatewayAttachment.transitGatewayAttachmentId;
-                transitGatewayAttachments.set(key, transitGatewayAttachmentId);
+              const transitGatewayAttachment = TransitGatewayAttachment.fromLookup(
+                this,
+                pascalCase(`${tgwAttachmentItem.name}VpcTransitGatewayAttachment`),
+                {
+                  name: tgwAttachmentItem.name,
+                  owningAccountId,
+                  transitGatewayId,
+                  roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
+                  kmsKey: this.key,
+                  logRetentionInDays: this.logRetention,
+                },
+              );
+              // Build Transit Gateway Attachment Map
+              transitGatewayAttachmentId = transitGatewayAttachment.transitGatewayAttachmentId;
+              transitGatewayAttachments.set(key, transitGatewayAttachmentId);
+            }
+
+            // Evaluating TGW Routes
+
+            // Evaluate Route Table Associations
+            for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
+              const associationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
+
+              const transitGatewayRouteTableId = transitGatewayRouteTables.get(associationsKey);
+              if (transitGatewayRouteTableId === undefined) {
+                throw new Error(`Transit Gateway Route Table ${associationsKey} not found`);
               }
 
-              // Evaluating TGW Routes
-
-              // Evaluate Route Table Associations
-              for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
-                const key = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
-                let id: string;
-                if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
-                  id = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Association`;
-                } else {
-                  id = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}${pascalCase(
-                    owningAccount,
-                  )}Association`;
-                }
-
-                const transitGatewayRouteTableId = transitGatewayRouteTables.get(key);
-                if (transitGatewayRouteTableId === undefined) {
-                  throw new Error(`Transit Gateway Route Table ${key} not found`);
-                }
-
-                new TransitGatewayRouteTableAssociation(this, id, {
+              new TransitGatewayRouteTableAssociation(
+                this,
+                `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Association`,
+                {
                   transitGatewayAttachmentId,
                   transitGatewayRouteTableId,
-                });
+                },
+              );
+            }
+
+            // Evaluate Route Table Propagations
+            for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
+              const propagationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
+
+              const transitGatewayRouteTableId = transitGatewayRouteTables.get(propagationsKey);
+              if (transitGatewayRouteTableId === undefined) {
+                throw new Error(`Transit Gateway Route Table ${propagationsKey} not found`);
               }
 
-              // Evaluate Route Table Propagations
-              for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
-                const key = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
-                let id: string;
-                if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
-                  id = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Propagation`;
-                } else {
-                  id = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}${pascalCase(
-                    owningAccount,
-                  )}Propagation`;
-                }
-
-                const transitGatewayRouteTableId = transitGatewayRouteTables.get(key);
-                if (transitGatewayRouteTableId === undefined) {
-                  throw new Error(`Transit Gateway Route Table ${key} not found`);
-                }
-
-                new TransitGatewayRouteTablePropagation(this, id, {
+              new TransitGatewayRouteTablePropagation(
+                this,
+                `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Propagation`,
+                {
                   transitGatewayAttachmentId,
                   transitGatewayRouteTableId,
-                });
-              }
+                },
+              );
             }
           }
         }
@@ -248,24 +232,25 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             // Create static routes
             //
             if (routeItem.destinationCidrBlock) {
-              let id = '';
+              let routeTableId = '';
               let transitGatewayAttachmentId: string | undefined = undefined;
               if (routeItem.blackhole) {
                 Logger.info(
                   `[network-associations-stack] Adding blackhole route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
                 );
-                id = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-blackhole`;
+                routeTableId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-blackhole`;
               }
 
               if (routeItem.attachment) {
                 Logger.info(
                   `[network-associations-stack] Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
                 );
-                id = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`;
-                const key = `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`;
+                routeTableId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`;
 
                 // Get TGW attachment ID
-                transitGatewayAttachmentId = transitGatewayAttachments.get(key);
+                transitGatewayAttachmentId = transitGatewayAttachments.get(
+                  `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
+                );
 
                 if (!transitGatewayAttachmentId) {
                   throw new Error(
@@ -275,7 +260,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               }
 
               // Create static route
-              new TransitGatewayStaticRoute(this, id, {
+              new TransitGatewayStaticRoute(this, routeTableId, {
                 transitGatewayRouteTableId,
                 blackhole: routeItem.blackhole,
                 destinationCidrBlock: routeItem.destinationCidrBlock,
@@ -295,25 +280,26 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                 );
               }
 
-              let id = '';
+              let plId = '';
               let transitGatewayAttachmentId: string | undefined = undefined;
               if (routeItem.blackhole) {
                 Logger.info(
                   `[network-associations-stack] Adding blackhole prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
                 );
-                id = pascalCase(`${routeTableItem.name}${routeItem.destinationPrefixList}Blackhole`);
+                plId = pascalCase(`${routeTableItem.name}${routeItem.destinationPrefixList}Blackhole`);
               }
               if (routeItem.attachment) {
                 Logger.info(
                   `[network-associations-stack] Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
                 );
-                id = pascalCase(
+                plId = pascalCase(
                   `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.vpcName}${routeItem.attachment.account}`,
                 );
-                const key = `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`;
 
                 // Get TGW attachment ID
-                transitGatewayAttachmentId = transitGatewayAttachments.get(key);
+                transitGatewayAttachmentId = transitGatewayAttachments.get(
+                  `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
+                );
 
                 if (!transitGatewayAttachmentId) {
                   throw new Error(
@@ -323,7 +309,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               }
 
               // Create prefix list reference
-              new TransitGatewayPrefixListReference(this, id, {
+              new TransitGatewayPrefixListReference(this, plId, {
                 prefixListId,
                 blackhole: routeItem.blackhole,
                 transitGatewayAttachmentId,
@@ -365,19 +351,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
       // Generate list of accounts with VPCs that needed to set up share
       const accountIds: string[] = [];
-      for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
-        // Only perform operations for this account and region
-        const vpcAccountIds = this.getVpcDeploymentDetails(vpcItem);
-
-        if (
-          vpcAccountIds.has(cdk.Stack.of(this).account) &&
-          vpcItem.region === cdk.Stack.of(this).region &&
-          vpcItem.useCentralEndpoints
-        ) {
-          for (const accountId of vpcAccountIds) {
-            if (!accountIds.includes(accountId)) {
-              accountIds.push(accountId);
-            }
+      for (const vpcItem of props.networkConfig.vpcs ?? []) {
+        if (vpcItem.region === cdk.Stack.of(this).region && vpcItem.useCentralEndpoints) {
+          const accountId = props.accountsConfig.getAccountId(vpcItem.account);
+          if (!accountIds.includes(accountId)) {
+            accountIds.push(accountId);
           }
         }
       }
@@ -421,13 +399,17 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     const resolverRuleMap = new Map<string, string>();
     const centralNetworkConfig = props.networkConfig.centralNetworkServices;
 
-    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
-      // Only deploy to VPCs for this account and region
-      const vpcAccountIds = this.getVpcDeploymentDetails(vpcItem);
-
-      if (vpcAccountIds.has(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+    for (const vpcItem of props.networkConfig.vpcs ?? []) {
+      const accountId = props.accountsConfig.getAccountId(vpcItem.account);
+      // Only care about VPCs to be created in the current account and region
+      if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
         // DNS firewall rule group associations
         for (const firewallItem of vpcItem.dnsFirewallRuleGroups ?? []) {
+          // Throw error if centralNetworkConfig is undefined
+          if (!centralNetworkConfig) {
+            throw new Error('[network-associations-stack] centralNetworkServices is undefined');
+          }
+
           // Get VPC ID
           const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
@@ -435,29 +417,27 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           );
 
           // Skip lookup if already added to map
-          if (dnsFirewallMap.has(firewallItem.name)) {
-            continue;
-          }
+          if (!dnsFirewallMap.has(firewallItem.name)) {
+            if (centralNetworkConfig?.delegatedAdminAccount) {
+              const owningAccountId = props.accountsConfig.getAccountId(centralNetworkConfig.delegatedAdminAccount);
 
-          if (centralNetworkConfig?.delegatedAdminAccount) {
-            const owningAccountId = props.accountsConfig.getAccountId(centralNetworkConfig.delegatedAdminAccount);
-
-            // Get SSM parameter if this is the owning account
-            if (owningAccountId === cdk.Stack.of(this).account) {
-              const ruleId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                this,
-                `/accelerator/network/route53Resolver/firewall/ruleGroups/${firewallItem.name}/id`,
-              );
-              dnsFirewallMap.set(firewallItem.name, ruleId);
-            } else {
-              // Get ID from the resource share
-              const ruleId = this.getResourceShare(
-                vpcItem.name,
-                `${firewallItem.name}_ResolverFirewallRuleGroupShare`,
-                'route53resolver:FirewallRuleGroup',
-                owningAccountId,
-              ).resourceShareItemId;
-              dnsFirewallMap.set(firewallItem.name, ruleId);
+              // Get SSM parameter if this is the owning account
+              if (owningAccountId === cdk.Stack.of(this).account) {
+                const ruleId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                  this,
+                  `/accelerator/network/route53Resolver/firewall/ruleGroups/${firewallItem.name}/id`,
+                );
+                dnsFirewallMap.set(firewallItem.name, ruleId);
+              } else {
+                // Get ID from the resource share
+                const ruleId = this.getResourceShare(
+                  vpcItem.name,
+                  `${firewallItem.name}_ResolverFirewallRuleGroupShare`,
+                  'route53resolver:FirewallRuleGroup',
+                  owningAccountId,
+                ).resourceShareItemId;
+                dnsFirewallMap.set(firewallItem.name, ruleId);
+              }
             }
           }
 
@@ -488,46 +468,49 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         // Route 53 query logging configuration associations
         //
         for (const configItem of vpcItem.queryLogs ?? []) {
+          // Throw error if centralNetworkConfig is undefined
+          if (!centralNetworkConfig) {
+            throw new Error('[network-associations-stack] centralNetworkServices is undefined');
+          }
+
           // Get VPC ID
           const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
             `/accelerator/network/vpc/${vpcItem.name}/id`,
           );
 
-          // Skip lookup if already added to map
-          if (queryLogMap.has(configItem)) {
-            continue;
+          // Determine query log destination(s)
+          const configNames: string[] = [];
+          if (centralNetworkConfig.route53Resolver?.queryLogs?.destinations.includes('s3')) {
+            configNames.push(`${configItem}-s3`);
+          }
+          if (centralNetworkConfig.route53Resolver?.queryLogs?.destinations.includes('cloud-watch-logs')) {
+            configNames.push(`${configItem}-cwl`);
           }
 
           if (centralNetworkConfig?.delegatedAdminAccount) {
             const owningAccountId = props.accountsConfig.getAccountId(centralNetworkConfig.delegatedAdminAccount);
 
-            // Determine query log destination(s)
-            const configNames: string[] = [];
-            if (centralNetworkConfig.route53Resolver?.queryLogs?.destinations.includes('s3')) {
-              configNames.push(`${configItem}-s3`);
-            }
-            if (centralNetworkConfig.route53Resolver?.queryLogs?.destinations.includes('cloud-watch-logs')) {
-              configNames.push(`${configItem}-cwl`);
-            }
-
             // Get SSM parameter if this is the owning account
             for (const nameItem of configNames) {
-              if (owningAccountId === cdk.Stack.of(this).account) {
-                const configId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                  this,
-                  `/accelerator/network/route53Resolver/queryLogConfigs/${nameItem}/id`,
-                );
-                queryLogMap.set(nameItem, configId);
-              } else {
-                // Get ID from the resource share
-                const configId = this.getResourceShare(
-                  vpcItem.name,
-                  `${nameItem}_QueryLogConfigShare`,
-                  'route53resolver:ResolverQueryLogConfig',
-                  owningAccountId,
-                ).resourceShareItemId;
-                queryLogMap.set(nameItem, configId);
+              // Skip lookup if already added to map
+              if (!queryLogMap.has(nameItem)) {
+                if (owningAccountId === cdk.Stack.of(this).account) {
+                  const configId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                    this,
+                    `/accelerator/network/route53Resolver/queryLogConfigs/${nameItem}/id`,
+                  );
+                  queryLogMap.set(nameItem, configId);
+                } else {
+                  // Get ID from the resource share
+                  const configId = this.getResourceShare(
+                    vpcItem.name,
+                    `${nameItem}_QueryLogConfigShare`,
+                    'route53resolver:ResolverQueryLogConfig',
+                    owningAccountId,
+                  ).resourceShareItemId;
+                  queryLogMap.set(nameItem, configId);
+                }
               }
             }
 
@@ -551,6 +534,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         // Route 53 resolver rule associations
         //
         for (const ruleItem of vpcItem.resolverRules ?? []) {
+          // Throw error if centralNetworkConfig is undefined
+          if (!centralNetworkConfig) {
+            throw new Error('[network-associations-stack] centralNetworkServices is undefined');
+          }
+
           // Get VPC ID
           const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
@@ -558,29 +546,27 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           );
 
           // Skip lookup if already added to map
-          if (resolverRuleMap.has(ruleItem)) {
-            continue;
-          }
+          if (!resolverRuleMap.has(ruleItem)) {
+            if (centralNetworkConfig?.delegatedAdminAccount) {
+              const owningAccountId = props.accountsConfig.getAccountId(centralNetworkConfig.delegatedAdminAccount);
 
-          if (centralNetworkConfig?.delegatedAdminAccount) {
-            const owningAccountId = props.accountsConfig.getAccountId(centralNetworkConfig.delegatedAdminAccount);
-
-            // Get SSM parameter if this is the owning account
-            if (owningAccountId === cdk.Stack.of(this).account) {
-              const ruleId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                this,
-                `/accelerator/network/route53Resolver/rules/${ruleItem}/id`,
-              );
-              resolverRuleMap.set(ruleItem, ruleId);
-            } else {
-              // Get ID from the resource share
-              const ruleId = this.getResourceShare(
-                vpcItem.name,
-                `${ruleItem}_ResolverRule`,
-                'route53resolver:ResolverRule',
-                owningAccountId,
-              ).resourceShareItemId;
-              resolverRuleMap.set(ruleItem, ruleId);
+              // Get SSM parameter if this is the owning account
+              if (owningAccountId === cdk.Stack.of(this).account) {
+                const ruleId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                  this,
+                  `/accelerator/network/route53Resolver/rules/${ruleItem}/id`,
+                );
+                resolverRuleMap.set(ruleItem, ruleId);
+              } else {
+                // Get ID from the resource share
+                const ruleId = this.getResourceShare(
+                  vpcItem.name,
+                  `${ruleItem}_ResolverRule`,
+                  'route53resolver:ResolverRule',
+                  owningAccountId,
+                ).resourceShareItemId;
+                resolverRuleMap.set(ruleItem, ruleId);
+              }
             }
           }
 
@@ -725,74 +711,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     });
 
     // Represents the item shared by RAM
-    const item = ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
+    return ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
       resourceShare,
       resourceShareItemType: itemType,
       kmsKey: this.key,
       logRetentionInDays: this.logRetention,
     });
-    return item;
-  }
-
-  /**
-   * Get the account ID(s) a VPC will be deployed to.
-   * @param vpcItem
-   * @returns
-   */
-  private getVpcDeploymentDetails(vpcItem: VpcConfig | VpcTemplatesConfig, accountNames?: boolean): Set<string> {
-    const accounts = new Set<string>();
-
-    // Set account IDs
-    if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
-      if (accountNames) {
-        accounts.add(vpcItem.account);
-      } else {
-        accounts.add(this.accountsConfig.getAccountId(vpcItem.account));
-      }
-    } else {
-      // Check if accounts/OUs are defined
-      if (!vpcItem.deploymentTargets.organizationalUnits && !vpcItem.deploymentTargets.accounts) {
-        throw new Error(
-          `[network-associations-stack] VPC ${vpcItem.name} does not specify account(s) or OU(s) for deployment. Please specify in deploymentTarget property.`,
-        );
-      }
-      // We ignore excluded regions for VPC templates since the region is explicit
-      if (vpcItem.deploymentTargets.excludedRegions) {
-        Logger.info(
-          `[network-associations-stack] VPC ${vpcItem.name} deployment target includes excludedRegions property. This property will be ignored.`,
-        );
-      }
-
-      // Filter relevant accounts based on OU mapping
-      let ouAccountNames: string[] = [];
-      if (vpcItem.deploymentTargets.organizationalUnits) {
-        let ouAccounts = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts];
-
-        if (!vpcItem.deploymentTargets.organizationalUnits.includes('Root')) {
-          ouAccounts = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts].filter(
-            item => vpcItem.deploymentTargets.organizationalUnits.includes(item.organizationalUnit),
-          );
-        }
-
-        ouAccountNames = ouAccounts.map(item => {
-          return item.name;
-        });
-      }
-
-      // Filter excluded accounts
-      let filteredAccounts = [...ouAccountNames, ...(vpcItem.deploymentTargets.accounts ?? [])];
-      if (vpcItem.deploymentTargets.excludedAccounts) {
-        filteredAccounts = [...ouAccountNames, ...(vpcItem.deploymentTargets.accounts ?? [])].filter(
-          item => !vpcItem.deploymentTargets.excludedAccounts.includes(item),
-        );
-      }
-
-      if (accountNames) {
-        filteredAccounts.forEach(item => accounts.add(item));
-      } else {
-        filteredAccounts.forEach(item => accounts.add(this.accountsConfig.getAccountId(item)));
-      }
-    }
-    return accounts;
   }
 }

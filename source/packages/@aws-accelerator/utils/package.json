@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com"
+    "url": "https://aws.amazon.com/solutions"
   },
   "private": true,
   "main": "dist/index.js",
@@ -31,9 +31,15 @@
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-prettier": "4.0.0",
     "jest": "27.4.3",
+    "jest-sonar-reporter": "2.0.0",
     "prettier": "2.5.1",
     "ts-jest": "27.1.1",
     "typescript": "4.5.2"
+  },
+  "jestSonar": {
+    "reportPath": "coverage",
+    "reportFile": "test-report.xml",
+    "indent": 4
   },
   "dependencies": {
     "exponential-backoff": "3.1.0"

@@ -56,11 +56,12 @@ export class AssumeRoleProviderSource implements CredentialProviderSource {
     }
 
     const credentials = assumeRole.Credentials!;
-    return (this.cache[accountId] = new AWS.Credentials({
+    this.cache[accountId] = new AWS.Credentials({
       accessKeyId: credentials.AccessKeyId,
       secretAccessKey: credentials.SecretAccessKey,
       sessionToken: credentials.SessionToken,
-    }));
+    });
+    return this.cache[accountId];
   }
 
   protected async assumeRole(accountId: string, duration: number): Promise<AWS.STS.AssumeRoleResponse> {

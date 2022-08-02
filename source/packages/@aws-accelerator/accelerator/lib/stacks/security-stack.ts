@@ -54,6 +54,37 @@ export class SecurityStack extends AcceleratorStack {
     //
     // MacieSession configuration
     //
+    this.configureMacie(props, auditAccountName);
+
+    //
+    // GuardDuty configuration
+    //
+    this.configureGuardDuty(props, auditAccountName);
+
+    //
+    // SecurityHub configuration
+    //
+    this.configureSecurityHub(props, auditAccountName);
+
+    //
+    // Ebs Default Volume Encryption configuration
+    //
+    this.configureDefaultEbsEncryption(props);
+
+    //
+    // Update IAM Password Policy
+    //
+    this.updateIamPasswordPolicy(props);
+
+    Logger.info('[security-stack] Completed stack synthesis');
+  }
+
+  /**
+   * Function to configure Macie
+   * @param props
+   * @param auditAccountName
+   */
+  private configureMacie(props: AcceleratorStackProps, auditAccountName: string) {
     if (
       props.securityConfig.centralSecurityServices.macie.enable &&
       props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
@@ -73,10 +104,14 @@ export class SecurityStack extends AcceleratorStack {
         throw new Error(`Macie audit delegated admin account name "${auditAccountName}" not found.`);
       }
     }
+  }
 
-    //
-    // GuardDuty configuration
-    //
+  /**
+   * Function to configure GuardDuty
+   * @param props
+   * @param auditAccountName
+   */
+  private configureGuardDuty(props: AcceleratorStackProps, auditAccountName: string) {
     if (
       props.securityConfig.centralSecurityServices.guardduty.enable &&
       props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
@@ -99,10 +134,14 @@ export class SecurityStack extends AcceleratorStack {
         throw new Error(`Guardduty audit delegated admin account name "${auditAccountName}" not found.`);
       }
     }
+  }
 
-    //
-    // SecurityHub configuration
-    //
+  /**
+   * Function to configure SecurityHub
+   * @param props
+   * @param auditAccountName
+   */
+  private configureSecurityHub(props: AcceleratorStackProps, auditAccountName: string) {
     if (
       props.securityConfig.centralSecurityServices.securityHub.enable &&
       props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(
@@ -119,10 +158,13 @@ export class SecurityStack extends AcceleratorStack {
         throw new Error(`SecurityHub audit delegated admin account name "${auditAccountName}" not found.`);
       }
     }
+  }
 
-    //
-    // Ebs Default Volume Encryption configuration
-    //
+  /**
+   * Function to configure default EBS encryption
+   * @param props
+   */
+  private configureDefaultEbsEncryption(props: AcceleratorStackProps) {
     if (
       props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
       props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.excludeRegions!.indexOf(
@@ -175,10 +217,13 @@ export class SecurityStack extends AcceleratorStack {
         stringValue: ebsEncryptionKey.keyArn,
       });
     }
+  }
 
-    //
-    // Update IAM Password Policy
-    //
+  /**
+   * Function to update IAM password policy
+   * @param props
+   */
+  private updateIamPasswordPolicy(props: AcceleratorStackProps) {
     if (props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
       Logger.info(`[security-stack] Setting the IAM Password policy`);
       new PasswordPolicy(this, 'IamPasswordPolicy', {
@@ -187,7 +232,5 @@ export class SecurityStack extends AcceleratorStack {
         logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });
     }
-
-    Logger.info('[security-stack] Completed stack synthesis');
   }
 }

@@ -83,8 +83,6 @@ export class ConfigRepository extends Construct {
       s3BucketName: configurationDefaultsAssets.bucket.bucketName,
       s3key: configurationDefaultsAssets.s3ObjectKey,
     });
-
-    // TODO: Add delete protection on the CodeCommit repository
   }
 
   /**
