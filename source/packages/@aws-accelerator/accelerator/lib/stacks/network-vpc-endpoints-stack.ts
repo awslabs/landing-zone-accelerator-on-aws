@@ -106,6 +106,11 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     // Iterate through VPCs in this account and region
     //
     const firewallMap = new Map<string, NetworkFirewall>();
+    const firewallLogBucket = cdk.aws_s3.Bucket.fromBucketName(
+      this,
+      'FirewallLogsBucket',
+      `aws-accelerator-central-logs-${this.accountsConfig.getLogArchiveAccountId()}-${this.globalConfig.homeRegion}`,
+    );
     for (const vpcItem of props.networkConfig.vpcs ?? []) {
       const accountId = this.accountsConfig.getAccountId(vpcItem.account);
       if (accountId === cdk.Stack.of(this).account && vpcItem.region === cdk.Stack.of(this).region) {
@@ -130,11 +135,6 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         if (props.networkConfig.centralNetworkServices?.networkFirewall?.firewalls) {
           const firewalls = props.networkConfig.centralNetworkServices.networkFirewall.firewalls;
 
-          const firewallLogBucket = cdk.aws_s3.Bucket.fromBucketName(
-            this,
-            'FirewallLogsBucket',
-            `aws-accelerator-central-logs-${this.accountsConfig.getLogArchiveAccountId()}-${this.globalConfig.homeRegion}`,
-            );
           for (const firewallItem of firewalls) {
             if (firewallItem.vpc === vpcItem.name) {
               const firewallSubnets: string[] = [];
@@ -163,7 +163,13 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
 
               // Create firewall
               if (firewallSubnets.length > 0) {
-                const nfw = this.createNetworkFirewall(firewallItem, vpcId, firewallSubnets, firewallLogBucket,owningAccountId);
+                const nfw = this.createNetworkFirewall(
+                  firewallItem,
+                  vpcId,
+                  firewallSubnets,
+                  firewallLogBucket,
+                  owningAccountId,
+                );
                 firewallMap.set(firewallItem.name, nfw);
               }
             }
