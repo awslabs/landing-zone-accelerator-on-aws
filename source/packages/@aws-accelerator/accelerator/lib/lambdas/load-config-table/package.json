@@ -1,10 +1,11 @@
 {
   "name": "@aws-accelerator/load-config-table",
   "version": "0.0.0",
+  "description": "Accelerator Lambda",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com"
+    "url": "https://aws.amazon.com/solutions"
   },
   "private": true,
   "main": "dist/index.js",

@@ -1,10 +1,11 @@
 {
   "name": "@aws-accelerator/accelerator",
   "version": "0.0.0",
+  "description": "The core of the accelerator solution.",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com"
+    "url": "https://aws.amazon.com/solutions"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -64,6 +65,7 @@
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-prettier": "4.0.0",
     "jest": "27.4.3",
+    "jest-sonar-reporter": "2.0.0",
     "mri": "1.2.0",
     "prettier": "2.5.1",
     "promptly": "3.0.2",
@@ -74,5 +76,10 @@
   },
   "peerDependencies": {
     "eslint": "8.4.1"
+  },
+  "jestSonar": {
+    "reportPath": "coverage",
+    "reportFile": "test-report.xml",
+    "indent": 4
   }
 }

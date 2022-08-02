@@ -1,10 +1,11 @@
 {
   "name": "@aws-accelerator/tools",
   "version": "0.0.0",
+  "description": "The tools package for the accelerator solution.",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com"
+    "url": "https://aws.amazon.com/solutions"
   },
   "private": true,
   "main": "dist/index.js",
@@ -33,6 +34,7 @@
     "eslint-plugin-node": "11.1.0",
     "eslint-plugin-prettier": "4.0.0",
     "jest": "27.4.3",
+    "jest-sonar-reporter": "2.0.0",
     "prettier": "2.5.1",
     "ts-jest": "27.1.1",
     "ts-node": "10.7.0",
@@ -40,6 +42,11 @@
   },
   "peerDependencies": {
     "eslint": "8.4.1"
+  },
+  "jestSonar": {
+    "reportPath": "coverage",
+    "reportFile": "test-report.xml",
+    "indent": 4
   },
   "dependencies": {
     "@aws-accelerator/config": "^0.0.0",
