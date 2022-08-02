@@ -437,17 +437,19 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
 
       let rootId = '';
 
-      let nextToken: string | undefined = undefined;
+      let listRootsNextToken: string | undefined = undefined;
       do {
-        const page = await throttlingBackOff(() => organizationsClient.listRoots({ NextToken: nextToken }).promise());
+        const page = await throttlingBackOff(() =>
+          organizationsClient.listRoots({ NextToken: listRootsNextToken }).promise(),
+        );
         for (const root of page.Roots ?? []) {
           if (root.Name === 'Root' && root.Id && root.Arn) {
             this.organizationalUnitIds?.push({ name: root.Name, id: root.Id, arn: root.Arn });
             rootId = root.Id;
           }
         }
-        nextToken = page.NextToken;
-      } while (nextToken);
+        listRootsNextToken = page.NextToken;
+      } while (listRootsNextToken);
 
       for (const item of this.organizationalUnits) {
         let parentId = rootId;
@@ -456,11 +458,11 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
         const parentPath = this.getPath(item.name);
         for (const parent of parentPath.split('/')) {
           if (parent) {
-            let nextToken: string | undefined = undefined;
+            let ouForParentnextToken: string | undefined = undefined;
             do {
               const page = await throttlingBackOff(() =>
                 organizationsClient
-                  .listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: nextToken })
+                  .listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: ouForParentnextToken })
                   .promise(),
               );
               for (const ou of page.OrganizationalUnits ?? []) {
@@ -469,8 +471,8 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
                   parentName = ou.Name;
                 }
               }
-              nextToken = page.NextToken;
-            } while (nextToken);
+              ouForParentnextToken = page.NextToken;
+            } while (ouForParentnextToken);
           }
         }
 
@@ -521,11 +523,11 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
   public getPath(name: string): string {
     //get the parent path
     const pathIndex = name.lastIndexOf('/');
-    const path = name.slice(0, pathIndex + 1).slice(0, -1);
-    if (path === '') {
+    const ouPath = name.slice(0, pathIndex + 1).slice(0, -1);
+    if (ouPath === '') {
       return '/';
     }
-    return '/' + path;
+    return '/' + ouPath;
   }
 
   public getOuName(name: string): string {
@@ -537,8 +539,8 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
   }
 
   public getParentOuName(name: string): string {
-    const path = this.getPath(name);
-    const result = path.split('/').pop();
+    const parentOuPath = this.getPath(name);
+    const result = parentOuPath.split('/').pop();
     if (result === undefined) {
       return '/';
     }

@@ -14,7 +14,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
-import { Duration } from 'aws-cdk-lib';
 import path = require('path');
 
 export interface DetachQuarantineScpProps {
@@ -48,7 +47,7 @@ export class DetachQuarantineScp extends Construct {
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, DETACH_QUARANTINE_SCP_RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'lambdas/detach-quarantine-scp/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
-      timeout: Duration.minutes(15),
+      timeout: cdk.Duration.minutes(15),
       policyStatements: [
         {
           Sid: 'organizations',

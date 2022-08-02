@@ -11,14 +11,12 @@
  *  and limitations under the License.
  */
 
-// import { countResources, expect as expectCDK } from '@aws-cdk/assert';
+import { OrganizationConfig } from '../lib/organization-config';
 
-test('Organization Config', () => {
-  //   // const app = new cdk.App();
-  //   // // WHEN
-  //   // const stack = new Installer.InstallerStack(app, 'MyTestStack');
-  //   // // THEN
-  //   // // expectCDK(stack).to(matchTemplate({
-  //   // //   "Resources": {}
-  //   // // }, MatchStyle.EXACT))
+const testNamePrefix = 'Config(OrganizationConfig): ';
+
+describe('OrganizationConfig', () => {
+  test(`${testNamePrefix} OrganizationConfig`, () => {
+    new OrganizationConfig();
+  });
 });

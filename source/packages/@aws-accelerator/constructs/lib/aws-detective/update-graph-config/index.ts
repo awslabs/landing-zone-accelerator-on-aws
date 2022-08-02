@@ -17,7 +17,6 @@ import {
   ListMembersCommand,
   ListMembersCommandOutput,
 } from '@aws-sdk/client-detective';
-//AWS.config.logger = console;
 /**
  * DetectiveUpdateGraph - lambda handler
  *
@@ -32,19 +31,13 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const region = event.ResourceProperties['region'];
-  const adminAccountId = event.ResourceProperties['adminAccountId'];
   const detectiveClient = new DetectiveClient({ region: region });
   const graphArn = await getGraphArn(detectiveClient);
-  const existingMemberAccountIds: string[] = [adminAccountId];
   let nextToken: string | undefined = undefined;
   do {
     const page: ListMembersCommandOutput = await detectiveClient.send(
       new ListMembersCommand({ GraphArn: graphArn!, NextToken: nextToken }),
     );
-    for (const member of page.MemberDetails ?? []) {
-      console.log(member);
-      existingMemberAccountIds.push(member.AccountId!);
-    }
     nextToken = page.NextToken;
   } while (nextToken);
   switch (event.RequestType) {

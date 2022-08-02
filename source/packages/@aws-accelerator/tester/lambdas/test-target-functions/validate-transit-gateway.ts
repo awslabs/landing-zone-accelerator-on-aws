@@ -60,8 +60,8 @@ export async function validateTransitGateway(
     const stsClient = new AWS.STS({
       region: configRegion,
       credentials: {
-        accessKeyId: managementAccount.credential.AccessKeyId!,
-        secretAccessKey: managementAccount.credential.SecretAccessKey!,
+        accessKeyId: managementAccount.credential.AccessKeyId,
+        secretAccessKey: managementAccount.credential.SecretAccessKey,
         sessionToken: managementAccount.credential.SessionToken,
         expireTime: managementAccount.credential.Expiration,
       },
@@ -84,8 +84,8 @@ export async function validateTransitGateway(
     ec2Client = new AWS.EC2({
       region: transitGatewayRegion,
       credentials: {
-        accessKeyId: managementAccount.credential.AccessKeyId!,
-        secretAccessKey: managementAccount.credential.SecretAccessKey!,
+        accessKeyId: managementAccount.credential.AccessKeyId,
+        secretAccessKey: managementAccount.credential.SecretAccessKey,
         sessionToken: managementAccount.credential.SessionToken,
         expireTime: managementAccount.credential.Expiration,
       },
@@ -101,16 +101,14 @@ export async function validateTransitGateway(
     const page = await throttlingBackOff(() => ec2Client.describeTransitGateways({ NextToken: nextToken }).promise());
     for (const transitGateway of page.TransitGateways ?? []) {
       if (
-        await transitGatewayExists(
-          transitGateway,
-          transitGatewayName,
-          parseInt(amazonSideAsn ?? 0),
+        await transitGatewayExists(transitGateway, transitGatewayName, {
+          amazonSideAsn: parseInt(amazonSideAsn ?? 0),
           dnsSupport,
           vpnEcmpSupport,
-          autoAcceptSharingAttachments,
+          autoAcceptSharedAttachments: autoAcceptSharingAttachments,
           defaultRouteTableAssociation,
           defaultRouteTablePropagation,
-        )
+        })
       ) {
         complianceResourceId = transitGateway.TransitGatewayId!;
         if (
@@ -169,24 +167,26 @@ function areArraysEqual(first: string[], second: string[]) {
 async function transitGatewayExists(
   transitGateway: AWS.EC2.TransitGateway,
   validatingTransitGatewayName: string,
-  amazonSideAsn: number,
-  dnsSupport: string | undefined,
-  vpnEcmpSupport: string | undefined,
-  autoAcceptSharedAttachments: string | undefined,
-  defaultRouteTableAssociation: string | undefined,
-  defaultRouteTablePropagation: string | undefined,
+  props: {
+    amazonSideAsn: number;
+    dnsSupport: string | undefined;
+    vpnEcmpSupport: string | undefined;
+    autoAcceptSharedAttachments: string | undefined;
+    defaultRouteTableAssociation: string | undefined;
+    defaultRouteTablePropagation: string | undefined;
+  },
 ): Promise<boolean> {
   if (
     transitGateway.Options!.AmazonSideAsn ===
-      (amazonSideAsn !== 0 ? amazonSideAsn : transitGateway.Options!.AmazonSideAsn) &&
-    transitGateway.Options!.DnsSupport === (dnsSupport ?? transitGateway.Options!.DnsSupport) &&
-    transitGateway.Options!.VpnEcmpSupport === (vpnEcmpSupport ?? transitGateway.Options!.VpnEcmpSupport) &&
+      (props.amazonSideAsn !== 0 ? props.amazonSideAsn : transitGateway.Options!.AmazonSideAsn) &&
+    transitGateway.Options!.DnsSupport === (props.dnsSupport ?? transitGateway.Options!.DnsSupport) &&
+    transitGateway.Options!.VpnEcmpSupport === (props.vpnEcmpSupport ?? transitGateway.Options!.VpnEcmpSupport) &&
     transitGateway.Options!.AutoAcceptSharedAttachments ===
-      (autoAcceptSharedAttachments ?? transitGateway.Options!.AutoAcceptSharedAttachments) &&
+      (props.autoAcceptSharedAttachments ?? transitGateway.Options!.AutoAcceptSharedAttachments) &&
     transitGateway.Options!.DefaultRouteTableAssociation ===
-      (defaultRouteTableAssociation ?? transitGateway.Options!.DefaultRouteTableAssociation) &&
+      (props.defaultRouteTableAssociation ?? transitGateway.Options!.DefaultRouteTableAssociation) &&
     transitGateway.Options!.DefaultRouteTablePropagation ===
-      (defaultRouteTablePropagation ?? transitGateway.Options!.DefaultRouteTablePropagation)
+      (props.defaultRouteTablePropagation ?? transitGateway.Options!.DefaultRouteTablePropagation)
   ) {
     for (const tag of transitGateway.Tags ?? []) {
       if (tag.Key === 'Name' && tag.Value === validatingTransitGatewayName) {
@@ -238,9 +238,11 @@ async function isRouteTablesValid(
     nextToken = page.NextToken;
   } while (nextToken);
 
+  validatingRouteTableNames.sort();
+  presentRouteTableNames.sort();
   return validatingRouteTableNames.length === 0
     ? true
-    : areArraysEqual(validatingRouteTableNames.sort(), presentRouteTableNames.sort());
+    : areArraysEqual(validatingRouteTableNames, presentRouteTableNames);
 }
 
 /**
@@ -271,7 +273,8 @@ async function isTransitGatewayAttachmentsValid(
     }
     nextToken = page.NextToken;
   } while (nextToken);
-  return shareTargetAccountIds.length === 0
-    ? true
-    : areArraysEqual(shareTargetAccountIds.sort(), resourceOwnerIds.sort());
+
+  shareTargetAccountIds.sort();
+  resourceOwnerIds.sort();
+  return shareTargetAccountIds.length === 0 ? true : areArraysEqual(shareTargetAccountIds, resourceOwnerIds);
 }

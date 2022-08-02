@@ -535,9 +535,9 @@ export class NetworkVpcStack extends AcceleratorStack {
 
         // Create additional CIDRs or IPAM allocations as needed
         if (vpcItem.cidrs && vpcItem.cidrs.length > 1) {
-          for (const cidr of vpcItem.cidrs.slice(1)) {
-            Logger.info(`[network-vpc-stack] Adding secondary CIDR ${cidr} to VPC ${vpcItem.name}`);
-            vpc.addCidr({ cidrBlock: cidr });
+          for (const vpcCidr of vpcItem.cidrs.slice(1)) {
+            Logger.info(`[network-vpc-stack] Adding secondary CIDR ${vpcCidr} to VPC ${vpcItem.name}`);
+            vpc.addCidr({ cidrBlock: vpcCidr });
           }
         }
 
@@ -814,7 +814,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           }
 
           for (const routeTableEntryItem of routeTableItem.routes ?? []) {
-            const id =
+            const routeId =
               pascalCase(`${vpcItem.name}Vpc`) +
               pascalCase(`${routeTableItem.name}RouteTable`) +
               pascalCase(routeTableEntryItem.name);
@@ -870,9 +870,8 @@ export class NetworkVpcStack extends AcceleratorStack {
                 }
 
                 routeTable.addTransitGatewayRoute(
-                  id,
+                  routeId,
                   transitGatewayId,
-                  // TODO: Implement correct dependency relationships without need for escape hatch
                   transitGatewayAttachment.node.defaultChild as cdk.aws_ec2.CfnTransitGatewayAttachment,
                   destination,
                   destinationPrefixListId,
@@ -897,7 +896,7 @@ export class NetworkVpcStack extends AcceleratorStack {
                 }
 
                 routeTable.addNatGatewayRoute(
-                  id,
+                  routeId,
                   natGateway.natGatewayId,
                   destination,
                   destinationPrefixListId,
@@ -912,7 +911,7 @@ export class NetworkVpcStack extends AcceleratorStack {
                   `[network-vpc-stack] Adding Internet Gateway Route Table Entry ${routeTableEntryItem.name}`,
                 );
                 routeTable.addInternetGatewayRoute(
-                  id,
+                  routeId,
                   destination,
                   destinationPrefixListId,
                   this.acceleratorKey,
@@ -1034,9 +1033,9 @@ export class NetworkVpcStack extends AcceleratorStack {
                 securityGroupMap,
               );
 
-              for (const [index, ingressRule] of ingressRules.entries()) {
+              for (const [ingressRuleIndex, ingressRule] of ingressRules.entries()) {
                 if (ingressRule.targetSecurityGroup) {
-                  securityGroup.addIngressRule(`${securityGroupItem.name}-Ingress-${ruleId}-${index}`, {
+                  securityGroup.addIngressRule(`${securityGroupItem.name}-Ingress-${ruleId}-${ingressRuleIndex}`, {
                     sourceSecurityGroup: ingressRule.targetSecurityGroup,
                     ...ingressRule,
                   });
@@ -1068,9 +1067,9 @@ export class NetworkVpcStack extends AcceleratorStack {
                 securityGroupMap,
               );
 
-              for (const [index, egressRule] of egressRules.entries()) {
+              for (const [egressRulesIndex, egressRule] of egressRules.entries()) {
                 if (egressRule.targetSecurityGroup) {
-                  securityGroup.addEgressRule(`${securityGroupItem.name}-Egress-${ruleId}-${index}`, {
+                  securityGroup.addEgressRule(`${securityGroupItem.name}-Egress-${ruleId}-${egressRulesIndex}`, {
                     destinationSecurityGroup: egressRule.targetSecurityGroup,
                     ...egressRule,
                   });
@@ -1122,7 +1121,7 @@ export class NetworkVpcStack extends AcceleratorStack {
 
           for (const inboundRuleItem of naclItem.inboundRules ?? []) {
             Logger.info(`[network-vpc-stack] Adding inbound rule ${inboundRuleItem.rule} to ${naclItem.name}`);
-            const props: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
+            const inboundAclTargetProps: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
               inboundRuleItem.source,
             );
 
@@ -1138,7 +1137,7 @@ export class NetworkVpcStack extends AcceleratorStack {
                   from: inboundRuleItem.fromPort,
                   to: inboundRuleItem.toPort,
                 },
-                ...props,
+                ...inboundAclTargetProps,
               },
             );
             // Suppression for AwsSolutions-VPC3: A Network ACL or Network ACL entry has been implemented.
@@ -1153,7 +1152,7 @@ export class NetworkVpcStack extends AcceleratorStack {
 
           for (const outboundRuleItem of naclItem.outboundRules ?? []) {
             Logger.info(`[network-vpc-stack] Adding outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`);
-            const props: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
+            const outboundAclTargetProps: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
               outboundRuleItem.destination,
             );
 
@@ -1169,7 +1168,7 @@ export class NetworkVpcStack extends AcceleratorStack {
                   from: outboundRuleItem.fromPort,
                   to: outboundRuleItem.toPort,
                 },
-                ...props,
+                ...outboundAclTargetProps,
               },
             );
             // Suppression for AwsSolutions-VPC3: A Network ACL or Network ACL entry has been implemented.
@@ -1395,7 +1394,6 @@ export class NetworkVpcStack extends AcceleratorStack {
               throw new Error(`Specified subnet ${subnet} not defined`);
             }
             rules.push({
-              // TODO: Add support for dynamic IP lookup
               cidrIp: subnetItem.ipv4CidrBlock,
               ...props,
             });
@@ -1503,12 +1501,11 @@ export class NetworkVpcStack extends AcceleratorStack {
     });
 
     // Represents the item shared by RAM
-    const item = ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
+    return ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
       resourceShare,
       resourceShareItemType: itemType,
       kmsKey: this.acceleratorKey,
       logRetentionInDays: this.logRetention,
     });
-    return item;
   }
 }

@@ -96,15 +96,6 @@ export class CentralLogsBucket extends Construct {
       }),
     );
 
-    // // Permission to allow checking existence of AWSConfig bucket
-    // bucket.getS3Bucket().addToResourcePolicy(
-    //   new iam.PolicyStatement({
-    //     principals: [new iam.ServicePrincipal('config.amazonaws.com')],
-    //     actions: ['s3:ListBucket'],
-    //     resources: [bucket.getS3Bucket().bucketArn],
-    //   }),
-    // );
-
     bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: 'Allow S3 use of the key',

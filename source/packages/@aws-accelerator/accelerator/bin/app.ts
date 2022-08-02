@@ -66,7 +66,8 @@ process.on(
 export class GovCloudOverrides implements cdk.IAspect {
   public visit(node: IConstruct): void {
     if (node instanceof cdk.aws_logs.CfnLogGroup) {
-      node.addPropertyDeletionOverride('KmsKeyId'), node.addPropertyDeletionOverride('Tags');
+      node.addPropertyDeletionOverride('KmsKeyId');
+      node.addPropertyDeletionOverride('Tags');
     }
   }
 }
@@ -74,16 +75,17 @@ export class GovCloudOverrides implements cdk.IAspect {
 export class IsobOverrides implements cdk.IAspect {
   public visit(node: IConstruct): void {
     if (node instanceof cdk.aws_ec2.CfnFlowLog) {
-      node.addPropertyDeletionOverride('LogFormat'),
-        node.addPropertyDeletionOverride('Tags'),
-        node.addPropertyDeletionOverride('MaxAggregationInterval');
+      node.addPropertyDeletionOverride('LogFormat');
+      node.addPropertyDeletionOverride('Tags');
+      node.addPropertyDeletionOverride('MaxAggregationInterval');
     }
     if (node instanceof cdk.aws_logs.CfnLogGroup) {
-      node.addPropertyDeletionOverride('KmsKeyId'), node.addPropertyDeletionOverride('Tags');
+      node.addPropertyDeletionOverride('KmsKeyId');
+      node.addPropertyDeletionOverride('Tags');
     }
     if (node instanceof cdk.aws_s3.CfnBucket) {
-      node.addPropertyDeletionOverride('PublicAccessBlockConfiguration'),
-        node.addPropertyDeletionOverride('OwnershipControls');
+      node.addPropertyDeletionOverride('PublicAccessBlockConfiguration');
+      node.addPropertyDeletionOverride('OwnershipControls');
     }
   }
 }

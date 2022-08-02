@@ -64,7 +64,7 @@ export class KeyLookup extends Construct {
     }
 
     // Accelerator Key
-    this.key = cdk.aws_kms.Key.fromKeyArn(this, 'Resource', keyArn!) as cdk.aws_kms.Key;
+    this.key = cdk.aws_kms.Key.fromKeyArn(this, 'Resource', keyArn) as cdk.aws_kms.Key;
   }
 
   public getKey(): cdk.aws_kms.Key {

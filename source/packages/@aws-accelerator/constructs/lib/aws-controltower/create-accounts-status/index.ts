@@ -30,9 +30,9 @@ interface AccountConfig {
   name: string;
   description: string;
   email: string;
-  enableGovCloud?: boolean | undefined;
-  organizationalUnitId: string | undefined;
-  createRequestId?: string | undefined;
+  enableGovCloud?: boolean;
+  organizationalUnitId?: string;
+  createRequestId?: string;
 }
 
 type AccountConfigs = Array<AccountConfig>;
@@ -166,7 +166,8 @@ async function getSingleAccountConfigFromTable(): Promise<AccountConfigs> {
   const response = await throttlingBackOff(() => documentClient.scan(scanParams).promise());
 
   console.log(`getSingleAccount response ${JSON.stringify(response)}`);
-  if (response.Items?.length ?? 0 > 0) {
+  const itemCount = response.Items?.length ?? 0;
+  if (itemCount > 0) {
     const account: AccountConfig = JSON.parse(response.Items![0]['accountConfig']);
     accountToAdd.push(account);
     console.log(`Account to add ${JSON.stringify(accountToAdd)}`);
@@ -255,28 +256,25 @@ async function provisionAccount(accountToAdd: AccountConfig): Promise<AWS.Servic
     ],
   };
 
-  const response: AWS.ServiceCatalog.ProvisionProductOutput = await throttlingBackOff(() =>
-    serviceCatalogClient.provisionProduct(provisionInput).promise(),
-  );
-  return response;
+  return throttlingBackOff(() => serviceCatalogClient.provisionProduct(provisionInput).promise());
 }
 
-async function deleteAllRecordsFromTable(tableName: string) {
+async function deleteAllRecordsFromTable(paramTableName: string) {
   const params = {
-    TableName: tableName,
+    TableName: paramTableName,
     ProjectionExpression: 'accountEmail',
   };
   const response = await documentClient.scan(params).promise();
   if (response.Items) {
     for (const item of response.Items) {
       console.log(item['accountEmail']);
-      const params = {
-        TableName: tableName,
+      const itemParams = {
+        TableName: paramTableName,
         Key: {
           accountEmail: item['accountEmail'],
         },
       };
-      await documentClient.delete(params).promise();
+      await documentClient.delete(itemParams).promise();
     }
   }
 }

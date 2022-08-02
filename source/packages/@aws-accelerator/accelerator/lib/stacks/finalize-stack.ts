@@ -33,7 +33,7 @@ export class FinalizeStack extends AcceleratorStack {
     if (globalRegion === cdk.Stack.of(this).region) {
       Logger.debug(`[finalize-stack] Retrieving kms key`);
       const keyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(this, '/accelerator/management/kms/key-arn');
-      const key = cdk.aws_kms.Key.fromKeyArn(this, 'Resource', keyArn!) as cdk.aws_kms.Key;
+      const key = cdk.aws_kms.Key.fromKeyArn(this, 'Resource', keyArn) as cdk.aws_kms.Key;
 
       if (props.organizationConfig.quarantineNewAccounts?.enable && props.partition == 'aws') {
         Logger.debug(`[finalize-stack] Creating resources to detach quarantine scp`);

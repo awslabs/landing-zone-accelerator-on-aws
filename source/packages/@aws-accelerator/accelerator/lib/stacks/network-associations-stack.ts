@@ -137,11 +137,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
             // Evaluate Route Table Associations
             for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
-              const key = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
+              const associationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
 
-              const transitGatewayRouteTableId = transitGatewayRouteTables.get(key);
+              const transitGatewayRouteTableId = transitGatewayRouteTables.get(associationsKey);
               if (transitGatewayRouteTableId === undefined) {
-                throw new Error(`Transit Gateway Route Table ${key} not found`);
+                throw new Error(`Transit Gateway Route Table ${associationsKey} not found`);
               }
 
               new TransitGatewayRouteTableAssociation(
@@ -156,11 +156,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
             // Evaluate Route Table Propagations
             for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
-              const key = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
+              const propagationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
 
-              const transitGatewayRouteTableId = transitGatewayRouteTables.get(key);
+              const transitGatewayRouteTableId = transitGatewayRouteTables.get(propagationsKey);
               if (transitGatewayRouteTableId === undefined) {
-                throw new Error(`Transit Gateway Route Table ${key} not found`);
+                throw new Error(`Transit Gateway Route Table ${propagationsKey} not found`);
               }
 
               new TransitGatewayRouteTablePropagation(
@@ -232,20 +232,20 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             // Create static routes
             //
             if (routeItem.destinationCidrBlock) {
-              let id = '';
+              let routeTableId = '';
               let transitGatewayAttachmentId: string | undefined = undefined;
               if (routeItem.blackhole) {
                 Logger.info(
                   `[network-associations-stack] Adding blackhole route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
                 );
-                id = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-blackhole`;
+                routeTableId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-blackhole`;
               }
 
               if (routeItem.attachment) {
                 Logger.info(
                   `[network-associations-stack] Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
                 );
-                id = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`;
+                routeTableId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`;
 
                 // Get TGW attachment ID
                 transitGatewayAttachmentId = transitGatewayAttachments.get(
@@ -260,7 +260,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               }
 
               // Create static route
-              new TransitGatewayStaticRoute(this, id, {
+              new TransitGatewayStaticRoute(this, routeTableId, {
                 transitGatewayRouteTableId,
                 blackhole: routeItem.blackhole,
                 destinationCidrBlock: routeItem.destinationCidrBlock,
@@ -280,19 +280,19 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                 );
               }
 
-              let id = '';
+              let plId = '';
               let transitGatewayAttachmentId: string | undefined = undefined;
               if (routeItem.blackhole) {
                 Logger.info(
                   `[network-associations-stack] Adding blackhole prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
                 );
-                id = pascalCase(`${routeTableItem.name}${routeItem.destinationPrefixList}Blackhole`);
+                plId = pascalCase(`${routeTableItem.name}${routeItem.destinationPrefixList}Blackhole`);
               }
               if (routeItem.attachment) {
                 Logger.info(
                   `[network-associations-stack] Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
                 );
-                id = pascalCase(
+                plId = pascalCase(
                   `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.vpcName}${routeItem.attachment.account}`,
                 );
 
@@ -309,7 +309,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               }
 
               // Create prefix list reference
-              new TransitGatewayPrefixListReference(this, id, {
+              new TransitGatewayPrefixListReference(this, plId, {
                 prefixListId,
                 blackhole: routeItem.blackhole,
                 transitGatewayAttachmentId,
@@ -711,12 +711,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     });
 
     // Represents the item shared by RAM
-    const item = ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
+    return ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
       resourceShare,
       resourceShareItemType: itemType,
       kmsKey: this.key,
       logRetentionInDays: this.logRetention,
     });
-    return item;
   }
 }

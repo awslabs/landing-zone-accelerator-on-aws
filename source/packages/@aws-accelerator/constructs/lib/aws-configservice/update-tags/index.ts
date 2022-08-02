@@ -20,7 +20,6 @@ import {
   UntagResourceCommandInput,
   Tag,
 } from '@aws-sdk/client-config-service';
-//import { Tag as AcceleratorTag } from '@aws-accelerator/config';
 import { v4 as uuidv4 } from 'uuid';
 const configClient = new ConfigServiceClient({});
 

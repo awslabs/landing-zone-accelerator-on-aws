@@ -42,7 +42,6 @@ export interface InstallerStackProps extends cdk.StackProps {
 }
 
 export class InstallerStack extends cdk.Stack {
-  // TODO: Add allowedPattern for all CfnParameter uses
   private readonly repositorySource = new cdk.CfnParameter(this, 'RepositorySource', {
     type: 'String',
     description: 'Specify the git host',
@@ -185,6 +184,23 @@ export class InstallerStack extends cdk.Stack {
     let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
     let targetAcceleratorEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } | undefined;
 
+    //
+    // Variables to be changed based on qualifier parameter
+    let stackIdSsmParameterName = `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`;
+    let acceleratorVersionSsmParameterName = `/accelerator/${cdk.Stack.of(this).stackName}/version`;
+    let installerKeySsmParameterName = 'alias/accelerator/installer/kms/key';
+    let acceleratorManagementKmsArnSsmParameterName = '/accelerator/installer/kms/key-arn';
+    let installerAccessLogsBucketName = `aws-accelerator-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+    let installerAccessLogsBucketNameSsmParameterName = `/accelerator/installer-access-logs-bucket-name`;
+    let secureBucketName = `aws-accelerator-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+    let acceleratorPipelineName = 'AWSAccelerator-Pipeline';
+    let installerProjectName = 'AWSAccelerator-InstallerProject';
+    let installerPipelineName = 'AWSAccelerator-Installer';
+
+    let acceleratorPrincipalArn = `arn:${cdk.Stack.of(this).partition}:iam::${
+      cdk.Stack.of(this).account
+    }:role/AWSAccelerator-*`;
+
     if (props.useExternalPipelineAccount) {
       this.acceleratorQualifier = new cdk.CfnParameter(this, 'AcceleratorQualifier', {
         type: 'String',
@@ -231,6 +247,26 @@ export class InstallerStack extends cdk.Stack {
           value: this.acceleratorQualifier.valueAsString,
         },
       };
+
+      //
+      // Change the variable to use qualifier
+      stackIdSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/${
+        cdk.Stack.of(this).stackName
+      }/stack-id`;
+      acceleratorVersionSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/${
+        cdk.Stack.of(this).stackName
+      }/version`;
+      installerKeySsmParameterName = `alias/accelerator/${this.acceleratorQualifier.valueAsString}/installer/kms/key`;
+      acceleratorManagementKmsArnSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/installer/kms/key-arn`;
+      installerAccessLogsBucketName = `${this.acceleratorQualifier.valueAsString}-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+      installerAccessLogsBucketNameSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/installer-access-logs-bucket-name`;
+      secureBucketName = `${this.acceleratorQualifier.valueAsString}-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+      acceleratorPipelineName = `${this.acceleratorQualifier.valueAsString}-pipeline`;
+      installerProjectName = `${this.acceleratorQualifier.valueAsString}-installer-project`;
+      installerPipelineName = `${this.acceleratorQualifier.valueAsString}-installer`;
+      acceleratorPrincipalArn = `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
+        this.acceleratorQualifier.valueAsString
+      }-*`;
     }
 
     let targetAcceleratorTestEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } | undefined;
@@ -256,17 +292,13 @@ export class InstallerStack extends cdk.Stack {
     };
 
     new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
-      parameterName: this.acceleratorQualifier
-        ? `/accelerator/${this.acceleratorQualifier.valueAsString}/${cdk.Stack.of(this).stackName}/stack-id`
-        : `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
+      parameterName: stackIdSsmParameterName,
       stringValue: cdk.Stack.of(this).stackId,
       simpleName: false,
     });
 
     new cdk.aws_ssm.StringParameter(this, 'SsmParamAcceleratorVersion', {
-      parameterName: this.acceleratorQualifier
-        ? `/accelerator/${this.acceleratorQualifier.valueAsString}/${cdk.Stack.of(this).stackName}/version`
-        : `/accelerator/${cdk.Stack.of(this).stackName}/version`,
+      parameterName: acceleratorVersionSsmParameterName,
       stringValue: version,
       simpleName: false,
     });
@@ -286,9 +318,7 @@ export class InstallerStack extends cdk.Stack {
 
     // Create Accelerator Installer KMS Key
     const installerKey = new cdk.aws_kms.Key(this, 'InstallerKey', {
-      alias: this.acceleratorQualifier
-        ? `alias/accelerator/${this.acceleratorQualifier.valueAsString}/installer/kms/key`
-        : 'alias/accelerator/installer/kms/key',
+      alias: installerKeySsmParameterName,
       description: 'AWS Accelerator Management Account Kms Key',
       enableKeyRotation: true,
       policy: undefined,
@@ -317,9 +347,7 @@ export class InstallerStack extends cdk.Stack {
           Resource: '*',
           Condition: {
             ArnLike: {
-              'aws:PrincipalARN': `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
-                this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'AWSAccelerator'
-              }-*`,
+              'aws:PrincipalARN': acceleratorPrincipalArn,
             },
           },
         },
@@ -368,18 +396,14 @@ export class InstallerStack extends cdk.Stack {
 
     // Create SSM parameter for installer key arn for future use
     new cdk.aws_ssm.StringParameter(this, 'AcceleratorManagementKmsArnParameter', {
-      parameterName: this.acceleratorQualifier
-        ? `/accelerator/${this.acceleratorQualifier.valueAsString}/installer/kms/key-arn`
-        : '/accelerator/installer/kms/key-arn',
+      parameterName: acceleratorManagementKmsArnSsmParameterName,
       stringValue: installerKey.keyArn,
       simpleName: false,
     });
 
     const installerServerAccessLogsBucket = new Bucket(this, 'InstallerAccessLogsBucket', {
       encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
-      s3BucketName: `${
-        this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'aws-accelerator'
-      }-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+      s3BucketName: installerAccessLogsBucketName,
     });
 
     // cfn_nag: Suppress warning related to high S3 Bucket should have access logging configured
@@ -409,38 +433,27 @@ export class InstallerStack extends cdk.Stack {
     );
 
     new cdk.aws_ssm.StringParameter(this, 'InstallerAccessLogsBucketName', {
-      parameterName: this.acceleratorQualifier
-        ? `/accelerator/${this.acceleratorQualifier.valueAsString}/installer-access-logs-bucket-name`
-        : `/accelerator/installer-access-logs-bucket-name`,
+      parameterName: installerAccessLogsBucketNameSsmParameterName,
       stringValue: installerServerAccessLogsBucket.getS3Bucket().bucketName,
       simpleName: false,
     });
 
     const bucket = new Bucket(this, 'SecureBucket', {
       encryptionType: BucketEncryptionType.SSE_KMS,
-      s3BucketName: `${
-        this.acceleratorQualifier ? this.acceleratorQualifier.valueAsString : 'aws-accelerator'
-      }-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`, //TO DO change the bucket name
+      s3BucketName: secureBucketName,
       kmsKey: installerKey,
       serverAccessLogsBucket: installerServerAccessLogsBucket.getS3Bucket(),
     });
 
     const installerRole = new cdk.aws_iam.Role(this, 'InstallerAdminRole', {
       assumedBy: new cdk.aws_iam.ServicePrincipal('codebuild.amazonaws.com'),
-      // TODO: Lock this down to just the pipeline and cloudformation actions needed
       managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
     });
 
     const globalRegion = globalRegionMap.findInMap(cdk.Aws.PARTITION, 'regionName');
 
-    const acceleratorPipelineName = this.acceleratorQualifier
-      ? `${this.acceleratorQualifier?.valueAsString}-pipeline`
-      : 'AWSAccelerator-Pipeline';
-
     const installerProject = new cdk.aws_codebuild.PipelineProject(this, 'InstallerProject', {
-      projectName: this.acceleratorQualifier
-        ? `${this.acceleratorQualifier.valueAsString}-installer-project`
-        : 'AWSAccelerator-InstallerProject',
+      projectName: installerProjectName,
       encryptionKey: installerKey,
       role: installerRole,
       buildSpec: cdk.aws_codebuild.BuildSpec.fromObjectToYaml({
@@ -559,9 +572,7 @@ export class InstallerStack extends cdk.Stack {
     });
 
     const codeCommitPipeline = new cdk.aws_codepipeline.Pipeline(this, 'CodeCommitPipeline', {
-      pipelineName: this.acceleratorQualifier
-        ? `${this.acceleratorQualifier.valueAsString}-installer`
-        : 'AWSAccelerator-Installer',
+      pipelineName: installerPipelineName,
       artifactBucket: bucket.getS3Bucket(),
       restartExecutionOnUpdate: true,
       role: codeCommitPipelineRole,
@@ -626,9 +637,7 @@ export class InstallerStack extends cdk.Stack {
     });
 
     const gitHubPipeline = new cdk.aws_codepipeline.Pipeline(this, 'GitHubPipeline', {
-      pipelineName: this.acceleratorQualifier
-        ? `${this.acceleratorQualifier.valueAsString}-installer`
-        : 'AWSAccelerator-Installer',
+      pipelineName: installerPipelineName,
       artifactBucket: bucket.getS3Bucket(),
       restartExecutionOnUpdate: true,
       role: gitHubPipelineRole,

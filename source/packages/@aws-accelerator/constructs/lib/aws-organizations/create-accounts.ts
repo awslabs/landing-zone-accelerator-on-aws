@@ -111,7 +111,7 @@ export class CreateOrganizationAccounts extends Construct {
         sid: 'MappingDynamoDb',
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['dynamodb:GetItem', 'dynamodb:PutItem'],
-        resources: [props.govCloudAccountMappingTable!.tableArn],
+        resources: [props.govCloudAccountMappingTable.tableArn],
       });
       const mappingTableKeyPolicy = new cdk.aws_iam.PolicyStatement({
         sid: 'MappingKMS',

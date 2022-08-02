@@ -48,17 +48,17 @@ export async function handler(event): Promise<{
   // Create management account credential when invoking account is not management account
   if (invokingAwsAccountId !== managementAccountId) {
     const roleArn = `arn:${partition}:iam::${managementAccountId}:role/${managementAccountRoleName}`;
-    const response = await throttlingBackOff(() =>
+    const assumeRoleResponse = await throttlingBackOff(() =>
       stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' }).promise(),
     );
-    managementAccountCredential = response.Credentials!;
+    managementAccountCredential = assumeRoleResponse.Credentials!;
   } else {
     const credentials = stsClient.config.credentials as AWS.Credentials;
     managementAccountCredential = {
-      AccessKeyId: credentials!.accessKeyId,
-      SecretAccessKey: credentials!.secretAccessKey,
-      SessionToken: credentials!.sessionToken!,
-      Expiration: credentials!.expireTime,
+      AccessKeyId: credentials.accessKeyId,
+      SecretAccessKey: credentials.secretAccessKey,
+      SessionToken: credentials.sessionToken,
+      Expiration: credentials.expireTime,
     };
   }
 

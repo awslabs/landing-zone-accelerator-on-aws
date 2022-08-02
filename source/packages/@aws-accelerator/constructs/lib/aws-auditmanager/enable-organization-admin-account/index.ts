@@ -98,5 +98,4 @@ async function isAuditManagerEnable(auditManagerClient: AWS.AuditManager): Promi
       throw error;
     }
   }
-  return { accountId: undefined };
 }

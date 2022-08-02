@@ -154,7 +154,6 @@ export class TesterPipeline extends Construct {
      */
     const deployRole = new iam.Role(this, 'DeployAdminRole', {
       assumedBy: new iam.ServicePrincipal('codebuild.amazonaws.com'),
-      //TODO restricted access
       managedPolicies: [iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
     });
 

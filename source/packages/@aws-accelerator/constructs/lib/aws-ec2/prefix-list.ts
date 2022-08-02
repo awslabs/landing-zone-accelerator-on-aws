@@ -13,7 +13,6 @@
 
 import { CfnTag, IResource, Resource } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import { CfnPrefixList } from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
 
 export interface IPrefixList extends IResource {
@@ -60,7 +59,7 @@ export class PrefixList extends Resource implements IPrefixList {
   constructor(scope: Construct, id: string, props: PrefixListProps) {
     super(scope, id);
 
-    const cidrBlocks: CfnPrefixList.EntryProperty[] = props.entries.map(item => {
+    const cidrBlocks: ec2.CfnPrefixList.EntryProperty[] = props.entries.map(item => {
       return { cidr: item };
     });
 

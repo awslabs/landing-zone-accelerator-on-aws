@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TransitGatewayStaticRoute Construct(TransitGatewayStaticRoute):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TransitGatewayStaticRoute761B0FE9": Object {
+      "Properties": Object {
+        "Blackhole": false,
+        "DestinationCidrBlock": "10.0.0.0/16",
+        "TransitGatewayAttachmentId": "tgw-123123",
+        "TransitGatewayRouteTableId": "1234",
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
+    },
+  },
+}
+`;

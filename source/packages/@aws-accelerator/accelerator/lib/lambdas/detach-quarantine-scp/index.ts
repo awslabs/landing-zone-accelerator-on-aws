@@ -82,7 +82,6 @@ async function detachQuarantineScp(accountId: string, policyId: string): Promise
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
     if (e.code === 'PolicyNotAttachedException') {
-      //console.log(`Quarantine SCP was not attached to account: ${accountId}`);
       return true;
     } else {
       console.log(e);
