@@ -128,6 +128,10 @@ export class IamConfigTypes {
      */
     deploymentTargets: t.deploymentTargets,
     /**
+     * The path to the role
+     */
+    path: t.optional(t.nonEmptyString),
+    /**
      * List of role objects
      */
     roles: t.array(this.roleConfig),
@@ -317,6 +321,10 @@ export class RoleSetConfig implements t.TypeOf<typeof IamConfigTypes.roleSetConf
    * Role set deployment targets
    */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+  /**
+   * The path to the role
+   */
+  readonly path: string | undefined = undefined;
   /**
    * List of role objects
    */
