@@ -69,6 +69,7 @@ source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts
 
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:24
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:78
+source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:85
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:88
 
 
@@ -106,3 +107,30 @@ source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1178
 source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:68
 source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:82
 source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:92
+
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:4
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:8
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:12
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:17
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:21
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:24
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:26
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:28
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:30
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:32
+
+source/packages/@aws-accelerator/accelerator/lib/stacks/operations-stack.ts:280
+
+source/packages/@aws-accelerator/installer/lib/installer-stack.ts:485
+source/packages/@aws-accelerator/installer/lib/installer-stack.ts:485
+source/packages/@aws-accelerator/installer/test/installer.test.ts:453
+source/packages/@aws-accelerator/installer/test/installer.test.ts:670
+source/packages/@aws-accelerator/installer/test/installer.test.ts:863
+source/packages/@aws-accelerator/installer/test/installer.test.ts:1080
+source/packages/@aws-accelerator/installer/test/installer.test.ts:453
+source/packages/@aws-accelerator/installer/test/installer.test.ts:670
+source/packages/@aws-accelerator/installer/test/installer.test.ts:863
+source/packages/@aws-accelerator/installer/test/installer.test.ts:1080
+
+source/packages/@aws-accelerator/constructs/lib/aws-iam/password-policy.ts
+source/packages/@aws-accelerator/constructs/test/aws-iam/password-policy.test.ts
