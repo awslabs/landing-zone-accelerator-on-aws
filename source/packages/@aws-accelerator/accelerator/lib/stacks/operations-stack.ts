@@ -277,9 +277,10 @@ export class OperationsStack extends AcceleratorStack {
 
           new cdk.aws_iam.User(this, pascalCase(user.username), {
             userName: user.username,
-            password: secret.secretValue,
+            password: secret.secretValueFromJson('password'),
             groups: [groups[user.group]],
             permissionsBoundary: policies[user.boundaryPolicy],
+            passwordResetRequired: true,
           });
         }
       }
