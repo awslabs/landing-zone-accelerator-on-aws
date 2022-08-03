@@ -166,6 +166,7 @@ export class OperationsStack extends AcceleratorStack {
             roleName: roleItem.name,
             assumedBy,
             managedPolicies,
+            path: roleSetItem.path,
             permissionsBoundary: policies[roleItem.boundaryPolicy],
           });
 
