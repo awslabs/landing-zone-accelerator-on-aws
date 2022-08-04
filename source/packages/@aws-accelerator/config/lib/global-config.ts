@@ -17,6 +17,9 @@ import * as yaml from 'js-yaml';
 import * as path from 'path';
 import * as t from './common-types';
 
+import { OrganizationConfig } from './organization-config';
+import { AccountsConfig } from './accounts-config';
+
 /**
  * Global configuration items.
  */
@@ -590,25 +593,56 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   // Validation errors
   //
   private readonly errors: string[] = [];
+  /**
+   * OUid name list
+   */
+  readonly ouIdNames: string[] = ['Root'];
+  /**
+   * Account name list
+   */
+  readonly accountNames: string[] = [];
 
   /**
    *
    * @param props
    * @param values
+   * @param configDir
+   * @param validateConfig
    */
   constructor(
     props: {
       homeRegion: string;
     },
     values?: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    configDir?: string,
+    validateConfig?: boolean,
   ) {
     if (values) {
       Object.assign(this, values);
 
       //
-      // budget notification email validation
-      //
-      this.validateBudgetNotificationEmailIds(values);
+      // Validation
+      if (configDir && validateConfig) {
+        //
+        // Get list of OU ID names from organization config file
+        this.getOuIdNames(configDir);
+
+        //
+        // Get list of Account names from account config file
+        this.getAccountNames(configDir);
+        //
+        // Validate logging account name
+        //
+        this.validateLoggingAccountName(values);
+        //
+        // Validate budget deployment target OU
+        //
+        this.validateBudgetDeploymentTargetOUs(values);
+        //
+        // budget notification email validation
+        //
+        this.validateBudgetNotificationEmailIds(values);
+      }
     } else {
       this.homeRegion = props.homeRegion;
       this.enabledRegions = [props.homeRegion as t.Region];
@@ -616,6 +650,59 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
 
     if (this.errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${this.errors.length} issues: ${this.errors.join(' ')}`);
+    }
+  }
+
+  /**
+   * Prepare list of OU ids from organization config file
+   * @param configDir
+   */
+  private getOuIdNames(configDir: string) {
+    for (const organizationalUnit of OrganizationConfig.load(configDir).organizationalUnits) {
+      this.ouIdNames.push(organizationalUnit.name);
+    }
+  }
+
+  /**
+   * Prepare list of Account names from account config file
+   * @param configDir
+   */
+  private getAccountNames(configDir: string) {
+    for (const accountItem of [
+      ...AccountsConfig.load(configDir).mandatoryAccounts,
+      ...AccountsConfig.load(configDir).workloadAccounts,
+    ]) {
+      this.accountNames.push(accountItem.name);
+    }
+  }
+
+  /**
+   * Function to validate existence of budget deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateBudgetDeploymentTargetOUs(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>) {
+    for (const budget of values.reports?.budgets ?? []) {
+      for (const ou of budget.deploymentTargets?.organizationalUnits ?? []) {
+        if (this.ouIdNames.indexOf(ou) === -1) {
+          this.errors.push(
+            `Deployment target OU ${ou} for budget ${budget.name} does not exists in organization-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of logging target account name
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateLoggingAccountName(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>) {
+    if (this.accountNames.indexOf(values.logging.account) === -1) {
+      this.errors.push(
+        `Deployment target account ${values.logging.account} for logging does not exists in accounts-config.yaml file.`,
+      );
     }
   }
 
@@ -636,9 +723,10 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   /**
    * Load from file in given directory
    * @param dir
+   * @param validateConfig
    * @returns
    */
-  static load(dir: string): GlobalConfig {
+  static load(dir: string, validateConfig?: boolean): GlobalConfig {
     const buffer = fs.readFileSync(path.join(dir, GlobalConfig.FILENAME), 'utf8');
     const values = t.parse(GlobalConfigTypes.globalConfig, yaml.load(buffer));
 
@@ -649,6 +737,8 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         homeRegion,
       },
       values,
+      dir,
+      validateConfig,
     );
   }
 

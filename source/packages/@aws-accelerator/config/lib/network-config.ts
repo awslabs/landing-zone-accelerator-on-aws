@@ -17,6 +17,9 @@ import * as path from 'path';
 
 import * as t from './common-types';
 
+import { OrganizationConfig } from './organization-config';
+import { AccountsConfig } from './accounts-config';
+
 /**
  * Network configuration items.
  */
@@ -3191,57 +3194,68 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   readonly vpcTemplates: VpcTemplatesConfig[] | undefined = undefined;
 
   /**
+   * Validation errors
+   */
+  readonly errors: string[] = [];
+
+  /**
+   * Domain lists
+   */
+  readonly domainLists: { name: string; document: string }[] = [];
+  /**
+   * OUid name list
+   */
+  readonly ouIdNames: string[] = ['Root'];
+  /**
+   * Account name list
+   */
+  readonly accountNames: string[] = [];
+
+  /**
    *
    * @param values
+   * @param configDir
+   * @param validateConfig
    */
-  constructor(values?: t.TypeOf<typeof NetworkConfigTypes.networkConfig>, configDir?: string) {
-    //
-    // Validation errors
-    //
-    const errors: string[] = [];
-
+  constructor(
+    values?: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    configDir?: string,
+    validateConfig?: boolean,
+  ) {
     if (values) {
-      //
-      // Endpoint policy validation
-      //
-      const endpointPolicies: { name: string; document: string }[] = [];
-      for (const policy of values.endpointPolicies ?? []) {
-        endpointPolicies.push(policy);
-      }
+      if (configDir && validateConfig) {
+        //
+        // Get list of OU ID names from organization config file
+        this.getOuIdNames(configDir);
 
-      //
-      // DNS firewall custom domain list validation
-      //
-      const domainLists: { name: string; document: string }[] = [];
-      for (const ruleGroup of values.centralNetworkServices?.route53Resolver?.firewallRuleGroups ?? []) {
-        for (const rule of ruleGroup.rules) {
-          if (rule.customDomainList) {
-            domainLists.push({ name: rule.name, document: rule.customDomainList });
-          }
-        }
-      }
+        //
+        // Get list of Account names from account config file
+        this.getAccountNames(configDir);
+        //
+        // Prepare Endpoint policy list
+        this.prepareEndpointPolicies(values);
 
-      //
-      // Validate documents exist
-      //
-      if (configDir) {
-        // Endpoint policies
-        for (const policy of endpointPolicies) {
-          if (!fs.existsSync(path.join(configDir, policy.document))) {
-            errors.push(`Endpoint policy ${policy.name} document file ${policy.document} not found!`);
-          }
-        }
+        //
+        // Prepare Custom domain list
+        this.prepareCustomDomainList(values);
+
+        // Validate Endpoint policy document file existence
+        this.validateEndpointPolicyDocumentFile(configDir);
 
         // Custom domain lists
-        for (const list of domainLists) {
-          if (!fs.existsSync(path.join(configDir, list.document))) {
-            errors.push(`DNS firewall custom domain list ${list.name} document file ${list.document} not found!`);
-          }
-        }
+        this.validateCustomDomainListDocumentFile(configDir);
+
+        //
+        // Validate deployment target OUs
+        this.validateDeploymentTargetOUs(values);
+
+        //
+        // Validate deployment target accounts
+        this.validateDeploymentTargetAccountNames(values);
       }
 
-      if (errors.length) {
-        throw new Error(`${NetworkConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      if (this.errors.length) {
+        throw new Error(`${NetworkConfig.FILENAME} has ${this.errors.length} issues: ${this.errors.join(' ')}`);
       }
 
       Object.assign(this, values);
@@ -3249,14 +3263,176 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   }
 
   /**
+   * Prepare list of OU ids from organization config file
+   * @param configDir
+   */
+  private getOuIdNames(configDir: string) {
+    for (const organizationalUnit of OrganizationConfig.load(configDir).organizationalUnits) {
+      this.ouIdNames.push(organizationalUnit.name);
+    }
+  }
+
+  /**
+   * Prepare list of Account names from account config file
+   * @param configDir
+   */
+  private getAccountNames(configDir: string) {
+    for (const accountItem of [
+      ...AccountsConfig.load(configDir).mandatoryAccounts,
+      ...AccountsConfig.load(configDir).workloadAccounts,
+    ]) {
+      this.accountNames.push(accountItem.name);
+    }
+  }
+
+  /**
+   * Function to validate existence of Transit Gateway deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateTgwDeploymentTargetOUs(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    for (const transitGateway of values.transitGateways ?? []) {
+      for (const ou of transitGateway.shareTargets?.organizationalUnits ?? []) {
+        if (this.ouIdNames.indexOf(ou) === -1) {
+          this.errors.push(
+            `Deployment target OU ${ou} for transit gateways ${transitGateway.name} does not exists in organization-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of IPAM pool deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateIpamPoolDeploymentTargetOUs(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    for (const ipam of values.centralNetworkServices?.ipams ?? []) {
+      for (const pool of ipam.pools ?? []) {
+        for (const ou of pool.shareTargets?.organizationalUnits ?? []) {
+          if (this.ouIdNames.indexOf(ou) === -1) {
+            this.errors.push(
+              `Deployment target OU ${ou} for IPAM pool ${pool.name} does not exists in organization-config.yaml file.`,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of transit deployment target accounts
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateTgwDeploymentTargetAccounts(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    for (const transitGateway of values.transitGateways ?? []) {
+      for (const account of transitGateway.shareTargets?.accounts ?? []) {
+        if (this.accountNames.indexOf(account) === -1) {
+          this.errors.push(
+            `Deployment target account ${account} for transit gateway ${transitGateway.name} does not exists in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of IPAM pool deployment target accounts
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateIpamPoolDeploymentTargetAccounts(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    for (const ipam of values.centralNetworkServices?.ipams ?? []) {
+      for (const pool of ipam.pools ?? []) {
+        for (const account of pool.shareTargets?.accounts ?? []) {
+          if (this.accountNames.indexOf(account) === -1) {
+            this.errors.push(
+              `Deployment target account ${account} for IPAM pool ${pool.name} does not exists in accounts-config.yaml file.`,
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate Deployment targets OU name for network services
+   * @param values
+   */
+  private validateDeploymentTargetOUs(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    this.validateTgwDeploymentTargetOUs(values);
+    this.validateIpamPoolDeploymentTargetOUs(values);
+  }
+
+  /**
+   * Function to validate Deployment targets account name for network services
+   * @param values
+   */
+  private validateDeploymentTargetAccountNames(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    this.validateTgwDeploymentTargetAccounts(values);
+    this.validateIpamPoolDeploymentTargetAccounts(values);
+  }
+
+  /**
+   * Function to prepare Endpoint policies
+   * @param values
+   */
+  private prepareEndpointPolicies(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    for (const policy of values.endpointPolicies ?? []) {
+      this.endpointPolicies.push(policy);
+    }
+  }
+
+  /**
+   * Function to prepare custom domain list
+   * @param values
+   */
+  private prepareCustomDomainList(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    for (const ruleGroup of values.centralNetworkServices?.route53Resolver?.firewallRuleGroups ?? []) {
+      for (const rule of ruleGroup.rules) {
+        if (rule.customDomainList) {
+          this.domainLists.push({ name: rule.name, document: rule.customDomainList });
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate Endpoint policy document file existence
+   * @param configDir
+   */
+  private validateEndpointPolicyDocumentFile(configDir: string) {
+    for (const policy of this.endpointPolicies) {
+      if (!fs.existsSync(path.join(configDir, policy.document))) {
+        this.errors.push(`Endpoint policy ${policy.name} document file ${policy.document} not found!`);
+      }
+    }
+  }
+
+  /**
+   * Function to validate custom domain list document file existence
+   * @param configDir
+   */
+  private validateCustomDomainListDocumentFile(configDir: string) {
+    for (const list of this.domainLists) {
+      if (!fs.existsSync(path.join(configDir, list.document))) {
+        this.errors.push(`DNS firewall custom domain list ${list.name} document file ${list.document} not found!`);
+      }
+    }
+  }
+
+  /**
    *
    * @param dir
+   * @param validateConfig
    * @returns
    */
-  static load(dir: string): NetworkConfig {
+  static load(dir: string, validateConfig?: boolean): NetworkConfig {
     const buffer = fs.readFileSync(path.join(dir, NetworkConfig.FILENAME), 'utf8');
     const values = t.parse(NetworkConfigTypes.networkConfig, yaml.load(buffer));
-    return new NetworkConfig(values, dir);
+    return new NetworkConfig(values, dir, validateConfig);
   }
 
   /**

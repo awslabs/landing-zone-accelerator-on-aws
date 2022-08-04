@@ -11,63 +11,14 @@
  *  and limitations under the License.
  */
 
-import {
-  AccountsConfig,
-  GlobalConfig,
-  IamConfig,
-  NetworkConfig,
-  OrganizationConfig,
-  SecurityConfig,
-} from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
-import * as path from 'path';
-import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
-import { NetworkPrepStack } from '../lib/stacks/network-prep-stack';
+import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 
 const testNamePrefix = 'Construct(NetworkPrepStack): ';
 
-/**
- * NetworkPrepStack
- */
-const app = new cdk.App({
-  context: { 'config-dir': path.join(__dirname, 'configs/all-enabled') },
-});
-const configDirPath = app.node.tryGetContext('config-dir');
-
-const props: AcceleratorStackProps = {
-  configDirPath,
-  accountsConfig: AccountsConfig.load(configDirPath),
-  globalConfig: GlobalConfig.load(configDirPath),
-  iamConfig: IamConfig.load(configDirPath),
-  networkConfig: NetworkConfig.load(configDirPath),
-  organizationConfig: OrganizationConfig.load(configDirPath),
-  securityConfig: SecurityConfig.load(configDirPath),
-  partition: 'aws',
-};
-
-/**
- * Build all related stacks
- */
-const stacks = new Map<string, NetworkPrepStack>();
-
-for (const region of props.globalConfig.enabledRegions) {
-  for (const account of [...props.accountsConfig.mandatoryAccounts, ...props.accountsConfig.workloadAccounts]) {
-    const accountId = props.accountsConfig.getAccountId(account.name);
-
-    stacks.set(
-      `${account.name}-${region}`,
-      new NetworkPrepStack(app, `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC]}-${accountId}-${region}`, {
-        env: {
-          account: accountId,
-          region,
-        },
-        ...props,
-      }),
-    );
-  }
-}
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.NETWORK_PREP, 'all-enabled', 'aws');
+const stack = acceleratorTestStacks.stacks.get(`Network-us-east-1`)!;
 
 /**
  * NetworkPrepStack construct test
@@ -77,313 +28,262 @@ describe('NetworkPrepStack', () => {
    * Number of TransitGatewayRouteTable resource test
    */
   test(`${testNamePrefix} TransitGatewayRouteTable resource count test`, () => {
-    cdk.assertions.Template.fromStack(stacks.get(`Network-us-east-1`)!).resourceCountIs(
-      'AWS::EC2::TransitGatewayRouteTable',
-      4,
-    );
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::TransitGatewayRouteTable', 4);
   });
 
-  // /**
-  //  * Number of TransitGateway resource test
-  //  */
-  // test(`${testNamePrefix} TransitGateway resource count test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).resourceCountIs(
-  //     'AWS::EC2::TransitGateway',
-  //     1,
-  //   );
-  // });
+  /**
+   * Number of TransitGateway resource test
+   */
+  test(`${testNamePrefix} TransitGateway resource count test`, () => {
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::TransitGateway', 1);
+  });
 
-  // /**
-  //  * Number of RAM ResourceShare resource test
-  //  */
-  // test(`${testNamePrefix} RAM ResourceShare resource count test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).resourceCountIs(
-  //     'AWS::RAM::ResourceShare',
-  //     1,
-  //   );
-  // });
+  /**
+   * Number of RAM ResourceShare resource test
+   */
+  test(`${testNamePrefix} RAM ResourceShare resource count test`, () => {
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::RAM::ResourceShare', 6);
+  });
 
-  // /**
-  //  * Number of SSM parameter resource test
-  //  */
-  // test(`${testNamePrefix} SSM parameter resource count test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).resourceCountIs('AWS::SSM::Parameter', 7);
-  // });
+  /**
+   * Number of SSM parameter resource test
+   */
+  test(`${testNamePrefix} SSM parameter resource count test`, () => {
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::SSM::Parameter', 18);
+  });
 
-  // /**
-  //  * CoreTransitGatewayRouteTable TransitGatewayRouteTable resource configuration test
-  //  */
-  // test(`${testNamePrefix} CoreTransitGatewayRouteTable TransitGatewayRouteTable resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).templateMatches({
-  //     Resources: {
-  //       CoreTransitGatewayRouteTableD73AD6A9: {
-  //         Type: 'AWS::EC2::TransitGatewayRouteTable',
-  //         Properties: {
-  //           Tags: [
-  //             {
-  //               Key: 'Name',
-  //               Value: 'core',
-  //             },
-  //           ],
-  //           TransitGatewayId: {
-  //             Ref: 'MainTransitGateway66204EF2',
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
+  /**
+   * AcceleratorBlockGroupResolverFirewallRuleGroupShareResourceShare resource configuration test
+   */
+  test(`${testNamePrefix} AcceleratorBlockGroupResolverFirewallRuleGroupShareResourceShare resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        AcceleratorBlockGroupResolverFirewallRuleGroupShareResourceShare3C3E6D12: {
+          Properties: {
+            Name: 'accelerator-block-group_ResolverFirewallRuleGroupShare',
+            Principals: ['arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222'],
+            ResourceArns: [
+              {
+                'Fn::GetAtt': ['AcceleratorBlockGroupRuleGroup1083FDE0', 'Arn'],
+              },
+            ],
+          },
+          Type: 'AWS::RAM::ResourceShare',
+        },
+      },
+    });
+  });
 
-  // /**
-  //  * MainTransitGateway TransitGateway resource configuration test
-  //  */
-  // test(`${testNamePrefix} MainTransitGateway TransitGateway resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).templateMatches({
-  //     Resources: {
-  //       MainTransitGateway66204EF2: {
-  //         Type: 'AWS::EC2::TransitGateway',
-  //         Properties: {
-  //           AmazonSideAsn: 65521,
-  //           AutoAcceptSharedAttachments: 'enable',
-  //           DefaultRouteTableAssociation: 'disable',
-  //           DefaultRouteTablePropagation: 'disable',
-  //           DnsSupport: 'enable',
-  //           Tags: [
-  //             {
-  //               Key: 'Name',
-  //               Value: 'Main',
-  //             },
-  //           ],
-  //           VpnEcmpSupport: 'enable',
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
-
-  // /**
-  //  * RAM ResourceShare MainTransitGatewayShareMainTransitGatewayShareResourceShare  resource configuration test
-  //  */
-  // test(`${testNamePrefix} RAM ResourceShare MainTransitGatewayShareMainTransitGatewayShareResourceShare resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).templateMatches({
-  //     Resources: {
-  //       MainTransitGatewayShareResourceShare02109087: {
-  //         Type: 'AWS::RAM::ResourceShare',
-  //         Properties: {
-  //           Name: 'Main_TransitGatewayShare',
-  //           Principals: ['Sandbox-arn', '222222222222'],
-  //           ResourceArns: [
-  //             {
-  //               'Fn::Join': [
-  //                 '',
-  //                 [
-  //                   'arn:',
-  //                   {
-  //                     Ref: 'AWS::Partition',
-  //                   },
-  //                   ':ec2:us-east-1:111111111111:transit-gateway/',
-  //                   {
-  //                     Ref: 'MainTransitGateway66204EF2',
-  //                   },
-  //                 ],
-  //               ],
-  //             },
-  //           ],
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
-
-  // /**
-  //  * CoreTransitGatewayRouteTable SegregatedTransitGatewayRouteTable resource configuration test
-  //  */
-  // test(`${testNamePrefix} CoreTransitGatewayRouteTable SegregatedTransitGatewayRouteTable resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).templateMatches({
-  //     Resources: {
-  //       SegregatedTransitGatewayRouteTableFBA11CE4: {
-  //         Type: 'AWS::EC2::TransitGatewayRouteTable',
-  //         Properties: {
-  //           Tags: [
-  //             {
-  //               Key: 'Name',
-  //               Value: 'segregated',
-  //             },
-  //           ],
-  //           TransitGatewayId: {
-  //             Ref: 'MainTransitGateway66204EF2',
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
-
-  // /**
-  //  * CoreTransitGatewayRouteTable SharedTransitGatewayRouteTable resource configuration test
-  //  */
-  // test(`${testNamePrefix} CoreTransitGatewayRouteTable SharedTransitGatewayRouteTable resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).templateMatches({
-  //     Resources: {
-  //       SharedTransitGatewayRouteTableDEC04AD4: {
-  //         Type: 'AWS::EC2::TransitGatewayRouteTable',
-  //         Properties: {
-  //           Tags: [
-  //             {
-  //               Key: 'Name',
-  //               Value: 'shared',
-  //             },
-  //           ],
-  //           TransitGatewayId: {
-  //             Ref: 'MainTransitGateway66204EF2',
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
-
-  // /**
-  //  * SSM parameter SsmParamMainTransitGatewayId resource configuration test
-  //  */
-  // test(`${testNamePrefix} SSM parameter SsmParamMainTransitGatewayId resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).templateMatches({
-  //     Resources: {
-  //       SsmParamMainTransitGatewayId76D30719: {
-  //         Type: 'AWS::SSM::Parameter',
-  //         Properties: {
-  //           Name: '/accelerator/network/transitGateways/Main/id',
-  //           Type: 'String',
-  //           Value: {
-  //             Ref: 'MainTransitGateway66204EF2',
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
-
-  // /**
-  //  * CoreTransitGatewayRouteTable StandaloneTransitGatewayRouteTable resource configuration test
-  //  */
-  // test(`${testNamePrefix} CoreTransitGatewayRouteTable StandaloneTransitGatewayRouteTable resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).templateMatches({
-  //     Resources: {
-  //       StandaloneTransitGatewayRouteTableD8B42C98: {
-  //         Type: 'AWS::EC2::TransitGatewayRouteTable',
-  //         Properties: {
-  //           Tags: [
-  //             {
-  //               Key: 'Name',
-  //               Value: 'standalone',
-  //             },
-  //           ],
-  //           TransitGatewayId: {
-  //             Ref: 'MainTransitGateway66204EF2',
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
-
-  // /**
-  //  * SSM parameter SsmParamMaincoreTransitGatewayRouteTableId resource configuration test
-  //  */
-  // test(`${testNamePrefix} SSM parameter SsmParamMaincoreTransitGatewayRouteTableId resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).templateMatches({
-  //     Resources: {
-  //       SsmParamMaincoreTransitGatewayRouteTableIdC4F7B376: {
-  //         Type: 'AWS::SSM::Parameter',
-  //         Properties: {
-  //           Name: '/accelerator/network/transitGateways/Main/routeTables/core/id',
-  //           Type: 'String',
-  //           Value: {
-  //             Ref: 'CoreTransitGatewayRouteTableD73AD6A9',
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
-
-  // /**
-  //  * SSM parameter SsmParamMainsegregatedTransitGatewayRouteTableId resource configuration test
-  //  */
-  // test(`${testNamePrefix} SSM parameter SsmParamMainsegregatedTransitGatewayRouteTableId resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).templateMatches({
-  //     Resources: {
-  //       SsmParamMainsegregatedTransitGatewayRouteTableId8DCAFE8D: {
-  //         Type: 'AWS::SSM::Parameter',
-  //         Properties: {
-  //           Name: '/accelerator/network/transitGateways/Main/routeTables/segregated/id',
-  //           Type: 'String',
-  //           Value: {
-  //             Ref: 'SegregatedTransitGatewayRouteTableFBA11CE4',
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
-
-  // /**
-  //  * SSM parameter SsmParamMainsharedTransitGatewayRouteTableId resource configuration test
-  //  */
-  // test(`${testNamePrefix} SSM parameter SsmParamMainsharedTransitGatewayRouteTableId resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).templateMatches({
-  //     Resources: {
-  //       SsmParamMainsharedTransitGatewayRouteTableId2B981DF1: {
-  //         Type: 'AWS::SSM::Parameter',
-  //         Properties: {
-  //           Name: '/accelerator/network/transitGateways/Main/routeTables/shared/id',
-  //           Type: 'String',
-  //           Value: {
-  //             Ref: 'SharedTransitGatewayRouteTableDEC04AD4',
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
-
-  // /**
-  //  * SSM parameter SsmParamMainstandaloneTransitGatewayRouteTableId resource configuration test
-  //  */
-  // test(`${testNamePrefix} SSM parameter SsmParamMainstandaloneTransitGatewayRouteTableId resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).templateMatches({
-  //     Resources: {
-  //       SsmParamMainstandaloneTransitGatewayRouteTableIdE6B97388: {
-  //         Type: 'AWS::SSM::Parameter',
-  //         Properties: {
-  //           Name: '/accelerator/network/transitGateways/Main/routeTables/standalone/id',
-  //           Type: 'String',
-  //           Value: {
-  //             Ref: 'StandaloneTransitGatewayRouteTableD8B42C98',
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
-
-  // /**
-  //  * SSM parameter SsmParamMainTransitGatewayId resource configuration test
-  //  */
-  // test(`${testNamePrefix} SSM parameter SsmParamStackId resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).templateMatches({
-  //     Resources: {
-  //       SsmParamStackId521A78D3: {
-  //         Type: 'AWS::SSM::Parameter',
-  //         Properties: {
-  //           Name: '/accelerator/AWSAccelerator-NetworkPrepStack-111111111111-us-east-1/stack-id',
-  //           Type: 'String',
-  //           Value: {
-  //             Ref: 'AWS::StackId',
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
+  /**
+   * AcceleratorBlockGroupRuleGroup resource configuration test
+   */
+  test(`${testNamePrefix} AcceleratorBlockGroupRuleGroup resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        AcceleratorBlockGroupRuleGroup1083FDE0: {
+          Properties: {
+            FirewallRules: [
+              {
+                Action: 'BLOCK',
+                BlockResponse: 'NXDOMAIN',
+                FirewallDomainListId: {
+                  'Fn::GetAtt': ['DomainList1DomainListBF84D823', 'Id'],
+                },
+                Priority: 100,
+              },
+              {
+                Action: 'BLOCK',
+                BlockOverrideDnsType: 'CNAME',
+                BlockOverrideDomain: 'amazon.com',
+                BlockOverrideTtl: 3600,
+                BlockResponse: 'OVERRIDE',
+                FirewallDomainListId: {
+                  'Fn::GetAtt': ['DomainList1DomainListBF84D823', 'Id'],
+                },
+                Priority: 200,
+              },
+              {
+                Action: 'BLOCK',
+                BlockResponse: 'NODATA',
+                FirewallDomainListId: {
+                  Ref: 'AwsManagedDomainsBotnetCommandandControlDomainList1AA90CC1',
+                },
+                Priority: 300,
+              },
+            ],
+            Tags: [
+              {
+                Key: 'Name',
+                Value: 'accelerator-block-group',
+              },
+            ],
+          },
+          Type: 'AWS::Route53Resolver::FirewallRuleGroup',
+        },
+      },
+    });
+  });
+  /**
+   * AcceleratorIpamIpam resource configuration test
+   */
+  test(`${testNamePrefix} AcceleratorIpamIpam resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        AcceleratorIpamIpamB72C793C: {
+          Properties: {
+            Description: 'Accelerator IPAM',
+            OperatingRegions: [
+              {
+                RegionName: 'us-east-1',
+              },
+              {
+                RegionName: 'us-west-2',
+              },
+            ],
+            Tags: [
+              {
+                Key: 'Name',
+                Value: 'accelerator-ipam',
+              },
+            ],
+          },
+          Type: 'AWS::EC2::IPAM',
+        },
+      },
+    });
+  });
+  /**
+   * AcceleratorKeyLookup resource configuration test
+   */
+  test(`${testNamePrefix} AcceleratorKeyLookup resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        AcceleratorKeyLookup0C18DA36: {
+          DeletionPolicy: 'Delete',
+          DependsOn: ['CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D'],
+          Properties: {
+            ServiceToken: {
+              'Fn::GetAtt': ['CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE', 'Arn'],
+            },
+            assumeRoleArn: {
+              'Fn::Join': [
+                '',
+                [
+                  'arn:',
+                  {
+                    Ref: 'AWS::Partition',
+                  },
+                  ':iam::222222222222:role/AWSAccelerator-CrossAccount-SsmParameter-Role',
+                ],
+              ],
+            },
+            invokingAccountID: '555555555555',
+            invokingRegion: 'us-east-1',
+            parameterAccountID: '222222222222',
+            parameterName: '/accelerator/kms/key-arn',
+            parameterRegion: 'us-east-1',
+          },
+          Type: 'Custom::SsmGetParameterValue',
+          UpdateReplacePolicy: 'Delete',
+        },
+      },
+    });
+  });
+  /**
+   * AcceleratorPolicyNetworkFirewallPolicy resource configuration test
+   */
+  test(`${testNamePrefix} AcceleratorPolicyNetworkFirewallPolicy resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        AcceleratorPolicyNetworkFirewallPolicyC840A0C2: {
+          Properties: {
+            FirewallPolicy: {
+              StatefulRuleGroupReferences: [
+                {
+                  ResourceArn: {
+                    Ref: 'AcceleratorRuleGroupNetworkFirewallRuleGroup3B409F78',
+                  },
+                },
+                {
+                  ResourceArn: {
+                    Ref: 'DomainListGroupNetworkFirewallRuleGroup8FEBF91F',
+                  },
+                },
+              ],
+              StatelessDefaultActions: ['aws:forward_to_sfe'],
+              StatelessFragmentDefaultActions: ['aws:forward_to_sfe'],
+              StatelessRuleGroupReferences: [],
+            },
+            FirewallPolicyName: 'accelerator-policy',
+            Tags: [
+              {
+                Key: 'Name',
+                Value: 'accelerator-policy',
+              },
+            ],
+          },
+          Type: 'AWS::NetworkFirewall::FirewallPolicy',
+        },
+      },
+    });
+  });
+  /**
+   * AcceleratorPolicyNetworkFirewallPolicyShareResourceShare resource configuration test
+   */
+  test(`${testNamePrefix} AcceleratorPolicyNetworkFirewallPolicyShareResourceShare resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        AcceleratorPolicyNetworkFirewallPolicyShareResourceShareA8374828: {
+          Properties: {
+            Name: 'accelerator-policy_NetworkFirewallPolicyShare',
+            Principals: ['arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222'],
+            ResourceArns: [
+              {
+                Ref: 'AcceleratorPolicyNetworkFirewallPolicyC840A0C2',
+              },
+            ],
+          },
+          Type: 'AWS::RAM::ResourceShare',
+        },
+      },
+    });
+  });
+  /**
+   * AcceleratorQueryLogsCwlQueryLogConfig resource configuration test
+   */
+  test(`${testNamePrefix} AcceleratorQueryLogsCwlQueryLogConfig resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        AcceleratorQueryLogsCwlQueryLogConfigE0FE97C8: {
+          Properties: {
+            DestinationArn: {
+              'Fn::GetAtt': ['QueryLogsLogGroup9D69754D', 'Arn'],
+            },
+          },
+          Type: 'AWS::Route53Resolver::ResolverQueryLoggingConfig',
+        },
+      },
+    });
+  });
+  /**
+   * AcceleratorQueryLogsCwlQueryLogConfigShareResourceShare resource configuration test
+   */
+  test(`${testNamePrefix} AcceleratorQueryLogsCwlQueryLogConfigShareResourceShare resource configuration test`, () => {
+    cdk.assertions.Template.fromStack(stack).templateMatches({
+      Resources: {
+        AcceleratorQueryLogsCwlQueryLogConfigShareResourceShare584C5889: {
+          Properties: {
+            Name: 'accelerator-query-logs-cwl_QueryLogConfigShare',
+            Principals: ['arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222'],
+            ResourceArns: [
+              {
+                'Fn::GetAtt': ['AcceleratorQueryLogsCwlQueryLogConfigE0FE97C8', 'Arn'],
+              },
+            ],
+          },
+          Type: 'AWS::RAM::ResourceShare',
+        },
+      },
+    });
+  });
 });

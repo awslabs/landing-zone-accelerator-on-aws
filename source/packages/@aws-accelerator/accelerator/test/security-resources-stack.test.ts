@@ -11,60 +11,18 @@
  *  and limitations under the License.
  */
 
-import {
-  AccountsConfig,
-  GlobalConfig,
-  IamConfig,
-  NetworkConfig,
-  OrganizationConfig,
-  SecurityConfig,
-} from '@aws-accelerator/config';
 import * as cdk from 'aws-cdk-lib';
-import * as path from 'path';
-import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
-import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
+import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 
 const testNamePrefix = 'Construct(SecurityResourcesStack): ';
 
 /**
  * SecurityResourcesStack
  */
-const app = new cdk.App({
-  context: { 'config-dir': path.join(__dirname, 'configs/all-enabled') },
-});
-const configDirPath = app.node.tryGetContext('config-dir');
-
-const props: AcceleratorStackProps = {
-  configDirPath,
-  accountsConfig: AccountsConfig.load(configDirPath),
-  globalConfig: GlobalConfig.load(configDirPath),
-  iamConfig: IamConfig.load(configDirPath),
-  networkConfig: NetworkConfig.load(configDirPath),
-  organizationConfig: OrganizationConfig.load(configDirPath),
-  securityConfig: SecurityConfig.load(configDirPath),
-  partition: 'aws',
-};
-
-const stacks = new Map<string, SecurityResourcesStack>();
-
-for (const region of props.globalConfig.enabledRegions) {
-  for (const account of [...props.accountsConfig.mandatoryAccounts, ...props.accountsConfig.workloadAccounts]) {
-    const accountId = props.accountsConfig.getAccountId(account.name);
-
-    stacks.set(
-      `${account.name}-${region}`,
-      new SecurityResourcesStack(app, `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC]}-${accountId}-${region}`, {
-        env: {
-          account: accountId,
-          region,
-        },
-        ...props,
-      }),
-    );
-  }
-}
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.SECURITY_RESOURCES, 'all-enabled', 'aws');
+console.log(acceleratorTestStacks.stacks);
+const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 
 /**
  * SecurityResourcesStack construct test
@@ -74,6 +32,6 @@ describe('SecurityResourcesStack', () => {
    * Number of Lambda Function resource test
    */
   test(`${testNamePrefix} Lambda Function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stacks.get(`Management-us-east-1`)!).resourceCountIs('AWS::Lambda::Function', 4);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 4);
   });
 });

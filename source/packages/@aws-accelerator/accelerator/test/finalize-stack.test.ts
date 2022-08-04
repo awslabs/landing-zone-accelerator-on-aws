@@ -12,66 +12,18 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
-import { FinalizeStack } from '../lib/stacks/finalize-stack';
-import { AcceleratorStackNames } from '../lib/accelerator';
+import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import {
-  ACCOUNT_CONFIG,
-  GLOBAL_CONFIG,
-  IAM_CONFIG,
-  NETWORK_CONFIG,
-  ORGANIZATION_CONFIG,
-  SECURITY_CONFIG,
-} from './configs/test-config';
-import * as path from 'path';
-import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
-//import { SynthUtils } from '@aws-cdk/assert';
 
 const testNamePrefix = 'Construct(FinalizeStack): ';
 
-/**
- * Finalize Stack
- */
-const app = new cdk.App({
-  context: { 'config-dir': path.join(__dirname, 'configs') },
-});
-const configDirPath = app.node.tryGetContext('config-dir');
-
-const env = {
-  account: '333333333333',
-  region: 'us-east-1',
-};
-
-const props: AcceleratorStackProps = {
-  env,
-  configDirPath,
-  accountsConfig: ACCOUNT_CONFIG,
-  globalConfig: GLOBAL_CONFIG,
-  iamConfig: IAM_CONFIG,
-  networkConfig: NETWORK_CONFIG,
-  organizationConfig: ORGANIZATION_CONFIG,
-  securityConfig: SECURITY_CONFIG,
-  partition: 'aws',
-};
-
-const stack = new FinalizeStack(
-  app,
-  `${AcceleratorStackNames[AcceleratorStage.ACCOUNTS]}-${env.account}-${env.region}`,
-  props,
-);
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.FINALIZE, 'all-enabled', 'aws');
+const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 
 /**
  * FinalizeStack construct test
  */
 describe('FinalizeStack', () => {
-  // /**
-  //  * Snapshot test
-  //  */
-  //test(`${testNamePrefix} Snapshot Test`, () => {
-  //  expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  //});
-
   /**
    * Number of SSM parameters resource test
    */

@@ -12,52 +12,13 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import * as path from 'path';
-import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
-import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
-import {
-  ACCOUNT_CONFIG,
-  GLOBAL_CONFIG,
-  IAM_CONFIG,
-  NETWORK_CONFIG,
-  ORGANIZATION_CONFIG,
-  SECURITY_CONFIG,
-} from './configs/test-config';
+import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 
 const testNamePrefix = 'Construct(SecurityAuditStack): ';
 
-/**
- * SecurityAuditStack
- */
-const app = new cdk.App({
-  context: { 'config-dir': path.join(__dirname, 'configs') },
-});
-const configDirPath = app.node.tryGetContext('config-dir');
-
-const env = {
-  account: '333333333333',
-  region: 'us-east-1',
-};
-
-const props: AcceleratorStackProps = {
-  env,
-  configDirPath,
-  accountsConfig: ACCOUNT_CONFIG,
-  globalConfig: GLOBAL_CONFIG,
-  iamConfig: IAM_CONFIG,
-  networkConfig: NETWORK_CONFIG,
-  organizationConfig: ORGANIZATION_CONFIG,
-  securityConfig: SECURITY_CONFIG,
-  partition: 'aws',
-};
-
-const stack = new SecurityAuditStack(
-  app,
-  `${AcceleratorStackNames[AcceleratorStage.SECURITY_AUDIT]}-${env.account}-${env.region}`,
-  props,
-);
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.SECURITY_AUDIT, 'all-enabled', 'aws');
+const stack = acceleratorTestStacks.stacks.get(`Audit-us-east-1`)!;
 
 /**
  * SecurityAuditStack construct test
@@ -81,14 +42,14 @@ describe('SecurityAuditStack', () => {
    * Number of Lambda function resource test
    */
   test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 11);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 13);
   });
 
   /**
    * Number of IAM role resource test
    */
   test(`${testNamePrefix} IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 14);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 16);
   });
 
   /**
@@ -209,7 +170,7 @@ describe('SecurityAuditStack', () => {
           DependsOn: ['CustomGuardDutyCreateMembersCustomResourceProviderRole2D82020E'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-222222222222-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -234,7 +195,7 @@ describe('SecurityAuditStack', () => {
           DependsOn: ['CustomS3PutBucketReplicationCustomResourceProviderRole1C378488'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-222222222222-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -314,7 +275,7 @@ describe('SecurityAuditStack', () => {
           DependsOn: ['CustomGuardDutyUpdateDetectorCustomResourceProviderRole3014073E'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-222222222222-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -393,7 +354,7 @@ describe('SecurityAuditStack', () => {
           DependsOn: ['CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-222222222222-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -470,7 +431,7 @@ describe('SecurityAuditStack', () => {
           DependsOn: ['CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-222222222222-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -496,7 +457,7 @@ describe('SecurityAuditStack', () => {
           DependsOn: ['CustomDetectiveUpdateGraphCustomResourceProviderRole54CD7295'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-222222222222-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -671,7 +632,7 @@ describe('SecurityAuditStack', () => {
           DependsOn: ['CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-222222222222-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -697,7 +658,7 @@ describe('SecurityAuditStack', () => {
           DependsOn: ['CustomDetectiveUpdateGraphCustomResourceProviderRole54CD7295'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-222222222222-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -872,7 +833,7 @@ describe('SecurityAuditStack', () => {
           DependsOn: ['CustomMacieCreateMemberCustomResourceProviderRole3E8977EE'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-222222222222-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -966,7 +927,7 @@ describe('SecurityAuditStack', () => {
           DependsOn: ['CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-222222222222-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -1039,7 +1000,7 @@ describe('SecurityAuditStack', () => {
           DependsOn: ['CustomSecurityHubCreateMembersCustomResourceProviderRoleFD355CB6'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-222222222222-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -1196,13 +1157,13 @@ describe('SecurityAuditStack', () => {
                   {
                     Ref: 'AuditManagerPublishingDestinationBucket74974FCF',
                   },
-                  '/audit-manager/333333333333/',
+                  '/audit-manager/222222222222/',
                 ],
               ],
             },
             defaultReportsDestinationType: 'S3',
             kmsKeyArn: {
-              Ref: 'AcceleratorKeyLookup0C18DA36',
+              Ref: 'SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
             },
             region: 'us-east-1',
           },
@@ -1265,7 +1226,7 @@ describe('SecurityAuditStack', () => {
           Properties: {
             DisplayName: 'AWS Accelerator - High Notifications',
             KmsMasterKeyId: {
-              Ref: 'AcceleratorKeyLookup0C18DA36',
+              Ref: 'SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
             },
             TopicName: 'aws-accelerator-HighNotifications',
           },
@@ -1358,26 +1319,6 @@ describe('SecurityAuditStack', () => {
   });
 
   /**
-   * HighSnsTopichighalertamazoncom resource configuration test
-   */
-  test(`${testNamePrefix} HighSnsTopichighalertamazoncom resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        HighSnsTopichighalertamazoncom829BEACE: {
-          Type: 'AWS::SNS::Subscription',
-          Properties: {
-            Endpoint: 'highalert@amazon.com',
-            Protocol: 'email',
-            TopicArn: {
-              Ref: 'HighSnsTopicF69104E5',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
    * LowSnsTopic resource configuration test
    */
   test(`${testNamePrefix} LowSnsTopic resource configuration test`, () => {
@@ -1388,7 +1329,7 @@ describe('SecurityAuditStack', () => {
           Properties: {
             DisplayName: 'AWS Accelerator - Low Notifications',
             KmsMasterKeyId: {
-              Ref: 'AcceleratorKeyLookup0C18DA36',
+              Ref: 'SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
             },
             TopicName: 'aws-accelerator-LowNotifications',
           },
@@ -1481,26 +1422,6 @@ describe('SecurityAuditStack', () => {
   });
 
   /**
-   * LowSnsTopiclowalertamazoncom resource configuration test
-   */
-  test(`${testNamePrefix} LowSnsTopiclowalertamazoncom resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        LowSnsTopiclowalertamazoncom68C4704C: {
-          Type: 'AWS::SNS::Subscription',
-          Properties: {
-            Endpoint: 'lowalert@amazon.com',
-            Protocol: 'email',
-            TopicArn: {
-              Ref: 'LowSnsTopic53AD0F18',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
    * MacieMembers resource configuration test
    */
   test(`${testNamePrefix} MacieMembers resource configuration test`, () => {
@@ -1514,7 +1435,7 @@ describe('SecurityAuditStack', () => {
             ServiceToken: {
               'Fn::GetAtt': ['CustomMacieCreateMemberCustomResourceProviderHandler913F75DB', 'Arn'],
             },
-            adminAccountId: '333333333333',
+            adminAccountId: '222222222222',
             region: 'us-east-1',
           },
         },
@@ -1533,7 +1454,7 @@ describe('SecurityAuditStack', () => {
           Properties: {
             DisplayName: 'AWS Accelerator - Medium Notifications',
             KmsMasterKeyId: {
-              Ref: 'AcceleratorKeyLookup0C18DA36',
+              Ref: 'SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
             },
             TopicName: 'aws-accelerator-MediumNotifications',
           },
@@ -1626,26 +1547,6 @@ describe('SecurityAuditStack', () => {
   });
 
   /**
-   * MediumSnsTopicmidalertamazoncom resource configuration test
-   */
-  test(`${testNamePrefix} MediumSnsTopicmidalertamazoncom resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        MediumSnsTopicmidalertamazoncom73D2DD2D: {
-          Type: 'AWS::SNS::Subscription',
-          Properties: {
-            Endpoint: 'midalert@amazon.com',
-            Protocol: 'email',
-            TopicArn: {
-              Ref: 'MediumSnsTopic267CAB5B',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
    * Organization custom resource configuration test
    */
   test(`${testNamePrefix} Organization custom resource configuration test`, () => {
@@ -1702,7 +1603,7 @@ describe('SecurityAuditStack', () => {
                 {
                   ServerSideEncryptionByDefault: {
                     KMSMasterKeyID: {
-                      Ref: 'AcceleratorKeyLookup0C18DA36',
+                      Ref: 'SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
                     },
                     SSEAlgorithm: 'aws:kms',
                   },
@@ -1779,7 +1680,7 @@ describe('SecurityAuditStack', () => {
                 {
                   ServerSideEncryptionByDefault: {
                     KMSMasterKeyID: {
-                      Ref: 'AcceleratorKeyLookup0C18DA36',
+                      Ref: 'SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter',
                     },
                     SSEAlgorithm: 'aws:kms',
                   },

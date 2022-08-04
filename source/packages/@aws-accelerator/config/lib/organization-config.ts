@@ -363,58 +363,101 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    */
   readonly backupVault: BackupVaultConfig | undefined;
 
+  //
+  // Validation errors
+  //
+  readonly errors: string[] = [];
   /**
    *
    * @param values
    * @param configDir
+   * @param validateConfig
    */
-  constructor(values?: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>, configDir?: string) {
-    //
-    // Validation errors
-    //
-    const errors: string[] = [];
+  constructor(
+    values?: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
+    configDir?: string,
+    validateConfig?: boolean,
+  ) {
     if (values) {
-      if (configDir) {
-        for (const serviceControlPolicy of values.serviceControlPolicies ?? []) {
-          // Validate presence of service control policy file
-          if (!fs.existsSync(path.join(configDir, serviceControlPolicy.policy))) {
-            errors.push(
-              `Invalid policy file ${serviceControlPolicy.policy} for service control policy ${serviceControlPolicy.name} !!!`,
-            );
-          }
-        }
+      if (configDir && validateConfig) {
+        // Validate presence of service control policy file
+        this.validateServiceControlPolicyFile(configDir, values);
 
         // Validate presence of tagging policy file
-        for (const taggingPolicy of values.taggingPolicies ?? []) {
-          if (!fs.existsSync(path.join(configDir, taggingPolicy.policy))) {
-            errors.push(`Invalid policy file ${taggingPolicy.policy} for tagging policy ${taggingPolicy.name} !!!`);
-          }
-        }
+        this.validateTaggingPolicyFile(configDir, values);
 
         // Validate presence of backup policy file
-        for (const backupPolicy of values.backupPolicies ?? []) {
-          if (!fs.existsSync(path.join(configDir, backupPolicy.policy))) {
-            errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name} !!!`);
-          }
-        }
+        this.validateBackupPolicyFile(configDir, values);
       }
 
-      if (errors.length) {
-        throw new Error(`${OrganizationConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      if (this.errors.length) {
+        throw new Error(`${OrganizationConfig.FILENAME} has ${this.errors.length} issues: ${this.errors.join(' ')}`);
       }
       Object.assign(this, values);
     }
   }
 
   /**
+   * Function to validate service control policy file existence
+   * @param configDir
+   * @param values
+   */
+  private validateServiceControlPolicyFile(
+    configDir: string,
+    values: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
+  ) {
+    for (const serviceControlPolicy of values.serviceControlPolicies ?? []) {
+      if (!fs.existsSync(path.join(configDir, serviceControlPolicy.policy))) {
+        this.errors.push(
+          `Invalid policy file ${serviceControlPolicy.policy} for service control policy ${serviceControlPolicy.name} !!!`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate tagging policy file existence
+   * @param configDir
+   * @param values
+   */
+  private validateTaggingPolicyFile(
+    configDir: string,
+    values: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
+  ) {
+    for (const taggingPolicy of values.taggingPolicies ?? []) {
+      if (!fs.existsSync(path.join(configDir, taggingPolicy.policy))) {
+        this.errors.push(`Invalid policy file ${taggingPolicy.policy} for tagging policy ${taggingPolicy.name} !!!`);
+      }
+    }
+  }
+
+  /**
+   * Function to validate presence of backup policy file existence
+   * @param configDir
+   * @param values
+   */
+  private validateBackupPolicyFile(
+    configDir: string,
+    values: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
+  ) {
+    // Validate presence of backup policy file
+    for (const backupPolicy of values.backupPolicies ?? []) {
+      if (!fs.existsSync(path.join(configDir, backupPolicy.policy))) {
+        this.errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name} !!!`);
+      }
+    }
+  }
+
+  /**
    * Load from config file content
    * @param dir
+   * @param validateConfig
    * @returns
    */
-  static load(dir: string): OrganizationConfig {
+  static load(dir: string, validateConfig?: boolean): OrganizationConfig {
     const buffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
     const values = t.parse(OrganizationConfigTypes.organizationConfig, yaml.load(buffer));
-    return new OrganizationConfig(values, dir);
+    return new OrganizationConfig(values, dir, validateConfig);
   }
 
   /**
