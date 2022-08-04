@@ -155,6 +155,31 @@ Object {
               "Effect": "Allow",
               "Resource": "*",
             },
+            Object {
+              "Condition": Object {
+                "Bool": Object {
+                  "aws:MultiFactorAuthPresent": "false",
+                  "aws:ViaAWSService": "false",
+                },
+              },
+              "Effect": "Deny",
+              "NotAction": Array [
+                "iam:CreateVirtualMFADevice",
+                "iam:DeleteVirtualMFADevice",
+                "iam:ListVirtualMFADevices",
+                "iam:EnableMFADevice",
+                "iam:ResyncMFADevice",
+                "iam:ListAccountAliases",
+                "iam:ListUsers",
+                "iam:ListSSHPublicKeys",
+                "iam:ListAccessKeys",
+                "iam:ListServiceSpecificCredentials",
+                "iam:ListMFADevices",
+                "iam:GetAccountSummary",
+                "sts:GetSessionToken",
+              ],
+              "Resource": "*",
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -243,16 +268,9 @@ Object {
       },
       "Type": "AWS::IAM::InstanceProfile",
     },
-    "ProviderSamlProviderDA84AD16": Object {
-      "Properties": Object {
-        "Name": "provider",
-        "SamlMetadataDocument": "",
-      },
-      "Type": "AWS::IAM::SAMLProvider",
-    },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
-        "Name": "/accelerator/AWSAccelerator-OperationsStack-333333333333-us-east-1/version",
+        "Name": "/accelerator/AWSAccelerator-OperationsStack-111111111111-us-east-1/version",
         "Type": "String",
         "Value": "1.1.0",
       },
@@ -260,13 +278,112 @@ Object {
     },
     "SsmParamStackId521A78D3": Object {
       "Properties": Object {
-        "Name": "/accelerator/AWSAccelerator-OperationsStack-333333333333-us-east-1/stack-id",
+        "Name": "/accelerator/AWSAccelerator-OperationsStack-111111111111-us-east-1/stack-id",
         "Type": "String",
         "Value": Object {
           "Ref": "AWS::StackId",
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "accelbudgetBudgetDefinitionaccelbudget73707CCE": Object {
+      "Properties": Object {
+        "Budget": Object {
+          "BudgetLimit": Object {
+            "Amount": 2000,
+            "Unit": "USD",
+          },
+          "BudgetName": "accel-budget",
+          "BudgetType": "COST",
+          "CostTypes": Object {
+            "IncludeCredit": false,
+            "IncludeDiscount": true,
+            "IncludeOtherSubscription": true,
+            "IncludeRecurring": true,
+            "IncludeRefund": false,
+            "IncludeSubscription": true,
+            "IncludeSupport": true,
+            "IncludeTax": true,
+            "IncludeUpfront": true,
+            "UseAmortized": false,
+            "UseBlended": false,
+          },
+          "TimeUnit": "MONTHLY",
+        },
+        "NotificationsWithSubscribers": Array [
+          Object {
+            "Notification": Object {
+              "ComparisonOperator": "GREATER_THAN",
+              "NotificationType": "ACTUAL",
+              "Threshold": 100,
+              "ThresholdType": "PERCENTAGE",
+            },
+            "Subscribers": Array [
+              Object {
+                "Address": "myemail+pa-budg@example.com",
+                "SubscriptionType": "EMAIL",
+              },
+            ],
+          },
+          Object {
+            "Notification": Object {
+              "ComparisonOperator": "GREATER_THAN",
+              "NotificationType": "ACTUAL",
+              "Threshold": 90,
+              "ThresholdType": "PERCENTAGE",
+            },
+            "Subscribers": Array [
+              Object {
+                "Address": "myemail+pa-budg@example.com",
+                "SubscriptionType": "EMAIL",
+              },
+            ],
+          },
+          Object {
+            "Notification": Object {
+              "ComparisonOperator": "GREATER_THAN",
+              "NotificationType": "ACTUAL",
+              "Threshold": 80,
+              "ThresholdType": "PERCENTAGE",
+            },
+            "Subscribers": Array [
+              Object {
+                "Address": "myemail+pa-budg@example.com",
+                "SubscriptionType": "EMAIL",
+              },
+            ],
+          },
+          Object {
+            "Notification": Object {
+              "ComparisonOperator": "GREATER_THAN",
+              "NotificationType": "ACTUAL",
+              "Threshold": 75,
+              "ThresholdType": "PERCENTAGE",
+            },
+            "Subscribers": Array [
+              Object {
+                "Address": "myemail+pa-budg@example.com",
+                "SubscriptionType": "EMAIL",
+              },
+            ],
+          },
+          Object {
+            "Notification": Object {
+              "ComparisonOperator": "GREATER_THAN",
+              "NotificationType": "ACTUAL",
+              "Threshold": 50,
+              "ThresholdType": "PERCENTAGE",
+            },
+            "Subscribers": Array [
+              Object {
+                "Address": "myemail+pa-budg@example.com",
+                "SubscriptionType": "EMAIL",
+              },
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::Budgets::Budget",
     },
   },
 }

@@ -53,6 +53,9 @@ backupVault:
   enableManagementKey: false
   name: DefaultVault
 organizationalUnitIds:
+  - name: Root
+    id: r-asdf
+    arn: arn:aws:organizations::111111111111:root/o-asdf123456/r-asdf
   - name: Security
     id: ou-asdf-11111111
     arn: arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-11111111

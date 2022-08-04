@@ -12,52 +12,13 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { LoggingStack } from '../lib/stacks/logging-stack';
-import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import {
-  ACCOUNT_CONFIG,
-  GLOBAL_CONFIG,
-  IAM_CONFIG,
-  NETWORK_CONFIG,
-  ORGANIZATION_CONFIG,
-  SECURITY_CONFIG,
-} from './configs/test-config';
-import * as path from 'path';
-import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
+import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 
 const testNamePrefix = 'Construct(LoggingStack): ';
 
-/**
- * LoggingStack
- */
-const app = new cdk.App({
-  context: { 'config-dir': path.join(__dirname, 'configs') },
-});
-const configDirPath = app.node.tryGetContext('config-dir');
-
-const env = {
-  account: '333333333333',
-  region: 'us-east-1',
-};
-
-const props: AcceleratorStackProps = {
-  env,
-  configDirPath,
-  accountsConfig: ACCOUNT_CONFIG,
-  globalConfig: GLOBAL_CONFIG,
-  iamConfig: IAM_CONFIG,
-  networkConfig: NETWORK_CONFIG,
-  organizationConfig: ORGANIZATION_CONFIG,
-  securityConfig: SECURITY_CONFIG,
-  partition: 'aws',
-};
-console.log(props);
-const stack = new LoggingStack(
-  app,
-  `${AcceleratorStackNames[AcceleratorStage.LOGGING]}-${env.account}-${env.region}`,
-  props,
-);
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.LOGGING, 'all-enabled', 'aws');
+const stack = acceleratorTestStacks.stacks.get(`LogArchive-us-east-1`)!;
 
 /**
  * LoggingStack construct test
@@ -67,28 +28,28 @@ describe('LoggingStack', () => {
    * Number of S3 Bucket resource test
    */
   test(`${testNamePrefix} S3 Bucket resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::Bucket', 1);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::Bucket', 3);
   });
 
   /**
    * Number of BucketPolicy resource test
    */
   test(`${testNamePrefix} BucketPolicy resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::BucketPolicy', 1);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::S3::BucketPolicy', 3);
   });
 
   /**
    * Number of Lambda Function resource test
    */
   test(`${testNamePrefix} Lambda Function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 3);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 5);
   });
 
   /**
    * Number of IAM Role resource test
    */
   test(`${testNamePrefix} IAM Role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 3);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 8);
   });
 
   /**

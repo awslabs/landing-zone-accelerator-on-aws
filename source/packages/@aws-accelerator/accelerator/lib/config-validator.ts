@@ -27,37 +27,37 @@ if (configDirPath) {
   Logger.info(`[config-validator] Config source directory -  ${configDirPath}`);
 
   try {
-    AccountsConfig.load(configDirPath);
+    AccountsConfig.load(configDirPath, true);
   } catch (e) {
     errors.push({ file: 'accounts-config.yaml', message: e });
   }
 
   try {
-    GlobalConfig.load(configDirPath);
+    GlobalConfig.load(configDirPath, true);
   } catch (e) {
     errors.push({ file: 'global-config.yaml', message: e });
   }
 
   try {
-    IamConfig.load(configDirPath);
+    IamConfig.load(configDirPath, true);
   } catch (e) {
     errors.push({ file: 'iam-config.yaml', message: e });
   }
 
   try {
-    NetworkConfig.load(configDirPath);
+    NetworkConfig.load(configDirPath, true);
   } catch (e) {
     errors.push({ file: 'network-config.yaml', message: e });
   }
 
   try {
-    OrganizationConfig.load(configDirPath);
+    OrganizationConfig.load(configDirPath, true);
   } catch (e) {
     errors.push({ file: 'organization-config.yaml', message: e });
   }
 
   try {
-    SecurityConfig.load(configDirPath);
+    SecurityConfig.load(configDirPath, true);
   } catch (e) {
     errors.push({ file: 'security-config.yaml', message: e });
   }
