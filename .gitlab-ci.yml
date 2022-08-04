@@ -41,6 +41,29 @@ accelerator-test:
   artifacts:
     untracked: true
     expire_in: 1 day
+accelerator-unit-tests:
+  stage: test
+  script:
+    - 'export NODE_OPTIONS=--max_old_space_size=4096'
+    - 'cd source'
+    - "yarn install"
+    - "yarn build"
+    - |- 
+        for file in $(find packages -name "*.test.ts"); do
+            directory=`echo $(dirname $(readlink -f "$file"))`
+            file_name=`echo $(basename $file)`
+            cd "${directory}"
+            echo "[Accelerator][run-all-unit-test]  :Started unit test case execution for ${file} file"
+            yarn test $file_name
+            echo "[Accelerator][run-all-unit-test]  :Completed unit test case execution for ${file} file"
+            cd -
+        done
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - source/test-reports/*.xml
+    expire_in: 1 day    
 pages:
   stage: metadata
   script:
