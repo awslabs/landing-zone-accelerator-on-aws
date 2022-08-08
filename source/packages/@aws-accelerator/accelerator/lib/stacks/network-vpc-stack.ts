@@ -18,6 +18,7 @@ import { Construct } from 'constructs';
 
 import {
   AccountsConfig,
+  GwlbConfig,
   NetworkAclSubnetSelection,
   NetworkConfigTypes,
   nonEmptyString,
@@ -31,6 +32,7 @@ import {
 import {
   DeleteDefaultVpc,
   DhcpOptions,
+  GatewayLoadBalancer,
   IResourceShareItem,
   KeyLookup,
   NatGateway,
@@ -1187,6 +1189,24 @@ export class NetworkVpcStack extends AcceleratorStack {
             );
           }
         }
+
+        //
+        // Create Gateway Load Balancers
+        //
+        for (const loadBalancerItem of props.networkConfig.centralNetworkServices?.gatewayLoadBalancers ?? []) {
+          if (vpcItem.name === loadBalancerItem.vpc) {
+            const delegatedAdminAccountId = this.accountsConfig.getAccountId(
+              props.networkConfig.centralNetworkServices!.delegatedAdminAccount,
+            );
+            if (cdk.Stack.of(this).account !== delegatedAdminAccountId) {
+              throw new Error(
+                `[network-vpc-stack] Attempting to deploy Gateway Load Balancer ${loadBalancerItem.name} to a VPC outside of the delegated administrator account`,
+              );
+            }
+
+            this.createGatewayLoadBalancer(loadBalancerItem, subnetMap);
+          }
+        }
       }
     }
     Logger.info('[network-vpc-stack] Completed stack synthesis');
@@ -1513,5 +1533,84 @@ export class NetworkVpcStack extends AcceleratorStack {
       kmsKey: this.acceleratorKey,
       logRetentionInDays: this.logRetention,
     });
+  }
+
+  private createGatewayLoadBalancer(loadBalancerItem: GwlbConfig, subnetMap: Map<string, Subnet>): void {
+    const allowedPrincipals: string[] = [];
+    const subnets: string[] = [];
+
+    // Set account principals
+    for (const endpointItem of loadBalancerItem.endpoints) {
+      const accountId = this.accountsConfig.getAccountId(endpointItem.account);
+      if (!allowedPrincipals.includes(accountId)) {
+        allowedPrincipals.push(accountId);
+      }
+    }
+
+    // Create cross-account role
+    if (allowedPrincipals.length > 0) {
+      const principals: cdk.aws_iam.PrincipalBase[] = [];
+      allowedPrincipals.forEach(accountId => {
+        principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
+      });
+      const role = new cdk.aws_iam.Role(this, `Get${pascalCase(loadBalancerItem.name)}SsmParamRole`, {
+        roleName: `AWSAccelerator-Get${pascalCase(loadBalancerItem.name)}SsmParamRole-${cdk.Stack.of(this).region}`,
+        assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
+        inlinePolicies: {
+          default: new cdk.aws_iam.PolicyDocument({
+            statements: [
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ssm:GetParameter'],
+                resources: [
+                  `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/network/gwlb/${loadBalancerItem.name}/*`,
+                ],
+              }),
+            ],
+          }),
+        },
+      });
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      NagSuppressions.addResourceSuppressions(role, [
+        { id: 'AwsSolutions-IAM5', reason: 'Allow cross-account resources to get SSM parameters under this path.' },
+      ]);
+    }
+
+    // Set subnets
+    for (const subnetItem of loadBalancerItem.subnets) {
+      const subnet = subnetMap.get(subnetItem);
+
+      if (!subnet) {
+        throw new Error(
+          `[network-vpc-stack] Create Gateway Load Balancer: unable to find subnet ${subnetItem} in VPC ${loadBalancerItem.vpc}`,
+        );
+      }
+
+      if (!subnets.includes(subnet.subnetId)) {
+        subnets.push(subnet.subnetId);
+      }
+    }
+
+    // Create GWLB
+    Logger.info(
+      `[network-vpc-stack] Add Gateway Load Balancer ${loadBalancerItem.name} to VPC ${loadBalancerItem.vpc}`,
+    );
+    const loadBalancer = new GatewayLoadBalancer(this, `${pascalCase(loadBalancerItem.name)}GatewayLoadBalancer`, {
+      name: loadBalancerItem.name,
+      allowedPrincipals,
+      subnets,
+      crossZoneLoadBalancing: loadBalancerItem.crossZoneLoadBalancing,
+      deletionProtection: loadBalancerItem.deletionProtection,
+      tags: loadBalancerItem.tags,
+    });
+    new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${pascalCase(loadBalancerItem.name)}GwlbServiceId`), {
+      parameterName: `/accelerator/network/gwlb/${loadBalancerItem.name}/endpointService/id`,
+      stringValue: loadBalancer.endpointServiceId,
+    });
+
+    // AwsSolutions-ELB2: The ELB does not have access logs enabled.
+    NagSuppressions.addResourceSuppressions(loadBalancer, [
+      { id: 'AwsSolutions-ELB2', reason: 'Gateway Load Balancers do not support access logging.' },
+    ]);
   }
 }

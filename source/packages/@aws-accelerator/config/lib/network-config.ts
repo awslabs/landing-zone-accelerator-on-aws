@@ -106,6 +106,7 @@ export class NetworkConfigTypes {
       'internetGateway',
       'local',
       'gatewayEndpoint',
+      'gatewayLoadBalancerEndpoint',
       'networkInterface',
       'networkFirewall',
     ],
@@ -663,8 +664,26 @@ export class NetworkConfigTypes {
     rules: t.array(this.nfwRuleGroupConfig),
   });
 
+  static readonly gwlbEndpointConfig = t.interface({
+    name: t.nonEmptyString,
+    account: t.nonEmptyString,
+    subnet: t.nonEmptyString,
+    vpc: t.nonEmptyString,
+  });
+
+  static readonly gwlbConfig = t.interface({
+    name: t.nonEmptyString,
+    endpoints: t.array(this.gwlbEndpointConfig),
+    subnets: t.array(t.nonEmptyString),
+    vpc: t.nonEmptyString,
+    crossZoneLoadBalancing: t.optional(t.boolean),
+    deletionProtection: t.optional(t.boolean),
+    tags: t.optional(t.array(t.tag)),
+  });
+
   static readonly centralNetworkServicesConfig = t.interface({
     delegatedAdminAccount: t.nonEmptyString,
+    gatewayLoadBalancers: t.optional(t.array(this.gwlbConfig)),
     ipams: t.optional(t.array(this.ipamConfig)),
     route53Resolver: t.optional(this.resolverConfig),
     networkFirewall: t.optional(this.nfwConfig),
@@ -2898,6 +2917,97 @@ export class NfwConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwConfig> 
 }
 
 /**
+ * Gateway Load Balancer endpoint configuration.
+ * Use to define Gateway Load Balancer endpoints.
+ *
+ * @example
+ * ```
+ * endpoints:
+ *   - name: Endpoint-A
+ *     account: Network
+ *     subnet: Network-Inspection-A
+ *     vpc: Network-Inspection
+ *   - name: Endpoint-B
+ *     account: Network
+ *     subnet: Network-Inspection-B
+ *     vpc: Network-Inspection
+ * ```
+ */
+export class GwlbEndpointConfig implements t.TypeOf<typeof NetworkConfigTypes.gwlbEndpointConfig> {
+  /**
+   * The friendly name of the Gateway Load Balancer endpoint.
+   */
+  readonly name: string = '';
+  /**
+   * The friendly name of the account to deploy the endpoint to.
+   */
+  readonly account: string = '';
+  /**
+   * The friendly name of the subnet to deploy the Gateway Load Balancer endpoint to.
+   */
+  readonly subnet: string = '';
+  /**
+   * The friendly name of the VPC to deploy the Gateway Load Balancer endpoint to.
+   */
+  readonly vpc: string = '';
+}
+
+/**
+ * Gateway Load Balancer configuration.
+ * Used to define Gateway Load Balancer configurations for the accelerator.
+ *
+ * @example
+ * ```
+ * gatewayLoadBalancers:
+ *   - name: Accelerator-GWLB
+ *     subnets:
+ *       - Network-Inspection-Firewall-A
+ *       - Network-Inspection-Firewall-B
+ *     vpc: Network-Inspection
+ *     deletionProtection: true
+ *     endpoints:
+ *       - name: Endpoint-A
+ *         account: Network
+ *         subnet: Network-Inspection-A
+ *         vpc: Network-Inspection
+ *       - name: Endpoint-B
+ *         account: Network
+ *         subnet: Network-Inspection-B
+ *         vpc: Network-Inspection
+ * ```
+ */
+export class GwlbConfig implements t.TypeOf<typeof NetworkConfigTypes.gwlbConfig> {
+  /**
+   * The friendly name of the Gateway Load Balancer.
+   */
+  readonly name: string = '';
+  /**
+   * An array of Gateway Load Balancer endpoint configurations.
+   */
+  readonly endpoints: GwlbEndpointConfig[] = [];
+  /**
+   * An array of friendly names of subnets to deploy the Gateway Load Balancer to.
+   */
+  readonly subnets: string[] = [];
+  /**
+   * The friendly name of the VPC to deploy the Gateway Load Balancer to.
+   */
+  readonly vpc: string = '';
+  /**
+   * Whether to enable cross-zone load balancing.
+   */
+  readonly crossZoneLoadBalancing: boolean | undefined = undefined;
+  /**
+   * Whether to enable deletion protection.
+   */
+  readonly deletionProtection: boolean | undefined = undefined;
+  /**
+   * An optional array of CloudFormation tag objects.
+   */
+  readonly tags: t.Tag[] | undefined = undefined;
+}
+
+/**
  * Central network services configuration.
  * Used to define centralized networking services for the accelerator.
  */
@@ -2906,6 +3016,12 @@ export class CentralNetworkServicesConfig implements t.TypeOf<typeof NetworkConf
    * The friendly name of the delegated administrator account for network services.
    */
   readonly delegatedAdminAccount: string = '';
+  /**
+   * An array of Gateway Load Balancer configurations.
+   *
+   * @see {@link GwlbConfig}
+   */
+  readonly gatewayLoadBalancers: GwlbConfig[] | undefined = undefined;
   /**
    * An array of IPAM configurations.
    *

@@ -24,8 +24,14 @@ export interface IVpcEndpoint extends cdk.IResource {
   readonly hostedZoneId?: string;
 }
 
+export enum VpcEndpointType {
+  INTERFACE = 'Interface',
+  GATEWAY = 'Gateway',
+  GWLB = 'GatewayLoadBalancer',
+}
+
 export interface VpcEndpointProps {
-  readonly vpcEndpointType: cdk.aws_ec2.VpcEndpointType;
+  readonly vpcEndpointType: VpcEndpointType;
   readonly service: string;
   readonly vpcId: string;
   readonly subnets?: string[];
@@ -51,7 +57,7 @@ export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
     // Add constant for sagemaker conditionals
     const sagemakerArray = ['notebook', 'studio'];
 
-    if (props.vpcEndpointType === cdk.aws_ec2.VpcEndpointType.INTERFACE) {
+    if (props.vpcEndpointType === VpcEndpointType.INTERFACE) {
       let serviceName = `com.amazonaws.${cdk.Stack.of(this).region}.${props.service}`;
       if (sagemakerArray.includes(this.service)) {
         serviceName = `aws.sagemaker.${cdk.Stack.of(this).region}.${props.service}`;
@@ -81,7 +87,7 @@ export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
       return;
     }
 
-    if (props.vpcEndpointType === cdk.aws_ec2.VpcEndpointType.GATEWAY) {
+    if (props.vpcEndpointType === VpcEndpointType.GATEWAY) {
       const resource = new cdk.aws_ec2.CfnVPCEndpoint(this, 'Resource', {
         serviceName: new cdk.aws_ec2.GatewayVpcEndpointAwsService(props.service).name,
         vpcId: this.vpcId,
@@ -92,6 +98,27 @@ export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
       return;
     }
 
+    if (props.vpcEndpointType === VpcEndpointType.GWLB) {
+      const serviceName = `com.amazonaws.vpce.${cdk.Stack.of(this).region}.${props.service}`;
+
+      const resource = new cdk.aws_ec2.CfnVPCEndpoint(this, 'Resource', {
+        serviceName,
+        vpcEndpointType: props.vpcEndpointType,
+        vpcId: this.vpcId,
+        subnetIds: props.subnets,
+      });
+      this.vpcEndpointId = resource.ref;
+      return;
+    }
+
     throw new Error('Invalid vpcEndpointType specified');
+  }
+
+  public createEndpointRoute(id: string, destination: string, routeTableId: string): void {
+    new cdk.aws_ec2.CfnRoute(this, id, {
+      destinationCidrBlock: destination,
+      routeTableId,
+      vpcEndpointId: this.vpcEndpointId,
+    });
   }
 }

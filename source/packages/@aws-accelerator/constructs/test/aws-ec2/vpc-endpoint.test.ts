@@ -16,7 +16,7 @@ import * as cdk from 'aws-cdk-lib';
 import { SynthUtils } from '@aws-cdk/assert';
 
 import { SecurityGroup } from '../../lib/aws-ec2/vpc';
-import { VpcEndpoint } from '../../lib/aws-ec2/vpc-endpoint';
+import { VpcEndpoint, VpcEndpointType } from '../../lib/aws-ec2/vpc-endpoint';
 
 const testNamePrefix = 'Construct(VpcEndpoint): ';
 
@@ -31,7 +31,7 @@ const securityGroup = new SecurityGroup(stack, 'TestSecurityGroup`', {
 
 new VpcEndpoint(stack, 'VpcEndpoint', {
   vpcId: 'Test',
-  vpcEndpointType: cdk.aws_ec2.VpcEndpointType.GATEWAY,
+  vpcEndpointType: VpcEndpointType.GATEWAY,
   service: 'service',
   subnets: ['Test1', 'Test2'],
   securityGroups: [securityGroup],
