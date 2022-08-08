@@ -38,6 +38,7 @@ export abstract class GlobalConfigTypes {
     sendToS3: t.boolean,
     excludeRegions: t.optional(t.array(t.region)),
     excludeAccounts: t.optional(t.array(t.string)),
+    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
   });
 
   static readonly accessLogBucketConfig = t.interface({
@@ -180,6 +181,10 @@ export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.s
    * List of AWS Account names to be excluded from configuring SessionManager configuration
    */
   readonly excludeAccounts = [];
+  /**
+   * S3 Lifecycle rule for log storage
+   */
+  readonly lifecycleRules: t.LifecycleRule[] = [];
 }
 
 /**

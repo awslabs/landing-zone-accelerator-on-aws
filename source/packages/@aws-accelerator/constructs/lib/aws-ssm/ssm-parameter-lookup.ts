@@ -36,11 +36,11 @@ export interface SsmParameterLookupProps {
   /**
    * The name of the cross account role to use when accessing
    */
-  readonly roleName: string;
+  readonly roleName?: string;
   /**
    * Custom resource lambda log group encryption key
    */
-  readonly kmsKey?: cdk.aws_kms.Key;
+  readonly kmsKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */
@@ -77,6 +77,10 @@ export class SsmParameterLookup extends Construct {
       ],
     });
 
+    const roleArn = props.roleName
+      ? `arn:${cdk.Stack.of(this).partition}:iam::${props.accountId}:role/${props.roleName}`
+      : '';
+
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: RESOURCE_TYPE,
       serviceToken: provider.serviceToken,
@@ -85,7 +89,7 @@ export class SsmParameterLookup extends Construct {
         invokingRegion: cdk.Stack.of(this).region,
         parameterAccountID: props.accountId,
         parameterName: props.name,
-        assumeRoleArn: `arn:${cdk.Stack.of(this).partition}:iam::${props.accountId}:role/${props.roleName}`,
+        assumeRoleArn: roleArn,
         invokingAccountID: cdk.Stack.of(this).account,
         uuid: uuidv4(),
       },

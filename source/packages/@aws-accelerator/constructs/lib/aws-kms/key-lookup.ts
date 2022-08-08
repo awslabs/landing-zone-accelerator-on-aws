@@ -34,11 +34,11 @@ export interface KeyLookupProps {
   /**
    * The name of the cross account role to use when accessing
    */
-  readonly roleName: string;
+  readonly roleName?: string;
   /**
    * Custom resource lambda log group encryption key
    */
-  readonly kmsKey?: cdk.aws_kms.Key;
+  readonly kmsKey?: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */

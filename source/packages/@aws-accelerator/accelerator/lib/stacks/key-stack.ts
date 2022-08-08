@@ -21,13 +21,16 @@ import { Logger } from '../logger';
 export class KeyStack extends AcceleratorStack {
   public static readonly CROSS_ACCOUNT_ACCESS_ROLE_NAME = 'AWSAccelerator-CrossAccount-SsmParameter-Role';
   public static readonly ACCELERATOR_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/key-arn';
+  public static readonly ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/s3/key-arn';
+
+  private readonly organizationId: string;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
     Logger.debug(`[key-stack] Region: ${cdk.Stack.of(this).region}`);
 
-    const organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
+    this.organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
 
     const key = new cdk.aws_kms.Key(this, 'AcceleratorKey', {
       alias: 'alias/accelerator/kms/key',
@@ -46,7 +49,7 @@ export class KeyStack extends AcceleratorStack {
           resources: ['*'],
           conditions: {
             StringEquals: {
-              'aws:PrincipalOrgID': organizationId,
+              'aws:PrincipalOrgID': this.organizationId,
             },
             ArnLike: {
               'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
@@ -79,12 +82,16 @@ export class KeyStack extends AcceleratorStack {
       { name: 'Sqs', principal: 'sqs.amazonaws.com' },
       // Add similar objects for any other service principal needs access to this key
     ];
+
+    // Deprecated
     if (props.securityConfig.centralSecurityServices.macie.enable) {
       allowedServicePrincipals.push({ name: 'Macie', principal: 'macie.amazonaws.com' });
     }
+    // Deprecated
     if (props.securityConfig.centralSecurityServices.guardduty.enable) {
       allowedServicePrincipals.push({ name: 'Guardduty', principal: 'guardduty.amazonaws.com' });
     }
+    // Deprecated
     if (props.securityConfig.centralSecurityServices.auditManager?.enable) {
       allowedServicePrincipals.push({ name: 'AuditManager', principal: 'auditmanager.amazonaws.com' });
       key.addToResourcePolicy(
@@ -93,7 +100,7 @@ export class KeyStack extends AcceleratorStack {
           principals: [new cdk.aws_iam.AnyPrincipal()],
           actions: ['kms:CreateGrant'],
           conditions: {
-            StringLike: { 'kms:ViaService': 'auditmanager.*.amazonaws.com', 'aws:PrincipalOrgID': organizationId },
+            StringLike: { 'kms:ViaService': 'auditmanager.*.amazonaws.com', 'aws:PrincipalOrgID': this.organizationId },
             Bool: { 'kms:GrantIsForAWSResource': 'true' },
           },
           resources: ['*'],
@@ -122,7 +129,7 @@ export class KeyStack extends AcceleratorStack {
     if (cdk.Stack.of(this).region === props.globalConfig.homeRegion && props.organizationConfig.enable) {
       new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
         roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-        assumedBy: new cdk.aws_iam.OrganizationPrincipal(organizationId),
+        assumedBy: new cdk.aws_iam.OrganizationPrincipal(this.organizationId),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
             statements: [
@@ -133,10 +140,13 @@ export class KeyStack extends AcceleratorStack {
                   `arn:${cdk.Stack.of(this).partition}:ssm:*:${
                     cdk.Stack.of(this).account
                   }:parameter/accelerator/kms/key-arn`,
+                  `arn:${cdk.Stack.of(this).partition}:ssm:*:${
+                    cdk.Stack.of(this).account
+                  }:parameter/accelerator/kms/s3/key-arn`,
                 ],
                 conditions: {
                   StringEquals: {
-                    'aws:PrincipalOrgID': organizationId,
+                    'aws:PrincipalOrgID': this.organizationId,
                   },
                   ArnLike: {
                     'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
@@ -149,7 +159,7 @@ export class KeyStack extends AcceleratorStack {
                 resources: ['*'],
                 conditions: {
                   StringEquals: {
-                    'aws:PrincipalOrgID': organizationId,
+                    'aws:PrincipalOrgID': this.organizationId,
                   },
                   ArnLike: {
                     'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
@@ -175,5 +185,86 @@ export class KeyStack extends AcceleratorStack {
         ],
       );
     }
+
+    // Create KMS Key for Security Audit account S3 Buckets
+    this.createS3Key();
+  }
+  private createS3Key() {
+    Logger.debug(`[key-stack] Create S3 Key`);
+    const s3Key = new cdk.aws_kms.Key(this, 'AcceleratorAuditS3Key', {
+      alias: 'alias/accelerator/kms/s3/key',
+      description: 'AWS Accelerator S3 Kms Key',
+      enableKeyRotation: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    s3Key.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: `Allow S3 to use the encryption key`,
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+        actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
+            'aws:PrincipalOrgId': `${this.organizationId}`,
+          },
+        },
+      }),
+    );
+
+    s3Key.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'Allow services to confirm encryption',
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+        actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'aws:PrincipalOrgId': `${this.organizationId}`,
+          },
+        },
+      }),
+    );
+
+    const allowedServicePrincipals: { name: string; principal: string }[] = [];
+    if (this.props.securityConfig.centralSecurityServices.macie.enable) {
+      allowedServicePrincipals.push({ name: 'Macie', principal: 'macie.amazonaws.com' });
+    }
+    if (this.props.securityConfig.centralSecurityServices.guardduty.enable) {
+      allowedServicePrincipals.push({ name: 'Guardduty', principal: 'guardduty.amazonaws.com' });
+    }
+
+    if (this.props.securityConfig.centralSecurityServices.auditManager?.enable) {
+      allowedServicePrincipals.push({ name: 'AuditManager', principal: 'auditmanager.amazonaws.com' });
+      s3Key.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: `Allow Audit Manager service to provision encryption key grants`,
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          actions: ['kms:CreateGrant'],
+          conditions: {
+            StringLike: { 'kms:ViaService': 'auditmanager.*.amazonaws.com', 'aws:PrincipalOrgID': this.organizationId },
+            Bool: { 'kms:GrantIsForAWSResource': 'true' },
+          },
+          resources: ['*'],
+        }),
+      );
+    }
+
+    allowedServicePrincipals!.forEach(item => {
+      s3Key.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: `Allow ${item.name} service to use the encryption key`,
+          principals: [new cdk.aws_iam.ServicePrincipal(item.principal)],
+          actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+          resources: ['*'],
+        }),
+      );
+    });
+
+    new cdk.aws_ssm.StringParameter(this, 'AcceleratorCloudWatchKmsArnParameter', {
+      parameterName: KeyStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
+      stringValue: s3Key.keyArn,
+    });
   }
 }

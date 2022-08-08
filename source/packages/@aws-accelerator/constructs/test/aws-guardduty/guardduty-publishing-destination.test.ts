@@ -20,7 +20,7 @@ const testNamePrefix = 'Construct(GuardDutyPublishingDestination): ';
 const stack = new cdk.Stack();
 
 new GuardDutyPublishingDestination(stack, 'GuardDutyPublishingDestination', {
-  destinationArn: `arn:${stack.partition}:s3:::aws-accelerator-org-gduty-pub-dest-${stack.account}-${stack.region}`,
+  destinationArn: `arn:${stack.partition}:s3:::aws-accelerator-guardduty-${stack.account}-${stack.region}`,
   exportDestinationType: 'S3',
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
@@ -117,6 +117,7 @@ describe('GuardDutyPublishingDestination', () => {
                         'guardDuty:CreateDetector',
                         'guardDuty:CreatePublishingDestination',
                         'guardDuty:DeletePublishingDestination',
+                        'guardDuty:UpdatePublishingDestination',
                         'guardDuty:ListDetectors',
                         'guardDuty:ListPublishingDestinations',
                         'iam:CreateServiceLinkedRole',
@@ -153,6 +154,25 @@ describe('GuardDutyPublishingDestination', () => {
               'Fn::GetAtt': [
                 'CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8',
                 'Arn',
+              ],
+            },
+            destinationArn: {
+              'Fn::Join': [
+                '',
+                [
+                  'arn:',
+                  {
+                    Ref: 'AWS::Partition',
+                  },
+                  ':s3:::aws-accelerator-guardduty-',
+                  {
+                    Ref: 'AWS::AccountId',
+                  },
+                  '-',
+                  {
+                    Ref: 'AWS::Region',
+                  },
+                ],
               ],
             },
             exportDestinationType: 'S3',

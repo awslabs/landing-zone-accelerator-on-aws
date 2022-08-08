@@ -52,15 +52,6 @@ export class PrepareStack extends AcceleratorStack {
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
 
-      // Make assets from the configuration directory
-      Logger.debug(`[prepare-stack] Configuration assets creation`);
-      const accountConfigAsset = new cdk.aws_s3_assets.Asset(this, 'AccountConfigAsset', {
-        path: path.join(props.configDirPath, 'accounts-config.yaml'),
-      });
-      const organzationsConfigAsset = new cdk.aws_s3_assets.Asset(this, 'OrganizationConfigAsset', {
-        path: path.join(props.configDirPath, 'organization-config.yaml'),
-      });
-
       // Allow Accelerator Role to use the encryption key
       key.addToResourcePolicy(
         new cdk.aws_iam.PolicyStatement({
@@ -120,6 +111,45 @@ export class PrepareStack extends AcceleratorStack {
         stringValue: key.keyArn,
       });
 
+      Logger.debug(`[prepare-stack] CloudWatch Encryption Key`);
+      const cloudwatchKey = new cdk.aws_kms.Key(this, 'AcceleratorManagementCloudWatchKey', {
+        alias: 'alias/accelerator/kms/cloudwatch/key',
+        description: 'AWS Accelerator Management Account CloudWatch Key',
+        enableKeyRotation: true,
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+      });
+
+      // Allow Cloudwatch logs to use the encryption key
+      cloudwatchKey.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: `Allow Cloudwatch logs to use the encryption key`,
+          principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+          actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
+          resources: ['*'],
+          conditions: {
+            ArnLike: {
+              'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
+                cdk.Stack.of(this).region
+              }:${cdk.Stack.of(this).account}:log-group:*`,
+            },
+          },
+        }),
+      );
+
+      new cdk.aws_ssm.StringParameter(this, 'AcceleratorCloudWatchKmsArnParameter', {
+        parameterName: '/accelerator/kms/cloudwatch/key-arn',
+        stringValue: cloudwatchKey.keyArn,
+      });
+
+      // Make assets from the configuration directory
+      Logger.debug(`[prepare-stack] Configuration assets creation`);
+      const accountConfigAsset = new cdk.aws_s3_assets.Asset(this, 'AccountConfigAsset', {
+        path: path.join(props.configDirPath, 'accounts-config.yaml'),
+      });
+      const organzationsConfigAsset = new cdk.aws_s3_assets.Asset(this, 'OrganizationConfigAsset', {
+        path: path.join(props.configDirPath, 'organization-config.yaml'),
+      });
+
       const driftDetectedParameter = new cdk.aws_ssm.StringParameter(this, 'AcceleratorControlTowerDriftParameter', {
         parameterName: '/accelerator/controltower/driftDetected',
         stringValue: 'false',
@@ -175,7 +205,7 @@ export class PrepareStack extends AcceleratorStack {
         region: cdk.Stack.of(this).region,
         managementAccountId: props.accountsConfig.getManagementAccountId(),
         stackName: cdk.Stack.of(this).stackName,
-        kmsKey: key,
+        kmsKey: cloudwatchKey,
         logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });
 
@@ -185,7 +215,7 @@ export class PrepareStack extends AcceleratorStack {
         commitId: props.configCommitId || '',
         controlTowerEnabled: props.globalConfig.controlTower.enable,
         organizationsEnabled: props.organizationConfig.enable,
-        kmsKey: key,
+        kmsKey: cloudwatchKey,
         logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });
 
@@ -197,7 +227,7 @@ export class PrepareStack extends AcceleratorStack {
         acceleratorConfigTable: configTable,
         commitId: props.configCommitId || '',
         assumeRoleName: props.globalConfig.managementAccountAccessRole,
-        kmsKey: key,
+        kmsKey: cloudwatchKey,
         logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });
       inviteAccountsToOu.node.addDependency(loadAcceleratorConfigTable);
@@ -278,7 +308,7 @@ export class PrepareStack extends AcceleratorStack {
           region: cdk.Stack.of(this).region,
           managementAccountId: props.accountsConfig.getManagementAccountId(),
           partition: props.partition,
-          kmsKey: key,
+          kmsKey: cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
           driftDetectionParameter: driftDetectedParameter,
           driftDetectionMessageParameter: driftMessageParameter,
@@ -293,7 +323,7 @@ export class PrepareStack extends AcceleratorStack {
           newOrgAccountsTable: newOrgAccountsTable,
           govCloudAccountMappingTable: govCloudAccountMappingTable,
           accountRoleName: props.globalConfig.managementAccountAccessRole,
-          kmsKey: key,
+          kmsKey: cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
         organizationAccounts.node.addDependency(validation);
@@ -334,14 +364,14 @@ export class PrepareStack extends AcceleratorStack {
           const portfolioResults = new GetPortfolioId(this, 'GetPortFolioId', {
             displayName: 'AWS Control Tower Account Factory Portfolio',
             providerName: 'AWS Control Tower',
-            kmsKey: key,
+            kmsKey: cloudwatchKey,
             logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
           });
           Logger.info(`[prepare-stack] Create new control tower accounts`);
           const controlTowerAccounts = new CreateControlTowerAccounts(this, 'CreateCTAccounts', {
             table: newCTAccountsTable,
             portfolioId: portfolioResults.portfolioId,
-            kmsKey: key,
+            kmsKey: cloudwatchKey,
             logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
           });
           controlTowerAccounts.node.addDependency(validation);
@@ -422,7 +452,7 @@ export class PrepareStack extends AcceleratorStack {
           new cdk.aws_logs.LogGroup(this, `${controlTowerOuEventsFunction.node.id}LogGroup`, {
             logGroupName: `/aws/lambda/${controlTowerOuEventsFunction.functionName}`,
             retention: props.globalConfig.cloudwatchLogRetentionInDays,
-            encryptionKey: key,
+            encryptionKey: cloudwatchKey,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
           });
 
@@ -488,7 +518,7 @@ export class PrepareStack extends AcceleratorStack {
           new cdk.aws_logs.LogGroup(this, `${controlTowerNotificationsFunction.node.id}LogGroup`, {
             logGroupName: `/aws/lambda/${controlTowerNotificationsFunction.functionName}`,
             retention: props.globalConfig.cloudwatchLogRetentionInDays,
-            encryptionKey: key,
+            encryptionKey: cloudwatchKey,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
           });
 
