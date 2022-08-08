@@ -60,6 +60,7 @@ export class GuardDutyPublishingDestination extends Construct {
             'guardDuty:CreateDetector',
             'guardDuty:CreatePublishingDestination',
             'guardDuty:DeletePublishingDestination',
+            'guardDuty:UpdatePublishingDestination',
             'guardDuty:ListDetectors',
             'guardDuty:ListPublishingDestinations',
             'iam:CreateServiceLinkedRole',

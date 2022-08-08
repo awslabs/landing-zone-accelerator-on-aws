@@ -39,7 +39,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
   switch (event.RequestType) {
     case 'Create':
-    case 'Update':
       console.log('starting - CreatePublishingDestination');
       if (!detectorId) {
         await throttlingBackOff(() =>
@@ -49,40 +48,54 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             })
             .promise(),
         );
-
-        detectorId = await getDetectorId(guardDutyClient);
       }
 
-      const listPublishingDestinationResponse = await getPublishingDestinations(guardDutyClient, detectorId!);
+      detectorId = await getDetectorId(guardDutyClient);
 
-      if (listPublishingDestinationResponse.Destinations.length === 0) {
-        console.log('starting CreatePublishingDestinationCommand');
+      await throttlingBackOff(() =>
+        guardDutyClient
+          .createPublishingDestination({
+            DetectorId: detectorId!,
+            DestinationType: exportDestinationType,
+            DestinationProperties: { DestinationArn: destinationArn, KmsKeyArn: kmsKeyArn },
+          })
+          .promise(),
+      );
+      return { Status: 'Success', StatusCode: 200 };
 
+    case 'Update':
+      console.log('starting - UpdatePublishingDestination');
+
+      const updateResponse = await getPublishingDestinations(guardDutyClient, detectorId!);
+
+      const updateDestinationId =
+        updateResponse.Destinations ?? [].length === 1 ? updateResponse.Destinations[0].DestinationId : undefined;
+
+      if (updateResponse.Destinations.length === 1) {
         await throttlingBackOff(() =>
           guardDutyClient
-            .createPublishingDestination({
+            .updatePublishingDestination({
               DetectorId: detectorId!,
-              DestinationType: exportDestinationType,
+              DestinationId: updateDestinationId!,
               DestinationProperties: { DestinationArn: destinationArn, KmsKeyArn: kmsKeyArn },
             })
             .promise(),
         );
       }
-
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
-      const response = await getPublishingDestinations(guardDutyClient, detectorId!);
+      const deleteResponse = await getPublishingDestinations(guardDutyClient, detectorId!);
 
-      const destinationId =
-        response.Destinations ?? [].length === 1 ? response.Destinations[0].DestinationId : undefined;
+      const deleteDestinationId =
+        deleteResponse.Destinations ?? [].length === 1 ? deleteResponse.Destinations[0].DestinationId : undefined;
 
-      if (response.Destinations.length === 1) {
+      if (deleteResponse.Destinations.length === 1) {
         await throttlingBackOff(() =>
           guardDutyClient
             .deletePublishingDestination({
               DetectorId: detectorId!,
-              DestinationId: destinationId!,
+              DestinationId: deleteDestinationId!,
             })
             .promise(),
         );

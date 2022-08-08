@@ -21,7 +21,7 @@ import path from 'path';
 import { Tag as ConfigRuleTag } from '@aws-sdk/client-config-service';
 import { AwsConfigRuleSet, ConfigRule, Tag } from '@aws-accelerator/config';
 
-import { KeyLookup, Organization, ConfigServiceTags } from '@aws-accelerator/constructs';
+import { KeyLookup, Organization, ConfigServiceTags, SsmSessionManagerSettings } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
@@ -53,6 +53,8 @@ interface RemediationParameters {
  */
 export class SecurityResourcesStack extends AcceleratorStack {
   readonly acceleratorKey: cdk.aws_kms.Key;
+  readonly auditS3Key: cdk.aws_kms.Key;
+  readonly cloudwatchKey: cdk.aws_kms.IKey;
   readonly auditAccountId: string;
   readonly logArchiveAccountId: string;
   readonly stackProperties: AcceleratorStackProps;
@@ -68,7 +70,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
 
     //
-    // Set Organization ID
+    // Set Organization Id
     this.setOrganizationId();
 
     this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
@@ -77,6 +79,20 @@ export class SecurityResourcesStack extends AcceleratorStack {
       keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
+
+    this.auditS3Key = new KeyLookup(this, 'AcceleratorS3KeyLookup', {
+      accountId: props.accountsConfig.getAuditAccountId(),
+      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+      keyArnParameterName: KeyStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
+
+    const cloudwatchKeyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
+      this,
+      '/accelerator/kms/cloudwatch/key-arn',
+    );
+
+    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(this, 'AcceleratorGetCloudWatchKey', cloudwatchKeyArn);
 
     // AWS Config - Set up recorder and delivery channel, only if Control Tower
     // is not being used. Else the Control Tower SCP will block these calls from
@@ -131,6 +147,16 @@ export class SecurityResourcesStack extends AcceleratorStack {
     // CloudWatch Alarms
     //
     this.configureCloudwatchAlarm();
+
+    //
+    // SessionManager Configuration
+    //
+    if (
+      props.globalConfig.logging.sessionManager.sendToCloudWatchLogs ||
+      props.globalConfig.logging.sessionManager.sendToS3
+    ) {
+      this.setupSessionManager();
+    }
 
     Logger.info('[security-resources-stack] Completed stack synthesis');
   }
@@ -335,7 +361,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
     new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-LogGroup', {
       logGroupName: `/aws/lambda/${lambdaFunction.functionName}`,
       retention: this.props.globalConfig.cloudwatchLogRetentionInDays,
-      encryptionKey: this.acceleratorKey,
+      encryptionKey: this.cloudwatchKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
@@ -444,7 +470,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
       new cdk.aws_logs.LogGroup(this, pascalCase(rule.name) + '-RemediationLogGroup', {
         logGroupName: `/aws/lambda/${remediationLambdaFunction.functionName}`,
         retention: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        encryptionKey: this.acceleratorKey,
+        encryptionKey: this.cloudwatchKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
     }
@@ -483,7 +509,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         resourceArn: configRule.configRuleArn,
         tags: configRuleTags,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        kmsKey: this.acceleratorKey,
+        kmsKey: this.cloudwatchKey,
         partition: this.props.partition,
         accountId: cdk.Stack.of(this).account,
       });
@@ -858,5 +884,53 @@ export class SecurityResourcesStack extends AcceleratorStack {
       tags.push({ Key: tag.key, Value: tag.value });
     }
     return tags;
+  }
+
+  private setupSessionManager() {
+    Logger.info(`[security-resources-stack] Creating Session Manager Logging Resources`);
+    // Set up Session Manager Logging
+    if (
+      !this.isAccountExcluded(this.props.globalConfig.logging.sessionManager.excludeAccounts ?? []) ||
+      !this.isRegionExcluded(this.props.globalConfig.logging.sessionManager.excludeRegions ?? [])
+    ) {
+      new SsmSessionManagerSettings(this, 'SsmSessionManagerSettings', {
+        s3BucketName: `aws-accelerator-ssm-${this.auditAccountId}-${this.props.globalConfig.homeRegion}`,
+        s3KeyPrefix: `session/${cdk.Aws.ACCOUNT_ID}/${cdk.Stack.of(this).region}`,
+        s3BucketKeyArn: this.auditS3Key.keyArn,
+        sendToCloudWatchLogs: this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
+        sendToS3: this.props.globalConfig.logging.sessionManager.sendToS3,
+        cloudWatchEncryptionEnabled:
+          this.props.partition !== 'aws-us-gov' && this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
+        cloudWatchEncryptionKey: this.cloudwatchKey,
+        constructLoggingKmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      });
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      // rule suppression with evidence for this permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/SsmSessionManagerSettings/SessionManagerEC2Policy/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Policy needed access to all S3 objects for the account to put objects into the access log bucket',
+          },
+        ],
+      );
+
+      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+      // rule suppression with evidence for this permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/SsmSessionManagerSettings/SessionManagerEC2Role/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM4',
+            reason: 'Create an IAM managed Policy for users to be able to use Session Manager with KMS encryption',
+          },
+        ],
+      );
+    }
   }
 }

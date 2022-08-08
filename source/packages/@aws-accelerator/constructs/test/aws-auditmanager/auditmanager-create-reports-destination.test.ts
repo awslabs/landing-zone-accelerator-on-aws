@@ -20,8 +20,9 @@ const testNamePrefix = 'Construct(AuditManagerDefaultReportsDestination): ';
 const stack = new cdk.Stack();
 
 new AuditManagerDefaultReportsDestination(stack, 'AuditManagerDefaultReportsDestination', {
-  bucket: `s3//aws-accelerator-org-auditmgr-pub-dest-${stack.account}-${stack.region}`,
+  bucket: `s3//aws-accelerator-auditmgr-${stack.account}-${stack.region}`,
   defaultReportsDestinationType: 'S3',
+  bucketKmsKey: new cdk.aws_kms.Key(stack, 'BucketKey', {}),
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
 });
@@ -151,7 +152,7 @@ describe('AuditManagerDefaultReportsDestination', () => {
               'Fn::Join': [
                 '',
                 [
-                  's3//aws-accelerator-org-auditmgr-pub-dest-',
+                  's3//aws-accelerator-auditmgr-',
                   {
                     Ref: 'AWS::AccountId',
                   },
@@ -164,7 +165,7 @@ describe('AuditManagerDefaultReportsDestination', () => {
             },
             defaultReportsDestinationType: 'S3',
             kmsKeyArn: {
-              'Fn::GetAtt': ['CustomKey1E6D0D07', 'Arn'],
+              'Fn::GetAtt': ['BucketKey7092080A', 'Arn'],
             },
             region: {
               Ref: 'AWS::Region',

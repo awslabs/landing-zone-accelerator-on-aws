@@ -36,9 +36,13 @@ export interface AuditManagerDefaultReportsDestinationProps {
    */
   readonly bucket: string;
   /**
+   * Publishing destination kms arn
+   */
+  readonly bucketKmsKey: cdk.aws_kms.Key;
+  /**
    * Custom resource lambda log group encryption key
    */
-  readonly kmsKey: cdk.aws_kms.Key;
+  readonly kmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */
@@ -76,7 +80,7 @@ export class AuditManagerDefaultReportsDestination extends Construct {
         region: cdk.Stack.of(this).region,
         defaultReportsDestinationType: props.defaultReportsDestinationType,
         bucket: props.bucket,
-        kmsKeyArn: props.kmsKey.keyArn,
+        kmsKeyArn: props.bucketKmsKey.keyArn,
       },
     });
 

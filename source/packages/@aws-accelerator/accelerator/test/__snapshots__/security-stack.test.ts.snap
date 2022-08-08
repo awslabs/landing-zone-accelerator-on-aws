@@ -53,7 +53,7 @@ Object {
           "Fn::Join": Array [
             "",
             Array [
-              "aws-accelerator-org-macie-disc-repo-222222222222-",
+              "aws-accelerator-macie-222222222222-",
               Object {
                 "Ref": "AWS::Region",
               },
@@ -241,6 +241,7 @@ Object {
                     "guardDuty:CreateDetector",
                     "guardDuty:CreatePublishingDestination",
                     "guardDuty:DeletePublishingDestination",
+                    "guardDuty:UpdatePublishingDestination",
                     "guardDuty:ListDetectors",
                     "guardDuty:ListPublishingDestinations",
                     "iam:CreateServiceLinkedRole",
@@ -773,7 +774,7 @@ Object {
               Object {
                 "Ref": "AWS::Partition",
               },
-              ":s3:::aws-accelerator-org-gduty-pub-dest-222222222222-us-east-1",
+              ":s3:::aws-accelerator-guardduty-222222222222-us-east-1",
             ],
           ],
         },

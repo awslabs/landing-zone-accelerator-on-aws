@@ -3,13 +3,21 @@
 exports[`SecurityAuditStack Construct(SecurityAuditStack):  Snapshot Test 1`] = `
 Object {
   "Parameters": Object {
+    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/cloudwatch/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
       "Default": "/accelerator/kms/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/s3/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": Object {
-    "AcceleratorCentralLogBucketKeyLookup26F8C418": Object {
+    "AcceleratorcentralLogsBucketKeyLookup5521C210": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
@@ -232,7 +240,7 @@ def script_handler(events, context):
         },
         "defaultReportsDestinationType": "S3",
         "kmsKeyArn": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "region": "us-east-1",
       },
@@ -257,7 +265,7 @@ def script_handler(events, context):
             Object {
               "ServerSideEncryptionByDefault": Object {
                 "KMSMasterKeyID": Object {
-                  "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                  "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
                 },
                 "SSEAlgorithm": "aws:kms",
               },
@@ -268,7 +276,7 @@ def script_handler(events, context):
           "Fn::Join": Array [
             "",
             Array [
-              "aws-accelerator-audmgr-pub-dest-",
+              "aws-accelerator-auditmgr-",
               Object {
                 "Ref": "AWS::AccountId",
               },
@@ -426,14 +434,14 @@ def script_handler(events, context):
               "Action": "kms:Decrypt",
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
             Object {
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+                "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
               },
             },
           ],
@@ -474,7 +482,7 @@ def script_handler(events, context):
           ],
         },
         "destinationBucketKeyArn": Object {
-          "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+          "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
         },
         "prefix": "",
         "replicationRoleArn": Object {
@@ -626,7 +634,7 @@ def script_handler(events, context):
             Object {
               "ServerSideEncryptionByDefault": Object {
                 "KMSMasterKeyID": Object {
-                  "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                  "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
                 },
                 "SSEAlgorithm": "aws:kms",
               },
@@ -637,7 +645,7 @@ def script_handler(events, context):
           "Fn::Join": Array [
             "",
             Array [
-              "aws-accelerator-org-macie-disc-repo-",
+              "aws-accelerator-macie-",
               Object {
                 "Ref": "AWS::AccountId",
               },
@@ -717,7 +725,7 @@ def script_handler(events, context):
           ],
         },
         "destinationBucketKeyArn": Object {
-          "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+          "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
         },
         "prefix": "",
         "replicationRoleArn": Object {
@@ -837,14 +845,14 @@ def script_handler(events, context):
               "Action": "kms:Decrypt",
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
             Object {
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+                "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
               },
             },
           ],
@@ -980,6 +988,336 @@ def script_handler(events, context):
                 },
               ],
               "Sid": "Allow Organization principals to use of the bucket",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "AwsSessionManagerLogBucket9C3CA827": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "BucketEncryption": Object {
+          "ServerSideEncryptionConfiguration": Array [
+            Object {
+              "ServerSideEncryptionByDefault": Object {
+                "KMSMasterKeyID": Object {
+                  "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                },
+                "SSEAlgorithm": "aws:kms",
+              },
+            },
+          ],
+        },
+        "BucketName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "aws-accelerator-ssm-",
+              Object {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              Object {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "aws-accelerator-s3-access-logs-",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+              ],
+            ],
+          },
+        },
+        "OwnershipControls": Object {
+          "Rules": Array [
+            Object {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": Object {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "VersioningConfiguration": Object {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "AwsSessionManagerLogBucketAwsSessionManagerLogBucketReplication81612E7A": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
+            "Arn",
+          ],
+        },
+        "destinationAccountId": "333333333333",
+        "destinationBucketArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":s3:::aws-accelerator-central-logs-333333333333-us-east-1",
+            ],
+          ],
+        },
+        "destinationBucketKeyArn": Object {
+          "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
+        },
+        "prefix": "",
+        "replicationRoleArn": Object {
+          "Fn::GetAtt": Array [
+            "AwsSessionManagerLogBucketAwsSessionManagerLogBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRole48A72A52",
+            "Arn",
+          ],
+        },
+        "sourceBucketName": Object {
+          "Ref": "AwsSessionManagerLogBucket9C3CA827",
+        },
+      },
+      "Type": "Custom::S3PutBucketReplication",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AwsSessionManagerLogBucketAwsSessionManagerLogBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRole48A72A52": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "s3.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Path": "/service-role/",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AwsSessionManagerLogBucketAwsSessionManagerLogBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRoleDefaultPolicyB0D4B73A": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObjectLegalHold",
+                "s3:GetObjectRetention",
+                "s3:GetObjectVersion",
+                "s3:GetObjectVersionAcl",
+                "s3:GetObjectVersionForReplication",
+                "s3:GetObjectVersionTagging",
+                "s3:GetReplicationConfiguration",
+                "s3:ListBucket",
+                "s3:ReplicateDelete",
+                "s3:ReplicateObject",
+                "s3:ReplicateTags",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AwsSessionManagerLogBucket9C3CA827",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AwsSessionManagerLogBucket9C3CA827",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "s3:GetBucketVersioning",
+                "s3:GetObjectVersionTagging",
+                "s3:ObjectOwnerOverrideToBucketOwner",
+                "s3:PutBucketVersioning",
+                "s3:ReplicateDelete",
+                "s3:ReplicateObject",
+                "s3:ReplicateTags",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":s3:::aws-accelerator-central-logs-333333333333-us-east-1/*",
+                  ],
+                ],
+              },
+            },
+            Object {
+              "Action": "kms:Decrypt",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            },
+            Object {
+              "Action": "kms:Encrypt",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "erLogBucketAwsSessionManagerLogBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRoleDefaultPolicyB0D4B73A",
+        "Roles": Array [
+          Object {
+            "Ref": "AwsSessionManagerLogBucketAwsSessionManagerLogBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRole48A72A52",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AwsSessionManagerLogBucketPolicyC5F62B5B": Object {
+      "Properties": Object {
+        "Bucket": Object {
+          "Ref": "AwsSessionManagerLogBucket9C3CA827",
+        },
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "s3:*",
+              "Condition": Object {
+                "Bool": Object {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AwsSessionManagerLogBucket9C3CA827",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AwsSessionManagerLogBucket9C3CA827",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "deny-insecure-connections",
+            },
+            Object {
+              "Action": Array [
+                "s3:PutObjectAcl",
+                "s3:PutObject",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    Object {
+                      "Fn::GetAtt": Array [
+                        "AwsSessionManagerLogBucket9C3CA827",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+              "Sid": "Allow Organization principals to put objects",
+            },
+            Object {
+              "Action": "s3:GetEncryptionConfiguration",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "AwsSessionManagerLogBucket9C3CA827",
+                  "Arn",
+                ],
+              },
+              "Sid": "Allow Organization principals to get encryption context",
             },
           ],
           "Version": "2012-10-17",
@@ -1208,7 +1546,7 @@ def script_handler(events, context):
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -1292,7 +1630,7 @@ def script_handler(events, context):
       "DeletionPolicy": "Retain",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -1402,7 +1740,7 @@ def script_handler(events, context):
       "DeletionPolicy": "Retain",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -1535,7 +1873,7 @@ def script_handler(events, context):
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -1651,7 +1989,7 @@ def script_handler(events, context):
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -1738,7 +2076,7 @@ def script_handler(events, context):
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -1905,7 +2243,7 @@ def script_handler(events, context):
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -1992,7 +2330,7 @@ def script_handler(events, context):
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -2088,7 +2426,7 @@ def script_handler(events, context):
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -2192,7 +2530,7 @@ def script_handler(events, context):
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -2459,7 +2797,7 @@ def script_handler(events, context):
             Object {
               "ServerSideEncryptionByDefault": Object {
                 "KMSMasterKeyID": Object {
-                  "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                  "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
                 },
                 "SSEAlgorithm": "aws:kms",
               },
@@ -2470,7 +2808,7 @@ def script_handler(events, context):
           "Fn::Join": Array [
             "",
             Array [
-              "aws-accelerator-org-gduty-pub-dest-",
+              "aws-accelerator-guardduty-",
               Object {
                 "Ref": "AWS::AccountId",
               },
@@ -2628,14 +2966,14 @@ def script_handler(events, context):
               "Action": "kms:Decrypt",
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
             Object {
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+                "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
               },
             },
           ],
@@ -2676,7 +3014,7 @@ def script_handler(events, context):
           ],
         },
         "destinationBucketKeyArn": Object {
-          "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+          "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
         },
         "prefix": "",
         "replicationRoleArn": Object {
@@ -3410,6 +3748,16 @@ def script_handler(events, context):
         "Type": "String",
         "Value": Object {
           "Ref": "AwsMacieExportConfigBucket83E4FE4E",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamOrganizationSessionManagerLogBucketF3D7322F": Object {
+      "Properties": Object {
+        "Name": "/accelerator/organization/security/sessionmanager/log/bucket-name",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "AwsSessionManagerLogBucket9C3CA827",
         },
       },
       "Type": "AWS::SSM::Parameter",
