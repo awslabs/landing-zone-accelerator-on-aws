@@ -1,0 +1,161 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
+Object {
+  "Parameters": Object {
+    "SsmParameterValueacceleratormanagementkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/management/kms/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratororganizationsscpQuarantineidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/organizations/scp/Quarantine/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": Object {
+    "CustomDetachQuarantineScpCustomResourceProviderHandlerA1F1C263": Object {
+      "DependsOn": Array [
+        "CustomDetachQuarantineScpCustomResourceProviderRoleE5C433C1",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomDetachQuarantineScpCustomResourceProviderRoleE5C433C1",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomDetachQuarantineScpCustomResourceProviderLogGroupD9E0EA42": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratormanagementkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomDetachQuarantineScpCustomResourceProviderHandlerA1F1C263",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomDetachQuarantineScpCustomResourceProviderRoleE5C433C1": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:ListAccounts",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "organizations",
+                },
+                Object {
+                  "Action": Array [
+                    "organizations:DetachPolicy",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:aws:organizations::111111111111:policy/o-*/service_control_policy/",
+                          Object {
+                            "Ref": "SsmParameterValueacceleratororganizationsscpQuarantineidC96584B6F00A464EAD1953AFF4B05118Parameter",
+                          },
+                        ],
+                      ],
+                    },
+                    "arn:aws:organizations::111111111111:account/o-*/*",
+                  ],
+                  "Sid": "detach",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DetachQuarantineScpD09A8004": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomDetachQuarantineScpCustomResourceProviderLogGroupD9E0EA42",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomDetachQuarantineScpCustomResourceProviderHandlerA1F1C263",
+            "Arn",
+          ],
+        },
+        "scpPolicyId": Object {
+          "Ref": "SsmParameterValueacceleratororganizationsscpQuarantineidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::DetachQuarantineScp",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SsmParamAcceleratorVersionFF83282D": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-FinalizeStack-111111111111-us-east-1/version",
+        "Type": "String",
+        "Value": "1.1.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-FinalizeStack-111111111111-us-east-1/stack-id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
