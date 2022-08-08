@@ -11,10 +11,10 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
-
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
+import { describe } from '@jest/globals';
+import { snapShotTest } from './snapshot-test';
 
 const testNamePrefix = 'Construct(NetworkVpcStack): ';
 
@@ -24,21 +24,6 @@ const testNamePrefix = 'Construct(NetworkVpcStack): ';
 const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.NETWORK_VPC, 'all-enabled', 'aws');
 const stack = acceleratorTestStacks.stacks.get(`Network-us-east-1`)!;
 
-/**
- * NetworkVpcStack construct test
- */
 describe('NetworkVpcStack', () => {
-  /**
-   * Number of Lambda function resource test
-   */
-  test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 4);
-  });
-
-  /**
-   * Number of Lambda function IAM role resource test
-   */
-  test(`${testNamePrefix} Lambda function IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 7);
-  });
+  snapShotTest(testNamePrefix, stack);
 });

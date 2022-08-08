@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
 import { AcceleratorStack, AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
+import { AccountsStack } from '../lib/stacks/accounts-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
 import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { AcceleratorStackNames } from '../lib/accelerator';
@@ -37,6 +37,7 @@ import {
   OrganizationConfig,
   SecurityConfig,
 } from '@aws-accelerator/config';
+
 import * as path from 'path';
 
 export class AcceleratorSynthStacks {
@@ -128,6 +129,9 @@ export class AcceleratorSynthStacks {
         break;
       case AcceleratorStage.SECURITY:
         this.synthSecurityStacks();
+        break;
+      case AcceleratorStage.ACCOUNTS:
+        this.synthAccountStacks();
         break;
     }
   }
@@ -430,6 +434,24 @@ export class AcceleratorSynthStacks {
       }
     }
   }
-}
+  /**
+   * synth Account stacks
+   */
 
-// const stack = stacks.get(`Management-us-east-1`)!;
+  private synthAccountStacks() {
+    this.stacks.set(
+      `${this.managementAccount.name}-${this.homeRegion}`,
+      new AccountsStack(
+        this.app,
+        `${AcceleratorStackNames[AcceleratorStage.ACCOUNTS]}-${this.managementAccountId}-${this.homeRegion}`,
+        {
+          env: {
+            account: this.managementAccountId,
+            region: this.homeRegion,
+          },
+          ...this.props,
+        },
+      ),
+    );
+  }
+}

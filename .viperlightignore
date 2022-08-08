@@ -87,11 +87,9 @@ source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1126
 source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1134
 source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1142
 
-source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:33
-source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:34
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:35
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:36
-
+source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:37
 
 source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1369
 source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1492
@@ -119,7 +117,7 @@ source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-c
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:30
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:32
 
-source/packages/@aws-accelerator/accelerator/lib/stacks/operations-stack.ts:280
+source/packages/@aws-accelerator/accelerator/lib/stacks/operations-stack.ts:281
 
 source/packages/@aws-accelerator/installer/lib/installer-stack.ts:485
 source/packages/@aws-accelerator/installer/lib/installer-stack.ts:485
