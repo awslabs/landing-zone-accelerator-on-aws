@@ -91,7 +91,22 @@ centralNetworkServices:
           provisionedCidrs:
             - 10.1.0.0/16
           sourceIpamPool: *BASE_POOL
-
+  gatewayLoadBalancers:
+    - name: Accelerator-GWLB
+      subnets:
+        - Network-Inspection-A
+        - Network-Inspection-B
+      vpc: Network-Inspection
+      deletionProtection: true
+      endpoints:
+        - name: Endpoint-A
+          account: Network
+          subnet: Network-Inspection-A
+          vpc: Network-Inspection
+        - name: Endpoint-B
+          account: Network
+          subnet: Network-Inspection-B
+          vpc: Network-Inspection
   networkFirewall:
     firewalls:
       - name: accelerator-firewall

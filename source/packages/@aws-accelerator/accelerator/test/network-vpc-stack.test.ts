@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 
@@ -38,6 +39,6 @@ describe('NetworkVpcStack', () => {
    * Number of Lambda function IAM role resource test
    */
   test(`${testNamePrefix} Lambda function IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 6);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 7);
   });
 });

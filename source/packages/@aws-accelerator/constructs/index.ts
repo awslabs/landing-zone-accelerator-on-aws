@@ -35,6 +35,7 @@ export * from './lib/aws-ec2/transit-gateway-static-route';
 export * from './lib/aws-ec2/vpc';
 export * from './lib/aws-ec2/vpc-endpoint';
 export * from './lib/aws-ec2/vpc-peering';
+export * from './lib/aws-elasticloadbalancingv2/gateway-load-balancer';
 export * from './lib/aws-guardduty/guardduty-detector-config';
 export * from './lib/aws-guardduty/guardduty-members';
 export * from './lib/aws-guardduty/guardduty-organization-admin-account';
