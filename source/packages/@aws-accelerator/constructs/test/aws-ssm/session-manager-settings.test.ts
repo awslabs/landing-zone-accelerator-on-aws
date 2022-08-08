@@ -239,7 +239,7 @@ describe('SsmSessionManagerSettings', () => {
               'Fn::Join': [
                 '',
                 [
-                  'SessionManagerEc2Role-',
+                  'AWSAccelerator-SessionManagerEc2Role-',
                   {
                     Ref: 'AWS::Region',
                   },
@@ -271,7 +271,7 @@ describe('SsmSessionManagerSettings', () => {
               'Fn::Join': [
                 '',
                 [
-                  'SessionManagerLogging-',
+                  'AWSAccelerator-SessionManagerLogging-',
                   {
                     Ref: 'AWS::Region',
                   },
@@ -439,7 +439,7 @@ describe('SsmSessionManagerSettings', () => {
               'Fn::Join': [
                 '',
                 [
-                  'SessionManagerEC2Role-',
+                  'AWSAccelerator-SessionManagerEC2Role-',
                   {
                     Ref: 'AWS::Region',
                   },
@@ -532,7 +532,7 @@ describe('SsmSessionManagerSettings', () => {
               'Fn::Join': [
                 '',
                 [
-                  'SessionManagerUserKMSPolicy-',
+                  'AWSAccelerator-SessionManagerUserKMS-',
                   {
                     Ref: 'AWS::Region',
                   },
