@@ -98,9 +98,6 @@ export class NetworkVpcStack extends AcceleratorStack {
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
 
-    // Get the organization object, used by Data Protection
-    //const organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
-
     //
     // Delete Default VPCs
     //
@@ -124,10 +121,11 @@ export class NetworkVpcStack extends AcceleratorStack {
     // Keep track of all the external accounts that will need to be able to list
     // the generated transit gateway attachments
     const transitGatewayAccountIds: string[] = [];
-    for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = this.accountsConfig.getAccountId(vpcItem.account);
-      // Only care about VPCs to be created in the current account and region
-      if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Get account IDs
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+
+      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         for (const attachment of vpcItem.transitGatewayAttachments ?? []) {
           Logger.info(`[network-vpc-stack] Evaluating Transit Gateway key ${attachment.transitGateway.name}`);
 
@@ -233,9 +231,11 @@ export class NetworkVpcStack extends AcceleratorStack {
     // access role (if we're in a different account)
     //
     let useCentralEndpoints = false;
-    for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = this.accountsConfig.getAccountId(vpcItem.account);
-      if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Get account IDs
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+
+      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         if (vpcItem.useCentralEndpoints) {
           if (props.partition !== 'aws') {
             throw new Error(
@@ -462,9 +462,11 @@ export class NetworkVpcStack extends AcceleratorStack {
     //
     // Evaluate VPC entries
     //
-    for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = this.accountsConfig.getAccountId(vpcItem.account);
-      if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Get account IDs
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+
+      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         Logger.info(`[network-vpc-stack] Adding VPC ${vpcItem.name}`);
 
         //
@@ -474,15 +476,17 @@ export class NetworkVpcStack extends AcceleratorStack {
         let delegatedAdminAccountId: string | undefined = undefined;
         let poolId: string | undefined = undefined;
         let poolNetmask: number | undefined = undefined;
-        if (vpcItem.cidrs && vpcItem.ipamAllocations) {
-          throw new Error(
-            `[network-vpc-stack] Attempting to define both a CIDR and IPAM allocation for VPC ${vpcItem.name}. Please choose only one.`,
-          );
-        }
+        if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+          if (vpcItem.cidrs && vpcItem.ipamAllocations) {
+            throw new Error(
+              `[network-vpc-stack] Attempting to define both a CIDR and IPAM allocation for VPC ${vpcItem.name}. Please choose only one.`,
+            );
+          }
 
-        // Get first CIDR in array
-        if (vpcItem.cidrs) {
-          cidr = vpcItem.cidrs[0];
+          // Get first CIDR in array
+          if (vpcItem.cidrs) {
+            cidr = vpcItem.cidrs[0];
+          }
         }
 
         // Get IPAM details
@@ -497,7 +501,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             props.networkConfig.centralNetworkServices?.delegatedAdminAccount,
           );
 
-          if (delegatedAdminAccountId === accountId) {
+          if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
             poolId = cdk.aws_ssm.StringParameter.valueForStringParameter(
               this,
               `/accelerator/network/ipam/pools/${vpcItem.ipamAllocations[0].ipamPoolName}/id`,
@@ -534,10 +538,12 @@ export class NetworkVpcStack extends AcceleratorStack {
         });
 
         // Create additional CIDRs or IPAM allocations as needed
-        if (vpcItem.cidrs && vpcItem.cidrs.length > 1) {
-          for (const vpcCidr of vpcItem.cidrs.slice(1)) {
-            Logger.info(`[network-vpc-stack] Adding secondary CIDR ${vpcCidr} to VPC ${vpcItem.name}`);
-            vpc.addCidr({ cidrBlock: vpcCidr });
+        if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+          if (vpcItem.cidrs && vpcItem.cidrs.length > 1) {
+            for (const vpcCidr of vpcItem.cidrs.slice(1)) {
+              Logger.info(`[network-vpc-stack] Adding secondary CIDR ${vpcCidr} to VPC ${vpcItem.name}`);
+              vpc.addCidr({ cidrBlock: vpcCidr });
+            }
           }
         }
 
@@ -547,7 +553,7 @@ export class NetworkVpcStack extends AcceleratorStack {
               `[network-vpc-stack] Adding secondary IPAM allocation with netmask ${alloc.netmaskLength} to VPC ${vpcItem.name}`,
             );
             // Get IPAM pool ID
-            if (delegatedAdminAccountId === accountId) {
+            if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
               poolId = cdk.aws_ssm.StringParameter.valueForStringParameter(
                 this,
                 `/accelerator/network/ipam/pools/${alloc.ipamPoolName}/id`,

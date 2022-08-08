@@ -23,7 +23,6 @@ import {
   GatewayEndpointServiceConfig,
   GlobalConfig,
   InterfaceEndpointServiceConfig,
-  NetworkConfigTypes,
   NfwFirewallConfig,
   ResolverEndpointConfig,
   VpcConfig,
@@ -75,10 +74,10 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     const subnetMap = new Map<string, string>();
     const routeTableMap = new Map<string, string>();
     for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
-      // Only perform operations for this account and region
-      const accountIds = this.getVpcDeploymentDetails(vpcItem);
+      // Get account IDs
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
-      if (accountIds.has(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         // Set VPC ID
         const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
@@ -115,9 +114,11 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       'FirewallLogsBucket',
       `aws-accelerator-central-logs-${this.accountsConfig.getLogArchiveAccountId()}-${this.globalConfig.homeRegion}`,
     );
-    for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = this.accountsConfig.getAccountId(vpcItem.account);
-      if (accountId === cdk.Stack.of(this).account && vpcItem.region === cdk.Stack.of(this).region) {
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Get account IDs
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+
+      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         const vpcId = vpcMap.get(vpcItem.name);
         if (!vpcId) {
           throw new Error(`[network-vpc-endpoints-stack] Unable to locate VPC ${vpcItem.name}`);
@@ -843,58 +844,5 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       kmsKey: this.acceleratorKey,
       logRetentionInDays: this.logRetention,
     });
-  }
-
-  /**
-   * Get the account ID(s) a VPC will be deployed to.
-   * @param vpcItem
-   * @returns
-   */
-  private getVpcDeploymentDetails(vpcItem: VpcConfig | VpcTemplatesConfig): Set<string> {
-    const accountIds = new Set<string>();
-
-    // Set account IDs
-    if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
-      accountIds.add(this.accountsConfig.getAccountId(vpcItem.account));
-    } else {
-      // Check if accounts/OUs are defined
-      if (!vpcItem.deploymentTargets.organizationalUnits && !vpcItem.deploymentTargets.accounts) {
-        throw new Error(
-          `[network-vpc-endpoints-stack] VPC ${vpcItem.name} does not specify account(s) or OU(s) for deployment. Please specify in deploymentTarget property.`,
-        );
-      }
-      // We ignore excluded regions for VPC templates since the region is explicit
-      if (vpcItem.deploymentTargets.excludedRegions) {
-        Logger.info(
-          `[network-vpc-endpoints-stack] VPC ${vpcItem.name} deployment target includes excludedRegions property. This property will be ignored.`,
-        );
-      }
-
-      // Filter relevant accounts based on OU mapping
-      let ouAccountNames: string[] = [];
-      if (vpcItem.deploymentTargets.organizationalUnits) {
-        let ouAccounts = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts];
-
-        if (!vpcItem.deploymentTargets.organizationalUnits.includes('Root')) {
-          ouAccounts = [...this.accountsConfig.mandatoryAccounts, ...this.accountsConfig.workloadAccounts].filter(
-            item => vpcItem.deploymentTargets.organizationalUnits.includes(item.organizationalUnit),
-          );
-        }
-
-        ouAccountNames = ouAccounts.map(item => {
-          return item.name;
-        });
-      }
-
-      // Filter excluded accounts
-      let filteredAccounts = [...ouAccountNames, ...(vpcItem.deploymentTargets.accounts ?? [])];
-      if (vpcItem.deploymentTargets.excludedAccounts) {
-        filteredAccounts = [...ouAccountNames, ...(vpcItem.deploymentTargets.accounts ?? [])].filter(
-          item => !vpcItem.deploymentTargets.excludedAccounts.includes(item),
-        );
-      }
-      filteredAccounts.forEach(item => accountIds.add(this.accountsConfig.getAccountId(item)));
-    }
-    return accountIds;
   }
 }
