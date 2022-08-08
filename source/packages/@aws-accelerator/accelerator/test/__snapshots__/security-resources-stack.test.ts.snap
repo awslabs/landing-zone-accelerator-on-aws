@@ -2819,7 +2819,7 @@ Object {
     },
     "SsmSessionManagerSettingsSessionManagerEC2InstanceProfile36B87210": Object {
       "Properties": Object {
-        "InstanceProfileName": "SessionManagerEc2Role-us-east-1",
+        "InstanceProfileName": "AWSAccelerator-SessionManagerEc2Role-us-east-1",
         "Roles": Array [
           Object {
             "Ref": "SsmSessionManagerSettingsSessionManagerEC2Role83702F06",
@@ -2841,7 +2841,7 @@ Object {
       },
       "Properties": Object {
         "Description": "",
-        "ManagedPolicyName": "SessionManagerLogging-us-east-1",
+        "ManagedPolicyName": "AWSAccelerator-SessionManagerLogging-us-east-1",
         "Path": "/",
         "PolicyDocument": Object {
           "Statement": Array [
@@ -2951,7 +2951,7 @@ Object {
             "Ref": "SsmSessionManagerSettingsSessionManagerEC2Policy8ED295CA",
           },
         ],
-        "RoleName": "SessionManagerEC2Role-us-east-1",
+        "RoleName": "AWSAccelerator-SessionManagerEC2Role-us-east-1",
       },
       "Type": "AWS::IAM::Role",
     },
@@ -3003,7 +3003,7 @@ Object {
     "SsmSessionManagerSettingsSessionManagerUserKMSPolicyFB96BB42": Object {
       "Properties": Object {
         "Description": "",
-        "ManagedPolicyName": "SessionManagerUserKMSPolicy-us-east-1",
+        "ManagedPolicyName": "AWSAccelerator-SessionManagerUserKMS-us-east-1",
         "Path": "/",
         "PolicyDocument": Object {
           "Statement": Array [
