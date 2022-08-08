@@ -16,7 +16,7 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
-import { VpcConfig } from '@aws-accelerator/config';
+import { AccountsConfig, NetworkConfigTypes, VpcConfig } from '@aws-accelerator/config';
 import {
   AssociateHostedZones,
   IResourceShareItem,
@@ -49,10 +49,15 @@ interface Peering {
 }
 
 export class NetworkAssociationsStack extends AcceleratorStack {
+  private accountsConfig: AccountsConfig;
   private key: cdk.aws_kms.Key;
   private logRetention: number;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    // Set private properties
+    this.accountsConfig = props.accountsConfig;
+    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
     this.key = new KeyLookup(this, 'AcceleratorKeyLookup', {
       accountId: props.accountsConfig.getAuditAccountId(),
@@ -60,7 +65,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
-    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
     // Build Transit Gateway Maps
     const transitGateways = new Map<string, string>();
@@ -86,13 +90,21 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       }
     }
 
-    for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      if (vpcItem.region == cdk.Stack.of(this).region) {
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Get account names for attachment keys
+      let accountNames: string[];
+      let excludedAccountIds: string[] = [];
+      if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+        accountNames = [vpcItem.account];
+      } else {
+        accountNames = this.getAccountNamesFromDeploymentTarget(vpcItem.deploymentTargets);
+        excludedAccountIds = this.getExcludedAccountIds(vpcItem.deploymentTargets);
+      }
+
+      if (vpcItem.region === cdk.Stack.of(this).region) {
         for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
           const accountId = props.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
           if (accountId === cdk.Stack.of(this).account) {
-            const owningAccountId = props.accountsConfig.getAccountId(vpcItem.account);
-
             // Get the Transit Gateway ID
             const transitGatewayId = transitGateways.get(tgwAttachmentItem.transitGateway.name);
             if (transitGatewayId === undefined) {
@@ -100,77 +112,93 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             }
 
             // Get the Transit Gateway Attachment ID
-            let transitGatewayAttachmentId;
-            const key = `${vpcItem.account}_${vpcItem.name}`;
-            if (accountId === owningAccountId) {
-              Logger.info(
-                `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from local account ${owningAccountId}`,
-              );
-              transitGatewayAttachmentId = ssm.StringParameter.valueForStringParameter(
-                this,
-                `/accelerator/network/vpc/${vpcItem.name}/transitGatewayAttachment/${tgwAttachmentItem.name}/id`,
-              );
-              transitGatewayAttachments.set(key, transitGatewayAttachmentId);
-            } else {
-              Logger.info(
-                `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
-              );
-
-              const transitGatewayAttachment = TransitGatewayAttachment.fromLookup(
-                this,
-                pascalCase(`${tgwAttachmentItem.name}VpcTransitGatewayAttachment`),
-                {
-                  name: tgwAttachmentItem.name,
-                  owningAccountId,
-                  transitGatewayId,
-                  roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
-                  kmsKey: this.key,
-                  logRetentionInDays: this.logRetention,
-                },
-              );
-              // Build Transit Gateway Attachment Map
-              transitGatewayAttachmentId = transitGatewayAttachment.transitGatewayAttachmentId;
-              transitGatewayAttachments.set(key, transitGatewayAttachmentId);
-            }
-
-            // Evaluating TGW Routes
-
-            // Evaluate Route Table Associations
-            for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
-              const associationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
-
-              const transitGatewayRouteTableId = transitGatewayRouteTables.get(associationsKey);
-              if (transitGatewayRouteTableId === undefined) {
-                throw new Error(`Transit Gateway Route Table ${associationsKey} not found`);
+            for (const owningAccount of accountNames) {
+              let transitGatewayAttachmentId;
+              const owningAccountId = this.accountsConfig.getAccountId(owningAccount);
+              const attachmentKey = `${owningAccount}_${vpcItem.name}`;
+              // Skip iteration if account is excluded
+              if (excludedAccountIds.includes(owningAccountId)) {
+                continue;
               }
 
-              new TransitGatewayRouteTableAssociation(
-                this,
-                `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Association`,
-                {
-                  transitGatewayAttachmentId,
-                  transitGatewayRouteTableId,
-                },
-              );
-            }
+              if (accountId === owningAccountId) {
+                Logger.info(
+                  `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from local account ${owningAccountId}`,
+                );
+                transitGatewayAttachmentId = ssm.StringParameter.valueForStringParameter(
+                  this,
+                  `/accelerator/network/vpc/${vpcItem.name}/transitGatewayAttachment/${tgwAttachmentItem.name}/id`,
+                );
+                transitGatewayAttachments.set(attachmentKey, transitGatewayAttachmentId);
+              } else {
+                Logger.info(
+                  `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
+                );
 
-            // Evaluate Route Table Propagations
-            for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
-              const propagationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
-
-              const transitGatewayRouteTableId = transitGatewayRouteTables.get(propagationsKey);
-              if (transitGatewayRouteTableId === undefined) {
-                throw new Error(`Transit Gateway Route Table ${propagationsKey} not found`);
+                const transitGatewayAttachment = TransitGatewayAttachment.fromLookup(
+                  this,
+                  pascalCase(`${tgwAttachmentItem.name}${owningAccount}VpcTransitGatewayAttachment`),
+                  {
+                    name: tgwAttachmentItem.name,
+                    owningAccountId,
+                    transitGatewayId,
+                    roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
+                    kmsKey: this.key,
+                    logRetentionInDays: this.logRetention,
+                  },
+                );
+                // Build Transit Gateway Attachment Map
+                transitGatewayAttachmentId = transitGatewayAttachment.transitGatewayAttachmentId;
+                transitGatewayAttachments.set(attachmentKey, transitGatewayAttachmentId);
               }
 
-              new TransitGatewayRouteTablePropagation(
-                this,
-                `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Propagation`,
-                {
+              // Evaluating TGW Routes
+
+              // Evaluate Route Table Associations
+              for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
+                const associationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
+                let associationId: string;
+                if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+                  associationId = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Association`;
+                } else {
+                  associationId = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}${pascalCase(
+                    owningAccount,
+                  )}Association`;
+                }
+
+                const transitGatewayRouteTableId = transitGatewayRouteTables.get(associationsKey);
+                if (transitGatewayRouteTableId === undefined) {
+                  throw new Error(`Transit Gateway Route Table ${associationsKey} not found`);
+                }
+
+                new TransitGatewayRouteTableAssociation(this, associationId, {
                   transitGatewayAttachmentId,
                   transitGatewayRouteTableId,
-                },
-              );
+                });
+              }
+
+              // Evaluate Route Table Propagations
+              for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
+                const propagationsKey = `${tgwAttachmentItem.transitGateway.name}_${routeTableItem}`;
+                let propagationId: string;
+                if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+                  propagationId = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}Propagation`;
+                } else {
+                  propagationId = `${pascalCase(tgwAttachmentItem.name)}${pascalCase(routeTableItem)}${pascalCase(
+                    owningAccount,
+                  )}Propagation`;
+                }
+
+                const transitGatewayRouteTableId = transitGatewayRouteTables.get(propagationsKey);
+                if (transitGatewayRouteTableId === undefined) {
+                  throw new Error(`Transit Gateway Route Table ${propagationsKey} not found`);
+                }
+
+                new TransitGatewayRouteTablePropagation(this, propagationId, {
+                  transitGatewayAttachmentId,
+                  transitGatewayRouteTableId,
+                });
+              }
             }
           }
         }
@@ -232,20 +260,20 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             // Create static routes
             //
             if (routeItem.destinationCidrBlock) {
-              let routeTableId = '';
+              let routeId = '';
               let transitGatewayAttachmentId: string | undefined = undefined;
               if (routeItem.blackhole) {
                 Logger.info(
                   `[network-associations-stack] Adding blackhole route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
                 );
-                routeTableId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-blackhole`;
+                routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-blackhole`;
               }
 
               if (routeItem.attachment) {
                 Logger.info(
                   `[network-associations-stack] Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
                 );
-                routeTableId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`;
+                routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`;
 
                 // Get TGW attachment ID
                 transitGatewayAttachmentId = transitGatewayAttachments.get(
@@ -260,7 +288,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               }
 
               // Create static route
-              new TransitGatewayStaticRoute(this, routeTableId, {
+              new TransitGatewayStaticRoute(this, routeId, {
                 transitGatewayRouteTableId,
                 blackhole: routeItem.blackhole,
                 destinationCidrBlock: routeItem.destinationCidrBlock,
@@ -280,19 +308,19 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                 );
               }
 
-              let plId = '';
+              let plRouteId = '';
               let transitGatewayAttachmentId: string | undefined = undefined;
               if (routeItem.blackhole) {
                 Logger.info(
                   `[network-associations-stack] Adding blackhole prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
                 );
-                plId = pascalCase(`${routeTableItem.name}${routeItem.destinationPrefixList}Blackhole`);
+                plRouteId = pascalCase(`${routeTableItem.name}${routeItem.destinationPrefixList}Blackhole`);
               }
               if (routeItem.attachment) {
                 Logger.info(
                   `[network-associations-stack] Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
                 );
-                plId = pascalCase(
+                plRouteId = pascalCase(
                   `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.vpcName}${routeItem.attachment.account}`,
                 );
 
@@ -309,7 +337,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               }
 
               // Create prefix list reference
-              new TransitGatewayPrefixListReference(this, plId, {
+              new TransitGatewayPrefixListReference(this, plRouteId, {
                 prefixListId,
                 blackhole: routeItem.blackhole,
                 transitGatewayAttachmentId,
@@ -350,12 +378,16 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       );
 
       // Generate list of accounts with VPCs that needed to set up share
-      const accountIds: string[] = [];
-      for (const vpcItem of props.networkConfig.vpcs ?? []) {
+      const zoneAssociationAccountIds: string[] = [];
+      for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+        // Get account IDs
+        const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+
         if (vpcItem.region === cdk.Stack.of(this).region && vpcItem.useCentralEndpoints) {
-          const accountId = props.accountsConfig.getAccountId(vpcItem.account);
-          if (!accountIds.includes(accountId)) {
-            accountIds.push(accountId);
+          for (const accountId of vpcAccountIds) {
+            if (!zoneAssociationAccountIds.includes(accountId)) {
+              zoneAssociationAccountIds.push(accountId);
+            }
           }
         }
       }
@@ -372,7 +404,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
       // Custom resource to associate hosted zones
       new AssociateHostedZones(this, 'AssociateHostedZones', {
-        accountIds,
+        accountIds: zoneAssociationAccountIds,
         hostedZoneIds,
         hostedZoneAccountId: cdk.Stack.of(this).account,
         roleName: `AWSAccelerator-EnableCentralEndpointsRole-${cdk.Stack.of(this).region}`,
@@ -399,10 +431,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     const resolverRuleMap = new Map<string, string>();
     const centralNetworkConfig = props.networkConfig.centralNetworkServices;
 
-    for (const vpcItem of props.networkConfig.vpcs ?? []) {
-      const accountId = props.accountsConfig.getAccountId(vpcItem.account);
-      // Only care about VPCs to be created in the current account and region
-      if (accountId === cdk.Stack.of(this).account && vpcItem.region == cdk.Stack.of(this).region) {
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Get account IDs
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+
+      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         // DNS firewall rule group associations
         for (const firewallItem of vpcItem.dnsFirewallRuleGroups ?? []) {
           // Throw error if centralNetworkConfig is undefined
