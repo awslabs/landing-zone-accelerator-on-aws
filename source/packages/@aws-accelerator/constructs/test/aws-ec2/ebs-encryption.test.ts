@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
 import { EbsDefaultEncryption } from '../../lib/aws-ec2/ebs-encryption';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(EbsDefaultEncryption): ';
 
@@ -33,10 +33,5 @@ new EbsDefaultEncryption(stack, 'EbsDefaultVolumeEncryption', {
  * Report Definition construct test
  */
 describe('ReportDefinition', () => {
-  /**
-   * Number of Lambda function resource test
-   */
-  test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 1);
-  });
+  snapShotTest(testNamePrefix, stack);
 });

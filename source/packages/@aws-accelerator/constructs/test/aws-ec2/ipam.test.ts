@@ -12,9 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
-// import { SynthUtils } from '@aws-cdk/assert';
 import { Ipam } from '../../lib/aws-ec2/ipam';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(Ipam): ';
 
@@ -31,47 +30,5 @@ new Ipam(stack, 'TestIpam', {
  * IPAM construct test
  */
 describe('Ipam', () => {
-  /**
-   * Snapshot test
-   */
-  // test(`${testNamePrefix} Snapshot Test`, () => {
-  //   expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  // });
-
-  /**
-   * Number of IPAM test
-   */
-  test(`${testNamePrefix} IPAM count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::IPAM', 1);
-  });
-
-  /**
-   * IPAM resource configuration test
-   */
-  test(`${testNamePrefix} IPAM resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestIpamD7083AA5: {
-          Type: 'AWS::EC2::IPAM',
-          Properties: {
-            Description: 'Test IPAM',
-            OperatingRegions: [
-              {
-                RegionName: 'us-east-1',
-              },
-              {
-                RegionName: 'us-west-2',
-              },
-            ],
-            Tags: [
-              {
-                Key: 'Name',
-                Value: 'Test',
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
+  snapShotTest(testNamePrefix, stack);
 });

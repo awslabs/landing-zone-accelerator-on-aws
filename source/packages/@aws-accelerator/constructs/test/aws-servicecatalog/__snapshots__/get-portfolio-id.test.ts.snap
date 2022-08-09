@@ -1,0 +1,151 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GetPortfolioId Construct(GetPortfolioId):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "AssociateHostedZonesF0E2F0DA": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomGetPortfolioIdCustomResourceProviderLogGroupA4D50C6A",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomGetPortfolioIdCustomResourceProviderHandlerB6C78D44",
+            "Arn",
+          ],
+        },
+        "displayName": "AWS Control Tower Account Factory Portfolio",
+        "providerName": "AWS Control Tower",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetPortfolioId",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGetPortfolioIdCustomResourceProviderHandlerB6C78D44": Object {
+      "DependsOn": Array [
+        "CustomGetPortfolioIdCustomResourceProviderRole698D24D6",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomGetPortfolioIdCustomResourceProviderRole698D24D6",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetPortfolioIdCustomResourceProviderLogGroupA4D50C6A": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "Key961B73FD",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomGetPortfolioIdCustomResourceProviderHandlerB6C78D44",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGetPortfolioIdCustomResourceProviderRole698D24D6": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "servicecatalog:ListPortfolios",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "ServiceCatalog",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "Key961B73FD": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
+}
+`;

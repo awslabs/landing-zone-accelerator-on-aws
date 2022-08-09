@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
 import { ConfigServiceTags } from '../../lib/aws-configservice/config-tags';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(ConfigServiceTags): ';
 
@@ -43,13 +43,8 @@ new ConfigServiceTags(stack, 'TestConfigServiceTags', {
 });
 
 /**
- * Report Definition construct test
+ * ConfigServiceTags construct test
  */
-describe('ReportDefinition', () => {
-  /**
-   * Number of Lambda function resource test
-   */
-  test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 1);
-  });
+describe('ConfigServiceTags', () => {
+  snapShotTest(testNamePrefix, stack);
 });

@@ -1,0 +1,961 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConfigServiceTags Construct(ConfigServiceTags):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CustomKey1E6D0D07": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "NewCTAccountsE326CD07": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "AttributeDefinitions": Array [
+          Object {
+            "AttributeName": "accountEmail",
+            "AttributeType": "S",
+          },
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "KeySchema": Array [
+          Object {
+            "AttributeName": "accountEmail",
+            "KeyType": "HASH",
+          },
+        ],
+        "PointInTimeRecoverySpecification": Object {
+          "PointInTimeRecoveryEnabled": true,
+        },
+        "SSESpecification": Object {
+          "KMSMasterKeyId": Object {
+            "Fn::GetAtt": Array [
+              "TableKeyF581D96F",
+              "Arn",
+            ],
+          },
+          "SSEEnabled": true,
+          "SSEType": "KMS",
+        },
+      },
+      "Type": "AWS::DynamoDB::Table",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TableKeyF581D96F": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkisComplete47A55521": Object {
+      "DependsOn": Array [
+        "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkisCompleteServiceRoleDefaultPolicyD53F8A69",
+        "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkisCompleteServiceRole4FC767AD",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - isComplete (Stack/TestCreateCTAccounts/CreateControlTowerAcccountsProvider)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_IS_COMPLETE_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
+                "Arn",
+              ],
+            },
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.isComplete",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkisCompleteServiceRole4FC767AD",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs12.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkisCompleteServiceRole4FC767AD": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkisCompleteServiceRoleDefaultPolicyD53F8A69": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkisCompleteServiceRoleDefaultPolicyD53F8A69",
+        "Roles": Array [
+          Object {
+            "Ref": "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkisCompleteServiceRole4FC767AD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEventF4BABDE5": Object {
+      "DependsOn": Array [
+        "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEventServiceRoleDefaultPolicy2744460D",
+        "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEventServiceRoleF177CF40",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Stack/TestCreateCTAccounts/CreateControlTowerAcccountsProvider)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_IS_COMPLETE_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
+                "Arn",
+              ],
+            },
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C",
+                "Arn",
+              ],
+            },
+            "WAITER_STATE_MACHINE_ARN": Object {
+              "Ref": "TestCreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachine4FC44469",
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEventServiceRoleF177CF40",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs12.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEventServiceRoleDefaultPolicy2744460D": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": "states:StartExecution",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Ref": "TestCreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachine4FC44469",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEventServiceRoleDefaultPolicy2744460D",
+        "Roles": Array [
+          Object {
+            "Ref": "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEventServiceRoleF177CF40",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEventServiceRoleF177CF40": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutCA292AA3": Object {
+      "DependsOn": Array [
+        "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutServiceRoleDefaultPolicy58DCA1E0",
+        "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutServiceRole8F9F9F14",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onTimeout (Stack/TestCreateCTAccounts/CreateControlTowerAcccountsProvider)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_IS_COMPLETE_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
+                "Arn",
+              ],
+            },
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onTimeout",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutServiceRole8F9F9F14",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs12.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutServiceRole8F9F9F14": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutServiceRoleDefaultPolicy58DCA1E0": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutServiceRoleDefaultPolicy58DCA1E0",
+        "Roles": Array [
+          Object {
+            "Ref": "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutServiceRole8F9F9F14",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TestCreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachine4FC44469": Object {
+      "DependsOn": Array [
+        "TestCreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachineRoleDefaultPolicy766F8603",
+        "TestCreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachineRoleC1F4B90C",
+      ],
+      "Properties": Object {
+        "DefinitionString": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "{\\"StartAt\\":\\"framework-isComplete-task\\",\\"States\\":{\\"framework-isComplete-task\\":{\\"End\\":true,\\"Retry\\":[{\\"ErrorEquals\\":[\\"States.ALL\\"],\\"IntervalSeconds\\":60,\\"MaxAttempts\\":240,\\"BackoffRate\\":1}],\\"Catch\\":[{\\"ErrorEquals\\":[\\"States.ALL\\"],\\"Next\\":\\"framework-onTimeout-task\\"}],\\"Type\\":\\"Task\\",\\"Resource\\":\\"",
+              Object {
+                "Fn::GetAtt": Array [
+                  "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkisComplete47A55521",
+                  "Arn",
+                ],
+              },
+              "\\"},\\"framework-onTimeout-task\\":{\\"End\\":true,\\"Type\\":\\"Task\\",\\"Resource\\":\\"",
+              Object {
+                "Fn::GetAtt": Array [
+                  "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutCA292AA3",
+                  "Arn",
+                ],
+              },
+              "\\"}}}",
+            ],
+          ],
+        },
+        "RoleArn": Object {
+          "Fn::GetAtt": Array [
+            "TestCreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachineRoleC1F4B90C",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::StepFunctions::StateMachine",
+    },
+    "TestCreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachineRoleC1F4B90C": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "states.us-east-1.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestCreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachineRoleDefaultPolicy766F8603": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkisComplete47A55521",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkisComplete47A55521",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutCA292AA3",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutCA292AA3",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TestCreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachineRoleDefaultPolicy766F8603",
+        "Roles": Array [
+          Object {
+            "Ref": "TestCreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachineRoleC1F4B90C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C": Object {
+      "DependsOn": Array [
+        "TestCreateCTAccountsCreateControlTowerAccountServiceRoleCCD1613F",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Create Control Tower Account onEvent handler",
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "TestCreateCTAccountsCreateControlTowerAccountServiceRoleCCD1613F",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TestCreateCTAccountsCreateControlTowerAccountLogGroup92213B11": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "TestCreateCTAccountsCreateControlTowerAccount8CC34F3C",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestCreateCTAccountsCreateControlTowerAccountServiceRoleCCD1613F": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC": Object {
+      "DependsOn": Array [
+        "TestCreateCTAccountsCreateControlTowerAccountStatusServiceRoleDefaultPolicy35D63657",
+        "TestCreateCTAccountsCreateControlTowerAccountStatusServiceRole8C15A4DF",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Create Control Tower Account isComplete handler",
+        "Environment": Object {
+          "Variables": Object {
+            "NewAccountsTableName": Object {
+              "Ref": "NewCTAccountsE326CD07",
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "TestCreateCTAccountsCreateControlTowerAccountStatusServiceRole8C15A4DF",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "TestCreateCTAccountsCreateControlTowerAccountStatusLogGroupE10D1958": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "TestCreateCTAccountsCreateControlTowerAccountStatus08A35AEC",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestCreateCTAccountsCreateControlTowerAccountStatusServiceRole8C15A4DF": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AWSServiceCatalogEndUserFullAccess",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestCreateCTAccountsCreateControlTowerAccountStatusServiceRoleDefaultPolicy35D63657": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "dynamodb:Scan",
+                "dynamodb:GetItem",
+                "dynamodb:DeleteItem",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "NewCTAccountsE326CD07",
+                  "Arn",
+                ],
+              },
+              "Sid": "DynamoDb",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "TableKeyF581D96F",
+                  "Arn",
+                ],
+              },
+              "Sid": "KMS",
+            },
+            Object {
+              "Action": Array [
+                "controltower:CreateManagedAccount",
+                "controltower:SetupLandingZone",
+                "controltower:EnableGuardrail",
+                "controltower:Describe*",
+                "controltower:Get*",
+                "controltower:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "ControlTower",
+            },
+            Object {
+              "Action": Array [
+                "sso-directory:DescribeDirectory",
+                "sso-directory:CreateUser",
+                "sso-directory:SearchUsers",
+                "sso-directory:SearchGroups",
+                "sso:ListDirectoryAssociations",
+                "sso:DescribeRegisteredRegions",
+                "sso:ListProfileAssociations",
+                "sso:AssociateProfile",
+                "sso:GetProfile",
+                "sso:CreateProfile",
+                "sso:UpdateProfile",
+                "sso:GetTrust",
+                "sso:CreateTrust",
+                "sso:UpdateTrust",
+                "sso:GetApplicationInstance",
+                "sso:CreateApplicationInstance",
+                "sso:ListPermissionSets",
+                "sso:GetSSOStatus",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "SSO",
+            },
+            Object {
+              "Action": Array [
+                "servicecatalog:SearchProvisionedProducts",
+                "servicecatalog:ProvisionProduct",
+                "servicecatalog:DescribeProduct",
+                "servicecatalog:ListProvisioningArtifacts",
+                "servicecatalog:DescribeProvisionedProduct",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "ServiceCatalog",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "TestCreateCTAccountsCreateControlTowerAccountStatusServiceRoleDefaultPolicy35D63657",
+        "Roles": Array [
+          Object {
+            "Ref": "TestCreateCTAccountsCreateControlTowerAccountStatusServiceRole8C15A4DF",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "TestCreateCTAccountsEE75074E": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "TestCreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEventF4BABDE5",
+            "Arn",
+          ],
+        },
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::CreateControlTowerAccounts",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestCreateCTAccountsLambdaPrincipalAssociation53AF43AE": Object {
+      "Properties": Object {
+        "PortfolioId": "asdf1234",
+        "PrincipalARN": Object {
+          "Fn::GetAtt": Array [
+            "TestCreateCTAccountsCreateControlTowerAccountStatusServiceRole8C15A4DF",
+            "Arn",
+          ],
+        },
+        "PrincipalType": "IAM",
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+    },
+  },
+}
+`;

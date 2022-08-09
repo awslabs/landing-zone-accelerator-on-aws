@@ -1,0 +1,223 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`MacieOrganizationAdminAccount Construct(MacieOrganizationAdminAccount):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CustomMacieEnableOrganizationAdminAccountCustomResourceProviderHandlerD7A9976A": Object {
+      "DependsOn": Array [
+        "CustomMacieEnableOrganizationAdminAccountCustomResourceProviderRoleA386B194",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomMacieEnableOrganizationAdminAccountCustomResourceProviderRoleA386B194",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 180,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomMacieEnableOrganizationAdminAccountCustomResourceProviderLogGroupB2A6EB41": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "Key961B73FD",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomMacieEnableOrganizationAdminAccountCustomResourceProviderHandlerD7A9976A",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomMacieEnableOrganizationAdminAccountCustomResourceProviderRoleA386B194": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:DeregisterDelegatedAdministrator",
+                    "organizations:DescribeOrganization",
+                    "organizations:EnableAWSServiceAccess",
+                    "organizations:ListAWSServiceAccessForOrganization",
+                    "organizations:ListAccounts",
+                    "organizations:ListDelegatedAdministrators",
+                    "organizations:RegisterDelegatedAdministrator",
+                    "organizations:ServicePrincipal",
+                    "organizations:UpdateOrganizationConfiguration",
+                  ],
+                  "Condition": Object {
+                    "StringLikeIfExists": Object {
+                      "organizations:DeregisterDelegatedAdministrator": Array [
+                        "macie.amazonaws.com",
+                      ],
+                      "organizations:DescribeOrganization": Array [
+                        "macie.amazonaws.com",
+                      ],
+                      "organizations:EnableAWSServiceAccess": Array [
+                        "macie.amazonaws.com",
+                      ],
+                      "organizations:ListAWSServiceAccessForOrganization": Array [
+                        "macie.amazonaws.com",
+                      ],
+                      "organizations:ListAccounts": Array [
+                        "macie.amazonaws.com",
+                      ],
+                      "organizations:ListDelegatedAdministrators": Array [
+                        "macie.amazonaws.com",
+                      ],
+                      "organizations:RegisterDelegatedAdministrator": Array [
+                        "macie.amazonaws.com",
+                      ],
+                      "organizations:ServicePrincipal": Array [
+                        "macie.amazonaws.com",
+                      ],
+                      "organizations:UpdateOrganizationConfiguration": Array [
+                        "macie.amazonaws.com",
+                      ],
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "MacieEnableOrganizationAdminAccountTaskOrganizationActions",
+                },
+                Object {
+                  "Action": Array [
+                    "macie2:DisableOrganizationAdminAccount",
+                    "macie2:EnableMacie",
+                    "macie2:EnableOrganizationAdminAccount",
+                    "macie2:GetMacieSession",
+                    "macie2:ListOrganizationAdminAccounts",
+                    "macie2:DisableOrganizationAdminAccount",
+                    "macie2:GetMacieSession",
+                    "macie2:EnableMacie",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "MacieEnableOrganizationAdminAccountTaskMacieActions",
+                },
+                Object {
+                  "Action": Array [
+                    "iam:CreateServiceLinkedRole",
+                  ],
+                  "Condition": Object {
+                    "StringLikeIfExists": Object {
+                      "iam:CreateServiceLinkedRole": Array [
+                        "macie.amazonaws.com",
+                      ],
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "MacieEnableMacieTaskIamAction",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "Key961B73FD": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "MacieOrganizationAdminAccount2C23317B": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomMacieEnableOrganizationAdminAccountCustomResourceProviderLogGroupB2A6EB41",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomMacieEnableOrganizationAdminAccountCustomResourceProviderHandlerD7A9976A",
+            "Arn",
+          ],
+        },
+        "adminAccountId": Object {
+          "Ref": "AWS::AccountId",
+        },
+        "region": Object {
+          "Ref": "AWS::Region",
+        },
+      },
+      "Type": "Custom::MacieEnableOrganizationAdminAccount",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;

@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
 import { CreateOrganizationAccounts } from '../../lib/aws-organizations/create-accounts';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(ConfigServiceTags): ';
 
@@ -47,30 +47,9 @@ new CreateOrganizationAccounts(stack, 'CreateOrganizationAccounts', {
   logRetentionInDays: 3653,
 });
 
-// const newCTAccountsTable = new cdk.aws_dynamodb.Table(stack, 'NewCTAccounts', {
-//   partitionKey: { name: 'accountEmail', type: cdk.aws_dynamodb.AttributeType.STRING },
-//   billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
-//   encryption: cdk.aws_dynamodb.TableEncryption.CUSTOMER_MANAGED,
-//   encryptionKey: new cdk.aws_kms.Key(stack, 'TableKey', {}),
-//   removalPolicy: cdk.RemovalPolicy.DESTROY,
-//   pointInTimeRecovery: true,
-// });
-
-// new CreateControlTowerAccounts(stack, 'TestCreateCTAccounts', {
-//   table: newCTAccountsTable,
-//   portfolioId: 'asdf1234',
-//   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-//   logRetentionInDays: 3653,
-// });
-
 /**
  * Report Definition construct test
  */
 describe('ReportDefinition', () => {
-  /**
-   * Number of Lambda function resource test
-   */
-  test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 5);
-  });
+  snapShotTest(testNamePrefix, stack);
 });

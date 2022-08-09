@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { MacieExportConfigClassification } from '../../lib/aws-macie/macie-export-config-classification';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(MacieExportConfigClassification): ';
 
@@ -30,10 +31,5 @@ new MacieExportConfigClassification(stack, 'AwsMacieUpdateExportConfigClassifica
  * MacieExportConfigClassification construct test
  */
 describe('MacieExportConfigClassification', () => {
-  /**
-   * Number of Lambda function resource test
-   */
-  test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 1);
-  });
+  snapShotTest(testNamePrefix, stack);
 });

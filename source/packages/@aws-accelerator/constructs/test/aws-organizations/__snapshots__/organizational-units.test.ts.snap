@@ -1,0 +1,200 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`OrganizationalUnits Construct(OrganizationalUnit):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "ConfigTable5CD72349": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "AttributeDefinitions": Array [
+          Object {
+            "AttributeName": "dataType",
+            "AttributeType": "S",
+          },
+        ],
+        "KeySchema": Array [
+          Object {
+            "AttributeName": "dataType",
+            "KeyType": "HASH",
+          },
+        ],
+        "ProvisionedThroughput": Object {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5,
+        },
+      },
+      "Type": "AWS::DynamoDB::Table",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomKey1E6D0D07": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderHandler4596F0BC": Object {
+      "DependsOn": Array [
+        "CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderRole4B8B81B0",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderRole4B8B81B0",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderLogGroup5A9D7A53": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderHandler4596F0BC",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 365,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderRole4B8B81B0": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:CreateOrganizationalUnit",
+                    "organizations:ListOrganizationalUnitsForParent",
+                    "organizations:ListRoots",
+                    "organizations:UpdateOrganizationalUnit",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "organizations",
+                },
+                Object {
+                  "Action": Array [
+                    "dynamodb:UpdateItem",
+                    "dynamodb:Query",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::GetAtt": Array [
+                        "ConfigTable5CD72349",
+                        "Arn",
+                      ],
+                    },
+                  ],
+                  "Sid": "dynamodb",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OrganizationalUnits30245726": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderLogGroup5A9D7A53",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsCreateOrganizationalUnitsCustomResourceProviderHandler4596F0BC",
+            "Arn",
+          ],
+        },
+        "commitId": "bda32a39",
+        "configTableName": Object {
+          "Ref": "ConfigTable5CD72349",
+        },
+        "controlTowerEnabled": true,
+        "organizationsEnabled": true,
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::CreateOrganizationalUnits",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;

@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GatewayLoadBalancer Construct(GatewayLoadBalancer):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "Test7BFAF513": Object {
+      "Properties": Object {
+        "LoadBalancerAttributes": Array [
+          Object {
+            "Key": "deletion_protection.enabled",
+            "Value": "true",
+          },
+          Object {
+            "Key": "load_balancing.cross_zone.enabled",
+            "Value": "true",
+          },
+        ],
+        "Subnets": Array [
+          "subnet-test123",
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Test",
+          },
+        ],
+        "Type": "gateway",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    },
+    "TestEndpointServiceDD0E3344": Object {
+      "Properties": Object {
+        "AcceptanceRequired": false,
+        "GatewayLoadBalancerArns": Array [
+          Object {
+            "Ref": "Test7BFAF513",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPCEndpointService",
+    },
+    "TestEndpointServicePermissionsC0FA4150": Object {
+      "Properties": Object {
+        "AllowedPrincipals": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::333333333333:root",
+              ],
+            ],
+          },
+        ],
+        "ServiceId": Object {
+          "Ref": "TestEndpointServiceDD0E3344",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpointServicePermissions",
+    },
+  },
+}
+`;

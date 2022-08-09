@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VpcPeering Construct(VpcPeering):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestPeeringF63C5812": Object {
+      "Properties": Object {
+        "PeerOwnerId": "111111111111",
+        "PeerRegion": "us-east-1",
+        "PeerRoleArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::111111111111:role/TestRole",
+            ],
+          ],
+        },
+        "PeerVpcId": "AccepterVpc",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Test",
+          },
+        ],
+        "VpcId": "RequesterVpc",
+      },
+      "Type": "AWS::EC2::VPCPeeringConnection",
+    },
+  },
+}
+`;

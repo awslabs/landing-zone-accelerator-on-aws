@@ -1,0 +1,179 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`MacieMembers Construct(MacieMembers):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CustomMacieCreateMemberCustomResourceProviderHandler913F75DB": Object {
+      "DependsOn": Array [
+        "CustomMacieCreateMemberCustomResourceProviderRole3E8977EE",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomMacieCreateMemberCustomResourceProviderRole3E8977EE",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomMacieCreateMemberCustomResourceProviderLogGroupB2DBC335": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "Key961B73FD",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomMacieCreateMemberCustomResourceProviderHandler913F75DB",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomMacieCreateMemberCustomResourceProviderRole3E8977EE": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:ListAccounts",
+                  ],
+                  "Condition": Object {
+                    "StringLikeIfExists": Object {
+                      "organizations:ListAccounts": Array [
+                        "macie.amazonaws.com",
+                      ],
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "MacieCreateMemberTaskOrganizationAction",
+                },
+                Object {
+                  "Action": Array [
+                    "macie2:CreateMember",
+                    "macie2:DeleteMember",
+                    "macie2:DescribeOrganizationConfiguration",
+                    "macie2:DisassociateMember",
+                    "macie2:EnableMacie",
+                    "macie2:GetMacieSession",
+                    "macie2:ListMembers",
+                    "macie2:UpdateOrganizationConfiguration",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "MacieCreateMemberTaskMacieActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "Key961B73FD": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "MacieMembers1B6840B4": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomMacieCreateMemberCustomResourceProviderLogGroupB2DBC335",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomMacieCreateMemberCustomResourceProviderHandler913F75DB",
+            "Arn",
+          ],
+        },
+        "adminAccountId": Object {
+          "Ref": "AWS::AccountId",
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "region": Object {
+          "Ref": "AWS::Region",
+        },
+      },
+      "Type": "Custom::MacieCreateMember",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;

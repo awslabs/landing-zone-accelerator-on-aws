@@ -15,8 +15,6 @@ export interface SolutionHelperProps {
 export class SolutionHelper extends Construct {
   constructor(scope: Construct, id: string, props: SolutionHelperProps) {
     super(scope, id);
-    console.log(props);
-
     const metricsMapping = new cdk.CfnMapping(this, 'AnonymousData', {
       mapping: {
         SendAnonymousData: {

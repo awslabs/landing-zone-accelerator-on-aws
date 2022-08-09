@@ -1,0 +1,232 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AuditManagerOrganizationAdminAccount Construct(AuditManagerOrganizationAdminAccount):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "AuditManagerOrganizationAdminAccount34B8BA90": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderLogGroup858CB16C",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderHandlerCA9379D9",
+            "Arn",
+          ],
+        },
+        "adminAccountId": Object {
+          "Ref": "AWS::AccountId",
+        },
+        "kmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "region": Object {
+          "Ref": "AWS::Region",
+        },
+      },
+      "Type": "Custom::AuditManagerEnableOrganizationAdminAccount",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderHandlerCA9379D9": Object {
+      "DependsOn": Array [
+        "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderRoleF4A6BEA4",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderRoleF4A6BEA4",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderLogGroup858CB16C": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderHandlerCA9379D9",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderRoleF4A6BEA4": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:DeregisterDelegatedAdministrator",
+                    "organizations:DescribeOrganization",
+                    "organizations:EnableAWSServiceAccess",
+                    "organizations:ListAWSServiceAccessForOrganization",
+                    "organizations:ListAccounts",
+                    "organizations:ListDelegatedAdministrators",
+                    "organizations:RegisterDelegatedAdministrator",
+                  ],
+                  "Condition": Object {
+                    "StringLikeIfExists": Object {
+                      "organizations:DeregisterDelegatedAdministrator": Array [
+                        "auditmanager.amazonaws.com",
+                      ],
+                      "organizations:DescribeOrganization": Array [
+                        "auditmanager.amazonaws.com",
+                      ],
+                      "organizations:EnableAWSServiceAccess": Array [
+                        "auditmanager.amazonaws.com",
+                      ],
+                      "organizations:ListAWSServiceAccessForOrganization": Array [
+                        "auditmanager.amazonaws.com",
+                      ],
+                      "organizations:ListAccounts": Array [
+                        "auditmanager.amazonaws.com",
+                      ],
+                      "organizations:ListDelegatedAdministrators": Array [
+                        "auditmanager.amazonaws.com",
+                      ],
+                      "organizations:RegisterDelegatedAdministrator": Array [
+                        "auditmanager.amazonaws.com",
+                      ],
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AuditManagerEnableOrganizationAdminAccountTaskOrganizationActions",
+                },
+                Object {
+                  "Action": Array [
+                    "auditmanager:RegisterAccount",
+                    "auditmanager:DeregisterAccount",
+                    "auditmanager:RegisterOrganizationAdminAccount",
+                    "auditmanager:DeregisterOrganizationAdminAccount",
+                    "auditmanager:getOrganizationAdminAccount",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AuditManagerEnableOrganizationAdminAccountTaskDetectiveActions",
+                },
+                Object {
+                  "Action": "kms:CreateGrant",
+                  "Condition": Object {
+                    "Bool": Object {
+                      "kms:GrantIsForAWSResource": "true",
+                    },
+                    "StringLike": Object {
+                      "kms:ViaService": "auditmanager.*.amazonaws.com",
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::GetAtt": Array [
+                      "CustomKey1E6D0D07",
+                      "Arn",
+                    ],
+                  },
+                  "Sid": "AuditManagerEnableKmsKeyGrants",
+                },
+                Object {
+                  "Action": Array [
+                    "iam:CreateServiceLinkedRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    "*",
+                  ],
+                  "Sid": "ServiceLinkedRoleDetective",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomKey1E6D0D07": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
+}
+`;

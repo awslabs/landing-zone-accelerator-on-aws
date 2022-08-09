@@ -1,0 +1,401 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReportDefinition Construct(ReportDefinition):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "NativeStack5E60C508": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestBucket560B80BC": Object {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestBucketPolicyBA12ED38": Object {
+      "Properties": Object {
+        "Bucket": Object {
+          "Ref": "TestBucket560B80BC",
+        },
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetBucketAcl",
+                "s3:GetBucketPolicy",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:SourceAccount": Object {
+                    "Ref": "AWS::AccountId",
+                  },
+                  "aws:SourceArn": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:aws:cur:us-east-1:",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":definition/*",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "billingreports.amazonaws.com",
+              },
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "TestBucket560B80BC",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "s3:PutObject",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:SourceAccount": Object {
+                    "Ref": "AWS::AccountId",
+                  },
+                  "aws:SourceArn": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:aws:cur:us-east-1:",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":definition/*",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "billingreports.amazonaws.com",
+              },
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    Object {
+                      "Fn::GetAtt": Array [
+                        "TestBucket560B80BC",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "TestReportDefinition9701AAC4": Object {
+      "DependsOn": Array [
+        "TestBucketPolicyBA12ED38",
+      ],
+      "Properties": Object {
+        "Compression": "Parquet",
+        "Format": "Parquet",
+        "RefreshClosedReports": true,
+        "ReportName": "Test",
+        "ReportVersioning": "OVERWRITE_REPORT",
+        "S3Bucket": Object {
+          "Ref": "TestBucket560B80BC",
+        },
+        "S3Prefix": "test",
+        "S3Region": "us-east-1",
+        "TimeUnit": "DAILY",
+      },
+      "Type": "AWS::CUR::ReportDefinition",
+    },
+  },
+}
+`;
+
+exports[`ReportDefinition Construct(ReportDefinition):  Snapshot Test 2`] = `
+Object {
+  "Resources": Object {
+    "CustomCrossRegionReportDefinitionCustomResourceProviderHandler8E3AEE17": Object {
+      "DependsOn": Array [
+        "CustomCrossRegionReportDefinitionCustomResourceProviderRole845A4C3A",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-west-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomCrossRegionReportDefinitionCustomResourceProviderRole845A4C3A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomCrossRegionReportDefinitionCustomResourceProviderLogGroupC64E88D7": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomCrossRegionReportDefinitionCustomResourceProviderHandler8E3AEE17",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomCrossRegionReportDefinitionCustomResourceProviderRole845A4C3A": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "cur:DeleteReportDefinition",
+                    "cur:ModifyReportDefinition",
+                    "cur:PutReportDefinition",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomKey1E6D0D07": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestBucket560B80BC": Object {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestBucketPolicyBA12ED38": Object {
+      "Properties": Object {
+        "Bucket": Object {
+          "Ref": "TestBucket560B80BC",
+        },
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetBucketAcl",
+                "s3:GetBucketPolicy",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:SourceAccount": Object {
+                    "Ref": "AWS::AccountId",
+                  },
+                  "aws:SourceArn": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:aws:cur:us-east-1:",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":definition/*",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "billingreports.amazonaws.com",
+              },
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "TestBucket560B80BC",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "s3:PutObject",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:SourceAccount": Object {
+                    "Ref": "AWS::AccountId",
+                  },
+                  "aws:SourceArn": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:aws:cur:us-east-1:",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":definition/*",
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "billingreports.amazonaws.com",
+              },
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    Object {
+                      "Fn::GetAtt": Array [
+                        "TestBucket560B80BC",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "TestReportDefinition9701AAC4": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomCrossRegionReportDefinitionCustomResourceProviderLogGroupC64E88D7",
+        "TestBucketPolicyBA12ED38",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomCrossRegionReportDefinitionCustomResourceProviderHandler8E3AEE17",
+            "Arn",
+          ],
+        },
+        "reportDefinition": Object {
+          "AdditionalSchemaElements": Array [],
+          "Compression": "Parquet",
+          "Format": "Parquet",
+          "RefreshClosedReports": true,
+          "ReportName": "Test",
+          "ReportVersioning": "OVERWRITE_REPORT",
+          "S3Bucket": Object {
+            "Ref": "TestBucket560B80BC",
+          },
+          "S3Prefix": "test",
+          "S3Region": "us-west-1",
+          "TimeUnit": "DAILY",
+        },
+      },
+      "Type": "Custom::CrossRegionReportDefinition",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;
