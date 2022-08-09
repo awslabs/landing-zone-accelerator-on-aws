@@ -1673,6 +1673,36 @@ Object {
       },
       "Type": "AWS::IAM::Policy",
     },
+    "NetworkInspectionVpcInternetGateway6D8C30C4": Object {
+      "Properties": Object {
+        "Tags": Array [
+          Object {
+            "Key": "accelerator:central-endpoints-account-id",
+            "Value": "555555555555",
+          },
+          Object {
+            "Key": "accelerator:use-central-endpoints",
+            "Value": "true",
+          },
+          Object {
+            "Key": "Name",
+            "Value": "Network-Inspection",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::InternetGateway",
+    },
+    "NetworkInspectionVpcInternetGatewayAttachment6A85212A": Object {
+      "Properties": Object {
+        "InternetGatewayId": Object {
+          "Ref": "NetworkInspectionVpcInternetGateway6D8C30C4",
+        },
+        "VpcId": Object {
+          "Ref": "NetworkInspectionVpc302E00C0",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
     "NetworkInspectionVpcNetworkInspectionARouteTableED0E5084": Object {
       "Properties": Object {
         "Tags": Array [
@@ -1784,6 +1814,34 @@ Object {
         },
       },
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkInspectionVpcNetworkInspectionGatewayRouteTable22A0DD2C": Object {
+      "Properties": Object {
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Network-Inspection-Gateway",
+          },
+        ],
+        "VpcId": Object {
+          "Ref": "NetworkInspectionVpc302E00C0",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "NetworkInspectionVpcNetworkInspectionGatewayRouteTableGatewayAssociation826FEA45": Object {
+      "DependsOn": Array [
+        "NetworkInspectionVpcInternetGatewayAttachment6A85212A",
+      ],
+      "Properties": Object {
+        "GatewayId": Object {
+          "Ref": "NetworkInspectionVpcInternetGateway6D8C30C4",
+        },
+        "RouteTableId": Object {
+          "Ref": "NetworkInspectionVpcNetworkInspectionGatewayRouteTable22A0DD2C",
+        },
+      },
+      "Type": "AWS::EC2::GatewayRouteTableAssociation",
     },
     "NetworkInspectionVpcNetworkInspectionTgwARouteTable1753FE94": Object {
       "Properties": Object {
@@ -2132,6 +2190,16 @@ Object {
         "Type": "String",
         "Value": Object {
           "Ref": "NetworkInspectionVpcNetworkInspectionBSubnet064602BF",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkInspectionNetworkInspectionGatewayRouteTableId9C85DF52": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Gateway/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "NetworkInspectionVpcNetworkInspectionGatewayRouteTable22A0DD2C",
         },
       },
       "Type": "AWS::SSM::Parameter",

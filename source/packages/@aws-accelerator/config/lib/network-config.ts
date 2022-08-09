@@ -15,10 +15,9 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import * as t from './common-types';
-
-import { OrganizationConfig } from './organization-config';
 import { AccountsConfig } from './accounts-config';
+import * as t from './common-types';
+import { OrganizationConfig } from './organization-config';
 
 /**
  * Network configuration items.
@@ -113,6 +112,12 @@ export class NetworkConfigTypes {
     'Value should be a route table target type',
   );
 
+  static readonly gatewayRouteTableTypeEnum = t.enums(
+    'GatewayType',
+    ['internetGateway', 'virtualGateway'],
+    'Value should be a route table gateway type.',
+  );
+
   static readonly routeTableEntryConfig = t.interface({
     name: t.nonEmptyString,
     destination: t.optional(t.nonEmptyString),
@@ -124,6 +129,7 @@ export class NetworkConfigTypes {
 
   static readonly routeTableConfig = t.interface({
     name: t.nonEmptyString,
+    gatewayAssociation: t.optional(this.gatewayRouteTableTypeEnum),
     routes: t.optional(t.array(this.routeTableEntryConfig)),
     tags: t.optional(t.array(t.tag)),
   });
@@ -1121,12 +1127,33 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
 /**
  * VPC route table configuration.
  * Used to define a VPC route table.
+ *
+ * @example Subnet route table
+ * ```
+ * - name: SubnetRouteTable
+ *   routes: []
+ *   tags: []
+ * ```
+ * @example Gateway route table
+ * ```
+ * - name: GatewayRouteTable
+ *   gatewayAssociation: internetGateway
+ *   routes: []
+ *   tags: []
+ * ```
  */
 export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.routeTableConfig> {
   /**
    * A friendly name for the VPC route table.
    */
   readonly name = '';
+  /**
+   * Designate a gateway to associate this route table with.
+   *
+   * @remarks
+   * Only define this property when creating a gateway route table. Leave undefined for subnet route tables.
+   */
+  readonly gatewayAssociation: t.TypeOf<typeof NetworkConfigTypes.gatewayRouteTableTypeEnum> | undefined = undefined;
   /**
    * An array of VPC route table entry configuration objects.
    *
@@ -3368,6 +3395,10 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
         //
         // Validate deployment target accounts
         this.validateDeploymentTargetAccountNames(values);
+
+        //
+        // Validate VPC configurations
+        this.validateVpcConfiguration(values);
       }
 
       if (this.errors.length) {
@@ -3474,12 +3505,47 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   }
 
   /**
+   * Function to validate existence of VPC deployment target accounts
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateVpcTemplatesDeploymentTargetAccounts(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    for (const vpc of values.vpcTemplates ?? []) {
+      for (const account of vpc.deploymentTargets?.accounts ?? []) {
+        if (this.accountNames.indexOf(account) === -1) {
+          this.errors.push(
+            `Deployment target account ${account} for VPC template ${vpc.name} does not exist in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of VPC deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateVpcTemplatesDeploymentTargetOUs(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    for (const vpc of values.vpcTemplates ?? []) {
+      for (const ou of vpc.deploymentTargets?.organizationalUnits ?? []) {
+        if (this.ouIdNames.indexOf(ou) === -1) {
+          this.errors.push(
+            `Deployment target OU ${ou} for VPC template ${vpc.name} does not exist in organization-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
    * Function to validate Deployment targets OU name for network services
    * @param values
    */
   private validateDeploymentTargetOUs(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
     this.validateTgwDeploymentTargetOUs(values);
     this.validateIpamPoolDeploymentTargetOUs(values);
+    this.validateVpcTemplatesDeploymentTargetOUs(values);
   }
 
   /**
@@ -3489,6 +3555,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   private validateDeploymentTargetAccountNames(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
     this.validateTgwDeploymentTargetAccounts(values);
     this.validateIpamPoolDeploymentTargetAccounts(values);
+    this.validateVpcTemplatesDeploymentTargetAccounts(values);
   }
 
   /**
@@ -3535,6 +3602,22 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     for (const list of this.domainLists) {
       if (!fs.existsSync(path.join(configDir, list.document))) {
         this.errors.push(`DNS firewall custom domain list ${list.name} document file ${list.document} not found!`);
+      }
+    }
+  }
+
+  /**
+   * Function to validate conditional dependencies for VPC configurations.
+   * @param values
+   */
+  private validateVpcConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    for (const vpcItem of [...values.vpcs, ...(values.vpcTemplates ?? [])] ?? []) {
+      for (const routeTableItem of vpcItem.routeTables ?? []) {
+        if (routeTableItem.gatewayAssociation === 'internetGateway' && !vpcItem.internetGateway) {
+          this.errors.push(
+            `Route table ${routeTableItem.name} for VPC ${vpcItem.name}: attempting to configure a gateway association with no IGW attached to the VPC!`,
+          );
+        }
       }
     }
   }
