@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { GetPortfolioId } from '../../lib/aws-servicecatalog/get-portfolio-id';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(GetPortfolioId): ';
 
@@ -30,10 +31,5 @@ new GetPortfolioId(stack, 'AssociateHostedZones', {
  * GetPortfolioId construct test
  */
 describe('GetPortfolioId', () => {
-  /**
-   * Number of Lambda function resource test
-   */
-  test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 1);
-  });
+  snapShotTest(testNamePrefix, stack);
 });

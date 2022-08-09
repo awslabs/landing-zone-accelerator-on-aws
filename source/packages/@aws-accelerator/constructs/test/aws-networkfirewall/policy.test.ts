@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
 import { FirewallPolicyProperty, NetworkFirewallPolicy } from '../../lib/aws-networkfirewall/policy';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(NetworkFirewallPolicy): ';
 
@@ -42,40 +42,5 @@ new NetworkFirewallPolicy(stack, 'TestPolicy', {
  * Network Firewall construct test
  */
 describe('Network Firewall Policy', () => {
-  /**
-   * Number of Network Firewall Policy test
-   */
-  test(`${testNamePrefix} Network firewall count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::NetworkFirewall::FirewallPolicy', 1);
-  });
-
-  /**
-   * Network firewall resource configuration test
-   */
-  test(`${testNamePrefix} Network firewall policy resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestPolicyCC05E598: {
-          Type: 'AWS::NetworkFirewall::FirewallPolicy',
-          Properties: {
-            FirewallPolicy: {
-              StatefulEngineOptions: {
-                RuleOrder: 'STRICT_ORDER',
-              },
-              StatefulRuleGroupReferences: [
-                {
-                  Priority: 123,
-                  ResourceArn: 'arn:aws:network-firewall:us-east-1:222222222222:stateful-rulegroup/TestGroup',
-                },
-              ],
-              StatelessDefaultActions: ['aws:forward_to_sfe'],
-              StatelessFragmentDefaultActions: ['aws:forward_to_sfe'],
-            },
-            FirewallPolicyName: 'TestFirewallPolicy',
-            Tags: [{ Key: 'Name', Value: 'TestFirewallPolicy' }],
-          },
-        },
-      },
-    });
-  });
+  snapShotTest(testNamePrefix, stack);
 });

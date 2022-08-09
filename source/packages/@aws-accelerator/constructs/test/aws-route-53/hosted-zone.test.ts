@@ -12,10 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
-import { SynthUtils } from '@aws-cdk/assert';
-
 import { HostedZone } from '../../index';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(HostedZone): ';
 
@@ -32,41 +30,5 @@ new HostedZone(stack, `TestHostedZone`, {
  * HostedZone construct test
  */
 describe('HostedZone', () => {
-  /**
-   * Snapshot test
-   */
-  test(`${testNamePrefix} Snapshot Test`, () => {
-    expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  });
-
-  /**
-   * Number of hosted zone test
-   */
-  test(`${testNamePrefix} Hosted zone count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Route53::HostedZone', 1);
-  });
-
-  /**
-   * HostedZone resource configuration test
-   */
-  test(`${testNamePrefix} HostedZone resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestHostedZone68F306E4: {
-          Type: 'AWS::Route53::HostedZone',
-          Properties: {
-            Name: 's3-global.accesspoint.aws.com',
-            VPCs: [
-              {
-                VPCId: 'Test',
-                VPCRegion: {
-                  Ref: 'AWS::Region',
-                },
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
+  snapShotTest(testNamePrefix, stack);
 });

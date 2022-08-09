@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
 import { ResolverRule, ResolverRuleAssociation } from '../../lib/aws-route-53-resolver/resolver-rule';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(ResolverRule): ';
 
@@ -37,68 +37,5 @@ new ResolverRuleAssociation(stack, 'TestResolverRuleAssoc', {
 });
 
 describe('ResolverRule', () => {
-  /**
-   * Resolver rule count test
-   */
-  test(`${testNamePrefix} Resolver rule count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Route53Resolver::ResolverRule', 1);
-  });
-
-  /**
-   * Resolver rule association count test
-   */
-  test(`${testNamePrefix} Resolver rule association count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Route53Resolver::ResolverRuleAssociation', 1);
-  });
-
-  /**
-   * Resolver rule resource configuration test
-   */
-  test(`${testNamePrefix} Resolver rule resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestResolverRule183FBE0C: {
-          Type: 'AWS::Route53Resolver::ResolverRule',
-          Properties: {
-            DomainName: 'test.com',
-            ResolverEndpointId: 'TestEndpoint',
-            RuleType: 'FORWARD',
-            TargetIps: [
-              {
-                Ip: '1.1.1.1',
-              },
-              {
-                Ip: '2.2.2.2',
-              },
-            ],
-            Tags: [
-              {
-                Key: 'Name',
-                Value: 'TestResolverRule',
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * Resolver rule association resource configuration test
-   */
-  test(`${testNamePrefix} Resolver rule association resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestResolverRuleAssoc7E0DCDC2: {
-          Type: 'AWS::Route53Resolver::ResolverRuleAssociation',
-          Properties: {
-            ResolverRuleId: {
-              'Fn::GetAtt': ['TestResolverRule183FBE0C', 'ResolverRuleId'],
-            },
-            VPCId: 'TestVpc',
-          },
-        },
-      },
-    });
-  });
+  snapShotTest(testNamePrefix, stack);
 });

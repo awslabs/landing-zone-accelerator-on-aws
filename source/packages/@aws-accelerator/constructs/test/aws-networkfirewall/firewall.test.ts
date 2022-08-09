@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
 import { NetworkFirewall } from '../../lib/aws-networkfirewall/firewall';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(NetworkFirewall): ';
 
@@ -34,42 +34,5 @@ new NetworkFirewall(stack, 'TestFirewall', {
  * Network Firewall construct test
  */
 describe('Network Firewall', () => {
-  /**
-   * Number of Network Firewalls test
-   */
-  test(`${testNamePrefix} Network firewall count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::NetworkFirewall::Firewall', 1);
-  });
-
-  /**
-   * Network firewall resource configuration test
-   */
-  test(`${testNamePrefix} Network firewall resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestFirewallE26FCA5C: {
-          Type: 'AWS::NetworkFirewall::Firewall',
-          Properties: {
-            FirewallName: 'TestFirewall',
-            FirewallPolicyArn: 'arn:aws:network-firewall:us-east-1:222222222222:firewall-policy/TestPolicy',
-            SubnetMappings: [
-              {
-                SubnetId: 'Test-Subnet-1',
-              },
-              {
-                SubnetId: 'Test-Subnet-2',
-              },
-            ],
-            VpcId: 'TestVpc',
-            Tags: [
-              {
-                Key: 'Name',
-                Value: 'TestFirewall',
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
+  snapShotTest(testNamePrefix, stack);
 });

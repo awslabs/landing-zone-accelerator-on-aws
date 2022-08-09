@@ -12,9 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
-// import { SynthUtils } from '@aws-cdk/assert';
 import { IpamPool } from '../../lib/aws-ec2/ipam-pool';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(IpamPool): ';
 
@@ -34,50 +33,5 @@ new IpamPool(stack, 'TestIpamPool', {
  * IPAM pool construct test
  */
 describe('IpamPool', () => {
-  /**
-   * Snapshot test
-   */
-  // test(`${testNamePrefix} Snapshot Test`, () => {
-  //   expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  // });
-
-  /**
-   * Number of IPAM pool test
-   */
-  test(`${testNamePrefix} IPAM pool count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::IPAMPool', 1);
-  });
-
-  /**
-   * IPAM pool resource configuration test
-   */
-  test(`${testNamePrefix} IPAM pool resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestIpamPool2D962DC3: {
-          Type: 'AWS::EC2::IPAMPool',
-          Properties: {
-            AddressFamily: 'ipv4',
-            Description: 'Test IPAM pool',
-            IpamScopeId: 'test-scope',
-            Locale: 'us-east-1',
-            ProvisionedCidrs: [
-              {
-                Cidr: '10.0.0.0/8',
-              },
-              {
-                Cidr: '192.168.0.0/16',
-              },
-            ],
-            Tags: [
-              {
-                Key: 'Name',
-                Value: 'Test',
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
+  snapShotTest(testNamePrefix, stack);
 });

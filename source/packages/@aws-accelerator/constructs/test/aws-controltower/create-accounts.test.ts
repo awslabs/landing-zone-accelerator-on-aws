@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
 import { CreateControlTowerAccounts } from '../../lib/aws-controltower/create-accounts';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(ConfigServiceTags): ';
 
@@ -40,13 +40,8 @@ new CreateControlTowerAccounts(stack, 'TestCreateCTAccounts', {
 });
 
 /**
- * Report Definition construct test
+ * ConfigServiceTags construct test
  */
-describe('ReportDefinition', () => {
-  /**
-   * Number of Lambda function resource test
-   */
-  test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 5);
-  });
+describe('ConfigServiceTags', () => {
+  snapShotTest(testNamePrefix, stack);
 });

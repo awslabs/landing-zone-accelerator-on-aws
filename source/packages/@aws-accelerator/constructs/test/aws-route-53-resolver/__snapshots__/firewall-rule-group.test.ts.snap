@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ResolverFirewallRuleGroup Construct(ResolverFirewallRuleGroup):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestRuleGroup43F9213A": Object {
+      "Properties": Object {
+        "FirewallRules": Array [
+          Object {
+            "Action": "BLOCK",
+            "BlockResponse": "NXDOMAIN",
+            "FirewallDomainListId": "TestDomainList",
+            "Priority": 101,
+          },
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "TestRuleGroup",
+          },
+        ],
+      },
+      "Type": "AWS::Route53Resolver::FirewallRuleGroup",
+    },
+    "TestRuleGroupAssoc48F4678D": Object {
+      "Properties": Object {
+        "FirewallRuleGroupId": Object {
+          "Ref": "TestRuleGroup43F9213A",
+        },
+        "Priority": 101,
+        "VpcId": "TestVpc",
+      },
+      "Type": "AWS::Route53Resolver::FirewallRuleGroupAssociation",
+    },
+  },
+}
+`;
