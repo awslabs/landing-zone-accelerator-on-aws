@@ -183,4 +183,15 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
     // the network (vpc)
     route.node.addDependency(this.vpc.internetGatewayAttachment);
   }
+
+  public addGatewayAssociation(type: string): void {
+    if (type === 'internetGateway') {
+      const association = new cdk.aws_ec2.CfnGatewayRouteTableAssociation(this, 'GatewayAssociation', {
+        routeTableId: this.routeTableId,
+        gatewayId: this.vpc.internetGateway!.ref,
+      });
+      association.node.addDependency(this.vpc.internetGatewayAttachment!);
+    }
+    // TODO: add case for virtual private gateways when supported
+  }
 }

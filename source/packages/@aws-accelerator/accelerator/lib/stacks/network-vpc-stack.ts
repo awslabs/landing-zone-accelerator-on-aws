@@ -633,6 +633,11 @@ export class NetworkVpcStack extends AcceleratorStack {
               stringValue: routeTable.routeTableId,
             },
           );
+
+          // Add gateway association if configured
+          if (routeTableItem.gatewayAssociation) {
+            routeTable.addGatewayAssociation(routeTableItem.gatewayAssociation);
+          }
         }
 
         //
