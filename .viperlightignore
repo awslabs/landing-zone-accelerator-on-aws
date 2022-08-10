@@ -128,3 +128,9 @@ source/packages/@aws-accelerator/installer/test/installer.test.ts:670
 source/packages/@aws-accelerator/installer/test/installer.test.ts:863
 source/packages/@aws-accelerator/installer/test/installer.test.ts:1080
 
+source/packages/@aws-accelerator/constructs/lib/aws-iam/password-policy.ts
+source/packages/@aws-accelerator/constructs/test/aws-iam/password-policy.test.ts
+source/packages/@aws-accelerator/accelerator/combined.log
+source/packages/@aws-accelerator/accelerator/error.log
+source/packages/@aws-accelerator/constructs/lib/aws-iam/password-policy.d.ts
+source/packages/@aws-accelerator/constructs/test/aws-iam/__snapshots__/password-policy.test.ts.snap
