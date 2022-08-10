@@ -149,7 +149,7 @@ async function isMacieEnable(macie2Client: AWS.Macie2): Promise<boolean> {
       return false;
     }
 
-    // This is required when macie is not enabled(first time executing in any management account) AccessDeniedException exception issues
+    // This is required when macie is not enabled AccessDeniedException exception issues
     if (
       // SDKv2 Error Structure
       e.code === 'AccessDeniedException' ||
