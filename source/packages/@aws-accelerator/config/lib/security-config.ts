@@ -1485,6 +1485,10 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
         this.validateDeploymentTargetOUs(values);
         this.validateDeploymentTargetAccountNames(values);
 
+        // Validate expiration for Macie and GuardDuty Lifecycle Rules
+        this.macieLifecycleRules(values);
+        this.guarddutyLifecycleRules(values);
+
         //
         // Validate Config rule assets
         for (const ruleSet of values.awsConfig.ruleSets ?? []) {
@@ -1522,6 +1526,28 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
       ...AccountsConfig.load(configDir).workloadAccounts,
     ]) {
       this.accountNames.push(accountItem.name);
+    }
+  }
+
+  /**
+   * Validate S3 lifecycle expiration to be smaller than noncurrentVersionExpiration
+   */
+  private macieLifecycleRules(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
+    for (const lifecycleRule of values.centralSecurityServices?.macie?.lifecycleRules ?? []) {
+      if (lifecycleRule.noncurrentVersionExpiration! <= lifecycleRule.expiration!) {
+        this.errors.push('The nonCurrentVersionExpiration value must be greater than that of the expiration value.');
+      }
+    }
+  }
+
+  /**
+   * Validate S3 lifecycle expiration to be smaller than noncurrentVersionExpiration
+   */
+  private guarddutyLifecycleRules(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
+    for (const lifecycleRule of values.centralSecurityServices?.guardduty?.lifecycleRules ?? []) {
+      if (lifecycleRule.noncurrentVersionExpiration! <= lifecycleRule.expiration!) {
+        this.errors.push('The nonCurrentVersionExpiration value must be greater than that of the expiration value.');
+      }
     }
   }
 
