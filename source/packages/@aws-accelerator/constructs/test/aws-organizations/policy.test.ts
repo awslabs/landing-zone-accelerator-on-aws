@@ -21,7 +21,7 @@ const testNamePrefix = 'Construct(Policy): ';
 const stack = new cdk.Stack();
 
 new Policy(stack, 'Policy', {
-  path: __dirname,
+  path: '.',
   name: 'TestPolicy',
   description: 'Testing Policy construct',
   type: PolicyType.SERVICE_CONTROL_POLICY,
