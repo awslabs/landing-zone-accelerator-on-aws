@@ -157,6 +157,17 @@ async function isMacieEnable(macie2Client: AWS.Macie2): Promise<boolean> {
       console.warn(e.name + ': ' + e.message);
       return false;
     }
+
+    // This is required when macie is not enabled AccessDeniedException exception issues
+    if (
+      // SDKv2 Error Structure
+      e.code === 'AccessDeniedException' ||
+      // SDKv3 Error Structure
+      e.name === 'AccessDeniedException'
+    ) {
+      console.warn(e.name + ': ' + e.message);
+      return false;
+    }
     throw new Error(`Macie enable issue error message - ${e}`);
   }
 }
