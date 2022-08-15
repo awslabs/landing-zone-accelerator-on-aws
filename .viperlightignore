@@ -62,8 +62,6 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:62
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:376
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:454
 
-source/packages/@aws-accelerator/constructs/lib/aws-iam/password-policy.ts
-
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:55
 
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:57
