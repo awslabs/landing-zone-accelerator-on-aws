@@ -29,9 +29,13 @@ export interface GuardDutyPublishingDestinationProps {
    */
   readonly destinationArn: string;
   /**
+   * Publishing destination bucket encryption key
+   */
+  readonly destinationKmsKey: cdk.aws_kms.Key;
+  /**
    * Custom resource lambda log group encryption key
    */
-  readonly kmsKey: cdk.aws_kms.Key;
+  readonly logKmsKey: cdk.aws_kms.Key;
   /**
    * Custom resource lambda log retention in days
    */
@@ -77,7 +81,7 @@ export class GuardDutyPublishingDestination extends Construct {
         region: cdk.Stack.of(this).region,
         exportDestinationType: props.exportDestinationType,
         destinationArn: props.destinationArn,
-        kmsKeyArn: props.kmsKey.keyArn,
+        kmsKeyArn: props.destinationKmsKey.keyArn,
       },
     });
 
@@ -91,7 +95,7 @@ export class GuardDutyPublishingDestination extends Construct {
       new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
         logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
         retention: props.logRetentionInDays,
-        encryptionKey: props.kmsKey,
+        encryptionKey: props.logKmsKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
     resource.node.addDependency(logGroup);

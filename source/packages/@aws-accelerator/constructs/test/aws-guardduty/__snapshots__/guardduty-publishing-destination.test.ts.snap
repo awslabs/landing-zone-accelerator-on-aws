@@ -32,7 +32,7 @@ Object {
       "Properties": Object {
         "KmsKeyId": Object {
           "Fn::GetAtt": Array [
-            "CustomKey1E6D0D07",
+            "LogKeyE83D0C1B",
             "Arn",
           ],
         },
@@ -98,7 +98,7 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomKey1E6D0D07": Object {
+    "DestinationKeyEE1EE37E": Object {
       "DeletionPolicy": "Retain",
       "Properties": Object {
         "KeyPolicy": Object {
@@ -167,7 +167,7 @@ Object {
         "exportDestinationType": "S3",
         "kmsKeyArn": Object {
           "Fn::GetAtt": Array [
-            "CustomKey1E6D0D07",
+            "DestinationKeyEE1EE37E",
             "Arn",
           ],
         },
@@ -177,6 +177,41 @@ Object {
       },
       "Type": "Custom::GuardDutyCreatePublishingDestinationCommand",
       "UpdateReplacePolicy": "Delete",
+    },
+    "LogKeyE83D0C1B": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
     },
   },
 }

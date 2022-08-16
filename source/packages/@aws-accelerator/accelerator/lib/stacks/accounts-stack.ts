@@ -22,75 +22,40 @@ import { EnablePolicyType, Policy, PolicyAttachment, PolicyType, PolicyTypeEnum 
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { PrepareStack } from './prepare-stack';
 
 export interface AccountsStackProps extends AcceleratorStackProps {
   readonly configDirPath: string;
 }
 
-let key: cdk.aws_kms.Key;
 export class AccountsStack extends AcceleratorStack {
+  readonly cloudwatchKey: cdk.aws_kms.Key;
+
   constructor(scope: Construct, id: string, props: AccountsStackProps) {
     super(scope, id, props);
 
     Logger.debug(`[accounts-stack] Region: ${cdk.Stack.of(this).region}`);
 
-    let globalRegion = 'us-east-1';
-    if (props.partition === 'aws-us-gov') {
-      globalRegion = 'us-gov-west-1';
-    }
-
-    // Use existing management account key if in the home region
+    // Use existing management account CloudWatch log key if in the home region
     // otherwise create new kms key
     if (props.globalConfig.homeRegion == cdk.Stack.of(this).region) {
-      const keyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
+      this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
         this,
-        PrepareStack.MANAGEMENT_KEY_ARN_PARAMETER_NAME,
-      );
-      key = cdk.aws_kms.Key.fromKeyArn(this, 'ManagementKey', keyArn) as cdk.aws_kms.Key;
+        'AcceleratorGetCloudWatchKey',
+        cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        ),
+      ) as cdk.aws_kms.Key;
     } else {
-      key = new cdk.aws_kms.Key(this, 'ManagementKey', {
-        alias: 'alias/accelerator/management/kms/key',
-        description: 'AWS Accelerator Management Account Kms Key',
+      this.cloudwatchKey = new cdk.aws_kms.Key(this, 'AcceleratorCloudWatchKey', {
+        alias: AcceleratorStack.CLOUDWATCH_LOG_KEY_ALIAS,
+        description: AcceleratorStack.CLOUDWATCH_LOG_KEY_DESCRIPTION,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
 
-      // Adding Backups to the permitted services for vaults
-      const allowedServicePrincipals: { name: string; principal: string }[] = [
-        { name: 'Backup', principal: 'backup.amazonaws.com' },
-      ];
-
-      allowedServicePrincipals.forEach(item => {
-        key.addToResourcePolicy(
-          new cdk.aws_iam.PolicyStatement({
-            sid: `Allow ${item.name} service to use the encryption key`,
-            principals: [new cdk.aws_iam.ServicePrincipal(item.principal)],
-            actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
-            resources: ['*'],
-          }),
-        );
-      });
-
-      // Allow Accelerator Role to use the encryption key
-      key.addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: `Allow Accelerator Role in this account to use the encryption key`,
-          principals: [new cdk.aws_iam.AnyPrincipal()],
-          actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
-          resources: ['*'],
-          conditions: {
-            ArnLike: {
-              'aws:PrincipalARN': [
-                `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/AWSAccelerator-*`,
-              ],
-            },
-          },
-        }),
-      );
-
       // Allow Cloudwatch logs to use the encryption key
-      key.addToResourcePolicy(
+      this.cloudwatchKey.addToResourcePolicy(
         new cdk.aws_iam.PolicyStatement({
           sid: `Allow Cloudwatch logs to use the encryption key`,
           principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
@@ -106,20 +71,20 @@ export class AccountsStack extends AcceleratorStack {
         }),
       );
 
-      new cdk.aws_ssm.StringParameter(this, 'AcceleratorManagementKmsArnParameter', {
-        parameterName: PrepareStack.MANAGEMENT_KEY_ARN_PARAMETER_NAME,
-        stringValue: key.keyArn,
+      new cdk.aws_ssm.StringParameter(this, 'AcceleratorCloudWatchKmsArnParameter', {
+        parameterName: AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        stringValue: this.cloudwatchKey.keyArn,
       });
     }
 
     //
     // Global Organizations actions
     //
-    if (globalRegion === cdk.Stack.of(this).region) {
+    if (props.globalRegion === cdk.Stack.of(this).region) {
       if (props.organizationConfig.enable) {
         const enablePolicyTypeScp = new EnablePolicyType(this, 'enablePolicyTypeScp', {
           policyType: PolicyTypeEnum.SERVICE_CONTROL_POLICY,
-          kmsKey: key,
+          kmsKey: this.cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
 
@@ -133,7 +98,7 @@ export class AccountsStack extends AcceleratorStack {
             name: serviceControlPolicy.name,
             path: path.join(props.configDirPath, serviceControlPolicy.policy),
             type: PolicyType.SERVICE_CONTROL_POLICY,
-            kmsKey: key,
+            kmsKey: this.cloudwatchKey,
             logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             acceleratorPrefix: 'AWSAccelerator',
             managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
@@ -160,7 +125,7 @@ export class AccountsStack extends AcceleratorStack {
               policyId: scp.id,
               targetId: props.organizationConfig.getOrganizationalUnitId(organizationalUnit),
               type: PolicyType.SERVICE_CONTROL_POLICY,
-              kmsKey: key,
+              kmsKey: this.cloudwatchKey,
               logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             });
           }
@@ -170,7 +135,7 @@ export class AccountsStack extends AcceleratorStack {
               policyId: scp.id,
               targetId: props.accountsConfig.getAccountId(account),
               type: PolicyType.SERVICE_CONTROL_POLICY,
-              kmsKey: key,
+              kmsKey: this.cloudwatchKey,
               logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             });
           }
@@ -230,6 +195,15 @@ export class AccountsStack extends AcceleratorStack {
           });
 
           Logger.info(`[accounts-stack] Creating function to attach quarantine scp to accounts`);
+          //
+          // Create KMS Key for Lambda environment variable encryption
+          const lambdaKey = new cdk.aws_kms.Key(this, 'AcceleratorLambdaKey', {
+            alias: AcceleratorStack.LAMBDA_KEY_ALIAS,
+            description: AcceleratorStack.LAMBDA_KEY_DESCRIPTION,
+            enableKeyRotation: true,
+            removalPolicy: cdk.RemovalPolicy.RETAIN,
+          });
+
           const attachQuarantineFunction = new cdk.aws_lambda.Function(this, 'AttachQuarantineScpFunction', {
             code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/attach-quarantine-scp/dist')),
             runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
@@ -237,7 +211,7 @@ export class AccountsStack extends AcceleratorStack {
             description: 'Lambda function to attach quarantine scp to new accounts',
             timeout: cdk.Duration.minutes(5),
             environment: { SCP_POLICY_NAME: props.organizationConfig.quarantineNewAccounts?.scpPolicyName ?? '' },
-            environmentEncryption: key,
+            environmentEncryption: lambdaKey,
             initialPolicy: [orgPolicyRead, orgPolicyWrite],
           });
 
@@ -313,7 +287,7 @@ export class AccountsStack extends AcceleratorStack {
           new cdk.aws_logs.LogGroup(this, `${attachQuarantineFunction.node.id}LogGroup`, {
             logGroupName: `/aws/lambda/${attachQuarantineFunction.functionName}`,
             retention: props.globalConfig.cloudwatchLogRetentionInDays,
-            encryptionKey: key,
+            encryptionKey: this.cloudwatchKey,
             removalPolicy: cdk.RemovalPolicy.DESTROY,
           });
         }

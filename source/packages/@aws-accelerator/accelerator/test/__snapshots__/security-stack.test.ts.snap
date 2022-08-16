@@ -2,8 +2,14 @@
 
 exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
 Object {
+  "Parameters": Object {
+    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/cloudwatch/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
   "Resources": Object {
-    "AcceleratorKeyLookup0C18DA36": Object {
+    "AcceleratorCloudWatchKeyLookupC9DE53CD": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
@@ -62,7 +68,7 @@ Object {
         },
         "keyPrefix": "macie/111111111111/",
         "kmsKeyArn": Object {
-          "Ref": "AcceleratorKeyLookup0C18DA36",
+          "Ref": "AcceleratorCloudWatchKeyLookupC9DE53CD",
         },
         "region": "us-east-1",
       },
@@ -95,7 +101,7 @@ Object {
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "AcceleratorKeyLookup0C18DA36",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -195,7 +201,7 @@ Object {
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "AcceleratorKeyLookup0C18DA36",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -285,7 +291,7 @@ Object {
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "AcceleratorKeyLookup0C18DA36",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -368,7 +374,7 @@ Object {
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "AcceleratorKeyLookup0C18DA36",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -455,7 +461,7 @@ Object {
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "AcceleratorKeyLookup0C18DA36",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -557,6 +563,9 @@ Object {
     "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": Object {
       "DeletionPolicy": "Delete",
       "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "LogGroupName": Object {
           "Fn::Join": Array [
             "",
@@ -780,7 +789,7 @@ Object {
         },
         "exportDestinationType": "S3",
         "kmsKeyArn": Object {
-          "Ref": "AcceleratorKeyLookup0C18DA36",
+          "Ref": "AcceleratorCloudWatchKeyLookupC9DE53CD",
         },
         "region": "us-east-1",
       },

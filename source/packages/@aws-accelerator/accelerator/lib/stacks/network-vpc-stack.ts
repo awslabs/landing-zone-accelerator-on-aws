@@ -34,7 +34,6 @@ import {
   DhcpOptions,
   GatewayLoadBalancer,
   IResourceShareItem,
-  KeyLookup,
   NatGateway,
   NetworkAcl,
   PrefixList,
@@ -52,7 +51,6 @@ import {
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { KeyStack } from './key-stack';
 
 export interface SecurityGroupRuleProps {
   ipProtocol: string;
@@ -83,7 +81,7 @@ export class NetworkVpcStack extends AcceleratorStack {
   private accountsConfig: AccountsConfig;
   private orgConfig: OrganizationConfig;
   private logRetention: number;
-  readonly acceleratorKey: cdk.aws_kms.Key;
+  readonly cloudwatchKey: cdk.aws_kms.Key;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -93,12 +91,11 @@ export class NetworkVpcStack extends AcceleratorStack {
     this.orgConfig = props.organizationConfig;
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
-    this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
-      accountId: props.accountsConfig.getAuditAccountId(),
-      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-    }).getKey();
+    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
+      this,
+      'AcceleratorGetCloudWatchKey',
+      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
+    ) as cdk.aws_kms.Key;
 
     //
     // Delete Default VPCs
@@ -109,7 +106,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     ) {
       Logger.info('[network-vpc-stack] Add DeleteDefaultVpc');
       new DeleteDefaultVpc(this, 'DeleteDefaultVpc', {
-        kmsKey: this.acceleratorKey,
+        kmsKey: this.cloudwatchKey,
         logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });
     }
@@ -464,6 +461,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     //
     // Evaluate VPC entries
     //
+
     for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
       // Get account IDs
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
@@ -606,7 +604,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           maxAggregationInterval: props.networkConfig.vpcFlowLogs.maxAggregationInterval,
           logFormat,
           logRetentionInDays: this.logRetention,
-          encryptionKey: this.acceleratorKey,
+          encryptionKey: this.cloudwatchKey,
           bucketArn: centralLogsBucketArn,
         });
 
@@ -694,7 +692,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             basePool,
             ipamAllocation: subnetItem.ipamAllocation,
             ipv4CidrBlock: subnetItem.ipv4CidrBlock,
-            kmsKey: this.acceleratorKey,
+            kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.logRetention,
             mapPublicIpOnLaunch: subnetItem.mapPublicIpOnLaunch,
             routeTable,
@@ -888,7 +886,7 @@ export class NetworkVpcStack extends AcceleratorStack {
                   transitGatewayAttachment.node.defaultChild as cdk.aws_ec2.CfnTransitGatewayAttachment,
                   destination,
                   destinationPrefixListId,
-                  this.acceleratorKey,
+                  this.cloudwatchKey,
                   this.logRetention,
                 );
               }
@@ -913,7 +911,7 @@ export class NetworkVpcStack extends AcceleratorStack {
                   natGateway.natGatewayId,
                   destination,
                   destinationPrefixListId,
-                  this.acceleratorKey,
+                  this.cloudwatchKey,
                   this.logRetention,
                 );
               }
@@ -927,7 +925,7 @@ export class NetworkVpcStack extends AcceleratorStack {
                   routeId,
                   destination,
                   destinationPrefixListId,
-                  this.acceleratorKey,
+                  this.cloudwatchKey,
                   this.logRetention,
                 );
               }
@@ -1535,7 +1533,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     return ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
       resourceShare,
       resourceShareItemType: itemType,
-      kmsKey: this.acceleratorKey,
+      kmsKey: this.cloudwatchKey,
       logRetentionInDays: this.logRetention,
     });
   }

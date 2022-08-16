@@ -24,7 +24,8 @@ new MacieExportConfigClassification(stack, 'AwsMacieUpdateExportConfigClassifica
   bucketName: 'bucketName',
   keyPrefix: `111111111111-aws-macie-export-config`,
   logRetentionInDays: 3653,
-  kmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
+  bucketKmsKey: new cdk.aws_kms.Key(stack, 'BucketKey', {}),
+  logKmsKey: new cdk.aws_kms.Key(stack, 'LogKey', {}),
 });
 
 /**

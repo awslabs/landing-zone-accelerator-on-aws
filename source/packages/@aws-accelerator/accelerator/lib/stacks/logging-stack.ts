@@ -30,6 +30,7 @@ import {
 
 import { LifecycleRule } from '@aws-accelerator/constructs/lib/aws-s3/bucket';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { Logger } from '../logger';
 
 export class LoggingStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.IKey;
@@ -44,23 +45,30 @@ export class LoggingStack extends AcceleratorStack {
 
     this.setOrganizationId();
 
+    //
+    // Create S3 Key in all account
+    this.createS3Key();
+
     // create kms key for CloudWatch logs
     // the CloudWatch key for the management account
     // in the home region is created in the prepare stack
     if (
       cdk.Stack.of(this).account === props.accountsConfig.getManagementAccountId() &&
-      cdk.Stack.of(this).region === this.props.globalConfig.homeRegion
+      (cdk.Stack.of(this).region === this.props.globalConfig.homeRegion ||
+        cdk.Stack.of(this).region === this.props.globalRegion)
     ) {
-      const cloudwatchKeyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
+      this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
         this,
-        '/accelerator/kms/cloudwatch/key-arn',
+        'AcceleratorGetCloudWatchKey',
+        cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        ),
       );
-
-      this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(this, 'AcceleratorGetCloudWatchKey', cloudwatchKeyArn);
     } else {
       this.cloudwatchKey = new cdk.aws_kms.Key(this, 'AcceleratorCloudWatchKey', {
-        alias: 'alias/accelerator/kms/cloudwatch/key',
-        description: 'AWS Accelerator CloudWatch Kms Key',
+        alias: AcceleratorStack.CLOUDWATCH_LOG_KEY_ALIAS,
+        description: AcceleratorStack.CLOUDWATCH_LOG_KEY_DESCRIPTION,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
@@ -245,7 +253,7 @@ export class LoggingStack extends AcceleratorStack {
     if (centralLogsBucket) {
       centralLogBucketKey = centralLogsBucket.getS3Bucket().getKey();
     } else {
-      centralLogBucketKey = new KeyLookup(this, 'AcceleratorCentralLogBucketKeyLookup', {
+      centralLogBucketKey = new KeyLookup(this, 'AcceleratorCentralLogsBucketKey', {
         accountId: props.accountsConfig.getLogArchiveAccountId(),
         keyRegion: props.globalConfig.homeRegion,
         roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
@@ -378,6 +386,44 @@ export class LoggingStack extends AcceleratorStack {
   private setOrganizationId() {
     if (this.props.organizationConfig.enable) {
       this.organizationId = new Organization(this, 'Organization').id;
+    }
+  }
+
+  /**
+   * Function to create S3 Key
+   */
+  private createS3Key() {
+    //
+    // Crete S3 key in every account except audit account,
+    // this is required for SSM automation to get right KMS key to encrypt unencrypted bucket
+    if (cdk.Stack.of(this).account !== this.props.accountsConfig.getAuditAccountId()) {
+      Logger.debug(`[Logging-stack] Create S3 Key`);
+      const s3Key = new cdk.aws_kms.Key(this, 'Accelerator3Key', {
+        alias: AcceleratorStack.S3_KEY_ALIAS,
+        description: AcceleratorStack.S3_KEY_DESCRIPTION,
+        enableKeyRotation: true,
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+      });
+
+      s3Key.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: `Allow S3 to use the encryption key`,
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
+          resources: ['*'],
+          conditions: {
+            StringEquals: {
+              'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
+              'aws:PrincipalOrgId': `${this.organizationId}`,
+            },
+          },
+        }),
+      );
+
+      new cdk.aws_ssm.StringParameter(this, 'AcceleratorS3KmsArnParameter', {
+        parameterName: AcceleratorStack.S3_KEY_ARN_PARAMETER_NAME,
+        stringValue: s3Key.keyArn,
+      });
     }
   }
 }

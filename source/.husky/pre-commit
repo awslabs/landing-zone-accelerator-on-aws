@@ -3,4 +3,4 @@
 
 wget -v "https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip" && unzip -qo viperlight.zip -d ../viperlight && rm -r ./viperlight.zip && ../viperlight/bin/viperlight scan
 
-cd source && yarn run test && yarn lerna run precommit --stream
+cd source && yarn lerna run precommit --stream && yarn run test

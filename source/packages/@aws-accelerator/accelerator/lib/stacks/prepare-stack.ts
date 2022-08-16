@@ -31,8 +31,6 @@ import { ValidateEnvironmentConfig } from '../validate-environment-config';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class PrepareStack extends AcceleratorStack {
-  public static readonly MANAGEMENT_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
-
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
     if (
@@ -46,8 +44,8 @@ export class PrepareStack extends AcceleratorStack {
       });
 
       const key = new cdk.aws_kms.Key(this, 'ManagementKey', {
-        alias: 'alias/accelerator/management/kms/key',
-        description: 'AWS Accelerator Management Account Kms Key',
+        alias: AcceleratorStack.ACCELERATOR_MANAGEMENT_KEY_ALIAS,
+        description: AcceleratorStack.ACCELERATOR_MANAGEMENT_KEY_DESCRIPTION,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
@@ -107,14 +105,14 @@ export class PrepareStack extends AcceleratorStack {
       );
 
       new cdk.aws_ssm.StringParameter(this, 'AcceleratorManagementKmsArnParameter', {
-        parameterName: PrepareStack.MANAGEMENT_KEY_ARN_PARAMETER_NAME,
+        parameterName: '/accelerator/management/kms/key-arn',
         stringValue: key.keyArn,
       });
 
       Logger.debug(`[prepare-stack] CloudWatch Encryption Key`);
       const cloudwatchKey = new cdk.aws_kms.Key(this, 'AcceleratorManagementCloudWatchKey', {
-        alias: 'alias/accelerator/kms/cloudwatch/key',
-        description: 'AWS Accelerator Management Account CloudWatch Key',
+        alias: AcceleratorStack.CLOUDWATCH_LOG_KEY_ALIAS,
+        description: AcceleratorStack.CLOUDWATCH_LOG_KEY_DESCRIPTION,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
@@ -137,7 +135,7 @@ export class PrepareStack extends AcceleratorStack {
       );
 
       new cdk.aws_ssm.StringParameter(this, 'AcceleratorCloudWatchKmsArnParameter', {
-        parameterName: '/accelerator/kms/cloudwatch/key-arn',
+        parameterName: AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
         stringValue: cloudwatchKey.keyArn,
       });
 
@@ -146,7 +144,7 @@ export class PrepareStack extends AcceleratorStack {
       const accountConfigAsset = new cdk.aws_s3_assets.Asset(this, 'AccountConfigAsset', {
         path: path.join(props.configDirPath, 'accounts-config.yaml'),
       });
-      const organzationsConfigAsset = new cdk.aws_s3_assets.Asset(this, 'OrganizationConfigAsset', {
+      const organizationsConfigAsset = new cdk.aws_s3_assets.Asset(this, 'OrganizationConfigAsset', {
         path: path.join(props.configDirPath, 'organization-config.yaml'),
       });
 
@@ -197,8 +195,8 @@ export class PrepareStack extends AcceleratorStack {
         managementAccountEmail: props.accountsConfig.getManagementAccount().email,
         auditAccountEmail: props.accountsConfig.getAuditAccount().email,
         logArchiveAccountEmail: props.accountsConfig.getLogArchiveAccount().email,
-        configS3Bucket: organzationsConfigAsset.s3BucketName,
-        organizationsConfigS3Key: organzationsConfigAsset.s3ObjectKey,
+        configS3Bucket: organizationsConfigAsset.s3BucketName,
+        organizationsConfigS3Key: organizationsConfigAsset.s3ObjectKey,
         accountConfigS3Key: accountConfigAsset.s3ObjectKey,
         commitId: props.configCommitId || '',
         partition: props.partition,
@@ -483,18 +481,18 @@ export class PrepareStack extends AcceleratorStack {
             new cdk.aws_events_targets.LambdaFunction(controlTowerOuEventsFunction, { retryAttempts: 3 }),
           );
 
-          const controlTowerNofificationTopic = new cdk.aws_sns.Topic(this, 'ControlTowerNotification', {
+          const controlTowerNotificationTopic = new cdk.aws_sns.Topic(this, 'ControlTowerNotification', {
             topicName: 'AWSAccelerator-ControlTowerNotification',
             displayName: 'ForwardedControlTowerNotifications',
             masterKey: key,
           });
 
-          controlTowerNofificationTopic.addToResourcePolicy(
+          controlTowerNotificationTopic.addToResourcePolicy(
             new cdk.aws_iam.PolicyStatement({
               sid: 'auditAccount',
               principals: [new cdk.aws_iam.AccountPrincipal(props.accountsConfig.getAuditAccountId())],
               actions: ['sns:Publish'],
-              resources: [controlTowerNofificationTopic.topicArn],
+              resources: [controlTowerNotificationTopic.topicArn],
             }),
           );
 
@@ -522,7 +520,7 @@ export class PrepareStack extends AcceleratorStack {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
           });
 
-          controlTowerNotificationsFunction.addEventSource(new SnsEventSource(controlTowerNofificationTopic));
+          controlTowerNotificationsFunction.addEventSource(new SnsEventSource(controlTowerNotificationTopic));
           controlTowerNotificationsFunction.addToRolePolicy(
             new cdk.aws_iam.PolicyStatement({
               sid: 'ssm',
