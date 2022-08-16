@@ -23,7 +23,8 @@ const stack = new cdk.Stack();
 new GuardDutyPublishingDestination(stack, 'GuardDutyPublishingDestination', {
   destinationArn: `arn:${stack.partition}:s3:::aws-accelerator-guardduty-${stack.account}-${stack.region}`,
   exportDestinationType: 'S3',
-  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  destinationKmsKey: new cdk.aws_kms.Key(stack, 'DestinationKey', {}),
+  logKmsKey: new cdk.aws_kms.Key(stack, 'LogKey', {}),
   logRetentionInDays: 3653,
 });
 

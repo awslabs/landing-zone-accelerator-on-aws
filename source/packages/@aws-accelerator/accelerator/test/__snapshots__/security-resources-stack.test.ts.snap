@@ -7,6 +7,10 @@ Object {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/s3/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": Object {
     "AcceleratorAlbHttpDropInvalidHeaderEnabled699B715A": Object {
@@ -383,6 +387,40 @@ Object {
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "AcceleratorCloudWatchKeyLookupC9DE53CD": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::222222222222:role/AWSAccelerator-CrossAccount-SsmParameter-Role",
+            ],
+          ],
+        },
+        "invokingAccountID": "111111111111",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "222222222222",
+        "parameterName": "/accelerator/kms/s3/key-arn",
+        "parameterRegion": "us-east-1",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
     },
     "AcceleratorCloudtrailEnabled08B9BEEA": Object {
       "DependsOn": Array [
@@ -1316,40 +1354,6 @@ Object {
       },
       "Type": "AWS::Config::ConfigRule",
     },
-    "AcceleratorKeyLookup0C18DA36": Object {
-      "DeletionPolicy": "Delete",
-      "DependsOn": Array [
-        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
-      ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
-            "Arn",
-          ],
-        },
-        "assumeRoleArn": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "arn:",
-              Object {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::222222222222:role/AWSAccelerator-CrossAccount-SsmParameter-Role",
-            ],
-          ],
-        },
-        "invokingAccountID": "111111111111",
-        "invokingRegion": "us-east-1",
-        "parameterAccountID": "222222222222",
-        "parameterName": "/accelerator/kms/key-arn",
-        "parameterRegion": "us-east-1",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::SsmGetParameterValue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "AcceleratorKmsCmkNotScheduledForDeletionF3796D4E": Object {
       "DependsOn": Array [
         "ConfigRecorder",
@@ -1535,7 +1539,7 @@ Object {
             "StaticValue": Object {
               "Values": Array [
                 Object {
-                  "Ref": "AcceleratorKeyLookup0C18DA36",
+                  "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
                 },
               ],
             },
@@ -1656,40 +1660,6 @@ Object {
         },
       },
       "Type": "AWS::Config::ConfigRule",
-    },
-    "AcceleratorS3KeyLookupF3040313": Object {
-      "DeletionPolicy": "Delete",
-      "DependsOn": Array [
-        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
-      ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
-            "Arn",
-          ],
-        },
-        "assumeRoleArn": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "arn:",
-              Object {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::222222222222:role/AWSAccelerator-CrossAccount-SsmParameter-Role",
-            ],
-          ],
-        },
-        "invokingAccountID": "111111111111",
-        "invokingRegion": "us-east-1",
-        "parameterAccountID": "222222222222",
-        "parameterName": "/accelerator/kms/s3/key-arn",
-        "parameterRegion": "us-east-1",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::SsmGetParameterValue",
-      "UpdateReplacePolicy": "Delete",
     },
     "AcceleratorSagemakerEndpointConfigurationKmsKeyConfigured29A26847": Object {
       "DependsOn": Array [
@@ -2902,7 +2872,7 @@ Object {
               ],
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "AcceleratorS3KeyLookupF3040313",
+                "Ref": "AcceleratorCloudWatchKeyLookupC9DE53CD",
               },
             },
             Object {

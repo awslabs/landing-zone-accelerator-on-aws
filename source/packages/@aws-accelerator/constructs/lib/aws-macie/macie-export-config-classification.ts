@@ -25,13 +25,17 @@ export interface MacieExportConfigClassificationProps {
    */
   readonly bucketName: string;
   /**
+   * Macie ExportConfigClassification repository bucket encryption key
+   */
+  readonly bucketKmsKey: cdk.aws_kms.Key;
+  /**
    * Bucket key prefix
    */
   readonly keyPrefix: string;
   /**
    * Custom resource lambda log group encryption key
    */
-  readonly kmsKey: cdk.aws_kms.Key;
+  readonly logKmsKey: cdk.aws_kms.Key;
   /**
    * Custom resource lambda log retention in days
    */
@@ -74,7 +78,7 @@ export class MacieExportConfigClassification extends Construct {
         region: cdk.Stack.of(this).region,
         bucketName: props.bucketName,
         keyPrefix: props.keyPrefix,
-        kmsKeyArn: props.kmsKey.keyArn,
+        kmsKeyArn: props.bucketKmsKey.keyArn,
       },
     });
 
@@ -88,7 +92,7 @@ export class MacieExportConfigClassification extends Construct {
       new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
         logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
         retention: props.logRetentionInDays,
-        encryptionKey: props.kmsKey,
+        encryptionKey: props.logKmsKey,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
     resource.node.addDependency(logGroup);

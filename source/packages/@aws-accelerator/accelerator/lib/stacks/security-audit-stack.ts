@@ -46,7 +46,6 @@ import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { S3ServerAccessLogsBucketNamePrefix } from '../accelerator';
 
 export class SecurityAuditStack extends AcceleratorStack {
-  private readonly acceleratorKey: cdk.aws_kms.Key;
   private readonly s3Key: cdk.aws_kms.Key;
   private readonly cloudwatchKey: cdk.aws_kms.IKey;
   private readonly centralLogsBucketKey: cdk.aws_kms.Key;
@@ -57,28 +56,20 @@ export class SecurityAuditStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
+    this.s3Key = new KeyLookup(this, 'AcceleratorS3Key', {
       accountId: props.accountsConfig.getAuditAccountId(),
       roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
+      keyArnParameterName: AcceleratorStack.S3_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
 
-    this.s3Key = new KeyLookup(this, 'AcceleratorS3KeyLookup', {
-      accountId: props.accountsConfig.getAuditAccountId(),
-      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: KeyStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-    }).getKey();
-
-    const cloudwatchKeyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
+    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
-      '/accelerator/kms/cloudwatch/key-arn',
+      'AcceleratorGetCloudWatchKey',
+      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
     );
 
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(this, 'AcceleratorGetCloudWatchKey', cloudwatchKeyArn);
-
-    this.centralLogsBucketKey = new KeyLookup(this, 'AcceleratorcentralLogsBucketKeyLookup', {
+    this.centralLogsBucketKey = new KeyLookup(this, 'AcceleratorCloudWatchKey', {
       accountId: props.accountsConfig.getLogArchiveAccountId(),
       keyRegion: props.globalConfig.homeRegion,
       roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
@@ -157,7 +148,7 @@ export class SecurityAuditStack extends AcceleratorStack {
     );
     if (this.props.securityConfig.centralSecurityServices.macie.enable) {
       Logger.info(
-        `[security-audit-stack] Creating macie export config bucket - aws-accelerator-securitymacie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        `[security-audit-stack] Creating macie export config bucket - aws-accelerator-macie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
       );
       const lifecycleRules: LifecycleRule[] = [];
       for (const lifecycleRule of this.props.securityConfig.centralSecurityServices.macie.lifecycleRules ?? []) {
@@ -651,13 +642,25 @@ export class SecurityAuditStack extends AcceleratorStack {
   private configureSnsSubscriptions() {
     Logger.info(`[security-audit-stack] Create SNS Topics and Subscriptions`);
 
+    //
+    // Create KMS Key for SNS topic when there are SNS topics are to be created
+    let snsKey: cdk.aws_kms.Key | undefined;
+    if (props.securityConfig.centralSecurityServices.snsSubscriptions ?? [].length > 0) {
+      snsKey = new cdk.aws_kms.Key(this, 'AcceleratorSnsKey', {
+        alias: AcceleratorStack.SNS_KEY_ALIAS,
+        description: AcceleratorStack.SNS_KEY_DESCRIPTION,
+        enableKeyRotation: true,
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+      });
+    }
+
     // Loop through all the subscription entries
     for (const snsSubscriptionItem of this.props.securityConfig.centralSecurityServices.snsSubscriptions ?? []) {
       Logger.info(`[security-audit-stack] Create SNS Topic: ${snsSubscriptionItem.level}`);
       const topic = new cdk.aws_sns.Topic(this, `${pascalCase(snsSubscriptionItem.level)}SnsTopic`, {
         displayName: `AWS Accelerator - ${snsSubscriptionItem.level} Notifications`,
         topicName: `aws-accelerator-${snsSubscriptionItem.level}Notifications`,
-        masterKey: this.acceleratorKey,
+        masterKey: snsKey,
       });
 
       // Allowing Publish from CloudWatch Service from any account

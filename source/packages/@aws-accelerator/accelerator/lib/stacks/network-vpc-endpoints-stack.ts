@@ -30,7 +30,6 @@ import {
 } from '@aws-accelerator/config';
 import {
   IResourceShareItem,
-  KeyLookup,
   NetworkFirewall,
   ResolverEndpoint,
   ResourceShare,
@@ -47,10 +46,9 @@ import {
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { KeyStack } from './key-stack';
 
 export class NetworkVpcEndpointsStack extends AcceleratorStack {
-  private acceleratorKey: cdk.aws_kms.Key;
+  private cloudwatchKey: cdk.aws_kms.Key;
   private accountsConfig: AccountsConfig;
   private globalConfig: GlobalConfig;
   private logRetention: number;
@@ -63,12 +61,11 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     this.globalConfig = props.globalConfig;
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
-    this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
-      accountId: props.accountsConfig.getAuditAccountId(),
-      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-    }).getKey();
+    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
+      this,
+      'AcceleratorGetCloudWatchKey',
+      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
+    ) as cdk.aws_kms.Key;
 
     //
     // Store VPC, subnet, and route table IDs
@@ -328,7 +325,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
                   endpointRouteId,
                   routeTableEntryItem.destination,
                   endpointAz,
-                  this.acceleratorKey,
+                  this.cloudwatchKey,
                   this.logRetention,
                   routeTableId,
                 );
@@ -464,7 +461,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
           `[network-vpc-endpoints-stack] Add CloudWatch ${logItem.type} logs for Network Firewall ${firewallItem.name}`,
         );
         const logGroup = new cdk.aws_logs.LogGroup(this, pascalCase(`${firewallItem.name}${logItem.type}LogGroup`), {
-          encryptionKey: this.acceleratorKey,
+          encryptionKey: this.cloudwatchKey,
           retention: this.logRetention,
         });
         destinationConfigs.push({
@@ -979,7 +976,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     return ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
       resourceShare,
       resourceShareItemType: itemType,
-      kmsKey: this.acceleratorKey,
+      kmsKey: this.cloudwatchKey,
       logRetentionInDays: this.logRetention,
     });
   }

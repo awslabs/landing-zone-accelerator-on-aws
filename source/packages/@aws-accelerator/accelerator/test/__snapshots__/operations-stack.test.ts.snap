@@ -49,10 +49,11 @@ Object {
                 Object {
                   "Ref": "BreakGlassUser01Secret8A54324D",
                 },
-                ":SecretString:::}}",
+                ":SecretString:password::}}",
               ],
             ],
           },
+          "PasswordResetRequired": true,
         },
         "PermissionsBoundary": Object {
           "Ref": "DefaultBoundaryPolicy489A8D26",
@@ -99,10 +100,11 @@ Object {
                 Object {
                   "Ref": "BreakGlassUser02Secret4D200D8D",
                 },
-                ":SecretString:::}}",
+                ":SecretString:password::}}",
               ],
             ],
           },
+          "PasswordResetRequired": true,
         },
         "PermissionsBoundary": Object {
           "Ref": "DefaultBoundaryPolicy489A8D26",

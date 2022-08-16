@@ -32,7 +32,6 @@ import {
   Ipam,
   IpamPool,
   IpamScope,
-  KeyLookup,
   NetworkFirewallPolicy,
   NetworkFirewallRuleGroup,
   Organization,
@@ -47,7 +46,6 @@ import {
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { KeyStack } from './key-stack';
 
 interface ResolverFirewallRuleProps {
   action: string;
@@ -70,7 +68,7 @@ type ResourceShareType =
 export class NetworkPrepStack extends AcceleratorStack {
   private accountsConfig: AccountsConfig;
   private orgConfig: OrganizationConfig;
-  private key: cdk.aws_kms.Key;
+  private cloudwatchKey: cdk.aws_kms.Key;
   private logRetention: number;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -81,12 +79,11 @@ export class NetworkPrepStack extends AcceleratorStack {
     this.orgConfig = props.organizationConfig;
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
-    this.key = new KeyLookup(this, 'AcceleratorKeyLookup', {
-      accountId: props.accountsConfig.getAuditAccountId(),
-      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-    }).getKey();
+    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
+      this,
+      'AcceleratorGetCloudWatchKey',
+      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
+    ) as cdk.aws_kms.Key;
 
     //
     // Generate Transit Gateways
@@ -361,7 +358,7 @@ export class NetworkPrepStack extends AcceleratorStack {
                 path: filePath,
                 tags: [],
                 type: domainListType,
-                kmsKey: this.key,
+                kmsKey: this.cloudwatchKey,
                 logRetentionInDays: this.logRetention,
               });
               domainMap.set(listName, domainList.listId);
@@ -469,7 +466,7 @@ export class NetworkPrepStack extends AcceleratorStack {
             const organization = new Organization(this, 'Organization');
 
             const logGroup = new cdk.aws_logs.LogGroup(this, 'QueryLogsLogGroup', {
-              encryptionKey: this.key,
+              encryptionKey: this.cloudwatchKey,
               retention: this.logRetention,
             });
 

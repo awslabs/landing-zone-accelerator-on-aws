@@ -7,17 +7,13 @@ Object {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
-      "Default": "/accelerator/kms/key-arn",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
     "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
       "Default": "/accelerator/kms/s3/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
   "Resources": Object {
-    "AcceleratorcentralLogsBucketKeyLookup5521C210": Object {
+    "AcceleratorCloudWatchKeyLookupC9DE53CD": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
@@ -50,6 +46,51 @@ Object {
       },
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorSnsKeyAlias1909B90C": Object {
+      "Properties": Object {
+        "AliasName": "alias/accelerator/kms/sns/key",
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorSnsKeyDADF94B1",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
+    "AcceleratorSnsKeyDADF94B1": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "Description": "AWS Accelerator SNS Kms Key",
+        "EnableKeyRotation": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::222222222222:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
     },
     "AccessAnalyzer": Object {
       "Properties": Object {
@@ -441,7 +482,7 @@ def script_handler(events, context):
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
+                "Ref": "AcceleratorCloudWatchKeyLookupC9DE53CD",
               },
             },
           ],
@@ -482,7 +523,7 @@ def script_handler(events, context):
           ],
         },
         "destinationBucketKeyArn": Object {
-          "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
+          "Ref": "AcceleratorCloudWatchKeyLookupC9DE53CD",
         },
         "prefix": "",
         "replicationRoleArn": Object {
@@ -725,7 +766,7 @@ def script_handler(events, context):
           ],
         },
         "destinationBucketKeyArn": Object {
-          "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
+          "Ref": "AcceleratorCloudWatchKeyLookupC9DE53CD",
         },
         "prefix": "",
         "replicationRoleArn": Object {
@@ -852,7 +893,7 @@ def script_handler(events, context):
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
+                "Ref": "AcceleratorCloudWatchKeyLookupC9DE53CD",
               },
             },
           ],
@@ -1088,7 +1129,7 @@ def script_handler(events, context):
           ],
         },
         "destinationBucketKeyArn": Object {
-          "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
+          "Ref": "AcceleratorCloudWatchKeyLookupC9DE53CD",
         },
         "prefix": "",
         "replicationRoleArn": Object {
@@ -1209,7 +1250,7 @@ def script_handler(events, context):
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
+                "Ref": "AcceleratorCloudWatchKeyLookupC9DE53CD",
               },
             },
           ],
@@ -2973,7 +3014,7 @@ def script_handler(events, context):
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
+                "Ref": "AcceleratorCloudWatchKeyLookupC9DE53CD",
               },
             },
           ],
@@ -3014,7 +3055,7 @@ def script_handler(events, context):
           ],
         },
         "destinationBucketKeyArn": Object {
-          "Ref": "AcceleratorcentralLogsBucketKeyLookup5521C210",
+          "Ref": "AcceleratorCloudWatchKeyLookupC9DE53CD",
         },
         "prefix": "",
         "replicationRoleArn": Object {
@@ -3162,7 +3203,10 @@ def script_handler(events, context):
       "Properties": Object {
         "DisplayName": "AWS Accelerator - High Notifications",
         "KmsMasterKeyId": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Fn::GetAtt": Array [
+            "AcceleratorSnsKeyDADF94B1",
+            "Arn",
+          ],
         },
         "TopicName": "aws-accelerator-HighNotifications",
       },
@@ -3259,7 +3303,10 @@ def script_handler(events, context):
       "Properties": Object {
         "DisplayName": "AWS Accelerator - Low Notifications",
         "KmsMasterKeyId": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Fn::GetAtt": Array [
+            "AcceleratorSnsKeyDADF94B1",
+            "Arn",
+          ],
         },
         "TopicName": "aws-accelerator-LowNotifications",
       },
@@ -3377,7 +3424,10 @@ def script_handler(events, context):
       "Properties": Object {
         "DisplayName": "AWS Accelerator - Medium Notifications",
         "KmsMasterKeyId": Object {
-          "Ref": "SsmParameterValueacceleratorkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Fn::GetAtt": Array [
+            "AcceleratorSnsKeyDADF94B1",
+            "Arn",
+          ],
         },
         "TopicName": "aws-accelerator-MediumNotifications",
       },

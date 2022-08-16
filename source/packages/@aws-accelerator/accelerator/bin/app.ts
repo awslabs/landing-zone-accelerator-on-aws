@@ -219,6 +219,7 @@ async function main() {
       partition: partition,
       qualifier: process.env['ACCELERATOR_QUALIFIER'],
       configCommitId: process.env['CONFIG_COMMIT_ID'],
+      globalRegion: globalRegion,
     };
 
     //

@@ -42,10 +42,117 @@ export interface AcceleratorStackProps extends cdk.StackProps {
   readonly partition: string;
   readonly qualifier?: string;
   readonly configCommitId?: string;
+  readonly globalRegion?: string;
 }
 
 export abstract class AcceleratorStack extends cdk.Stack {
   protected props: AcceleratorStackProps;
+
+  /**
+   * Cross account IAM ROLE to read SSM parameter
+   * IAM role to access SSM parameter from different or different region
+   * This role is created in Key stack
+   */
+  public static readonly CROSS_ACCOUNT_ACCESS_ROLE_NAME = 'AWSAccelerator-CrossAccount-SsmParameter-Role';
+  /**
+   * Accelerator generic KMS Key
+   */
+  public static readonly ACCELERATOR_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/key-arn';
+  /**
+   * Accelerator S3 encryption key arn SSM parameter name
+   */
+  protected static readonly S3_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/s3/key-arn';
+  /**
+   * Accelerator S3 encryption key alias, S3 CMK use to encrypt buckets
+   * This key is created in logging stack
+   */
+  protected static readonly S3_KEY_ALIAS = 'alias/accelerator/kms/s3/key';
+  /**
+   * Accelerator S3 encryption key description, S3 CMK use to encrypt buckets
+   * This key is created in logging stack
+   */
+  protected static readonly S3_KEY_DESCRIPTION = 'AWS Accelerator S3 Kms Key';
+  /**
+   * Accelerator CloudWatch Log encryption key arn SSM parameter name
+   */
+  protected static readonly CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/cloudwatch/key-arn';
+  /**
+   * Accelerator CloudWatch Log encryption key alias used to encrypt cloudwatch log groups
+   * This key is created in Prepare, Accounts and Logging stacks
+   */
+  protected static readonly CLOUDWATCH_LOG_KEY_ALIAS = 'alias/accelerator/kms/cloudwatch/key';
+  /**
+   * Accelerator CloudWatch Log encryption key description used to encrypt cloudwatch log groups
+   * This key is created in Prepare, Accounts and Logging stacks
+   */
+  protected static readonly CLOUDWATCH_LOG_KEY_DESCRIPTION = 'AWS Accelerator CloudWatch Kms Key';
+
+  /**
+   * Accelerator Backup encryption key alias
+   * Organization stack creates this key to encrypt AWS backup
+   */
+  protected static readonly AWS_BACKUP_KEY_ALIAS = 'alias/accelerator/kms/backup/key';
+
+  /**
+   * Accelerator Backup encryption key description
+   * Organization stack creates this key to encrypt AWS backup
+   */
+  protected static readonly AWS_BACKUP_KEY_DESCRIPTION = 'AWS Accelerator Backup Kms Key';
+
+  /**
+   * Accelerator SNS encryption key alias
+   * SecurityAudit stack creates this key to encrypt AWS SNS topics
+   */
+  protected static readonly SNS_KEY_ALIAS = 'alias/accelerator/kms/sns/key';
+
+  /**
+   * Accelerator SNS encryption key description
+   * SecurityAudit stack creates this key to encrypt AWS SNS topics
+   */
+  protected static readonly SNS_KEY_DESCRIPTION = 'AWS Accelerator SNS Kms Key';
+
+  /**
+   * Accelerator Lambda Log encryption key alias
+   * Accounts stack creates this key to encrypt lambda environment variables
+   */
+  protected static readonly LAMBDA_KEY_ALIAS = 'alias/accelerator/kms/lambda/key';
+
+  /**
+   * Accelerator Lambda Log encryption key description
+   * Key stack creates this key to encrypt Accelerator Audit account S3 encryption.
+   * Audit account S3 buckets are accessed by every accounts to publish security services data
+   */
+  protected static readonly LAMBDA_KEY_DESCRIPTION = 'AWS Accelerator Lambda Kms Key';
+
+  /**
+   * @Deprecated
+   * Accelerator encryption key alias, this key is no longer in use, it will be removed in future iteration
+   */
+  protected static readonly ACCELERATOR_KEY_ALIAS = 'alias/accelerator/kms/key';
+
+  /**
+   * @Deprecated
+   * Accelerator encryption key alias, this key is no longer in use, it will be removed in future iteration
+   */
+  protected static readonly ACCELERATOR_KEY_DESCRIPTION = 'AWS Accelerator Kms Key';
+
+  /**
+   * Accelerator management encryption key alias
+   * Prepare stack creates this key to encrypt DynamoDB and CT SNS notification
+   */
+  protected static readonly ACCELERATOR_MANAGEMENT_KEY_ALIAS = 'alias/accelerator/management/kms/key';
+
+  /**
+   * Accelerator management encryption key alias
+   * Prepare stack creates this key to encrypt DynamoDB and CT SNS notification
+   */
+  protected static readonly ACCELERATOR_MANAGEMENT_KEY_DESCRIPTION = 'AWS Accelerator Management Account Kms Key';
+
+  /**
+   * Accelerator management encryption key alias
+   * Prepare stack creates this key to encrypt DynamoDB and CT SNS notification
+   */
+  protected static readonly ACCELERATOR_MANAGEMENT_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
 
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);

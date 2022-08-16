@@ -19,7 +19,7 @@ Object {
         "keyPrefix": "111111111111-aws-macie-export-config",
         "kmsKeyArn": Object {
           "Fn::GetAtt": Array [
-            "Key961B73FD",
+            "BucketKey7092080A",
             "Arn",
           ],
         },
@@ -29,6 +29,41 @@ Object {
       },
       "Type": "Custom::MaciePutClassificationExportConfiguration",
       "UpdateReplacePolicy": "Delete",
+    },
+    "BucketKey7092080A": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
     },
     "CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC": Object {
       "DependsOn": Array [
@@ -59,7 +94,7 @@ Object {
       "Properties": Object {
         "KmsKeyId": Object {
           "Fn::GetAtt": Array [
-            "Key961B73FD",
+            "LogKeyE83D0C1B",
             "Arn",
           ],
         },
@@ -122,7 +157,7 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "Key961B73FD": Object {
+    "LogKeyE83D0C1B": Object {
       "DeletionPolicy": "Retain",
       "Properties": Object {
         "KeyPolicy": Object {

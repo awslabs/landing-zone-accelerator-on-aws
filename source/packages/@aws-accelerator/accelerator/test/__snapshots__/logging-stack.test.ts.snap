@@ -3,6 +3,74 @@
 exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
 Object {
   "Resources": Object {
+    "Accelerator3KeyAliasA5E4BDCB": Object {
+      "Properties": Object {
+        "AliasName": "alias/accelerator/kms/s3/key",
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "Accelerator3KeyBF43FCD9",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
+    "Accelerator3KeyBF43FCD9": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "Description": "AWS Accelerator S3 Kms Key",
+        "EnableKeyRotation": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey",
+                "kms:Describe*",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgId": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                  "kms:ViaService": "s3.us-east-1.amazonaws.com",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow S3 to use the encryption key",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
     "AcceleratorCloudWatchKeyAlias6842582C": Object {
       "Properties": Object {
         "AliasName": "alias/accelerator/kms/cloudwatch/key",
@@ -75,6 +143,19 @@ Object {
         "Value": Object {
           "Fn::GetAtt": Array [
             "AcceleratorCloudWatchKeyF93B6E17",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "AcceleratorS3KmsArnParameter82C4C525": Object {
+      "Properties": Object {
+        "Name": "/accelerator/kms/s3/key-arn",
+        "Type": "String",
+        "Value": Object {
+          "Fn::GetAtt": Array [
+            "Accelerator3KeyBF43FCD9",
             "Arn",
           ],
         },
