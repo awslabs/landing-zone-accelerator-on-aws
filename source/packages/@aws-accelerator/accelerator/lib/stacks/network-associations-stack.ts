@@ -20,7 +20,6 @@ import { AccountsConfig, NetworkConfigTypes, VpcConfig } from '@aws-accelerator/
 import {
   AssociateHostedZones,
   IResourceShareItem,
-  KeyLookup,
   QueryLoggingConfigAssociation,
   ResolverFirewallRuleGroupAssociation,
   ResolverRuleAssociation,
@@ -39,7 +38,6 @@ import {
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { KeyStack } from './key-stack';
 
 interface Peering {
   name: string;
@@ -50,7 +48,7 @@ interface Peering {
 
 export class NetworkAssociationsStack extends AcceleratorStack {
   private accountsConfig: AccountsConfig;
-  private key: cdk.aws_kms.Key;
+  private cloudwatchKey: cdk.aws_kms.Key;
   private logRetention: number;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -59,12 +57,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     this.accountsConfig = props.accountsConfig;
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
-    this.key = new KeyLookup(this, 'AcceleratorKeyLookup', {
-      accountId: props.accountsConfig.getAuditAccountId(),
-      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-    }).getKey();
+    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
+      this,
+      'AcceleratorGetCloudWatchKey',
+      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
+    ) as cdk.aws_kms.Key;
 
     // Build Transit Gateway Maps
     const transitGateways = new Map<string, string>();
@@ -143,7 +140,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                     owningAccountId,
                     transitGatewayId,
                     roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
-                    kmsKey: this.key,
+                    kmsKey: this.cloudwatchKey,
                     logRetentionInDays: this.logRetention,
                   },
                 );
@@ -342,7 +339,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                 blackhole: routeItem.blackhole,
                 transitGatewayAttachmentId,
                 transitGatewayRouteTableId,
-                logGroupKmsKey: this.key,
+                logGroupKmsKey: this.cloudwatchKey,
                 logRetentionInDays: this.logRetention,
               });
             }
@@ -418,7 +415,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             value: props.accountsConfig.getAccountId(centralEndpointVpc.account),
           },
         ],
-        kmsKey: this.key,
+        kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
       });
     }
@@ -747,7 +744,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     return ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
       resourceShare,
       resourceShareItemType: itemType,
-      kmsKey: this.key,
+      kmsKey: this.cloudwatchKey,
       logRetentionInDays: this.logRetention,
     });
   }

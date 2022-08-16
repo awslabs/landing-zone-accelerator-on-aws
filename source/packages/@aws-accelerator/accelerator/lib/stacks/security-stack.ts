@@ -33,7 +33,8 @@ import { KeyStack } from './key-stack';
  * Security Stack, configures local account security services
  */
 export class SecurityStack extends AcceleratorStack {
-  readonly acceleratorKey: cdk.aws_kms.Key;
+  readonly auditAccountS3Key: cdk.aws_kms.Key;
+  readonly cloudwatchKey: cdk.aws_kms.Key;
   readonly auditAccountId: string;
   readonly logArchiveAccountId: string;
 
@@ -44,10 +45,17 @@ export class SecurityStack extends AcceleratorStack {
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
 
-    this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
+    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
+      this,
+      'AcceleratorGetCloudWatchKey',
+      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
+    ) as cdk.aws_kms.Key;
+
+    this.auditAccountS3Key = new KeyLookup(this, 'AcceleratorCloudWatchKey', {
       accountId: props.accountsConfig.getAuditAccountId(),
       roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
       keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
+      kmsKey: this.cloudwatchKey,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
 
@@ -96,7 +104,8 @@ export class SecurityStack extends AcceleratorStack {
 
         new MacieExportConfigClassification(this, 'AwsMacieUpdateExportConfigClassification', {
           bucketName: bucketName,
-          kmsKey: this.acceleratorKey,
+          bucketKmsKey: this.auditAccountS3Key,
+          logKmsKey: this.cloudwatchKey,
           keyPrefix: `macie/${cdk.Stack.of(this).account}/`,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
@@ -127,7 +136,8 @@ export class SecurityStack extends AcceleratorStack {
           exportDestinationType:
             props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.destinationType,
           destinationArn,
-          kmsKey: this.acceleratorKey,
+          destinationKmsKey: this.auditAccountS3Key,
+          logKmsKey: this.cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
       } else {
@@ -151,7 +161,7 @@ export class SecurityStack extends AcceleratorStack {
       if (props.accountsConfig.containsAccount(auditAccountName)) {
         new SecurityHubStandards(this, 'SecurityHubStandards', {
           standards: props.securityConfig.centralSecurityServices.securityHub.standards,
-          kmsKey: this.acceleratorKey,
+          kmsKey: this.cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
       } else {
@@ -208,7 +218,7 @@ export class SecurityStack extends AcceleratorStack {
       );
       new EbsDefaultEncryption(this, 'EbsDefaultVolumeEncryption', {
         ebsEncryptionKmsKey: ebsEncryptionKey,
-        logGroupKmsKey: this.acceleratorKey,
+        logGroupKmsKey: this.cloudwatchKey,
         logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });
 
@@ -228,7 +238,7 @@ export class SecurityStack extends AcceleratorStack {
       Logger.info(`[security-stack] Setting the IAM Password policy`);
       new PasswordPolicy(this, 'IamPasswordPolicy', {
         ...props.securityConfig.iamPasswordPolicy,
-        kmsKey: this.acceleratorKey,
+        kmsKey: this.cloudwatchKey,
         logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
       });
     }

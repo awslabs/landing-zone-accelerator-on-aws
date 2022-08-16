@@ -22,7 +22,6 @@ const testNamePrefix = 'Construct(SecurityResourcesStack): ';
  * SecurityResourcesStack
  */
 const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.SECURITY_RESOURCES, 'all-enabled', 'aws');
-console.log(acceleratorTestStacks.stacks);
 const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 
 describe('SecurityResourcesStack', () => {

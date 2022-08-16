@@ -24,16 +24,15 @@ import {
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
-import { HostedZone, KeyLookup, RecordSet, ResolverRule, ResourceShare } from '@aws-accelerator/constructs';
+import { HostedZone, RecordSet, ResolverRule, ResourceShare } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { KeyStack } from './key-stack';
 
 type ResourceShareType = ResolverRuleConfig;
 
 export class NetworkVpcDnsStack extends AcceleratorStack {
-  private acceleratorKey: cdk.aws_kms.Key;
+  private cloudwatchKey: cdk.aws_kms.Key;
   private accountsConfig: AccountsConfig;
   private logRetention: number;
   private orgConfig: OrganizationConfig;
@@ -46,12 +45,11 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
     this.orgConfig = props.organizationConfig;
 
-    this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
-      accountId: props.accountsConfig.getAuditAccountId(),
-      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-    }).getKey();
+    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
+      this,
+      'AcceleratorGetCloudWatchKey',
+      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
+    ) as cdk.aws_kms.Key;
 
     //
     // Store VPC IDs, interface endpoint DNS, and Route 53 resolver endpoints
@@ -275,7 +273,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
         targetIps: ruleItem.targetIps,
         tags: ruleItem.tags,
         targetInbound: inboundTarget,
-        kmsKey: this.acceleratorKey,
+        kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
       });
       new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${ruleItem.name}ResolverRule`), {

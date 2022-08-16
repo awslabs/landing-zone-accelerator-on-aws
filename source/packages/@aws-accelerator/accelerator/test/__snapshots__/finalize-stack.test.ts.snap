@@ -3,8 +3,8 @@
 exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
 Object {
   "Parameters": Object {
-    "SsmParameterValueacceleratormanagementkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
-      "Default": "/accelerator/management/kms/key-arn",
+    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratororganizationsscpQuarantineidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
@@ -39,7 +39,7 @@ Object {
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
-          "Ref": "SsmParameterValueacceleratormanagementkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": Object {
           "Fn::Join": Array [

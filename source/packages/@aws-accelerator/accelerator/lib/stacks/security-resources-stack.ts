@@ -52,7 +52,6 @@ interface RemediationParameters {
  * Security Stack, configures local account security services
  */
 export class SecurityResourcesStack extends AcceleratorStack {
-  readonly acceleratorKey: cdk.aws_kms.Key;
   readonly auditS3Key: cdk.aws_kms.Key;
   readonly cloudwatchKey: cdk.aws_kms.IKey;
   readonly auditAccountId: string;
@@ -73,26 +72,18 @@ export class SecurityResourcesStack extends AcceleratorStack {
     // Set Organization Id
     this.setOrganizationId();
 
-    this.acceleratorKey = new KeyLookup(this, 'AcceleratorKeyLookup', {
+    this.auditS3Key = new KeyLookup(this, 'AcceleratorCloudWatchKey', {
       accountId: props.accountsConfig.getAuditAccountId(),
       roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
+      keyArnParameterName: AcceleratorStack.S3_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
 
-    this.auditS3Key = new KeyLookup(this, 'AcceleratorS3KeyLookup', {
-      accountId: props.accountsConfig.getAuditAccountId(),
-      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: KeyStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-    }).getKey();
-
-    const cloudwatchKeyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
+    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
-      '/accelerator/kms/cloudwatch/key-arn',
+      'AcceleratorGetCloudWatchKey',
+      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
     );
-
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(this, 'AcceleratorGetCloudWatchKey', cloudwatchKeyArn);
 
     // AWS Config - Set up recorder and delivery channel, only if Control Tower
     // is not being used. Else the Control Tower SCP will block these calls from
@@ -797,8 +788,23 @@ export class SecurityResourcesStack extends AcceleratorStack {
       ).managedPolicyArn;
     }
 
-    if (lookupType === ACCEL_LOOKUP_TYPE.KMS && replacementArray.length === 1) {
-      return this.acceleratorKey.keyArn;
+    if (lookupType === ACCEL_LOOKUP_TYPE.KMS) {
+      if (replacementArray.length === 1) {
+        return cdk.aws_kms.Key.fromKeyArn(
+          this,
+          pascalCase(ruleName) + '-AcceleratorGetS3Key',
+          cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.S3_KEY_ARN_PARAMETER_NAME),
+        ).keyArn;
+      } else {
+        // When specific Key ID is given
+        return cdk.aws_kms.Key.fromKeyArn(
+          this,
+          pascalCase(ruleName) + '-AcceleratorGetS3Key',
+          `arn:${cdk.Stack.of(this).partition}:kms:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:key/${
+            replacementArray[1]
+          }`,
+        ).keyArn;
+      }
     }
 
     if (lookupType === ACCEL_LOOKUP_TYPE.Bucket && replacementArray.length === 2) {
