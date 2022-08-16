@@ -510,10 +510,29 @@ export class AcceleratorPipeline extends Construct {
   }
 
   /**
-   * Enable pipeline notification for commercial partition
+   * Enable pipeline notification for commercial partition and supported regions
    */
   private enablePipelineNotification() {
-    if (this.props.partition === 'aws') {
+    // List of regions with AWS CodeStar being supported. For details, see documentation:
+    // https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/
+    const awsCodeStarSupportedRegions = [
+      'us-east-1',
+      'us-east-2',
+      'us-west-1',
+      'us-west-2',
+      'ap-northeast-2',
+      'ap-southeast-1',
+      'ap-southeast-2',
+      'ap-northeast-1',
+      'ca-central-1',
+      'eu-central-1',
+      'eu-west-1',
+      'eu-west-2',
+      'eu-north-1',
+    ];
+
+    // We can Enable pipeline notification only for regions with AWS CodeStar being available
+    if (awsCodeStarSupportedRegions.includes(cdk.Stack.of(this).region)) {
       const codeStarNotificationsRole = new cdk.aws_iam.CfnServiceLinkedRole(
         this,
         'AWSServiceRoleForCodeStarNotifications',
