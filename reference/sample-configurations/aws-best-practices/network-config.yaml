@@ -280,6 +280,89 @@ endpointPolicies:
   - name: Ec2
     document: vpc-endpoint-policies/ec2.json
 
+#####################################
+# VPC templates -- use this object  #
+# to deploy standard VPCs across    #
+# multiple accounts/OUs             #
+#####################################
+vpcTemplates:
+  - name: Accelerator-Template
+    region: *HOME_REGION
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+    ipamAllocations:
+      - ipamPoolName: home-region-prod-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Accelerator-Template-Tgw-A
+        routes: []
+      - name: Accelerator-Template-Tgw-B
+        routes: []
+      - name: Accelerator-Template-A
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: Accelerator-Template-B
+        routes:
+          - name: TgwRoute
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+    subnets:
+      - name: Accelerator-Template-A
+        availabilityZone: a
+        routeTable: Accelerator-Template-A
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 27
+      - name: Accelerator-Template-B
+        availabilityZone: b
+        routeTable: Accelerator-Template-B
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 27
+      - name: Accelerator-TemplateTgwAttach-A
+        availabilityZone: a
+        routeTable: Accelerator-Template-Tgw-A
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 27
+      - name: Accelerator-TemplateTgwAttach-B
+        availabilityZone: b
+        routeTable: Accelerator-Template-Tgw-B
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 27
+    transitGatewayAttachments:
+      - name: Accelerator-Template
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - Network-Main-Shared
+        routeTablePropagations:
+          - Network-Main-Core
+          - Network-Main-Shared
+          - Network-Main-Segregated
+        subnets:
+          - Accelerator-TemplateTgwAttach-A
+          - Accelerator-TemplateTgwAttach-B
+    tags:
+      - key: env
+        value: prod
+
+#####################################
+# VPCs-- use this object to deploy  #
+# a VPC in a single account and     #
+# region.                           #
+#####################################
 vpcs:
   - name: Network-Endpoints
     account: Network
@@ -518,6 +601,14 @@ vpcs:
         availabilityZone: b
         routeTable: Network-Inspection-Tgw-B
         ipv4CidrBlock: 10.2.3.224/28
+      - name: Network-Inspection-Firewall-A
+        availabilityZone: a
+        routeTable: Network-Inspection-A
+        ipv4CidrBlock: 10.2.3.0/28
+      - name: Network-Inspection-Firewall-B
+        availabilityZone: b
+        routeTable: Network-Inspection-B
+        ipv4CidrBlock: 10.2.3.16/28
     transitGatewayAttachments:
       - name: Network-Inspection
         transitGateway:
