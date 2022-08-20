@@ -359,7 +359,7 @@ vpcTemplates:
           netmaskLength: 27
       - name: Accelerator-Template-B
         availabilityZone: b
-        routeTable: Network-Endpoints-B
+        routeTable: Accelerator-Template-B
         ipamAllocation:
           ipamPoolName: home-region-prod-pool
           netmaskLength: 27
@@ -636,6 +636,14 @@ vpcs:
         availabilityZone: b
         routeTable: Network-Inspection-Tgw-B
         ipv4CidrBlock: 10.2.3.224/28
+      - name: Network-Inspection-Firewall-A
+        availabilityZone: a
+        routeTable: Network-Inspection-A
+        ipv4CidrBlock: 10.2.3.0/28
+      - name: Network-Inspection-Firewall-B
+        availabilityZone: b
+        routeTable: Network-Inspection-B
+        ipv4CidrBlock: 10.2.3.16/28
     transitGatewayAttachments:
       - name: Network-Inspection
         transitGateway:
