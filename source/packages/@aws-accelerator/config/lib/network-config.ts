@@ -581,17 +581,17 @@ export class NetworkConfigTypes {
   });
 
   static readonly nfwRuleSourceStatelessTcpFlagsConfig = t.interface({
-    flags: t.array(t.nonEmptyString),
-    masks: t.optional(t.array(t.nonEmptyString)),
+    flags: t.array(t.string),
+    masks: t.array(t.nonEmptyString),
   });
 
   static readonly nfwRuleSourceStatelessMatchAttributesConfig = t.interface({
-    destinationPorts: t.array(this.nfwRuleSourceStatelessPortRangeConfig),
-    destinations: t.array(t.nonEmptyString),
-    protocols: t.array(t.number),
-    sourcePorts: t.array(this.nfwRuleSourceStatelessPortRangeConfig),
-    sources: t.array(t.nonEmptyString),
-    tcpFlags: t.array(this.nfwRuleSourceStatelessTcpFlagsConfig),
+    destinationPorts: t.optional(t.array(this.nfwRuleSourceStatelessPortRangeConfig)),
+    destinations: t.optional(t.array(t.nonEmptyString)),
+    protocols: t.optional(t.array(t.number)),
+    sourcePorts: t.optional(t.array(this.nfwRuleSourceStatelessPortRangeConfig)),
+    sources: t.optional(t.array(t.nonEmptyString)),
+    tcpFlags: t.optional(t.array(this.nfwRuleSourceStatelessTcpFlagsConfig)),
   });
 
   static readonly nfwRuleSourceStatelessRuleDefinitionConfig = t.interface({
@@ -2613,7 +2613,7 @@ export class NfwRuleSourceStatelessTcpFlagsConfig
    * The ones that are not set in this flags setting must also not be set in the packet.
    * To inspect all flags in the valid values list, leave this with no setting.
    */
-  readonly masks: string[] | undefined = undefined;
+  readonly masks: string[] = [];
 }
 
 /**
@@ -2630,37 +2630,37 @@ export class NfwRuleSourceStatelessMatchAttributesConfig
    *
    * @see {@link NfwRuleSourceStatelessPortRangeConfig}
    */
-  readonly destinationPorts: NfwRuleSourceStatelessPortRangeConfig[] = [new NfwRuleSourceStatelessPortRangeConfig()];
+  readonly destinationPorts: NfwRuleSourceStatelessPortRangeConfig[] | undefined = undefined;
   /**
    * An array of destination CIDR ranges.
    *
    * @remarks
    * Use CIDR notation, i.e. 10.0.0.0/16
    */
-  readonly destinations: string[] = [];
+  readonly destinations: string[] | undefined = undefined;
   /**
    * An array of IP protocol numbers to inspect.
    */
-  readonly protocols: number[] = [];
+  readonly protocols: number[] | undefined = undefined;
   /**
    * An array of Network Firewall stateless port range configurations.
    *
    * @see {@link NfwRuleSourceStatelessPortRangeConfig}
    */
-  readonly sourcePorts: NfwRuleSourceStatelessPortRangeConfig[] = [new NfwRuleSourceStatelessPortRangeConfig()];
+  readonly sourcePorts: NfwRuleSourceStatelessPortRangeConfig[] | undefined = undefined;
   /**
    * An array of source CIDR ranges.
    *
    * @remarks
    * Use CIDR notation, i.e. 10.0.0.0/16
    */
-  readonly sources: string[] = [];
+  readonly sources: string[] | undefined = undefined;
   /**
    * An array of Network Firewall stateless TCP flag configurations.
    *
    * @see {@link NfwRuleSourceStatelessTcpFlagsConfig}
    */
-  readonly tcpFlags: NfwRuleSourceStatelessTcpFlagsConfig[] = [new NfwRuleSourceStatelessTcpFlagsConfig()];
+  readonly tcpFlags: NfwRuleSourceStatelessTcpFlagsConfig[] | undefined = undefined;
 }
 
 /**

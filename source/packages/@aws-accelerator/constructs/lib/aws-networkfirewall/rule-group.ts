@@ -144,16 +144,18 @@ export class NetworkFirewallRuleGroup extends cdk.Resource implements INetworkFi
         ruleDefinition: {
           actions: rule.ruleDefinition.actions,
           matchAttributes: {
-            destinationPorts: rule.ruleDefinition.matchAttributes.destinationPorts,
-            destinations: rule.ruleDefinition.matchAttributes.destinations.map(item => {
-              return { addressDefinition: item };
-            }),
-            protocols: rule.ruleDefinition.matchAttributes.protocols,
-            sourcePorts: rule.ruleDefinition.matchAttributes.sourcePorts,
-            sources: rule.ruleDefinition.matchAttributes.destinations.map(item => {
-              return { addressDefinition: item };
-            }),
-            tcpFlags: rule.ruleDefinition.matchAttributes.tcpFlags,
+            destinationPorts: rule.ruleDefinition.matchAttributes?.destinationPorts ?? [],
+            destinations:
+              rule.ruleDefinition.matchAttributes?.destinations?.map(item => {
+                return { addressDefinition: item };
+              }) ?? [],
+            protocols: rule.ruleDefinition.matchAttributes?.protocols ?? [],
+            sourcePorts: rule.ruleDefinition.matchAttributes?.sourcePorts ?? [],
+            sources:
+              rule.ruleDefinition.matchAttributes?.sources?.map(item => {
+                return { addressDefinition: item };
+              }) ?? [],
+            tcpFlags: rule.ruleDefinition.matchAttributes?.tcpFlags,
           },
         },
       });
