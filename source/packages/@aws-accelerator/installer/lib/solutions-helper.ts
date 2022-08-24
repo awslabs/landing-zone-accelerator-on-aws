@@ -28,7 +28,6 @@ export class SolutionHelper extends Construct {
     });
 
     const helperFunction = new lambda.Function(this, 'SolutionHelper', {
-      functionName: 'LandingZoneAccelerator-SolutionHelper',
       runtime: lambda.Runtime.NODEJS_14_X,
       handler: 'index.handler',
       description:
@@ -157,7 +156,7 @@ export class SolutionHelper extends Construct {
       },
     };
 
-    const createIdFunction = new cdk.CustomResource(this, 'CreateUniqueID', {
+    const createIdFunction = new cdk.CustomResource(this, 'SolutionCreateUniqueID', {
       serviceToken: helperFunction.functionArn,
       properties: {
         Resource: 'UUID',
@@ -165,7 +164,7 @@ export class SolutionHelper extends Construct {
       resourceType: 'Custom::CreateUUID',
     });
 
-    const sendDataFunction = new cdk.CustomResource(this, 'SendAnonymousData', {
+    const sendDataFunction = new cdk.CustomResource(this, 'SolutionSendAnonymousData', {
       serviceToken: helperFunction.functionArn,
       properties: {
         Resource: 'AnonymousMetric',
