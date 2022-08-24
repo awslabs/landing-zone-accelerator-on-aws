@@ -1845,7 +1845,6 @@ phases:
       ",
         },
         "Description": "This function generates UUID for each deployment and sends anonymous data to the AWS Solutions team",
-        "FunctionName": "LandingZoneAccelerator-SolutionHelper",
         "Handler": "index.handler",
         "Role": Object {
           "Fn::GetAtt": Array [
@@ -1857,58 +1856,6 @@ phases:
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
-    },
-    "SolutionHelperCreateUniqueIDAF03406A": Object {
-      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
-      "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "Resource": "UUID",
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "SolutionHelper4825923B",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "Custom::CreateUUID",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "SolutionHelperSendAnonymousData9B19E31D": Object {
-      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
-      "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "BranchName": Object {
-          "Ref": "RepositoryBranchName",
-        },
-        "Region": Object {
-          "Ref": "AWS::Region",
-        },
-        "RepositoryName": Object {
-          "Ref": "RepositoryName",
-        },
-        "RepositoryOwner": Object {
-          "Ref": "RepositoryOwner",
-        },
-        "RepositorySource": Object {
-          "Ref": "RepositorySource",
-        },
-        "Resource": "AnonymousMetric",
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "SolutionHelper4825923B",
-            "Arn",
-          ],
-        },
-        "SolutionId": "SO0199",
-        "UUID": Object {
-          "Fn::GetAtt": Array [
-            "SolutionHelperCreateUniqueIDAF03406A",
-            "UUID",
-          ],
-        },
-      },
-      "Type": "Custom::AnonymousData",
-      "UpdateReplacePolicy": "Delete",
     },
     "SolutionHelperServiceRoleF70C0E2A": Object {
       "Metadata": Object {
@@ -1950,6 +1897,58 @@ phases:
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "SolutionHelperSolutionCreateUniqueID070ED802": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "Resource": "UUID",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::CreateUUID",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SolutionHelperSolutionSendAnonymousData271B3D26": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "BranchName": Object {
+          "Ref": "RepositoryBranchName",
+        },
+        "Region": Object {
+          "Ref": "AWS::Region",
+        },
+        "RepositoryName": Object {
+          "Ref": "RepositoryName",
+        },
+        "RepositoryOwner": Object {
+          "Ref": "RepositoryOwner",
+        },
+        "RepositorySource": Object {
+          "Ref": "RepositorySource",
+        },
+        "Resource": "AnonymousMetric",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+        "SolutionId": "SO0199",
+        "UUID": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelperSolutionCreateUniqueID070ED802",
+            "UUID",
+          ],
+        },
+      },
+      "Type": "Custom::AnonymousData",
+      "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
@@ -3808,7 +3807,6 @@ phases:
       ",
         },
         "Description": "This function generates UUID for each deployment and sends anonymous data to the AWS Solutions team",
-        "FunctionName": "LandingZoneAccelerator-SolutionHelper",
         "Handler": "index.handler",
         "Role": Object {
           "Fn::GetAtt": Array [
@@ -3820,58 +3818,6 @@ phases:
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
-    },
-    "SolutionHelperCreateUniqueIDAF03406A": Object {
-      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
-      "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "Resource": "UUID",
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "SolutionHelper4825923B",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "Custom::CreateUUID",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "SolutionHelperSendAnonymousData9B19E31D": Object {
-      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
-      "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "BranchName": Object {
-          "Ref": "RepositoryBranchName",
-        },
-        "Region": Object {
-          "Ref": "AWS::Region",
-        },
-        "RepositoryName": Object {
-          "Ref": "RepositoryName",
-        },
-        "RepositoryOwner": Object {
-          "Ref": "RepositoryOwner",
-        },
-        "RepositorySource": Object {
-          "Ref": "RepositorySource",
-        },
-        "Resource": "AnonymousMetric",
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "SolutionHelper4825923B",
-            "Arn",
-          ],
-        },
-        "SolutionId": "SO0199",
-        "UUID": Object {
-          "Fn::GetAtt": Array [
-            "SolutionHelperCreateUniqueIDAF03406A",
-            "UUID",
-          ],
-        },
-      },
-      "Type": "Custom::AnonymousData",
-      "UpdateReplacePolicy": "Delete",
     },
     "SolutionHelperServiceRoleF70C0E2A": Object {
       "Metadata": Object {
@@ -3913,6 +3859,58 @@ phases:
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "SolutionHelperSolutionCreateUniqueID070ED802": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "Resource": "UUID",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::CreateUUID",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SolutionHelperSolutionSendAnonymousData271B3D26": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "BranchName": Object {
+          "Ref": "RepositoryBranchName",
+        },
+        "Region": Object {
+          "Ref": "AWS::Region",
+        },
+        "RepositoryName": Object {
+          "Ref": "RepositoryName",
+        },
+        "RepositoryOwner": Object {
+          "Ref": "RepositoryOwner",
+        },
+        "RepositorySource": Object {
+          "Ref": "RepositorySource",
+        },
+        "Resource": "AnonymousMetric",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+        "SolutionId": "SO0199",
+        "UUID": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelperSolutionCreateUniqueID070ED802",
+            "UUID",
+          ],
+        },
+      },
+      "Type": "Custom::AnonymousData",
+      "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
@@ -5922,7 +5920,6 @@ phases:
       ",
         },
         "Description": "This function generates UUID for each deployment and sends anonymous data to the AWS Solutions team",
-        "FunctionName": "LandingZoneAccelerator-SolutionHelper",
         "Handler": "index.handler",
         "Role": Object {
           "Fn::GetAtt": Array [
@@ -5934,58 +5931,6 @@ phases:
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
-    },
-    "SolutionHelperCreateUniqueIDAF03406A": Object {
-      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
-      "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "Resource": "UUID",
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "SolutionHelper4825923B",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "Custom::CreateUUID",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "SolutionHelperSendAnonymousData9B19E31D": Object {
-      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
-      "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "BranchName": Object {
-          "Ref": "RepositoryBranchName",
-        },
-        "Region": Object {
-          "Ref": "AWS::Region",
-        },
-        "RepositoryName": Object {
-          "Ref": "RepositoryName",
-        },
-        "RepositoryOwner": Object {
-          "Ref": "RepositoryOwner",
-        },
-        "RepositorySource": Object {
-          "Ref": "RepositorySource",
-        },
-        "Resource": "AnonymousMetric",
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "SolutionHelper4825923B",
-            "Arn",
-          ],
-        },
-        "SolutionId": "SO0199",
-        "UUID": Object {
-          "Fn::GetAtt": Array [
-            "SolutionHelperCreateUniqueIDAF03406A",
-            "UUID",
-          ],
-        },
-      },
-      "Type": "Custom::AnonymousData",
-      "UpdateReplacePolicy": "Delete",
     },
     "SolutionHelperServiceRoleF70C0E2A": Object {
       "Metadata": Object {
@@ -6027,6 +5972,58 @@ phases:
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "SolutionHelperSolutionCreateUniqueID070ED802": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "Resource": "UUID",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::CreateUUID",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SolutionHelperSolutionSendAnonymousData271B3D26": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "BranchName": Object {
+          "Ref": "RepositoryBranchName",
+        },
+        "Region": Object {
+          "Ref": "AWS::Region",
+        },
+        "RepositoryName": Object {
+          "Ref": "RepositoryName",
+        },
+        "RepositoryOwner": Object {
+          "Ref": "RepositoryOwner",
+        },
+        "RepositorySource": Object {
+          "Ref": "RepositorySource",
+        },
+        "Resource": "AnonymousMetric",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+        "SolutionId": "SO0199",
+        "UUID": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelperSolutionCreateUniqueID070ED802",
+            "UUID",
+          ],
+        },
+      },
+      "Type": "Custom::AnonymousData",
+      "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
@@ -8048,7 +8045,6 @@ phases:
       ",
         },
         "Description": "This function generates UUID for each deployment and sends anonymous data to the AWS Solutions team",
-        "FunctionName": "LandingZoneAccelerator-SolutionHelper",
         "Handler": "index.handler",
         "Role": Object {
           "Fn::GetAtt": Array [
@@ -8060,58 +8056,6 @@ phases:
         "Timeout": 30,
       },
       "Type": "AWS::Lambda::Function",
-    },
-    "SolutionHelperCreateUniqueIDAF03406A": Object {
-      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
-      "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "Resource": "UUID",
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "SolutionHelper4825923B",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "Custom::CreateUUID",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "SolutionHelperSendAnonymousData9B19E31D": Object {
-      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
-      "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "BranchName": Object {
-          "Ref": "RepositoryBranchName",
-        },
-        "Region": Object {
-          "Ref": "AWS::Region",
-        },
-        "RepositoryName": Object {
-          "Ref": "RepositoryName",
-        },
-        "RepositoryOwner": Object {
-          "Ref": "RepositoryOwner",
-        },
-        "RepositorySource": Object {
-          "Ref": "RepositorySource",
-        },
-        "Resource": "AnonymousMetric",
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "SolutionHelper4825923B",
-            "Arn",
-          ],
-        },
-        "SolutionId": "SO0199",
-        "UUID": Object {
-          "Fn::GetAtt": Array [
-            "SolutionHelperCreateUniqueIDAF03406A",
-            "UUID",
-          ],
-        },
-      },
-      "Type": "Custom::AnonymousData",
-      "UpdateReplacePolicy": "Delete",
     },
     "SolutionHelperServiceRoleF70C0E2A": Object {
       "Metadata": Object {
@@ -8153,6 +8097,58 @@ phases:
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "SolutionHelperSolutionCreateUniqueID070ED802": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "Resource": "UUID",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::CreateUUID",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SolutionHelperSolutionSendAnonymousData271B3D26": Object {
+      "Condition": "SolutionHelperAnonymousDataToAWS62E4FDE2",
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "BranchName": Object {
+          "Ref": "RepositoryBranchName",
+        },
+        "Region": Object {
+          "Ref": "AWS::Region",
+        },
+        "RepositoryName": Object {
+          "Ref": "RepositoryName",
+        },
+        "RepositoryOwner": Object {
+          "Ref": "RepositoryOwner",
+        },
+        "RepositorySource": Object {
+          "Ref": "RepositorySource",
+        },
+        "Resource": "AnonymousMetric",
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelper4825923B",
+            "Arn",
+          ],
+        },
+        "SolutionId": "SO0199",
+        "UUID": Object {
+          "Fn::GetAtt": Array [
+            "SolutionHelperSolutionCreateUniqueID070ED802",
+            "UUID",
+          ],
+        },
+      },
+      "Type": "Custom::AnonymousData",
+      "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
