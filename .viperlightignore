@@ -91,12 +91,12 @@ source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1
 source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1492
 source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1637
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:768
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1142
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1151
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1160
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1169
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1178
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1137
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1146
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1156
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1165
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1174
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1183
 
 source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:68
 source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:82
