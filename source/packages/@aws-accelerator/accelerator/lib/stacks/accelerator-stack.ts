@@ -360,7 +360,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected isAccountIncluded(accounts: string[]): boolean {
     for (const account of accounts ?? []) {
       if (cdk.Stack.of(this).account === this.props.accountsConfig.getAccountId(account)) {
-        Logger.info(`[accelerator-stack] ${account} region explicitly included`);
+        Logger.info(`[accelerator-stack] ${account} account explicitly included`);
         return true;
       }
     }

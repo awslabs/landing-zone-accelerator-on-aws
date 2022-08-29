@@ -16,7 +16,7 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
-import { AccountsConfig, NetworkConfigTypes, VpcConfig } from '@aws-accelerator/config';
+import { AccountsConfig, NetworkConfigTypes, ShareTargets, VpcConfig } from '@aws-accelerator/config';
 import {
   AssociateHostedZones,
   IResourceShareItem,
@@ -26,6 +26,7 @@ import {
   ResourceShare,
   ResourceShareItem,
   ResourceShareOwner,
+  ShareSubnetTags,
   SsmParameter,
   SsmParameterType,
   TransitGatewayAttachment,
@@ -712,6 +713,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       }
     }
 
+    Logger.info('[network-associations-stack] Applying subnet and vpc tags for RAM shared resources');
+    this.shareSubnetTags();
+
     Logger.info('[network-associations-stack] Completed stack synthesis');
   }
 
@@ -733,6 +737,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     const resourceName = resourceShareName.split('_')[0];
     const logicalId = `${vpcName}${resourceName}${itemType.split(':')[1]}`;
 
+    Logger.debug('logicalId: ', logicalId);
     // Lookup resource share
     const resourceShare = ResourceShare.fromLookup(this, pascalCase(`${logicalId}Share`), {
       resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
@@ -747,5 +752,56 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       kmsKey: this.cloudwatchKey,
       logRetentionInDays: this.logRetention,
     });
+  }
+
+  /**
+   * Check if resource is shared with stack.
+   *
+   * @param shareTargets
+   */
+  private checkResourceShare(shareTargets: ShareTargets): boolean {
+    let included = false;
+    included = this.isOrganizationalUnitIncluded(shareTargets.organizationalUnits);
+
+    if (included) {
+      return included;
+    }
+
+    included = this.isAccountIncluded(shareTargets.accounts);
+
+    return included;
+  }
+
+  private shareSubnetTags() {
+    for (const vpc of this.props.networkConfig.vpcs) {
+      const owningAccountId = this.accountsConfig.getAccountId(vpc.account);
+      if (owningAccountId !== cdk.Stack.of(this).account && vpc.region === cdk.Stack.of(this).region) {
+        for (const subnet of vpc.subnets ?? []) {
+          //only get the shared subnets that have tags configured
+          if (subnet.shareTargets && subnet.tags) {
+            const shared = this.checkResourceShare(subnet.shareTargets);
+            if (shared) {
+              const sharedSubnet = this.getResourceShare(
+                vpc.name,
+                `${subnet.name}_SubnetShare`,
+                'ec2:Subnet',
+                owningAccountId,
+              );
+              const vpcTags = vpc.tags;
+              const subnetTags = subnet.tags;
+              const sharedSubnetId = sharedSubnet.resourceShareItemId;
+              new ShareSubnetTags(this, `ShareSubnetTags${vpc.account}-${subnet.name}`, {
+                vpcTags,
+                subnetTags,
+                sharedSubnetId,
+                owningAccountId,
+                resourceLoggingKmsKey: this.cloudwatchKey,
+                logRetentionInDays: this.logRetention,
+              });
+            }
+          }
+        }
+      }
+    }
   }
 }
