@@ -50,6 +50,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const subnetName: string = event.ResourceProperties['name'];
   const tags: Tag[] = event.ResourceProperties['tags'];
   const vpcId: string = event.ResourceProperties['vpcId'];
+  const outpostArn: string = event.ResourceProperties['outpostArn'] ?? undefined;
 
   // Set vpc variable
   let vpc: Vpc;
@@ -82,6 +83,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             AvailabilityZone: az,
             CidrBlock: subnetCidr,
             VpcId: vpc.vpcId,
+            OutpostArn: outpostArn,
           })
           .promise(),
       );
