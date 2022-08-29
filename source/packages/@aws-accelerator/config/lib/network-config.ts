@@ -104,6 +104,7 @@ export class NetworkConfigTypes {
       'natGateway',
       'internetGateway',
       'local',
+      'localGateway',
       'gatewayEndpoint',
       'gatewayLoadBalancerEndpoint',
       'networkInterface',
@@ -141,13 +142,14 @@ export class NetworkConfigTypes {
 
   static readonly subnetConfig = t.interface({
     name: t.nonEmptyString,
-    availabilityZone: t.nonEmptyString,
+    availabilityZone: t.optional(t.nonEmptyString),
     routeTable: t.nonEmptyString,
     ipv4CidrBlock: t.optional(t.nonEmptyString),
     mapPublicIpOnLaunch: t.optional(t.boolean),
     ipamAllocation: t.optional(this.ipamAllocationConfig),
     shareTargets: t.optional(t.shareTargets),
     tags: t.optional(t.array(t.tag)),
+    outpost: t.optional(t.nonEmptyString),
   });
 
   static readonly natGatewayConfig = t.interface({
@@ -343,6 +345,24 @@ export class NetworkConfigTypes {
     document: t.nonEmptyString,
   });
 
+  static readonly localGatewayRouteTableConfig = t.interface({
+    name: t.nonEmptyString,
+    id: t.nonEmptyString,
+  });
+
+  static readonly localGatewayConfig = t.interface({
+    name: t.nonEmptyString,
+    id: t.nonEmptyString,
+    routeTables: t.array(this.localGatewayRouteTableConfig),
+  });
+
+  static readonly outpostsConfig = t.interface({
+    name: t.nonEmptyString,
+    arn: t.nonEmptyString,
+    availabilityZone: t.nonEmptyString,
+    localGateway: t.optional(this.localGatewayConfig),
+  });
+
   static readonly vpcConfig = t.interface({
     name: t.nonEmptyString,
     account: t.nonEmptyString,
@@ -368,6 +388,7 @@ export class NetworkConfigTypes {
     subnets: t.optional(t.array(this.subnetConfig)),
     transitGatewayAttachments: t.optional(t.array(this.transitGatewayAttachmentConfig)),
     tags: t.optional(t.array(t.tag)),
+    outposts: t.optional(t.array(this.outpostsConfig)),
   });
 
   static readonly trafficTypeEnum = t.enums(
@@ -1153,6 +1174,7 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
    *
    * @remarks
    * Include only the letter of the AZ name (i.e. 'a' for 'us-east-1a').
+   * Not needed if providing an outpost
    */
   readonly availabilityZone = '';
   /**
@@ -1197,6 +1219,10 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
    * An array of tag objects for the VPC subnet.
    */
   readonly tags: t.Tag[] | undefined = undefined;
+  /**
+   * The friendly name for the outpost to attach to the subnet
+   */
+  readonly outpost: string | undefined = undefined;
 }
 
 /**
@@ -1258,6 +1284,61 @@ export class TransitGatewayAttachmentOptionsConfig
    * Enable to configure IPv6 support for the attachment. This option is disabled by default.
    */
   readonly ipv6Support: t.EnableDisable | undefined = undefined;
+}
+/**
+ * Local Gateway route table configuration.
+ * Used to define a Local Gateway route table.
+ */
+export class LocalGatewayRouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.localGatewayRouteTableConfig> {
+  /**
+   * A friendly name for the Route Table
+   */
+  readonly name = '';
+  /**
+   * The id for the Route Table
+   */
+  readonly id = '';
+}
+/**
+ * Local Gateway configuration.
+ * Used to define a Local Gateway
+ */
+export class LocalGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.localGatewayConfig> {
+  /**
+   * A friendly name for the Local Gateway
+   */
+  readonly name = '';
+  /**
+   * The id for the Local Gateway
+   */
+  readonly id = '';
+  /**
+   * The route tables for the Local Gateway
+   */
+  readonly routeTables: LocalGatewayRouteTableConfig[] = [];
+}
+
+/**
+ * Outpost configuration.
+ * Used to define an Outpost.
+ */
+export class OutpostsConfig implements t.TypeOf<typeof NetworkConfigTypes.outpostsConfig> {
+  /**
+   * A friendly name for the Outpost
+   */
+  readonly name = '';
+  /**
+   * The ARN for the Outpost
+   */
+  readonly arn = '';
+  /**
+   * The availability zone for the Outpost
+   */
+  readonly availabilityZone = '';
+  /**
+   * The Local Gateway for the Outpost
+   */
+  readonly localGateway: LocalGatewayConfig | undefined = undefined;
 }
 
 /**
@@ -1854,7 +1935,10 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
    * An array of Transit Gateway attachment configurations.
    */
   readonly transitGatewayAttachments: TransitGatewayAttachmentConfig[] | undefined = undefined;
-
+  /**
+   * An array of Local Gateway Route table configurations.
+   */
+  readonly outposts: OutpostsConfig[] | undefined = undefined;
   /**
    * An array of gateway endpoints for the VPC.
    */

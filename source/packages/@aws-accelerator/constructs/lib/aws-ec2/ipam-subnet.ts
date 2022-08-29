@@ -69,6 +69,10 @@ export interface IpamSubnetProps {
    * An array of tags for the subnet
    */
   readonly tags?: cdk.CfnTag[];
+  /**
+   * The outpost arn for the subnet
+   */
+  readonly outpostArn?: string;
 }
 
 export class IpamSubnet extends cdk.Resource implements IIpamSubnet {
@@ -127,6 +131,7 @@ export class IpamSubnet extends cdk.Resource implements IIpamSubnet {
         vpcId: props.vpcId,
         mapPublicIpOnLaunch: props.mapPublicIpOnLaunch,
         tags: this.tags,
+        outpostArn: props.outpostArn,
       },
     });
 

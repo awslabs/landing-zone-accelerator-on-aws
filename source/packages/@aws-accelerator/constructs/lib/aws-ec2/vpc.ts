@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
-import { IpamAllocationConfig } from '@aws-accelerator/config';
+import { IpamAllocationConfig, OutpostsConfig } from '@aws-accelerator/config';
 
 import { IpamSubnet } from './ipam-subnet';
 import { IPrefixList } from './prefix-list';
@@ -62,6 +62,7 @@ export interface SubnetProps {
   readonly kmsKey?: cdk.aws_kms.Key;
   readonly logRetentionInDays?: number;
   readonly tags?: cdk.CfnTag[];
+  readonly outpost?: OutpostsConfig;
   // readonly nacl: INacl;
 }
 
@@ -73,6 +74,7 @@ export class Subnet extends cdk.Resource implements ISubnet {
   public readonly routeTable: IRouteTable;
   public readonly subnetId: string;
   public readonly subnetArn: string;
+  public readonly outpostArn?: string;
 
   constructor(scope: Construct, id: string, props: SubnetProps) {
     super(scope, id);
@@ -81,7 +83,7 @@ export class Subnet extends cdk.Resource implements ISubnet {
     this.availabilityZone = props.availabilityZone;
     this.mapPublicIpOnLaunch = props.mapPublicIpOnLaunch;
     this.routeTable = props.routeTable;
-
+    this.outpostArn = props.outpost?.arn;
     // Determine if IPAM subnet or native
     let resource: cdk.aws_ec2.CfnSubnet | IpamSubnet;
 
@@ -94,6 +96,7 @@ export class Subnet extends cdk.Resource implements ISubnet {
         availabilityZone: props.availabilityZone,
         mapPublicIpOnLaunch: props.mapPublicIpOnLaunch,
         tags: props.tags,
+        outpostArn: props.outpost?.arn,
       });
 
       cdk.Tags.of(this).add('Name', props.name);
@@ -136,6 +139,7 @@ export class Subnet extends cdk.Resource implements ISubnet {
         kmsKey: props.kmsKey,
         logRetentionInDays: props.logRetentionInDays,
         tags: props.tags,
+        outpostArn: props.outpost?.arn,
       });
 
       this.ipv4CidrBlock = resource.ipv4CidrBlock;
