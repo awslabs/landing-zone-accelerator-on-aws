@@ -332,6 +332,181 @@ Object {
       },
       "Type": "AWS::EC2::IPAMPool",
     },
+    "CustomDirectConnectGatewayCustomResourceProviderHandler82F9382C": Object {
+      "DependsOn": Array [
+        "CustomDirectConnectGatewayCustomResourceProviderRole60C5A7B2",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomDirectConnectGatewayCustomResourceProviderRole60C5A7B2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomDirectConnectGatewayCustomResourceProviderLogGroup242F4324": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomDirectConnectGatewayCustomResourceProviderHandler82F9382C",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomDirectConnectGatewayCustomResourceProviderRole60C5A7B2": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "directconnect:CreateDirectConnectGateway",
+                    "directconnect:DeleteDirectConnectGateway",
+                    "directconnect:UpdateDirectConnectGateway",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "DirectConnectGatewayCRUD",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomDirectConnectVirtualInterfaceCustomResourceProviderHandler147DBFD9": Object {
+      "DependsOn": Array [
+        "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomDirectConnectVirtualInterfaceCustomResourceProviderLogGroup51E4607A": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomDirectConnectVirtualInterfaceCustomResourceProviderHandler147DBFD9",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "directconnect:CreatePrivateVirtualInterface",
+                    "directconnect:CreateTransitVirtualInterface",
+                    "directconnect:DeleteVirtualInterface",
+                    "directconnect:TagResource",
+                    "directconnect:UntagResource",
+                    "directconnect:UpdateVirtualInterfaceAttributes",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "DxVirtualInterfaceCRUD",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1": Object {
       "DependsOn": Array [
         "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
@@ -613,6 +788,52 @@ Object {
       },
       "Type": "AWS::EC2::IPAMPool",
     },
+    "NetworkDxgwAccelratorVifVirtualInterface0F06099A": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomDirectConnectVirtualInterfaceCustomResourceProviderLogGroup51E4607A",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomDirectConnectVirtualInterfaceCustomResourceProviderHandler147DBFD9",
+            "Arn",
+          ],
+        },
+        "addressFamily": "ipv4",
+        "connectionId": "dxcon-test1234",
+        "customerAsn": 65002,
+        "directConnectGatewayId": Object {
+          "Ref": "NetworkDxgwDxGatewayB600DBBE",
+        },
+        "enableSiteLink": true,
+        "interfaceName": "Accelrator-VIF",
+        "jumboFrames": true,
+        "region": "us-east-1",
+        "type": "transit",
+        "vlan": 575,
+      },
+      "Type": "Custom::DirectConnectVirtualInterface",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkDxgwDxGatewayB600DBBE": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomDirectConnectGatewayCustomResourceProviderLogGroup242F4324",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomDirectConnectGatewayCustomResourceProviderHandler82F9382C",
+            "Arn",
+          ],
+        },
+        "asn": 65000,
+        "gatewayName": "Network-DXGW",
+      },
+      "Type": "Custom::DirectConnectGateway",
+      "UpdateReplacePolicy": "Delete",
+    },
     "NetworkMainCoreTransitGatewayRouteTableE04FCA1B": Object {
       "Properties": Object {
         "Tags": Array [
@@ -765,6 +986,26 @@ Object {
         "Name": "/accelerator/AWSAccelerator-NetworkPrepStack-555555555555-us-east-1/version",
         "Type": "String",
         "Value": "1.1.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkDxgwAccelratorVifVirtualInterface811176E7": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/directConnectGateways/Network-DXGW/virtualInterfaces/Accelrator-VIF/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "NetworkDxgwAccelratorVifVirtualInterface0F06099A",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkDxgwDirectConnectGatewayC782B366": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/directConnectGateways/Network-DXGW/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "NetworkDxgwDxGatewayB600DBBE",
+        },
       },
       "Type": "AWS::SSM::Parameter",
     },

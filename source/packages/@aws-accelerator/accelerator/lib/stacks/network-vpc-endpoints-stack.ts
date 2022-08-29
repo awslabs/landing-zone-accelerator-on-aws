@@ -39,8 +39,7 @@ import {
   SecurityGroup,
   SecurityGroupEgressRuleProps,
   SecurityGroupIngressRuleProps,
-  SsmParameter,
-  SsmParameterType,
+  SsmParameterLookup,
   VpcEndpoint,
   VpcEndpointType,
 } from '@aws-accelerator/constructs';
@@ -199,19 +198,20 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
                 // Get endpoint service ID
                 if (!endpointServiceId) {
                   if (delegatedAdminAccountId !== cdk.Stack.of(this).account) {
-                    endpointServiceId = new SsmParameter(this, pascalCase(`SsmParamLookup${loadBalancerItem.name}`), {
-                      region: cdk.Stack.of(this).region,
-                      partition: cdk.Stack.of(this).partition,
-                      parameter: {
+                    endpointServiceId = new SsmParameterLookup(
+                      this,
+                      pascalCase(`SsmParamLookup${loadBalancerItem.name}`),
+                      {
                         name: `/accelerator/network/gwlb/${loadBalancerItem.name}/endpointService/id`,
                         accountId: delegatedAdminAccountId,
+                        parameterRegion: cdk.Stack.of(this).region,
                         roleName: `AWSAccelerator-Get${pascalCase(loadBalancerItem.name)}SsmParamRole-${
                           cdk.Stack.of(this).region
                         }`,
+                        kmsKey: this.cloudwatchKey,
+                        logRetentionInDays: this.logRetention,
                       },
-                      invokingAccountID: cdk.Stack.of(this).account,
-                      type: SsmParameterType.GET,
-                    }).value;
+                    ).value;
 
                     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
                     NagSuppressions.addResourceSuppressionsByPath(

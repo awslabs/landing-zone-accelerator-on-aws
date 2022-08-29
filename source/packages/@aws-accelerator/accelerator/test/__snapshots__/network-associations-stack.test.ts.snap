@@ -7,19 +7,863 @@ Object {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkdirectConnectGatewaysNetworkDXGWidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/directConnectGateways/Network-DXGW/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/prefixList/accelerator-prefix-list/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkroute53ResolverfirewallruleGroupsacceleratorblockgroupidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/route53Resolver/firewall/ruleGroups/accelerator-block-group/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkroute53ResolverqueryLogConfigsacceleratorquerylogscwlidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/route53Resolver/queryLogConfigs/accelerator-query-logs-cwl/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkroute53ResolverqueryLogConfigsacceleratorquerylogss3idC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/route53Resolver/queryLogConfigs/accelerator-query-logs-s3/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkroute53ResolverrulesexampleruleidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/route53Resolver/rules/example-rule/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/transitGateways/Network-Main/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Core/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSegregatedidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Segregated/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Shared/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainStandaloneidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Standalone/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneec2idC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/ec2/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneec2messagesidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/ec2messages/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonekmsidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/kms/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonelogsidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/logs/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonessmidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/ssm/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonessmmessagesidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/ssmmessages/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/transitGatewayAttachment/Network-Endpoints/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Inspection/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectiontransitGatewayAttachmentNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Inspection/transitGatewayAttachment/Network-Inspection/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": Object {
+    "AssociateHostedZonesF0E2F0DA": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomRoute53AssociateHostedZonesCustomResourceProviderLogGroupDEA7760D",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomRoute53AssociateHostedZonesCustomResourceProviderHandler1296DB71",
+            "Arn",
+          ],
+        },
+        "accountIds": Array [
+          "555555555555",
+          "444444444444",
+        ],
+        "hostedZoneAccountId": "555555555555",
+        "hostedZoneIds": Array [
+          Object {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneec2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          Object {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneec2messagesidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          Object {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonessmidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          Object {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonessmmessagesidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          Object {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonekmsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          Object {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZonelogsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        ],
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "region": "us-east-1",
+        "roleName": "AWSAccelerator-EnableCentralEndpointsRole-us-east-1",
+        "tagFilters": Array [
+          Object {
+            "key": "accelerator:use-central-endpoints",
+            "value": "true",
+          },
+          Object {
+            "key": "accelerator:central-endpoints-account-id",
+            "value": "555555555555",
+          },
+        ],
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::Route53AssociateHostedZones",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomDirectConnectGatewayAssociationCustomResourceProviderHandler3BC99D92": Object {
+      "DependsOn": Array [
+        "CustomDirectConnectGatewayAssociationCustomResourceProviderRole7D012188",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomDirectConnectGatewayAssociationCustomResourceProviderRole7D012188",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomDirectConnectGatewayAssociationCustomResourceProviderLogGroup966224A3": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomDirectConnectGatewayAssociationCustomResourceProviderHandler3BC99D92",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomDirectConnectGatewayAssociationCustomResourceProviderRole7D012188": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "directconnect:CreateDirectConnectGatewayAssociation",
+                    "directconnect:DeleteDirectConnectGatewayAssociation",
+                    "directconnect:DescribeDirectConnectGatewayAssociations",
+                    "directconnect:UpdateDirectConnectGatewayAssociation",
+                    "ec2:DescribeTransitGatewayAttachments",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "DirectConnectGatewayCRUD",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354": Object {
+      "DependsOn": Array [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomRoute53AssociateHostedZonesCustomResourceProviderHandler1296DB71": Object {
+      "DependsOn": Array [
+        "CustomRoute53AssociateHostedZonesCustomResourceProviderRole17C82AD6",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomRoute53AssociateHostedZonesCustomResourceProviderRole17C82AD6",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomRoute53AssociateHostedZonesCustomResourceProviderLogGroupDEA7760D": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomRoute53AssociateHostedZonesCustomResourceProviderHandler1296DB71",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomRoute53AssociateHostedZonesCustomResourceProviderRole17C82AD6": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "ec2:DescribeVpcs",
+                    "route53:AssociateVPCWithHostedZone",
+                    "route53:CreateVPCAssociationAuthorization",
+                    "route53:DeleteVPCAssociationAuthorization",
+                    "route53:GetHostedZone",
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "Route53AssociateHostedZonesActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomTransitGatewayPrefixListReferenceCustomResourceProviderHandler9BAD63E3": Object {
+      "DependsOn": Array [
+        "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomTransitGatewayPrefixListReferenceCustomResourceProviderLogGroupBC9F3669": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomTransitGatewayPrefixListReferenceCustomResourceProviderHandler9BAD63E3",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomTransitGatewayPrefixListReferenceCustomResourceProviderRoleC5D4C080": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "ec2:CreateTransitGatewayPrefixListReference",
+                    "ec2:ModifyTransitGatewayPrefixListReference",
+                    "ec2:DeleteTransitGatewayPrefixListReference",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AllowModifyTgwReferences",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "NetworkDxgwNetworkMainCoreAssociation1B0096A1": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Fn::GetAtt": Array [
+            "NetworkDxgwNetworkMainDxGatewayAssociationF3E8BC9A",
+            "TransitGatewayAttachmentId",
+          ],
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "NetworkDxgwNetworkMainCorePropagation959338BE": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Fn::GetAtt": Array [
+            "NetworkDxgwNetworkMainDxGatewayAssociationF3E8BC9A",
+            "TransitGatewayAttachmentId",
+          ],
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "NetworkDxgwNetworkMainDxGatewayAssociationF3E8BC9A": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomDirectConnectGatewayAssociationCustomResourceProviderLogGroup966224A3",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomDirectConnectGatewayAssociationCustomResourceProviderHandler3BC99D92",
+            "Arn",
+          ],
+        },
+        "allowedPrefixes": Array [
+          "10.0.0.0/8",
+          "192.168.0.0/16",
+        ],
+        "directConnectGatewayId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkdirectConnectGatewaysNetworkDXGWidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "gatewayId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "Custom::DirectConnectGatewayAssociation",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkEndpointsNetworkMainCorePropagationB71504FB": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "NetworkEndpointsNetworkMainSegregatedPropagation126AD34C": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSegregatedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "NetworkEndpointsNetworkMainSharedAssociation32A1E778": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "NetworkEndpointsNetworkMainSharedPropagationB52F1A2C": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "NetworkEndpointsToInspectionVpcPeeringE81AF602": Object {
+      "Properties": Object {
+        "PeerOwnerId": "555555555555",
+        "PeerRegion": "us-east-1",
+        "PeerVpcId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "NetworkEndpointsToInspection",
+          },
+        ],
+        "VpcId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCPeeringConnection",
+    },
+    "NetworkEndpointsacceleratorBlockGroupRuleGroupAssociation1AF8FC15": Object {
+      "Properties": Object {
+        "FirewallRuleGroupId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkroute53ResolverfirewallruleGroupsacceleratorblockgroupidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Priority": 101,
+        "VpcId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::Route53Resolver::FirewallRuleGroupAssociation",
+    },
+    "NetworkEndpointsacceleratorQueryLogsCwlQueryLogAssociationEA44BB29": Object {
+      "Properties": Object {
+        "ResolverQueryLogConfigId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkroute53ResolverqueryLogConfigsacceleratorquerylogscwlidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "ResourceId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfigAssociation",
+    },
+    "NetworkEndpointsacceleratorQueryLogsS3QueryLogAssociationC248D059": Object {
+      "Properties": Object {
+        "ResolverQueryLogConfigId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkroute53ResolverqueryLogConfigsacceleratorquerylogss3idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "ResourceId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfigAssociation",
+    },
+    "NetworkEndpointsexampleRuleRuleAssociationB302A795": Object {
+      "Properties": Object {
+        "ResolverRuleId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkroute53ResolverrulesexampleruleidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "VPCId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::Route53Resolver::ResolverRuleAssociation",
+    },
+    "NetworkInspectionNetworkMainCorePropagation37D40A21": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectiontransitGatewayAttachmentNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "NetworkInspectionNetworkMainSegregatedPropagationA07EB35C": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectiontransitGatewayAttachmentNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSegregatedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "NetworkInspectionNetworkMainSharedAssociationC5D467EA": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectiontransitGatewayAttachmentNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "NetworkInspectionNetworkMainSharedPropagation9C8183A3": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectiontransitGatewayAttachmentNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "NetworkMainCore101000016NetworkEndpointsNetworkStaticRouteEC325B8C": Object {
+      "Properties": Object {
+        "DestinationCidrBlock": "10.100.0.0/16",
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
+    },
+    "NetworkMainCore102000016NetworkDXGWStaticRoute7BFECA73": Object {
+      "Properties": Object {
+        "DestinationCidrBlock": "10.200.0.0/16",
+        "TransitGatewayAttachmentId": Object {
+          "Fn::GetAtt": Array [
+            "NetworkDxgwNetworkMainDxGatewayAssociationF3E8BC9A",
+            "TransitGatewayAttachmentId",
+          ],
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
+    },
+    "NetworkMainCore111132blackholeStaticRouteEF8CDB96": Object {
+      "Properties": Object {
+        "Blackhole": true,
+        "DestinationCidrBlock": "1.1.1.1/32",
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
+    },
+    "NetworkMainCoreacceleratorPrefixListNetworkEndpointsNetwork3EFFBC42": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomTransitGatewayPrefixListReferenceCustomResourceProviderLogGroupBC9F3669",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomTransitGatewayPrefixListReferenceCustomResourceProviderHandler9BAD63E3",
+            "Arn",
+          ],
+        },
+        "prefixListReference": Object {
+          "PrefixListId": Object {
+            "Ref": "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          "TransitGatewayAttachmentId": Object {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          "TransitGatewayRouteTableId": Object {
+            "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        },
+      },
+      "Type": "Custom::TransitGatewayPrefixListReference",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SharedServicesMainNetworkMainCorePropagationB8A9444B": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "SharedServicesMainNetworkMainSegregatedPropagation1734E165": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSegregatedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "SharedServicesMainNetworkMainSharedAssociationFE2C7420": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "SharedServicesMainNetworkMainSharedPropagationA83F55E7": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "SharedServicesMainSharedServicesVpcTransitGatewayAttachmentE1E0A8A8": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "name": "SharedServices-Main",
+        "roleArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::444444444444:role/AWSAccelerator-DescribeTgwAttachRole-us-east-1",
+            ],
+          ],
+        },
+        "transitGatewayId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
+      "UpdateReplacePolicy": "Delete",
+    },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
-        "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-111111111111-us-east-1/version",
+        "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/version",
         "Type": "String",
         "Value": "1.1.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamNetworkEndpointsToInspectionVpcPeering66A4E12A": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/vpcPeering/NetworkEndpointsToInspection/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "NetworkEndpointsToInspectionVpcPeeringE81AF602",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamStackId521A78D3": Object {
       "Properties": Object {
-        "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-111111111111-us-east-1/stack-id",
+        "Name": "/accelerator/AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/stack-id",
         "Type": "String",
         "Value": Object {
           "Ref": "AWS::StackId",
