@@ -22,6 +22,9 @@ transitGateways:
             attachment:
               vpcName: Network-Endpoints
               account: Network
+          - destinationCidrBlock: 10.200.0.0/16
+            attachment:
+              directConnectGatewayName: Network-DXGW
           - destinationCidrBlock: 1.1.1.1/32
             blackhole: true
           - destinationPrefixList: accelerator-prefix-list
@@ -747,6 +750,33 @@ vpcFlowLogs:
     - pkt-dst-aws-service
     - flow-direction
     - traffic-path
+
+directConnectGateways:
+  - name: Network-DXGW
+    account: Network
+    asn: 65000
+    gatewayName: Network-DXGW
+    virtualInterfaces:
+      - name: Accelrator-VIF
+        connectionId: dxcon-test1234
+        customerAsn: 65002
+        interfaceName: Accelrator-VIF
+        ownerAccount: Network
+        region: us-east-1
+        type: transit
+        vlan: 575
+        enableSiteLink: true
+        jumboFrames: true
+    transitGatewayAssociations: 
+      - name: Network-Main
+        account: Network
+        allowedPrefixes:
+          - 10.0.0.0/8
+          - 192.168.0.0/16
+        routeTableAssociations:
+          - Network-Main-Core
+        routeTablePropagations:
+          - Network-Main-Core
 
 vpcPeering:
   - name: NetworkEndpointsToInspection

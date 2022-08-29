@@ -1,0 +1,282 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VirtualInterface Construct(VirtualInterface):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderHandler58CF9005": Object {
+      "DependsOn": Array [
+        "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderRoleBC904CA4",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderRoleBC904CA4",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderLogGroup29B00939": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "Key961B73FD",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderHandler58CF9005",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderRoleBC904CA4": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "directconnect:AllocatePrivateVirtualInterface",
+                    "directconnect:AllocateTransitVirtualInterface",
+                    "directconnect:DeleteVirtualInterface",
+                    "directconnect:TagResource",
+                    "directconnect:UpdateVirtualInterfaceAttributes",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "DxVirtualInterfaceAllocateCRUD",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomDirectConnectVirtualInterfaceCustomResourceProviderHandler147DBFD9": Object {
+      "DependsOn": Array [
+        "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomDirectConnectVirtualInterfaceCustomResourceProviderLogGroup51E4607A": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "Key961B73FD",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomDirectConnectVirtualInterfaceCustomResourceProviderHandler147DBFD9",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomDirectConnectVirtualInterfaceCustomResourceProviderRoleD8C9D582": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "directconnect:CreatePrivateVirtualInterface",
+                    "directconnect:CreateTransitVirtualInterface",
+                    "directconnect:DeleteVirtualInterface",
+                    "directconnect:TagResource",
+                    "directconnect:UntagResource",
+                    "directconnect:UpdateVirtualInterfaceAttributes",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "DxVirtualInterfaceCRUD",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "Key961B73FD": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestVif905D8106": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomDirectConnectVirtualInterfaceCustomResourceProviderLogGroup51E4607A",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomDirectConnectVirtualInterfaceCustomResourceProviderHandler147DBFD9",
+            "Arn",
+          ],
+        },
+        "addressFamily": "ipv4",
+        "connectionId": "test-dx-conn-id",
+        "customerAsn": 65000,
+        "directConnectGatewayId": "test-dxgw-id",
+        "enableSiteLink": false,
+        "interfaceName": "test-vif",
+        "jumboFrames": false,
+        "region": "us-east-1",
+        "type": "transit",
+        "vlan": 300,
+      },
+      "Type": "Custom::DirectConnectVirtualInterface",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TestVifAllocation5BE00E39": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderLogGroup29B00939",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomDirectConnectVirtualInterfaceAllocationCustomResourceProviderHandler58CF9005",
+            "Arn",
+          ],
+        },
+        "addressFamily": "ipv4",
+        "connectionId": "test-dx-conn-id",
+        "customerAsn": 65000,
+        "enableSiteLink": false,
+        "interfaceName": "test-vif",
+        "jumboFrames": false,
+        "ownerAccount": "111111111",
+        "region": "us-east-1",
+        "type": "transit",
+        "vlan": 300,
+      },
+      "Type": "Custom::DirectConnectVirtualInterfaceAllocation",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;

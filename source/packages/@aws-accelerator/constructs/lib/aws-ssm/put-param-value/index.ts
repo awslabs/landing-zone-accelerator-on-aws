@@ -49,7 +49,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         })
         .promise(),
     );
-    console.log(assumeRoleCredential);
     ssmClient = new AWS.SSM({
       region: region,
       credentials: {
