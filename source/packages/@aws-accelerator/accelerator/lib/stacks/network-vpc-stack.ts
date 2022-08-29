@@ -23,11 +23,14 @@ import {
   NetworkConfigTypes,
   nonEmptyString,
   OrganizationConfig,
+  OutpostsConfig,
   PrefixListSourceConfig,
   SecurityGroupRuleConfig,
   SecurityGroupSourceConfig,
   SubnetConfig,
   SubnetSourceConfig,
+  VpcConfig,
+  VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import {
   DeleteDefaultVpc,
@@ -51,7 +54,6 @@ import {
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-
 export interface SecurityGroupRuleProps {
   ipProtocol: string;
   cidrIp?: string;
@@ -607,42 +609,51 @@ export class NetworkVpcStack extends AcceleratorStack {
           encryptionKey: this.cloudwatchKey,
           bucketArn: centralLogsBucketArn,
         });
-
+        // Get Outpost Info
+        let outpostMap = new Map<string, OutpostsConfig>();
+        let outpostRouteTableMap = new Map<string, RouteTable>();
+        if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+          outpostMap = this.getOutpostMap(vpcItem);
+          outpostRouteTableMap = this.getOutpostRouteTables(vpcItem, vpc);
+          this.associateLocalGatewayRouteTablesToVpc({
+            vpcAccountName: vpcItem.account,
+            routeTables: outpostRouteTableMap,
+            vpcId: vpc.vpcId,
+            vpcName: vpcItem.name,
+          });
+        }
         //
         // Create Route Tables
         //
-        const routeTableMap = new Map<string, RouteTable>();
-        for (const routeTableItem of vpcItem.routeTables ?? []) {
-          const routeTable = new RouteTable(
-            this,
-            pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${routeTableItem.name}RouteTable`),
-            {
-              name: routeTableItem.name,
-              vpc,
-              tags: routeTableItem.tags,
-            },
-          );
-          routeTableMap.set(routeTableItem.name, routeTable);
+        const routeTableMap = this.createRouteTables(vpcItem, vpc);
+        //
+        // Add outposts route tables to route table map and associate route tables to VPC
+        //
+        for (const [key, value] of outpostRouteTableMap) {
+          routeTableMap.set(key, value);
+        }
+
+        //
+        // Create Route Table SSM Parameters
+        //
+        for (const [routeTableName, routeTableInfo] of routeTableMap) {
           new cdk.aws_ssm.StringParameter(
             this,
-            pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(routeTableItem.name)}RouteTableId`),
+            pascalCase(`SsmParam${pascalCase(vpcItem.name)}${pascalCase(routeTableName)}RouteTableId`),
             {
-              parameterName: `/accelerator/network/vpc/${vpcItem.name}/routeTable/${routeTableItem.name}/id`,
-              stringValue: routeTable.routeTableId,
+              parameterName: `/accelerator/network/vpc/${vpcItem.name}/routeTable/${routeTableName}/id`,
+              stringValue: routeTableInfo.routeTableId,
             },
           );
-
-          // Add gateway association if configured
-          if (routeTableItem.gatewayAssociation) {
-            routeTable.addGatewayAssociation(routeTableItem.gatewayAssociation);
-          }
         }
 
         //
         // Create Subnets
         //
+
         const subnetMap = new Map<string, Subnet>();
         const ipamSubnetMap = new Map<number, Subnet>();
+
         let index = 0;
 
         for (const subnetItem of vpcItem.subnets ?? []) {
@@ -660,7 +671,22 @@ export class NetworkVpcStack extends AcceleratorStack {
               `[network-vpc-stack] Error creating subnet ${subnetItem.name}: route table ${subnetItem.routeTable} not defined`,
             );
           }
+          const outpost = outpostMap.get(subnetItem.outpost || '');
 
+          // Set the AZ
+
+          let availabilityZone;
+          if (subnetItem.availabilityZone) {
+            availabilityZone = `${cdk.Stack.of(this).region}${subnetItem.availabilityZone}`;
+          } else if (outpost?.availabilityZone) {
+            availabilityZone = outpost.availabilityZone;
+          }
+
+          if (!availabilityZone) {
+            throw new Error(
+              `[network-vpc-stack] Error creating subnet ${subnetItem.name}: Availability Zone not defined.`,
+            );
+          }
           // Check for base IPAM pool CIDRs in config
           let basePool: string[] | undefined = undefined;
           if (subnetItem.ipamAllocation) {
@@ -688,7 +714,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           // Create subnet
           const subnet = new Subnet(this, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${subnetItem.name}Subnet`), {
             name: subnetItem.name,
-            availabilityZone: `${cdk.Stack.of(this).region}${subnetItem.availabilityZone}`,
+            availabilityZone,
             basePool,
             ipamAllocation: subnetItem.ipamAllocation,
             ipv4CidrBlock: subnetItem.ipv4CidrBlock,
@@ -698,7 +724,9 @@ export class NetworkVpcStack extends AcceleratorStack {
             routeTable,
             vpc,
             tags: subnetItem.tags,
+            outpost,
           });
+
           subnetMap.set(subnetItem.name, subnet);
           new cdk.aws_ssm.StringParameter(
             this,
@@ -1615,5 +1643,71 @@ export class NetworkVpcStack extends AcceleratorStack {
     NagSuppressions.addResourceSuppressions(loadBalancer, [
       { id: 'AwsSolutions-ELB2', reason: 'Gateway Load Balancers do not support access logging.' },
     ]);
+  }
+
+  private createRouteTables(vpcItem: VpcConfig | VpcTemplatesConfig, vpc: Vpc): Map<string, RouteTable> {
+    const routeTableMap = new Map<string, RouteTable>();
+    for (const routeTableItem of vpcItem.routeTables ?? []) {
+      const routeTable = new RouteTable(
+        this,
+        pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${routeTableItem.name}RouteTable`),
+        {
+          name: routeTableItem.name,
+          vpc,
+          tags: routeTableItem.tags,
+        },
+      );
+
+      // Add gateway association if configured
+      if (routeTableItem.gatewayAssociation) {
+        routeTable.addGatewayAssociation(routeTableItem.gatewayAssociation);
+      }
+
+      routeTableMap.set(routeTableItem.name, routeTable);
+    }
+
+    return routeTableMap;
+  }
+
+  /**
+   * Get outpost route tables
+   */
+  private getOutpostRouteTables(vpcItem: VpcConfig, vpc: Vpc): Map<string, RouteTable> {
+    const outpostRouteTableMap = new Map<string, RouteTable>();
+    for (const outpost of vpcItem.outposts ?? []) {
+      for (const routeTableItem of outpost.localGateway?.routeTables ?? []) {
+        const outpostRouteTable = { routeTableId: routeTableItem.id, vpc } as RouteTable;
+        outpostRouteTableMap.set(routeTableItem.name, outpostRouteTable);
+      }
+    }
+
+    return outpostRouteTableMap;
+  }
+
+  private getOutpostMap(vpcItem: VpcConfig): Map<string, OutpostsConfig> {
+    const outpostsMap = new Map<string, OutpostsConfig>();
+    for (const outpost of vpcItem.outposts ?? []) {
+      outpostsMap.set(outpost.name, outpost);
+    }
+
+    return outpostsMap;
+  }
+
+  private associateLocalGatewayRouteTablesToVpc(localGateway: {
+    vpcAccountName: string;
+    vpcName: string;
+    vpcId: string;
+    routeTables: Map<string, RouteTable>;
+  }): void {
+    for (const [name, routeTable] of localGateway.routeTables) {
+      new cdk.aws_ec2.CfnLocalGatewayRouteTableVPCAssociation(
+        this,
+        `${name}-${localGateway.vpcName}-${localGateway.vpcAccountName}`,
+        {
+          vpcId: localGateway.vpcId,
+          localGatewayRouteTableId: routeTable.routeTableId,
+        },
+      );
+    }
   }
 }
