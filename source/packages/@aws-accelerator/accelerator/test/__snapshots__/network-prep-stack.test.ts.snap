@@ -966,7 +966,11 @@ Object {
           "Fn::Join": Array [
             "",
             Array [
-              "{\\"Statement\\":[{\\"Action\\":[\\"logs:CreateLogStream\\",\\"logs:PutLogEvents\\"],\\"Effect\\":\\"Allow\\",\\"Principal\\":{\\"Service\\":\\"delivery.logs.amazonaws.com\\"},\\"Resource\\":\\"",
+              "{\\"Statement\\":[{\\"Action\\":[\\"logs:CreateLogStream\\",\\"logs:PutLogEvents\\"],\\"Condition\\":{\\"StringEquals\\":{\\"aws:PrincipalOrgId\\":\\"",
+              Object {
+                "Ref": "Organization29A5FC3F",
+              },
+              "\\"}},\\"Effect\\":\\"Allow\\",\\"Principal\\":{\\"Service\\":\\"delivery.logs.amazonaws.com\\"},\\"Resource\\":\\"",
               Object {
                 "Fn::GetAtt": Array [
                   "QueryLogsLogGroup9D69754D",

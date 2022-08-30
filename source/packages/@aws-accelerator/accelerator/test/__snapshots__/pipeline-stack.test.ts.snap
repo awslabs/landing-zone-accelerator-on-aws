@@ -223,6 +223,53 @@ Object {
       },
       "Type": "AWS::IAM::Policy",
     },
+    "AdminCdkToolkitRoleOverflowPolicy1B97AD4AA": Object {
+      "Properties": Object {
+        "Description": "Part of the policies for PipelineStack/AdminCdkToolkitRole",
+        "Path": "/",
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "PipelineSecureBucketB3EEB324",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "PipelineSecureBucketB3EEB324",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Roles": Array [
+          Object {
+            "Ref": "AdminCdkToolkitRole292E163A",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::ManagedPolicy",
+    },
     "Pipeline8E4BFAC9": Object {
       "DependsOn": Array [
         "PipelinePipelineRoleDefaultPolicy7D262A22",
