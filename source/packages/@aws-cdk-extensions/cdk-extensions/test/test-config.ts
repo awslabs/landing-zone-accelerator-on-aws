@@ -27,3 +27,9 @@ export const repositoryProps: CdkExtensions.RepositoryProps = {
   s3BucketName: 'Testbucket',
   s3key: 'testkey',
 };
+
+export const trailProps: CdkExtensions.TrailProps = {
+  isOrganizationTrail: true,
+  apiCallRateInsight: true,
+  apiErrorRateInsight: true,
+};

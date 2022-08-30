@@ -57,14 +57,18 @@ export interface OrganizationsStackProps extends AcceleratorStackProps {
  */
 export class OrganizationsStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.Key;
+  private centralLogBucketKey: cdk.aws_kms.Key;
+  private centralLogBucketReplicationProps: BucketReplicationProps;
   private logRetention: number;
+  private stackProperties: AcceleratorStackProps;
 
   constructor(scope: Construct, id: string, props: OrganizationsStackProps) {
     super(scope, id, props);
 
     Logger.debug(`[organizations-stack] homeRegion: ${props.globalConfig.homeRegion}`);
     // Set private properties
-    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
+    this.stackProperties = props;
+    this.logRetention = this.stackProperties.globalConfig.cloudwatchLogRetentionInDays;
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
@@ -72,14 +76,34 @@ export class OrganizationsStack extends AcceleratorStack {
       cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
     ) as cdk.aws_kms.Key;
 
+    this.centralLogBucketKey = new KeyLookup(this, 'AcceleratorCentralLogBucketKeyLookup', {
+      accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
+      keyRegion: this.stackProperties.globalConfig.homeRegion,
+      roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
+      keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
+      logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
+
+    this.centralLogBucketReplicationProps = {
+      destination: {
+        bucketName: `aws-accelerator-central-logs-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
+          this.stackProperties.globalConfig.homeRegion
+        }`,
+        accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
+        keyArn: this.centralLogBucketKey.keyArn,
+      },
+      kmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
+    };
+
     //
     // Global Organizations actions, only execute in the home region
     //
-    if (props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
+    if (this.stackProperties.globalConfig.homeRegion === cdk.Stack.of(this).region) {
       //
-      // Configure Organizations Trail
+      // Organizational CloudTrail
       //
-      this.addOrganizationsCloudTrail();
+      this.configureOrganizationCloudTrail();
 
       //
       // Enable Backup Policy
@@ -140,75 +164,10 @@ export class OrganizationsStack extends AcceleratorStack {
   }
 
   /**
-   * Function to add Organizations CloudTrail
-   */
-  private addOrganizationsCloudTrail() {
-    Logger.debug(
-      `[organizations-stack] logging.cloudtrail.enable: ${this.props.globalConfig.logging.cloudtrail.enable}`,
-    );
-    Logger.debug(
-      `[organizations-stack] logging.cloudtrail.organizationTrail: ${this.props.globalConfig.logging.cloudtrail.organizationTrail}`,
-    );
-    if (
-      this.props.globalConfig.logging.cloudtrail.enable &&
-      this.props.globalConfig.logging.cloudtrail.organizationTrail
-    ) {
-      Logger.info('[organizations-stack] Adding Organizations CloudTrail');
-
-      const enableCloudtrailServiceAccess = new EnableAwsServiceAccess(this, 'EnableOrganizationsCloudTrail', {
-        servicePrincipal: 'cloudtrail.amazonaws.com',
-        kmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.logRetention,
-      });
-
-      const cloudTrailCloudWatchCmkLogGroup = new cdk.aws_logs.LogGroup(this, 'CloudTrailCloudWatchLogGroup', {
-        retention: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        encryptionKey: this.cloudwatchKey,
-        logGroupName: 'aws-accelerator-cloudtrail-logs',
-      });
-
-      const organizationsTrail = new cdk_extensions.Trail(this, 'OrganizationsCloudTrail', {
-        bucket: cdk.aws_s3.Bucket.fromBucketName(
-          this,
-          'CentralLogsBucket',
-          `aws-accelerator-central-logs-${this.props.accountsConfig.getLogArchiveAccountId()}-${
-            cdk.Stack.of(this).region
-          }`,
-        ),
-        cloudWatchLogGroup: cloudTrailCloudWatchCmkLogGroup,
-        cloudWatchLogsRetention: cdk.aws_logs.RetentionDays.TEN_YEARS,
-        enableFileValidation: true,
-        encryptionKey: cdk.aws_kms.Key.fromKeyArn(
-          this,
-          'CentralLogsCmk',
-          `arn:${cdk.Stack.of(this).partition}:kms:${
-            cdk.Stack.of(this).region
-          }:${this.props.accountsConfig.getLogArchiveAccountId()}:alias/accelerator/central-logs/s3`,
-        ),
-        includeGlobalServiceEvents: true,
-        isMultiRegionTrail: true,
-        isOrganizationTrail: true,
-        managementEvents: cdk.aws_cloudtrail.ReadWriteType.ALL,
-        sendToCloudWatchLogs: true,
-        trailName: 'AWSAccelerator-Organizations-CloudTrail',
-      });
-
-      organizationsTrail.addEventSelector(cdk.aws_cloudtrail.DataResourceType.S3_OBJECT, [
-        `arn:${cdk.Stack.of(this).partition}:s3:::`,
-      ]);
-      organizationsTrail.addEventSelector(cdk.aws_cloudtrail.DataResourceType.LAMBDA_FUNCTION, [
-        `arn:${cdk.Stack.of(this).partition}:lambda`,
-      ]);
-
-      organizationsTrail.node.addDependency(enableCloudtrailServiceAccess);
-    }
-  }
-
-  /**
    * Function to add backup policies
    */
   private addBackupPolicies() {
-    if (this.props.organizationConfig.backupPolicies.length > 0) {
+    if (this.stackProperties.organizationConfig.backupPolicies.length > 0) {
       Logger.info(`[organizations-stack] Adding Backup Policies`);
 
       const role = new cdk.aws_iam.Role(this, 'BackupRole', {
@@ -240,12 +199,12 @@ export class OrganizationsStack extends AcceleratorStack {
 
       // Added enable value to allow customer to use default key or management key.
       // Additionally, when creating the BackupVault if redeployed then a new name will be required.
-      if (this.props.organizationConfig.backupVault?.enableManagementKey) {
+      if (this.stackProperties.organizationConfig.backupVault?.enableManagementKey) {
         new cdk.aws_backup.BackupVault(
           this,
-          `AcceleratorManagementBackupVault${this.props.organizationConfig.backupVault.name}`,
+          `AcceleratorManagementBackupVault${this.stackProperties.organizationConfig.backupVault.name}`,
           {
-            backupVaultName: `AcceleratorManagement${this.props.organizationConfig.backupVault.name}`,
+            backupVaultName: `AcceleratorManagement${this.stackProperties.organizationConfig.backupVault.name}`,
             encryptionKey: backupKey,
           },
         );
@@ -261,22 +220,22 @@ export class OrganizationsStack extends AcceleratorStack {
         logRetentionInDays: this.logRetention,
       });
 
-      for (const backupPolicies of this.props.organizationConfig.backupPolicies ?? []) {
+      for (const backupPolicies of this.stackProperties.organizationConfig.backupPolicies ?? []) {
         for (const orgUnit of backupPolicies.deploymentTargets.organizationalUnits) {
           const policy = new Policy(this, backupPolicies.name, {
             description: backupPolicies.description,
             name: backupPolicies.name,
-            path: path.join(this.props.configDirPath, backupPolicies.policy),
+            path: path.join(this.stackProperties.configDirPath, backupPolicies.policy),
             type: PolicyType.BACKUP_POLICY,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.logRetention,
             acceleratorPrefix: 'AWSAccelerator',
-            managementAccountAccessRole: this.props.globalConfig.managementAccountAccessRole,
+            managementAccountAccessRole: this.stackProperties.globalConfig.managementAccountAccessRole,
           });
 
           new PolicyAttachment(this, pascalCase(`Attach_${backupPolicies.name}_${orgUnit}`), {
             policyId: policy.id,
-            targetId: this.props.organizationConfig.getOrganizationalUnitId(orgUnit),
+            targetId: this.stackProperties.organizationConfig.getOrganizationalUnitId(orgUnit),
             type: PolicyType.BACKUP_POLICY,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.logRetention,
@@ -287,14 +246,14 @@ export class OrganizationsStack extends AcceleratorStack {
   }
 
   /**
-   * Function to add Cost and Usage report
+   * Function to add Cost and Usage Report
    */
   private addCostAndUsageReport() {
-    if (this.props.globalConfig.reports?.costAndUsageReport) {
+    if (this.stackProperties.globalConfig.reports?.costAndUsageReport) {
       Logger.info('[organizations-stack] Adding Cost and Usage Reports');
 
       const lifecycleRules: LifecycleRule[] = [];
-      for (const lifecycleRule of this.props.globalConfig.reports.costAndUsageReport.lifecycleRules ?? []) {
+      for (const lifecycleRule of this.stackProperties.globalConfig.reports.costAndUsageReport.lifecycleRules ?? []) {
         const noncurrentVersionTransitions = [];
         for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
           noncurrentVersionTransitions.push({
@@ -322,32 +281,12 @@ export class OrganizationsStack extends AcceleratorStack {
         lifecycleRules.push(rule);
       }
 
-      const centralLogsBucketKey = new KeyLookup(this, 'AcceleratorCloudWatchKey', {
-        accountId: this.props.accountsConfig.getLogArchiveAccountId(),
-        keyRegion: this.props.globalConfig.homeRegion,
-        roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
-        keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
-        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-      }).getKey();
-
-      const replicationProps: BucketReplicationProps = {
-        destination: {
-          bucketName: `aws-accelerator-central-logs-${this.props.accountsConfig.getLogArchiveAccountId()}-${
-            this.props.globalConfig.homeRegion
-          }`,
-          accountId: this.props.accountsConfig.getLogArchiveAccountId(),
-          keyArn: centralLogsBucketKey.keyArn,
-        },
-        kmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-      };
-
       const reportBucket = new Bucket(this, 'ReportBucket', {
         encryptionType: BucketEncryptionType.SSE_S3, // CUR does not support KMS CMK
         s3BucketName: `aws-accelerator-cur-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
         serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         lifecycleRules,
-        replicationProps,
+        replicationProps: this.centralLogBucketReplicationProps,
       });
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
@@ -355,8 +294,8 @@ export class OrganizationsStack extends AcceleratorStack {
         this,
         `/${this.stackName}/ReportBucket/ReportBucketReplication/` +
           pascalCase(
-            `aws-accelerator-central-logs-${this.props.accountsConfig.getLogArchiveAccountId()}-${
-              this.props.globalConfig.homeRegion
+            `aws-accelerator-central-logs-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
+              this.stackProperties.globalConfig.homeRegion
             }`,
           ) +
           '-ReplicationRole/DefaultPolicy/Resource',
@@ -369,17 +308,19 @@ export class OrganizationsStack extends AcceleratorStack {
       );
 
       new ReportDefinition(this, 'ReportDefinition', {
-        compression: this.props.globalConfig.reports.costAndUsageReport.compression,
-        format: this.props.globalConfig.reports.costAndUsageReport.format,
-        refreshClosedReports: this.props.globalConfig.reports.costAndUsageReport.refreshClosedReports,
-        reportName: this.props.globalConfig.reports.costAndUsageReport.reportName,
-        reportVersioning: this.props.globalConfig.reports.costAndUsageReport.reportVersioning,
+        compression: this.stackProperties.globalConfig.reports.costAndUsageReport.compression,
+        format: this.stackProperties.globalConfig.reports.costAndUsageReport.format,
+        refreshClosedReports: this.stackProperties.globalConfig.reports.costAndUsageReport.refreshClosedReports,
+        reportName: this.stackProperties.globalConfig.reports.costAndUsageReport.reportName,
+        reportVersioning: this.stackProperties.globalConfig.reports.costAndUsageReport.reportVersioning,
         s3Bucket: reportBucket.getS3Bucket(),
-        s3Prefix: `${this.props.globalConfig.reports.costAndUsageReport.s3Prefix}/${cdk.Stack.of(this).account}/`,
+        s3Prefix: `${this.stackProperties.globalConfig.reports.costAndUsageReport.s3Prefix}/${
+          cdk.Stack.of(this).account
+        }/`,
         s3Region: cdk.Stack.of(this).region,
-        timeUnit: this.props.globalConfig.reports.costAndUsageReport.timeUnit,
-        additionalArtifacts: this.props.globalConfig.reports.costAndUsageReport.additionalArtifacts,
-        additionalSchemaElements: this.props.globalConfig.reports.costAndUsageReport.additionalSchemaElements,
+        timeUnit: this.stackProperties.globalConfig.reports.costAndUsageReport.timeUnit,
+        additionalArtifacts: this.stackProperties.globalConfig.reports.costAndUsageReport.additionalArtifacts,
+        additionalSchemaElements: this.stackProperties.globalConfig.reports.costAndUsageReport.additionalSchemaElements,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
       });
@@ -390,7 +331,7 @@ export class OrganizationsStack extends AcceleratorStack {
    * Function to Enable Service Access for access-analyzer.amazonaws.com'
    */
   private enableIamAccessAnalyzer() {
-    if (this.props.securityConfig.accessAnalyzer.enable) {
+    if (this.stackProperties.securityConfig.accessAnalyzer.enable) {
       Logger.debug('[organizations-stack] Enable Service Access for access-analyzer.amazonaws.com');
 
       const enableAccessAnalyzer = new EnableAwsServiceAccess(this, 'EnableAccessAnalyzer', {
@@ -403,7 +344,7 @@ export class OrganizationsStack extends AcceleratorStack {
         this,
         'RegisterDelegatedAdministratorAccessAnalyzer',
         {
-          accountId: this.props.accountsConfig.getAuditAccountId(),
+          accountId: this.stackProperties.accountsConfig.getAuditAccountId(),
           servicePrincipal: 'access-analyzer.amazonaws.com',
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
@@ -418,7 +359,7 @@ export class OrganizationsStack extends AcceleratorStack {
    * Function to enable RAM organization sharing
    */
   private enableRamOrganizationSharing() {
-    if (this.props.organizationConfig.enable) {
+    if (this.stackProperties.organizationConfig.enable) {
       new EnableSharingWithAwsOrganization(this, 'EnableSharingWithAwsOrganization', {
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
@@ -430,10 +371,10 @@ export class OrganizationsStack extends AcceleratorStack {
    * Function to enable IPAM delegated admin account
    */
   private enableIpamDelegatedAdminAccount() {
-    if (this.props.networkConfig.centralNetworkServices?.ipams) {
+    if (this.stackProperties.networkConfig.centralNetworkServices?.ipams) {
       // Get delegated admin account
-      const networkAdminAccountId = this.props.accountsConfig.getAccountId(
-        this.props.networkConfig.centralNetworkServices!.delegatedAdminAccount,
+      const networkAdminAccountId = this.stackProperties.accountsConfig.getAccountId(
+        this.stackProperties.networkConfig.centralNetworkServices!.delegatedAdminAccount,
       );
 
       // Create delegated admin if the account ID is not the management account
@@ -454,15 +395,15 @@ export class OrganizationsStack extends AcceleratorStack {
    * @param adminAccountId
    */
   private enableMacieDelegatedAdminAccount(adminAccountId: string) {
-    if (this.props.securityConfig.centralSecurityServices.macie.enable) {
+    if (this.stackProperties.securityConfig.centralSecurityServices.macie.enable) {
       if (
-        this.props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
+        this.stackProperties.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
         Logger.debug(
           `[organizations-stack] Starts macie admin account delegation to the account with email ${
-            this.props.accountsConfig.getAuditAccount().email
+            this.stackProperties.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
@@ -477,7 +418,7 @@ export class OrganizationsStack extends AcceleratorStack {
           `[organizations-stack] ${
             cdk.Stack.of(this).region
           } region was in macie excluded list so ignoring this region for ${
-            this.props.accountsConfig.getAuditAccount().email
+            this.stackProperties.accountsConfig.getAuditAccount().email
           } account`,
         );
       }
@@ -488,15 +429,15 @@ export class OrganizationsStack extends AcceleratorStack {
    * @param adminAccountId
    */
   private enableGuardDutyDelegatedAdminAccount(adminAccountId: string) {
-    if (this.props.securityConfig.centralSecurityServices.guardduty.enable) {
+    if (this.stackProperties.securityConfig.centralSecurityServices.guardduty.enable) {
       if (
-        this.props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
+        this.stackProperties.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
         Logger.debug(
           `[organizations-stack] Starts guardduty admin account delegation to the account with email ${
-            this.props.accountsConfig.getAuditAccount().email
+            this.stackProperties.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
@@ -511,7 +452,7 @@ export class OrganizationsStack extends AcceleratorStack {
           `[organizations-stack] ${
             cdk.Stack.of(this).region
           } region was in guardduty excluded list so ignoring this region for ${
-            this.props.accountsConfig.getAuditAccount().email
+            this.stackProperties.accountsConfig.getAuditAccount().email
           } account`,
         );
       }
@@ -523,15 +464,15 @@ export class OrganizationsStack extends AcceleratorStack {
    * @param adminAccountId
    */
   private enableAuditManagerDelegatedAdminAccount(adminAccountId: string) {
-    if (this.props.securityConfig.centralSecurityServices.auditManager?.enable) {
+    if (this.stackProperties.securityConfig.centralSecurityServices.auditManager?.enable) {
       if (
-        this.props.securityConfig.centralSecurityServices.auditManager?.excludeRegions!.indexOf(
+        this.stackProperties.securityConfig.centralSecurityServices.auditManager?.excludeRegions!.indexOf(
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
         Logger.debug(
           `[organizations-stack] Starts audit manager admin account delegation to the account with email ${
-            this.props.accountsConfig.getAuditAccount().email
+            this.stackProperties.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
@@ -545,8 +486,8 @@ export class OrganizationsStack extends AcceleratorStack {
         Logger.debug(
           `[organizations-stack] ${
             cdk.Stack.of(this).region
-          } region was in AuditManager excluded list so ignoring this region for ${
-            this.props.accountsConfig.getAuditAccount().email
+          } region was in auditmanager excluded list so ignoring this region for ${
+            this.stackProperties.accountsConfig.getAuditAccount().email
           } account`,
         );
       }
@@ -558,15 +499,15 @@ export class OrganizationsStack extends AcceleratorStack {
    * @param adminAccountId
    */
   private enableDetectiveDelegatedAdminAccount(adminAccountId: string) {
-    if (this.props.securityConfig.centralSecurityServices.detective?.enable) {
+    if (this.stackProperties.securityConfig.centralSecurityServices.detective?.enable) {
       if (
-        this.props.securityConfig.centralSecurityServices.detective?.excludeRegions!.indexOf(
+        this.stackProperties.securityConfig.centralSecurityServices.detective?.excludeRegions!.indexOf(
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
         Logger.debug(
           `[organizations-stack] Starts detective admin account delegation to the account with email ${
-            this.props.accountsConfig.getAuditAccount().email
+            this.stackProperties.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
@@ -581,7 +522,7 @@ export class OrganizationsStack extends AcceleratorStack {
           `[organizations-stack] ${
             cdk.Stack.of(this).region
           } region was in detective excluded list so ignoring this region for ${
-            this.props.accountsConfig.getAuditAccount().email
+            this.stackProperties.accountsConfig.getAuditAccount().email
           } account`,
         );
       }
@@ -592,15 +533,15 @@ export class OrganizationsStack extends AcceleratorStack {
    * @param adminAccountId
    */
   private enableSecurityHubDelegatedAdminAccount(adminAccountId: string) {
-    if (this.props.securityConfig.centralSecurityServices.securityHub.enable) {
+    if (this.stackProperties.securityConfig.centralSecurityServices.securityHub.enable) {
       if (
-        this.props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(
+        this.stackProperties.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
         Logger.debug(
           `[organizations-stack] Starts SecurityHub admin account delegation to the account with email ${
-            this.props.accountsConfig.getAuditAccount().email
+            this.stackProperties.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
@@ -615,7 +556,7 @@ export class OrganizationsStack extends AcceleratorStack {
           `[organizations-stack] ${
             cdk.Stack.of(this).region
           } region was in SecurityHub excluded list so ignoring this region for ${
-            this.props.accountsConfig.getAuditAccount().email
+            this.stackProperties.accountsConfig.getAuditAccount().email
           } account`,
         );
       }
@@ -626,37 +567,141 @@ export class OrganizationsStack extends AcceleratorStack {
    * Function to add Tagging policies
    */
   private addTaggingPolicies() {
-    if (this.props.organizationConfig.taggingPolicies.length > 0) {
+    if (this.stackProperties.organizationConfig.taggingPolicies.length > 0) {
       Logger.info(`[organizations-stack] Adding Tagging Policies`);
       const tagPolicy = new EnablePolicyType(this, 'enablePolicyTypeTag', {
         policyType: PolicyTypeEnum.TAG_POLICY,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
       });
-      for (const taggingPolicy of this.props.organizationConfig.taggingPolicies ?? []) {
+      for (const taggingPolicy of this.stackProperties.organizationConfig.taggingPolicies ?? []) {
         for (const orgUnit of taggingPolicy.deploymentTargets.organizationalUnits) {
           const policy = new Policy(this, taggingPolicy.name, {
             description: taggingPolicy.description,
             name: taggingPolicy.name,
-            path: path.join(this.props.configDirPath, taggingPolicy.policy),
+            path: path.join(this.stackProperties.configDirPath, taggingPolicy.policy),
             type: PolicyType.TAG_POLICY,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.logRetention,
             acceleratorPrefix: 'AWSAccelerator',
-            managementAccountAccessRole: this.props.globalConfig.managementAccountAccessRole,
+            managementAccountAccessRole: this.stackProperties.globalConfig.managementAccountAccessRole,
           });
 
           policy.node.addDependency(tagPolicy);
 
           new PolicyAttachment(this, pascalCase(`Attach_${taggingPolicy.name}_${orgUnit}`), {
             policyId: policy.id,
-            targetId: this.props.organizationConfig.getOrganizationalUnitId(orgUnit),
+            targetId: this.stackProperties.organizationConfig.getOrganizationalUnitId(orgUnit),
             type: PolicyType.TAG_POLICY,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.logRetention,
           });
         }
       }
+    }
+  }
+
+  private configureOrganizationCloudTrail() {
+    Logger.debug(
+      `[organizations-stack] logging.cloudtrail.enable: ${this.stackProperties.globalConfig.logging.cloudtrail.enable}`,
+    );
+    Logger.debug(
+      `[organizations-stack] logging.cloudtrail.organizationTrail: ${this.stackProperties.globalConfig.logging.cloudtrail.organizationTrail}`,
+    );
+
+    let enableCloudtrailServiceAccess: EnableAwsServiceAccess;
+    if (this.stackProperties.globalConfig.logging.cloudtrail.enable) {
+      Logger.info('[organizations-stack] Enable CloudTrail Service Access');
+      enableCloudtrailServiceAccess = new EnableAwsServiceAccess(this, 'EnableOrganizationsCloudTrail', {
+        servicePrincipal: 'cloudtrail.amazonaws.com',
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.logRetention,
+      });
+    }
+
+    if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrail) {
+      Logger.info('[organizations-stack] Adding Organizations CloudTrail');
+
+      const cloudTrailCloudWatchCmk = new cdk.aws_kms.Key(this, 'CloudTrailCloudWatchCmk', {
+        enableKeyRotation: true,
+        description: 'CloudTrail Log Group CMK',
+        alias: 'accelerator/organizations-cloudtrail/log-group/',
+      });
+      cloudTrailCloudWatchCmk.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow Account use of the key',
+          actions: ['kms:*'],
+          principals: [new cdk.aws_iam.AccountRootPrincipal()],
+          resources: ['*'],
+        }),
+      );
+      cloudTrailCloudWatchCmk.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow logs use of the key',
+          actions: ['kms:*'],
+          principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+          resources: ['*'],
+          conditions: {
+            ArnEquals: {
+              'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
+                cdk.Stack.of(this).region
+              }:${cdk.Stack.of(this).account}:*`,
+            },
+          },
+        }),
+      );
+
+      const cloudTrailCloudWatchCmkLogGroup = new cdk.aws_logs.LogGroup(this, 'CloudTrailCloudWatchLogGroup', {
+        retention: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
+        encryptionKey: cloudTrailCloudWatchCmk,
+        logGroupName: 'aws-accelerator-cloudtrail-logs',
+      });
+
+      let managementEventType = cdk.aws_cloudtrail.ReadWriteType.ALL;
+      if (!this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.managementEvents) {
+        managementEventType = cdk.aws_cloudtrail.ReadWriteType.NONE;
+      }
+      const organizationsTrail = new cdk_extensions.Trail(this, 'OrganizationsCloudTrail', {
+        bucket: cdk.aws_s3.Bucket.fromBucketName(
+          this,
+          'CentralLogsBucket',
+          `aws-accelerator-central-logs-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
+            cdk.Stack.of(this).region
+          }`,
+        ),
+        s3KeyPrefix: 'cloudtrail-organization',
+        cloudWatchLogGroup: cloudTrailCloudWatchCmkLogGroup,
+        cloudWatchLogsRetention: cdk.aws_logs.RetentionDays.TEN_YEARS,
+        enableFileValidation: true,
+        encryptionKey: this.centralLogBucketKey,
+        includeGlobalServiceEvents:
+          this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.globalServiceEvents ?? true,
+        isMultiRegionTrail:
+          this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.multiRegionTrail ?? true,
+        isOrganizationTrail: true,
+        apiCallRateInsight:
+          this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.apiCallRateInsight ?? false,
+        apiErrorRateInsight:
+          this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.apiErrorRateInsight ?? false,
+        managementEvents: managementEventType,
+        sendToCloudWatchLogs:
+          this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.sendToCloudWatchLogs ?? true,
+        trailName: 'AWSAccelerator-Organizations-CloudTrail',
+      });
+
+      if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.s3DataEvents ?? true) {
+        organizationsTrail.addEventSelector(cdk.aws_cloudtrail.DataResourceType.S3_OBJECT, [
+          `arn:${cdk.Stack.of(this).partition}:s3:::`,
+        ]);
+      }
+
+      if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.lambdaDataEvents ?? true) {
+        organizationsTrail.addEventSelector(cdk.aws_cloudtrail.DataResourceType.LAMBDA_FUNCTION, [
+          `arn:${cdk.Stack.of(this).partition}:lambda`,
+        ]);
+      }
+
+      organizationsTrail.node.addDependency(enableCloudtrailServiceAccess!);
     }
   }
 }

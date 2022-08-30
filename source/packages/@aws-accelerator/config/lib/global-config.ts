@@ -28,9 +28,30 @@ export abstract class GlobalConfigTypes {
     enable: t.boolean,
   });
 
-  static readonly cloudtrailConfig = t.interface({
+  static readonly cloudTrailSettingsConfig = t.interface({
+    multiRegionTrail: t.boolean,
+    globalServiceEvents: t.boolean,
+    managementEvents: t.boolean,
+    s3DataEvents: t.boolean,
+    lambdaDataEvents: t.boolean,
+    sendToCloudWatchLogs: t.boolean,
+    apiErrorRateInsight: t.boolean,
+    apiCallRateInsight: t.boolean,
+  });
+
+  static readonly accountCloudTrailConfig = t.interface({
+    name: t.string,
+    regions: t.array(t.nonEmptyString),
+    deploymentTargets: t.deploymentTargets,
+    settings: this.cloudTrailSettingsConfig,
+  });
+
+  static readonly cloudTrailConfig = t.interface({
     enable: t.boolean,
     organizationTrail: t.boolean,
+    organizationTrailSettings: t.optional(this.cloudTrailSettingsConfig),
+    accountTrails: t.optional(t.array(this.accountCloudTrailConfig)),
+    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
   });
 
   static readonly sessionManagerConfig = t.interface({
@@ -51,7 +72,7 @@ export abstract class GlobalConfigTypes {
 
   static readonly loggingConfig = t.interface({
     account: t.nonEmptyString,
-    cloudtrail: GlobalConfigTypes.cloudtrailConfig,
+    cloudtrail: GlobalConfigTypes.cloudTrailConfig,
     sessionManager: GlobalConfigTypes.sessionManagerConfig,
     accessLogBucket: t.optional(GlobalConfigTypes.accessLogBucketConfig),
     centralLogBucket: t.optional(GlobalConfigTypes.centralLogBucketConfig),
@@ -141,13 +162,82 @@ export class ControlTowerConfig implements t.TypeOf<typeof GlobalConfigTypes.con
 }
 
 /**
+ * AWS CloudTrail Settings configuration
+ */
+export class CloudTrailSettingsConfig implements t.TypeOf<typeof GlobalConfigTypes.cloudTrailSettingsConfig> {
+  /**
+   * Whether or not this trail delivers log files from all regions in the account.
+   */
+  multiRegionTrail = true;
+  /**
+   * For global services such as AWS Identity and Access Management (IAM), AWS STS, Amazon CloudFront,
+   * and Route 53, events are delivered to any trail that includes global services,
+   *  and are logged as occurring in US East Region.
+   */
+  globalServiceEvents = true;
+  /**
+   * Management events provide insight into management operations that are
+   * on resources in your AWS account. These are also known as control plane operations.
+   * Management events can also include non-API events that occur in your account.
+   * For example, when a user logs in to your account, CloudTrail logs the ConsoleLogin event.
+   * Enabling will set ReadWriteType.ALL
+   */
+  managementEvents = true;
+  /**
+   * Adds an S3 Data Event Selector for filtering events that match S3 operations.
+   * These events provide insight into the resource operations performed on or within a resource.
+   * These are also known as data plane operations.
+   */
+  s3DataEvents = true;
+  /**
+   * Adds an Lambda Data Event Selector for filtering events that match Lambda operations.
+   * These events provide insight into the resource operations performed on or within a resource.
+   * These are also known as data plane operations.
+   */
+  lambdaDataEvents = true;
+  /**
+   * If CloudTrail pushes logs to CloudWatch Logs in addition to S3.
+   */
+  sendToCloudWatchLogs = true;
+  /**
+   * Will enable CloudTrail Insights and enable the API Error Rate Insight
+   */
+  readonly apiErrorRateInsight = false;
+  /**
+   * Will enable CloudTrail Insights and enable the API Call Rate Insight
+   */
+  readonly apiCallRateInsight = false;
+}
+
+export class AccountCloudTrailConfig implements t.TypeOf<typeof GlobalConfigTypes.accountCloudTrailConfig> {
+  /**
+   * Name that will be used to create the CloudTrail.
+   */
+  readonly name = 'AWSAccelerator-Account-CloudTrail';
+  /**
+   * Region(s) that this account trail will be deployed in.
+   */
+  readonly regions: string[] = [];
+  /**
+   * Which OU's or Accounts the trail will be deployed to
+   */
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+  /**
+   * Settings for the CloudTrail log
+   */
+  readonly settings = new CloudTrailSettingsConfig();
+}
+
+/**
  * AWS Cloudtrail configuration
  */
-export class CloudtrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloudtrailConfig> {
+export class CloudTrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloudTrailConfig> {
   /**
    * Indicates whether AWS Cloudtrail enabled.
    *
    * Cloudtrail a service that helps you enable governance, compliance, and operational and risk auditing of your AWS account.
+   * This setting does not create any trails.  You will also need to either and organization trail
+   * or setup account level trails.
    */
   readonly enable = false;
   /**
@@ -157,6 +247,20 @@ export class CloudtrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloud
    * A trusted service can query the organization's structure and create service-linked roles in the organization's accounts.
    */
   readonly organizationTrail = false;
+  /**
+   * Optional configuration of the organization trail.  OrganizationTrail must be enabled
+   * in order to use these settings
+   */
+  readonly organizationTrailSettings = new CloudTrailSettingsConfig();
+  /**
+   * Optional configuration of account level CloudTrails. Can be used with or without
+   * an Organization Trail
+   */
+  readonly accountTrails: AccountCloudTrailConfig[] = [];
+  /**
+   * Optional S3 Log Bucket Lifecycle rules
+   */
+  readonly lifecycleRules: t.LifecycleRule[] = [];
 }
 
 /**
@@ -212,7 +316,7 @@ export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingC
   /**
    * CloudTrail logging configuration
    */
-  readonly cloudtrail: CloudtrailConfig = new CloudtrailConfig();
+  readonly cloudtrail: CloudTrailConfig = new CloudTrailConfig();
   /**
    * SessionManager logging configuration
    */
@@ -543,6 +647,9 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *   cloudtrail:
    *     enable: false
    *     organizationTrail: false
+   *     cloudtrailInsights:
+   *       apiErrorRateInsight: true
+   *       apiCallRateInsight: true
    *   sessionManager:
    *     sendToCloudWatchLogs: false
    *     sendToS3: true
@@ -651,6 +758,10 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         // lifecycle rule expiration validation
         //
         this.validateLifecycleRuleExpiration(values);
+        //
+        // cloudtrail settings validation
+        //
+        this.validateCloudTrailSettings(values);
       }
     } else {
       this.homeRegion = props.homeRegion;
@@ -737,6 +848,30 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     for (const lifecycleRule of values.reports?.costAndUsageReport?.lifecycleRules ?? []) {
       if (lifecycleRule.noncurrentVersionExpiration! <= lifecycleRule.expiration!) {
         this.errors.push('The nonCurrentVersionExpiration value must be greater than that of the expiration value.');
+      }
+    }
+  }
+
+  /**
+   * Function to validate CloudTrail configuration
+   * If multiRegion is enabled then globalServiceEvents
+   * must be enabled as well
+   */
+  private validateCloudTrailSettings(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>) {
+    if (
+      values.logging.cloudtrail.organizationTrail &&
+      values.logging.cloudtrail.organizationTrailSettings?.multiRegionTrail &&
+      !values.logging.cloudtrail.organizationTrailSettings.globalServiceEvents
+    ) {
+      this.errors.push(
+        `The organization CloudTrail setting multiRegionTrail is enabled, the globalServiceEvents must be enabled as well`,
+      );
+    }
+    for (const accountTrail of values.logging.cloudtrail.accountTrails ?? []) {
+      if (accountTrail.settings.multiRegionTrail && !accountTrail.settings.globalServiceEvents) {
+        this.errors.push(
+          `The account CloudTrail with the name ${accountTrail.name} setting multiRegionTrail is enabled, the globalServiceEvents must be enabled as well`,
+        );
       }
     }
   }

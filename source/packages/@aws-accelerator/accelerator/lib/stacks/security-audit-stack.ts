@@ -54,9 +54,12 @@ export class SecurityAuditStack extends AcceleratorStack {
   private readonly organizationId: string;
   private readonly replicationProps: BucketReplicationProps;
   private readonly centralLogsBucketName: string;
+  private readonly stackProperties: AcceleratorStackProps;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    this.stackProperties = props;
 
     this.s3Key = new KeyLookup(this, 'AcceleratorS3Key', {
       accountId: props.accountsConfig.getAuditAccountId(),
@@ -72,42 +75,45 @@ export class SecurityAuditStack extends AcceleratorStack {
     );
 
     this.centralLogsBucketKey = new KeyLookup(this, 'AcceleratorCloudWatchKey', {
-      accountId: props.accountsConfig.getLogArchiveAccountId(),
-      keyRegion: props.globalConfig.homeRegion,
+      accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
+      keyRegion: this.stackProperties.globalConfig.homeRegion,
       roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
       keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
 
-    this.centralLogsBucketName = `aws-accelerator-central-logs-${props.accountsConfig.getLogArchiveAccountId()}-${
-      props.globalConfig.homeRegion
+    this.centralLogsBucketName = `aws-accelerator-central-logs-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
+      this.stackProperties.globalConfig.homeRegion
     }`;
 
     this.replicationProps = {
       destination: {
         bucketName: this.centralLogsBucketName,
-        accountId: props.accountsConfig.getLogArchiveAccountId(),
+        accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
         keyArn: this.centralLogsBucketKey.keyArn,
       },
       kmsKey: this.cloudwatchKey,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
     };
 
-    this.organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
+    this.organizationId = this.stackProperties.organizationConfig.enable
+      ? new Organization(this, 'Organization').id
+      : '';
 
     //
     // Macie configuration
     //
     Logger.debug(
-      `[security-audit-stack] centralSecurityServices.macie.enable: ${props.securityConfig.centralSecurityServices.macie.enable}`,
+      `[security-audit-stack] centralSecurityServices.macie.enable: ${this.stackProperties.securityConfig.centralSecurityServices.macie.enable}`,
     );
 
-    if (props.securityConfig.centralSecurityServices.macie.enable) {
+    if (this.stackProperties.securityConfig.centralSecurityServices.macie.enable) {
       Logger.info(
         `[security-audit-stack] Creating macie export config bucket - aws-accelerator-macie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
       );
       const lifecycleRules: LifecycleRule[] = [];
-      for (const lifecycleRule of props.securityConfig.centralSecurityServices.macie.lifecycleRules ?? []) {
+      for (const lifecycleRule of this.stackProperties.securityConfig.centralSecurityServices.macie.lifecycleRules ??
+        []) {
         const noncurrentVersionTransitions = [];
         for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
           noncurrentVersionTransitions.push({
@@ -186,7 +192,7 @@ export class SecurityAuditStack extends AcceleratorStack {
       cdk.Tags.of(bucket).add('aws-cdk:auto-macie-access-bucket', 'true');
 
       if (
-        props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
+        this.stackProperties.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
           cdk.Stack.of(this).region as Region,
         ) === -1
       ) {
@@ -195,7 +201,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         new MacieMembers(this, 'MacieMembers', {
           adminAccountId: cdk.Stack.of(this).account,
           kmsKey: this.cloudwatchKey,
-          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
         });
       }
     }
@@ -204,12 +210,13 @@ export class SecurityAuditStack extends AcceleratorStack {
     // GuardDuty configuration
     //
     Logger.debug(
-      `[security-audit-stack] centralSecurityServices.guardduty.enable: ${props.securityConfig.centralSecurityServices.guardduty.enable}`,
+      `[security-audit-stack] centralSecurityServices.guardduty.enable: ${this.stackProperties.securityConfig.centralSecurityServices.guardduty.enable}`,
     );
 
-    if (props.securityConfig.centralSecurityServices.guardduty.enable) {
+    if (this.stackProperties.securityConfig.centralSecurityServices.guardduty.enable) {
       const lifecycleRules: LifecycleRule[] = [];
-      for (const lifecycleRule of props.securityConfig.centralSecurityServices.guardduty.lifecycleRules ?? []) {
+      for (const lifecycleRule of this.stackProperties.securityConfig.centralSecurityServices.guardduty
+        .lifecycleRules ?? []) {
         const noncurrentVersionTransitions = [];
         for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
           noncurrentVersionTransitions.push({
@@ -301,28 +308,29 @@ export class SecurityAuditStack extends AcceleratorStack {
       cdk.Tags.of(bucket).add('aws-cdk:auto-guardduty-access-bucket', 'true');
 
       if (
-        props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
+        this.stackProperties.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
           cdk.Stack.of(this).region as Region,
         ) === -1
       ) {
         Logger.info('[security-audit-stack] Adding GuardDuty ');
 
         const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
-          enableS3Protection: props.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
+          enableS3Protection: this.stackProperties.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
           kmsKey: this.cloudwatchKey,
-          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
         });
 
         new GuardDutyDetectorConfig(this, 'GuardDutyDetectorConfig', {
           isExportConfigEnable:
-            props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.enable &&
-            !props.securityConfig.centralSecurityServices.guardduty.s3Protection.excludeRegions!.includes(
+            this.stackProperties.securityConfig.centralSecurityServices.guardduty.exportConfiguration.enable &&
+            !this.stackProperties.securityConfig.centralSecurityServices.guardduty.s3Protection.excludeRegions!.includes(
               cdk.Stack.of(this).region as Region,
             ),
           exportDestination: GuardDutyExportConfigDestinationTypes.S3,
-          exportFrequency: props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.exportFrequency,
+          exportFrequency:
+            this.stackProperties.securityConfig.centralSecurityServices.guardduty.exportConfiguration.exportFrequency,
           kmsKey: this.cloudwatchKey,
-          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
         }).node.addDependency(guardDutyMembers);
       }
     }
@@ -331,14 +339,15 @@ export class SecurityAuditStack extends AcceleratorStack {
     // Audit Manager configuration
     //
     Logger.debug(
-      `[security-audit-stack] centralSecurityServices.auditManager?.enable: ${props.securityConfig.centralSecurityServices.auditManager?.enable}`,
+      `[security-audit-stack] centralSecurityServices.auditManager?.enable: ${this.stackProperties.securityConfig.centralSecurityServices.auditManager?.enable}`,
     );
 
-    if (props.securityConfig.centralSecurityServices.auditManager?.enable) {
+    if (this.stackProperties.securityConfig.centralSecurityServices.auditManager?.enable) {
       Logger.info('[security-audit-stack] Adding Audit Manager ');
 
       const lifecycleRules: LifecycleRule[] = [];
-      for (const lifecycleRule of props.securityConfig.centralSecurityServices.auditManager?.lifecycleRules ?? []) {
+      for (const lifecycleRule of this.stackProperties.securityConfig.centralSecurityServices.auditManager
+        ?.lifecycleRules ?? []) {
         const noncurrentVersionTransitions = [];
         for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
           noncurrentVersionTransitions.push({
@@ -429,12 +438,14 @@ export class SecurityAuditStack extends AcceleratorStack {
       // We also tag the bucket to record the fact that it has access for guardduty principal.
       cdk.Tags.of(bucket).add('aws-cdk:auto-auditManager-access-bucket', 'true');
 
-      if (props.securityConfig.centralSecurityServices.auditManager?.defaultReportsConfiguration.enable) {
+      if (
+        this.stackProperties.securityConfig.centralSecurityServices.auditManager?.defaultReportsConfiguration.enable
+      ) {
         new AuditManagerDefaultReportsDestination(this, 'AuditManagerDefaultReportsDestination', {
           defaultReportsDestinationType: AuditManagerDefaultReportsDestinationTypes.S3,
           bucketKmsKey: this.s3Key,
           kmsKey: this.cloudwatchKey,
-          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
           bucket: `s3://'${bucket.getS3Bucket().bucketName}/audit-manager/${cdk.Stack.of(this).account}/`,
         });
       }
@@ -442,12 +453,12 @@ export class SecurityAuditStack extends AcceleratorStack {
     // Detective configuration
     //
     Logger.debug(
-      `[security-audit-stack] centralSecurityServices.detective?.enable: ${props.securityConfig.centralSecurityServices.detective?.enable}`,
+      `[security-audit-stack] centralSecurityServices.detective?.enable: ${this.stackProperties.securityConfig.centralSecurityServices.detective?.enable}`,
     );
 
-    if (props.securityConfig.centralSecurityServices.detective?.enable) {
+    if (this.stackProperties.securityConfig.centralSecurityServices.detective?.enable) {
       if (
-        props.securityConfig.centralSecurityServices.detective?.excludeRegions!.indexOf(
+        this.stackProperties.securityConfig.centralSecurityServices.detective?.excludeRegions!.indexOf(
           cdk.Stack.of(this).region as Region,
         ) === -1
       ) {
@@ -455,12 +466,12 @@ export class SecurityAuditStack extends AcceleratorStack {
 
         const detectiveMembers = new DetectiveMembers(this, 'DetectiveMembers', {
           kmsKey: this.cloudwatchKey,
-          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
         });
 
         new DetectiveGraphConfig(this, 'DetectiveGraphConfig', {
           kmsKey: this.cloudwatchKey,
-          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
         }).node.addDependency(detectiveMembers);
       }
     }
@@ -469,11 +480,11 @@ export class SecurityAuditStack extends AcceleratorStack {
     // SecurityHub configuration
     //
     Logger.debug(
-      `[security-audit-stack] centralSecurityServices.securityHub.enable: ${props.securityConfig.centralSecurityServices.securityHub.enable}`,
+      `[security-audit-stack] centralSecurityServices.securityHub.enable: ${this.stackProperties.securityConfig.centralSecurityServices.securityHub.enable}`,
     );
     if (
-      props.securityConfig.centralSecurityServices.securityHub.enable &&
-      props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(
+      this.stackProperties.securityConfig.centralSecurityServices.securityHub.enable &&
+      this.stackProperties.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
@@ -481,23 +492,23 @@ export class SecurityAuditStack extends AcceleratorStack {
 
       new SecurityHubMembers(this, 'SecurityHubMembers', {
         kmsKey: this.cloudwatchKey,
-        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+        logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
       });
     }
 
     Logger.debug(
-      `[security-audit-stack] centralSecurityServices.securityHub.regionAggregation: ${props.securityConfig.centralSecurityServices.securityHub.regionAggregation}`,
+      `[security-audit-stack] centralSecurityServices.securityHub.regionAggregation: ${this.stackProperties.securityConfig.centralSecurityServices.securityHub.regionAggregation}`,
     );
     if (
-      props.securityConfig.centralSecurityServices.securityHub.enable &&
-      props.securityConfig.centralSecurityServices.securityHub.regionAggregation &&
-      props.globalConfig.homeRegion == cdk.Stack.of(this).region
+      this.stackProperties.securityConfig.centralSecurityServices.securityHub.enable &&
+      this.stackProperties.securityConfig.centralSecurityServices.securityHub.regionAggregation &&
+      this.stackProperties.globalConfig.homeRegion == cdk.Stack.of(this).region
     ) {
       Logger.info('[security-audit-stack] Enabling region aggregation for SecurityHub in the Home Region');
 
       new SecurityHubRegionAggregation(this, 'SecurityHubRegionAggregation', {
         kmsKey: this.cloudwatchKey,
-        logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+        logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
       });
     }
 
@@ -506,13 +517,14 @@ export class SecurityAuditStack extends AcceleratorStack {
     //
     Logger.info(`[security-audit-stack] Adding SSM Automation Docs`);
     if (
-      props.securityConfig.centralSecurityServices.ssmAutomation.excludeRegions === undefined ||
-      props.securityConfig.centralSecurityServices.ssmAutomation.excludeRegions.indexOf(
+      this.stackProperties.securityConfig.centralSecurityServices.ssmAutomation.excludeRegions === undefined ||
+      this.stackProperties.securityConfig.centralSecurityServices.ssmAutomation.excludeRegions.indexOf(
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
       //
-      for (const documentSetItem of props.securityConfig.centralSecurityServices.ssmAutomation.documentSets ?? []) {
+      for (const documentSetItem of this.stackProperties.securityConfig.centralSecurityServices.ssmAutomation
+        .documentSets ?? []) {
         // Create list of accounts to share with
         const accountIds: string[] = this.getAccountIdsFromShareTarget(documentSetItem.shareTargets);
 
@@ -520,7 +532,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           Logger.info(`[security-audit-stack] Adding ${documentItem.name}`);
 
           // Read in the document which should be properly formatted
-          const buffer = fs.readFileSync(path.join(props.configDirPath, documentItem.template), 'utf8');
+          const buffer = fs.readFileSync(path.join(this.stackProperties.configDirPath, documentItem.template), 'utf8');
 
           let content;
           if (documentItem.template.endsWith('.json')) {
@@ -536,7 +548,7 @@ export class SecurityAuditStack extends AcceleratorStack {
             documentType: 'Automation',
             sharedWithAccountIds: accountIds,
             kmsKey: this.cloudwatchKey,
-            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+            logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
           });
         }
       }
@@ -545,8 +557,13 @@ export class SecurityAuditStack extends AcceleratorStack {
     //
     // IAM Access Analyzer (Does not have a native service enabler)
     //
-    Logger.debug(`[security-audit-stack] accessAnalyzer.enable: ${props.securityConfig.accessAnalyzer.enable}`);
-    if (props.securityConfig.accessAnalyzer.enable && props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
+    Logger.debug(
+      `[security-audit-stack] accessAnalyzer.enable: ${this.stackProperties.securityConfig.accessAnalyzer.enable}`,
+    );
+    if (
+      this.stackProperties.securityConfig.accessAnalyzer.enable &&
+      this.stackProperties.globalConfig.homeRegion === cdk.Stack.of(this).region
+    ) {
       Logger.info('[security-audit-stack] Adding IAM Access Analyzer ');
       new cdk.aws_accessanalyzer.CfnAnalyzer(this, 'AccessAnalyzer', {
         type: 'ORGANIZATION',
@@ -571,7 +588,8 @@ export class SecurityAuditStack extends AcceleratorStack {
     }
 
     // Loop through all the subscription entries
-    for (const snsSubscriptionItem of props.securityConfig.centralSecurityServices.snsSubscriptions ?? []) {
+    for (const snsSubscriptionItem of this.stackProperties.securityConfig.centralSecurityServices.snsSubscriptions ??
+      []) {
       Logger.info(`[security-audit-stack] Create SNS Topic: ${snsSubscriptionItem.level}`);
       const topic = new cdk.aws_sns.Topic(this, `${pascalCase(snsSubscriptionItem.level)}SnsTopic`, {
         displayName: `AWS Accelerator - ${snsSubscriptionItem.level} Notifications`,
@@ -614,10 +632,13 @@ export class SecurityAuditStack extends AcceleratorStack {
 
     // create lambda function to forward
     // control tower notifications to the management account
-    if (props.globalConfig.controlTower.enable && cdk.Stack.of(this).region == props.globalConfig.homeRegion) {
+    if (
+      this.stackProperties.globalConfig.controlTower.enable &&
+      cdk.Stack.of(this).region == this.stackProperties.globalConfig.homeRegion
+    ) {
       const mgmtAccountSnsTopicArn = `arn:${cdk.Stack.of(this).partition}:sns:${
         cdk.Stack.of(this).region
-      }:${props.accountsConfig.getManagementAccountId()}:AWSAccelerator-ControlTowerNotification`;
+      }:${this.stackProperties.accountsConfig.getManagementAccountId()}:AWSAccelerator-ControlTowerNotification`;
       const controlTowerNotificationsForwarderFunction = new cdk.aws_lambda.Function(
         this,
         'ControlTowerNotificationsForwarderFunction',
@@ -651,7 +672,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           resources: [
             `arn:${cdk.Stack.of(this).partition}:kms:${
               cdk.Stack.of(this).region
-            }:${props.accountsConfig.getManagementAccountId()}:key/*`,
+            }:${this.stackProperties.accountsConfig.getManagementAccountId()}:key/*`,
           ],
         }),
       );
@@ -694,6 +715,9 @@ export class SecurityAuditStack extends AcceleratorStack {
     // SessionManager Logs Bucket Creation
     this.createSessionManagerLogsBucket();
 
+    // CloudTrail Logs Bucket Creation
+    this.createCloudTrailLogsBucket();
+
     Logger.info('[security-audit-stack] Completed stack synthesis');
   }
 
@@ -701,7 +725,7 @@ export class SecurityAuditStack extends AcceleratorStack {
     Logger.info(`[security-audit-stack] Session Manager Logging S3 Bucket`);
     // Session Manager Log Bucket Lifecycle Rules
     const lifecycleRules: LifecycleRule[] = [];
-    for (const lifecycleRule of this.props.globalConfig.logging.sessionManager.lifecycleRules ?? []) {
+    for (const lifecycleRule of this.stackProperties.globalConfig.logging.sessionManager.lifecycleRules ?? []) {
       const noncurrentVersionTransitions = [];
       for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
         noncurrentVersionTransitions.push({
@@ -779,6 +803,100 @@ export class SecurityAuditStack extends AcceleratorStack {
     NagSuppressions.addResourceSuppressionsByPath(
       this,
       `/${this.stackName}/AwsSessionManagerLogBucket/AwsSessionManagerLogBucketReplication/` +
+        pascalCase(this.centralLogsBucketName) +
+        '-ReplicationRole/DefaultPolicy/Resource',
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Allows only specific policy.',
+        },
+      ],
+    );
+  }
+
+  private createCloudTrailLogsBucket() {
+    Logger.info(`[security-audit-stack] CloudTrail Logging S3 Bucket`);
+    const lifecycleRules: LifecycleRule[] = [];
+    for (const lifecycleRule of this.stackProperties.globalConfig.logging.cloudtrail.lifecycleRules ?? []) {
+      const noncurrentVersionTransitions = [];
+      for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
+        noncurrentVersionTransitions.push({
+          storageClass: noncurrentVersionTransition.storageClass,
+          transitionAfter: noncurrentVersionTransition.transitionAfter,
+        });
+      }
+      const transitions = [];
+      for (const transition of lifecycleRule.transitions) {
+        transitions.push({
+          storageClass: transition.storageClass,
+          transitionAfter: transition.transitionAfter,
+        });
+      }
+      const rule: LifecycleRule = {
+        abortIncompleteMultipartUploadAfter: lifecycleRule.abortIncompleteMultipartUpload,
+        enabled: lifecycleRule.enabled,
+        expiration: lifecycleRule.expiration,
+        expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
+        id: lifecycleRule.id,
+        noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
+        noncurrentVersionTransitions,
+        transitions,
+      };
+      lifecycleRules.push(rule);
+    }
+
+    const bucket = new Bucket(this, 'AcceleratorCloudTrailBucket', {
+      encryptionType: BucketEncryptionType.SSE_KMS,
+      s3BucketName: `aws-accelerator-cloudtrail-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+      kmsKey: this.s3Key,
+      serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+      lifecycleRules,
+      replicationProps: this.replicationProps,
+    });
+
+    new cdk.aws_ssm.StringParameter(this, 'SsmParamOrganizationCloudTrailLogBucketName', {
+      parameterName: '/accelerator/organization/security/cloudtrail/log/bucket-name',
+      stringValue: bucket.getS3Bucket().bucketName,
+    });
+
+    // Grant cloudtrail access to the bucket
+    bucket.getS3Bucket().grantReadWrite(new cdk.aws_iam.ServicePrincipal('cloudtrail.amazonaws.com'));
+
+    // Grant organization principals to use the bucket
+    bucket.getS3Bucket().addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'Allow Organization principals to use of the bucket',
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['s3:GetBucketLocation', 's3:PutObject', 's3:PutObjectAcl'],
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+        resources: [bucket.getS3Bucket().bucketArn, `${bucket.getS3Bucket().bucketArn}/*`],
+        conditions: {
+          StringEquals: {
+            'aws:PrincipalOrgID': this.organizationId,
+          },
+        },
+      }),
+    );
+
+    bucket.getS3Bucket().addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'Allow Organization principals to get encryption context',
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['s3:GetEncryptionConfiguration'],
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+        resources: [`${bucket.getS3Bucket().bucketArn}`],
+        conditions: {
+          StringEquals: {
+            'aws:PrincipalOrgID': this.organizationId,
+          },
+        },
+      }),
+    );
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/AcceleratorCloudTrailBucket/AcceleratorCloudTrailBucketReplication/` +
         pascalCase(this.centralLogsBucketName) +
         '-ReplicationRole/DefaultPolicy/Resource',
       [
