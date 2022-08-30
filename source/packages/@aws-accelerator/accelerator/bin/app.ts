@@ -16,7 +16,7 @@
 import 'source-map-support/register';
 
 import * as cdk from 'aws-cdk-lib';
-import { AwsSolutionsChecks } from 'cdk-nag';
+import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import { IConstruct } from 'constructs';
 import { version } from '../../../../package.json';
 
@@ -153,7 +153,7 @@ async function main() {
       );
     }
 
-    new PipelineStack(
+    const pipelineStack = new PipelineStack(
       app,
       process.env['ACCELERATOR_QUALIFIER']
         ? `${process.env['ACCELERATOR_QUALIFIER']}-${AcceleratorStage.PIPELINE}-stack-${account}-${region}`
@@ -177,6 +177,10 @@ async function main() {
         partition,
       },
     );
+
+    NagSuppressions.addStackSuppressions(pipelineStack, [
+      { id: 'AwsSolutions-IAM5', reason: 'IAM role requires wildcard permissions.' },
+    ]);
   }
 
   //
