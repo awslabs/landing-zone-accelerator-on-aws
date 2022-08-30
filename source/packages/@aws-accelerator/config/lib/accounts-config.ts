@@ -427,7 +427,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     if (accountId) {
       return accountId;
     }
-    throw new Error(`Account not found for ${name}. \
+    throw new Error(`Account ID not found for ${name}. \
      Validate that the emails in the parameter ManagementAccountEmail \
      of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) \
      match the correct account emails shown in AWS Organizations.`);
@@ -438,7 +438,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     if (value) {
       return value;
     }
-    throw new Error(`Account not found for ${name}. \
+    throw new Error(`Account name not found for ${name}. \
      Validate that the emails in the parameter ManagementAccountEmail \
      of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) \
      match the correct account emails shown in AWS Organizations.`);

@@ -69,20 +69,6 @@ source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:25
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:25
 
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:786
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:790
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:794
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1081
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1087
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1093
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1100
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1104
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1107
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1118
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1126
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1134
-source/packages/@aws-accelerator/accelerator/test/configs/test-config.ts:1142
-
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:35
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:36
 source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:37
@@ -132,3 +118,5 @@ source/packages/@aws-accelerator/accelerator/combined.log
 source/packages/@aws-accelerator/accelerator/error.log
 source/packages/@aws-accelerator/constructs/lib/aws-iam/password-policy.d.ts
 source/packages/@aws-accelerator/constructs/test/aws-iam/__snapshots__/password-policy.test.ts.snap
+
+source/packages/@aws-accelerator/config/test/accounts-config.test.ts
