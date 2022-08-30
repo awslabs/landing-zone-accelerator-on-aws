@@ -177,7 +177,7 @@ export class ResourceShare extends cdk.Resource implements IResourceShare {
           policyStatements: [
             {
               Effect: 'Allow',
-              Action: ['ram:GetResourceShares'],
+              Action: ['ram:AcceptResourceShareInvitation', 'ram:GetResourceShareInvitations', 'ram:GetResourceShares'],
               Resource: '*',
             },
           ],

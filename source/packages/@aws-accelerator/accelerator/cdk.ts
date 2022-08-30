@@ -29,8 +29,18 @@ process.on('unhandledRejection', (reason, _) => {
 const usage = `Usage: cdk.ts <command> --stage STAGE --config-dir CONFIG_DIRECTORY [--account ACCOUNT] [--region REGION]`;
 
 const args = mri(process.argv.slice(2), {
-  boolean: [],
-  string: ['require-approval', 'config-dir', 'partition', 'stage', 'account', 'region', 'app'],
+  boolean: ['ec2Creds'],
+  string: [
+    'require-approval',
+    'config-dir',
+    'partition',
+    'stage',
+    'account',
+    'region',
+    'app',
+    'ca-bundle-path',
+    'proxy',
+  ],
   alias: {
     c: 'config-dir',
     s: 'stage',
@@ -48,6 +58,9 @@ const stage = args['stage'];
 const account = args['account'];
 const region = args['region'];
 const app = args['app'];
+const caBundlePath = args['ca-bundle-path'];
+const ec2Creds = args['ec2Creds'];
+const proxyAddress = args['proxy'];
 
 //
 // Validate args: must specify a command
@@ -74,6 +87,14 @@ if (stage !== AcceleratorStage.PIPELINE && stage !== AcceleratorStage.TESTER_PIP
   }
 }
 
+// Check if the caBundlePath file exits
+if (caBundlePath !== undefined) {
+  if (caBundlePath.length === 0 || !fs.existsSync(caBundlePath)) {
+    console.log(`Invalid --ca-bundle-path ${caBundlePath}`);
+    throw new Error(usage);
+  }
+}
+
 //
 // Execute the Accelerator engine
 //
@@ -86,6 +107,9 @@ Accelerator.run({
   partition,
   requireApproval,
   app,
+  caBundlePath,
+  ec2Creds,
+  proxyAddress,
 }).catch(function (err) {
   console.log(err.message);
   process.exit(1);

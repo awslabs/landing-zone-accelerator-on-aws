@@ -283,7 +283,17 @@ export class LoggingStack extends AcceleratorStack {
         s3BucketName: `aws-accelerator-elb-access-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
         replicationProps,
       });
-
+      let elbAccountId = undefined;
+      if (AcceleratorElbRootAccounts[cdk.Stack.of(this).region]) {
+        elbAccountId = AcceleratorElbRootAccounts[cdk.Stack.of(this).region];
+      }
+      if (props.networkConfig.elbAccountIds?.find(item => item.region === cdk.Stack.of(this).region)) {
+        elbAccountId = props.networkConfig.elbAccountIds?.find(
+          item => item.region === cdk.Stack.of(this).region)!.accountId;
+      }
+      if (elbAccountId === undefined) {
+        throw new Error(`elbAccountId is not defined for region: ${cdk.Stack.of(this).region}`);
+      }
       // To make sure central log bucket created before elb access log bucket, this is required when logging stack executes in home region
       if (centralLogsBucket) {
         elbAccessLogsBucket.node.addDependency(centralLogsBucket);
@@ -315,7 +325,7 @@ export class LoggingStack extends AcceleratorStack {
           sid: 'Allow write access for ELB Account principal',
           effect: iam.Effect.ALLOW,
           actions: ['s3:PutObject'],
-          principals: [new iam.AccountPrincipal(AcceleratorElbRootAccounts[cdk.Stack.of(this).region])],
+          principals: [new iam.AccountPrincipal(`${elbAccountId}`)],
           resources: [`${elbAccessLogsBucket.getS3Bucket().bucketArn}/*`],
         }),
         new cdk.aws_iam.PolicyStatement({
@@ -338,7 +348,6 @@ export class LoggingStack extends AcceleratorStack {
           resources: [`${elbAccessLogsBucket.getS3Bucket().bucketArn}`],
         }),
       ];
-
       policies.forEach(item => {
         elbAccessLogsBucket.getS3Bucket().addToResourcePolicy(item);
       });

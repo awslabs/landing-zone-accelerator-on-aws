@@ -794,6 +794,11 @@ export class NetworkConfigTypes {
     tags: t.optional(t.array(t.tag)),
   });
 
+  static readonly elbAccountIdsConfig = t.interface({
+    region: t.nonEmptyString,
+    accountId: t.nonEmptyString,
+  });
+
   static readonly networkConfig = t.interface({
     defaultVpc: this.defaultVpcsConfig,
     endpointPolicies: t.array(this.endpointPolicyConfig),
@@ -805,6 +810,7 @@ export class NetworkConfigTypes {
     directConnectGateways: t.optional(t.array(this.dxGatewayConfig)),
     vpcPeering: t.optional(t.array(this.vpcPeeringConfig)),
     vpcTemplates: t.optional(t.array(this.vpcTemplatesConfig)),
+    elbAccountIds: t.optional(t.array(this.elbAccountIdsConfig)),
   });
 }
 
@@ -3644,6 +3650,13 @@ export class VpcPeeringConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcP
 }
 
 /**
+ * An optional ELB root account ID
+ */
+export class ElbAccountIdsConfig implements t.TypeOf<typeof NetworkConfigTypes.elbAccountIdsConfig> {
+  readonly region: string = '';
+  readonly accountId: string = '';
+}
+/**
  * Network Configuration.
  * Used to define a network configuration for the accelerator.
  */
@@ -3756,6 +3769,10 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    */
   readonly accountNames: string[] = [];
 
+  /**
+   * An optional ELB root account ID
+   */
+  readonly elbAccountIds: ElbAccountIdsConfig[] | undefined = undefined;
   /**
    *
    * @param values

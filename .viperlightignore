@@ -62,6 +62,11 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:62
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:376
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:454
 
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:396
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:401
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:429
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:436
+
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:57
 
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:56

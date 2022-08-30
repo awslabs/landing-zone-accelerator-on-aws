@@ -16,6 +16,8 @@ import * as AWS from 'aws-sdk';
 import { green } from 'colors/safe';
 
 import { throttlingBackOff } from './backoff';
+import fs from 'fs';
+import https from 'https';
 
 export interface AssumeRoleProviderSourceProps {
   name: string;
@@ -23,6 +25,7 @@ export interface AssumeRoleProviderSourceProps {
   assumeRoleDuration: number;
   credentials?: AWS.STS.Credentials;
   partition?: string;
+  caBundlePath?: string;
 }
 
 export class AssumeRoleProviderSource implements CredentialProviderSource {
@@ -67,16 +70,26 @@ export class AssumeRoleProviderSource implements CredentialProviderSource {
   protected async assumeRole(accountId: string, duration: number): Promise<AWS.STS.AssumeRoleResponse> {
     const roleArn = `arn:${this.props.partition ?? 'aws'}:iam::${accountId}:role/${this.props.assumeRoleName}`;
     console.log(`Assuming role ${green(roleArn)} for ${duration} seconds`);
-
+    let httpOptions: AWS.HTTPOptions | undefined = undefined;
+    if (this.props.caBundlePath) {
+      const certs = [fs.readFileSync(this.props.caBundlePath)];
+      httpOptions = {
+        agent: new https.Agent({
+          rejectUnauthorized: true,
+          ca: certs,
+        }),
+      };
+    }
     let sts: AWS.STS;
     if (this.props.credentials) {
       sts = new AWS.STS({
         accessKeyId: this.props.credentials.AccessKeyId,
         secretAccessKey: this.props.credentials.SecretAccessKey,
         sessionToken: this.props.credentials.SessionToken,
+        httpOptions,
       });
     } else {
-      sts = new AWS.STS();
+      sts = new AWS.STS({ httpOptions });
     }
 
     return throttlingBackOff(() =>
