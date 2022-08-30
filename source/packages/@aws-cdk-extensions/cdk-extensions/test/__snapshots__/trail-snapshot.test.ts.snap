@@ -1,0 +1,128 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CloudTrailExtension Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "SnapshotTest4B1F0CC8": Object {
+      "DependsOn": Array [
+        "SnapshotTestS3Policy98BCFC00",
+      ],
+      "Properties": Object {
+        "EnableLogFileValidation": true,
+        "EventSelectors": Array [],
+        "IncludeGlobalServiceEvents": true,
+        "InsightSelectors": Array [
+          Object {
+            "InsightType": "ApiCallRateInsight",
+          },
+          Object {
+            "InsightType": "ApiErrorRateInsight",
+          },
+        ],
+        "IsLogging": true,
+        "IsMultiRegionTrail": true,
+        "IsOrganizationTrail": true,
+        "S3BucketName": Object {
+          "Ref": "SnapshotTestS30107570F",
+        },
+      },
+      "Type": "AWS::CloudTrail::Trail",
+    },
+    "SnapshotTestS30107570F": Object {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "SnapshotTestS3Policy98BCFC00": Object {
+      "Properties": Object {
+        "Bucket": Object {
+          "Ref": "SnapshotTestS30107570F",
+        },
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "s3:*",
+              "Condition": Object {
+                "Bool": Object {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SnapshotTestS30107570F",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SnapshotTestS30107570F",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": "s3:GetBucketAcl",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "cloudtrail.amazonaws.com",
+              },
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "SnapshotTestS30107570F",
+                  "Arn",
+                ],
+              },
+            },
+            Object {
+              "Action": "s3:PutObject",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "s3:x-amz-acl": "bucket-owner-full-control",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "cloudtrail.amazonaws.com",
+              },
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    Object {
+                      "Fn::GetAtt": Array [
+                        "SnapshotTestS30107570F",
+                        "Arn",
+                      ],
+                    },
+                    "/AWSLogs/",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+  },
+}
+`;

@@ -231,6 +231,8 @@ export class KeyStack extends AcceleratorStack {
       allowedServicePrincipals.push({ name: 'Guardduty', principal: 'guardduty.amazonaws.com' });
     }
 
+    allowedServicePrincipals.push({ name: 'CloudTrail', principal: 'cloudtrail.amazonaws.com' });
+
     if (this.props.securityConfig.centralSecurityServices.auditManager?.enable) {
       allowedServicePrincipals.push({ name: 'AuditManager', principal: 'auditmanager.amazonaws.com' });
       s3Key.addToResourcePolicy(

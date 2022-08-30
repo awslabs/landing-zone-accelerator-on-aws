@@ -62,7 +62,7 @@ Object {
       "Type": "AWS::Backup::BackupVault",
       "UpdateReplacePolicy": "Retain",
     },
-    "AcceleratorCloudWatchKeyLookupC9DE53CD": Object {
+    "AcceleratorCentralLogBucketKeyLookup26F8C418": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
@@ -2156,7 +2156,7 @@ Object {
           ],
         },
         "destinationBucketKeyArn": Object {
-          "Ref": "AcceleratorCloudWatchKeyLookupC9DE53CD",
+          "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
         },
         "prefix": "",
         "replicationRoleArn": Object {
@@ -2270,7 +2270,7 @@ Object {
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "AcceleratorCloudWatchKeyLookupC9DE53CD",
+                "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
               },
             },
           ],

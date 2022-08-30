@@ -12,17 +12,31 @@
  */
 
 import * as cloudtrail from 'aws-cdk-lib/aws-cloudtrail';
+import { IResolvable } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 
 export interface TrailProps extends cloudtrail.TrailProps {
   readonly isOrganizationTrail: boolean;
+  readonly apiCallRateInsight: boolean;
+  readonly apiErrorRateInsight: boolean;
 }
 
 export class Trail extends cloudtrail.Trail {
   constructor(scope: Construct, id: string, props: TrailProps) {
     super(scope, id, props);
 
+    const insights: IResolvable | (IResolvable | cloudtrail.CfnTrail.InsightSelectorProperty)[] | undefined = [];
+
+    if (props.apiCallRateInsight) {
+      insights.push({ insightType: 'ApiCallRateInsight' });
+    }
+
+    if (props.apiErrorRateInsight) {
+      insights.push({ insightType: 'ApiErrorRateInsight' });
+    }
+
     const cfnRepository = this.node.defaultChild as cloudtrail.CfnTrail;
     cfnRepository.isOrganizationTrail = props.isOrganizationTrail;
+    cfnRepository.insightSelectors = insights;
   }
 }

@@ -22,6 +22,7 @@ import { Tag as ConfigRuleTag } from '@aws-sdk/client-config-service';
 import { AwsConfigRuleSet, ConfigRule, Tag } from '@aws-accelerator/config';
 
 import { KeyLookup, Organization, ConfigServiceTags, SsmSessionManagerSettings } from '@aws-accelerator/constructs';
+import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
@@ -148,6 +149,11 @@ export class SecurityResourcesStack extends AcceleratorStack {
     ) {
       this.setupSessionManager();
     }
+
+    //
+    // Configure Account CloudTrail Logs
+    //
+    this.configureAccountCloudTrails();
 
     Logger.info('[security-resources-stack] Completed stack synthesis');
   }
@@ -937,6 +943,72 @@ export class SecurityResourcesStack extends AcceleratorStack {
           },
         ],
       );
+    }
+  }
+
+  private configureAccountCloudTrails() {
+    Logger.debug('[logging-stack] In Configure Account CloudTrails');
+
+    for (const accountTrail of this.stackProperties.globalConfig.logging.cloudtrail.accountTrails ?? []) {
+      if (!accountTrail.regions?.includes(cdk.Stack.of(this).region)) {
+        continue;
+      }
+
+      if (!this.isIncluded(accountTrail.deploymentTargets)) {
+        continue;
+      }
+
+      const trailName = `AWSAccelerator-CloudTrail-${accountTrail.name}`;
+      Logger.info(`[logging-stack] Adding Account CloudTrail ${trailName}`);
+
+      let accountTrailCloudWatchLogGroup: cdk.aws_logs.LogGroup | undefined = undefined;
+      if (accountTrail.settings.sendToCloudWatchLogs) {
+        accountTrailCloudWatchLogGroup = new cdk.aws_logs.LogGroup(this, `CloudTrailLogGroup-${accountTrail.name}`, {
+          retention: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
+          encryptionKey: this.cloudwatchKey,
+          logGroupName: `aws-accelerator-cloudtrail-${accountTrail.name}`,
+        });
+      }
+
+      let managementEventType = cdk.aws_cloudtrail.ReadWriteType.NONE;
+      if (accountTrail.settings.managementEvents) {
+        managementEventType = cdk.aws_cloudtrail.ReadWriteType.ALL;
+      }
+
+      const accountCloudTrailLog = new cdk_extensions.Trail(this, `AcceleratorCloudTrail-${accountTrail.name}`, {
+        bucket: cdk.aws_s3.Bucket.fromBucketName(
+          this,
+          'CloudTrailLogBucket',
+          `aws-accelerator-cloudtrail-${this.stackProperties.accountsConfig.getAuditAccountId()}-${
+            cdk.Stack.of(this).region
+          }`,
+        ),
+        s3KeyPrefix: `cloudtrail-${accountTrail.name}`,
+        cloudWatchLogGroup: accountTrailCloudWatchLogGroup,
+        cloudWatchLogsRetention: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
+        enableFileValidation: true,
+        encryptionKey: this.auditS3Key,
+        includeGlobalServiceEvents: accountTrail.settings.globalServiceEvents ?? false,
+        isMultiRegionTrail: accountTrail.settings.multiRegionTrail ?? false,
+        isOrganizationTrail: false,
+        apiCallRateInsight: accountTrail.settings.apiCallRateInsight ?? false,
+        apiErrorRateInsight: accountTrail.settings.apiErrorRateInsight ?? false,
+        managementEvents: managementEventType,
+        sendToCloudWatchLogs: accountTrail.settings.sendToCloudWatchLogs ?? false,
+        trailName: trailName,
+      });
+
+      if (accountTrail.settings.s3DataEvents) {
+        accountCloudTrailLog.addEventSelector(cdk.aws_cloudtrail.DataResourceType.S3_OBJECT, [
+          `arn:${cdk.Stack.of(this).partition}:s3:::`,
+        ]);
+      }
+
+      if (accountTrail.settings.lambdaDataEvents) {
+        accountCloudTrailLog.addEventSelector(cdk.aws_cloudtrail.DataResourceType.LAMBDA_FUNCTION, [
+          `arn:${cdk.Stack.of(this).partition}:lambda`,
+        ]);
+      }
     }
   }
 }
