@@ -433,6 +433,10 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
      match the correct account emails shown in AWS Organizations.`);
   }
 
+  public getAccountIds(): string[] {
+    return this.accountIds?.flatMap(item => item.accountId) ?? [];
+  }
+  
   public getAccount(name: string): AccountConfig {
     const value = [...this.mandatoryAccounts, ...this.workloadAccounts].find(item => item.name == name);
     if (value) {

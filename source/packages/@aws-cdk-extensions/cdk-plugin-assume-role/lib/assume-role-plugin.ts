@@ -25,6 +25,7 @@ export class AssumeProfilePlugin implements Plugin {
       assumeRoleDuration?: number;
       credentials?: AWS.STS.Credentials;
       partition?: string;
+      caBundlePath?: string;
     } = {},
   ) {}
 
@@ -35,6 +36,7 @@ export class AssumeProfilePlugin implements Plugin {
       assumeRoleDuration: this.props.assumeRoleDuration ?? AssumeProfilePlugin.getDefaultAssumeRoleDuration(),
       credentials: this.props.credentials,
       partition: this.props.partition,
+      caBundlePath: this.props.caBundlePath,
     });
     host.registerCredentialProviderSource(source);
   }

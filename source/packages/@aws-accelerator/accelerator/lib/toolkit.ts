@@ -74,6 +74,9 @@ export class AcceleratorToolkit {
     requireApproval?: RequireApproval;
     trustedAccountId?: string;
     app?: string;
+    caBundlePath?: string;
+    ec2Creds?: boolean;
+    proxyAddress?: string;
   }): Promise<void> {
     // Logger
     if (options.accountId || options.region) {
@@ -125,6 +128,11 @@ export class AcceleratorToolkit {
 
     const sdkProvider = await SdkProvider.withAwsCliCompatibleDefaults({
       profile: configuration.settings.get(['profile']),
+      ec2creds: options.ec2Creds,
+      httpOptions: {
+        proxyAddress: options.proxyAddress,
+        caBundlePath: options.caBundlePath,
+      },
     });
 
     const cloudFormation = new CloudFormationDeployments({ sdkProvider });

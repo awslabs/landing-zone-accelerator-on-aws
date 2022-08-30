@@ -23,12 +23,7 @@ export class FinalizeStack extends AcceleratorStack {
 
     Logger.debug(`[finalize-stack] Region: ${cdk.Stack.of(this).region}`);
 
-    let globalRegion = 'us-east-1';
-    if (props.partition === 'aws-us-gov') {
-      globalRegion = 'us-gov-west-1';
-    }
-
-    if (globalRegion === cdk.Stack.of(this).region) {
+    if (props.globalRegion === cdk.Stack.of(this).region) {
       Logger.debug(`[finalize-stack] Retrieving CloudWatch kms key`);
       const cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
         this,
