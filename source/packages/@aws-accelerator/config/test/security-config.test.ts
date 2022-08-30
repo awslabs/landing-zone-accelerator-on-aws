@@ -12,11 +12,25 @@
  */
 
 import { SecurityConfig } from '../lib/security-config';
-
-const testNamePrefix = 'Config(SecurityConfig): ';
+import { describe, expect } from '@jest/globals';
+import * as path from 'path';
 
 describe('SecurityConfig', () => {
-  test(`${testNamePrefix} SecurityConfig`, () => {
-    new SecurityConfig();
+  describe('Test config', () => {
+    const securityConfigFromFile = SecurityConfig.load(path.resolve('../accelerator/test/configs/all-enabled'), true);
+    const securityConfig = new SecurityConfig();
+
+    it('has loaded successfully', () => {
+      expect(securityConfig.accountNames).toEqual([]);
+      expect(securityConfigFromFile.accountNames).toStrictEqual([
+        'Management',
+        'LogArchive',
+        'Audit',
+        'SharedServices',
+        'Network',
+      ]);
+
+      expect(securityConfigFromFile.getDelegatedAccountName()).toBe('Audit');
+    });
   });
 });

@@ -12,11 +12,43 @@
  */
 
 import { OrganizationConfig } from '../lib/organization-config';
-
-const testNamePrefix = 'Config(OrganizationConfig): ';
+import { describe, expect } from '@jest/globals';
+import * as path from 'path';
 
 describe('OrganizationConfig', () => {
-  test(`${testNamePrefix} OrganizationConfig`, () => {
-    new OrganizationConfig();
+  describe('Test config', () => {
+    const organizationConfigFromFile = OrganizationConfig.load(
+      path.resolve('../accelerator/test/configs/all-enabled'),
+      true,
+    );
+    const organizationConfig = new OrganizationConfig();
+    it('has loaded successfully', () => {
+      expect(organizationConfigFromFile.enable).toBe(true);
+      expect(organizationConfig.enable).toBe(true);
+    });
+
+    it('gets organization lookup', () => {
+      expect(() => {
+        organizationConfigFromFile.getOrganizationalUnitId('hello');
+      }).toThrow();
+      expect(organizationConfigFromFile.getOrganizationalUnitId('Security')).toEqual('ou-asdf-11111111');
+
+      expect(() => {
+        organizationConfigFromFile.getOrganizationalUnitArn('hello');
+      }).toThrow();
+      expect(organizationConfigFromFile.getOrganizationalUnitArn('Security')).toEqual(
+        'arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-11111111',
+      );
+
+      expect(organizationConfigFromFile.getPath('Security')).toEqual('/');
+      expect(organizationConfigFromFile.getPath('Security/MorePath')).toEqual('/Security');
+
+      expect(organizationConfigFromFile.getOuName('Security')).toEqual('Security');
+      expect(organizationConfigFromFile.getOuName('Security/MorePath')).toEqual('MorePath');
+
+      expect(organizationConfigFromFile.getParentOuName('Security')).toEqual('');
+      expect(organizationConfigFromFile.getParentOuName('Security/MorePath')).toEqual('Security');
+      expect(organizationConfigFromFile.getParentOuName('')).toEqual('');
+    });
   });
 });
