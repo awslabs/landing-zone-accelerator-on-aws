@@ -436,7 +436,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   public getAccountIds(): string[] {
     return this.accountIds?.flatMap(item => item.accountId) ?? [];
   }
-  
+
   public getAccount(name: string): AccountConfig {
     const value = [...this.mandatoryAccounts, ...this.workloadAccounts].find(item => item.name == name);
     if (value) {
