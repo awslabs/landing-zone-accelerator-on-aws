@@ -656,8 +656,10 @@ export class OrganizationsStack extends AcceleratorStack {
       });
 
       let managementEventType = cdk.aws_cloudtrail.ReadWriteType.ALL;
-      if (!this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.managementEvents) {
-        managementEventType = cdk.aws_cloudtrail.ReadWriteType.NONE;
+      if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings !== undefined) {
+        if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings.managementEvents === false) {
+          managementEventType = cdk.aws_cloudtrail.ReadWriteType.NONE;
+        }
       }
       const organizationsTrail = new cdk_extensions.Trail(this, 'OrganizationsCloudTrail', {
         bucket: cdk.aws_s3.Bucket.fromBucketName(
