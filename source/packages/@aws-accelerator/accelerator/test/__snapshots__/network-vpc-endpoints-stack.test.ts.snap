@@ -7,10 +7,6 @@ Object {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
-      "Default": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
     "SsmParameterValueacceleratornetworknetworkFirewallpoliciesacceleratorpolicyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
       "Default": "/accelerator/network/networkFirewall/policies/accelerator-policy/arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -683,56 +679,6 @@ Object {
             ],
           ],
         },
-        "VpcId": Object {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::EC2::VPCEndpoint",
-    },
-    "NetworkInspectionVpcEndpointAGwlbEpB5238F8C": Object {
-      "Properties": Object {
-        "ServiceName": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "com.amazonaws.vpce.us-east-1.",
-              Object {
-                "Ref": "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter",
-              },
-            ],
-          ],
-        },
-        "SubnetIds": Array [
-          Object {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-        ],
-        "VpcEndpointType": "GatewayLoadBalancer",
-        "VpcId": Object {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-      },
-      "Type": "AWS::EC2::VPCEndpoint",
-    },
-    "NetworkInspectionVpcEndpointBGwlbEpEF9CAE4C": Object {
-      "Properties": Object {
-        "ServiceName": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "com.amazonaws.vpce.us-east-1.",
-              Object {
-                "Ref": "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter",
-              },
-            ],
-          ],
-        },
-        "SubnetIds": Array [
-          Object {
-            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionBidC96584B6F00A464EAD1953AFF4B05118Parameter",
-          },
-        ],
-        "VpcEndpointType": "GatewayLoadBalancer",
         "VpcId": Object {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
