@@ -307,34 +307,6 @@ Object {
           ],
         },
         "BucketName": "aws-accelerator-central-logs-333333333333-us-east-1",
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
-                "DaysAfterInitiation": 1,
-              },
-              "ExpirationInDays": 1825,
-              "ExpiredObjectDeleteMarker": false,
-              "Id": "LifecycleRuleaws-accelerator-central-logs-333333333333-us-east-1",
-              "NoncurrentVersionExpiration": Object {
-                "NoncurrentDays": 1825,
-              },
-              "NoncurrentVersionTransitions": Array [
-                Object {
-                  "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 366,
-                },
-              ],
-              "Status": "Enabled",
-              "Transitions": Array [
-                Object {
-                  "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
-                },
-              ],
-            },
-          ],
-        },
         "LoggingConfiguration": Object {
           "DestinationBucketName": Object {
             "Ref": "AccessLogsBucketFA218D2A",
