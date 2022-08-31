@@ -1703,6 +1703,9 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    */
   private validateKeyPolicyFiles(configDir: string) {
     // Validate presence of KMS policy files
+    if (!this.keyManagementService) {
+      return;
+    }
     for (const key of this.keyManagementService.keySets) {
       if (key.policy) {
         if (!fs.existsSync(path.join(configDir, key.policy))) {
@@ -1719,6 +1722,10 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
     // Validate presence of KMS policy files
     for (const keyName of keyNames) {
       if (keyName) {
+        if (!this.keyManagementService) {
+          this.errors.push(`Custom CMK object keyManagementService not defined, CMK ${keyName} can not be used !!!`);
+          return;
+        }
         if (!this.keyManagementService.keySets.find(item => item.name === keyName)) {
           this.errors.push(
             `Custom CMK  ${keyName} is not part of keyManagementService key list [${
