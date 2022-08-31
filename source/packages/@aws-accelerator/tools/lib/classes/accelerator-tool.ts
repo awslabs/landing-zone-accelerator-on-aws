@@ -10,15 +10,17 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { AcceleratorStackNames } from '../../../accelerator/lib/accelerator';
-import { Logger } from '../../../accelerator/lib/logger';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+
 import { GlobalConfig } from '@aws-accelerator/config';
 import { throttlingBackOff } from '@aws-accelerator/utils';
-
+// import { WaiterResult } from '@aws-sdk/util-waiter';
+import { BackupClient, DeleteBackupVaultCommand } from '@aws-sdk/client-backup';
 import {
   CloudFormationClient,
   DeleteStackCommand,
-  DeleteStackCommandOutput,
   DescribeStacksCommand,
   ListStackResourcesCommand,
   Stack,
@@ -35,6 +37,14 @@ import {
 } from '@aws-sdk/client-codebuild';
 import { CodeCommitClient, DeleteRepositoryCommand, GetFileCommand } from '@aws-sdk/client-codecommit';
 import { CodePipelineClient, GetPipelineCommand } from '@aws-sdk/client-codepipeline';
+import {
+  DeleteRoleCommand,
+  DeleteRolePolicyCommand,
+  DetachRolePolicyCommand,
+  IAMClient,
+  ListAttachedRolePoliciesCommand,
+  ListRolePoliciesCommand,
+} from '@aws-sdk/client-iam';
 import {
   DescribeKeyCommand,
   DisableKeyCommand,
@@ -58,8 +68,8 @@ import {
   GetCallerIdentityCommand,
   STSClient,
 } from '@aws-sdk/client-sts';
-import { WaiterResult } from '@aws-sdk/util-waiter';
-import { BackupClient, DeleteBackupVaultCommand } from '@aws-sdk/client-backup';
+
+import { Logger } from '../../../accelerator/lib/logger';
 
 /**
  * Type for pipeline stage action information with order and action name
@@ -163,6 +173,85 @@ export class AcceleratorTool {
     stage: string;
     order: number;
     actions: stageActionType[];
+  }[] = [
+    {
+      stage: 'Deploy',
+      order: 7,
+      actions: [
+        { order: 6, name: 'Finalize', stackPrefix: 'AWSAccelerator-FinalizeStack' },
+        { order: 5, name: 'Network_Associations', stackPrefix: 'AWSAccelerator-NetworkAssociationsStack' },
+        { order: 5, name: 'Network_Associations', stackPrefix: 'AWSAccelerator-NetworkAssociationsGwlbStack' },
+        { order: 2, name: 'Security_Resources', stackPrefix: 'AWSAccelerator-SecurityResourcesStack' },
+        { order: 4, name: 'Network_VPCs', stackPrefix: 'AWSAccelerator-NetworkVpcDnsStack' },
+        { order: 3, name: 'Network_VPCs', stackPrefix: 'AWSAccelerator-NetworkVpcEndpointsStack' },
+        { order: 2, name: 'Network_VPCs', stackPrefix: 'AWSAccelerator-NetworkVpcStack' },
+        { order: 1, name: 'Operations', stackPrefix: 'AWSAccelerator-OperationsStack' },
+        { order: 1, name: 'Security', stackPrefix: 'AWSAccelerator-SecurityStack' },
+        { order: 1, name: 'Network_Prepare', stackPrefix: 'AWSAccelerator-NetworkPrepStack' },
+      ],
+    },
+    {
+      stage: 'SecurityAudit',
+      order: 6,
+      actions: [{ order: 1, name: 'SecurityAudit', stackPrefix: 'AWSAccelerator-SecurityAuditStack' }],
+    },
+    {
+      stage: 'Organization',
+      order: 5,
+      actions: [{ order: 1, name: 'Organizations', stackPrefix: 'AWSAccelerator-OrganizationsStack' }],
+    },
+    {
+      stage: 'Logging',
+      order: 4,
+      actions: [
+        { order: 2, name: 'Logging', stackPrefix: 'AWSAccelerator-LoggingStack' },
+        { order: 1, name: 'Key', stackPrefix: 'AWSAccelerator-KeyStack' },
+      ],
+    },
+    {
+      stage: 'Accounts',
+      order: 3,
+      actions: [{ order: 1, name: 'Accounts', stackPrefix: 'AWSAccelerator-AccountsStack' }],
+    },
+    {
+      stage: 'Prepare',
+      order: 2,
+      actions: [{ order: 1, name: 'Prepare', stackPrefix: 'AWSAccelerator-PrepareStack' }],
+    },
+    {
+      stage: 'Bootstrap',
+      order: 1,
+      actions: [{ order: 1, name: 'Bootstrap', stackPrefix: 'AWSAccelerator-CDKToolkit' }],
+    },
+  ];
+
+  /**
+   * List of pipeline stage names
+   */
+  private pipelineStageNames: string[] = [];
+
+  /**
+   * List of pipeline action names
+   */
+  private pipelineActionNames: string[] = [];
+
+  /**
+   * List of Kms key will be used to delete post stack deletion
+   */
+  private kmsKeys: { client: KMSClient; stackName: string; key: string }[] = [];
+
+  /**
+   * List of backup vaults will be used to delete post stack deletion
+   */
+  private backupVaults: { client: BackupClient; stackName: string; backup: string }[] = [];
+
+  /**
+   * List of log groups will be used to delete post stack deletion
+   */
+  private logGroups: {
+    client: CloudWatchLogsClient;
+    stackName: string;
+    logGroup: string;
   }[] = [];
 
   /**

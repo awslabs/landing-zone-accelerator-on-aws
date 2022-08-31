@@ -22,7 +22,6 @@ import {
   AccountsConfig,
   GatewayEndpointServiceConfig,
   GlobalConfig,
-  GwlbEndpointConfig,
   InterfaceEndpointServiceConfig,
   NfwFirewallConfig,
   ResolverEndpointConfig,
@@ -38,7 +37,6 @@ import {
   SecurityGroup,
   SecurityGroupEgressRuleProps,
   SecurityGroupIngressRuleProps,
-  SsmParameterLookup,
   VpcEndpoint,
   VpcEndpointType,
 } from '@aws-accelerator/constructs';
@@ -108,7 +106,6 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     // Iterate through VPCs in this account and region
     //
     const firewallMap = new Map<string, NetworkFirewall>();
-    const gwlbEndpointMap = new Map<string, VpcEndpoint>();
     const firewallLogBucket = cdk.aws_s3.Bucket.fromBucketName(
       this,
       'FirewallLogsBucket',
@@ -182,84 +179,6 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         }
 
         //
-        // Create GWLB endpoints
-        //
-        if (props.networkConfig.centralNetworkServices?.gatewayLoadBalancers) {
-          const loadBalancers = props.networkConfig.centralNetworkServices.gatewayLoadBalancers;
-          const delegatedAdminAccountId = this.accountsConfig.getAccountId(
-            props.networkConfig.centralNetworkServices.delegatedAdminAccount,
-          );
-
-          for (const loadBalancerItem of loadBalancers) {
-            let endpointServiceId: string | undefined = undefined;
-            for (const endpointItem of loadBalancerItem.endpoints) {
-              if (endpointItem.vpc === vpcItem.name) {
-                // Get endpoint service ID
-                if (!endpointServiceId) {
-                  if (delegatedAdminAccountId !== cdk.Stack.of(this).account) {
-                    endpointServiceId = new SsmParameterLookup(
-                      this,
-                      pascalCase(`SsmParamLookup${loadBalancerItem.name}`),
-                      {
-                        name: `/accelerator/network/gwlb/${loadBalancerItem.name}/endpointService/id`,
-                        accountId: delegatedAdminAccountId,
-                        parameterRegion: cdk.Stack.of(this).region,
-                        roleName: `AWSAccelerator-Get${pascalCase(loadBalancerItem.name)}SsmParamRole-${
-                          cdk.Stack.of(this).region
-                        }`,
-                        kmsKey: this.cloudwatchKey,
-                        logRetentionInDays: this.logRetention,
-                      },
-                    ).value;
-
-                    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
-                    NagSuppressions.addResourceSuppressionsByPath(
-                      this,
-                      `${this.stackName}/${pascalCase(
-                        `SsmParamLookup${loadBalancerItem.name}`,
-                      )}/SsmGetParameterValueFunction/ServiceRole/Resource`,
-                      [{ id: 'AwsSolutions-IAM4', reason: 'Custom resource requires managed policy.' }],
-                    );
-                    NagSuppressions.addResourceSuppressionsByPath(
-                      this,
-                      `${this.stackName}/${pascalCase(
-                        `SsmParamLookup${loadBalancerItem.name}`,
-                      )}/CustomResourceProvider/framework-onEvent/ServiceRole/Resource`,
-                      [{ id: 'AwsSolutions-IAM4', reason: 'Custom resource requires managed policy.' }],
-                    );
-
-                    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-                    NagSuppressions.addResourceSuppressionsByPath(
-                      this,
-                      `${this.stackName}/${pascalCase(
-                        `SsmParamLookup${loadBalancerItem.name}`,
-                      )}/SsmGetParameterValueFunction/ServiceRole/DefaultPolicy/Resource`,
-                      [{ id: 'AwsSolutions-IAM5', reason: 'Custom resource requires access to SSM' }],
-                    );
-                    NagSuppressions.addResourceSuppressionsByPath(
-                      this,
-                      `${this.stackName}/${pascalCase(
-                        `SsmParamLookup${loadBalancerItem.name}`,
-                      )}/CustomResourceProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
-                      [{ id: 'AwsSolutions-IAM5', reason: 'Custom resource requires access to SSM' }],
-                    );
-                  } else {
-                    endpointServiceId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                      this,
-                      `/accelerator/network/gwlb/${loadBalancerItem.name}/endpointService/id`,
-                    );
-                  }
-                }
-
-                // Create endpoint and add to map
-                const endpoint = this.createGwlbEndpoint(endpointItem, vpcId, subnetMap, endpointServiceId);
-                gwlbEndpointMap.set(endpointItem.name, endpoint);
-              }
-            }
-          }
-        }
-
-        //
         // Create endpoint routes
         //
         for (const routeTableItem of vpcItem.routeTables ?? []) {
@@ -269,9 +188,8 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
               pascalCase(`${vpcItem.name}Vpc`) +
               pascalCase(`${routeTableItem.name}RouteTable`) +
               pascalCase(routeTableEntryItem.name);
-            const entryTypes = ['networkFirewall', 'gatewayLoadBalancerEndpoint'];
 
-            if (routeTableEntryItem.type && entryTypes.includes(routeTableEntryItem.type)) {
+            if (routeTableEntryItem.type && routeTableEntryItem.type === 'networkFirewall') {
               const routeTableId = routeTableMap.get(`${vpcItem.name}_${routeTableItem.name}`);
 
               // Check if route table exists im map
@@ -279,76 +197,27 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
                 throw new Error(`[network-vpc-endpoints-stack] Unable to locate route table ${routeTableItem.name}`);
               }
 
-              if (!routeTableEntryItem.target) {
+              // Get Network Firewall
+              const firewall = firewallMap.get(routeTableEntryItem.target!);
+              const endpointAz = `${cdk.Stack.of(this).region}${routeTableEntryItem.targetAvailabilityZone}`;
+
+              if (!firewall) {
                 throw new Error(
-                  `[network-vpc-endpoints-stack] Route entry ${routeTableEntryItem.name} for route table ${routeTableItem.name} must include a target`,
+                  `[network-vpc-endpoints-stack] Unable to locate Network Firewall ${routeTableEntryItem.target}`,
                 );
               }
-
-              // Check if using a CIDR or prefix list as the destination
-              if (routeTableEntryItem.destinationPrefixList) {
-                throw new Error(
-                  `[network-vpc-endpoints-stack] ${routeTableEntryItem.name} using destinationPrefixList. Prefix list destinations cannot be used for networkFirewall or gatewayLoadBalancerEndpoint targets.`,
-                );
-              }
-              if (!routeTableEntryItem.destination) {
-                throw new Error(
-                  `[network-vpc-endpoints-stack] ${routeTableEntryItem.name} does not have a destination defined`,
-                );
-              }
-
-              //
-              // Network Firewall routes
-              //
-              if (routeTableEntryItem.type === 'networkFirewall') {
-                // Check for AZ input
-                if (!routeTableEntryItem.targetAvailabilityZone) {
-                  throw new Error(
-                    `[network-vpc-endpoints-stack] Network Firewall route table entry ${routeTableEntryItem.name} must specify a target availability zone`,
-                  );
-                }
-
-                // Get Network Firewall
-                const firewall = firewallMap.get(routeTableEntryItem.target);
-                const endpointAz = `${cdk.Stack.of(this).region}${routeTableEntryItem.targetAvailabilityZone}`;
-
-                if (!firewall) {
-                  throw new Error(
-                    `[network-vpc-endpoints-stack] Unable to locate Network Firewall ${routeTableEntryItem.target}`,
-                  );
-                }
-                // Add route
-                Logger.info(
-                  `[network-vpc-endpoints-stack] Adding Network Firewall Route Table Entry ${routeTableEntryItem.name}`,
-                );
-                firewall.addNetworkFirewallRoute(
-                  endpointRouteId,
-                  routeTableEntryItem.destination,
-                  endpointAz,
-                  this.cloudwatchKey,
-                  this.logRetention,
-                  routeTableId,
-                );
-              }
-
-              //
-              // GWLB endpoint routes
-              //
-              if (routeTableEntryItem.type === 'gatewayLoadBalancerEndpoint') {
-                // Get endpoint item
-                const gwlbEndpoint = gwlbEndpointMap.get(routeTableEntryItem.target);
-
-                if (!gwlbEndpoint) {
-                  throw new Error(
-                    `[network-vpc-endpoints-stack] Unable to locate endpoint ${routeTableEntryItem.target}`,
-                  );
-                }
-                // Add route
-                Logger.info(
-                  `[network-vpc-endpoints-stack] Adding Gateway Load Balancer endpoint Route Table Entry ${routeTableEntryItem.name}`,
-                );
-                gwlbEndpoint.createEndpointRoute(endpointRouteId, routeTableEntryItem.destination, routeTableId);
-              }
+              // Add route
+              Logger.info(
+                `[network-vpc-endpoints-stack] Adding Network Firewall Route Table Entry ${routeTableEntryItem.name}`,
+              );
+              firewall.addNetworkFirewallRoute(
+                endpointRouteId,
+                routeTableEntryItem.destination!,
+                endpointAz,
+                this.cloudwatchKey,
+                this.logRetention,
+                routeTableId,
+              );
             }
           }
         }
@@ -915,42 +784,6 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     // Set and return policy document
     policyDocument = cdk.aws_iam.PolicyDocument.fromJson(JSON.parse(document));
     return policyDocument;
-  }
-
-  /**
-   * Create Gateway Load Balancer endpoint.
-   *
-   * @param endpointItem
-   * @param vpcId
-   * @param subnetMap
-   * @param endpointServiceId
-   */
-  private createGwlbEndpoint(
-    endpointItem: GwlbEndpointConfig,
-    vpcId: string,
-    subnetMap: Map<string, string>,
-    endpointServiceId: string,
-  ): VpcEndpoint {
-    const subnetKey = `${endpointItem.vpc}_${endpointItem.subnet}`;
-    const subnet = subnetMap.get(subnetKey);
-
-    if (!subnet) {
-      throw new Error(
-        `[network-vpc-endpoints-stack] Create Gateway Load Balancer endpoint: subnet ${endpointItem.subnet} not found in VPC ${endpointItem.vpc}`,
-      );
-    }
-
-    // Create endpoint
-    Logger.info(
-      `[network-vpc-endpoints-stack] Add Gateway Load Balancer endpoint ${endpointItem.name} to VPC ${endpointItem.vpc} subnet ${endpointItem.subnet}`,
-    );
-    const endpoint = new VpcEndpoint(this, `${pascalCase(endpointItem.vpc)}Vpc${pascalCase(endpointItem.name)}GwlbEp`, {
-      service: endpointServiceId,
-      vpcEndpointType: VpcEndpointType.GWLB,
-      vpcId,
-      subnets: [subnet],
-    });
-    return endpoint;
   }
 
   /**
