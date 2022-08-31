@@ -864,13 +864,6 @@ export class NetworkVpcStack extends AcceleratorStack {
               let destination: string | undefined = undefined;
               let destinationPrefixListId: string | undefined = undefined;
               if (routeTableEntryItem.destinationPrefixList) {
-                // Check if a CIDR destination is also defined
-                if (routeTableEntryItem.destination) {
-                  throw new Error(
-                    `[network-vpc-stack] ${routeTableEntryItem.name} using destination and destinationPrefixList. Please choose only one destination type`,
-                  );
-                }
-
                 // Get PL ID from map
                 const prefixList = prefixListMap.get(routeTableEntryItem.destinationPrefixList);
                 if (!prefixList) {
@@ -880,11 +873,6 @@ export class NetworkVpcStack extends AcceleratorStack {
                 }
                 destinationPrefixListId = prefixList.prefixListId;
               } else {
-                if (!routeTableEntryItem.destination) {
-                  throw new Error(
-                    `[network-vpc-stack] ${routeTableEntryItem.name} does not have a destination defined`,
-                  );
-                }
                 destination = routeTableEntryItem.destination;
               }
 
@@ -892,18 +880,12 @@ export class NetworkVpcStack extends AcceleratorStack {
               if (routeTableEntryItem.type === 'transitGateway') {
                 Logger.info(`[network-vpc-stack] Adding Transit Gateway Route Table Entry ${routeTableEntryItem.name}`);
 
-                if (!routeTableEntryItem.target) {
-                  throw new Error(
-                    `[network-vpc-stack] Transit gateway route ${routeTableEntryItem.name} for route table ${routeTableItem.name} must include a target`,
-                  );
-                }
-
-                const transitGatewayId = transitGatewayIds.get(routeTableEntryItem.target);
+                const transitGatewayId = transitGatewayIds.get(routeTableEntryItem.target!);
                 if (transitGatewayId === undefined) {
                   throw new Error(`Transit Gateway ${routeTableEntryItem.target} not found`);
                 }
 
-                const transitGatewayAttachment = transitGatewayAttachments.get(routeTableEntryItem.target);
+                const transitGatewayAttachment = transitGatewayAttachments.get(routeTableEntryItem.target!);
                 if (transitGatewayAttachment === undefined) {
                   throw new Error(`Transit Gateway Attachment ${routeTableEntryItem.target} not found`);
                 }
@@ -923,13 +905,7 @@ export class NetworkVpcStack extends AcceleratorStack {
               if (routeTableEntryItem.type === 'natGateway') {
                 Logger.info(`[network-vpc-stack] Adding NAT Gateway Route Table Entry ${routeTableEntryItem.name}`);
 
-                if (!routeTableEntryItem.target) {
-                  throw new Error(
-                    `[network-vpc-stack] NAT gateway route ${routeTableEntryItem.name} for route table ${routeTableItem.name} must include a target`,
-                  );
-                }
-
-                const natGateway = natGatewayMap.get(routeTableEntryItem.target);
+                const natGateway = natGatewayMap.get(routeTableEntryItem.target!);
                 if (natGateway === undefined) {
                   throw new Error(`NAT Gateway ${routeTableEntryItem.target} not found`);
                 }

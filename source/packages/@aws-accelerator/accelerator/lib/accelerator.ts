@@ -82,6 +82,7 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.NETWORK_VPC_ENDPOINTS]: 'AWSAccelerator-NetworkVpcEndpointsStack',
   [AcceleratorStage.NETWORK_VPC_DNS]: 'AWSAccelerator-NetworkVpcDnsStack',
   [AcceleratorStage.NETWORK_ASSOCIATIONS]: 'AWSAccelerator-NetworkAssociationsStack',
+  [AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]: 'AWSAccelerator-NetworkAssociationsGwlbStack',
   [AcceleratorStage.FINALIZE]: 'AWSAccelerator-FinalizeStack',
   [AcceleratorStage.SECURITY_AUDIT]: 'AWSAccelerator-SecurityAuditStack',
 };

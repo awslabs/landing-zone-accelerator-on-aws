@@ -10,16 +10,17 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { Logger } from '../../../accelerator/lib/logger';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+
 import { GlobalConfig } from '@aws-accelerator/config';
 import { throttlingBackOff } from '@aws-accelerator/utils';
-import * as path from 'path';
-import * as os from 'os';
-import * as fs from 'fs';
+// import { WaiterResult } from '@aws-sdk/util-waiter';
+import { BackupClient, DeleteBackupVaultCommand } from '@aws-sdk/client-backup';
 import {
   CloudFormationClient,
   DeleteStackCommand,
-  // DeleteStackCommandOutput,
   DescribeStacksCommand,
   ListStackResourcesCommand,
   Stack,
@@ -36,6 +37,14 @@ import {
 import { CodeCommitClient, DeleteRepositoryCommand, GetFileCommand } from '@aws-sdk/client-codecommit';
 import { CodePipelineClient, GetPipelineCommand, StageDeclaration } from '@aws-sdk/client-codepipeline';
 import {
+  DeleteRoleCommand,
+  DeleteRolePolicyCommand,
+  DetachRolePolicyCommand,
+  IAMClient,
+  ListAttachedRolePoliciesCommand,
+  ListRolePoliciesCommand,
+} from '@aws-sdk/client-iam';
+import {
   DescribeKeyCommand,
   DisableKeyCommand,
   KeyState,
@@ -49,7 +58,6 @@ import {
   ListBucketsCommand,
   ListObjectVersionsCommand,
   ListObjectVersionsCommandOutput,
-  // S3,
   S3Client,
 } from '@aws-sdk/client-s3';
 import {
@@ -59,16 +67,8 @@ import {
   GetCallerIdentityCommand,
   STSClient,
 } from '@aws-sdk/client-sts';
-import {
-  IAMClient,
-  DeleteRoleCommand,
-  DeleteRolePolicyCommand,
-  DetachRolePolicyCommand,
-  ListAttachedRolePoliciesCommand,
-  ListRolePoliciesCommand,
-} from '@aws-sdk/client-iam';
-// import { WaiterResult } from '@aws-sdk/util-waiter';
-import { BackupClient, DeleteBackupVaultCommand } from '@aws-sdk/client-backup';
+
+import { Logger } from '../../../accelerator/lib/logger';
 
 /**
  * Type for pipeline stage action information with order and action name
@@ -190,6 +190,7 @@ export class AcceleratorTool {
       actions: [
         { order: 6, name: 'Finalize', stackPrefix: 'AWSAccelerator-FinalizeStack' },
         { order: 5, name: 'Network_Associations', stackPrefix: 'AWSAccelerator-NetworkAssociationsStack' },
+        { order: 5, name: 'Network_Associations', stackPrefix: 'AWSAccelerator-NetworkAssociationsGwlbStack' },
         { order: 2, name: 'Security_Resources', stackPrefix: 'AWSAccelerator-SecurityResourcesStack' },
         { order: 4, name: 'Network_VPCs', stackPrefix: 'AWSAccelerator-NetworkVpcDnsStack' },
         { order: 3, name: 'Network_VPCs', stackPrefix: 'AWSAccelerator-NetworkVpcEndpointsStack' },

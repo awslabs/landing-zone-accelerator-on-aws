@@ -204,6 +204,15 @@ export class AcceleratorToolkit {
           ];
         }
 
+        if (options.stage === AcceleratorStage.NETWORK_ASSOCIATIONS) {
+          stackName = [
+            `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]}-${options.accountId}-${options.region}`,
+            `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]}-${options.accountId}-${
+              options.region
+            }`,
+          ];
+        }
+
         const selector: StackSelector = {
           // patterns: [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`],
           patterns: stackName,

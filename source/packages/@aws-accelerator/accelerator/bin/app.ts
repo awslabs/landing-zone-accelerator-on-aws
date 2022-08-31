@@ -36,6 +36,7 @@ import { AccountsStack } from '../lib/stacks/accounts-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
 import { KeyStack } from '../lib/stacks/key-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
+import { NetworkAssociationsGwlbStack } from '../lib/stacks/network-associations-gwlb-stack';
 import { NetworkAssociationsStack } from '../lib/stacks/network-associations-stack';
 import { NetworkPrepStack } from '../lib/stacks/network-prep-stack';
 import { NetworkVpcDnsStack } from '../lib/stacks/network-vpc-dns-stack';
@@ -517,6 +518,20 @@ async function main() {
             {
               env,
               description: `(SO0199-networkassociations) Landing Zone Accelerator on AWS. Version ${version}.`,
+              synthesizer: new cdk.DefaultStackSynthesizer({
+                generateBootstrapVersionRule: false,
+              }),
+              terminationProtection: props.globalConfig.terminationProtection ?? true,
+              ...props,
+            },
+          );
+
+          new NetworkAssociationsGwlbStack(
+            app,
+            `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]}-${accountId}-${enabledRegion}`,
+            {
+              env,
+              description: `(SO0199-networkgwlb) Landing Zone Accelerator on AWS. Version ${version}.`,
               synthesizer: new cdk.DefaultStackSynthesizer({
                 generateBootstrapVersionRule: false,
               }),

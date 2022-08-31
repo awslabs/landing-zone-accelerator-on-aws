@@ -12,22 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { AcceleratorStack, AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
-import { AccountsStack } from '../lib/stacks/accounts-stack';
-import { FinalizeStack } from '../lib/stacks/finalize-stack';
-import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
-import { AcceleratorStackNames } from '../lib/accelerator';
-import { LoggingStack } from '../lib/stacks/logging-stack';
-import { NetworkAssociationsStack } from '../lib/stacks/network-associations-stack';
-import { NetworkPrepStack } from '../lib/stacks/network-prep-stack';
-import { NetworkVpcDnsStack } from '../lib/stacks/network-vpc-dns-stack';
-import { NetworkVpcEndpointsStack } from '../lib/stacks/network-vpc-endpoints-stack';
-import { NetworkVpcStack } from '../lib/stacks/network-vpc-stack';
-import { OperationsStack } from '../lib/stacks/operations-stack';
-import { OrganizationsStack } from '../lib/stacks/organizations-stack';
-import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
-import { SecurityStack } from '../lib/stacks/security-stack';
-import { AcceleratorStage } from '../lib/accelerator-stage';
+import * as path from 'path';
+
 import {
   AccountConfig,
   AccountsConfig,
@@ -38,7 +24,26 @@ import {
   SecurityConfig,
 } from '@aws-accelerator/config';
 
-import * as path from 'path';
+import { AcceleratorStackNames } from '../lib/accelerator';
+import { AcceleratorStage } from '../lib/accelerator-stage';
+import {
+  AcceleratorStack,
+  AcceleratorStackProps,
+} from '../lib/stacks/accelerator-stack';
+import { AccountsStack } from '../lib/stacks/accounts-stack';
+import { FinalizeStack } from '../lib/stacks/finalize-stack';
+import { LoggingStack } from '../lib/stacks/logging-stack';
+import { NetworkAssociationsGwlbStack } from '../lib/stacks/network-associations-gwlb-stack';
+import { NetworkAssociationsStack } from '../lib/stacks/network-associations-stack';
+import { NetworkPrepStack } from '../lib/stacks/network-prep-stack';
+import { NetworkVpcDnsStack } from '../lib/stacks/network-vpc-dns-stack';
+import { NetworkVpcEndpointsStack } from '../lib/stacks/network-vpc-endpoints-stack';
+import { NetworkVpcStack } from '../lib/stacks/network-vpc-stack';
+import { OperationsStack } from '../lib/stacks/operations-stack';
+import { OrganizationsStack } from '../lib/stacks/organizations-stack';
+import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
+import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
+import { SecurityStack } from '../lib/stacks/security-stack';
 
 export class AcceleratorSynthStacks {
   private readonly configFolderName: string;
@@ -105,6 +110,9 @@ export class AcceleratorSynthStacks {
         break;
       case AcceleratorStage.NETWORK_ASSOCIATIONS:
         this.synthNetworkAssociationStacks();
+        break;
+      case AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB:
+        this.synthNetworkAssociationGwlbStacks();
         break;
       case AcceleratorStage.NETWORK_PREP:
         this.synthNetworkPrepStacks();
@@ -215,6 +223,33 @@ export class AcceleratorSynthStacks {
           new NetworkAssociationsStack(
             this.app,
             `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]}-${accountId}-${region}`,
+            {
+              env: {
+                account: accountId,
+                region: region,
+              },
+              ...this.props,
+            },
+          ),
+        );
+      }
+    }
+  }
+  /**
+   * synth Network Association stacks
+   */
+  private synthNetworkAssociationGwlbStacks() {
+    for (const region of this.props.globalConfig.enabledRegions) {
+      for (const account of [
+        ...this.props.accountsConfig.mandatoryAccounts,
+        ...this.props.accountsConfig.workloadAccounts,
+      ]) {
+        const accountId = this.props.accountsConfig.getAccountId(account.name);
+        this.stacks.set(
+          `${account.name}-${region}`,
+          new NetworkAssociationsGwlbStack(
+            this.app,
+            `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]}-${accountId}-${region}`,
             {
               env: {
                 account: accountId,
