@@ -7,6 +7,10 @@ Object {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/key1/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": Object {
     "AcceleratorCloudWatchKeyLookupC9DE53CD": Object {
@@ -159,10 +163,7 @@ Object {
                   ],
                   "Effect": "Allow",
                   "Resource": Object {
-                    "Fn::GetAtt": Array [
-                      "EbsEncryptionKey9149E0DA",
-                      "Arn",
-                    ],
+                    "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
                   },
                   "Sid": "KMS",
                 },
@@ -660,7 +661,27 @@ Object {
           ],
         },
         "kmsKeyId": Object {
-          "Ref": "EbsEncryptionKey9149E0DA",
+          "Fn::Select": Array [
+            1,
+            Object {
+              "Fn::Split": Array [
+                "/",
+                Object {
+                  "Fn::Select": Array [
+                    5,
+                    Object {
+                      "Fn::Split": Array [
+                        ":",
+                        Object {
+                          "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
         },
       },
       "Type": "Custom::EbsDefaultVolumeEncryption",
@@ -671,97 +692,10 @@ Object {
         "Name": "/accelerator/security-stack/ebsDefaultVolumeEncryptionKeyArn",
         "Type": "String",
         "Value": Object {
-          "Fn::GetAtt": Array [
-            "EbsEncryptionKey9149E0DA",
-            "Arn",
-          ],
+          "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::SSM::Parameter",
-    },
-    "EbsEncryptionKey9149E0DA": Object {
-      "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "Description": "EBS Volume Encryption",
-        "EnableKeyRotation": true,
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
-              "Action": "kms:*",
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "arn:",
-                      Object {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::111111111111:root",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-            },
-            Object {
-              "Action": Array [
-                "kms:Decrypt",
-                "kms:DescribeKey",
-                "kms:Encrypt",
-                "kms:GenerateDataKey*",
-                "kms:ReEncrypt*",
-              ],
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "arn:",
-                      Object {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::111111111111:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-              "Sid": "Allow service-linked role use",
-            },
-            Object {
-              "Action": "kms:CreateGrant",
-              "Condition": Object {
-                "Bool": Object {
-                  "kms:GrantIsForAWSResource": "true",
-                },
-              },
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "arn:",
-                      Object {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::111111111111:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-              "Sid": "Allow Autoscaling to create grant",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::KMS::Key",
-      "UpdateReplacePolicy": "Retain",
     },
     "GuardDutyPublishingDestination52AE4412": Object {
       "DeletionPolicy": "Delete",
