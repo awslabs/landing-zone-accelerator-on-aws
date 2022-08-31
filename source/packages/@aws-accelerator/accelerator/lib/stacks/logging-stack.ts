@@ -412,6 +412,10 @@ export class LoggingStack extends AcceleratorStack {
    * Function to create KMS Keys defined in config file
    */
   private createKeys() {
+    if (!this.props.securityConfig.keyManagementService) {
+      return;
+    }
+
     for (const keyItem of this.props.securityConfig.keyManagementService.keySets) {
       if (!this.isIncluded(keyItem.deploymentTargets)) {
         Logger.info(`[Logging-stack] KMS Key ${keyItem.name} excluded`);
