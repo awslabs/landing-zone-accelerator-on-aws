@@ -1,8 +1,22 @@
 homeRegion: &HOME_REGION us-east-1
+keyManagementService:
+  keySets:
+    - name: key1
+      alias: accelerator/test-key/key1
+      policy: kms/kms-policy-01.json
+      description: Test KMS Key
+      enableKeyRotation: true
+      enabled: true
+      removalPolicy: destroy
+      deploymentTargets:
+        organizationalUnits:
+          - Root
+          - Infrastructure
 centralSecurityServices:
   delegatedAdminAccount: Audit
   ebsDefaultVolumeEncryption:
     enable: true
+    kmsKey: key1
     excludeRegions: []
   s3PublicAccessBlock:
     enable: true

@@ -149,6 +149,83 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "AcceleratorKmsArnParameterKey13EEB1676": Object {
+      "Properties": Object {
+        "Name": "/accelerator/kms/key1/key-arn",
+        "Type": "String",
+        "Value": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorKmsKeyKey1660964AC",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "AcceleratorKmsKeyKey1660964AC": Object {
+      "DeletionPolicy": "Delete",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-KMS5",
+              "reason": "CMK policy defined by customer provided policy definition file.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Description": "Test KMS Key",
+        "EnableKeyRotation": true,
+        "Enabled": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "arn:aws:iam::111111111111:root",
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorKmsKeyKey1Alias6B1D2C45": Object {
+      "Properties": Object {
+        "AliasName": "alias/accelerator/test-key/key1",
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorKmsKeyKey1660964AC",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
     "AcceleratorS3KmsArnParameter82C4C525": Object {
       "Properties": Object {
         "Name": "/accelerator/kms/s3/key-arn",

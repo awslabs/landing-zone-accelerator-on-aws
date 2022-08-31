@@ -59,6 +59,20 @@ export abstract class AcceleratorStack extends cdk.Stack {
    */
   public static readonly ACCELERATOR_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/key-arn';
   /**
+   * Accelerator ELB default encryption key arn SSM parameter name
+   */
+  protected static readonly EBS_DEFAULT_KEY_ARN_PARAMETER_NAME = '/accelerator/ebs/default-encryption/key-arn';
+  /**
+   * Accelerator ELB default encryption key alias, S3 CMK use to encrypt buckets
+   * This key is created in logging stack
+   */
+  protected static readonly EBS_DEFAULT_KEY_ALIAS = 'alias/accelerator/ebs/default-encryption/key';
+  /**
+   * Accelerator ELB default encryption key description, S3 CMK use to encrypt buckets
+   * This key is created in logging stack
+   */
+  protected static readonly EBS_DEFAULT_KEY_DESCRIPTION = 'AWS Accelerator default EBS Volume Encryption key';
+  /**
    * Accelerator S3 encryption key arn SSM parameter name
    */
   protected static readonly S3_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/s3/key-arn';
