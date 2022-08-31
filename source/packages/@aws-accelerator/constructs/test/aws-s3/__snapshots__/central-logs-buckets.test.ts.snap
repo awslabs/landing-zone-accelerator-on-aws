@@ -628,6 +628,86 @@ Object {
                 ],
               },
             },
+            Object {
+              "Action": Array [
+                "s3:GetBucketLocation",
+                "s3:PutObject",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": "acceleratorOrg",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "CentralLogsBucket447B5C59",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "CentralLogsBucket447B5C59",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "Allow Organization principals to use of the bucket",
+            },
+            Object {
+              "Action": Array [
+                "s3:List*",
+                "s3:GetBucketVersioning",
+                "s3:PutBucketVersioning",
+                "s3:ReplicateDelete",
+                "s3:ReplicateObject",
+                "s3:ObjectOwnerOverrideToBucketOwner",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": "acceleratorOrg",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "CentralLogsBucket447B5C59",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "CentralLogsBucket447B5C59",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "Allow Organization use of the bucket for replication",
+            },
           ],
           "Version": "2012-10-17",
         },

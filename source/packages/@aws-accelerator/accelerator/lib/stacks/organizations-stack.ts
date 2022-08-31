@@ -55,7 +55,7 @@ export interface OrganizationsStackProps extends AcceleratorStackProps {
  */
 export class OrganizationsStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.Key;
-  private centralLogBucketKey: cdk.aws_kms.Key;
+  private centralLogsBucketKey: cdk.aws_kms.Key;
   private centralLogBucketReplicationProps: BucketReplicationProps;
   private logRetention: number;
   private stackProperties: AcceleratorStackProps;
@@ -74,7 +74,7 @@ export class OrganizationsStack extends AcceleratorStack {
       cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
     ) as cdk.aws_kms.Key;
 
-    this.centralLogBucketKey = new KeyLookup(this, 'AcceleratorCentralLogBucketKeyLookup', {
+    this.centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
       accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
       keyRegion: this.stackProperties.globalConfig.homeRegion,
       roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
@@ -84,11 +84,13 @@ export class OrganizationsStack extends AcceleratorStack {
 
     this.centralLogBucketReplicationProps = {
       destination: {
-        bucketName: `aws-accelerator-central-logs-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
+        bucketName: `${
+          AcceleratorStack.CENTRAL_LOGS_BUCKET_NAME_PREFIX
+        }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
           this.stackProperties.globalConfig.homeRegion
         }`,
         accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
-        keyArn: this.centralLogBucketKey.keyArn,
+        keyArn: this.centralLogsBucketKey.keyArn,
       },
       kmsKey: this.cloudwatchKey,
       logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
@@ -292,7 +294,9 @@ export class OrganizationsStack extends AcceleratorStack {
         this,
         `/${this.stackName}/ReportBucket/ReportBucketReplication/` +
           pascalCase(
-            `aws-accelerator-central-logs-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
+            `${
+              AcceleratorStack.CENTRAL_LOGS_BUCKET_NAME_PREFIX
+            }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
               this.stackProperties.globalConfig.homeRegion
             }`,
           ) +
@@ -665,15 +669,15 @@ export class OrganizationsStack extends AcceleratorStack {
         bucket: cdk.aws_s3.Bucket.fromBucketName(
           this,
           'CentralLogsBucket',
-          `aws-accelerator-central-logs-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
-            cdk.Stack.of(this).region
-          }`,
+          `${
+            AcceleratorStack.CENTRAL_LOGS_BUCKET_NAME_PREFIX
+          }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${cdk.Stack.of(this).region}`,
         ),
         s3KeyPrefix: 'cloudtrail-organization',
         cloudWatchLogGroup: cloudTrailCloudWatchCmkLogGroup,
         cloudWatchLogsRetention: cdk.aws_logs.RetentionDays.TEN_YEARS,
         enableFileValidation: true,
-        encryptionKey: this.centralLogBucketKey,
+        encryptionKey: this.centralLogsBucketKey,
         includeGlobalServiceEvents:
           this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.globalServiceEvents ?? true,
         isMultiRegionTrail:

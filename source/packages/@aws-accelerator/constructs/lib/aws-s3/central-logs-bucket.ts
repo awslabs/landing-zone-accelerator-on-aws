@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { StorageClass } from '@aws-accelerator/config/lib/common-types/types';
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
+import { BucketAccessType } from './bucket';
 
 interface Transition {
   storageClass: StorageClass;
@@ -39,6 +40,15 @@ export interface CentralLogsBucketProps {
   serverAccessLogsBucket: Bucket;
   organizationId?: string;
   lifecycleRules?: CentralLogBucketLifecycleRule[];
+  /**
+   * @optional
+   * A list of AWS principals and access type the bucket to grant
+   * principal should be a valid AWS resource principal like for AWS MacieSession it
+   * should be macie.amazonaws.com accessType should be any of these possible
+   * values BucketAccessType.READONLY, BucketAccessType.WRITEONLY, & and
+   * BucketAccessType.READWRITE
+   */
+  awsPrincipalAccesses?: { name: string; principal: string; accessType: string }[];
 }
 
 /**
@@ -48,6 +58,8 @@ export class CentralLogsBucket extends Construct {
   constructor(scope: Construct, id: string, props: CentralLogsBucketProps) {
     super(scope, id);
 
+    const awsPrincipalAccesses = props.awsPrincipalAccesses ?? [];
+
     // Create Central Logs Bucket
     const bucket = new Bucket(this, 'Resource', {
       encryptionType: BucketEncryptionType.SSE_KMS,
@@ -56,6 +68,7 @@ export class CentralLogsBucket extends Construct {
       kmsDescription: props.kmsDescription,
       serverAccessLogsBucket: props.serverAccessLogsBucket.getS3Bucket(),
       lifecycleRules: props.lifecycleRules,
+      awsPrincipalAccesses: awsPrincipalAccesses.filter(item => item.accessType !== BucketAccessType.NO_ACCESS),
     });
 
     bucket.getKey().addToResourcePolicy(
@@ -144,8 +157,95 @@ export class CentralLogsBucket extends Construct {
         resources: ['*'],
       }),
     );
+
+    // Allow bucket encryption key for given aws principals
+    awsPrincipalAccesses
+      .filter(item => item.accessType !== BucketAccessType.NO_ACCESS)
+      .forEach(item => {
+        this.bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
+          new cdk.aws_iam.PolicyStatement({
+            sid: `Allow ${item.name} service to use the encryption key`,
+            principals: [new cdk.aws_iam.ServicePrincipal(item.principal)],
+            actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+            resources: ['*'],
+          }),
+        );
+      });
+
     if (props.organizationId !== undefined) {
-      bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
+      props.awsPrincipalAccesses?.forEach(item => {
+        if (item.name === 'SessionManager') {
+          this.bucket.getS3Bucket().addToResourcePolicy(
+            new cdk.aws_iam.PolicyStatement({
+              sid: 'Allow Organization principals to put objects',
+              effect: cdk.aws_iam.Effect.ALLOW,
+              actions: ['s3:PutObjectAcl', 's3:PutObject'],
+              principals: [new cdk.aws_iam.AnyPrincipal()],
+              resources: [`${this.bucket.getS3Bucket().bucketArn}/*`],
+              conditions: {
+                StringEquals: {
+                  'aws:PrincipalOrgID': props.organizationId,
+                },
+              },
+            }),
+          );
+
+          this.bucket.getS3Bucket().addToResourcePolicy(
+            new cdk.aws_iam.PolicyStatement({
+              sid: 'Allow Organization principals to get encryption context',
+              effect: cdk.aws_iam.Effect.ALLOW,
+              actions: ['s3:GetEncryptionConfiguration'],
+              principals: [new cdk.aws_iam.AnyPrincipal()],
+              resources: [`${this.bucket.getS3Bucket().bucketArn}`],
+              conditions: {
+                StringEquals: {
+                  'aws:PrincipalOrgID': props.organizationId,
+                },
+              },
+            }),
+          );
+        }
+      });
+
+      // Grant organization principals to use the bucket
+      this.bucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow Organization principals to use of the bucket',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['s3:GetBucketLocation', 's3:PutObject'],
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          resources: [this.bucket.getS3Bucket().bucketArn, `${this.bucket.getS3Bucket().bucketArn}/*`],
+          conditions: {
+            StringEquals: {
+              'aws:PrincipalOrgID': props.organizationId,
+            },
+          },
+        }),
+      );
+
+      // Allow bucket to be used by other buckets in organization for replication
+      this.bucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow Organization use of the bucket for replication',
+          actions: [
+            's3:List*',
+            's3:GetBucketVersioning',
+            's3:PutBucketVersioning',
+            's3:ReplicateDelete',
+            's3:ReplicateObject',
+            's3:ObjectOwnerOverrideToBucketOwner',
+          ],
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          resources: [this.bucket.getS3Bucket().bucketArn, this.bucket.getS3Bucket().arnForObjects('*')],
+          conditions: {
+            StringEquals: {
+              'aws:PrincipalOrgID': props.organizationId,
+            },
+          },
+        }),
+      );
+
+      this.bucket.getS3Bucket().encryptionKey?.addToResourcePolicy(
         new cdk.aws_iam.PolicyStatement({
           sid: 'Allow Organization use of the key',
           actions: [

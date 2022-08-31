@@ -20,9 +20,22 @@ import { Construct } from 'constructs';
 import { pascalCase } from 'change-case';
 
 export enum BucketAccessType {
+  /**
+   * When service need read only access to bucket and CMK
+   */
   READONLY = 'readonly',
+  /**
+   * When service need write only access to bucket and CMK
+   */
   WRITEONLY = 'writeonly',
+  /**
+   * When service need read write access to bucket and CMK
+   */
   READWRITE = 'readwrite',
+  /**
+   * When service need no access like SessionManager, but the service name required for other logical changes in bucket or CMK policy
+   */
+  NO_ACCESS = 'no_access',
 }
 
 export enum BucketEncryptionType {
@@ -108,12 +121,17 @@ export interface BucketProps {
   /**
    * @optional
    * A list of AWS principals and access type the bucket to grant
-   * principal should be a valid AWS resource principal like for AWS MacieSession it
+   * principal should be a valid AWS resource principal like for AWS Macie it
    * should be macie.amazonaws.com accessType should be any of these possible
-   * values BucketAccessType.READONLY, BucketAccessType.WRITEONLY, & and
-   * BucketAccessType.READWRITE
+   * values BucketAccessType.READONLY, BucketAccessType.WRITEONLY,BucketAccessType.READWRITE and BucketAccessType.NO_ACCESS
+   *
    */
-  awsPrincipalAccesses?: { principalAccesses: [{ principal: string; accessType: string }] };
+  awsPrincipalAccesses?: { name: string; principal: string; accessType: string }[];
+
+  /**
+   * Optional bucket replication property
+   */
+  replicationProps?: BucketReplicationProps;
 }
 
 /**
@@ -144,12 +162,12 @@ export class Bucket extends Construct {
     this.setEncryptionType();
 
     //
-    // Set accesslog bucket properties
-    this.setAccesslogBucketProperties();
+    // Set access log bucket properties
+    this.setAccessLogBucketProperties();
 
     //
     // set Lifecycle rules
-    this.setLifycycleRules();
+    this.setLifeCycleRules();
 
     this.bucket = new s3.Bucket(this, 'Resource', {
       encryption: this.encryptionType,
@@ -195,16 +213,19 @@ export class Bucket extends Construct {
     );
 
     // Add access policy for input AWS principal to the bucket
-    props.awsPrincipalAccesses?.principalAccesses.forEach(input => {
+    props.awsPrincipalAccesses?.forEach(input => {
       switch (input.accessType) {
         case BucketAccessType.READONLY:
           this.bucket.grantRead(new iam.ServicePrincipal(input.principal));
+          cdk.Tags.of(this.bucket).add(`aws-cdk:auto-${input.name.toLowerCase()}-access-bucket`, 'true');
           break;
         case BucketAccessType.WRITEONLY:
           this.bucket.grantWrite(new iam.ServicePrincipal(input.principal));
+          cdk.Tags.of(this.bucket).add(`aws-cdk:auto-${input.name.toLowerCase()}-access-bucket`, 'true');
           break;
         case BucketAccessType.READWRITE:
           this.bucket.grantReadWrite(new iam.ServicePrincipal(input.principal));
+          cdk.Tags.of(this.bucket).add(`aws-cdk:auto-${input.name.toLowerCase()}-access-bucket`, 'true');
           break;
         default:
           throw new Error(`Invalid Access Type ${input.accessType} for ${input.principal} principal.`);
@@ -256,7 +277,7 @@ export class Bucket extends Construct {
   /**
    * Set Server access log bucket property
    */
-  private setAccesslogBucketProperties() {
+  private setAccessLogBucketProperties() {
     if (this.props.serverAccessLogsBucketName && !this.props.serverAccessLogsBucket) {
       this.serverAccessLogBucket = s3.Bucket.fromBucketName(
         this,
@@ -278,7 +299,7 @@ export class Bucket extends Construct {
     }
   }
 
-  private setLifycycleRules() {
+  private setLifeCycleRules() {
     if (this.props.lifecycleRules) {
       for (const lifecycleRuleConfig of this.props.lifecycleRules) {
         const transitions = [];
