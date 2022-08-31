@@ -21,7 +21,13 @@ import path from 'path';
 import { Tag as ConfigRuleTag } from '@aws-sdk/client-config-service';
 import { AwsConfigRuleSet, ConfigRule, Tag } from '@aws-accelerator/config';
 
-import { KeyLookup, Organization, ConfigServiceTags, SsmSessionManagerSettings } from '@aws-accelerator/constructs';
+import {
+  KeyLookup,
+  Organization,
+  ConfigServiceTags,
+  SsmSessionManagerSettings,
+  SecurityHubEventsLog,
+} from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
 import { Logger } from '../logger';
@@ -149,6 +155,9 @@ export class SecurityResourcesStack extends AcceleratorStack {
     ) {
       this.setupSessionManager();
     }
+
+    // SecurityHub Log event to CloudWatch
+    this.securityHubEventForwardToLogs();
 
     //
     // Configure Account CloudTrail Logs
@@ -940,6 +949,45 @@ export class SecurityResourcesStack extends AcceleratorStack {
           {
             id: 'AwsSolutions-IAM4',
             reason: 'Create an IAM managed Policy for users to be able to use Session Manager with KMS encryption',
+          },
+        ],
+      );
+    }
+  }
+
+  private securityHubEventForwardToLogs() {
+    if (this.props.securityConfig.centralSecurityServices.securityHub.enable) {
+      new SecurityHubEventsLog(this, 'SecurityHubEventsLog');
+      Logger.debug(`Stack: ${this.stackName}`);
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `/${this.stackName}/SecurityHubEventsLog/SecurityHubEventsFunction/ServiceRole/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM4',
+            reason: 'Managed policy for lambda to write logs to cloudwatch.',
+          },
+        ],
+      );
+
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `/${this.stackName}/SecurityHubEventsFunction/ServiceRole/DefaultPolicy/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Allows only access to /AWSAccelerator-SecurityHub log group.',
+          },
+        ],
+      );
+
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `/${this.stackName}/SecurityHubEventsLog/SecurityHubEventsFunction/ServiceRole/DefaultPolicy/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Allows only access to /AWSAccelerator-SecurityHub log group.',
           },
         ],
       );
