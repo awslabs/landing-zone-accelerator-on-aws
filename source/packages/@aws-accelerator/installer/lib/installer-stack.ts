@@ -14,6 +14,8 @@
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
+import * as fs from 'fs';
+import * as path from 'path';
 
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 
@@ -360,6 +362,15 @@ export class InstallerStack extends cdk.Stack {
           Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
           Resource: '*',
         },
+        {
+          Sid: 'Allow Cloudwatch Logs service to use the encryption key',
+          Effect: 'Allow',
+          Principal: {
+            Service: 'logs.amazonaws.com',
+          },
+          Action: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+          Resource: '*',
+        },
         cdk.Fn.conditionIf(
           isCommercialCondition.logicalId,
           {
@@ -684,16 +695,119 @@ export class InstallerStack extends cdk.Stack {
     const cfnGitHubPipeline = gitHubPipeline.node.defaultChild as cdk.aws_codepipeline.CfnPipeline;
     cfnGitHubPipeline.cfnOptions.condition = useGitHubCondition;
 
+    /**
+     * Update GitHub Token for Github Pipeline
+     */
+
+    //const fileContents = fs.readFileSync('lib/lambdas/update-pipeline-github-token/index.js');
+    const fileContents = fs.readFileSync(
+      path.join(__dirname, '..', 'lib', 'lambdas/update-pipeline-github-token/index.js'),
+    );
+
+    const updatePipelineLambdaRole = new cdk.aws_iam.Role(this, 'UpdatePipelineLambdaRole', {
+      assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
+    });
+
+    const secretIdPrefix = `arn:${this.partition}:secretsmanager:${this.region}:${this.account}:secret:accelerator/github-token`;
+    const installerPipelineArn = `arn:${this.partition}:codepipeline:${this.region}:${this.account}:${installerPipelineName}`;
+    const acceleratorPipelineArn = `arn:${this.partition}:codepipeline:${this.region}:${this.account}:${acceleratorPipelineName}`;
+
+    const codePipelineStatement = new cdk.aws_iam.PolicyStatement({
+      actions: ['codepipeline:GetPipeline', 'codepipeline:UpdatePipeline'],
+      resources: [`${installerPipelineArn}*`, `${acceleratorPipelineArn}*`],
+    });
+
+    const secretsManagerStatement = new cdk.aws_iam.PolicyStatement({
+      actions: [
+        'secretsmanager:GetResourcePolicy',
+        'secretsmanager:GetSecretValue',
+        'secretsmanager:DescribeSecret',
+        'secretsmanager:ListSecretVersionIds',
+      ],
+      resources: [`${secretIdPrefix}*`],
+    });
+
+    const kmsStatement = new cdk.aws_iam.PolicyStatement({
+      actions: ['kms:Decrypt'],
+      resources: ['*'],
+    });
+
+    const cwLogsStatement = new cdk.aws_iam.PolicyStatement({
+      actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
+      resources: ['*'],
+    });
+
+    const passRoleStatement = new cdk.aws_iam.PolicyStatement({
+      actions: ['iam:PassRole'],
+      resources: ['*'],
+    });
+
+    updatePipelineLambdaRole.attachInlinePolicy(
+      new cdk.aws_iam.Policy(this, 'UpdatePipelineLambdaPolicy', {
+        statements: [codePipelineStatement, secretsManagerStatement, passRoleStatement, kmsStatement, cwLogsStatement],
+      }),
+    );
+
+    const updatePipelineGithubTokenFunction = new cdk.aws_lambda.Function(this, 'UpdatePipelineGithubTokenFunction', {
+      code: new cdk.aws_lambda.InlineCode(fileContents.toString()),
+      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      handler: 'index.handler',
+      description: 'Lambda function to update CodePipeline OAuth Token',
+      timeout: cdk.Duration.minutes(1),
+      environment: {
+        ACCELERATOR_PIPELINE_NAME: acceleratorPipelineName,
+        INSTALLER_PIPELINE_NAME: installerPipelineName,
+      },
+      environmentEncryption: installerKey,
+      role: updatePipelineLambdaRole,
+    });
+
+    const updatePipelineGithubTokenRule = new cdk.aws_events.Rule(this, 'UpdatePipelineGithubTokenRule', {
+      eventPattern: {
+        detailType: ['AWS API Call via CloudTrail'],
+        detail: {
+          eventSource: ['secretsmanager.amazonaws.com'],
+          eventName: ['UpdateSecret', 'PutSecretValue'],
+          requestParameters: {
+            secretId: [
+              {
+                prefix: secretIdPrefix,
+              },
+            ],
+          },
+        },
+      },
+      description: 'Rule to trigger Lambda Function when the Github Accelerator Token has been updated.',
+    });
+
+    updatePipelineGithubTokenRule.addTarget(
+      new cdk.aws_events_targets.LambdaFunction(updatePipelineGithubTokenFunction, {
+        maxEventAge: cdk.Duration.hours(4),
+        retryAttempts: 2,
+      }),
+    );
+
+    new cdk.aws_logs.LogGroup(this, `${updatePipelineGithubTokenFunction.node.id}LogGroup`, {
+      logGroupName: `/aws/lambda/${updatePipelineGithubTokenFunction.functionName}`,
+      encryptionKey: installerKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     //
     // cdk-nag suppressions
     //
-    const iam4SuppressionPaths = ['InstallerAdminRole/Resource', 'InstallerAdminRole/DefaultPolicy/Resource'];
+    const iam4SuppressionPaths = [
+      'InstallerAdminRole/Resource',
+      'InstallerAdminRole/DefaultPolicy/Resource',
+      'UpdatePipelineLambdaRole/Resource',
+    ];
 
     const iam5SuppressionPaths = [
       'InstallerAdminRole/DefaultPolicy/Resource',
       'CodeCommitPipelineRole/DefaultPolicy/Resource',
       'CodeCommitPipeline/Source/Source/CodePipelineActionRole/DefaultPolicy/Resource',
       'GitHubPipelineRole/DefaultPolicy/Resource',
+      'UpdatePipelineLambdaPolicy/Resource',
     ];
 
     const cb3SuppressionPaths = ['InstallerProject/Resource'];

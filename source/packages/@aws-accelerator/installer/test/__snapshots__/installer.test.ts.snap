@@ -1276,6 +1276,21 @@ Object {
               "Sid": "Allow SNS service to use the encryption key",
             },
             Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "logs.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow Cloudwatch Logs service to use the encryption key",
+            },
+            Object {
               "Fn::If": Array [
                 "IsCommercialCondition",
                 Object {
@@ -1967,6 +1982,391 @@ phases:
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "UpdatePipelineGithubTokenFunction29B64F2E": Object {
+      "DependsOn": Array [
+        "UpdatePipelineLambdaRole88CE0535",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "ZipFile": "/**
+ *  Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the \\"License\\"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
+const AWS = require('aws-sdk');
+
+const secretsManager = new AWS.SecretsManager({});
+const codePipeline = new AWS.CodePipeline({});
+const installerPipelineName = process.env['INSTALLER_PIPELINE_NAME'] ?? '';
+const acceleratorPipelineName = process.env['ACCELERATOR_PIPELINE_NAME'] ?? '';
+const pipelineArray = [installerPipelineName, acceleratorPipelineName];
+
+/**
+ * update-pipeline-github-token - lambda handler
+ *
+ * @param event
+ * @returns
+ */
+
+exports.handler = async (event, context) => {
+  const secretDetails = event.detail.requestParameters;
+  const secretArn = secretDetails.secretId;
+  const secretValue = await getSecretValue(secretArn);
+  await updatePipelineDetailsForBothPipelines(secretValue);
+  return {
+    statusCode: 200,
+  };
+};
+
+async function getSecretValue(secretName) {
+  try {
+    const data = await secretsManager
+      .getSecretValue({
+        SecretId: secretName,
+      })
+      .promise();
+
+    if (!data || !data.SecretString) {
+      throw new Error(\`Secret \${secretName} didn't exist.\`);
+    }
+    console.log(\`Retrieved secret: \${secretName}...\`);
+    return data.SecretString;
+  } catch (error) {
+    console.log(error);
+    throw new Error(\`Error retrieving secret: \${secretName}.\`);
+  }
+}
+
+async function updateCodePipelineSourceStage(pipelineDetails, secretValue) {
+  const pipelineStages = pipelineDetails.pipeline.stages;
+  const sourceStage = pipelineStages.find(o => o.name == 'Source');
+  const sourceAction = sourceStage.actions.find(a => a.name == 'Source');
+  sourceAction.configuration.OAuthToken = secretValue;
+
+  return pipelineDetails;
+}
+
+async function getPipelineDetails(pipelineName) {
+  //This function retrieves the original Code Pipeline structure, so we can update it.
+  const getPipelineParams = {
+    name: pipelineName,
+  };
+  console.log(\`Retrieving existing pipeline configuration for: \${pipelineName}...\`);
+  const pipelineObject = await codePipeline.getPipeline(getPipelineParams).promise();
+  console.log(JSON.stringify(pipelineObject));
+  return pipelineObject;
+}
+
+async function updatePipeline(updatedPipelineDetails) {
+  //Remove metadata from getPipelineOutput to use as updatePipelineInput
+  delete updatedPipelineDetails.metadata;
+  console.log(\`Updating pipeline with new OAuth Token...\`);
+  return codePipeline.updatePipeline(updatedPipelineDetails).promise();
+}
+
+async function updatePipelineDetailsForBothPipelines(secretValue) {
+  for (const pipeline of pipelineArray) {
+    try {
+      const pipelineDetails = await getPipelineDetails(pipeline);
+      const updatedPipelineDetails = await updateCodePipelineSourceStage(pipelineDetails, secretValue);
+      await updatePipeline(updatedPipelineDetails);
+    } catch (error) {
+      console.error(error);
+      throw new Error(\`Error occurred while updating pipeline \${pipeline}\`);
+    }
+  }
+}
+",
+        },
+        "Description": "Lambda function to update CodePipeline OAuth Token",
+        "Environment": Object {
+          "Variables": Object {
+            "ACCELERATOR_PIPELINE_NAME": "AWSAccelerator-Pipeline",
+            "INSTALLER_PIPELINE_NAME": "AWSAccelerator-Installer",
+          },
+        },
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "UpdatePipelineLambdaRole88CE0535",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "UpdatePipelineGithubTokenFunction29B64F2E",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 731,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "UpdatePipelineGithubTokenRule79D83132": Object {
+      "Properties": Object {
+        "Description": "Rule to trigger Lambda Function when the Github Accelerator Token has been updated.",
+        "EventPattern": Object {
+          "detail": Object {
+            "eventName": Array [
+              "UpdateSecret",
+              "PutSecretValue",
+            ],
+            "eventSource": Array [
+              "secretsmanager.amazonaws.com",
+            ],
+            "requestParameters": Object {
+              "secretId": Array [
+                Object {
+                  "prefix": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":secretsmanager:",
+                        Object {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":secret:accelerator/github-token",
+                      ],
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          "detail-type": Array [
+            "AWS API Call via CloudTrail",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": Array [
+          Object {
+            "Arn": Object {
+              "Fn::GetAtt": Array [
+                "UpdatePipelineGithubTokenFunction29B64F2E",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+            "RetryPolicy": Object {
+              "MaximumEventAgeInSeconds": 14400,
+              "MaximumRetryAttempts": 2,
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "UpdatePipelineGithubTokenRuleAllowEventRuleAWSAcceleratorTestInstallerStackUpdatePipelineGithubTokenFunction78C173C279CEF0A3": Object {
+      "Properties": Object {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": Object {
+          "Fn::GetAtt": Array [
+            "UpdatePipelineGithubTokenFunction29B64F2E",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": Object {
+          "Fn::GetAtt": Array [
+            "UpdatePipelineGithubTokenRule79D83132",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "UpdatePipelineLambdaPolicy284ABC36": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "codepipeline:GetPipeline",
+                "codepipeline:UpdatePipeline",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":codepipeline:",
+                      Object {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":AWSAccelerator-Installer*",
+                    ],
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":codepipeline:",
+                      Object {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":AWSAccelerator-Pipeline*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "secretsmanager:GetResourcePolicy",
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:ListSecretVersionIds",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":secret:accelerator/github-token*",
+                  ],
+                ],
+              },
+            },
+            Object {
+              "Action": "iam:PassRole",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": "kms:Decrypt",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "UpdatePipelineLambdaPolicy284ABC36",
+        "Roles": Array [
+          Object {
+            "Ref": "UpdatePipelineLambdaRole88CE0535",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "UpdatePipelineLambdaRole88CE0535": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
     },
   },
 }
@@ -3248,6 +3648,21 @@ Object {
               "Sid": "Allow SNS service to use the encryption key",
             },
             Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "logs.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow Cloudwatch Logs service to use the encryption key",
+            },
+            Object {
               "Fn::If": Array [
                 "IsCommercialCondition",
                 Object {
@@ -3929,6 +4344,391 @@ phases:
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "UpdatePipelineGithubTokenFunction29B64F2E": Object {
+      "DependsOn": Array [
+        "UpdatePipelineLambdaRole88CE0535",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "ZipFile": "/**
+ *  Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the \\"License\\"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
+const AWS = require('aws-sdk');
+
+const secretsManager = new AWS.SecretsManager({});
+const codePipeline = new AWS.CodePipeline({});
+const installerPipelineName = process.env['INSTALLER_PIPELINE_NAME'] ?? '';
+const acceleratorPipelineName = process.env['ACCELERATOR_PIPELINE_NAME'] ?? '';
+const pipelineArray = [installerPipelineName, acceleratorPipelineName];
+
+/**
+ * update-pipeline-github-token - lambda handler
+ *
+ * @param event
+ * @returns
+ */
+
+exports.handler = async (event, context) => {
+  const secretDetails = event.detail.requestParameters;
+  const secretArn = secretDetails.secretId;
+  const secretValue = await getSecretValue(secretArn);
+  await updatePipelineDetailsForBothPipelines(secretValue);
+  return {
+    statusCode: 200,
+  };
+};
+
+async function getSecretValue(secretName) {
+  try {
+    const data = await secretsManager
+      .getSecretValue({
+        SecretId: secretName,
+      })
+      .promise();
+
+    if (!data || !data.SecretString) {
+      throw new Error(\`Secret \${secretName} didn't exist.\`);
+    }
+    console.log(\`Retrieved secret: \${secretName}...\`);
+    return data.SecretString;
+  } catch (error) {
+    console.log(error);
+    throw new Error(\`Error retrieving secret: \${secretName}.\`);
+  }
+}
+
+async function updateCodePipelineSourceStage(pipelineDetails, secretValue) {
+  const pipelineStages = pipelineDetails.pipeline.stages;
+  const sourceStage = pipelineStages.find(o => o.name == 'Source');
+  const sourceAction = sourceStage.actions.find(a => a.name == 'Source');
+  sourceAction.configuration.OAuthToken = secretValue;
+
+  return pipelineDetails;
+}
+
+async function getPipelineDetails(pipelineName) {
+  //This function retrieves the original Code Pipeline structure, so we can update it.
+  const getPipelineParams = {
+    name: pipelineName,
+  };
+  console.log(\`Retrieving existing pipeline configuration for: \${pipelineName}...\`);
+  const pipelineObject = await codePipeline.getPipeline(getPipelineParams).promise();
+  console.log(JSON.stringify(pipelineObject));
+  return pipelineObject;
+}
+
+async function updatePipeline(updatedPipelineDetails) {
+  //Remove metadata from getPipelineOutput to use as updatePipelineInput
+  delete updatedPipelineDetails.metadata;
+  console.log(\`Updating pipeline with new OAuth Token...\`);
+  return codePipeline.updatePipeline(updatedPipelineDetails).promise();
+}
+
+async function updatePipelineDetailsForBothPipelines(secretValue) {
+  for (const pipeline of pipelineArray) {
+    try {
+      const pipelineDetails = await getPipelineDetails(pipeline);
+      const updatedPipelineDetails = await updateCodePipelineSourceStage(pipelineDetails, secretValue);
+      await updatePipeline(updatedPipelineDetails);
+    } catch (error) {
+      console.error(error);
+      throw new Error(\`Error occurred while updating pipeline \${pipeline}\`);
+    }
+  }
+}
+",
+        },
+        "Description": "Lambda function to update CodePipeline OAuth Token",
+        "Environment": Object {
+          "Variables": Object {
+            "ACCELERATOR_PIPELINE_NAME": "AWSAccelerator-Pipeline",
+            "INSTALLER_PIPELINE_NAME": "AWSAccelerator-Installer",
+          },
+        },
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "UpdatePipelineLambdaRole88CE0535",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "UpdatePipelineGithubTokenFunction29B64F2E",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 731,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "UpdatePipelineGithubTokenRule79D83132": Object {
+      "Properties": Object {
+        "Description": "Rule to trigger Lambda Function when the Github Accelerator Token has been updated.",
+        "EventPattern": Object {
+          "detail": Object {
+            "eventName": Array [
+              "UpdateSecret",
+              "PutSecretValue",
+            ],
+            "eventSource": Array [
+              "secretsmanager.amazonaws.com",
+            ],
+            "requestParameters": Object {
+              "secretId": Array [
+                Object {
+                  "prefix": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":secretsmanager:",
+                        Object {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":secret:accelerator/github-token",
+                      ],
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          "detail-type": Array [
+            "AWS API Call via CloudTrail",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": Array [
+          Object {
+            "Arn": Object {
+              "Fn::GetAtt": Array [
+                "UpdatePipelineGithubTokenFunction29B64F2E",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+            "RetryPolicy": Object {
+              "MaximumEventAgeInSeconds": 14400,
+              "MaximumRetryAttempts": 2,
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "UpdatePipelineGithubTokenRuleAllowEventRuleAWSAcceleratorTestInstallerStackUpdatePipelineGithubTokenFunction78C173C279CEF0A3": Object {
+      "Properties": Object {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": Object {
+          "Fn::GetAtt": Array [
+            "UpdatePipelineGithubTokenFunction29B64F2E",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": Object {
+          "Fn::GetAtt": Array [
+            "UpdatePipelineGithubTokenRule79D83132",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "UpdatePipelineLambdaPolicy284ABC36": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "codepipeline:GetPipeline",
+                "codepipeline:UpdatePipeline",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":codepipeline:",
+                      Object {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":AWSAccelerator-Installer*",
+                    ],
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":codepipeline:",
+                      Object {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":AWSAccelerator-Pipeline*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "secretsmanager:GetResourcePolicy",
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:ListSecretVersionIds",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":secret:accelerator/github-token*",
+                  ],
+                ],
+              },
+            },
+            Object {
+              "Action": "iam:PassRole",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": "kms:Decrypt",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "UpdatePipelineLambdaPolicy284ABC36",
+        "Roles": Array [
+          Object {
+            "Ref": "UpdatePipelineLambdaRole88CE0535",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "UpdatePipelineLambdaRole88CE0535": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
     },
   },
 }
@@ -5295,6 +6095,21 @@ Object {
               "Sid": "Allow SNS service to use the encryption key",
             },
             Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "logs.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow Cloudwatch Logs service to use the encryption key",
+            },
+            Object {
               "Fn::If": Array [
                 "IsCommercialCondition",
                 Object {
@@ -6064,6 +6879,419 @@ phases:
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "UpdatePipelineGithubTokenFunction29B64F2E": Object {
+      "DependsOn": Array [
+        "UpdatePipelineLambdaRole88CE0535",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "ZipFile": "/**
+ *  Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the \\"License\\"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
+const AWS = require('aws-sdk');
+
+const secretsManager = new AWS.SecretsManager({});
+const codePipeline = new AWS.CodePipeline({});
+const installerPipelineName = process.env['INSTALLER_PIPELINE_NAME'] ?? '';
+const acceleratorPipelineName = process.env['ACCELERATOR_PIPELINE_NAME'] ?? '';
+const pipelineArray = [installerPipelineName, acceleratorPipelineName];
+
+/**
+ * update-pipeline-github-token - lambda handler
+ *
+ * @param event
+ * @returns
+ */
+
+exports.handler = async (event, context) => {
+  const secretDetails = event.detail.requestParameters;
+  const secretArn = secretDetails.secretId;
+  const secretValue = await getSecretValue(secretArn);
+  await updatePipelineDetailsForBothPipelines(secretValue);
+  return {
+    statusCode: 200,
+  };
+};
+
+async function getSecretValue(secretName) {
+  try {
+    const data = await secretsManager
+      .getSecretValue({
+        SecretId: secretName,
+      })
+      .promise();
+
+    if (!data || !data.SecretString) {
+      throw new Error(\`Secret \${secretName} didn't exist.\`);
+    }
+    console.log(\`Retrieved secret: \${secretName}...\`);
+    return data.SecretString;
+  } catch (error) {
+    console.log(error);
+    throw new Error(\`Error retrieving secret: \${secretName}.\`);
+  }
+}
+
+async function updateCodePipelineSourceStage(pipelineDetails, secretValue) {
+  const pipelineStages = pipelineDetails.pipeline.stages;
+  const sourceStage = pipelineStages.find(o => o.name == 'Source');
+  const sourceAction = sourceStage.actions.find(a => a.name == 'Source');
+  sourceAction.configuration.OAuthToken = secretValue;
+
+  return pipelineDetails;
+}
+
+async function getPipelineDetails(pipelineName) {
+  //This function retrieves the original Code Pipeline structure, so we can update it.
+  const getPipelineParams = {
+    name: pipelineName,
+  };
+  console.log(\`Retrieving existing pipeline configuration for: \${pipelineName}...\`);
+  const pipelineObject = await codePipeline.getPipeline(getPipelineParams).promise();
+  console.log(JSON.stringify(pipelineObject));
+  return pipelineObject;
+}
+
+async function updatePipeline(updatedPipelineDetails) {
+  //Remove metadata from getPipelineOutput to use as updatePipelineInput
+  delete updatedPipelineDetails.metadata;
+  console.log(\`Updating pipeline with new OAuth Token...\`);
+  return codePipeline.updatePipeline(updatedPipelineDetails).promise();
+}
+
+async function updatePipelineDetailsForBothPipelines(secretValue) {
+  for (const pipeline of pipelineArray) {
+    try {
+      const pipelineDetails = await getPipelineDetails(pipeline);
+      const updatedPipelineDetails = await updateCodePipelineSourceStage(pipelineDetails, secretValue);
+      await updatePipeline(updatedPipelineDetails);
+    } catch (error) {
+      console.error(error);
+      throw new Error(\`Error occurred while updating pipeline \${pipeline}\`);
+    }
+  }
+}
+",
+        },
+        "Description": "Lambda function to update CodePipeline OAuth Token",
+        "Environment": Object {
+          "Variables": Object {
+            "ACCELERATOR_PIPELINE_NAME": Object {
+              "Fn::Join": Array [
+                "",
+                Array [
+                  Object {
+                    "Ref": "AcceleratorQualifier",
+                  },
+                  "-pipeline",
+                ],
+              ],
+            },
+            "INSTALLER_PIPELINE_NAME": Object {
+              "Fn::Join": Array [
+                "",
+                Array [
+                  Object {
+                    "Ref": "AcceleratorQualifier",
+                  },
+                  "-installer",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "UpdatePipelineLambdaRole88CE0535",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "UpdatePipelineGithubTokenFunction29B64F2E",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 731,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "UpdatePipelineGithubTokenRule79D83132": Object {
+      "Properties": Object {
+        "Description": "Rule to trigger Lambda Function when the Github Accelerator Token has been updated.",
+        "EventPattern": Object {
+          "detail": Object {
+            "eventName": Array [
+              "UpdateSecret",
+              "PutSecretValue",
+            ],
+            "eventSource": Array [
+              "secretsmanager.amazonaws.com",
+            ],
+            "requestParameters": Object {
+              "secretId": Array [
+                Object {
+                  "prefix": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":secretsmanager:",
+                        Object {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":secret:accelerator/github-token",
+                      ],
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          "detail-type": Array [
+            "AWS API Call via CloudTrail",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": Array [
+          Object {
+            "Arn": Object {
+              "Fn::GetAtt": Array [
+                "UpdatePipelineGithubTokenFunction29B64F2E",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+            "RetryPolicy": Object {
+              "MaximumEventAgeInSeconds": 14400,
+              "MaximumRetryAttempts": 2,
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "UpdatePipelineGithubTokenRuleAllowEventRuleAWSAcceleratorTestInstallerStackUpdatePipelineGithubTokenFunction78C173C279CEF0A3": Object {
+      "Properties": Object {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": Object {
+          "Fn::GetAtt": Array [
+            "UpdatePipelineGithubTokenFunction29B64F2E",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": Object {
+          "Fn::GetAtt": Array [
+            "UpdatePipelineGithubTokenRule79D83132",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "UpdatePipelineLambdaPolicy284ABC36": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "codepipeline:GetPipeline",
+                "codepipeline:UpdatePipeline",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":codepipeline:",
+                      Object {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":",
+                      Object {
+                        "Ref": "AcceleratorQualifier",
+                      },
+                      "-installer*",
+                    ],
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":codepipeline:",
+                      Object {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":",
+                      Object {
+                        "Ref": "AcceleratorQualifier",
+                      },
+                      "-pipeline*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "secretsmanager:GetResourcePolicy",
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:ListSecretVersionIds",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":secret:accelerator/github-token*",
+                  ],
+                ],
+              },
+            },
+            Object {
+              "Action": "iam:PassRole",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": "kms:Decrypt",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "UpdatePipelineLambdaPolicy284ABC36",
+        "Roles": Array [
+          Object {
+            "Ref": "UpdatePipelineLambdaRole88CE0535",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "UpdatePipelineLambdaRole88CE0535": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
     },
   },
 }
@@ -7430,6 +8658,21 @@ Object {
               "Sid": "Allow SNS service to use the encryption key",
             },
             Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "logs.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow Cloudwatch Logs service to use the encryption key",
+            },
+            Object {
               "Fn::If": Array [
                 "IsCommercialCondition",
                 Object {
@@ -8189,6 +9432,419 @@ phases:
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "UpdatePipelineGithubTokenFunction29B64F2E": Object {
+      "DependsOn": Array [
+        "UpdatePipelineLambdaRole88CE0535",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "ZipFile": "/**
+ *  Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the \\"License\\"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
+const AWS = require('aws-sdk');
+
+const secretsManager = new AWS.SecretsManager({});
+const codePipeline = new AWS.CodePipeline({});
+const installerPipelineName = process.env['INSTALLER_PIPELINE_NAME'] ?? '';
+const acceleratorPipelineName = process.env['ACCELERATOR_PIPELINE_NAME'] ?? '';
+const pipelineArray = [installerPipelineName, acceleratorPipelineName];
+
+/**
+ * update-pipeline-github-token - lambda handler
+ *
+ * @param event
+ * @returns
+ */
+
+exports.handler = async (event, context) => {
+  const secretDetails = event.detail.requestParameters;
+  const secretArn = secretDetails.secretId;
+  const secretValue = await getSecretValue(secretArn);
+  await updatePipelineDetailsForBothPipelines(secretValue);
+  return {
+    statusCode: 200,
+  };
+};
+
+async function getSecretValue(secretName) {
+  try {
+    const data = await secretsManager
+      .getSecretValue({
+        SecretId: secretName,
+      })
+      .promise();
+
+    if (!data || !data.SecretString) {
+      throw new Error(\`Secret \${secretName} didn't exist.\`);
+    }
+    console.log(\`Retrieved secret: \${secretName}...\`);
+    return data.SecretString;
+  } catch (error) {
+    console.log(error);
+    throw new Error(\`Error retrieving secret: \${secretName}.\`);
+  }
+}
+
+async function updateCodePipelineSourceStage(pipelineDetails, secretValue) {
+  const pipelineStages = pipelineDetails.pipeline.stages;
+  const sourceStage = pipelineStages.find(o => o.name == 'Source');
+  const sourceAction = sourceStage.actions.find(a => a.name == 'Source');
+  sourceAction.configuration.OAuthToken = secretValue;
+
+  return pipelineDetails;
+}
+
+async function getPipelineDetails(pipelineName) {
+  //This function retrieves the original Code Pipeline structure, so we can update it.
+  const getPipelineParams = {
+    name: pipelineName,
+  };
+  console.log(\`Retrieving existing pipeline configuration for: \${pipelineName}...\`);
+  const pipelineObject = await codePipeline.getPipeline(getPipelineParams).promise();
+  console.log(JSON.stringify(pipelineObject));
+  return pipelineObject;
+}
+
+async function updatePipeline(updatedPipelineDetails) {
+  //Remove metadata from getPipelineOutput to use as updatePipelineInput
+  delete updatedPipelineDetails.metadata;
+  console.log(\`Updating pipeline with new OAuth Token...\`);
+  return codePipeline.updatePipeline(updatedPipelineDetails).promise();
+}
+
+async function updatePipelineDetailsForBothPipelines(secretValue) {
+  for (const pipeline of pipelineArray) {
+    try {
+      const pipelineDetails = await getPipelineDetails(pipeline);
+      const updatedPipelineDetails = await updateCodePipelineSourceStage(pipelineDetails, secretValue);
+      await updatePipeline(updatedPipelineDetails);
+    } catch (error) {
+      console.error(error);
+      throw new Error(\`Error occurred while updating pipeline \${pipeline}\`);
+    }
+  }
+}
+",
+        },
+        "Description": "Lambda function to update CodePipeline OAuth Token",
+        "Environment": Object {
+          "Variables": Object {
+            "ACCELERATOR_PIPELINE_NAME": Object {
+              "Fn::Join": Array [
+                "",
+                Array [
+                  Object {
+                    "Ref": "AcceleratorQualifier",
+                  },
+                  "-pipeline",
+                ],
+              ],
+            },
+            "INSTALLER_PIPELINE_NAME": Object {
+              "Fn::Join": Array [
+                "",
+                Array [
+                  Object {
+                    "Ref": "AcceleratorQualifier",
+                  },
+                  "-installer",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "UpdatePipelineLambdaRole88CE0535",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "InstallerKey2A6A8C6D",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "UpdatePipelineGithubTokenFunction29B64F2E",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 731,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "UpdatePipelineGithubTokenRule79D83132": Object {
+      "Properties": Object {
+        "Description": "Rule to trigger Lambda Function when the Github Accelerator Token has been updated.",
+        "EventPattern": Object {
+          "detail": Object {
+            "eventName": Array [
+              "UpdateSecret",
+              "PutSecretValue",
+            ],
+            "eventSource": Array [
+              "secretsmanager.amazonaws.com",
+            ],
+            "requestParameters": Object {
+              "secretId": Array [
+                Object {
+                  "prefix": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":secretsmanager:",
+                        Object {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":secret:accelerator/github-token",
+                      ],
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          "detail-type": Array [
+            "AWS API Call via CloudTrail",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": Array [
+          Object {
+            "Arn": Object {
+              "Fn::GetAtt": Array [
+                "UpdatePipelineGithubTokenFunction29B64F2E",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+            "RetryPolicy": Object {
+              "MaximumEventAgeInSeconds": 14400,
+              "MaximumRetryAttempts": 2,
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "UpdatePipelineGithubTokenRuleAllowEventRuleAWSAcceleratorTestInstallerStackUpdatePipelineGithubTokenFunction78C173C279CEF0A3": Object {
+      "Properties": Object {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": Object {
+          "Fn::GetAtt": Array [
+            "UpdatePipelineGithubTokenFunction29B64F2E",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": Object {
+          "Fn::GetAtt": Array [
+            "UpdatePipelineGithubTokenRule79D83132",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "UpdatePipelineLambdaPolicy284ABC36": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "codepipeline:GetPipeline",
+                "codepipeline:UpdatePipeline",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":codepipeline:",
+                      Object {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":",
+                      Object {
+                        "Ref": "AcceleratorQualifier",
+                      },
+                      "-installer*",
+                    ],
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":codepipeline:",
+                      Object {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":",
+                      Object {
+                        "Ref": "AcceleratorQualifier",
+                      },
+                      "-pipeline*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "secretsmanager:GetResourcePolicy",
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:ListSecretVersionIds",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:",
+                    Object {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    Object {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":secret:accelerator/github-token*",
+                  ],
+                ],
+              },
+            },
+            Object {
+              "Action": "iam:PassRole",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": "kms:Decrypt",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "UpdatePipelineLambdaPolicy284ABC36",
+        "Roles": Array [
+          Object {
+            "Ref": "UpdatePipelineLambdaRole88CE0535",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "UpdatePipelineLambdaRole88CE0535": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
     },
   },
 }

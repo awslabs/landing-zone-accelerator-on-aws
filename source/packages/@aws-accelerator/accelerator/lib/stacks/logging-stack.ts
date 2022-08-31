@@ -268,7 +268,8 @@ export class LoggingStack extends AcceleratorStack {
       }
       if (props.networkConfig.elbAccountIds?.find(item => item.region === cdk.Stack.of(this).region)) {
         elbAccountId = props.networkConfig.elbAccountIds?.find(
-          item => item.region === cdk.Stack.of(this).region)!.accountId;
+          item => item.region === cdk.Stack.of(this).region,
+        )!.accountId;
       }
       if (elbAccountId === undefined) {
         throw new Error(`elbAccountId is not defined for region: ${cdk.Stack.of(this).region}`);
