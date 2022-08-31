@@ -175,7 +175,7 @@ export class LoggingStack extends AcceleratorStack {
       cdk.Stack.of(this).account === this.stackProperties.accountsConfig.getLogArchiveAccountId()
     ) {
       const lifecycleRules: LifecycleRule[] = [];
-      for (const lifecycleRule of this.stackProperties.globalConfig.logging.accessLogBucket?.lifecycleRules ?? []) {
+      for (const lifecycleRule of this.stackProperties.globalConfig.logging.centralLogBucket?.lifecycleRules ?? []) {
         const noncurrentVersionTransitions = [];
         for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
           noncurrentVersionTransitions.push({

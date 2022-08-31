@@ -59,7 +59,7 @@ export class CentralLogsBucket extends Construct {
       kmsAliasName: props.kmsAliasName,
       kmsDescription: props.kmsDescription,
       serverAccessLogsBucket: props.serverAccessLogsBucket.getS3Bucket(),
-      //lifecycleRules: props.lifecycleRules,
+      lifecycleRules: props.lifecycleRules,
     });
 
     this.bucket.getKey().addToResourcePolicy(
