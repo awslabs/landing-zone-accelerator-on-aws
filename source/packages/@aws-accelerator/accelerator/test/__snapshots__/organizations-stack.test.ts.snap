@@ -62,40 +62,6 @@ Object {
       "Type": "AWS::Backup::BackupVault",
       "UpdateReplacePolicy": "Retain",
     },
-    "AcceleratorCentralLogBucketKeyLookup26F8C418": Object {
-      "DeletionPolicy": "Delete",
-      "DependsOn": Array [
-        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
-      ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
-            "Arn",
-          ],
-        },
-        "assumeRoleArn": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "arn:",
-              Object {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
-            ],
-          ],
-        },
-        "invokingAccountID": "111111111111",
-        "invokingRegion": "us-east-1",
-        "parameterAccountID": "333333333333",
-        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
-        "parameterRegion": "us-east-1",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::SsmGetParameterValue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "AttachBackupPolicyRootB4A999CE": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
@@ -236,6 +202,40 @@ Object {
         "RoleName": "Backup-Role",
       },
       "Type": "AWS::IAM::Role",
+    },
+    "CentralLogsBucketKeyLookup52CD8A37": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
+            ],
+          ],
+        },
+        "invokingAccountID": "111111111111",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "333333333333",
+        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
+        "parameterRegion": "us-east-1",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
     },
     "CustomAuditManagerEnableOrganizationAdminAccountCustomResourceProviderHandlerCA9379D9": Object {
       "DependsOn": Array [
@@ -2156,7 +2156,7 @@ Object {
           ],
         },
         "destinationBucketKeyArn": Object {
-          "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+          "Ref": "CentralLogsBucketKeyLookup52CD8A37",
         },
         "prefix": "",
         "replicationRoleArn": Object {
@@ -2270,7 +2270,7 @@ Object {
               "Action": "kms:Encrypt",
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "AcceleratorCentralLogBucketKeyLookup26F8C418",
+                "Ref": "CentralLogsBucketKeyLookup52CD8A37",
               },
             },
           ],

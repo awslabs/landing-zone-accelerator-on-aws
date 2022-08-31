@@ -17,6 +17,7 @@ import { Construct } from 'constructs';
 
 import { Region } from '@aws-accelerator/config';
 import {
+  CentralLogsBucket,
   EbsDefaultEncryption,
   GuardDutyPublishingDestination,
   KeyLookup,
@@ -27,18 +28,18 @@ import {
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { KeyStack } from './key-stack';
 import { pascalCase } from 'pascal-case';
 
 /**
  * Security Stack, configures local account security services
  */
 export class SecurityStack extends AcceleratorStack {
-  readonly auditAccountS3Key: cdk.aws_kms.Key;
   readonly cloudwatchKey: cdk.aws_kms.Key;
   readonly auditAccountId: string;
   readonly logArchiveAccountId: string;
   readonly auditAccountName: string;
+  readonly centralLogsBucketName: string;
+  readonly centralLogsBucketKey: cdk.aws_kms.Key;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -46,20 +47,23 @@ export class SecurityStack extends AcceleratorStack {
     this.auditAccountName = props.securityConfig.getDelegatedAccountName();
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
+    this.centralLogsBucketName = `${
+      AcceleratorStack.CENTRAL_LOGS_BUCKET_NAME_PREFIX
+    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.globalConfig.homeRegion}`;
+
+    this.centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
+      accountId: props.accountsConfig.getLogArchiveAccountId(),
+      keyRegion: props.globalConfig.homeRegion,
+      roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
+      keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
+      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
       'AcceleratorGetCloudWatchKey',
       cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
     ) as cdk.aws_kms.Key;
-
-    this.auditAccountS3Key = new KeyLookup(this, 'AcceleratorCloudWatchKey', {
-      accountId: props.accountsConfig.getAuditAccountId(),
-      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: KeyStack.ACCELERATOR_KEY_ARN_PARAMETER_NAME,
-      kmsKey: this.cloudwatchKey,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-    }).getKey();
 
     //
     // MacieSession configuration
@@ -100,11 +104,9 @@ export class SecurityStack extends AcceleratorStack {
       ) === -1
     ) {
       if (this.props.accountsConfig.containsAccount(this.auditAccountName)) {
-        const bucketName = `aws-accelerator-macie-${this.auditAccountId}-${cdk.Aws.REGION}`;
-
         new MacieExportConfigClassification(this, 'AwsMacieUpdateExportConfigClassification', {
-          bucketName: bucketName,
-          bucketKmsKey: this.auditAccountS3Key,
+          bucketName: this.centralLogsBucketName,
+          bucketKmsKey: this.centralLogsBucketKey,
           logKmsKey: this.cloudwatchKey,
           keyPrefix: `macie/${cdk.Stack.of(this).account}/`,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
@@ -126,20 +128,18 @@ export class SecurityStack extends AcceleratorStack {
       ) === -1
     ) {
       if (this.props.accountsConfig.containsAccount(this.auditAccountName)) {
-        const destinationArn = `arn:${cdk.Stack.of(this).partition}:s3:::aws-accelerator-guardduty-${
-          this.auditAccountId
-        }-${cdk.Stack.of(this).region}`;
-
-        new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
-          exportDestinationType:
-            this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.destinationType,
-          destinationArn,
-          destinationKmsKey: this.auditAccountS3Key,
-          logKmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        });
-      } else {
-        throw new Error(`Guardduty audit delegated admin account name "${this.auditAccountName}" not found.`);
+        if (this.props.accountsConfig.containsAccount(this.auditAccountName)) {
+          new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
+            exportDestinationType:
+              this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.destinationType,
+            destinationArn: `arn:${cdk.Stack.of(this).partition}:s3:::${this.centralLogsBucketName}`,
+            destinationKmsKey: this.centralLogsBucketKey,
+            logKmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          });
+        } else {
+          throw new Error(`Guardduty audit delegated admin account name "${this.auditAccountName}" not found.`);
+        }
       }
     }
   }

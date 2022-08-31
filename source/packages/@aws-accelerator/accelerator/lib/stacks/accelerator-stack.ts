@@ -49,6 +49,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected props: AcceleratorStackProps;
 
   /**
+   * Accelerator CentralLogs bucket name prefix
+   */
+  public static readonly CENTRAL_LOGS_BUCKET_NAME_PREFIX = 'aws-accelerator-central-logs';
+  /**
    * Cross account IAM ROLE to read SSM parameter
    * IAM role to access SSM parameter from different or different region
    * This role is created in Key stack
