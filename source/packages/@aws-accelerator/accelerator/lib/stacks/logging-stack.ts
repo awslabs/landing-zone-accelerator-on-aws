@@ -29,21 +29,21 @@ import {
 import { LifecycleRule } from '@aws-accelerator/constructs/lib/aws-s3/bucket';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { Logger } from '../logger';
+import path from 'path';
 
 export class LoggingStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.IKey;
   private organizationId: string | undefined;
-  private stackProperties: AcceleratorStackProps;
   private centralLogsBucketName: string;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    this.stackProperties = props;
-    this.centralLogsBucketName = `aws-accelerator-central-logs-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
-      this.stackProperties.globalConfig.homeRegion
+    this.centralLogsBucketName = `aws-accelerator-central-logs-${this.props.accountsConfig.getLogArchiveAccountId()}-${
+      this.props.globalConfig.homeRegion
     }`;
 
+    // Set Organization ID
     this.setOrganizationId();
 
     Logger.debug(
@@ -54,6 +54,10 @@ export class LoggingStack extends AcceleratorStack {
     //
     // Create S3 Key in all account
     this.createS3Key();
+
+    //
+    // Create KMS keys defined in config
+    this.createKeys();
 
     // create kms key for CloudWatch logs
     // the CloudWatch key for the management account
@@ -73,12 +77,12 @@ export class LoggingStack extends AcceleratorStack {
     // logging-stack instead of the security-stack since initial buckets are created in this stack.
     //
     if (
-      cdk.Stack.of(this).region === this.stackProperties.globalConfig.homeRegion &&
+      cdk.Stack.of(this).region === this.props.globalConfig.homeRegion &&
       !this.isAccountExcluded(
-        this.stackProperties.securityConfig.centralSecurityServices.s3PublicAccessBlock.excludeAccounts ?? [],
+        this.props.securityConfig.centralSecurityServices.s3PublicAccessBlock.excludeAccounts ?? [],
       )
     ) {
-      if (this.stackProperties.securityConfig.centralSecurityServices.s3PublicAccessBlock.enable) {
+      if (this.props.securityConfig.centralSecurityServices.s3PublicAccessBlock.enable) {
         new S3PublicAccessBlock(this, 'S3PublicAccessBlock', {
           blockPublicAcls: true,
           blockPublicPolicy: true,
@@ -86,13 +90,13 @@ export class LoggingStack extends AcceleratorStack {
           restrictPublicBuckets: true,
           accountId: cdk.Stack.of(this).account,
           kmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
+          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
         });
       }
     }
 
     const lifecycleRules: LifecycleRule[] = [];
-    for (const lifecycleRule of this.stackProperties.globalConfig.logging.accessLogBucket?.lifecycleRules ?? []) {
+    for (const lifecycleRule of this.props.globalConfig.logging.accessLogBucket?.lifecycleRules ?? []) {
       const noncurrentVersionTransitions = [];
       for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
         noncurrentVersionTransitions.push({
@@ -169,11 +173,11 @@ export class LoggingStack extends AcceleratorStack {
     //
     let centralLogsBucket: CentralLogsBucket | undefined;
     if (
-      cdk.Stack.of(this).region === this.stackProperties.globalConfig.homeRegion &&
-      cdk.Stack.of(this).account === this.stackProperties.accountsConfig.getLogArchiveAccountId()
+      cdk.Stack.of(this).region === this.props.globalConfig.homeRegion &&
+      cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId()
     ) {
       const lifecycleRules: LifecycleRule[] = [];
-      for (const lifecycleRule of this.stackProperties.globalConfig.logging.centralLogBucket?.lifecycleRules ?? []) {
+      for (const lifecycleRule of this.props.globalConfig.logging.accessLogBucket?.lifecycleRules ?? []) {
         const noncurrentVersionTransitions = [];
         for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
           noncurrentVersionTransitions.push({
@@ -231,30 +235,30 @@ export class LoggingStack extends AcceleratorStack {
       centralLogBucketKey = centralLogsBucket.getS3Bucket().getKey();
     } else {
       centralLogBucketKey = new KeyLookup(this, 'AcceleratorCentralLogBucketKeyLookup', {
-        accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
-        keyRegion: this.stackProperties.globalConfig.homeRegion,
+        accountId: this.props.accountsConfig.getLogArchiveAccountId(),
+        keyRegion: this.props.globalConfig.homeRegion,
         roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
         keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
         kmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       }).getKey();
     }
 
     const replicationProps: BucketReplicationProps = {
       destination: {
         bucketName: this.centralLogsBucketName,
-        accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
+        accountId: this.props.accountsConfig.getLogArchiveAccountId(),
         keyArn: centralLogBucketKey!.keyArn,
       },
       kmsKey: this.cloudwatchKey,
-      logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
+      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
     };
 
     /**
      * Create S3 Bucket for ELB Access Logs, this is created in log archive account
      * For ELB to write access logs bucket is needed to have SSE-S3 server-side encryption
      */
-    if (cdk.Stack.of(this).account === this.stackProperties.accountsConfig.getLogArchiveAccountId()) {
+    if (cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId()) {
       const elbAccessLogsBucket = new Bucket(this, 'ElbAccessLogsBucket', {
         encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
         s3BucketName: `aws-accelerator-elb-access-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
@@ -358,7 +362,7 @@ export class LoggingStack extends AcceleratorStack {
       ]);
     }
 
-    if (this.stackProperties.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable) {
+    if (this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable) {
       // create service linked role for autoscaling
       // if ebs default encryption enabled and using a customer master key
       new iam.CfnServiceLinkedRole(this, 'AutoScalingServiceLinkedRole', {
@@ -372,7 +376,7 @@ export class LoggingStack extends AcceleratorStack {
   }
 
   private setOrganizationId() {
-    if (this.stackProperties.organizationConfig.enable) {
+    if (this.props.organizationConfig.enable) {
       this.organizationId = new Organization(this, 'Organization').id;
     }
   }
@@ -452,5 +456,58 @@ export class LoggingStack extends AcceleratorStack {
     });
 
     return cloudwatchKey;
+  }
+
+  /**
+   * Function to create KMS Keys defined in config file
+   */
+  private createKeys() {
+    for (const keyItem of this.props.securityConfig.keyManagementService.keySets) {
+      if (!this.isIncluded(keyItem.deploymentTargets)) {
+        Logger.info(`[Logging-stack] KMS Key ${keyItem.name} excluded`);
+        continue;
+      }
+      Logger.debug(`[Logging-stack] Create KMS Key ${keyItem.name}`);
+
+      const key = new cdk.aws_kms.Key(this, 'AcceleratorKmsKey-' + pascalCase(keyItem.name), {
+        alias: keyItem.alias,
+        description: keyItem.description,
+        enabled: keyItem.enabled,
+        enableKeyRotation: keyItem.enableKeyRotation,
+        removalPolicy: keyItem.removalPolicy as cdk.RemovalPolicy,
+      });
+
+      if (keyItem.policy) {
+        // Read in the policy document which should be properly formatted json
+        const policyDocument = require(path.join(this.props.configDirPath, keyItem.policy));
+
+        // Create a statements list using the PolicyStatement factory
+        const statements: cdk.aws_iam.PolicyStatement[] = [];
+        for (const statement of policyDocument.Statement) {
+          statements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+        }
+
+        // Attach statements to key policy
+        statements.forEach(item => key.addToResourcePolicy(item));
+      }
+
+      // Create SSM parameter
+      new cdk.aws_ssm.StringParameter(this, 'AcceleratorKmsArnParameter-' + pascalCase(keyItem.name), {
+        parameterName: `/accelerator/kms/${keyItem.name}/key-arn`,
+        stringValue: key.keyArn,
+      });
+
+      // AwsSolutions-S1: The KMS Symmetric key does not have automatic key rotation enabled.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}` + '/AcceleratorKmsKey-' + pascalCase(keyItem.name) + `/Resource`,
+        [
+          {
+            id: 'AwsSolutions-KMS5',
+            reason: 'CMK policy defined by customer provided policy definition file.',
+          },
+        ],
+      );
+    }
   }
 }
