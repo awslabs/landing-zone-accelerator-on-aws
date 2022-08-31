@@ -59,13 +59,10 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:59
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:60
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:61
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:62
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:376
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:454
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:477
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:484
 
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:396
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:401
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:429
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:436
 
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:57
 
