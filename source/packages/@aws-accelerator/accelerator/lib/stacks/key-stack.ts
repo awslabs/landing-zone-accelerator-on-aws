@@ -284,12 +284,6 @@ export class KeyStack extends AcceleratorStack {
     );
 
     const allowedServicePrincipals: { name: string; principal: string }[] = [];
-    if (this.props.securityConfig.centralSecurityServices.macie.enable) {
-      allowedServicePrincipals.push({ name: 'Macie', principal: 'macie.amazonaws.com' });
-    }
-    if (this.props.securityConfig.centralSecurityServices.guardduty.enable) {
-      allowedServicePrincipals.push({ name: 'Guardduty', principal: 'guardduty.amazonaws.com' });
-    }
 
     allowedServicePrincipals.push({ name: 'CloudTrail', principal: 'cloudtrail.amazonaws.com' });
 

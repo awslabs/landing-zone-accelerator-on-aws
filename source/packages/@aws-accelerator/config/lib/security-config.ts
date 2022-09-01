@@ -47,6 +47,44 @@ export class SecurityConfigTypes {
   });
 
   /**
+   * AWS KMS Key configuration
+   */
+  static readonly keyConfig = t.interface({
+    /**
+     * Unique Key name for logical reference
+     */
+    name: t.nonEmptyString,
+    /**
+     * Initial alias to add to the key
+     */
+    alias: t.optional(t.nonEmptyString),
+    /**
+     * Key policy definition file
+     */
+    policy: t.optional(t.nonEmptyString),
+    /**
+     * A description of the key.
+     */
+    description: t.optional(t.nonEmptyString),
+    /**
+     * Indicates whether AWS KMS rotates the key.
+     */
+    enableKeyRotation: t.optional(t.boolean),
+    /**
+     * Indicates whether the key is available for use.
+     */
+    enabled: t.optional(t.boolean),
+    /**
+     * Whether the encryption key should be retained when it is removed from the Stack.
+     */
+    removalPolicy: t.optional(t.enums('KeyRemovalPolicy', ['destroy', 'retain', 'snapshot'])),
+    /**
+     * Key deployment targets
+     */
+    deploymentTargets: t.deploymentTargets,
+  });
+
+  /**
    * AWS Macie configuration
    */
   static readonly macieConfig = t.interface({
@@ -215,6 +253,7 @@ export class SecurityConfigTypes {
 
   static readonly ebsDefaultVolumeEncryptionConfig = t.interface({
     enable: t.boolean,
+    kmsKey: t.optional(t.nonEmptyString),
     excludeRegions: t.optional(t.array(t.region)),
   });
   static readonly documentConfig = t.interface({
@@ -245,6 +284,13 @@ export class SecurityConfigTypes {
     detective: t.optional(SecurityConfigTypes.detectiveConfig),
     securityHub: SecurityConfigTypes.securityHubConfig,
     ssmAutomation: this.ssmAutomationConfig,
+  });
+
+  /**
+   * KMS key management configuration
+   */
+  static readonly keyManagementServiceConfig = t.interface({
+    keySets: t.array(SecurityConfigTypes.keyConfig),
   });
 
   static readonly accessAnalyzerConfig = t.interface({
@@ -418,6 +464,7 @@ export class SecurityConfigTypes {
     iamPasswordPolicy: this.iamPasswordPolicyConfig,
     awsConfig: this.awsConfig,
     cloudWatch: this.cloudWatchConfig,
+    keyManagementService: t.optional(this.keyManagementServiceConfig),
   });
 }
 
@@ -433,6 +480,64 @@ export class S3PublicAccessBlockConfig implements t.TypeOf<typeof SecurityConfig
    * List of AWS Region names to be excluded from configuring block S3 public access
    */
   readonly excludeAccounts: string[] = [];
+}
+
+/**
+ * AWS KMS Key configuration
+ */
+export class KeyConfig implements t.TypeOf<typeof SecurityConfigTypes.keyConfig> {
+  /**
+   * Unique Key name for logical reference
+   */
+  readonly name = '';
+  /**
+   * Initial alias to add to the key
+   */
+  readonly alias = '';
+  /**
+   * Key policy file path. This file must be available in accelerator config repository.
+   */
+  readonly policy = '';
+  /**
+   * A description of the key.
+   */
+  readonly description = '';
+  /**
+   * Indicates whether AWS KMS rotates the key.
+   * @default true
+   */
+  readonly enableKeyRotation = true;
+  /**
+   * Indicates whether the key is available for use.
+   * @default - Key is enabled.
+   */
+  readonly enabled = true;
+  /**
+   * Whether the encryption key should be retained when it is removed from the Stack.
+   * @default retain
+   */
+  readonly removalPolicy = 'retain';
+  /**
+   * KMS key deployment target.
+   *
+   * To deploy KMS key into Root and Infrastructure organizational units, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * - deploymentTargets:
+   *         organizationalUnits:
+   *           - Root
+   *           - Infrastructure
+   * ```
+   */
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
+/**
+ *  KMS key management service configuration
+ */
+export class KeyManagementServiceConfig implements t.TypeOf<typeof SecurityConfigTypes.keyManagementServiceConfig> {
+  readonly keySets: KeyConfig[] = [];
 }
 
 /**
@@ -645,6 +750,10 @@ export class EbsDefaultVolumeEncryptionConfig
    * Indicates whether AWS EBS volume have default encryption enabled.
    */
   readonly enable = false;
+  /**
+   * KMS key to encrypt EBS volume. When no value provided LZ Accelerator will create the KMS key.
+   */
+  readonly kmsKey = '';
   /**
    * List of AWS Region names to be excluded from configuring AWS EBS volume default encryption
    */
@@ -1141,15 +1250,15 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
    */
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   /**
-   * AWS Config ruleset
+   * AWS Config rule set
    *
-   * Following example will create a custom rule named accelerator-attatch-ec2-instance-profile with remediation
+   * Following example will create a custom rule named accelerator-attach-ec2-instance-profile with remediation
    * and a managed rule named accelerator-iam-user-group-membership-check without remediation
    *
    * @example
    * ```
    * rules:
-   *         - name: accelerator-attatch-ec2-instance-profile
+   *         - name: accelerator-attach-ec2-instance-profile
    *           type: Custom
    *           description: Custom role to remediate ec2 instance profile to EC2 instances
    *           inputParameters:
@@ -1431,6 +1540,7 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
   readonly iamPasswordPolicy: IamPasswordPolicyConfig = new IamPasswordPolicyConfig();
   readonly awsConfig: AwsConfig = new AwsConfig();
   readonly cloudWatch: CloudWatchConfig = new CloudWatchConfig();
+  readonly keyManagementService: KeyManagementServiceConfig = new KeyManagementServiceConfig();
   /**
    * Validation errors
    */
@@ -1464,6 +1574,8 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
     //
 
     if (values) {
+      Object.assign(this, values);
+
       if (configDir && validateConfig) {
         //
         // SSM Document validations
@@ -1478,6 +1590,16 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
 
         // Validate presence of SSM document files
         this.validateSsmDocumentFiles(configDir);
+
+        // Validate KMS key policy files
+        this.validateKeyPolicyFiles(configDir);
+
+        //
+        // Create list of custom CMKs got any services to be validated against key list from keyManagementService
+        const keyNames: string[] = [this.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey];
+
+        // Validate custom CMK names
+        this.validateCustomKeyName(keyNames);
 
         //
         // Validate deployment targets against organization config file
@@ -1501,8 +1623,6 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
       if (this.errors.length) {
         throw new Error(`${SecurityConfig.FILENAME} has ${this.errors.length} issues: ${this.errors.join(' ')}`);
       }
-
-      Object.assign(this, values);
     }
   }
 
@@ -1573,6 +1693,46 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
     for (const ssmDocument of this.ssmDocuments) {
       if (!fs.existsSync(path.join(configDir, ssmDocument.template))) {
         this.errors.push(`SSM document ${ssmDocument.name} template file ${ssmDocument.template} not found !!!`);
+      }
+    }
+  }
+
+  /**
+   * Function to validate KMS key policy files existence
+   * @param configDir
+   */
+  private validateKeyPolicyFiles(configDir: string) {
+    // Validate presence of KMS policy files
+    if (!this.keyManagementService) {
+      return;
+    }
+    for (const key of this.keyManagementService.keySets) {
+      if (key.policy) {
+        if (!fs.existsSync(path.join(configDir, key.policy))) {
+          this.errors.push(`KMS Key ${key.name} policy file ${key.policy} not found !!!`);
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate custom key existence in key list of keyManagementService
+   */
+  private validateCustomKeyName(keyNames: string[]) {
+    // Validate presence of KMS policy files
+    for (const keyName of keyNames) {
+      if (keyName) {
+        if (!this.keyManagementService) {
+          this.errors.push(`Custom CMK object keyManagementService not defined, CMK ${keyName} can not be used !!!`);
+          return;
+        }
+        if (!this.keyManagementService.keySets.find(item => item.name === keyName)) {
+          this.errors.push(
+            `Custom CMK  ${keyName} is not part of keyManagementService key list [${
+              this.keyManagementService.keySets.flatMap(item => item.name) ?? []
+            }] !!!`,
+          );
+        }
       }
     }
   }

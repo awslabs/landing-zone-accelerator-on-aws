@@ -149,6 +149,83 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "AcceleratorKmsArnParameterKey13EEB1676": Object {
+      "Properties": Object {
+        "Name": "/accelerator/kms/key1/key-arn",
+        "Type": "String",
+        "Value": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorKmsKeyKey1660964AC",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "AcceleratorKmsKeyKey1660964AC": Object {
+      "DeletionPolicy": "Delete",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-KMS5",
+              "reason": "CMK policy defined by customer provided policy definition file.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Description": "Test KMS Key",
+        "EnableKeyRotation": true,
+        "Enabled": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "arn:aws:iam::111111111111:root",
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorKmsKeyKey1Alias6B1D2C45": Object {
+      "Properties": Object {
+        "AliasName": "alias/accelerator/test-key/key1",
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorKmsKeyKey1660964AC",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
     "AcceleratorS3KmsArnParameter82C4C525": Object {
       "Properties": Object {
         "Name": "/accelerator/kms/s3/key-arn",
@@ -307,34 +384,6 @@ Object {
           ],
         },
         "BucketName": "aws-accelerator-central-logs-333333333333-us-east-1",
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
-                "DaysAfterInitiation": 1,
-              },
-              "ExpirationInDays": 1825,
-              "ExpiredObjectDeleteMarker": false,
-              "Id": "LifecycleRuleaws-accelerator-central-logs-333333333333-us-east-1",
-              "NoncurrentVersionExpiration": Object {
-                "NoncurrentDays": 1825,
-              },
-              "NoncurrentVersionTransitions": Array [
-                Object {
-                  "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 366,
-                },
-              ],
-              "Status": "Enabled",
-              "Transitions": Array [
-                Object {
-                  "StorageClass": "DEEP_ARCHIVE",
-                  "TransitionInDays": 365,
-                },
-              ],
-            },
-          ],
-        },
         "LoggingConfiguration": Object {
           "DestinationBucketName": Object {
             "Ref": "AccessLogsBucketFA218D2A",
@@ -354,6 +403,20 @@ Object {
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
+        "Tags": Array [
+          Object {
+            "Key": "aws-cdk:auto-auditmanager-access-bucket",
+            "Value": "true",
+          },
+          Object {
+            "Key": "aws-cdk:auto-guardduty-access-bucket",
+            "Value": "true",
+          },
+          Object {
+            "Key": "aws-cdk:auto-macie-access-bucket",
+            "Value": "true",
+          },
+        ],
         "VersioningConfiguration": Object {
           "Status": "Enabled",
         },
@@ -396,6 +459,48 @@ Object {
                     ],
                   ],
                 },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "macie.amazonaws.com",
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "guardduty.amazonaws.com",
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "auditmanager.amazonaws.com",
               },
               "Resource": "*",
             },
@@ -467,6 +572,51 @@ Object {
               },
               "Resource": "*",
               "Sid": "Allow AWS Services to encrypt and describe logs",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "macie.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow Macie service to use the encryption key",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "guardduty.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow Guardduty service to use the encryption key",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "auditmanager.amazonaws.com",
+              },
+              "Resource": "*",
+              "Sid": "Allow AuditManager service to use the encryption key",
             },
             Object {
               "Action": Array [
@@ -662,6 +812,126 @@ Object {
               "Sid": "deny-insecure-connections",
             },
             Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "macie.amazonaws.com",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "CentralLogsBucket447B5C59",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "CentralLogsBucket447B5C59",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "guardduty.amazonaws.com",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "CentralLogsBucket447B5C59",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "CentralLogsBucket447B5C59",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "auditmanager.amazonaws.com",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "CentralLogsBucket447B5C59",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "CentralLogsBucket447B5C59",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
               "Action": "s3:PutObject",
               "Condition": Object {
                 "StringEquals": Object {
@@ -710,6 +980,46 @@ Object {
                   "Arn",
                 ],
               },
+            },
+            Object {
+              "Action": Array [
+                "s3:GetBucketLocation",
+                "s3:PutObject",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "CentralLogsBucket447B5C59",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "CentralLogsBucket447B5C59",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "Allow Organization principals to use of the bucket",
             },
             Object {
               "Action": Array [

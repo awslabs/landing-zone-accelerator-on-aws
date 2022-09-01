@@ -808,6 +808,7 @@ export class NetworkConfigTypes {
     centralNetworkServices: t.optional(this.centralNetworkServicesConfig),
     dhcpOptions: t.optional(t.array(this.dhcpOptsConfig)),
     directConnectGateways: t.optional(t.array(this.dxGatewayConfig)),
+    prefixLists: t.optional(t.array(this.prefixListConfig)),
     vpcPeering: t.optional(t.array(this.vpcPeeringConfig)),
     vpcTemplates: t.optional(t.array(this.vpcTemplatesConfig)),
     elbAccountIds: t.optional(t.array(this.elbAccountIdsConfig)),
@@ -3826,6 +3827,10 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
         //
         // Validate DX gateway configurations
         this.validateDxConfiguration(values);
+
+        //
+        // Validate GWLB configuration
+        this.validateGwlbConfiguration(values);
       }
 
       if (this.errors.length) {
@@ -3966,6 +3971,23 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   }
 
   /**
+   * Function to validate existence of GWLB deployment target accounts
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateGwlbDeploymentTargetAccounts(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    for (const gwlb of values.centralNetworkServices?.gatewayLoadBalancers ?? []) {
+      for (const endpoint of gwlb.endpoints ?? []) {
+        if (this.accountNames.indexOf(endpoint.account) === -1) {
+          this.errors.push(
+            `Deployment target account ${endpoint.account} for Gateway Load Balancer ${gwlb.name} endpoint ${endpoint.name} does not exist in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
    * Function to validate Deployment targets OU name for network services
    * @param values
    */
@@ -3983,6 +4005,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     this.validateTgwDeploymentTargetAccounts(values);
     this.validateIpamPoolDeploymentTargetAccounts(values);
     this.validateVpcTemplatesDeploymentTargetAccounts(values);
+    this.validateGwlbDeploymentTargetAccounts(values);
   }
 
   /**
@@ -4040,12 +4063,177 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   private validateVpcConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
     for (const vpcItem of [...values.vpcs, ...(values.vpcTemplates ?? [])] ?? []) {
       for (const routeTableItem of vpcItem.routeTables ?? []) {
+        // Throw error if gateway association exists but no internet gateway
         if (routeTableItem.gatewayAssociation === 'internetGateway' && !vpcItem.internetGateway) {
           this.errors.push(
-            `Route table ${routeTableItem.name} for VPC ${vpcItem.name}: attempting to configure a gateway association with no IGW attached to the VPC!`,
+            `[Route table ${routeTableItem.name} for VPC ${vpcItem.name}]: attempting to configure a gateway association with no IGW attached to the VPC!`,
           );
         }
+        // Validate route entries
+        this.validateRouteTableEntries(routeTableItem, vpcItem, values);
       }
+    }
+  }
+
+  /**
+   * Validate route table entries
+   * @param routeTableItem
+   */
+  private validateRouteTableEntries(
+    routeTableItem: t.TypeOf<typeof NetworkConfigTypes.routeTableConfig>,
+    vpcItem: t.TypeOf<typeof NetworkConfigTypes.vpcConfig> | t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig>,
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+  ) {
+    for (const routeTableEntryItem of routeTableItem.routes ?? []) {
+      // Validate destination exists
+      if (routeTableEntryItem.type && routeTableEntryItem.type !== 'gatewayEndpoint') {
+        this.validateRouteEntryDestination(routeTableEntryItem, routeTableItem.name, vpcItem.name, values);
+      }
+
+      // Validate IGW route
+      if (routeTableEntryItem.type && routeTableEntryItem.type === 'internetGateway') {
+        this.validateIgwRouteEntry(routeTableEntryItem, routeTableItem.name, vpcItem);
+      }
+
+      // Validate target exists
+      if (
+        routeTableEntryItem.type &&
+        ['gatewayLoadBalancerEndpoint', 'natGateway', 'networkFirewall', 'transitGateway'].includes(
+          routeTableEntryItem.type,
+        )
+      ) {
+        this.validateRouteEntryTarget(routeTableEntryItem, routeTableItem.name, vpcItem, values);
+      }
+    }
+  }
+
+  /**
+   * Validate route entries have a valid destination configured
+   * @param routeTableEntryItem
+   * @param routeTableName
+   * @param vpcName
+   */
+  private validateRouteEntryDestination(
+    routeTableEntryItem: t.TypeOf<typeof NetworkConfigTypes.routeTableEntryConfig>,
+    routeTableName: string,
+    vpcName: string,
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+  ) {
+    if (routeTableEntryItem.destinationPrefixList) {
+      // Check if a CIDR destination is also defined
+      if (routeTableEntryItem.destination) {
+        this.errors.push(
+          `[Route table ${routeTableName} for VPC ${vpcName}]: route entry ${routeTableEntryItem.name} using destination and destinationPrefixList. Please choose only one destination type`,
+        );
+      }
+
+      // Throw error if network firewall or GWLB are the target
+      if (['networkFirewall', 'gatewayLoadBalancerEndpoint'].includes(routeTableEntryItem.type!)) {
+        this.errors.push(
+          `[Route table ${routeTableName} for VPC ${vpcName}]: route entry ${routeTableEntryItem.name} with type ${routeTableEntryItem.type} does not support destinationPrefixList`,
+        );
+      }
+
+      // Throw error if prefix list doesn't exist
+      if (!values.prefixLists?.find(item => item.name === routeTableEntryItem.destinationPrefixList)) {
+        this.errors.push(
+          `[Route table ${routeTableName} for VPC ${vpcName}]: route entry ${routeTableEntryItem.name} destinationPrefixList ${routeTableEntryItem.destinationPrefixList} does not exist`,
+        );
+      }
+    } else {
+      if (!routeTableEntryItem.destination) {
+        this.errors.push(
+          `[Route table ${routeTableName} for VPC ${vpcName}]: route entry ${routeTableEntryItem.name} does not have a destination defined`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Validate IGW routes are associated with a VPC with an IGW attached
+   * @param routeTableEntryItem
+   * @param routeTableName
+   * @param vpcItem
+   */
+  private validateIgwRouteEntry(
+    routeTableEntryItem: t.TypeOf<typeof NetworkConfigTypes.routeTableEntryConfig>,
+    routeTableName: string,
+    vpcItem: t.TypeOf<typeof NetworkConfigTypes.vpcConfig> | t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig>,
+  ) {
+    if (!vpcItem.internetGateway) {
+      this.errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} is targeting an IGW, but now IGW is attached to the VPC`,
+      );
+    }
+  }
+
+  /**
+   * Validate route table entries have a valid target configured
+   * @param routeTableEntryItem
+   * @param routeTableName
+   * @param vpcItem
+   * @param values
+   */
+  private validateRouteEntryTarget(
+    routeTableEntryItem: t.TypeOf<typeof NetworkConfigTypes.routeTableEntryConfig>,
+    routeTableName: string,
+    vpcItem: t.TypeOf<typeof NetworkConfigTypes.vpcConfig> | t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig>,
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+  ) {
+    const gwlbs = values.centralNetworkServices?.gatewayLoadBalancers;
+    const networkFirewalls = values.centralNetworkServices?.networkFirewall?.firewalls;
+    const tgws = values.transitGateways;
+    const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
+
+    // Throw error if no target defined
+    if (!routeTableEntryItem.target) {
+      this.errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} of type ${routeTableEntryItem.type} must include a target`,
+      );
+    }
+
+    // Throw error if GWLB endpoint doesn't exist
+    if (
+      routeTableEntryItem.type === 'gatewayLoadBalancerEndpoint' &&
+      !gwlbs?.find(item => item.endpoints.find(endpoint => endpoint.name === routeTableEntryItem.target))
+    ) {
+      this.errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target ${routeTableEntryItem.target} does not exist`,
+      );
+    }
+
+    // Throw error if network firewall endpoint doesn't exist
+    if (
+      routeTableEntryItem.type === 'networkFirewall' &&
+      !networkFirewalls?.find(item => item.name === routeTableEntryItem.target)
+    ) {
+      this.errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target ${routeTableEntryItem.target} does not exist`,
+      );
+    }
+
+    // Throw error if network firewall target AZ doesn't exist
+    if (routeTableEntryItem.type === 'networkFirewall' && !routeTableEntryItem.targetAvailabilityZone) {
+      this.errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} with type networkFirewall must include targetAvailabilityZone`,
+      );
+    }
+
+    // Throw error if NAT gateway doesn't exist
+    if (
+      routeTableEntryItem.type === 'natGateway' &&
+      !vpcs.find(item => item.natGateways?.find(nat => nat.name === routeTableEntryItem.target))
+    ) {
+      this.errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target ${routeTableEntryItem.target} does not exist`,
+      );
+    }
+
+    // Throw error if transit gateway doesn't exist
+    if (routeTableEntryItem.type === 'transitGateway' && !tgws.find(item => item.name === routeTableEntryItem.target)) {
+      this.errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target ${routeTableEntryItem.target} does not exist`,
+      );
     }
   }
 
@@ -4073,13 +4261,13 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
       // Catch error if an attachment and blackhole are both defined
       if (entry.attachment && entry.blackhole) {
         this.errors.push(
-          `Transit Gateway route table ${routeTable.name}: cannot define both an attachment and blackhole target`,
+          `[Transit Gateway route table ${routeTable.name}]: cannot define both an attachment and blackhole target`,
         );
       }
       // Catch error if destination CIDR and prefix list are both defined
       if (entry.destinationCidrBlock && entry.destinationPrefixList) {
         this.errors.push(
-          `Transit Gateway route table ${routeTable.name}: cannot define both a destination CIDR and destination prefix list`,
+          `[Transit Gateway route table ${routeTable.name}]: cannot define both a destination CIDR and destination prefix list`,
         );
       }
       // Validate VPC attachment routes
@@ -4106,7 +4294,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
       const vpcAttachment = entry.attachment as TransitGatewayRouteTableVpcEntryConfig;
       const vpc = vpcs.find(item => item.name === vpcAttachment.vpcName);
       if (!vpc) {
-        this.errors.push(`Transit Gateway route table ${routeTableName}: cannot find VPC ${vpcAttachment.vpcName}`);
+        this.errors.push(`[Transit Gateway route table ${routeTableName}]: cannot find VPC ${vpcAttachment.vpcName}`);
       }
     }
   }
@@ -4130,20 +4318,20 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
       // Catch error if DXGW doesn't exist
       if (!dxgw) {
         this.errors.push(
-          `Transit Gateway route table ${routeTableName}: cannot find DX Gateway ${dxAttachment.directConnectGatewayName}`,
+          `[Transit Gateway route table ${routeTableName}]: cannot find DX Gateway ${dxAttachment.directConnectGatewayName}`,
         );
       }
       if (dxgw) {
         // Catch error if DXGW is not in the same account as the TGW
         if (dxgw!.account !== tgw.account) {
           this.errors.push(
-            `Transit Gateway route table ${routeTableName}: cannot add route entry for DX Gateway ${dxAttachment.directConnectGatewayName}. DX Gateway and TGW ${tgw.name} reside in separate accounts`,
+            `[Transit Gateway route table ${routeTableName}]: cannot add route entry for DX Gateway ${dxAttachment.directConnectGatewayName}. DX Gateway and TGW ${tgw.name} reside in separate accounts`,
           );
         }
         // Catch error if there is no association with the TGW
         if (!dxgw.transitGatewayAssociations || !dxgw.transitGatewayAssociations.find(item => item.name === tgw.name)) {
           this.errors.push(
-            `Transit Gateway route table ${routeTableName}: cannot add route entry for DX Gateway ${dxAttachment.directConnectGatewayName}. DX Gateway and TGW ${tgw.name} are not associated`,
+            `[Transit Gateway route table ${routeTableName}]: cannot add route entry for DX Gateway ${dxAttachment.directConnectGatewayName}. DX Gateway and TGW ${tgw.name} are not associated`,
           );
         }
       }
@@ -4172,23 +4360,23 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
       // Catch error for private VIFs with transit gateway associations
       if (vif.type === 'private' && dxgw.transitGatewayAssociations) {
         this.errors.push(
-          `Direct Connect Gateway ${dxgw.name}: cannot specify private virtual interface ${vif.name} with transit gateway associations`,
+          `[Direct Connect Gateway ${dxgw.name}]: cannot specify private virtual interface ${vif.name} with transit gateway associations`,
         );
       }
       // Catch error if ASNs match
       if (dxgw.asn === vif.customerAsn) {
-        this.errors.push(`Direct Connect Gateway ${dxgw.name}: Amazon ASN and customer ASN match for ${vif.name}`);
+        this.errors.push(`[Direct Connect Gateway ${dxgw.name}]: Amazon ASN and customer ASN match for ${vif.name}`);
       }
       // Catch error if ASN is not in the correct range
       if (vif.customerAsn < 1 || vif.customerAsn > 2147483647) {
         this.errors.push(
-          `Direct Connect Gateway ${dxgw.name}: ASN ${vif.customerAsn} out of range 1-2147483647 for virtual interface ${vif.name}`,
+          `[Direct Connect Gateway ${dxgw.name}]: ASN ${vif.customerAsn} out of range 1-2147483647 for virtual interface ${vif.name}`,
         );
       }
       // Catch error if VIF VLAN is not in range
       if (vif.vlan < 1 || vif.vlan > 4094) {
         this.errors.push(
-          `Direct Connect Gateway ${dxgw.name}: VLAN ${vif.vlan} out of range 1-4094 for virtual interface ${vif.name}`,
+          `[Direct Connect Gateway ${dxgw.name}]: VLAN ${vif.vlan} out of range 1-4094 for virtual interface ${vif.name}`,
         );
       }
       // Validate peer IP addresses
@@ -4208,19 +4396,19 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     // Catch error if one peer IP is defined and not the other
     if (vif.amazonAddress && !vif.customerAddress) {
       this.errors.push(
-        `Direct Connect Gateway ${dxgw.name}: Amazon peer IP defined but customer peer IP undefined for ${vif.name}`,
+        `[Direct Connect Gateway ${dxgw.name}]: Amazon peer IP defined but customer peer IP undefined for ${vif.name}`,
       );
     }
     if (!vif.amazonAddress && vif.customerAddress) {
       this.errors.push(
-        `Direct Connect Gateway ${dxgw.name}: Customer peer IP defined but Amazon peer IP undefined for ${vif.name}`,
+        `[Direct Connect Gateway ${dxgw.name}]: Customer peer IP defined but Amazon peer IP undefined for ${vif.name}`,
       );
     }
     // Catch error if addresses match
     if (vif.amazonAddress && vif.customerAddress) {
       if (vif.amazonAddress === vif.customerAddress) {
         this.errors.push(
-          `Direct Connect Gateway ${dxgw.name}: Amazon peer IP and customer peer IP match for ${vif.name}`,
+          `[Direct Connect Gateway ${dxgw.name}]: Amazon peer IP and customer peer IP match for ${vif.name}`,
         );
       }
     }
@@ -4242,20 +4430,73 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
       // Catch error if TGW isn't found
       if (!tgw) {
         this.errors.push(
-          `Direct Connect Gateway ${dxgw.name}: cannot find matching transit gateway for TGW association ${tgwAssociation.name}`,
+          `[Direct Connect Gateway ${dxgw.name}]: cannot find matching transit gateway for TGW association ${tgwAssociation.name}`,
         );
       }
       // Catch error if ASNs match
       if (tgw!.asn === dxgw.asn) {
-        this.errors.push(`Direct Connect Gateway ${dxgw.name}: DX Gateway ASN and TGW ASN match for ${tgw!.name}`);
+        this.errors.push(`[Direct Connect Gateway ${dxgw.name}]: DX Gateway ASN and TGW ASN match for ${tgw!.name}`);
       }
       // Catch error if TGW and DXGW account don't match and associations/propagations are configured
       if (tgw!.account !== dxgw.account) {
         if (tgwAssociation.routeTableAssociations || tgwAssociation.routeTablePropagations) {
           this.errors.push(
-            `Direct Connect Gateway ${dxgw.name}: DX Gateway association proposals cannot have TGW route table associations or propagations defined`,
+            `[Direct Connect Gateway ${dxgw.name}]: DX Gateway association proposals cannot have TGW route table associations or propagations defined`,
           );
         }
+      }
+    }
+  }
+
+  /**
+   * Validate Gateway Load Balancer configuration
+   * @param values
+   */
+  private validateGwlbConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
+    for (const gwlb of values.centralNetworkServices?.gatewayLoadBalancers ?? []) {
+      const vpc = vpcs.find(item => item.name === gwlb.vpc);
+      if (!vpc) {
+        this.errors.push(`[Gateway Load Balancer ${gwlb.name}]: VPC ${gwlb.vpc} does not exist`);
+      }
+
+      // Validate subnets
+      for (const gwlbSubnet of gwlb.subnets ?? []) {
+        if (vpc && !vpc.subnets?.find(subnet => subnet.name === gwlbSubnet)) {
+          this.errors.push(
+            `[Gateway Load Balancer ${gwlb.name}]: subnet ${gwlbSubnet} does not exist in VPC ${vpc!.name}`,
+          );
+        }
+      }
+
+      // Validate endpoints
+      this.validateGwlbEndpoints(gwlb, values);
+    }
+  }
+
+  /**
+   * Validate Gateway Load Balancer endpoint configuration
+   * @param gwlb
+   * @param values
+   */
+  private validateGwlbEndpoints(
+    gwlb: t.TypeOf<typeof NetworkConfigTypes.gwlbConfig>,
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+  ) {
+    const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
+    for (const gwlbEndpoint of gwlb.endpoints ?? []) {
+      const vpc = vpcs.find(item => item.name === gwlbEndpoint.vpc);
+      if (!vpc) {
+        this.errors.push(
+          `[Gateway Load Balancer ${gwlb.name} endpoint ${gwlbEndpoint.name}]: VPC ${gwlbEndpoint.vpc} does not exist`,
+        );
+      }
+
+      // Validate subnet
+      if (vpc && !vpc.subnets?.find(subnet => subnet.name === gwlbEndpoint.subnet)) {
+        this.errors.push(
+          `[Gateway Load Balancer ${gwlb.name} endpoint ${gwlbEndpoint.name}]: subnet ${gwlbEndpoint.subnet} does not exist in VPC ${vpc.name}`,
+        );
       }
     }
   }

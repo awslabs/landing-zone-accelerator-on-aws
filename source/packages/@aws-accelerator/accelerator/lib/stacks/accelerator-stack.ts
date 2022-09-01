@@ -49,6 +49,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected props: AcceleratorStackProps;
 
   /**
+   * Accelerator CentralLogs bucket name prefix
+   */
+  public static readonly CENTRAL_LOGS_BUCKET_NAME_PREFIX = 'aws-accelerator-central-logs';
+  /**
    * Cross account IAM ROLE to read SSM parameter
    * IAM role to access SSM parameter from different or different region
    * This role is created in Key stack
@@ -58,6 +62,20 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * Accelerator generic KMS Key
    */
   public static readonly ACCELERATOR_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/key-arn';
+  /**
+   * Accelerator ELB default encryption key arn SSM parameter name
+   */
+  protected static readonly EBS_DEFAULT_KEY_ARN_PARAMETER_NAME = '/accelerator/ebs/default-encryption/key-arn';
+  /**
+   * Accelerator ELB default encryption key alias, S3 CMK use to encrypt buckets
+   * This key is created in logging stack
+   */
+  protected static readonly EBS_DEFAULT_KEY_ALIAS = 'alias/accelerator/ebs/default-encryption/key';
+  /**
+   * Accelerator ELB default encryption key description, S3 CMK use to encrypt buckets
+   * This key is created in logging stack
+   */
+  protected static readonly EBS_DEFAULT_KEY_DESCRIPTION = 'AWS Accelerator default EBS Volume Encryption key';
   /**
    * Accelerator S3 encryption key arn SSM parameter name
    */
