@@ -377,13 +377,27 @@ export abstract class Accelerator {
         requireApproval: props.requireApproval,
         app: props.app,
       });
+      // execute in all other regions for Logging account, except home region
+      for (const region of globalConfig.enabledRegions) {
+        Logger.info(`[accelerator] Executing ${props.stage} for ${logAccountName} account in ${region} region.`);
+        await AcceleratorToolkit.execute({
+          command: props.command,
+          accountId: logAccountId,
+          region: region,
+          partition: props.partition,
+          stage: props.stage,
+          configDirPath: props.configDirPath,
+          requireApproval: props.requireApproval,
+          app: props.app,
+        });
+      }
       // execute in all other regions for all accounts, except logging account home region
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
           Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
           const accountId = accountsConfig.getAccountId(account.name);
           await delay(1000);
-          if (!(accountId === logAccountId && homeRegion === region)) {
+          if (!(accountId === logAccountId)) {
             promises.push(
               AcceleratorToolkit.execute({
                 command: props.command,

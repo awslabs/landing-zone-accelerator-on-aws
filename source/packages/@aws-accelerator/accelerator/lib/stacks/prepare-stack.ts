@@ -139,6 +139,19 @@ export class PrepareStack extends AcceleratorStack {
         stringValue: cloudwatchKey.keyArn,
       });
 
+      Logger.debug(`[prepare-stack] Lambda Encryption Key`);
+      const lambdaKey = new cdk.aws_kms.Key(this, 'AcceleratorManagementLambdaKey', {
+        alias: AcceleratorStack.LAMBDA_KEY_ALIAS,
+        description: AcceleratorStack.LAMBDA_KEY_DESCRIPTION,
+        enableKeyRotation: true,
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+      });
+
+      new cdk.aws_ssm.StringParameter(this, 'AcceleratorLambdaKmsArnParameter', {
+        parameterName: AcceleratorStack.LAMBDA_KEY_ARN_PARAMETER_NAME,
+        stringValue: lambdaKey.keyArn,
+      });
+
       // Make assets from the configuration directory
       Logger.debug(`[prepare-stack] Configuration assets creation`);
       const accountConfigAsset = new cdk.aws_s3_assets.Asset(this, 'AccountConfigAsset', {

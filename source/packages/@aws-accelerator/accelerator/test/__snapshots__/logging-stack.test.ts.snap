@@ -2,6 +2,12 @@
 
 exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
 Object {
+  "Parameters": Object {
+    "SsmParameterValueacceleratorloggingcentralbucketkmsarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/logging/central-bucket/kms/arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
   "Resources": Object {
     "Accelerator3KeyAliasA5E4BDCB": Object {
       "Properties": Object {
@@ -225,6 +231,64 @@ Object {
         },
       },
       "Type": "AWS::KMS::Alias",
+    },
+    "AcceleratorLambdaKeyAlias4E15225B": Object {
+      "Properties": Object {
+        "AliasName": "alias/accelerator/kms/lambda/key",
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorLambdaKeyD279839E",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
+    "AcceleratorLambdaKeyD279839E": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "Description": "AWS Accelerator Lambda Kms Key",
+        "EnableKeyRotation": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "AcceleratorLambdaKmsArnParameterFECEE80C": Object {
+      "Properties": Object {
+        "Name": "/accelerator/kms/lambda/key-arn",
+        "Type": "String",
+        "Value": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorLambdaKeyD279839E",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
     },
     "AcceleratorS3KmsArnParameter82C4C525": Object {
       "Properties": Object {
@@ -1321,6 +1385,140 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
+    "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608": Object {
+      "DependsOn": Array [
+        "CustomUpdateSubscriptionFilterCustomResourceProviderRole81A1751E",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomUpdateSubscriptionFilterCustomResourceProviderRole81A1751E",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomUpdateSubscriptionFilterCustomResourceProviderLogGroup0738E05B": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorCloudWatchKeyF93B6E17",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomUpdateSubscriptionFilterCustomResourceProviderRole81A1751E": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "logs:PutRetentionPolicy",
+                    "logs:AssociateKmsKey",
+                    "logs:DescribeLogGroups",
+                    "logs:DescribeSubscriptionFilters",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":logs:us-east-1:333333333333:log-group:*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+                Object {
+                  "Action": Array [
+                    "logs:PutSubscriptionFilter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":logs:us-east-1:333333333333:log-group:*",
+                        ],
+                      ],
+                    },
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":logs:us-east-1:333333333333:destination:*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "ElbAccessLogsBucketD6CD6A5D": Object {
       "DeletionPolicy": "Retain",
       "DependsOn": Array [
@@ -1767,6 +1965,791 @@ Object {
       },
       "Type": "AWS::S3::BucketPolicy",
     },
+    "FirehoseToS3SetupFirehoseKinesisStreamServiceRoleDCF2BF9E": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "firehose.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "Role used by Kinesis Firehose to get records from Kinesis.",
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "kinesis:DescribeStream",
+                    "kinesis:GetShardIterator",
+                    "kinesis:GetRecords",
+                    "kinesis:ListShards",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::GetAtt": Array [
+                      "LogsKinesisStreamCfn",
+                      "Arn",
+                    ],
+                  },
+                },
+                Object {
+                  "Action": Array [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:ReEncryptTo",
+                    "kms:GenerateDataKeyWithoutPlaintext",
+                    "kms:GenerateDataKeyPairWithoutPlaintext",
+                    "kms:GenerateDataKeyPair",
+                    "kms:ReEncryptFrom",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::GetAtt": Array [
+                      "LogsReplicationKeyAE749486",
+                      "Arn",
+                    ],
+                  },
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "AccessKinesis",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "FirehoseToS3SetupFirehosePrefixProcessingLambdaCFF0C71A": Object {
+      "DependsOn": Array [
+        "FirehoseToS3SetupFirehosePrefixProcessingLambdaServiceRole55C795C1",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": Object {
+          "Variables": Object {
+            "DynamicS3LogPartitioningMapping": "[
+  { \\"logGroupPattern\\": \\"/AWSAccelerator/SecurityHub\\", \\"s3Prefix\\": \\"security-hub\\" } 
+]",
+          },
+        },
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorLambdaKeyD279839E",
+            "Arn",
+          ],
+        },
+        "MemorySize": 2048,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "FirehoseToS3SetupFirehosePrefixProcessingLambdaServiceRole55C795C1",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "FirehoseToS3SetupFirehosePrefixProcessingLambdaServiceRole55C795C1": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Managed policy for Lambda basic execution attached.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "FirehoseToS3SetupFirehoseS3ServiceRole1E95E56A": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Bucket permissions are wildcards to abort downloads and clean up objects. KMS permissions are wildcards to re-encrypt entities.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "firehose.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "Role used by Kinesis Firehose to place Kinesis records in the central bucket.",
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "kms:Decrypt",
+                    "kms:GenerateDataKey",
+                  ],
+                  "Condition": Object {
+                    "StringEquals": Object {
+                      "kms:ViaService": "s3.us-east-1.amazonaws.com",
+                    },
+                    "StringLike": Object {
+                      "kms:EncryptionContext:aws:s3:arn": Object {
+                        "Fn::Join": Array [
+                          "",
+                          Array [
+                            "arn:",
+                            Object {
+                              "Ref": "AWS::Partition",
+                            },
+                            ":s3:::aws-accelerator-central-logs-333333333333-us-east-1/*",
+                          ],
+                        ],
+                      },
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Ref": "SsmParameterValueacceleratorloggingcentralbucketkmsarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                  },
+                },
+                Object {
+                  "Action": Array [
+                    "s3:AbortMultipartUpload",
+                    "s3:GetBucketLocation",
+                    "s3:GetObject",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                    "s3:PutObject",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":s3:::aws-accelerator-central-logs-333333333333-us-east-1",
+                        ],
+                      ],
+                    },
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":s3:::aws-accelerator-central-logs-333333333333-us-east-1/*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+                Object {
+                  "Action": Array [
+                    "lambda:InvokeFunction",
+                    "lambda:GetFunctionConfiguration",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          Object {
+                            "Fn::GetAtt": Array [
+                              "FirehoseToS3SetupFirehosePrefixProcessingLambdaCFF0C71A",
+                              "Arn",
+                            ],
+                          },
+                          ":*",
+                        ],
+                      ],
+                    },
+                    Object {
+                      "Fn::GetAtt": Array [
+                        "FirehoseToS3SetupFirehosePrefixProcessingLambdaCFF0C71A",
+                        "Arn",
+                      ],
+                    },
+                  ],
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "AccessS3KmsLambda",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "FirehoseToS3SetupKinesisFirehoseStreamDynamicPartitioning65876320": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-KDF1",
+              "reason": "Customer managed key is used to encrypt firehose delivery stream.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "DeliveryStreamType": "KinesisStreamAsSource",
+        "ExtendedS3DestinationConfiguration": Object {
+          "BucketARN": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":s3:::aws-accelerator-central-logs-333333333333-us-east-1",
+              ],
+            ],
+          },
+          "BufferingHints": Object {
+            "IntervalInSeconds": 60,
+            "SizeInMBs": 64,
+          },
+          "CompressionFormat": "UNCOMPRESSED",
+          "DynamicPartitioningConfiguration": Object {
+            "Enabled": true,
+          },
+          "EncryptionConfiguration": Object {
+            "KMSEncryptionConfig": Object {
+              "AWSKMSKeyARN": Object {
+                "Ref": "SsmParameterValueacceleratorloggingcentralbucketkmsarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            },
+          },
+          "ErrorOutputPrefix": "CloudWatchLogs/processing-failed",
+          "Prefix": "!{partitionKeyFromLambda:dynamicPrefix}",
+          "ProcessingConfiguration": Object {
+            "Enabled": true,
+            "Processors": Array [
+              Object {
+                "Parameters": Array [
+                  Object {
+                    "ParameterName": "LambdaArn",
+                    "ParameterValue": Object {
+                      "Fn::GetAtt": Array [
+                        "FirehoseToS3SetupFirehosePrefixProcessingLambdaCFF0C71A",
+                        "Arn",
+                      ],
+                    },
+                  },
+                  Object {
+                    "ParameterName": "NumberOfRetries",
+                    "ParameterValue": "3",
+                  },
+                ],
+                "Type": "Lambda",
+              },
+            ],
+          },
+          "RoleARN": Object {
+            "Fn::GetAtt": Array [
+              "FirehoseToS3SetupFirehoseS3ServiceRole1E95E56A",
+              "Arn",
+            ],
+          },
+        },
+        "KinesisStreamSourceConfiguration": Object {
+          "KinesisStreamARN": Object {
+            "Fn::GetAtt": Array [
+              "LogsKinesisStreamCfn",
+              "Arn",
+            ],
+          },
+          "RoleARN": Object {
+            "Fn::GetAtt": Array [
+              "FirehoseToS3SetupFirehoseKinesisStreamServiceRoleDCF2BF9E",
+              "Arn",
+            ],
+          },
+        },
+      },
+      "Type": "AWS::KinesisFirehose::DeliveryStream",
+    },
+    "LogsDestinationSetup408DBC7D": Object {
+      "Properties": Object {
+        "DestinationName": "AWSAcceleratorCloudWatchToS3",
+        "DestinationPolicy": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "{\\"Version\\":\\"2012-10-17\\",\\"Statement\\":[{\\"Effect\\":\\"Allow\\",\\"Principal\\":\\"*\\",\\"Action\\":\\"logs:PutSubscriptionFilter\\",\\"Resource\\":\\"arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":logs:us-east-1:333333333333:destination:AWSAcceleratorCloudWatchToS3\\",\\"Condition\\":{\\"StringEquals\\":{\\"aws:PrincipalOrgID\\":[\\"",
+              Object {
+                "Ref": "Organization29A5FC3F",
+              },
+              "\\"]}}}]}",
+            ],
+          ],
+        },
+        "RoleArn": Object {
+          "Fn::GetAtt": Array [
+            "LogsDestinationSetupLogsKinesisRoleBBFE4D49",
+            "Arn",
+          ],
+        },
+        "TargetArn": Object {
+          "Fn::GetAtt": Array [
+            "LogsKinesisStreamCfn",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Logs::Destination",
+    },
+    "LogsDestinationSetupLogsKinesisRoleBBFE4D49": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": Object {
+                  "Fn::Sub": "logs.\${AWS::Region}.amazonaws.com",
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "kinesis:ListShards",
+                    "kinesis:PutRecord",
+                    "kinesis:PutRecords",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::GetAtt": Array [
+                      "LogsKinesisStreamCfn",
+                      "Arn",
+                    ],
+                  },
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "KinesisAccess",
+          },
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:ReEncryptTo",
+                    "kms:GenerateDataKeyWithoutPlaintext",
+                    "kms:GenerateDataKeyPairWithoutPlaintext",
+                    "kms:GenerateDataKeyPair",
+                    "kms:ReEncryptFrom",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::GetAtt": Array [
+                      "LogsReplicationKeyAE749486",
+                      "Arn",
+                    ],
+                  },
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "KmsAccess",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "LogsKinesisStreamCfn": Object {
+      "Properties": Object {
+        "RetentionPeriodHours": 24,
+        "ShardCount": 1,
+        "StreamEncryption": Object {
+          "EncryptionType": "KMS",
+          "KeyId": Object {
+            "Fn::GetAtt": Array [
+              "LogsReplicationKeyAE749486",
+              "Arn",
+            ],
+          },
+        },
+      },
+      "Type": "AWS::Kinesis::Stream",
+    },
+    "LogsReplicationKeyAE749486": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "EnableKeyRotation": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "LogsSubscriptionFilter58C57C6B": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomUpdateSubscriptionFilterCustomResourceProviderLogGroup0738E05B",
+        "LogsDestinationSetupLogsKinesisRoleBBFE4D49",
+        "LogsDestinationSetup408DBC7D",
+      ],
+      "Properties": Object {
+        "LogDestination": "arn:aws:logs:us-east-1:333333333333:destination:AWSAcceleratorCloudWatchToS3",
+        "LogKmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorCloudWatchKeyF93B6E17",
+            "Arn",
+          ],
+        },
+        "LogRetention": "3653",
+        "LogSubscriptionRole": Object {
+          "Fn::GetAtt": Array [
+            "SubscriptionFilterRoleB0B89330",
+            "Arn",
+          ],
+        },
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomUpdateSubscriptionFilterCustomResourceProviderHandler1BAA7608",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::UpdateSubscriptionFilter",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NewCloudWatchLogsCreateEventNewLogGroupCreatedRuleA43A0A6D": Object {
+      "DependsOn": Array [
+        "LogsSubscriptionFilter58C57C6B",
+      ],
+      "Properties": Object {
+        "EventPattern": Object {
+          "detail": Object {
+            "eventName": Array [
+              "CreateLogGroup",
+            ],
+            "eventSource": Array [
+              "logs.amazonaws.com",
+            ],
+          },
+          "detail-type": Array [
+            "AWS API Call via CloudTrail",
+          ],
+          "source": Array [
+            "aws.logs",
+          ],
+        },
+        "State": "ENABLED",
+        "Targets": Array [
+          Object {
+            "Arn": Object {
+              "Fn::GetAtt": Array [
+                "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunction1A3BCE58",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+            "RetryPolicy": Object {
+              "MaximumRetryAttempts": 5,
+            },
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "NewCloudWatchLogsCreateEventNewLogGroupCreatedRuleAllowEventRuleAWSAcceleratorLoggingStack333333333333useast1NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunction8CBF4C192DFF85CD": Object {
+      "DependsOn": Array [
+        "LogsSubscriptionFilter58C57C6B",
+      ],
+      "Properties": Object {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": Object {
+          "Fn::GetAtt": Array [
+            "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunction1A3BCE58",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": Object {
+          "Fn::GetAtt": Array [
+            "NewCloudWatchLogsCreateEventNewLogGroupCreatedRuleA43A0A6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunction1A3BCE58": Object {
+      "DependsOn": Array [
+        "LogsSubscriptionFilter58C57C6B",
+        "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunctionServiceRoleDefaultPolicy5DE2EB5C",
+        "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunctionServiceRoleF408E8D2",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": Object {
+          "Variables": Object {
+            "LogDestination": "arn:aws:logs:us-east-1:333333333333:destination:AWSAcceleratorCloudWatchToS3",
+            "LogKmsKeyArn": Object {
+              "Fn::GetAtt": Array [
+                "AcceleratorCloudWatchKeyF93B6E17",
+                "Arn",
+              ],
+            },
+            "LogRetention": "3653",
+            "LogSubscriptionRole": Object {
+              "Fn::GetAtt": Array [
+                "SubscriptionFilterRoleB0B89330",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorLambdaKeyD279839E",
+            "Arn",
+          ],
+        },
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunctionServiceRoleF408E8D2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunctionServiceRoleDefaultPolicy5DE2EB5C": Object {
+      "DependsOn": Array [
+        "LogsSubscriptionFilter58C57C6B",
+      ],
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "This role needs permissions to change retention and subscription filter for any new log group that is created to enable log replication.",
+            },
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Managed policy for Lambda basic execution attached.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "logs:PutRetentionPolicy",
+                "logs:AssociateKmsKey",
+                "logs:DescribeLogGroups",
+                "logs:DescribeSubscriptionFilters",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":logs:us-east-1:333333333333:log-group:*",
+                  ],
+                ],
+              },
+            },
+            Object {
+              "Action": "logs:PutSubscriptionFilter",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:us-east-1:333333333333:log-group:*",
+                    ],
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":logs:us-east-1:333333333333:destination:*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunctionServiceRoleDefaultPolicy5DE2EB5C",
+        "Roles": Array [
+          Object {
+            "Ref": "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunctionServiceRoleF408E8D2",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "NewCloudWatchLogsCreateEventSetLogRetentionSubscriptionFunctionServiceRoleF408E8D2": Object {
+      "DependsOn": Array [
+        "LogsSubscriptionFilter58C57C6B",
+      ],
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "This role needs permissions to change retention and subscription filter for any new log group that is created to enable log replication.",
+            },
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Managed policy for Lambda basic execution attached.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "Organization29A5FC3F": Object {
       "DeletionPolicy": "Delete",
       "Properties": Object {
@@ -1821,6 +2804,51 @@ Object {
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "SubscriptionFilterRoleB0B89330": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Access is needed to ready all log events across all log groups for replication to S3.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": Object {
+                  "Fn::Sub": "logs.\${AWS::Region}.amazonaws.com",
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "Role used by Subscription Filter to allow access to CloudWatch Destination",
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": "logs:PutLogEvents",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "accessLogEvents",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
     },
   },
 }
