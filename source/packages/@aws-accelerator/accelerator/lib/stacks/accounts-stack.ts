@@ -29,6 +29,7 @@ export interface AccountsStackProps extends AcceleratorStackProps {
 
 export class AccountsStack extends AcceleratorStack {
   readonly cloudwatchKey: cdk.aws_kms.Key;
+  readonly lambdaKey: cdk.aws_kms.Key;
 
   constructor(scope: Construct, id: string, props: AccountsStackProps) {
     super(scope, id, props);
@@ -74,6 +75,29 @@ export class AccountsStack extends AcceleratorStack {
       new cdk.aws_ssm.StringParameter(this, 'AcceleratorCloudWatchKmsArnParameter', {
         parameterName: AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
         stringValue: this.cloudwatchKey.keyArn,
+      });
+    }
+
+    // Use existing management account Lambda key if in the global region
+    // otherwise create new kms key
+    if (props.globalRegion == cdk.Stack.of(this).region) {
+      this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
+        this,
+        'AcceleratorGetLambdaKey',
+        cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.LAMBDA_KEY_ARN_PARAMETER_NAME),
+      ) as cdk.aws_kms.Key;
+    } else {
+      // Create KMS Key for Lambda environment variable encryption
+      this.lambdaKey = new cdk.aws_kms.Key(this, 'AcceleratorLambdaKey', {
+        alias: AcceleratorStack.LAMBDA_KEY_ALIAS,
+        description: AcceleratorStack.LAMBDA_KEY_DESCRIPTION,
+        enableKeyRotation: true,
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+      });
+
+      new cdk.aws_ssm.StringParameter(this, 'AcceleratorLambdaKmsArnParameter', {
+        parameterName: AcceleratorStack.LAMBDA_KEY_ARN_PARAMETER_NAME,
+        stringValue: this.lambdaKey.keyArn,
       });
     }
 
@@ -195,15 +219,6 @@ export class AccountsStack extends AcceleratorStack {
           });
 
           Logger.info(`[accounts-stack] Creating function to attach quarantine scp to accounts`);
-          //
-          // Create KMS Key for Lambda environment variable encryption
-          const lambdaKey = new cdk.aws_kms.Key(this, 'AcceleratorLambdaKey', {
-            alias: AcceleratorStack.LAMBDA_KEY_ALIAS,
-            description: AcceleratorStack.LAMBDA_KEY_DESCRIPTION,
-            enableKeyRotation: true,
-            removalPolicy: cdk.RemovalPolicy.RETAIN,
-          });
-
           const attachQuarantineFunction = new cdk.aws_lambda.Function(this, 'AttachQuarantineScpFunction', {
             code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/attach-quarantine-scp/dist')),
             runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
@@ -211,7 +226,7 @@ export class AccountsStack extends AcceleratorStack {
             description: 'Lambda function to attach quarantine scp to new accounts',
             timeout: cdk.Duration.minutes(5),
             environment: { SCP_POLICY_NAME: props.organizationConfig.quarantineNewAccounts?.scpPolicyName ?? '' },
-            environmentEncryption: lambdaKey,
+            environmentEncryption: this.lambdaKey,
             initialPolicy: [orgPolicyRead, orgPolicyWrite],
           });
 

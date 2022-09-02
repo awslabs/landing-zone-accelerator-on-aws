@@ -59,6 +59,8 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:59
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:60
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:61
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:62
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:376
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:468
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:455
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:478
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:485
@@ -121,4 +123,6 @@ source/packages/@aws-accelerator/accelerator/error.log
 source/packages/@aws-accelerator/constructs/lib/aws-iam/password-policy.d.ts
 source/packages/@aws-accelerator/constructs/test/aws-iam/__snapshots__/password-policy.test.ts.snap
 
+
+source/packages/@aws-accelerator/constructs/test/aws-cloudwatch-logs/put-destination.test.ts:28
 source/packages/@aws-accelerator/config/test/accounts-config.test.ts

@@ -17,6 +17,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import { AcceleratorElbRootAccounts } from '../accelerator';
 import { pascalCase } from 'pascal-case';
+import * as fs from 'fs';
 
 import {
   Bucket,
@@ -25,6 +26,10 @@ import {
   CentralLogsBucket,
   KeyLookup,
   S3PublicAccessBlock,
+  CloudWatchDestination,
+  CloudWatchToS3Firehose,
+  CloudWatchLogsSubscriptionFilter,
+  NewCloudWatchLogEvent,
   Organization,
 } from '@aws-accelerator/constructs';
 
@@ -36,6 +41,7 @@ import path from 'path';
 export class LoggingStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.IKey;
   private organizationId: string | undefined;
+  private lambdaKey: cdk.aws_kms.IKey;
   private centralLogsBucketName: string;
   private centralLogsBucket: CentralLogsBucket | undefined;
 
@@ -73,6 +79,32 @@ export class LoggingStack extends AcceleratorStack {
       this.cloudwatchKey = this.lookupManagementAccountCloudWatchKey();
     } else {
       this.cloudwatchKey = this.createCloudWatchKey();
+    }
+
+    // create kms key for Lambda environment encryption
+    // the Lambda environment encryption key for the management account
+    // in the home region is created in the prepare stack
+    if (
+      cdk.Stack.of(this).account === props.accountsConfig.getManagementAccountId() &&
+      (cdk.Stack.of(this).region === this.props.globalConfig.homeRegion ||
+        cdk.Stack.of(this).region === this.props.globalRegion)
+    ) {
+      this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
+        this,
+        'AcceleratorGetLambdaKey',
+        cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.LAMBDA_KEY_ARN_PARAMETER_NAME),
+      );
+    } else {
+      this.lambdaKey = new cdk.aws_kms.Key(this, 'AcceleratorLambdaKey', {
+        alias: AcceleratorStack.LAMBDA_KEY_ALIAS,
+        description: AcceleratorStack.LAMBDA_KEY_DESCRIPTION,
+        enableKeyRotation: true,
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+      });
+      new cdk.aws_ssm.StringParameter(this, 'AcceleratorLambdaKmsArnParameter', {
+        parameterName: AcceleratorStack.LAMBDA_KEY_ARN_PARAMETER_NAME,
+        stringValue: this.lambdaKey.keyArn,
+      });
     }
 
     //
@@ -321,6 +353,28 @@ export class LoggingStack extends AcceleratorStack {
           'Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling',
       });
     }
+    // CloudWatchLogs to S3 replication
+
+    // First, logs receiving account will setup Kinesis DataStream and Firehose
+    // in LogArchive account home region
+    // KMS to encrypt Kinesis, Firehose and any Lambda environment variables for CloudWatchLogs to S3 replication
+    const logsReplicationKmsKey = new cdk.aws_kms.Key(this, 'LogsReplicationKey', { enableKeyRotation: true });
+
+    if (cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) {
+      const receivingLogs = this.cloudwatchLogReceivingAccount(
+        logsReplicationKmsKey,
+        this.centralLogsBucketName,
+        this.lambdaKey,
+      );
+      const creatingLogs = this.cloudwatchLogCreatingAccount();
+
+      // Log receiving setup should be complete before logs creation setup can start or else there will be errors about destination not ready.
+      creatingLogs.node.addDependency(receivingLogs);
+    } else {
+      // Any account in LZA needs to setup log subscriptions for CloudWatch Logs
+      // The destination needs to be present before its setup
+      this.cloudwatchLogCreatingAccount();
+    }
 
     Logger.debug(`[logging-stack] Stack synthesis complete`);
   }
@@ -330,7 +384,6 @@ export class LoggingStack extends AcceleratorStack {
       this.organizationId = new Organization(this, 'Organization').id;
     }
   }
-
   /**
    * Function to create S3 Key
    */
@@ -369,6 +422,209 @@ export class LoggingStack extends AcceleratorStack {
     }
   }
 
+  private cloudwatchLogReceivingAccount(
+    logsReplicationKmsKey: cdk.aws_kms.Key,
+    centralLogsBucketName: string,
+    lambdaKey: cdk.aws_kms.IKey,
+  ) {
+    // Check to see if Dynamic Partitioning was used
+    let dynamicPartitionValue = '';
+    if (this.props.globalConfig.logging.cloudwatchLogs?.dynamicPartitioning) {
+      dynamicPartitionValue = fs.readFileSync(
+        path.join(this.props.configDirPath, this.props.globalConfig.logging.cloudwatchLogs?.dynamicPartitioning),
+        'utf-8',
+      );
+    }
+
+    // // Create Kinesis Data Stream
+    // Kinesis Stream - data stream which will get data from CloudWatch logs
+    const logsKinesisStreamCfn = new cdk.aws_kinesis.CfnStream(this, 'LogsKinesisStreamCfn', {
+      retentionPeriodHours: 24,
+      shardCount: 1,
+      streamEncryption: {
+        encryptionType: 'KMS',
+        keyId: logsReplicationKmsKey.keyArn,
+      },
+    });
+    const logsKinesisStream = cdk.aws_kinesis.Stream.fromStreamArn(
+      this,
+      'LogsKinesisStream',
+      logsKinesisStreamCfn.attrArn,
+    );
+
+    // LogsKinesisStream/Resource AwsSolutions-KDS3
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/LogsKinesisStream/Resource`, [
+      {
+        id: 'AwsSolutions-KDS3',
+        reason: 'Customer managed key is being used to encrypt Kinesis Data Stream',
+      },
+    ]);
+    // Cloudwatch logs destination which points to Kinesis Data Stream
+    const cloudwatchCfnDestination = new CloudWatchDestination(this, 'LogsDestinationSetup', {
+      kinesisKmsKey: logsReplicationKmsKey,
+      kinesisStream: logsKinesisStream,
+      orgId: this.organizationId!,
+    });
+
+    const centralLogBucketKey = new KeyLookup(this, 'AcceleratorCentralLogsBucketKeyFirehose', {
+      accountId: this.props.accountsConfig.getLogArchiveAccountId(),
+      keyRegion: this.props.globalConfig.homeRegion,
+      roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
+      keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
+      kmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
+
+    // Setup Firehose to take records from Kinesis and place in S3
+    // Dynamic partition incoming records
+    // so files from particular log group can be placed in their respective S3 prefix
+    new CloudWatchToS3Firehose(this, 'FirehoseToS3Setup', {
+      dynamicPartitioningValue: dynamicPartitionValue,
+      bucketName: centralLogsBucketName,
+      kinesisStream: logsKinesisStream,
+      firehoseKmsKey: centralLogBucketKey, // for firehose to access s3
+      kinesisKmsKey: logsReplicationKmsKey, // for firehose to access kinesis
+      homeRegion: this.props.globalConfig.homeRegion,
+      lambdaKey: lambdaKey, // to encrypt lambda environment
+    });
+    // FirehosePrefixProcessingLambda/ServiceRole AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/FirehoseToS3Setup/FirehosePrefixProcessingLambda/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Managed policy for Lambda basic execution attached.',
+        },
+      ],
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/FirehoseToS3Setup/FirehoseS3ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'Bucket permissions are wildcards to abort downloads and clean up objects. KMS permissions are wildcards to re-encrypt entities.',
+        },
+      ],
+    );
+
+    // Kinesis-Firehose-Stream-Dynamic-Partitioning AwsSolutions-KDF1: The Kinesis Data Firehose delivery stream does have server-side encryption enabled.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/FirehoseToS3Setup/Kinesis-Firehose-Stream-Dynamic-Partitioning`,
+      [
+        {
+          id: 'AwsSolutions-KDF1',
+          reason: 'Customer managed key is used to encrypt firehose delivery stream.',
+        },
+      ],
+    );
+    return cloudwatchCfnDestination;
+  }
+  private cloudwatchLogCreatingAccount() {
+    const logsDestinationArnValue =
+      'arn:' +
+      this.props.partition +
+      ':logs:' +
+      cdk.Stack.of(this).region +
+      ':' +
+      this.props.accountsConfig.getLogArchiveAccountId() +
+      ':destination:AWSAcceleratorCloudWatchToS3';
+
+    // Since this is deployed organization wide, this role is required
+    // https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CreateSubscriptionFilter-IAMrole.html
+    const subscriptionFilterRole = new cdk.aws_iam.Role(this, 'SubscriptionFilterRole', {
+      assumedBy: new cdk.aws_iam.ServicePrincipal(cdk.Fn.sub('logs.${AWS::Region}.amazonaws.com')),
+      description: 'Role used by Subscription Filter to allow access to CloudWatch Destination',
+      inlinePolicies: {
+        accessLogEvents: new cdk.aws_iam.PolicyDocument({
+          statements: [
+            new cdk.aws_iam.PolicyStatement({
+              resources: ['*'],
+              actions: ['logs:PutLogEvents'],
+            }),
+          ],
+        }),
+      },
+    });
+    // Run a custom resource to update subscription, KMS and retention for all existing log groups
+    const customResourceExistingLogs = new CloudWatchLogsSubscriptionFilter(this, 'LogsSubscriptionFilter', {
+      logDestinationArn: logsDestinationArnValue,
+      logsKmsKey: this.cloudwatchKey,
+      logArchiveAccountId: this.props.accountsConfig.getLogArchiveAccountId(),
+      logsRetentionInDaysValue: this.props.globalConfig.cloudwatchLogRetentionInDays.toString(),
+      subscriptionFilterRoleArn: subscriptionFilterRole.roleArn,
+    });
+
+    //For every new log group that is created, set up subscription, KMS and retention
+    const newLogCreationEvent = new NewCloudWatchLogEvent(this, 'NewCloudWatchLogsCreateEvent', {
+      logDestinationArn: logsDestinationArnValue,
+      lambdaEnvKey: this.lambdaKey,
+      logsKmsKey: this.cloudwatchKey,
+      logArchiveAccountId: this.props.accountsConfig.getLogArchiveAccountId(),
+      logsRetentionInDaysValue: this.props.globalConfig.cloudwatchLogRetentionInDays.toString(),
+      subscriptionFilterRoleArn: subscriptionFilterRole.roleArn,
+    });
+
+    // create custom resource before the new log group logic is created.
+    newLogCreationEvent.node.addDependency(customResourceExistingLogs);
+
+    // SubscriptionFilterRole AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/SubscriptionFilterRole/Resource`, [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Access is needed to ready all log events across all log groups for replication to S3.',
+      },
+    ]);
+    // SetLogRetentionSubscriptionFunction AwsSolutions-IAM4
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/SetLogRetentionSubscriptionFunction/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Managed policy for Lambda basic execution attached.',
+        },
+      ],
+    );
+    // SetLogRetentionSubscriptionFunction AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/NewCloudWatchLogsCreateEvent/SetLogRetentionSubscriptionFunction/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'This role needs permissions to change retention and subscription filter for any new log group that is created to enable log replication.',
+        },
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Managed policy for Lambda basic execution attached.',
+        },
+      ],
+    );
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/NewCloudWatchLogsCreateEvent/SetLogRetentionSubscriptionFunction/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'This role needs permissions to change retention and subscription filter for any new log group that is created to enable log replication.',
+        },
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Managed policy for Lambda basic execution attached.',
+        },
+      ],
+    );
+
+    return customResourceExistingLogs;
+  }
+
   private lookupManagementAccountCloudWatchKey() {
     const cloudwatchKeyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
       this,
@@ -394,7 +650,9 @@ export class LoggingStack extends AcceleratorStack {
         resources: ['*'],
         conditions: {
           ArnLike: {
-            'kms:EncryptionContext:aws:logs:arn': `arn:aws:logs:${cdk.Stack.of(this).region}:*:log-group:*`,
+            'kms:EncryptionContext:aws:logs:arn': `arn:${this.props.partition}:logs:${
+              cdk.Stack.of(this).region
+            }:*:log-group:*`,
           },
         },
       }),

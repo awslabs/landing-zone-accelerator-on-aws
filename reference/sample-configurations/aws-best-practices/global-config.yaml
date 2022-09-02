@@ -40,6 +40,8 @@ logging:
   sessionManager:
     sendToCloudWatchLogs: false
     sendToS3: true
+  cloudwatchLogs:
+    dynamicPartitioning: dynamic-partitioning/log-filters.json
 reports:
   costAndUsageReport:
     compression: Parquet
