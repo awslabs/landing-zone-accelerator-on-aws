@@ -78,9 +78,9 @@ export class AccountsStack extends AcceleratorStack {
       });
     }
 
-    // Use existing management account Lambda key if in the global region
+    // Exactly like CloudWatch key, reference a new key if in home
     // otherwise create new kms key
-    if (props.globalRegion == cdk.Stack.of(this).region) {
+    if (props.globalConfig.homeRegion == cdk.Stack.of(this).region) {
       this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
         this,
         'AcceleratorGetLambdaKey',
