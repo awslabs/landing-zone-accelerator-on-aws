@@ -113,6 +113,7 @@ async function main() {
 
   if (partition === 'aws-iso-b') {
     cdk.Aspects.of(app).add(new IsobOverrides());
+    globalRegion = 'us-isob-east-1';
   }
 
   const includeStage = (props: { stage: string; account: string; region: string }): boolean => {

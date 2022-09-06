@@ -98,6 +98,9 @@ export interface AcceleratorProps {
   readonly partition: string;
   readonly requireApproval: RequireApproval;
   readonly app?: string;
+  readonly caBundlePath?: string;
+  readonly ec2Creds?: boolean;
+  readonly proxyAddress?: string;
 }
 
 /**
@@ -142,6 +145,7 @@ export abstract class Accelerator {
         assumeRoleDuration: 3600,
         credentials: managementAccountCredentials,
         partition: props.partition,
+        caBundlePath: props.caBundlePath,
       });
       assumeRolePlugin.init(PluginHost.instance);
     }
@@ -166,6 +170,9 @@ export abstract class Accelerator {
         configDirPath: props.configDirPath,
         requireApproval: props.requireApproval,
         app: props.app,
+        caBundlePath: props.caBundlePath,
+        ec2Creds: props.ec2Creds,
+        proxyAddress: props.proxyAddress,
       });
     }
 
@@ -180,6 +187,9 @@ export abstract class Accelerator {
         configDirPath: props.configDirPath,
         requireApproval: props.requireApproval,
         app: props.app,
+        caBundlePath: props.caBundlePath,
+        ec2Creds: props.ec2Creds,
+        proxyAddress: props.proxyAddress,
       });
     }
 
@@ -221,6 +231,9 @@ export abstract class Accelerator {
               configDirPath: props.configDirPath,
               requireApproval: props.requireApproval,
               app: props.app,
+              caBundlePath: props.caBundlePath,
+              ec2Creds: props.ec2Creds,
+              proxyAddress: props.proxyAddress,
             }),
           );
 
@@ -237,6 +250,8 @@ export abstract class Accelerator {
 
     if (props.partition === 'aws-us-gov') {
       globalRegion = 'us-gov-west-1';
+    } else if (props.partition === 'aws-iso-b') {
+      globalRegion = 'us-isob-east-1';
     }
     // Control Tower: To start a well-planned OU structure in your landing zone, AWS Control Tower
     // sets up a Security OU for you. This OU contains three shared accounts: the management
@@ -253,6 +268,9 @@ export abstract class Accelerator {
         configDirPath: props.configDirPath,
         requireApproval: props.requireApproval,
         app: props.app,
+        caBundlePath: props.caBundlePath,
+        ec2Creds: props.ec2Creds,
+        proxyAddress: props.proxyAddress,
       });
     }
 
@@ -267,6 +285,9 @@ export abstract class Accelerator {
         configDirPath: props.configDirPath,
         requireApproval: props.requireApproval,
         app: props.app,
+        caBundlePath: props.caBundlePath,
+        ec2Creds: props.ec2Creds,
+        proxyAddress: props.proxyAddress,
       });
     }
 
@@ -298,6 +319,9 @@ export abstract class Accelerator {
             configDirPath: props.configDirPath,
             requireApproval: props.requireApproval,
             app: props.app,
+            caBundlePath: props.caBundlePath,
+            ec2Creds: props.ec2Creds,
+            proxyAddress: props.proxyAddress,
           }),
         );
         if (promises.length >= maxStacks) {
@@ -320,6 +344,9 @@ export abstract class Accelerator {
             configDirPath: props.configDirPath,
             requireApproval: props.requireApproval,
             app: props.app,
+            caBundlePath: props.caBundlePath,
+            ec2Creds: props.ec2Creds,
+            proxyAddress: props.proxyAddress,
           }),
         );
         if (promises.length >= maxStacks) {
@@ -351,6 +378,9 @@ export abstract class Accelerator {
               configDirPath: props.configDirPath,
               requireApproval: props.requireApproval,
               app: props.app,
+              caBundlePath: props.caBundlePath,
+              ec2Creds: props.ec2Creds,
+              proxyAddress: props.proxyAddress,
             }),
           );
           if (promises.length >= maxStacks) {

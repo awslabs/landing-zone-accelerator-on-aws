@@ -27,6 +27,8 @@ export class KeyStack extends AcceleratorStack {
     Logger.debug(`[key-stack] Region: ${cdk.Stack.of(this).region}`);
 
     this.organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
+    const auditAccountId = props.accountsConfig.getAuditAccountId();
+    const accountIds = props.accountsConfig.getAccountIds();
 
     const key = new cdk.aws_kms.Key(this, 'AcceleratorKey', {
       alias: AcceleratorStack.ACCELERATOR_KEY_ALIAS,
@@ -167,6 +169,64 @@ export class KeyStack extends AcceleratorStack {
         },
       });
 
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag
+      // rule suppression with evidence for this permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/CrossAccountAcceleratorSsmParamAccessRole/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason:
+              'This policy is required to give access to ssm parameters in every region where accelerator deployed. Various accelerator roles need permission to describe SSM parameters.',
+          },
+        ],
+      );
+    } else {
+      const principals: cdk.aws_iam.PrincipalBase[] = [];
+      accountIds.forEach(accountId => {
+        principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
+      });
+      new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
+        roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+        assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
+        inlinePolicies: {
+          default: new cdk.aws_iam.PolicyDocument({
+            statements: [
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                resources: [
+                  `arn:${cdk.Stack.of(this).partition}:ssm:*:${
+                    cdk.Stack.of(this).account
+                  }:parameter/accelerator/kms/key-arn`,
+                ],
+                conditions: {
+                  StringEquals: {
+                    'aws:PrincipalAccount': auditAccountId,
+                  },
+                  ArnLike: {
+                    'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                  },
+                },
+              }),
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ssm:DescribeParameters'],
+                resources: ['*'],
+                conditions: {
+                  StringEquals: {
+                    'aws:PrincipalAccount': auditAccountId,
+                  },
+                  ArnLike: {
+                    'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                  },
+                },
+              }),
+            ],
+          }),
+        },
+      });
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag
       // rule suppression with evidence for this permission.
       NagSuppressions.addResourceSuppressionsByPath(
