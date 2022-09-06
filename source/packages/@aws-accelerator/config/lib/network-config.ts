@@ -33,11 +33,17 @@ export class NetworkConfigTypes {
     vpcName: t.nonEmptyString,
   });
 
+  static readonly transitGatewayRouteTableDxGatewayEntryConfig = t.interface({
+    directConnectGatewayName: t.nonEmptyString,
+  });
+
   static readonly transitGatewayRouteEntryConfig = t.interface({
     destinationCidrBlock: t.optional(t.nonEmptyString),
     destinationPrefixList: t.optional(t.nonEmptyString),
     blackhole: t.optional(t.boolean),
-    attachment: t.optional(this.transitGatewayRouteTableVpcEntryConfig),
+    attachment: t.optional(
+      t.union([this.transitGatewayRouteTableVpcEntryConfig, this.transitGatewayRouteTableDxGatewayEntryConfig]),
+    ),
   });
 
   static readonly transitGatewayRouteTableConfig = t.interface({
@@ -61,13 +67,53 @@ export class NetworkConfigTypes {
     tags: t.optional(t.array(t.tag)),
   });
 
+  static readonly dxVirtualInterfaceTypeEnum = t.enums(
+    'DxVirtualInterfaceType',
+    ['private', 'transit'],
+    'Must be a DX virtual interface type.',
+  );
+
+  static readonly ipVersionEnum = t.enums('IpVersionType', ['ipv4', 'ipv6']);
+
+  static readonly dxVirtualInterfaceConfig = t.interface({
+    name: t.nonEmptyString,
+    connectionId: t.nonEmptyString,
+    customerAsn: t.number,
+    interfaceName: t.nonEmptyString,
+    ownerAccount: t.nonEmptyString,
+    region: t.region,
+    type: this.dxVirtualInterfaceTypeEnum,
+    vlan: t.number,
+    addressFamily: t.optional(this.ipVersionEnum),
+    amazonAddress: t.optional(t.nonEmptyString),
+    customerAddress: t.optional(t.nonEmptyString),
+    enableSiteLink: t.optional(t.boolean),
+    jumboFrames: t.optional(t.boolean),
+    tags: t.optional(t.array(t.tag)),
+  });
+
+  static readonly dxTransitGatewayAssociationConfig = t.interface({
+    name: t.nonEmptyString,
+    account: t.nonEmptyString,
+    allowedPrefixes: t.array(t.nonEmptyString),
+    routeTableAssociations: t.optional(t.array(t.nonEmptyString)),
+    routeTablePropagations: t.optional(t.array(t.nonEmptyString)),
+  });
+
+  static readonly dxGatewayConfig = t.interface({
+    name: t.nonEmptyString,
+    account: t.nonEmptyString,
+    asn: t.number,
+    gatewayName: t.nonEmptyString,
+    virtualInterfaces: t.optional(t.array(this.dxVirtualInterfaceConfig)),
+    transitGatewayAssociations: t.optional(t.array(this.dxTransitGatewayAssociationConfig)),
+  });
+
   static readonly ipamScopeConfig = t.interface({
     name: t.nonEmptyString,
     description: t.optional(t.nonEmptyString),
     tags: t.optional(t.array(t.tag)),
   });
-
-  static readonly ipVersionEnum = t.enums('IpVersionType', ['ipv4', 'ipv6']);
 
   static readonly ipamPoolConfig = t.interface({
     name: t.nonEmptyString,
@@ -730,6 +776,7 @@ export class NetworkConfigTypes {
     vpcFlowLogs: this.vpcFlowLogsConfig,
     centralNetworkServices: t.optional(this.centralNetworkServicesConfig),
     dhcpOptions: t.optional(t.array(this.dhcpOptsConfig)),
+    directConnectGateways: t.optional(t.array(this.dxGatewayConfig)),
     vpcPeering: t.optional(t.array(this.vpcPeeringConfig)),
   });
 }
@@ -768,6 +815,23 @@ export class TransitGatewayRouteTableVpcEntryConfig
 }
 
 /**
+ * Transit Gateway Direct Connect Gateway entry configuration.
+ * Used to define a Direct Connect Gateway attachment for Transit
+ * Gateway static routes.
+ */
+export class TransitGatewayRouteTableDxGatewayEntryConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig>
+{
+  /**
+   * The name of the Direct Connect Gateway
+   *
+   * @remarks
+   * Note: This is the `name` property of the Direct Connect Gateway, not `gatewayName`.
+   */
+  readonly directConnectGatewayName: string = '';
+}
+
+/**
  * Transit Gateway route entry configuration.
  * Used to define static route entries in a Transit Gateway route table.
  */
@@ -791,12 +855,15 @@ export class TransitGatewayRouteEntryConfig
    */
   readonly blackhole: boolean | undefined = undefined;
   /**
-   * A Transit Gateway VPC entry configuration.
+   * A Transit Gateway VPC or DX Gateway entry configuration.
    * Leave undefined if specifying a blackhole destination.
    *
-   * @see {@link TransitGatewayRouteTableVpcEntryConfig}
+   * @see {@link TransitGatewayRouteTableVpcEntryConfig} {@link TransitGatewayRouteTableDxGatewayEntryConfig}
    */
-  readonly attachment: TransitGatewayRouteTableVpcEntryConfig | undefined = undefined;
+  readonly attachment:
+    | TransitGatewayRouteTableVpcEntryConfig
+    | TransitGatewayRouteTableDxGatewayEntryConfig
+    | undefined = undefined;
 }
 
 /**
@@ -906,6 +973,241 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
   readonly tags: t.Tag[] | undefined = undefined;
 }
 
+/**
+ * Direct Connect Gateway virtual interface configuration.
+ * Use to create a virtual interface to a DX Gateway.
+ *
+ * @example
+ * ```
+ * - name: Accelerator-VIF
+ *   connectionId: dx-conn-example
+ *   customerAsn: 64512
+ *   interfaceName: Accelerator-VIF
+ *   ownerAccount: Network
+ *   type: transit
+ * ```
+ */
+export class DxVirtualInterfaceConfig implements t.TypeOf<typeof NetworkConfigTypes.dxVirtualInterfaceConfig> {
+  /**
+   * A friendly name for the virtual interface. This name
+   * is used as a logical reference for the resource in
+   * the accelerator.
+   *
+   * @remarks
+   * This name cannot be changed without recreating the physical resource.
+   */
+  readonly name: string = '';
+  /**
+   * The resource ID of the DX connection the virtual interface will be created on
+   *
+   * @remarks
+   * Resource IDs should be the the format `dx-conn-xxxxxx`
+   */
+  readonly connectionId: string = '';
+  /**
+   * A Border Gateway Protocol (BGP) Autonomous System Number (ASN) for the customer side of the connection.
+   *
+   * @remarks
+   * This ASN must be unique from the Amazon side ASN.
+   * The ASN for the Amazon side is determined by the DX Gateway it is created on.
+   *
+   * The valid values are 1 to 2147483647
+   */
+  readonly customerAsn: number = 64512;
+  /**
+   * The name of the virtual interface.
+   * This name will show as the name of the resource
+   * in the AWS console and API.
+   *
+   * @remarks
+   * This name can be changed without replacing the physical resource.
+   */
+  readonly interfaceName: string = '';
+  /**
+   * The friendly name of the owning account of the DX connection.
+   *
+   * @remarks
+   * Please note this is the owning account of the **physical** connection, not the virtual interface.
+   *
+   * If specifying an account that differs from the account of the Direct Connect Gateway, this will
+   * create an allocation from the connection owner account to the Direct Connect Gateway owner account.
+   * Allocations must be manually confirmed before they can be used or updated by the accelerator.
+   */
+  readonly ownerAccount: string = '';
+  /**
+   * The region of the virtual interface.
+   *
+   * @remarks
+   * Please note this region must match the region where the physical connection is hosted.
+   */
+  readonly region: t.Region = 'us-east-1';
+  /**
+   * The type of the virtual interface
+   *
+   * @remarks
+   * `private` virtual interfaces can only be created on DX gateways associated with virtual private gateways.
+   *
+   * `transit` virtual interfaces can only be created on DX gateways associated with transit gateways.
+   */
+  readonly type: t.TypeOf<typeof NetworkConfigTypes.dxVirtualInterfaceTypeEnum> = 'transit';
+  /**
+   * The virtual local area network (VLAN) tag to use for this virtual interface.
+   *
+   * @remarks
+   * This must be a unique VLAN tag that's not already in use on your connection.
+   *
+   * The value must be between 1 and 4094
+   */
+  readonly vlan: number = 1;
+  /**
+   * (OPTIONAL) The address family to use for this virtual interface.
+   *
+   * Default - ipv4
+   */
+  readonly addressFamily: t.TypeOf<typeof NetworkConfigTypes.ipVersionEnum> | undefined = undefined;
+  /**
+   * (OPTIONAL) The peer IP address to use for Amazon's side of the virtual interface.
+   *
+   * Default - randomly-generated by Amazon
+   */
+  readonly amazonAddress: string | undefined = undefined;
+  /**
+   * (OPTIONAL) The peer IP address to use for customer's side of the virtual interface.
+   *
+   * Default - randomly-generated by Amazon
+   */
+  readonly customerAddress: string | undefined = undefined;
+  /**
+   * (OPTIONAL) Enable SiteLink for this virtual interface.
+   *
+   * Default - false
+   */
+  readonly enableSiteLink: boolean | undefined = undefined;
+  /**
+   * (OPTIONAL) Enable jumbo frames for the virtual interface.
+   *
+   * Default - standard 1500 MTU frame size
+   */
+  readonly jumboFrames: boolean | undefined = undefined;
+  /**
+   * (OPTIONAL) An array of tags to apply to the virtual interface.
+   */
+  readonly tags: t.Tag[] | undefined = undefined;
+}
+
+/**
+ * Direct Connect Gateway transit gateway association configuration.
+ * Use this object to define transit gateway attachments for a DX gateway.
+ *
+ * @example
+ * ```
+ * - name: Network-Main
+ *   account: Network
+ *   allowedPrefixes:
+ *     - 10.0.0.0/8
+ *     - 192.168.0.0/24
+ *   routeTableAssociations:
+ *     - Network-Main-Core
+ *   routeTablePropagations:
+ *     - Network-Main-Core
+ *     - Network-Main-Shared
+ *     - Network-Main-Segregated
+ * ```
+ */
+export class DxTransitGatewayAssociationConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.dxTransitGatewayAssociationConfig>
+{
+  /**
+   * The friendly name of the transit gateway to associate.
+   */
+  readonly name: string = '';
+  /**
+   * The friendly name of the account the transit gateway is deployed to.
+   *
+   * @remarks
+   * If specifying an account that differs from the account of the Direct Connect Gateway, this will
+   * create a proposal from the transit gateway owner account to the Direct Connect Gateway owner account.
+   * Proposals must be manually approved. Proposal associations **cannot** also have configured transit gateway
+   * route table associations or propagations.
+   */
+  readonly account: string = '';
+  /**
+   * An array of CIDR prefixes that are allowed to advertise over this transit gateway association.
+   */
+  readonly allowedPrefixes: string[] = [];
+  /**
+   * (OPTIONAL) The friendly name of TGW route table(s) to associate with this attachment.
+   */
+  readonly routeTableAssociations: string[] | undefined = undefined;
+  /**
+   * (OPTIONAL) The friendly name of TGW route table(s) to propagate routes from this attachment.
+   */
+  readonly routeTablePropagations: string[] | undefined = undefined;
+}
+/**
+ * Direct Connect Gateway configuration.
+ * Used to define Direct Connect Gateways, virtual interfaces,
+ * and gateway associations.
+ *
+ * @example
+ * ```
+ * - name: Accelerator-DXGW
+ *   account: Network
+ *   asn: 64512
+ *   gamewayName: Accelerator-DXGW
+ *   virtualInterfaces: []
+ *   transitGatewayAssociations: []
+ * ```
+ */
+export class DxGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.dxGatewayConfig> {
+  /**
+   * A friendly name for the DX Gateway.
+   * This name is used as a logical reference
+   * for the resource in the accelerator.
+   *
+   * @remarks
+   * This name cannot be changed without recreating the physical resource.
+   */
+  readonly name: string = '';
+  /**
+   * The friendly name of the account to deploy the DX Gateway.
+   *
+   */
+  readonly account: string = '';
+  /**
+   * A Border Gateway Protocol (BGP) Autonomous System Number (ASN).
+   *
+   * @remarks
+   * The range is 64512 to 65534 for 16-bit ASNs.
+   *
+   * The range is 4200000000 to 4294967294 for 32-bit ASNs.
+   */
+  readonly asn: number = 64512;
+  /**
+   * The name of the Direct Connect Gateway.
+   * This name will show as the name of the resource
+   * in the AWS console and API.
+   *
+   * @remarks
+   * This name can be changed without replacing the physical resource.
+   */
+  readonly gatewayName: string = '';
+  /**
+   * (OPTIONAL) An array of virtual interface configurations. Creates virtual interfaces on the DX gateway.
+   *
+   * @remarks
+   * The `transitGatewayAssociations` property must also be defined if defining this property.
+   *
+   * @see {@link DxVirtualInterfaceConfig}
+   */
+  readonly virtualInterfaces: DxVirtualInterfaceConfig[] | undefined = undefined;
+  /**
+   * (OPTIONAL) An array of transit gateway association configurations. Creates a transit gateway attachment for this DX gateway.
+   *
+   * @see {@link DxTransitGatewayAssociationConfig}
+   */
+  readonly transitGatewayAssociations: DxTransitGatewayAssociationConfig[] | undefined = undefined;
+}
 /**
  * IPAM scope configuration.
  * Used to define a custom IPAM scope.
@@ -3233,6 +3535,22 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   readonly centralNetworkServices: CentralNetworkServicesConfig | undefined = undefined;
 
   /**
+   * An optional array of Direct Connect Gateway configurations.
+   *
+   * @example
+   * ```
+   * directConnectGateways:
+   *   - name: Accelerator-DXGW
+   *     account: Network
+   *     asn: 64512
+   *     virtualInterfaces: []
+   *     transitGatewayAssociations: []
+   * ```
+   * @see {@link DxGatewayConfig}
+   */
+  readonly directConnectGateways: DxGatewayConfig[] | undefined = undefined;
+
+  /**
    * An optional list of prefix list set configurations.
    */
   readonly prefixLists: PrefixListConfig[] | undefined = undefined;
@@ -3314,6 +3632,14 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
         //
         // Validate VPC configurations
         this.validateVpcConfiguration(values);
+
+        //
+        // Validate TGW configurations
+        this.validateTgwConfiguration(values);
+
+        //
+        // Validate DX gateway configurations
+        this.validateDxConfiguration(values);
       }
 
       if (this.errors.length) {
@@ -3531,6 +3857,217 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
         if (routeTableItem.gatewayAssociation === 'internetGateway' && !vpcItem.internetGateway) {
           this.errors.push(
             `Route table ${routeTableItem.name} for VPC ${vpcItem.name}: attempting to configure a gateway association with no IGW attached to the VPC!`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate conditional dependencies for TGW configurations
+   * @param values
+   */
+  private validateTgwConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    for (const tgw of values.transitGateways ?? []) {
+      for (const routeTable of tgw.routeTables ?? []) {
+        this.validateTgwStaticRouteEntries(values, tgw, routeTable);
+      }
+    }
+  }
+
+  /**
+   * Function to validate TGW route table entries
+   */
+  private validateTgwStaticRouteEntries(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    tgw: t.TypeOf<typeof NetworkConfigTypes.transitGatewayConfig>,
+    routeTable: t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteTableConfig>,
+  ) {
+    for (const entry of routeTable.routes ?? []) {
+      // Catch error if an attachment and blackhole are both defined
+      if (entry.attachment && entry.blackhole) {
+        this.errors.push(
+          `Transit Gateway route table ${routeTable.name}: cannot define both an attachment and blackhole target`,
+        );
+      }
+      // Catch error if destination CIDR and prefix list are both defined
+      if (entry.destinationCidrBlock && entry.destinationPrefixList) {
+        this.errors.push(
+          `Transit Gateway route table ${routeTable.name}: cannot define both a destination CIDR and destination prefix list`,
+        );
+      }
+      // Validate VPC attachment routes
+      this.validateVpcStaticRouteEntry(values, routeTable.name, entry);
+
+      // Validate DX Gateway routes
+      this.validateDxGatewayStaticRouteEntry(values, routeTable.name, tgw, entry);
+    }
+  }
+
+  /**
+   * Function to validate transit gateway static route entries for VPC attachments
+   * @param values
+   * @param routeTableName
+   * @param entry
+   */
+  private validateVpcStaticRouteEntry(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    routeTableName: string,
+    entry: t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteEntryConfig>,
+  ) {
+    if (entry.attachment && NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig.is(entry.attachment)) {
+      const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
+      const vpcAttachment = entry.attachment as TransitGatewayRouteTableVpcEntryConfig;
+      const vpc = vpcs.find(item => item.name === vpcAttachment.vpcName);
+      if (!vpc) {
+        this.errors.push(`Transit Gateway route table ${routeTableName}: cannot find VPC ${vpcAttachment.vpcName}`);
+      }
+    }
+  }
+
+  /**
+   * Function to validate transit gateway static route entries for DX attachments
+   * @param values
+   * @param routeTableName
+   * @param entry
+   */
+  private validateDxGatewayStaticRouteEntry(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    routeTableName: string,
+    tgw: t.TypeOf<typeof NetworkConfigTypes.transitGatewayConfig>,
+    entry: t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteEntryConfig>,
+  ) {
+    if (entry.attachment && NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig.is(entry.attachment)) {
+      const dxgws = [...(values.directConnectGateways ?? [])];
+      const dxAttachment = entry.attachment as TransitGatewayRouteTableDxGatewayEntryConfig;
+      const dxgw = dxgws.find(item => item.name === dxAttachment.directConnectGatewayName);
+      // Catch error if DXGW doesn't exist
+      if (!dxgw) {
+        this.errors.push(
+          `Transit Gateway route table ${routeTableName}: cannot find DX Gateway ${dxAttachment.directConnectGatewayName}`,
+        );
+      }
+      if (dxgw) {
+        // Catch error if DXGW is not in the same account as the TGW
+        if (dxgw!.account !== tgw.account) {
+          this.errors.push(
+            `Transit Gateway route table ${routeTableName}: cannot add route entry for DX Gateway ${dxAttachment.directConnectGatewayName}. DX Gateway and TGW ${tgw.name} reside in separate accounts`,
+          );
+        }
+        // Catch error if there is no association with the TGW
+        if (!dxgw.transitGatewayAssociations || !dxgw.transitGatewayAssociations.find(item => item.name === tgw.name)) {
+          this.errors.push(
+            `Transit Gateway route table ${routeTableName}: cannot add route entry for DX Gateway ${dxAttachment.directConnectGatewayName}. DX Gateway and TGW ${tgw.name} are not associated`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate DX gateway configurations.
+   * @param values
+   */
+  private validateDxConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+    for (const dxgw of values.directConnectGateways ?? []) {
+      // Validate virtual interfaces
+      this.validateDxVirtualInterfaces(dxgw);
+      // Validate transit gateway attachments
+      this.validateDxTransitGatewayAssociations(values, dxgw);
+    }
+  }
+
+  /**
+   * Function to validate DX virtual interface configurations.
+   * @param dxgw
+   */
+  private validateDxVirtualInterfaces(dxgw: t.TypeOf<typeof NetworkConfigTypes.dxGatewayConfig>) {
+    for (const vif of dxgw.virtualInterfaces ?? []) {
+      // Catch error for private VIFs with transit gateway associations
+      if (vif.type === 'private' && dxgw.transitGatewayAssociations) {
+        this.errors.push(
+          `Direct Connect Gateway ${dxgw.name}: cannot specify private virtual interface ${vif.name} with transit gateway associations`,
+        );
+      }
+      // Catch error if ASNs match
+      if (dxgw.asn === vif.customerAsn) {
+        this.errors.push(`Direct Connect Gateway ${dxgw.name}: Amazon ASN and customer ASN match for ${vif.name}`);
+      }
+      // Catch error if ASN is not in the correct range
+      if (vif.customerAsn < 1 || vif.customerAsn > 2147483647) {
+        this.errors.push(
+          `Direct Connect Gateway ${dxgw.name}: ASN ${vif.customerAsn} out of range 1-2147483647 for virtual interface ${vif.name}`,
+        );
+      }
+      // Catch error if VIF VLAN is not in range
+      if (vif.vlan < 1 || vif.vlan > 4094) {
+        this.errors.push(
+          `Direct Connect Gateway ${dxgw.name}: VLAN ${vif.vlan} out of range 1-4094 for virtual interface ${vif.name}`,
+        );
+      }
+      // Validate peer IP addresses
+      this.validateDxVirtualInterfaceAddresses(dxgw, vif);
+    }
+  }
+
+  /**
+   * Function to validate peer IP addresses for virtual interfaces.
+   * @param dxgw
+   * @param vif
+   */
+  private validateDxVirtualInterfaceAddresses(
+    dxgw: t.TypeOf<typeof NetworkConfigTypes.dxGatewayConfig>,
+    vif: t.TypeOf<typeof NetworkConfigTypes.dxVirtualInterfaceConfig>,
+  ) {
+    // Catch error if one peer IP is defined and not the other
+    if (vif.amazonAddress && !vif.customerAddress) {
+      this.errors.push(
+        `Direct Connect Gateway ${dxgw.name}: Amazon peer IP defined but customer peer IP undefined for ${vif.name}`,
+      );
+    }
+    if (!vif.amazonAddress && vif.customerAddress) {
+      this.errors.push(
+        `Direct Connect Gateway ${dxgw.name}: Customer peer IP defined but Amazon peer IP undefined for ${vif.name}`,
+      );
+    }
+    // Catch error if addresses match
+    if (vif.amazonAddress && vif.customerAddress) {
+      if (vif.amazonAddress === vif.customerAddress) {
+        this.errors.push(
+          `Direct Connect Gateway ${dxgw.name}: Amazon peer IP and customer peer IP match for ${vif.name}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate DX gateway transit gateway assocations.
+   * @param values
+   * @param dxgw
+   */
+  private validateDxTransitGatewayAssociations(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    dxgw: t.TypeOf<typeof NetworkConfigTypes.dxGatewayConfig>,
+  ) {
+    for (const tgwAssociation of dxgw.transitGatewayAssociations ?? []) {
+      const tgw = values.transitGateways.find(
+        item => item.name === tgwAssociation.name && item.account === tgwAssociation.account,
+      );
+      // Catch error if TGW isn't found
+      if (!tgw) {
+        this.errors.push(
+          `Direct Connect Gateway ${dxgw.name}: cannot find matching transit gateway for TGW association ${tgwAssociation.name}`,
+        );
+      }
+      // Catch error if ASNs match
+      if (tgw!.asn === dxgw.asn) {
+        this.errors.push(`Direct Connect Gateway ${dxgw.name}: DX Gateway ASN and TGW ASN match for ${tgw!.name}`);
+      }
+      // Catch error if TGW and DXGW account don't match and associations/propagations are configured
+      if (tgw!.account !== dxgw.account) {
+        if (tgwAssociation.routeTableAssociations || tgwAssociation.routeTablePropagations) {
+          this.errors.push(
+            `Direct Connect Gateway ${dxgw.name}: DX Gateway association proposals cannot have TGW route table associations or propagations defined`,
           );
         }
       }

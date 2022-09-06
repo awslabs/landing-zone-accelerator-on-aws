@@ -12,30 +12,25 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { SsmParameter, SsmParameterType } from '../../lib/aws-ssm/ssm-parameter';
+
+import { DirectConnectGateway } from '../../lib/aws-directconnect/direct-connect-gateway';
 import { snapShotTest } from '../snapshot-test';
 
-const testNamePrefix = 'Construct(SsmParameter): ';
+const testNamePrefix = 'Construct(DirectConnectGateway): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new SsmParameter(stack, 'SsmParameter', {
-  region: 'us-east-1',
-  partition: 'aws',
-  parameter: {
-    name: `/accelerator/network/vpcPeering/name/id`,
-    accountId: '111111111111',
-    roleName: `AWSAccelerator-VpcPeeringRole-222222222222`,
-    value: 'vp-123123123',
-  },
-  invokingAccountID: '333333333333',
-  type: SsmParameterType.PUT,
+new DirectConnectGateway(stack, 'TestDxGateway', {
+  gatewayName: 'TestDxGateway',
+  asn: 65000,
+  kmsKey: new cdk.aws_kms.Key(stack, 'Key'),
+  logRetentionInDays: 3653,
 });
 
 /**
- * SsmParameter construct test
+ * DirectConnectGateway construct test
  */
-describe('SsmParameter', () => {
+describe('DirectConnectGateway', () => {
   snapShotTest(testNamePrefix, stack);
 });
