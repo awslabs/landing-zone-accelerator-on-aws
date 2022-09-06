@@ -62,6 +62,7 @@ export * from './lib/aws-organizations/policy-attachment';
 export * from './lib/aws-organizations/register-delegated-administrator';
 export * from './lib/aws-ram/enable-sharing-with-aws-organization';
 export * from './lib/aws-ram/resource-share';
+export * from './lib/aws-ram/share-subnet-tags';
 export * from './lib/aws-route-53-resolver/firewall-domain-list';
 export * from './lib/aws-route-53-resolver/firewall-rule-group';
 export * from './lib/aws-route-53-resolver/query-logging-config';
