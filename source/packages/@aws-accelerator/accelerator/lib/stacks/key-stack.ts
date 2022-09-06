@@ -27,7 +27,7 @@ export class KeyStack extends AcceleratorStack {
     Logger.debug(`[key-stack] Region: ${cdk.Stack.of(this).region}`);
 
     this.organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
-    const auditAccountId = props.accountsConfig.getAuditAccountId();
+
     const accountIds = props.accountsConfig.getAccountIds();
 
     const key = new cdk.aws_kms.Key(this, 'AcceleratorKey', {
@@ -200,10 +200,13 @@ export class KeyStack extends AcceleratorStack {
                   `arn:${cdk.Stack.of(this).partition}:ssm:*:${
                     cdk.Stack.of(this).account
                   }:parameter/accelerator/kms/key-arn`,
+                  `arn:${cdk.Stack.of(this).partition}:ssm:*:${
+                    cdk.Stack.of(this).account
+                  }:parameter/accelerator/kms/s3/key-arn`,
                 ],
                 conditions: {
                   StringEquals: {
-                    'aws:PrincipalAccount': auditAccountId,
+                    'aws:PrincipalAccount': [...accountIds],
                   },
                   ArnLike: {
                     'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
@@ -216,7 +219,7 @@ export class KeyStack extends AcceleratorStack {
                 resources: ['*'],
                 conditions: {
                   StringEquals: {
-                    'aws:PrincipalAccount': auditAccountId,
+                    'aws:PrincipalAccount': [...accountIds],
                   },
                   ArnLike: {
                     'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
