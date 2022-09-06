@@ -11,14 +11,89 @@
  *  and limitations under the License.
  */
 
-import { GlobalConfig } from '../lib/global-config';
-
-const testNamePrefix = 'Config(GlobalConfig): ';
+import {
+  GlobalConfig,
+  AccessLogBucketConfig,
+  CentralLogBucketConfig,
+  CostAndUsageReportConfig,
+  BudgetReportConfig,
+} from '../lib/global-config';
+import { describe, it, expect } from '@jest/globals';
+import * as path from 'path';
+import * as fs from 'fs';
 
 describe('GlobalConfig', () => {
-  test(`${testNamePrefix} GlobalConfig`, () => {
-    new GlobalConfig({
-      homeRegion: 'us-east-1',
+  describe('Test config', () => {
+    it('has loaded successfully', () => {
+      const globalConfig = new GlobalConfig({
+        homeRegion: 'us-east-1',
+      });
+      const globalConfigFromFile = GlobalConfig.load(path.resolve('../accelerator/test/configs/all-enabled'), true);
+
+      expect(globalConfig.accountNames).toStrictEqual([]);
+      expect(globalConfigFromFile.accountNames).toStrictEqual([
+        'Management',
+        'LogArchive',
+        'Audit',
+        'SharedServices',
+        'Network',
+      ]);
+    });
+
+    it('loads from string', () => {
+      const buffer = fs.readFileSync(
+        path.join('../accelerator/test/configs/all-enabled', GlobalConfig.FILENAME),
+        'utf8',
+      );
+      const globalConfigFromString = GlobalConfig.loadFromString(buffer);
+      if (!globalConfigFromString) {
+        throw new Error('globalConfigFromString is not defined');
+      }
+      expect(globalConfigFromString.accountNames).toStrictEqual([]);
+
+      expect(GlobalConfig.loadFromString('corrupt str')).toBe(undefined);
+    });
+
+    it('has an empty list of lifecycle rules', () => {
+      const accessLogBucketConfig = new AccessLogBucketConfig();
+      expect(accessLogBucketConfig.lifecycleRules).toStrictEqual([]);
+
+      const centralLogBucketConfig = new CentralLogBucketConfig();
+      expect(centralLogBucketConfig.lifecycleRules).toStrictEqual([]);
+    });
+
+    it('tests CostAndUsageReportConfig', () => {
+      const curConfig = new CostAndUsageReportConfig();
+      expect(curConfig.additionalSchemaElements).toStrictEqual(['']);
+      expect(curConfig.compression).toEqual('');
+      expect(curConfig.format).toEqual('');
+      expect(curConfig.reportName).toEqual('');
+      expect(curConfig.reportName).toEqual('');
+      expect(curConfig.s3Prefix).toEqual('');
+      expect(curConfig.timeUnit).toEqual('');
+      expect(curConfig.additionalArtifacts).toBe(undefined);
+      expect(curConfig.refreshClosedReports).toBe(true);
+      expect(curConfig.reportVersioning).toEqual('');
+      expect(curConfig.lifecycleRules).toBe(undefined);
+    });
+
+    it('tests BudgetReportConfig', () => {
+      const brConfig = new BudgetReportConfig();
+      expect(brConfig.amount).toStrictEqual(2000);
+      expect(brConfig.name).toEqual('');
+      expect(brConfig.type).toEqual('');
+      expect(brConfig.subscriptionType).toEqual('');
+      expect(brConfig.unit).toEqual('');
+      expect(brConfig.timeUnit).toEqual('');
+      expect(brConfig.includeUpfront).toBe(true);
+      expect(brConfig.includeTax).toBe(true);
+      expect(brConfig.includeSupport).toBe(true);
+      expect(brConfig.includeRecurring).toBe(true);
+      expect(brConfig.includeDiscount).toBe(true);
+      expect(brConfig.includeRefund).toBe(false);
+      expect(brConfig.includeCredit).toBe(false);
+      expect(brConfig.useAmortized).toBe(false);
+      expect(brConfig.useBlended).toBe(false);
     });
   });
 });
