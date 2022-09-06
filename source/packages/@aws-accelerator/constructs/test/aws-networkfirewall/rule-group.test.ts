@@ -12,10 +12,9 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
 import { NfwRuleGroupRuleConfig } from '@aws-accelerator/config';
-
 import { NetworkFirewallRuleGroup } from '../../lib/aws-networkfirewall/rule-group';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(NetworkFirewallPolicy): ';
 
@@ -63,60 +62,5 @@ new NetworkFirewallRuleGroup(stack, 'TestGroup', {
  * Network Firewall construct test
  */
 describe('Network Firewall Rule Group', () => {
-  /**
-   * Number of Network Firewall Policy test
-   */
-  test(`${testNamePrefix} Network firewall rule group count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::NetworkFirewall::RuleGroup', 1);
-  });
-
-  /**
-   * Network firewall resource configuration test
-   */
-  test(`${testNamePrefix} Network firewall policy resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestGroupAF88660E: {
-          Type: 'AWS::NetworkFirewall::RuleGroup',
-          Properties: {
-            Capacity: 100,
-            RuleGroup: {
-              RulesSource: {
-                StatefulRules: [
-                  {
-                    Action: 'PASS',
-                    Header: {
-                      Destination: '10.0.0.0/16',
-                      DestinationPort: 'ANY',
-                      Direction: 'FORWARD',
-                      Protocol: 'IP',
-                      Source: '10.1.0.0/16',
-                      SourcePort: 'ANY',
-                    },
-                    RuleOptions: [
-                      {
-                        Keyword: 'sid',
-                        Settings: ['100'],
-                      },
-                    ],
-                  },
-                ],
-              },
-              StatefulRuleOptions: {
-                RuleOrder: 'STRICT_ORDER',
-              },
-            },
-            RuleGroupName: 'TestGroup',
-            Tags: [
-              {
-                Key: 'Name',
-                Value: 'TestGroup',
-              },
-            ],
-            Type: 'STATEFUL',
-          },
-        },
-      },
-    });
-  });
+  snapShotTest(testNamePrefix, stack);
 });

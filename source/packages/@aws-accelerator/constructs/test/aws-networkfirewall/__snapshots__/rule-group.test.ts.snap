@@ -1,0 +1,50 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Network Firewall Rule Group Construct(NetworkFirewallPolicy):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestGroupAF88660E": Object {
+      "Properties": Object {
+        "Capacity": 100,
+        "RuleGroup": Object {
+          "RulesSource": Object {
+            "StatefulRules": Array [
+              Object {
+                "Action": "PASS",
+                "Header": Object {
+                  "Destination": "10.0.0.0/16",
+                  "DestinationPort": "ANY",
+                  "Direction": "FORWARD",
+                  "Protocol": "IP",
+                  "Source": "10.1.0.0/16",
+                  "SourcePort": "ANY",
+                },
+                "RuleOptions": Array [
+                  Object {
+                    "Keyword": "sid",
+                    "Settings": Array [
+                      "100",
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          "StatefulRuleOptions": Object {
+            "RuleOrder": "STRICT_ORDER",
+          },
+        },
+        "RuleGroupName": "TestGroup",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "TestGroup",
+          },
+        ],
+        "Type": "STATEFUL",
+      },
+      "Type": "AWS::NetworkFirewall::RuleGroup",
+    },
+  },
+}
+`;

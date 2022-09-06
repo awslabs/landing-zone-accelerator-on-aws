@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Ipam Construct(Ipam):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestIpamD7083AA5": Object {
+      "Properties": Object {
+        "Description": "Test IPAM",
+        "OperatingRegions": Array [
+          Object {
+            "RegionName": "us-east-1",
+          },
+          Object {
+            "RegionName": "us-west-2",
+          },
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Test",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::IPAM",
+    },
+  },
+}
+`;

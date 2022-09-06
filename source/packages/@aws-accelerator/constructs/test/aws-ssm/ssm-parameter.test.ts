@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { SsmParameter, SsmParameterType } from '../../lib/aws-ssm/ssm-parameter';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(SsmParameter): ';
 
@@ -36,10 +37,5 @@ new SsmParameter(stack, 'SsmParameter', {
  * SsmParameter construct test
  */
 describe('SsmParameter', () => {
-  /**
-   * Number of Lambda function resource test
-   */
-  test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 2);
-  });
+  snapShotTest(testNamePrefix, stack);
 });

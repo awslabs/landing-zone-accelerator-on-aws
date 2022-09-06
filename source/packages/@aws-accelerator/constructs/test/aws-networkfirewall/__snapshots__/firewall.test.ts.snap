@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Network Firewall Construct(NetworkFirewall):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestFirewallE26FCA5C": Object {
+      "Properties": Object {
+        "FirewallName": "TestFirewall",
+        "FirewallPolicyArn": "arn:aws:network-firewall:us-east-1:222222222222:firewall-policy/TestPolicy",
+        "SubnetMappings": Array [
+          Object {
+            "SubnetId": "Test-Subnet-1",
+          },
+          Object {
+            "SubnetId": "Test-Subnet-2",
+          },
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "TestFirewall",
+          },
+        ],
+        "VpcId": "TestVpc",
+      },
+      "Type": "AWS::NetworkFirewall::Firewall",
+    },
+  },
+}
+`;

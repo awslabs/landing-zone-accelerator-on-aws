@@ -1,0 +1,190 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SecurityHubStandards Construct(SecurityHubStandards):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CustomKey1E6D0D07": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderHandler4BE622C1": Object {
+      "DependsOn": Array [
+        "CustomSecurityHubBatchEnableStandardsCustomResourceProviderRole1ABC8ED2",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomSecurityHubBatchEnableStandardsCustomResourceProviderRole1ABC8ED2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderLogGroup51D3B0EA": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomSecurityHubBatchEnableStandardsCustomResourceProviderHandler4BE622C1",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderRole1ABC8ED2": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "securityhub:BatchDisableStandards",
+                    "securityhub:BatchEnableStandards",
+                    "securityhub:DescribeStandards",
+                    "securityhub:DescribeStandardsControls",
+                    "securityhub:EnableSecurityHub",
+                    "securityhub:GetEnabledStandards",
+                    "securityhub:UpdateStandardsControl",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "SecurityHubCreateMembersTaskSecurityHubActions",
+                },
+                Object {
+                  "Action": Array [
+                    "iam:CreateServiceLinkedRole",
+                  ],
+                  "Condition": Object {
+                    "StringLike": Object {
+                      "iam:AWSServiceName": "securityhub.amazonaws.com",
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "SecurityHubServiceLinkedRole",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "SecurityHubStandards294083BB": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSecurityHubBatchEnableStandardsCustomResourceProviderLogGroup51D3B0EA",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSecurityHubBatchEnableStandardsCustomResourceProviderHandler4BE622C1",
+            "Arn",
+          ],
+        },
+        "region": Object {
+          "Ref": "AWS::Region",
+        },
+        "standards": Array [
+          Object {
+            "controlsToDisable": Array [
+              "IAM.1",
+              "EC2.10",
+              "Lambda.4",
+            ],
+            "enable": true,
+            "name": "AWS Foundational Security Best Practices v1.0.0",
+          },
+          Object {
+            "controlsToDisable": Array [
+              "IAM.1",
+              "EC2.10",
+              "Lambda.4",
+            ],
+            "enable": true,
+            "name": "PCI DSS v3.2.1",
+          },
+        ],
+      },
+      "Type": "Custom::SecurityHubBatchEnableStandards",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;

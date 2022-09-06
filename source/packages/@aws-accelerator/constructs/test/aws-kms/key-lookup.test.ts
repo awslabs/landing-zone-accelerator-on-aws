@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { KeyLookup } from '../../lib/aws-kms/key-lookup';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(KeyLookup): ';
 
@@ -30,10 +31,5 @@ new KeyLookup(stack, 'KeyLookup', {
  * KeyLookup construct test
  */
 describe('KeyLookup', () => {
-  /**
-   * Number of Lambda function resource test
-   */
-  test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 1);
-  });
+  snapShotTest(testNamePrefix, stack);
 });

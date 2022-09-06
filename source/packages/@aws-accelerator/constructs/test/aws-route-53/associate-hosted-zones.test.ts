@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { AssociateHostedZones } from '../../lib/aws-route-53/associate-hosted-zones';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(AssociateHostedZones): ';
 
@@ -42,10 +43,5 @@ new AssociateHostedZones(stack, 'AssociateHostedZones', {
  * AssociateHostedZones construct test
  */
 describe('AssociateHostedZones', () => {
-  /**
-   * Number of Lambda function resource test
-   */
-  test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 1);
-  });
+  snapShotTest(testNamePrefix, stack);
 });

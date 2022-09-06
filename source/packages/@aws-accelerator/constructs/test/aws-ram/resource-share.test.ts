@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { SynthUtils } from '@aws-cdk/assert';
 import { ResourceShare, ResourceShareOwner } from '../../index';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(ResourceShare): ';
 
@@ -45,85 +45,5 @@ ResourceShare.fromLookup(stackLookup, 'ResourceShareLookup', {
  * ResourceShare construct test
  */
 describe('ResourceShare', () => {
-  /**
-   * Snapshot test
-   */
-  test(`${testNamePrefix} Snapshot Test`, () => {
-    expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  });
-
-  /**
-   * Number of ResourceShare resource test
-   */
-  test(`${testNamePrefix} ResourceShare resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::RAM::ResourceShare', 1);
-  });
-
-  /**
-   * ResourceShare resource configuration test
-   */
-  test(`${testNamePrefix} ResourceShare resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        ResourceShareTestResourceShareResourceShare8D7B67C7: {
-          Type: 'AWS::RAM::ResourceShare',
-          Properties: {
-            AllowExternalPrincipals: true,
-            Name: 'TestResourceShare',
-            PermissionArns: [
-              {
-                'Fn::Join': [
-                  '',
-                  [
-                    'arn:',
-                    {
-                      Ref: 'AWS::Partition',
-                    },
-                    ':s3:::test-bucket-1-',
-                    {
-                      Ref: 'AWS::AccountId',
-                    },
-                    '-',
-                    {
-                      Ref: 'AWS::Region',
-                    },
-                  ],
-                ],
-              },
-              {
-                'Fn::Join': [
-                  '',
-                  [
-                    'arn:',
-                    {
-                      Ref: 'AWS::Partition',
-                    },
-                    ':s3:::test-bucket-2-',
-                    {
-                      Ref: 'AWS::AccountId',
-                    },
-                    '-',
-                    {
-                      Ref: 'AWS::Region',
-                    },
-                  ],
-                ],
-              },
-            ],
-            Principals: ['accountID', 'organizationUnitId'],
-            ResourceArns: ['ec2:TransitGateway'],
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * Number of Lambda function resource test
-   */
-  test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stackLookup).resourceCountIs('AWS::Lambda::Function', 1);
-  });
-
-  //End of file
+  snapShotTest(testNamePrefix, stack);
 });

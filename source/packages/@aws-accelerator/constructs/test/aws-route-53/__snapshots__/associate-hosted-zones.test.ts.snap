@@ -1,0 +1,174 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AssociateHostedZones Construct(AssociateHostedZones):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "AssociateHostedZonesF0E2F0DA": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomRoute53AssociateHostedZonesCustomResourceProviderLogGroupDEA7760D",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomRoute53AssociateHostedZonesCustomResourceProviderHandler1296DB71",
+            "Arn",
+          ],
+        },
+        "accountIds": Array [],
+        "hostedZoneAccountId": "111111111111",
+        "hostedZoneIds": Array [],
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "region": Object {
+          "Ref": "AWS::Region",
+        },
+        "roleName": "AWSAccelerator-EnableCentralEndpointsRole-us-east-1",
+        "tagFilters": Array [
+          Object {
+            "key": "accelerator:use-central-endpoints",
+            "value": "true",
+          },
+          Object {
+            "key": "accelerator:central-endpoints-account-id",
+            "value": "222222222222",
+          },
+        ],
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::Route53AssociateHostedZones",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomRoute53AssociateHostedZonesCustomResourceProviderHandler1296DB71": Object {
+      "DependsOn": Array [
+        "CustomRoute53AssociateHostedZonesCustomResourceProviderRole17C82AD6",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomRoute53AssociateHostedZonesCustomResourceProviderRole17C82AD6",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomRoute53AssociateHostedZonesCustomResourceProviderLogGroupDEA7760D": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "Key961B73FD",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomRoute53AssociateHostedZonesCustomResourceProviderHandler1296DB71",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomRoute53AssociateHostedZonesCustomResourceProviderRole17C82AD6": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "ec2:DescribeVpcs",
+                    "route53:AssociateVPCWithHostedZone",
+                    "route53:CreateVPCAssociationAuthorization",
+                    "route53:DeleteVPCAssociationAuthorization",
+                    "route53:GetHostedZone",
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "Route53AssociateHostedZonesActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "Key961B73FD": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
+}
+`;

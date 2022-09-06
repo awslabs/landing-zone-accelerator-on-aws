@@ -15,33 +15,40 @@ import { SynthUtils } from '@aws-cdk/assert';
 import { expect, test } from '@jest/globals';
 
 export function snapShotTest(testNamePrefix: string, stack: cdk.Stack) {
-    test(`${testNamePrefix} Snapshot Test`, () => {
-
+  test(`${testNamePrefix} Snapshot Test`, () => {
     // greedy implementation: eg, because "/path/home/temp.json" matches on
     // temp.json, replace the whole string to "replaced-json-path.json".
-    const greedyJsonRegex: RegExp = /[a-z0-9]+.json/;
-    
+    const greedyJsonRegex = /[a-z0-9]+.json/;
+
     // limited: only match length of generated zip file or UUID spec lengths.
-    const uuidRegex: RegExp = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
-    const zipRegex: RegExp = /[0-9a-f]{64}\.zip/;
-    
+    const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
+    const zipRegex = /[0-9a-f]{64}\.zip/;
+
     // test each serialized object - if any part of string matches regex
     // replace with value of print()
     expect.addSnapshotSerializer({
-      test: (val: any) => typeof val === 'string' && val.match(uuidRegex) != null,
+      test: (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        val: any,
+      ) => typeof val === 'string' && val.match(uuidRegex) != null,
       print: () => '"REPLACED-UUID"',
     });
 
     expect.addSnapshotSerializer({
-      test: (val: any) => typeof val === 'string' && val.match(zipRegex) != null,
+      test: (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        val: any,
+      ) => typeof val === 'string' && val.match(zipRegex) != null,
       print: () => '"REPLACED-GENERATED-NAME.zip"',
     });
-      
+
     expect.addSnapshotSerializer({
-      test: (val: any) => typeof val === 'string' && val.match(greedyJsonRegex) != null,
+      test: (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        val: any,
+      ) => typeof val === 'string' && val.match(greedyJsonRegex) != null,
       print: () => '"REPLACED-JSON-PATH.json"',
     });
-
 
     expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
   });

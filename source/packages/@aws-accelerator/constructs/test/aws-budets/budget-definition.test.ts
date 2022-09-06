@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
 import { BudgetDefinition } from '../../lib/aws-budgets/budget-definition';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(BudgetDefinition): ';
 
@@ -57,13 +57,8 @@ new BudgetDefinition(nativeStack, 'TestBudgetDefinition', {
 });
 
 /**
- * Report Definition construct test
+ * BudgetDefinition construct test
  */
-describe('ReportDefinition', () => {
-  /**
-   * Native budget definition resource count tets
-   */
-  test(`${testNamePrefix} Native report definition resource count test`, () => {
-    cdk.assertions.Template.fromStack(nativeStack).resourceCountIs('AWS::Budgets::Budget', 1);
-  });
+describe('BudgetDefinition', () => {
+  snapShotTest(testNamePrefix, nativeStack);
 });

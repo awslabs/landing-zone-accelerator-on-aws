@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { SynthUtils } from '@aws-cdk/assert';
 import { TransitGatewayStaticRoute } from '../../lib/aws-ec2/transit-gateway-static-route';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(TransitGatewayStaticRoute): ';
 
@@ -31,10 +31,5 @@ new TransitGatewayStaticRoute(stack, 'TransitGatewayStaticRoute', {
  * TransitGatewayStaticRoute construct test
  */
 describe('TransitGatewayStaticRoute', () => {
-  /**
-   * Snapshot test
-   */
-  test(`${testNamePrefix} Snapshot Test`, () => {
-    expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  });
+  snapShotTest(testNamePrefix, stack);
 });

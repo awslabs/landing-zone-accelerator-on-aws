@@ -12,8 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { SynthUtils } from '@aws-cdk/assert';
 import { Document } from '../../lib/aws-ssm/document';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(Document): ';
 
@@ -33,10 +33,5 @@ new Document(stack, 'Document', {
  * Document construct test
  */
 describe('Document', () => {
-  /**
-   * Snapshot test
-   */
-  test(`${testNamePrefix} Snapshot Test`, () => {
-    expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  });
+  snapShotTest(testNamePrefix, stack);
 });

@@ -1,0 +1,192 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReportDefinition Construct(EbsDefaultEncryption):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B": Object {
+      "DependsOn": Array [
+        "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderLogGroupB7212213": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "ec2:DisableEbsEncryptionByDefault",
+                    "ec2:EnableEbsEncryptionByDefault",
+                    "ec2:ModifyEbsDefaultKmsKeyId",
+                    "ec2:ResetEbsDefaultKmsKeyId",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "EC2",
+                },
+                Object {
+                  "Action": Array [
+                    "kms:DescribeKey",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::GetAtt": Array [
+                      "EbsEncryptionKmsKeyFD1E785E",
+                      "Arn",
+                    ],
+                  },
+                  "Sid": "KMS",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomKey1E6D0D07": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "EbsDefaultVolumeEncryption55012F7A": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomEbsDefaultVolumeEncryptionCustomResourceProviderLogGroupB7212213",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B",
+            "Arn",
+          ],
+        },
+        "kmsKeyId": Object {
+          "Ref": "EbsEncryptionKmsKeyFD1E785E",
+        },
+      },
+      "Type": "Custom::EbsDefaultVolumeEncryption",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "EbsEncryptionKmsKeyFD1E785E": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
+}
+`;

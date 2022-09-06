@@ -12,10 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
-import { SynthUtils } from '@aws-cdk/assert';
-
 import { Vpc } from '../../lib/aws-ec2/vpc';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(Vpc): ';
 
@@ -37,120 +35,5 @@ new Vpc(stack, 'TestVpc', {
  * Vpc construct test
  */
 describe('Vpc', () => {
-  /**
-   * Snapshot test
-   */
-  test(`${testNamePrefix} Snapshot Test`, () => {
-    expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  });
-
-  /**
-   * Number of VPC test
-   */
-  test(`${testNamePrefix} VPC count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::VPC', 1);
-  });
-
-  /**
-   * Number of InternetGateway test
-   */
-  test(`${testNamePrefix} InternetGateway count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::InternetGateway', 1);
-  });
-
-  /**
-   * Number of DHCP options test
-   */
-  test(`${testNamePrefix} DHCP options association count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::VPCDHCPOptionsAssociation', 1);
-  });
-
-  /**
-   * Number of VPCGatewayAttachment test
-   */
-  test(`${testNamePrefix} VPCGatewayAttachment count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::VPCGatewayAttachment', 1);
-  });
-
-  /**
-   * VPC resource configuration test
-   */
-  test(`${testNamePrefix} VPC resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestVpcE77CE678: {
-          Type: 'AWS::EC2::VPC',
-          Properties: {
-            CidrBlock: '10.0.0.0/16',
-            EnableDnsHostnames: false,
-            EnableDnsSupport: true,
-            InstanceTenancy: 'default',
-            Tags: [
-              {
-                Key: 'Name',
-                Value: 'Main',
-              },
-              {
-                Key: 'Test-Key',
-                Value: 'Test-Value',
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * InternetGateway resource configuration test
-   */
-  test(`${testNamePrefix} InternetGateway resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestVpcInternetGateway01360C82: {
-          Type: 'AWS::EC2::InternetGateway',
-        },
-      },
-    });
-  });
-
-  /**
-   * DHCP options association resource configuration test
-   */
-  test(`${testNamePrefix} DHCP options association resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestVpcDhcpOptionsAssociationDB23B751: {
-          Type: 'AWS::EC2::VPCDHCPOptionsAssociation',
-          Properties: {
-            DhcpOptionsId: 'Test-Options',
-            VpcId: {
-              Ref: 'TestVpcE77CE678',
-            },
-          },
-        },
-      },
-    });
-  });
-
-  /**
-   * VPCGatewayAttachment resource configuration test
-   */
-  test(`${testNamePrefix} VPCGatewayAttachment resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestVpcInternetGatewayAttachment60E451D5: {
-          Type: 'AWS::EC2::VPCGatewayAttachment',
-          Properties: {
-            InternetGatewayId: {
-              Ref: 'TestVpcInternetGateway01360C82',
-            },
-            VpcId: {
-              Ref: 'TestVpcE77CE678',
-            },
-          },
-        },
-      },
-    });
-  });
+  snapShotTest(testNamePrefix, stack);
 });

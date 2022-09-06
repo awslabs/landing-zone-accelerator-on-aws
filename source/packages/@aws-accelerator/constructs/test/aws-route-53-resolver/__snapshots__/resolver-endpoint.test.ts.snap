@@ -1,0 +1,31 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ResolverEndpoint Construct(ResolverEndpoint):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestEndpoint4E197ABD": Object {
+      "Properties": Object {
+        "Direction": "OUTBOUND",
+        "IpAddresses": Array [
+          Object {
+            "SubnetId": "subnet-1",
+          },
+          Object {
+            "SubnetId": "subnet-2",
+          },
+        ],
+        "SecurityGroupIds": Array [
+          "sg-123test",
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "TestEndpoint",
+          },
+        ],
+      },
+      "Type": "AWS::Route53Resolver::ResolverEndpoint",
+    },
+  },
+}
+`;

@@ -1,0 +1,200 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DetectiveGraphConfig Construct(DetectiveGraphConfig):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CustomDetectiveUpdateGraphCustomResourceProviderHandlerD4473EC1": Object {
+      "DependsOn": Array [
+        "CustomDetectiveUpdateGraphCustomResourceProviderRole54CD7295",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomDetectiveUpdateGraphCustomResourceProviderRole54CD7295",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomDetectiveUpdateGraphCustomResourceProviderLogGroupDF150426": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomDetectiveUpdateGraphCustomResourceProviderHandlerD4473EC1",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomDetectiveUpdateGraphCustomResourceProviderRole54CD7295": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:DeregisterDelegatedAdministrator",
+                    "organizations:DescribeOrganization",
+                    "organizations:EnableAWSServiceAccess",
+                    "organizations:ListAWSServiceAccessForOrganization",
+                    "organizations:ListAccounts",
+                    "organizations:ListDelegatedAdministrators",
+                    "organizations:RegisterDelegatedAdministrator",
+                    "organizations:ServicePrincipal",
+                    "organizations:UpdateOrganizationConfiguration",
+                  ],
+                  "Condition": Object {
+                    "StringLikeIfExists": Object {
+                      "organizations:DeregisterDelegatedAdministrator": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:DescribeOrganization": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:EnableAWSServiceAccess": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:ListAWSServiceAccessForOrganization": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:ListAccounts": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:ListDelegatedAdministrators": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:RegisterDelegatedAdministrator": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:ServicePrincipal": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:UpdateOrganizationConfiguration": Array [
+                        "detective.amazonaws.com",
+                      ],
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "DetectiveConfigureOrganizationAdminAccountTaskOrganizationActions",
+                },
+                Object {
+                  "Action": Array [
+                    "detective:UpdateOrganizationConfiguration",
+                    "detective:ListGraphs",
+                    "detective:ListMembers",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "DetectiveUpdateGraphTaskDetectiveActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomKey1E6D0D07": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "DetectiveGraphConfig248C4B9F": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomDetectiveUpdateGraphCustomResourceProviderLogGroupDF150426",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomDetectiveUpdateGraphCustomResourceProviderHandlerD4473EC1",
+            "Arn",
+          ],
+        },
+        "region": Object {
+          "Ref": "AWS::Region",
+        },
+      },
+      "Type": "Custom::DetectiveUpdateGraph",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;

@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { SsmParameterLookup } from '../../index';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(SsmParameterLookup): ';
 
@@ -30,65 +31,5 @@ new SsmParameterLookup(stack, 'SsmParameter', {
  * SsmParameterLookup construct test
  */
 describe('SsmParameterLookup', () => {
-  /**
-   * Number of Lambda Function test
-   */
-  test(`${testNamePrefix} Lambda Function count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 1);
-  });
-
-  /**
-   * Number of IAM Role test
-   */
-  test(`${testNamePrefix} IAM Role count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 1);
-  });
-
-  /**
-   * Number of Custom resource SsmGetParameterValue test
-   */
-  test(`${testNamePrefix} Custom resource SsmGetParameterValue count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('Custom::SsmGetParameterValue', 1);
-  });
-
-  /**
-   * Custom resource SsmParameterLookup configuration test
-   */
-  test(`${testNamePrefix} Custom resource SsmParameter configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        SsmParameter39B3125C: {
-          Type: 'Custom::SsmGetParameterValue',
-          UpdateReplacePolicy: 'Delete',
-          DeletionPolicy: 'Delete',
-          DependsOn: ['CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D'],
-          Properties: {
-            ServiceToken: {
-              'Fn::GetAtt': ['CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE', 'Arn'],
-            },
-            assumeRoleArn: {
-              'Fn::Join': [
-                '',
-                [
-                  'arn:',
-                  {
-                    Ref: 'AWS::Partition',
-                  },
-                  ':iam::123123123123:role/TestRole',
-                ],
-              ],
-            },
-            invokingAccountID: {
-              Ref: 'AWS::AccountId',
-            },
-            region: {
-              Ref: 'AWS::Region',
-            },
-            parameterAccountID: '123123123123',
-            parameterName: 'TestParameter',
-          },
-        },
-      },
-    });
-  });
+  snapShotTest(testNamePrefix, stack);
 });

@@ -12,10 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-
-import { SynthUtils } from '@aws-cdk/assert';
-
 import { DhcpOptions } from '../../lib/aws-ec2/dhcp-options';
+import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(DhcpOptions): ';
 
@@ -36,43 +34,5 @@ new DhcpOptions(stack, 'TestDhcpOpts', {
  * DHCP Options construct test
  */
 describe('DhcpOptions', () => {
-  /**
-   * Snapshot test
-   */
-  test(`${testNamePrefix} Snapshot Test`, () => {
-    expect(SynthUtils.toCloudFormation(stack)).toMatchSnapshot();
-  });
-
-  /**
-   * Number of DHCP options test
-   */
-  test(`${testNamePrefix} DHCP options count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::EC2::DHCPOptions', 1);
-  });
-
-  /**
-   * DHCP options resource configuration test
-   */
-  test(`${testNamePrefix} DHCP options resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        TestDhcpOpts22CADF8A: {
-          Type: 'AWS::EC2::DHCPOptions',
-          Properties: {
-            DomainName: 'test.com',
-            DomainNameServers: ['1.1.1.1'],
-            NetbiosNameServers: ['1.1.1.1'],
-            NetbiosNodeType: 2,
-            NtpServers: ['1.1.1.1'],
-            Tags: [
-              {
-                Key: 'Name',
-                Value: 'Test',
-              },
-            ],
-          },
-        },
-      },
-    });
-  });
+  snapShotTest(testNamePrefix, stack);
 });

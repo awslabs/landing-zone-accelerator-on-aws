@@ -1,0 +1,77 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`QueryLoggingConfig Construct(QueryLoggingConfig):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CwlQueryLoggingTest70DD9614": Object {
+      "Properties": Object {
+        "DestinationArn": Object {
+          "Fn::GetAtt": Array [
+            "TestLogGroup4EEF7AD4",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfig",
+    },
+    "S3QueryLoggingTestA05F494B": Object {
+      "Properties": Object {
+        "DestinationArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":s3:::testbucket",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfig",
+    },
+    "TestLogGroup4EEF7AD4": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "RetentionInDays": 731,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestLogGroupPolicyResourcePolicyFDE53895": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "{\\"Statement\\":[{\\"Action\\":[\\"logs:CreateLogStream\\",\\"logs:PutLogEvents\\"],\\"Effect\\":\\"Allow\\",\\"Principal\\":{\\"Service\\":\\"delivery.logs.amazonaws.com\\"},\\"Resource\\":\\"",
+              Object {
+                "Fn::GetAtt": Array [
+                  "TestLogGroup4EEF7AD4",
+                  "Arn",
+                ],
+              },
+              ":log-stream:*\\",\\"Sid\\":\\"Allow log delivery access\\"}],\\"Version\\":\\"2012-10-17\\"}",
+            ],
+          ],
+        },
+        "PolicyName": "TestLogGroupPolicy628CC4FE",
+      },
+      "Type": "AWS::Logs::ResourcePolicy",
+    },
+    "TestQueryLoggingAssoc0ECD8965": Object {
+      "Properties": Object {
+        "ResolverQueryLogConfigId": Object {
+          "Fn::GetAtt": Array [
+            "S3QueryLoggingTestA05F494B",
+            "Id",
+          ],
+        },
+        "ResourceId": "TestVpc",
+      },
+      "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfigAssociation",
+    },
+  },
+}
+`;
