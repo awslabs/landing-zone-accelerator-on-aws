@@ -11,9 +11,10 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
+import { describe } from '@jest/globals';
+import { snapShotTest } from './snapshot-test';
 
 const testNamePrefix = 'Construct(SecurityResourcesStack): ';
 
@@ -24,14 +25,6 @@ const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.SECURI
 console.log(acceleratorTestStacks.stacks);
 const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 
-/**
- * SecurityResourcesStack construct test
- */
 describe('SecurityResourcesStack', () => {
-  /**
-   * Number of Lambda Function resource test
-   */
-  test(`${testNamePrefix} Lambda Function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 4);
-  });
+  snapShotTest(testNamePrefix, stack);
 });

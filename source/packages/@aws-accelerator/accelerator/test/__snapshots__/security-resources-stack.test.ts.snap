@@ -1,0 +1,2690 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "AcceleratorAlbHttpDropInvalidHeaderEnabled699B715A": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-alb-http-drop-invalid-header-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::ElasticLoadBalancingV2::LoadBalancer",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "ALB_HTTP_DROP_INVALID_HEADER_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorApiGwCacheEnabledAndEncrypted090286F1": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-api-gw-cache-enabled-and-encrypted",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::ApiGateway::Stage",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "API_GW_CACHE_ENABLED_AND_ENCRYPTED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorApiGwExecutionLoggingEnabledDA00B249": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-api-gw-execution-logging-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::ApiGateway::Stage",
+            "AWS::ApiGatewayV2::Stage",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "API_GW_EXECUTION_LOGGING_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorAttachEc2InstanceProfile1DAEB489": Object {
+      "DependsOn": Array [
+        "AcceleratorAttachEc2InstanceProfileFunctionPermissionF089A2FB",
+        "AcceleratorAttachEc2InstanceProfileFunction2F25082F",
+        "AcceleratorAttachEc2InstanceProfileFunctionServiceRoleF2BC24EC",
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-attach-ec2-instance-profile",
+        "Description": "Custom rule for checking EC2 instance IAM profile attachment",
+        "InputParameters": Object {},
+        "MaximumExecutionFrequency": "Six_Hours",
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::EC2::Instance",
+          ],
+        },
+        "Source": Object {
+          "Owner": "CUSTOM_LAMBDA",
+          "SourceDetails": Array [
+            Object {
+              "EventSource": "aws.config",
+              "MessageType": "ConfigurationItemChangeNotification",
+            },
+            Object {
+              "EventSource": "aws.config",
+              "MessageType": "OversizedConfigurationItemChangeNotification",
+            },
+            Object {
+              "EventSource": "aws.config",
+              "MaximumExecutionFrequency": "Six_Hours",
+              "MessageType": "ScheduledNotification",
+            },
+          ],
+          "SourceIdentifier": Object {
+            "Fn::GetAtt": Array [
+              "AcceleratorAttachEc2InstanceProfileFunction2F25082F",
+              "Arn",
+            ],
+          },
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorAttachEc2InstanceProfileFunction2F25082F": Object {
+      "DependsOn": Array [
+        "AcceleratorAttachEc2InstanceProfileFunctionServiceRoleF2BC24EC",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS Config custom rule function used for \\"accelerator-attach-ec2-instance-profile\\" rule",
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorAttachEc2InstanceProfileFunctionServiceRoleF2BC24EC",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 3,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AcceleratorAttachEc2InstanceProfileFunctionPermissionF089A2FB": Object {
+      "Properties": Object {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorAttachEc2InstanceProfileFunction2F25082F",
+            "Arn",
+          ],
+        },
+        "Principal": "config.amazonaws.com",
+        "SourceAccount": "111111111111",
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AcceleratorAttachEc2InstanceProfileFunctionServiceRoleF2BC24EC": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Config custom rule needs managed readonly access policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSConfigRulesExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorAttachEc2InstanceProfileLambdaRolePolicy9BC7815F": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Config rule custom lambda role, created by the permission provided in config repository",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "ec2:Describe*",
+                "ec2:Get*",
+                "ec2:ListSnapshotsInRecycleBin",
+                "ec2:SearchLocalGatewayRoutes",
+                "ec2:SearchTransitGatewayRoutes",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AcceleratorAttachEc2InstanceProfileLambdaRolePolicy9BC7815F",
+        "Roles": Array [
+          Object {
+            "Ref": "AcceleratorAttachEc2InstanceProfileFunctionServiceRoleF2BC24EC",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AcceleratorAttachEc2InstanceProfileLogGroup19DCB538": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "AcceleratorKeyLookup0C18DA36",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "AcceleratorAttachEc2InstanceProfileFunction2F25082F",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorAttachEc2InstanceProfileRemediation": Object {
+      "DependsOn": Array [
+        "AcceleratorAttachEc2InstanceProfile1DAEB489",
+      ],
+      "Properties": Object {
+        "Automatic": true,
+        "ConfigRuleName": "accelerator-attach-ec2-instance-profile",
+        "MaximumAutomaticAttempts": 5,
+        "Parameters": Object {
+          "AutomationAssumeRole": Object {
+            "StaticValue": Object {
+              "Values": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorAttachEc2InstanceProfileRemediationRole0804271B",
+                    "Arn",
+                  ],
+                },
+              ],
+            },
+          },
+          "IamInstanceProfile": Object {
+            "StaticValue": Object {
+              "Values": Array [
+                "EC2-Default-SSM-AD-Role",
+              ],
+            },
+          },
+          "InstanceId": Object {
+            "ResourceValue": Object {
+              "Value": "RESOURCE_ID",
+            },
+          },
+        },
+        "RetryAttemptSeconds": 60,
+        "TargetId": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":ssm:us-east-1:222222222222:document/Attach-IAM-Instance-Profile",
+            ],
+          ],
+        },
+        "TargetType": "SSM_DOCUMENT",
+      },
+      "Type": "AWS::Config::RemediationConfiguration",
+    },
+    "AcceleratorAttachEc2InstanceProfileRemediationRole0804271B": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "ssm.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorAttachEc2InstanceProfileRemediationRoleDefaultPolicy820C0688": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Config rule remediation role, created by the permission provided in config repository",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "ssm:GetAutomationExecution",
+                "ssm:StartAutomationExecution",
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1:222222222222:document/Attach-IAM-Instance-Profile",
+                  ],
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "ec2:AssociateIamInstanceProfile",
+                "ec2:ReplaceIamInstanceProfileAssociation",
+                "iam:PassRole",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AcceleratorAttachEc2InstanceProfileRemediationRoleDefaultPolicy820C0688",
+        "Roles": Array [
+          Object {
+            "Ref": "AcceleratorAttachEc2InstanceProfileRemediationRole0804271B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AcceleratorCloudtrailEnabled08B9BEEA": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-cloudtrail-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "CLOUD_TRAIL_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorCloudtrailS3DataeventsEnabledF8E06B95": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-cloudtrail-s3-dataevents-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "CLOUDTRAIL_S3_DATAEVENTS_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorCloudtrailSecurityTrailEnabledDBDDD05E": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-cloudtrail-security-trail-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "CLOUDTRAIL_SECURITY_TRAIL_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorCloudwatchAlarmActionCheckBBDDF3B7": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-cloudwatch-alarm-action-check",
+        "InputParameters": Object {
+          "alarmActionRequired": "TRUE",
+          "insufficientDataActionRequired": "TRUE",
+          "okActionRequired": "FALSE",
+        },
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::CloudWatch::Alarm",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "CLOUDWATCH_ALARM_ACTION_CHECK",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorCloudwatchLogGroupEncrypted233263DC": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-cloudwatch-log-group-encrypted",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "CLOUDWATCH_LOG_GROUP_ENCRYPTED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorCwLoggroupRetentionPeriodCheck7A9796B7": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-cw-loggroup-retention-period-check",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "CW_LOGGROUP_RETENTION_PERIOD_CHECK",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorDynamodbTableEncryptedKms3EE6CD77": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-dynamodb-table-encrypted-kms",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::DynamoDB::Table",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "DYNAMODB_TABLE_ENCRYPTED_KMS",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorEc2InstanceDetailedMonitoringEnabled9F032168": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-ec2-instance-detailed-monitoring-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::EC2::Instance",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "EC2_INSTANCE_DETAILED_MONITORING_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorEc2InstanceNoPublicIpB8B5F3AD": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-ec2-instance-no-public-ip",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::EC2::Instance",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "EC2_INSTANCE_NO_PUBLIC_IP",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorEc2InstanceProfilePermission16FE7EFE": Object {
+      "DependsOn": Array [
+        "AcceleratorEc2InstanceProfilePermissionFunctionPermission7A3C2DC0",
+        "AcceleratorEc2InstanceProfilePermissionFunction65B8A331",
+        "AcceleratorEc2InstanceProfilePermissionFunctionServiceRoleAA6A6427",
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-ec2-instance-profile-permission",
+        "Description": "Custom role to remediate EC2 instance profile permission",
+        "InputParameters": Object {
+          "AWSManagedPolicies": "AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy",
+          "ResourceId": "RESOURCE_ID",
+        },
+        "MaximumExecutionFrequency": "Six_Hours",
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::IAM::Role",
+          ],
+        },
+        "Source": Object {
+          "Owner": "CUSTOM_LAMBDA",
+          "SourceDetails": Array [
+            Object {
+              "EventSource": "aws.config",
+              "MessageType": "ConfigurationItemChangeNotification",
+            },
+            Object {
+              "EventSource": "aws.config",
+              "MessageType": "OversizedConfigurationItemChangeNotification",
+            },
+            Object {
+              "EventSource": "aws.config",
+              "MaximumExecutionFrequency": "Six_Hours",
+              "MessageType": "ScheduledNotification",
+            },
+          ],
+          "SourceIdentifier": Object {
+            "Fn::GetAtt": Array [
+              "AcceleratorEc2InstanceProfilePermissionFunction65B8A331",
+              "Arn",
+            ],
+          },
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorEc2InstanceProfilePermissionFunction65B8A331": Object {
+      "DependsOn": Array [
+        "AcceleratorEc2InstanceProfilePermissionFunctionServiceRoleAA6A6427",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS Config custom rule function used for \\"accelerator-ec2-instance-profile-permission\\" rule",
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorEc2InstanceProfilePermissionFunctionServiceRoleAA6A6427",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 3,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AcceleratorEc2InstanceProfilePermissionFunctionPermission7A3C2DC0": Object {
+      "Properties": Object {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorEc2InstanceProfilePermissionFunction65B8A331",
+            "Arn",
+          ],
+        },
+        "Principal": "config.amazonaws.com",
+        "SourceAccount": "111111111111",
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "AcceleratorEc2InstanceProfilePermissionFunctionServiceRoleAA6A6427": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Config custom rule needs managed readonly access policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSConfigRulesExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorEc2InstanceProfilePermissionLambdaRolePolicy8942B625": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Config rule custom lambda role, created by the permission provided in config repository",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "iam:Get*",
+                "iam:List*",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AcceleratorEc2InstanceProfilePermissionLambdaRolePolicy8942B625",
+        "Roles": Array [
+          Object {
+            "Ref": "AcceleratorEc2InstanceProfilePermissionFunctionServiceRoleAA6A6427",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AcceleratorEc2InstanceProfilePermissionLogGroupE31085F3": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "AcceleratorKeyLookup0C18DA36",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "AcceleratorEc2InstanceProfilePermissionFunction65B8A331",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorEc2InstanceProfilePermissionRemediation": Object {
+      "DependsOn": Array [
+        "AcceleratorEc2InstanceProfilePermission16FE7EFE",
+      ],
+      "Properties": Object {
+        "Automatic": true,
+        "ConfigRuleName": "accelerator-ec2-instance-profile-permission",
+        "MaximumAutomaticAttempts": 5,
+        "Parameters": Object {
+          "AWSManagedPolicies": Object {
+            "StaticValue": Object {
+              "Values": Array [
+                "AmazonSSMManagedInstanceCore",
+                "AmazonSSMDirectoryServiceAccess",
+                "CloudWatchAgentServerPolicy",
+              ],
+            },
+          },
+          "AutomationAssumeRole": Object {
+            "StaticValue": Object {
+              "Values": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorEc2InstanceProfilePermissionRemediationRoleDB841759",
+                    "Arn",
+                  ],
+                },
+              ],
+            },
+          },
+          "ResourceId": Object {
+            "ResourceValue": Object {
+              "Value": "RESOURCE_ID",
+            },
+          },
+        },
+        "RetryAttemptSeconds": 60,
+        "TargetId": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":ssm:us-east-1:222222222222:document/Attach-IAM-Role-Policy",
+            ],
+          ],
+        },
+        "TargetType": "SSM_DOCUMENT",
+      },
+      "Type": "AWS::Config::RemediationConfiguration",
+    },
+    "AcceleratorEc2InstanceProfilePermissionRemediationRoleDB841759": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "ssm.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorEc2InstanceProfilePermissionRemediationRoleDefaultPolicy9EC721D8": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Config rule remediation role, created by the permission provided in config repository",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "ssm:GetAutomationExecution",
+                "ssm:StartAutomationExecution",
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1:222222222222:document/Attach-IAM-Role-Policy",
+                  ],
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "config:BatchGetResourceConfig",
+                "iam:AttachRolePolicy",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AcceleratorEc2InstanceProfilePermissionRemediationRoleDefaultPolicy9EC721D8",
+        "Roles": Array [
+          Object {
+            "Ref": "AcceleratorEc2InstanceProfilePermissionRemediationRoleDB841759",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AcceleratorEc2InstancesInVpcFCB9B1B9": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-ec2-instances-in-vpc",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::EC2::Instance",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "INSTANCES_IN_VPC",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorEc2VolumeInuseCheck934E830D": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-ec2-volume-inuse-check",
+        "InputParameters": Object {
+          "deleteOnTermination": "TRUE",
+        },
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::EC2::Volume",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "EC2_VOLUME_INUSE_CHECK",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorElasticacheRedisClusterAutomaticBackupCheck7CFACFC6": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-elasticache-redis-cluster-automatic-backup-check",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "ELASTICACHE_REDIS_CLUSTER_AUTOMATIC_BACKUP_CHECK",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorElasticsearchInVpcOnly1FFB209E": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-elasticsearch-in-vpc-only",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "ELASTICSEARCH_IN_VPC_ONLY",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorElasticsearchNodeToNodeEncryptionCheck7F672889": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-elasticsearch-node-to-node-encryption-check",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::Elasticsearch::Domain",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "ELASTICSEARCH_NODE_TO_NODE_ENCRYPTION_CHECK",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorElbAcmCertificateRequired7DFF09EF": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-elb-acm-certificate-required",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::ElasticLoadBalancing::LoadBalancer",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "ELB_ACM_CERTIFICATE_REQUIRED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorElbCrossZoneLoadBalancingEnabled4933AD2A": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-elb-cross-zone-load-balancing-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::ElasticLoadBalancing::LoadBalancer",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "ELB_CROSS_ZONE_LOAD_BALANCING_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorElbDeletionProtectionEnabled6A44EA2D": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-elb-deletion-protection-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::ElasticLoadBalancingV2::LoadBalancer",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "ELB_DELETION_PROTECTION_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorElbLoggingEnabledD68765E9": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-elb-logging-enabled",
+        "InputParameters": Object {
+          "s3BucketNames": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
+        },
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::ElasticLoadBalancing::LoadBalancer",
+            "AWS::ElasticLoadBalancingV2::LoadBalancer",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "ELB_LOGGING_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorElbLoggingEnabledRemediation": Object {
+      "DependsOn": Array [
+        "AcceleratorElbLoggingEnabledD68765E9",
+      ],
+      "Properties": Object {
+        "Automatic": true,
+        "ConfigRuleName": "accelerator-elb-logging-enabled",
+        "MaximumAutomaticAttempts": 5,
+        "Parameters": Object {
+          "AutomationAssumeRole": Object {
+            "StaticValue": Object {
+              "Values": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorElbLoggingEnabledRemediationRole852D593A",
+                    "Arn",
+                  ],
+                },
+              ],
+            },
+          },
+          "LoadBalancerArn": Object {
+            "ResourceValue": Object {
+              "Value": "RESOURCE_ID",
+            },
+          },
+          "LogDestination": Object {
+            "StaticValue": Object {
+              "Values": Array [
+                "aws-accelerator-elb-access-logs-333333333333-us-east-1",
+              ],
+            },
+          },
+        },
+        "RetryAttemptSeconds": 60,
+        "TargetId": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":ssm:us-east-1:222222222222:document/SSM-ELB-Enable-Logging",
+            ],
+          ],
+        },
+        "TargetType": "SSM_DOCUMENT",
+      },
+      "Type": "AWS::Config::RemediationConfiguration",
+    },
+    "AcceleratorElbLoggingEnabledRemediationRole852D593A": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "ssm.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorElbLoggingEnabledRemediationRoleDefaultPolicy31D14E3C": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Config rule remediation role, created by the permission provided in config repository",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "ssm:GetAutomationExecution",
+                "ssm:StartAutomationExecution",
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1:222222222222:document/SSM-ELB-Enable-Logging",
+                  ],
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "elasticloadbalancing:DescribeLoadBalancers",
+                "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                "elasticloadbalancing:ModifyLoadBalancerAttributes",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AcceleratorElbLoggingEnabledRemediationRoleDefaultPolicy31D14E3C",
+        "Roles": Array [
+          Object {
+            "Ref": "AcceleratorElbLoggingEnabledRemediationRole852D593A",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AcceleratorElbTlsHttpsListenersOnly59A28904": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-elb-tls-https-listeners-only",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::ElasticLoadBalancing::LoadBalancer",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "ELB_TLS_HTTPS_LISTENERS_ONLY",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorEmrKerberosEnabled27B4E237": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-emr-kerberos-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "EMR_KERBEROS_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorGuarddutyNonArchivedFindings32ED20C9": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-guardduty-non-archived-findings",
+        "InputParameters": Object {
+          "daysHighSev": "1",
+          "daysLowSev": "30",
+          "daysMediumSev": "7",
+        },
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "GUARDDUTY_NON_ARCHIVED_FINDINGS",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorIamGroupHasUsersCheck5E15FE54": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-iam-group-has-users-check",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::IAM::Group",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "IAM_GROUP_HAS_USERS_CHECK",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorIamNoInlinePolicyCheckAE16B56C": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-iam-no-inline-policy-check",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::IAM::User",
+            "AWS::IAM::Role",
+            "AWS::IAM::Group",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "IAM_NO_INLINE_POLICY_CHECK",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorIamUserGroupMembershipCheck5D2DBD69": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-iam-user-group-membership-check",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::IAM::User",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "IAM_USER_GROUP_MEMBERSHIP_CHECK",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorIamUserMfaEnabled119AE0DF": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-iam-user-mfa-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "IAM_USER_MFA_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorInternetGatewayAuthorizedVpcOnly75CCD662": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-internet-gateway-authorized-vpc-only",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::EC2::InternetGateway",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "INTERNET_GATEWAY_AUTHORIZED_VPC_ONLY",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorKeyLookup0C18DA36": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::222222222222:role/AWSAccelerator-CrossAccount-SsmParameter-Role",
+            ],
+          ],
+        },
+        "invokingAccountID": "111111111111",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "222222222222",
+        "parameterName": "/accelerator/kms/key-arn",
+        "parameterRegion": "us-east-1",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorKmsCmkNotScheduledForDeletionF3796D4E": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-kms-cmk-not-scheduled-for-deletion",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::KMS::Key",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "KMS_CMK_NOT_SCHEDULED_FOR_DELETION",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorLambdaInsideVpc68BE0CC7": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-lambda-inside-vpc",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::Lambda::Function",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "LAMBDA_INSIDE_VPC",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorRdsLoggingEnabled02B0690C": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-rds-logging-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::RDS::DBInstance",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "RDS_LOGGING_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorRedshiftClusterConfigurationCheckC9D7559D": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-redshift-cluster-configuration-check",
+        "InputParameters": Object {
+          "clusterDbEncrypted": "TRUE",
+          "loggingEnabled": "TRUE",
+        },
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::Redshift::Cluster",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "REDSHIFT_CLUSTER_CONFIGURATION_CHECK",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorS3BucketDefaultLockEnabled1E1E5D5A": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-s3-bucket-default-lock-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::S3::Bucket",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "S3_BUCKET_DEFAULT_LOCK_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorS3BucketPolicyGranteeCheckA238FAF4": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-s3-bucket-policy-grantee-check",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::S3::Bucket",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "S3_BUCKET_POLICY_GRANTEE_CHECK",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorS3BucketReplicationEnabled54B924AB": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-s3-bucket-replication-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::S3::Bucket",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "S3_BUCKET_REPLICATION_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorS3BucketServerSideEncryptionEnabledB22E11D0": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-s3-bucket-server-side-encryption-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::S3::Bucket",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorS3BucketServerSideEncryptionEnabledRemediation": Object {
+      "DependsOn": Array [
+        "AcceleratorS3BucketServerSideEncryptionEnabledB22E11D0",
+      ],
+      "Properties": Object {
+        "Automatic": true,
+        "ConfigRuleName": "accelerator-s3-bucket-server-side-encryption-enabled",
+        "MaximumAutomaticAttempts": 5,
+        "Parameters": Object {
+          "AutomationAssumeRole": Object {
+            "StaticValue": Object {
+              "Values": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorS3BucketServerSideEncryptionEnabledRemediationRoleC1D55E4D",
+                    "Arn",
+                  ],
+                },
+              ],
+            },
+          },
+          "BucketName": Object {
+            "ResourceValue": Object {
+              "Value": "RESOURCE_ID",
+            },
+          },
+          "KMSMasterKey": Object {
+            "StaticValue": Object {
+              "Values": Array [
+                Object {
+                  "Ref": "AcceleratorKeyLookup0C18DA36",
+                },
+              ],
+            },
+          },
+        },
+        "RetryAttemptSeconds": 60,
+        "TargetId": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":ssm:us-east-1:222222222222:document/Put-S3-Encryption",
+            ],
+          ],
+        },
+        "TargetType": "SSM_DOCUMENT",
+      },
+      "Type": "AWS::Config::RemediationConfiguration",
+    },
+    "AcceleratorS3BucketServerSideEncryptionEnabledRemediationRoleC1D55E4D": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "ssm.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorS3BucketServerSideEncryptionEnabledRemediationRoleDefaultPolicy8B79DC01": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "AWS Config rule remediation role, created by the permission provided in config repository",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "ssm:GetAutomationExecution",
+                "ssm:StartAutomationExecution",
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1:222222222222:document/Put-S3-Encryption",
+                  ],
+                ],
+              },
+            },
+            Object {
+              "Action": Array [
+                "s3:GetEncryptionConfiguration",
+                "s3:PutEncryptionConfiguration",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalArn": Array [
+                    "arn:aws:iam::*:role/AWSAccelerator-SecuritySt-*",
+                  ],
+                },
+              },
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AcceleratorS3BucketServerSideEncryptionEnabledRemediationRoleDefaultPolicy8B79DC01",
+        "Roles": Array [
+          Object {
+            "Ref": "AcceleratorS3BucketServerSideEncryptionEnabledRemediationRoleC1D55E4D",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AcceleratorS3BucketVersioningEnabledA2D78DD3": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-s3-bucket-versioning-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::S3::Bucket",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "S3_BUCKET_VERSIONING_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorSagemakerEndpointConfigurationKmsKeyConfigured29A26847": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-sagemaker-endpoint-configuration-kms-key-configured",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorSagemakerNotebookInstanceKmsKeyConfigured98505444": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-sagemaker-notebook-instance-kms-key-configured",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorSecurityhubEnabled25B1DE1B": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-securityhub-enabled",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "SECURITYHUB_ENABLED",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorVpcSgOpenOnlyToAuthorizedPorts9EF29973": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-vpc-sg-open-only-to-authorized-ports",
+        "InputParameters": Object {
+          "authorizedTcpPorts": "443",
+          "authorizedUdpPorts": "1020-1025",
+        },
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::EC2::SecurityGroup",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "VPC_SG_OPEN_ONLY_TO_AUTHORIZED_PORTS",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AcceleratorVpcVpn2TunnelsUpBED0249E": Object {
+      "DependsOn": Array [
+        "ConfigRecorder",
+      ],
+      "Properties": Object {
+        "ConfigRuleName": "accelerator-vpc-vpn-2-tunnels-up",
+        "InputParameters": Object {},
+        "Scope": Object {
+          "ComplianceResourceTypes": Array [
+            "AWS::EC2::VPNConnection",
+          ],
+        },
+        "Source": Object {
+          "Owner": "AWS",
+          "SourceIdentifier": "VPC_VPN_2_TUNNELS_UP",
+        },
+      },
+      "Type": "AWS::Config::ConfigRule",
+    },
+    "AwsConfigChangesMetricFilter019CEB27": Object {
+      "Properties": Object {
+        "FilterPattern": "{($.eventSource=config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "AWSConfigChanges",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "Cis11RootAccountUsage27B8A444": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for usage of \\"root\\" account",
+        "AlarmName": "CIS-1.1-RootAccountUsage",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "RootAccountUsage",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis310SecurityGroupChanges08E807D3": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for security group changes",
+        "AlarmName": "CIS-3.10-SecurityGroupChanges",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "SecurityGroupChanges",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis311NetworkAclChanges9CF1F1AD": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for changes to Network Access Control Lists (NACL)",
+        "AlarmName": "CIS-3.11-NetworkACLChanges",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "NetworkACLChanges",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis312NetworkGatewayChanges1C63367E": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for changes to network gateways",
+        "AlarmName": "CIS-3.12-NetworkGatewayChanges",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "NetworkGatewayChanges",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis313RouteTableChanges2799DB8E": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for route table changes",
+        "AlarmName": "CIS-3.13-RouteTableChanges",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "RouteTableChanges",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Average",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis314VpcChanges4516C762": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for VPC changes",
+        "AlarmName": "CIS-3.14-VPCChanges",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "VPCChanges",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis31UnauthorizedApiCallsB850B3C7": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for unauthorized API calls",
+        "AlarmName": "CIS-3.1-UnauthorizedAPICalls",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "UnauthorizedAPICalls",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Average",
+        "Threshold": 5,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis32ConsoleSigninWithoutMfa8401FEDF": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for AWS Management Console sign-in without MFA",
+        "AlarmName": "CIS-3.2-ConsoleSigninWithoutMFA",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "ConsoleSigninWithoutMFA",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis33RootAccountUsage51A91DE1": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for usage of \\"root\\" account",
+        "AlarmName": "CIS-3.3-RootAccountUsage",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "RootAccountUsage",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis34IamPolicyChangesDD227791": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for IAM policy changes",
+        "AlarmName": "CIS-3.4-IAMPolicyChanges",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "IAMPolicyChanges",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Average",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis35CloudTrailChanges5766286B": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for CloudTrail configuration changes",
+        "AlarmName": "CIS-3.5-CloudTrailChanges",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "CloudTrailChanges",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis36ConsoleAuthenticationFailure01D5FCD6": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm exist for AWS Management Console authentication failures",
+        "AlarmName": "CIS-3.6-ConsoleAuthenticationFailure",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "ConsoleAuthenticationFailure",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis37DisableOrDeleteCmkA4096819": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for disabling or scheduled deletion of customer created CMKs",
+        "AlarmName": "CIS-3.7-DisableOrDeleteCMK",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "DisableOrDeleteCMK",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis38S3BucketPolicyChangesBCAEEBF2": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for S3 bucket policy changes",
+        "AlarmName": "CIS-3.8-S3BucketPolicyChanges.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "S3BucketPolicyChanges",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Average",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "Cis39AwsConfigChangesD1108027": Object {
+      "Properties": Object {
+        "AlarmActions": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+              ],
+            ],
+          },
+        ],
+        "AlarmDescription": "Alarm for AWS Config configuration changes",
+        "AlarmName": "CIS-3.9-AWSConfigChanges",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "AWSConfigChanges",
+        "Namespace": "LogMetrics",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "CloudTrailChangesMetricFilter25ABB504": Object {
+      "Properties": Object {
+        "FilterPattern": "{($.eventName=CreateTrail) || ($.eventName=UpdateTrail) || ($.eventName=DeleteTrail) || ($.eventName=StartLogging) || ($.eventName=StopLogging)}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "CloudTrailChanges",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "ConfigDeliveryChannel": Object {
+      "Properties": Object {
+        "ConfigSnapshotDeliveryProperties": Object {
+          "DeliveryFrequency": "One_Hour",
+        },
+        "S3BucketName": "aws-accelerator-central-logs-333333333333-us-east-1",
+      },
+      "Type": "AWS::Config::DeliveryChannel",
+    },
+    "ConfigRecorder": Object {
+      "Properties": Object {
+        "RecordingGroup": Object {
+          "AllSupported": true,
+          "IncludeGlobalResourceTypes": true,
+        },
+        "RoleARN": Object {
+          "Fn::GetAtt": Array [
+            "ConfigRecorderRoleC4E33AA3",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Config::ConfigurationRecorder",
+    },
+    "ConfigRecorderRoleC4E33AA3": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "ConfigRecorderRole needs managed policy service-role/AWS_ConfigRole to administer config rules",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "config.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWS_ConfigRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ConfigRecorderRoleDefaultPolicyB8261303": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "ConfigRecorderRole DefaultPolicy is built by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "s3:PutObject",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ConfigRecorderRoleDefaultPolicyB8261303",
+        "Roles": Array [
+          Object {
+            "Ref": "ConfigRecorderRoleC4E33AA3",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ConsoleAuthenticationFailureMetricFilter0F833CC2": Object {
+      "Properties": Object {
+        "FilterPattern": "{($.eventName=ConsoleLogin) && ($.errorMessage=\\"Failed authentication\\")}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "ConsoleAuthenticationFailure",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "ConsoleSigninWithoutMfaMetricFilter85B015F7": Object {
+      "Properties": Object {
+        "FilterPattern": "{($.eventName = \\"ConsoleLogin\\") && ($.additionalEventData.MFAUsed != \\"Yes\\") && ($.userIdentity.type = \\"IAMUser\\") && ($.responseElements.ConsoleLogin = \\"Success\\")}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "ConsoleSigninWithoutMFA",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1": Object {
+      "DependsOn": Array [
+        "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:DescribeOrganization",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE": Object {
+      "DependsOn": Array [
+        "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "ssm:GetParameters",
+                    "ssm:GetParameter",
+                    "ssm:DescribeParameters",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    "*",
+                  ],
+                  "Sid": "SsmGetParameterActions",
+                },
+                Object {
+                  "Action": Array [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "StsAssumeRoleActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DisableOrDeleteCmkMetricFilter4217496A": Object {
+      "Properties": Object {
+        "FilterPattern": "{($.eventSource=kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "DisableOrDeleteCMK",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "IamPolicyChangesMetricFilter29A943B3": Object {
+      "Properties": Object {
+        "FilterPattern": "{($.eventName=DeleteGroupPolicy) || ($.eventName=DeleteRolePolicy) || ($.eventName=DeleteUserPolicy) || ($.eventName=PutGroupPolicy) || ($.eventName=PutRolePolicy) || ($.eventName=PutUserPolicy) || ($.eventName=CreatePolicy) || ($.eventName=DeletePolicy) || ($.eventName=CreatePolicyVersion) || ($.eventName=DeletePolicyVersion) || ($.eventName=AttachRolePolicy) || ($.eventName=DetachRolePolicy) || ($.eventName=AttachUserPolicy) || ($.eventName=DetachUserPolicy) || ($.eventName=AttachGroupPolicy) || ($.eventName=DetachGroupPolicy)}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "IAMPolicyChanges",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "MetricFilter1B93B6E5": Object {
+      "Properties": Object {
+        "FilterPattern": "{$.userIdentity.type=\\"Root\\" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !=\\"AwsServiceEvent\\"}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "RootAccountUsage",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "NetworkAclChangesMetricFilter87734AD0": Object {
+      "Properties": Object {
+        "FilterPattern": "{($.eventName=CreateNetworkAcl) || ($.eventName=CreateNetworkAclEntry) || ($.eventName=DeleteNetworkAcl) || ($.eventName=DeleteNetworkAclEntry) || ($.eventName=ReplaceNetworkAclEntry) || ($.eventName=ReplaceNetworkAclAssociation)}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "NetworkACLChanges",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "NetworkGatewayChangesMetricFilterB8EAA32B": Object {
+      "Properties": Object {
+        "FilterPattern": "{($.eventName=CreateCustomerGateway) || ($.eventName=DeleteCustomerGateway) || ($.eventName=AttachInternetGateway) || ($.eventName=CreateInternetGateway) || ($.eventName=DeleteInternetGateway) || ($.eventName=DetachInternetGateway)}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "NetworkGatewayChanges",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "Organization29A5FC3F": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1",
+            "Arn",
+          ],
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+      },
+      "Type": "Custom::DescribeOrganization",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "RootAccountMetricFilter2CA28475": Object {
+      "Properties": Object {
+        "FilterPattern": "{$.userIdentity.type=\\"Root\\" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !=\\"AwsServiceEvent\\"}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "RootAccount",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "RouteTableChangesMetricFilter5DC8694A": Object {
+      "Properties": Object {
+        "FilterPattern": "{($.eventName=CreateRoute) || ($.eventName=CreateRouteTable) || ($.eventName=ReplaceRoute) || ($.eventName=ReplaceRouteTableAssociation) || ($.eventName=DeleteRouteTable) || ($.eventName=DeleteRoute) || ($.eventName=DisassociateRouteTable)}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "RouteTableChanges",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "S3BucketPolicyChangesMetricFilter2247C8C8": Object {
+      "Properties": Object {
+        "FilterPattern": "{($.eventSource=s3.amazonaws.com) && (($.eventName=PutBucketAcl) || ($.eventName=PutBucketPolicy) || ($.eventName=PutBucketCors) || ($.eventName=PutBucketLifecycle) || ($.eventName=PutBucketReplication) || ($.eventName=DeleteBucketPolicy) || ($.eventName=DeleteBucketCors) || ($.eventName=DeleteBucketLifecycle) || ($.eventName=DeleteBucketReplication))}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "S3BucketPolicyChanges",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "SecurityGroupChangesMetricFilterE0B65A44": Object {
+      "Properties": Object {
+        "FilterPattern": "{($.eventName=AuthorizeSecurityGroupIngress) || ($.eventName=AuthorizeSecurityGroupEgress) || ($.eventName=RevokeSecurityGroupIngress) || ($.eventName=RevokeSecurityGroupEgress) || ($.eventName=CreateSecurityGroup) || ($.eventName=DeleteSecurityGroup)}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "SecurityGroupChanges",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "SsmParamAcceleratorVersionFF83282D": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/version",
+        "Type": "String",
+        "Value": "1.1.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-SecurityResourcesStack-111111111111-us-east-1/stack-id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "UnauthorizedApiCallsMetricFilter95DF459D": Object {
+      "Properties": Object {
+        "FilterPattern": "{($.errorCode=\\"*UnauthorizedOperation\\") || ($.errorCode=\\"AccessDenied*\\")}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "UnauthorizedAPICalls",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "VpcChangesMetricFilter309EC3DF": Object {
+      "Properties": Object {
+        "FilterPattern": "{($.eventName=CreateVpc) || ($.eventName=DeleteVpc) || ($.eventName=ModifyVpcAttribute) || ($.eventName=AcceptVpcPeeringConnection) || ($.eventName=CreateVpcPeeringConnection) || ($.eventName=DeleteVpcPeeringConnection) || ($.eventName=RejectVpcPeeringConnection) || ($.eventName=AttachClassicLinkVpc) || ($.eventName=DetachClassicLinkVpc) || ($.eventName=DisableVpcClassicLink) || ($.eventName=EnableVpcClassicLink)}",
+        "LogGroupName": "aws-controltower/CloudTrailLogs",
+        "MetricTransformations": Array [
+          Object {
+            "MetricName": "VPCChanges",
+            "MetricNamespace": "LogMetrics",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+  },
+}
+`;
