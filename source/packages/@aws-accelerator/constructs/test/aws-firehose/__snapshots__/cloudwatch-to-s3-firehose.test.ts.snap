@@ -1,0 +1,491 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
+Object {
+  "Conditions": Object {
+    "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": Object {
+      "Fn::Or": Array [
+        Object {
+          "Fn::Equals": Array [
+            Object {
+              "Ref": "AWS::Region",
+            },
+            "cn-north-1",
+          ],
+        },
+        Object {
+          "Fn::Equals": Array [
+            Object {
+              "Ref": "AWS::Region",
+            },
+            "cn-northwest-1",
+          ],
+        },
+      ],
+    },
+  },
+  "Resources": Object {
+    "CloudWatchToS3FirehoseFirehoseKinesisStreamServiceRole80E25BD8": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "firehose.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "Role used by Kinesis Firehose to get records from Kinesis.",
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "kinesis:DescribeStream",
+                    "kinesis:GetShardIterator",
+                    "kinesis:GetRecords",
+                    "kinesis:ListShards",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::GetAtt": Array [
+                      "CustomStreamE8E9158E",
+                      "Arn",
+                    ],
+                  },
+                },
+                Object {
+                  "Action": Array [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:ReEncryptTo",
+                    "kms:GenerateDataKeyWithoutPlaintext",
+                    "kms:GenerateDataKeyPairWithoutPlaintext",
+                    "kms:GenerateDataKeyPair",
+                    "kms:ReEncryptFrom",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::GetAtt": Array [
+                      "CustomKinesisKey1382C574",
+                      "Arn",
+                    ],
+                  },
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "AccessKinesis",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603": Object {
+      "DependsOn": Array [
+        "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": Object {
+          "Variables": Object {
+            "DynamicS3LogPartitioningMapping": "",
+          },
+        },
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "CustomLambdaKey2287F5A9",
+            "Arn",
+          ],
+        },
+        "MemorySize": 2048,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "firehose.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "Role used by Kinesis Firehose to place Kinesis records in the central bucket.",
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "kms:Decrypt",
+                    "kms:GenerateDataKey",
+                  ],
+                  "Condition": Object {
+                    "StringEquals": Object {
+                      "kms:ViaService": "s3.someregion.amazonaws.com",
+                    },
+                    "StringLike": Object {
+                      "kms:EncryptionContext:aws:s3:arn": Object {
+                        "Fn::Join": Array [
+                          "",
+                          Array [
+                            Object {
+                              "Fn::GetAtt": Array [
+                                "CustomBucketF81FA714",
+                                "Arn",
+                              ],
+                            },
+                            "/*",
+                          ],
+                        ],
+                      },
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::GetAtt": Array [
+                      "CustomKey1E6D0D07",
+                      "Arn",
+                    ],
+                  },
+                },
+                Object {
+                  "Action": Array [
+                    "s3:AbortMultipartUpload",
+                    "s3:GetBucketLocation",
+                    "s3:GetObject",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                    "s3:PutObject",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::GetAtt": Array [
+                        "CustomBucketF81FA714",
+                        "Arn",
+                      ],
+                    },
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          Object {
+                            "Fn::GetAtt": Array [
+                              "CustomBucketF81FA714",
+                              "Arn",
+                            ],
+                          },
+                          "/*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+                Object {
+                  "Action": Array [
+                    "lambda:InvokeFunction",
+                    "lambda:GetFunctionConfiguration",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          Object {
+                            "Fn::GetAtt": Array [
+                              "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603",
+                              "Arn",
+                            ],
+                          },
+                          ":*",
+                        ],
+                      ],
+                    },
+                    Object {
+                      "Fn::GetAtt": Array [
+                        "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603",
+                        "Arn",
+                      ],
+                    },
+                  ],
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "AccessS3KmsLambda",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CloudWatchToS3FirehoseKinesisFirehoseStreamDynamicPartitioning03389B0D": Object {
+      "Properties": Object {
+        "DeliveryStreamType": "KinesisStreamAsSource",
+        "ExtendedS3DestinationConfiguration": Object {
+          "BucketARN": Object {
+            "Fn::GetAtt": Array [
+              "CustomBucketF81FA714",
+              "Arn",
+            ],
+          },
+          "BufferingHints": Object {
+            "IntervalInSeconds": 60,
+            "SizeInMBs": 64,
+          },
+          "CompressionFormat": "UNCOMPRESSED",
+          "DynamicPartitioningConfiguration": Object {
+            "Enabled": true,
+          },
+          "EncryptionConfiguration": Object {
+            "KMSEncryptionConfig": Object {
+              "AWSKMSKeyARN": Object {
+                "Fn::GetAtt": Array [
+                  "CustomKey1E6D0D07",
+                  "Arn",
+                ],
+              },
+            },
+          },
+          "ErrorOutputPrefix": "CloudWatchLogs/processing-failed",
+          "Prefix": "!{partitionKeyFromLambda:dynamicPrefix}",
+          "ProcessingConfiguration": Object {
+            "Enabled": true,
+            "Processors": Array [
+              Object {
+                "Parameters": Array [
+                  Object {
+                    "ParameterName": "LambdaArn",
+                    "ParameterValue": Object {
+                      "Fn::GetAtt": Array [
+                        "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603",
+                        "Arn",
+                      ],
+                    },
+                  },
+                  Object {
+                    "ParameterName": "NumberOfRetries",
+                    "ParameterValue": "3",
+                  },
+                ],
+                "Type": "Lambda",
+              },
+            ],
+          },
+          "RoleARN": Object {
+            "Fn::GetAtt": Array [
+              "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338",
+              "Arn",
+            ],
+          },
+        },
+        "KinesisStreamSourceConfiguration": Object {
+          "KinesisStreamARN": Object {
+            "Fn::GetAtt": Array [
+              "CustomStreamE8E9158E",
+              "Arn",
+            ],
+          },
+          "RoleARN": Object {
+            "Fn::GetAtt": Array [
+              "CloudWatchToS3FirehoseFirehoseKinesisStreamServiceRole80E25BD8",
+              "Arn",
+            ],
+          },
+        },
+      },
+      "Type": "AWS::KinesisFirehose::DeliveryStream",
+    },
+    "CustomBucketF81FA714": Object {
+      "DeletionPolicy": "Retain",
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomKey1E6D0D07": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomKinesisKey1382C574": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLambdaKey2287F5A9": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomStreamE8E9158E": Object {
+      "Properties": Object {
+        "RetentionPeriodHours": 24,
+        "ShardCount": 1,
+        "StreamEncryption": Object {
+          "Fn::If": Array [
+            "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
+            Object {
+              "Ref": "AWS::NoValue",
+            },
+            Object {
+              "EncryptionType": "KMS",
+              "KeyId": "alias/aws/kinesis",
+            },
+          ],
+        },
+        "StreamModeDetails": Object {
+          "StreamMode": "PROVISIONED",
+        },
+      },
+      "Type": "AWS::Kinesis::Stream",
+    },
+  },
+}
+`;

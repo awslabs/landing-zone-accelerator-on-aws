@@ -71,12 +71,17 @@ export abstract class GlobalConfigTypes {
     lifecycleRules: t.array(t.lifecycleRule),
   });
 
+  static readonly cloudwatchLogsConfig = t.interface({
+    dynamicPartitioning: t.nonEmptyString,
+  });
+
   static readonly loggingConfig = t.interface({
     account: t.nonEmptyString,
     cloudtrail: GlobalConfigTypes.cloudTrailConfig,
     sessionManager: GlobalConfigTypes.sessionManagerConfig,
     accessLogBucket: t.optional(GlobalConfigTypes.accessLogBucketConfig),
     centralLogBucket: t.optional(GlobalConfigTypes.centralLogBucketConfig),
+    cloudwatchLogs: t.optional(GlobalConfigTypes.cloudwatchLogsConfig),
   });
 
   static readonly artifactTypeEnum = t.enums('ArtifactType', ['REDSHIFT', 'QUICKSIGHT', 'ATHENA']);
@@ -307,6 +312,17 @@ export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes
    */
   readonly lifecycleRules: t.LifecycleRule[] = [];
 }
+
+/**
+ * Accelerator global CloudWatch Logs logging configuration
+ */
+export class CloudWatchLogsConfig implements t.TypeOf<typeof GlobalConfigTypes.cloudwatchLogsConfig> {
+  /**
+   * Declaration of Dynamic Partition for Kinesis Firehose.
+   */
+  readonly dynamicPartitioning: string = '';
+}
+
 export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingConfig> {
   /**
    * Accelerator logging account name.
@@ -330,6 +346,10 @@ export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingC
    * Declaration of a (S3 Bucket) Lifecycle rule configuration.
    */
   readonly centralLogBucket: CentralLogBucketConfig | undefined = undefined;
+  /**
+   * CloudWatch Logging configuration.
+   */
+  readonly cloudwatchLogs: CloudWatchLogsConfig | undefined = undefined;
 }
 
 /**
@@ -654,6 +674,8 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *   sessionManager:
    *     sendToCloudWatchLogs: false
    *     sendToS3: true
+   *   cloudwatchLogs:
+   *     dynamicPartitioning: logging/dynamic-partition.json
    * ```
    */
   readonly logging: LoggingConfig = new LoggingConfig();
@@ -760,6 +782,9 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         //
         this.validateLifecycleRuleExpiration(values);
         //
+        // validate cloudwatch logging
+        //
+        this.validateCloudWatchDynamicPartition(values, configDir);
         // cloudtrail settings validation
         //
         this.validateCloudTrailSettings(values);
@@ -854,7 +879,64 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   }
 
   /**
-   * Function to validate CloudTrail configuration
+<<<<<<< source/packages/@aws-accelerator/config/lib/global-config.ts
+   * Function to validate CloudWatch Logs Dynamic Partition and enforce format, key-value provided
+   * @param values
+   */
+  private validateCloudWatchDynamicPartition(
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    configDir: string,
+  ) {
+    const exampleString = JSON.stringify([
+      {
+        logGroupPattern: '/AWSAccelerator/SecurityHub',
+        s3Prefix: 'security-hub',
+      },
+    ]);
+
+    const errorMessage = `Please make dynamic partition in json array with key as logGroupPattern and s3Prefix. Here is an example: ${exampleString}`;
+
+    if (values.logging.cloudwatchLogs?.dynamicPartitioning) {
+      //read the file in
+      const dynamicPartitionValue = fs.readFileSync(
+        path.join(configDir, values.logging.cloudwatchLogs?.dynamicPartitioning),
+        'utf-8',
+      );
+      if (JSON.parse(dynamicPartitionValue)) {
+        this.checkForArray(JSON.parse(dynamicPartitionValue), errorMessage);
+      } else {
+        this.errors.push(`Not valid Json for Dynamic Partition in CloudWatch logs. ${errorMessage}`);
+      }
+    }
+  }
+
+  // Check if input is valid array and proceed to check schema
+  private checkForArray(inputStr: string, errorMessage: string) {
+    if (Array.isArray(inputStr)) {
+      this.checkSchema(inputStr, errorMessage);
+    } else {
+      this.errors.push(`Provided file is not a JSON array. ${errorMessage}`);
+    }
+  }
+
+  // check schema of each json input. Even if one is wrong abort, report bad item and provide example.
+  private checkSchema(inputStr: string, errorMessage: string) {
+    for (const eachItem of inputStr) {
+      if (!this.isDynamicLogType(eachItem)) {
+        this.errors.push(`Key value ${JSON.stringify(eachItem)} is incorrect. ${errorMessage}`);
+      } else {
+        console.log('Dynamic Partition is valid.');
+      }
+    }
+  }
+
+  // Validate this value with a custom type guard
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private isDynamicLogType(o: any): o is { logGroupPattern: string; s3Prefix: string } {
+    return 'logGroupPattern' in o && 's3Prefix' in o;
+  }
+
+  /* Function to validate CloudTrail configuration
    * If multiRegion is enabled then globalServiceEvents
    * must be enabled as well
    */

@@ -141,6 +141,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * Audit account S3 buckets are accessed by every accounts to publish security services data
    */
   protected static readonly LAMBDA_KEY_DESCRIPTION = 'AWS Accelerator Lambda Kms Key';
+  /**
+   * Accelerator  Lambda Log encryption key arn SSM parameter name
+   */
+  protected static readonly LAMBDA_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/lambda/key-arn';
 
   /**
    * @Deprecated
