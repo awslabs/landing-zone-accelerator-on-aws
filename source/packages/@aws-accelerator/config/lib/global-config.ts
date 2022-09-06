@@ -648,6 +648,10 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         // budget notification email validation
         //
         this.validateBudgetNotificationEmailIds(values);
+        //
+        // lifecycle rule expiration validation
+        //
+        this.validateLifecycleRuleExpiration(values);
       }
     } else {
       this.homeRegion = props.homeRegion;
@@ -722,6 +726,18 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         if (!emailValidator.validate(notification.address!)) {
           this.errors.push(`Invalid report notification email ${notification.address!}.`);
         }
+      }
+    }
+  }
+
+  /**
+   * Function to validate S3 lifecycle expiration to be smaller than noncurrentVersionExpiration
+   * @param values
+   */
+  private validateLifecycleRuleExpiration(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>) {
+    for (const lifecycleRule of values.reports?.costAndUsageReport?.lifecycleRules ?? []) {
+      if (lifecycleRule.noncurrentVersionExpiration! <= lifecycleRule.expiration!) {
+        this.errors.push('The nonCurrentVersionExpiration value must be greater than that of the expiration value.');
       }
     }
   }

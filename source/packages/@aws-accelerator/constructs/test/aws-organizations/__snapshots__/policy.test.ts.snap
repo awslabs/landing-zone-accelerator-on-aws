@@ -174,7 +174,7 @@ Object {
         "partition": Object {
           "Ref": "AWS::Partition",
         },
-        "path": "/Users/padebnat/Partha/work/AWS-TSD/tsd/compliance-accelerator/source/packages/@aws-accelerator/constructs/test/aws-organizations",
+        "path": "/Users/sayaaasi/Desktop/landing-zone-accelerator-sayaaasi/source/packages/@aws-accelerator/constructs/test/aws-organizations",
         "tags": Array [
           Object {
             "Key": "name",
