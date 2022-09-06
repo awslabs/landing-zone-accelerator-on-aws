@@ -16,6 +16,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 
+import { OrganizationConfig } from './organization-config';
+import { AccountsConfig } from './accounts-config';
+
 /**
  * IAM Configuration items.
  */
@@ -470,27 +473,49 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    * Validation error message list
    */
   readonly errors: string[] = [];
+  /**
+   * OUid name list
+   */
+  readonly ouIdNames: string[] = ['Root'];
+  /**
+   * Account name list
+   */
+  readonly accountNames: string[] = [];
 
   /**
    *
    * @param values
    * @param configDir
+   * @param validateConfig
    */
-  constructor(values?: t.TypeOf<typeof IamConfigTypes.iamConfig>, configDir?: string) {
+  constructor(values?: t.TypeOf<typeof IamConfigTypes.iamConfig>, configDir?: string, validateConfig?: boolean) {
     //
     // Validation errors
     //
 
     if (values) {
-      const policies: { name: string; policyFile: string }[] = [];
-      for (const policySet of values.policySets ?? []) {
-        for (const policy of policySet.policies) {
-          policies.push({ name: policy.name, policyFile: policy.policy });
-        }
-      }
+      //
+      // Validation
+      if (configDir && validateConfig) {
+        //
+        // Get list of OU ID names from organization config file
+        this.getOuIdNames(configDir);
 
-      // Validate policy file existence
-      this.validatePolicyFileExists(policies, configDir);
+        //
+        // Get list of Account names from account config file
+        this.getAccountNames(configDir);
+
+        //
+        // Validate policy file existence
+        //
+        this.validatePolicyFileExists(configDir, values);
+
+        // Validate target OU names
+        this.validateDeploymentTargetOUs(values);
+
+        // Validate target account names
+        this.validateDeploymentTargetAccountNames(values);
+      }
 
       if (this.errors.length) {
         throw new Error(`${IamConfig.FILENAME} has ${this.errors.length} issues: ${this.errors.join(' ')}`);
@@ -501,36 +526,243 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
   }
 
   /**
-   * Validate policy file existence
-   * @param policies
+   * Prepare list of OU ids from organization config file
    * @param configDir
+   */
+  private getOuIdNames(configDir: string) {
+    for (const organizationalUnit of OrganizationConfig.load(configDir).organizationalUnits) {
+      this.ouIdNames.push(organizationalUnit.name);
+    }
+  }
+
+  /**
+   * Prepare list of Account names from account config file
+   * @param configDir
+   */
+  private getAccountNames(configDir: string) {
+    for (const accountItem of [
+      ...AccountsConfig.load(configDir).mandatoryAccounts,
+      ...AccountsConfig.load(configDir).workloadAccounts,
+    ]) {
+      this.accountNames.push(accountItem.name);
+    }
+  }
+
+  /**
+   * Validate policy file existence
+   * @param configDir
+   * @param values
    * @returns
    */
-  private validatePolicyFileExists(
-    policies: {
-      name: string;
-      policyFile: string;
-    }[],
-    configDir?: string,
-  ) {
-    if (configDir) {
-      for (const policy of policies) {
-        if (!fs.existsSync(path.join(configDir, policy.policyFile))) {
-          this.errors.push(`Policy definition file ${policy.policyFile} not found, for ${policy.name} !!!`);
+  private validatePolicyFileExists(configDir: string, values: t.TypeOf<typeof IamConfigTypes.iamConfig>) {
+    const policies: { name: string; policyFile: string }[] = [];
+    for (const policySet of values.policySets ?? []) {
+      for (const policy of policySet.policies) {
+        policies.push({ name: policy.name, policyFile: policy.policy });
+      }
+    }
+
+    for (const policy of policies) {
+      if (!fs.existsSync(path.join(configDir, policy.policyFile))) {
+        this.errors.push(`Policy definition file ${policy.policyFile} not found, for ${policy.name} !!!`);
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of policy sets target account names
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validatePolicySetsAccountNames(values: t.TypeOf<typeof IamConfigTypes.iamConfig>) {
+    for (const policySet of values.policySets ?? []) {
+      for (const account of policySet.deploymentTargets.accounts ?? []) {
+        if (this.accountNames.indexOf(account) === -1) {
+          this.errors.push(
+            `Deployment target account ${account} for policy sets does not exists in accounts-config.yaml file.`,
+          );
         }
       }
     }
   }
 
   /**
+   * Function to validate existence of role sets target account names
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateRoleSetsAccountNames(values: t.TypeOf<typeof IamConfigTypes.iamConfig>) {
+    for (const roleSet of values.roleSets ?? []) {
+      for (const account of roleSet.deploymentTargets.accounts ?? []) {
+        if (this.accountNames.indexOf(account) === -1) {
+          this.errors.push(
+            `Deployment target account ${account} for role sets does not exists in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of group sets target account names
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateGroupSetsAccountNames(values: t.TypeOf<typeof IamConfigTypes.iamConfig>) {
+    for (const groupSet of values.groupSets ?? []) {
+      for (const account of groupSet.deploymentTargets.accounts ?? []) {
+        if (this.accountNames.indexOf(account) === -1) {
+          this.errors.push(
+            `Deployment target account ${account} for group sets does not exists in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of user sets target account names
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateUserSetsAccountNames(values: t.TypeOf<typeof IamConfigTypes.iamConfig>) {
+    for (const userSet of values.userSets ?? []) {
+      for (const account of userSet.deploymentTargets.accounts ?? []) {
+        if (this.accountNames.indexOf(account) === -1) {
+          this.errors.push(
+            `Deployment target account ${account} for user sets does not exists in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate Deployment targets OU name for IAM services
+   * @param values
+   */
+  private validateDeploymentTargetAccountNames(values: t.TypeOf<typeof IamConfigTypes.iamConfig>) {
+    //
+    // Validate policy sets account name
+    //
+    this.validatePolicySetsAccountNames(values);
+
+    //
+    // Validate role sets account name
+    //
+    this.validateRoleSetsAccountNames(values);
+
+    //
+    // Validate group sets account name
+    //
+    this.validateGroupSetsAccountNames(values);
+
+    //
+    // Validate user sets account name
+    //
+    this.validateUserSetsAccountNames(values);
+  }
+
+  /**
+   * Function to validate existence of policy sets deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validatePolicySetsDeploymentTargetOUs(values: t.TypeOf<typeof IamConfigTypes.iamConfig>) {
+    for (const policySet of values.policySets ?? []) {
+      for (const ou of policySet.deploymentTargets.organizationalUnits ?? []) {
+        if (this.ouIdNames.indexOf(ou) === -1) {
+          this.errors.push(
+            `Deployment target OU ${ou} for policy set does not exists in organization-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of role sets deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateRoleSetsDeploymentTargetOUs(values: t.TypeOf<typeof IamConfigTypes.iamConfig>) {
+    for (const roleSet of values.roleSets ?? []) {
+      for (const ou of roleSet.deploymentTargets.organizationalUnits ?? []) {
+        if (this.ouIdNames.indexOf(ou) === -1) {
+          this.errors.push(`Deployment target OU ${ou} for role set does not exists in organization-config.yaml file.`);
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of group sets deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateGroupSetsDeploymentTargetOUs(values: t.TypeOf<typeof IamConfigTypes.iamConfig>) {
+    for (const groupSet of values.groupSets ?? []) {
+      for (const ou of groupSet.deploymentTargets.organizationalUnits ?? []) {
+        if (this.ouIdNames.indexOf(ou) === -1) {
+          this.errors.push(
+            `Deployment target OU ${ou} for group set does not exists in organization-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of user sets deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateUserSetsDeploymentTargetOUs(values: t.TypeOf<typeof IamConfigTypes.iamConfig>) {
+    for (const userSet of values.userSets ?? []) {
+      for (const ou of userSet.deploymentTargets.organizationalUnits ?? []) {
+        if (this.ouIdNames.indexOf(ou) === -1) {
+          this.errors.push(`Deployment target OU ${ou} for user set does not exists in organization-config.yaml file.`);
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate Deployment targets OU name for IAM services
+   * @param values
+   */
+  private validateDeploymentTargetOUs(values: t.TypeOf<typeof IamConfigTypes.iamConfig>) {
+    //
+    // Validate policy sets OU name
+    //
+    this.validatePolicySetsDeploymentTargetOUs(values);
+
+    //
+    // Validate role sets OU name
+    //
+    this.validateRoleSetsDeploymentTargetOUs(values);
+
+    //
+    // Validate group sets OU name
+    //
+    this.validateGroupSetsDeploymentTargetOUs(values);
+
+    //
+    // Validate user sets OU name
+    //
+    this.validateUserSetsDeploymentTargetOUs(values);
+  }
+
+  /**
    * Load from config file content
    * @param dir
+   * @param validateConfig
    * @returns
    */
-  static load(dir: string): IamConfig {
+  static load(dir: string, validateConfig?: boolean): IamConfig {
     const buffer = fs.readFileSync(path.join(dir, IamConfig.FILENAME), 'utf8');
     const values = t.parse(IamConfigTypes.iamConfig, yaml.load(buffer));
-    return new IamConfig(values, dir);
+    return new IamConfig(values, dir, validateConfig);
   }
 
   /**

@@ -12,53 +12,16 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import * as path from 'path';
-
-import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
-import { OrganizationsStack } from '../lib/stacks/organizations-stack';
-import {
-  ACCOUNT_CONFIG,
-  GLOBAL_CONFIG,
-  IAM_CONFIG,
-  NETWORK_CONFIG,
-  ORGANIZATION_CONFIG,
-  SECURITY_CONFIG,
-} from './configs/test-config';
+import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 
 const testNamePrefix = 'Construct(OrganizationsStack): ';
 
 /**
  * OrganizationsStack
  */
-const app = new cdk.App({
-  context: { 'config-dir': path.join(__dirname, 'configs') },
-});
-const configDirPath = app.node.tryGetContext('config-dir');
-
-const env = {
-  account: '333333333333',
-  region: 'us-east-1',
-};
-
-const props: AcceleratorStackProps = {
-  env,
-  configDirPath,
-  accountsConfig: ACCOUNT_CONFIG,
-  globalConfig: GLOBAL_CONFIG,
-  iamConfig: IAM_CONFIG,
-  networkConfig: NETWORK_CONFIG,
-  organizationConfig: ORGANIZATION_CONFIG,
-  securityConfig: SECURITY_CONFIG,
-  partition: 'aws',
-};
-
-const stack = new OrganizationsStack(
-  app,
-  `${AcceleratorStackNames[AcceleratorStage.ORGANIZATIONS]}-${env.account}-${env.region}`,
-  props,
-);
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.ORGANIZATIONS, 'all-enabled', 'aws');
+const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 
 /**
  * OrganizationsStack construct test
@@ -75,14 +38,14 @@ describe('OrganizationsStack', () => {
    * Number of Lambda function resource test
    */
   test(`${testNamePrefix} Lambda function resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 13);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::Lambda::Function', 14);
   });
 
   /**
    * Number of Lambda IAM role resource test
    */
   test(`${testNamePrefix} Lambda IAM role resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 14);
+    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::Role', 16);
   });
 
   /**
@@ -135,22 +98,6 @@ describe('OrganizationsStack', () => {
   });
 
   /**
-   * IAM ServiceLinkedRole AccessAnalyzerServiceLinkedRole  resource configuration test
-   */
-  // test(`${testNamePrefix} IAM ServiceLinkedRole AccessAnalyzerServiceLinkedRole resource configuration test`, () => {
-  //   cdk.assertions.Template.fromStack(stack).templateMatches({
-  //     Resources: {
-  //       AccessAnalyzerServiceLinkedRole: {
-  //         Type: 'AWS::IAM::ServiceLinkedRole',
-  //         Properties: {
-  //           AWSServiceName: 'access-analyzer.amazonaws.com',
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
-
-  /**
    * Lambda function CustomEnableSharingWithAwsOrganizationCustomResourceProviderHandler resource configuration test
    */
   test(`${testNamePrefix} Lambda function CustomEnableSharingWithAwsOrganizationCustomResourceProviderHandler resource configuration test`, () => {
@@ -161,7 +108,7 @@ describe('OrganizationsStack', () => {
           DependsOn: ['CustomEnableSharingWithAwsOrganizationCustomResourceProviderRole4FE5EBD7'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-111111111111-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -240,7 +187,7 @@ describe('OrganizationsStack', () => {
           DependsOn: ['CustomGuardDutyEnableOrganizationAdminAccountCustomResourceProviderRole30371E09'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-111111111111-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -347,7 +294,7 @@ describe('OrganizationsStack', () => {
           DependsOn: ['CustomMacieEnableOrganizationAdminAccountCustomResourceProviderRoleA386B194'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-111111111111-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -470,7 +417,7 @@ describe('OrganizationsStack', () => {
           DependsOn: ['CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderRole59F76BA2'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-111111111111-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -543,7 +490,7 @@ describe('OrganizationsStack', () => {
           DependsOn: ['CustomOrganizationsRegisterDelegatedAdministratorCustomResourceProviderRole4B3EAD1B'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-111111111111-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -622,7 +569,7 @@ describe('OrganizationsStack', () => {
           DependsOn: ['CustomSecurityHubEnableOrganizationAdminAccountCustomResourceProviderRole1CBC866F'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-111111111111-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -759,7 +706,7 @@ describe('OrganizationsStack', () => {
           DependsOn: ['CustomEnableIpamOrganizationAdminAccountCustomResourceProviderRoleC4A018D1'],
           Properties: {
             Code: {
-              S3Bucket: 'cdk-hnb659fds-assets-333333333333-us-east-1',
+              S3Bucket: 'cdk-hnb659fds-assets-111111111111-us-east-1',
             },
             Handler: '__entrypoint__.handler',
             MemorySize: 128,
@@ -996,7 +943,7 @@ describe('OrganizationsStack', () => {
             ServiceToken: {
               'Fn::GetAtt': ['CustomEnableIpamOrganizationAdminAccountCustomResourceProviderHandlerA3CAFE25', 'Arn'],
             },
-            accountId: '222222222222',
+            accountId: '555555555555',
             region: 'us-east-1',
           },
         },

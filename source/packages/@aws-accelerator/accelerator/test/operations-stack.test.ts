@@ -13,52 +13,16 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { SynthUtils } from '@aws-cdk/assert';
-import { OperationsStack } from '../lib/stacks/operations-stack';
-import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import {
-  ACCOUNT_CONFIG,
-  GLOBAL_CONFIG,
-  IAM_CONFIG,
-  NETWORK_CONFIG,
-  ORGANIZATION_CONFIG,
-  SECURITY_CONFIG,
-} from './configs/test-config';
-import * as path from 'path';
-import { AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
+import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 
 const testNamePrefix = 'Construct(OperationsStack): ';
 
 /**
  * OperationsStack
  */
-const app = new cdk.App({
-  context: { 'config-dir': path.join(__dirname, 'configs') },
-});
-const configDirPath = app.node.tryGetContext('config-dir');
-
-const env = {
-  account: '333333333333',
-  region: 'us-east-1',
-};
-
-const props: AcceleratorStackProps = {
-  env,
-  configDirPath,
-  accountsConfig: ACCOUNT_CONFIG,
-  globalConfig: GLOBAL_CONFIG,
-  iamConfig: IAM_CONFIG,
-  networkConfig: NETWORK_CONFIG,
-  organizationConfig: ORGANIZATION_CONFIG,
-  securityConfig: SECURITY_CONFIG,
-  partition: 'aws',
-};
-
-const stack = new OperationsStack(
-  app,
-  `${AcceleratorStackNames[AcceleratorStage.OPERATIONS]}-${env.account}-${env.region}`,
-  props,
-);
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.OPERATIONS, 'all-enabled', 'aws');
+const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 
 /**
  * OperationsStack construct test
@@ -111,13 +75,6 @@ describe('OperationsStack', () => {
    */
   test(`${testNamePrefix} IAM InstanceProfile resource count test`, () => {
     cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::InstanceProfile', 1);
-  });
-
-  /**
-   * Number of IAM SAMLProvider resource test
-   */
-  test(`${testNamePrefix} IAM SAMLProvider resource count test`, () => {
-    cdk.assertions.Template.fromStack(stack).resourceCountIs('AWS::IAM::SAMLProvider', 1);
   });
 
   /**
@@ -284,7 +241,16 @@ describe('OperationsStack', () => {
     cdk.assertions.Template.fromStack(stack).templateMatches({
       Resources: {
         DefaultBoundaryPolicy489A8D26: {
-          Type: 'AWS::IAM::ManagedPolicy',
+          Metadata: {
+            cdk_nag: {
+              rules_to_suppress: [
+                {
+                  id: 'AwsSolutions-IAM5',
+                  reason: 'Policies definition are derived from accelerator iam-config boundary-policy file',
+                },
+              ],
+            },
+          },
           Properties: {
             Description: '',
             ManagedPolicyName: 'Default-Boundary-Policy',
@@ -296,10 +262,36 @@ describe('OperationsStack', () => {
                   Effect: 'Allow',
                   Resource: '*',
                 },
+                {
+                  Condition: {
+                    Bool: {
+                      'aws:MultiFactorAuthPresent': 'false',
+                      'aws:ViaAWSService': 'false',
+                    },
+                  },
+                  Effect: 'Deny',
+                  NotAction: [
+                    'iam:CreateVirtualMFADevice',
+                    'iam:DeleteVirtualMFADevice',
+                    'iam:ListVirtualMFADevices',
+                    'iam:EnableMFADevice',
+                    'iam:ResyncMFADevice',
+                    'iam:ListAccountAliases',
+                    'iam:ListUsers',
+                    'iam:ListSSHPublicKeys',
+                    'iam:ListAccessKeys',
+                    'iam:ListServiceSpecificCredentials',
+                    'iam:ListMFADevices',
+                    'iam:GetAccountSummary',
+                    'sts:GetSessionToken',
+                  ],
+                  Resource: '*',
+                },
               ],
               Version: '2012-10-17',
             },
           },
+          Type: 'AWS::IAM::ManagedPolicy',
         },
       },
     });
@@ -398,23 +390,6 @@ describe('OperationsStack', () => {
   });
 
   /**
-   * IAM SAMLProvider ProviderSamlProvider resource configuration test
-   */
-  test(`${testNamePrefix} IAM SAMLProvider ProviderSamlProvider resource configuration test`, () => {
-    cdk.assertions.Template.fromStack(stack).templateMatches({
-      Resources: {
-        ProviderSamlProviderDA84AD16: {
-          Type: 'AWS::IAM::SAMLProvider',
-          Properties: {
-            Name: 'provider',
-            SamlMetadataDocument: '',
-          },
-        },
-      },
-    });
-  });
-
-  /**
    * SSM parameter SsmParamStackId resource configuration test
    */
   test(`${testNamePrefix} SSM parameter SsmParamStackId resource configuration test`, () => {
@@ -423,7 +398,7 @@ describe('OperationsStack', () => {
         SsmParamStackId521A78D3: {
           Type: 'AWS::SSM::Parameter',
           Properties: {
-            Name: '/accelerator/AWSAccelerator-OperationsStack-333333333333-us-east-1/stack-id',
+            Name: '/accelerator/AWSAccelerator-OperationsStack-111111111111-us-east-1/stack-id',
             Type: 'String',
             Value: {
               Ref: 'AWS::StackId',
