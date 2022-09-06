@@ -92,7 +92,7 @@ export class SecurityStack extends AcceleratorStack {
       ) === -1
     ) {
       if (props.accountsConfig.containsAccount(auditAccountName)) {
-        const bucketName = `aws-accelerator-org-macie-disc-repo-${this.auditAccountId}-${cdk.Aws.REGION}`;
+        const bucketName = `aws-accelerator-macie-${this.auditAccountId}-${cdk.Aws.REGION}`;
 
         new MacieExportConfigClassification(this, 'AwsMacieUpdateExportConfigClassification', {
           bucketName: bucketName,
@@ -119,7 +119,7 @@ export class SecurityStack extends AcceleratorStack {
       ) === -1
     ) {
       if (props.accountsConfig.containsAccount(auditAccountName)) {
-        const bucketArn = `arn:${cdk.Stack.of(this).partition}:s3:::aws-accelerator-org-gduty-pub-dest-${
+        const destinationArn = `arn:${cdk.Stack.of(this).partition}:s3:::aws-accelerator-guardduty-${
           this.auditAccountId
         }-${cdk.Stack.of(this).region}`;
 

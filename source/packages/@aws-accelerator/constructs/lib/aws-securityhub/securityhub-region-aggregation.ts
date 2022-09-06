@@ -23,7 +23,7 @@ export interface SecurityHubRegionAggregationProps {
   /**
    * Custom resource lambda log group encryption key
    */
-  readonly kmsKey: cdk.aws_kms.Key;
+  readonly kmsKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log retention in days
    */

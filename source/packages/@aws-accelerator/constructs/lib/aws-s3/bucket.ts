@@ -67,7 +67,7 @@ export interface BucketProps {
    */
   s3RemovalPolicy?: cdk.RemovalPolicy;
   /**
-   * The ksm key for bucket encryption.
+   * The kms key for bucket encryption.
    */
   kmsKey?: kms.Key;
   /**
