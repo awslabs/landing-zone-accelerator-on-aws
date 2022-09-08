@@ -435,26 +435,34 @@ export class NetworkConfigTypes {
     transitGatewayAttachments: t.optional(t.array(this.transitGatewayAttachmentConfig)),
     tags: t.optional(t.array(t.tag)),
     outposts: t.optional(t.array(this.outpostsConfig)),
+    vpcFlowLogs: t.optional(t.vpcFlowLogsConfig),
   });
 
-  static readonly trafficTypeEnum = t.enums(
-    'Flow LogTrafficType',
-    ['ALL', 'ACCEPT', 'REJECT'],
-    'Value should be a flow log traffic type',
-  );
-
-  static readonly logDestinationTypeEnum = t.enums(
-    'LogDestinationTypes',
-    ['s3', 'cloud-watch-logs'],
-    'Value should be a log destination type',
-  );
-
-  static readonly vpcFlowLogsConfig = t.interface({
-    trafficType: this.trafficTypeEnum,
-    maxAggregationInterval: t.number,
-    destinations: t.array(this.logDestinationTypeEnum),
-    defaultFormat: t.boolean,
-    customFields: t.optional(t.array(t.nonEmptyString)),
+  static readonly vpcTemplatesConfig = t.interface({
+    name: t.nonEmptyString,
+    region: t.region,
+    deploymentTargets: t.deploymentTargets,
+    ipamAllocations: t.array(this.ipamAllocationConfig),
+    dhcpOptions: t.optional(t.nonEmptyString),
+    dnsFirewallRuleGroups: t.optional(t.array(this.vpcDnsFirewallAssociationConfig)),
+    enableDnsHostnames: t.optional(t.boolean),
+    enableDnsSupport: t.optional(t.boolean),
+    gatewayEndpoints: t.optional(this.gatewayEndpointConfig),
+    instanceTenancy: t.optional(this.instanceTenancyTypeEnum),
+    interfaceEndpoints: t.optional(this.interfaceEndpointConfig),
+    internetGateway: t.optional(t.boolean),
+    natGateways: t.optional(t.array(this.natGatewayConfig)),
+    useCentralEndpoints: t.optional(t.boolean),
+    securityGroups: t.optional(t.array(this.securityGroupConfig)),
+    prefixLists: t.optional(t.array(this.prefixListConfig)),
+    networkAcls: t.optional(t.array(this.networkAclConfig)),
+    queryLogs: t.optional(t.array(t.nonEmptyString)),
+    resolverRules: t.optional(t.array(t.nonEmptyString)),
+    routeTables: t.optional(t.array(this.routeTableConfig)),
+    subnets: t.optional(t.array(this.subnetConfig)),
+    transitGatewayAttachments: t.optional(t.array(this.transitGatewayAttachmentConfig)),
+    tags: t.optional(t.array(t.tag)),
+    vpcFlowLogs: t.optional(t.vpcFlowLogsConfig),
   });
 
   static readonly ruleTypeEnum = t.enums('ResolverRuleType', ['FORWARD', 'RECURSIVE', 'SYSTEM']);
@@ -489,7 +497,7 @@ export class NetworkConfigTypes {
 
   static readonly dnsQueryLogsConfig = t.interface({
     name: t.nonEmptyString,
-    destinations: t.array(this.logDestinationTypeEnum),
+    destinations: t.array(t.logDestinationTypeEnum),
     shareTargets: t.optional(t.shareTargets),
   });
 
@@ -714,7 +722,7 @@ export class NetworkConfigTypes {
   });
 
   static readonly nfwLoggingConfig = t.interface({
-    destination: this.logDestinationTypeEnum,
+    destination: t.logDestinationTypeEnum,
     type: this.nfwLogType,
   });
 
@@ -778,7 +786,7 @@ export class NetworkConfigTypes {
     endpointPolicies: t.array(this.endpointPolicyConfig),
     transitGateways: t.array(this.transitGatewayConfig),
     vpcs: t.array(this.vpcConfig),
-    vpcFlowLogs: this.vpcFlowLogsConfig,
+    vpcFlowLogs: t.vpcFlowLogsConfig,
     centralNetworkServices: t.optional(this.centralNetworkServicesConfig),
     dhcpOptions: t.optional(t.array(this.dhcpOptsConfig)),
     directConnectGateways: t.optional(t.array(this.dxGatewayConfig)),
@@ -2297,65 +2305,158 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
    *
    */
   readonly tags: t.Tag[] | undefined = undefined;
+
+  /**
+   * VPC flog log configuration
+   */
+  readonly vpcFlowLogs: t.VpcFlowLogsConfig | undefined = undefined;
 }
 
 /**
- * VPC flow logs configuration.
- * Used to customize VPC flow log output.
+ * VPC templates configuration.
+ * Used to define a VPC that is deployed to multiple accounts/OUs.
  */
-export class VpcFlowLogsConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcFlowLogsConfig> {
+export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig> {
   /**
-   * The type of traffic to log.
+   * The friendly name of the VPC.
    *
-   * @see {@link NetworkConfigTypes.trafficTypeEnum}
+   * The value of this property will be utilized as the logical id for this
+   * resource. Any references to this object should specify this value.
    */
-  readonly trafficType = 'ALL';
+  readonly name = '';
+
   /**
-   * The maximum log aggregation interval in days.
+   * The AWS region to deploy the VPCs to
    */
-  readonly maxAggregationInterval: number = 600;
+  readonly region = 'us-east-1';
+
   /**
-   * An array of destination serviced for storing logs.
+   * VPC deployment targets.
    *
-   * @see {@link NetworkConfigTypes.logDestinationTypeEnum}
+   * @remarks
+   * Targets can be account names and/or organizational units.
+   *
+   * @see {@link t.ShareTargets}
    */
-  readonly destinations: t.TypeOf<typeof NetworkConfigTypes.logDestinationTypeEnum>[] = ['s3', 'cloud-watch-logs'];
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+
   /**
-   * Enable to use the default log format for flow logs.
+   * An array of IPAM allocation configurations.
+   *
+   * @see {@link IpamAllocationConfig}
    */
-  readonly defaultFormat = false;
+  readonly ipamAllocations: IpamAllocationConfig[] = [];
+
   /**
-   * Custom fields to include in flow log outputs.
+   * The friendly name of a DHCP options set.
    */
-  readonly customFields = [
-    'version',
-    'account-id',
-    'interface-id',
-    'srcaddr',
-    'dstaddr',
-    'srcport',
-    'dstport',
-    'protocol',
-    'packets',
-    'bytes',
-    'start',
-    'end',
-    'action',
-    'log-status',
-    'vpc-id',
-    'subnet-id',
-    'instance-id',
-    'tcp-flags',
-    'type',
-    'pkt-srcaddr',
-    'pkt-dstaddr',
-    'region',
-    'az-id',
-    'pkt-src-aws-service',
-    'pkt-dst-aws-service',
-    'flow-direction',
-    'traffic-path',
-  ];
+  readonly dhcpOptions: string | undefined = undefined;
+
+  /**
+   * An array of DNS firewall VPC association configurations.
+   *
+   * @see {@link NetworkConfigTypes.vpcDnsFirewallAssociationConfig}
+   */
+  readonly dnsFirewallRuleGroups: t.TypeOf<typeof NetworkConfigTypes.vpcDnsFirewallAssociationConfig>[] | undefined =
+    undefined;
+
+  /**
+   * Defines if an internet gateway should be added to the VPC
+   */
+  readonly internetGateway: boolean | undefined = undefined;
+  /**
+   * Enable DNS hostname support for the VPC.
+   */
+  readonly enableDnsHostnames: boolean | undefined = true;
+  /**
+   * Enable DNS support for the VPC.
+   */
+  readonly enableDnsSupport: boolean | undefined = true;
+
+  /**
+   * Define instance tenancy for the VPC.
+   */
+  readonly instanceTenancy: t.TypeOf<typeof NetworkConfigTypes.instanceTenancyTypeEnum> | undefined = 'default';
+
+  /**
+   * An optional list of DNS query log configuration names.
+   */
+  readonly queryLogs: string[] | undefined = undefined;
+
+  /**
+   * An optional list of Route 53 resolver rule names.
+   */
+  readonly resolverRules: string[] | undefined = undefined;
+  /**
+   * An array of route table configurations for the VPC.
+   */
+  readonly routeTables: RouteTableConfig[] | undefined = undefined;
+  /**
+   * An array of subnet configurations for the VPC.
+   */
+  readonly subnets: SubnetConfig[] | undefined = undefined;
+  /**
+   * An array of NAT gateway configurations for the VPC.
+   */
+  readonly natGateways: NatGatewayConfig[] | undefined = undefined;
+  /**
+   * An array of Transit Gateway attachment configurations.
+   */
+  readonly transitGatewayAttachments: TransitGatewayAttachmentConfig[] | undefined = undefined;
+
+  /**
+   * An array of gateway endpoints for the VPC.
+   */
+  readonly gatewayEndpoints: GatewayEndpointConfig | undefined = undefined;
+
+  /**
+   * A list of VPC interface endpoints.
+   */
+  readonly interfaceEndpoints: InterfaceEndpointConfig | undefined = undefined;
+
+  /**
+   * When set to true, this VPC will be configured to utilize centralized
+   * endpoints. This includes having the Route 53 Private Hosted Zone
+   * associated with this VPC. Centralized endpoints are configured per
+   * region, and can span to spoke accounts
+   *
+   * @default false
+   */
+  readonly useCentralEndpoints: boolean | undefined = false;
+
+  /**
+   * A list of Security Groups to deploy for this VPC
+   *
+   * @default undefined
+   */
+  readonly securityGroups: SecurityGroupConfig[] | undefined = undefined;
+
+  /**
+   * A list of Prefix Lists to deploy for this VPC
+   *
+   * @default undefined
+   */
+  readonly prefixLists: PrefixListConfig[] | undefined = undefined;
+
+  /**
+   * A list of Network Access Control Lists (ACLs) to deploy for this VPC
+   *
+   * @default undefined
+   */
+  readonly networkAcls: NetworkAclConfig[] | undefined = undefined;
+
+  /**
+   * A list of tags to apply to this VPC
+   *
+   * @default undefined
+   *
+   */
+  readonly tags: t.Tag[] | undefined = undefined;
+
+  /**
+   * VPC flog log configuration
+   */
+  readonly vpcFlowLogs: t.VpcFlowLogsConfig | undefined = undefined;
 }
 
 /**
@@ -2467,7 +2568,7 @@ export class DnsQueryLogsConfig implements t.TypeOf<typeof NetworkConfigTypes.dn
    *
    * @see {@link NetworkConfigTypes.logDestinationTypeEnum}
    */
-  readonly destinations: t.TypeOf<typeof NetworkConfigTypes.logDestinationTypeEnum>[] = ['s3'];
+  readonly destinations: t.TypeOf<typeof t.logDestinationTypeEnum>[] = ['s3'];
   /**
    * Resource Access Manager (RAM) share targets.
    *
@@ -3250,9 +3351,9 @@ export class NfwLoggingConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwL
   /**
    * The destination service to log to.
    *
-   * @see {@link NetworkConfigTypes.logDestinationTypeEnum}
+   * @see {@link t.logDestinationTypeEnum}
    */
-  readonly destination: t.TypeOf<typeof NetworkConfigTypes.logDestinationTypeEnum> = 's3';
+  readonly destination: t.TypeOf<typeof t.logDestinationTypeEnum> = 's3';
   /**
    * The type of actions to log.
    *
@@ -3531,9 +3632,9 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   /**
    * A VPC flow logs configuration.
    *
-   * @see {@link VpcFlowLogsConfig}
+   * @see {@link t.VpcFlowLogsConfig}
    */
-  readonly vpcFlowLogs: VpcFlowLogsConfig = new VpcFlowLogsConfig();
+  readonly vpcFlowLogs: t.VpcFlowLogsConfig = new t.VpcFlowLogsConfig();
 
   /**
    * An optional list of DHCP options set configurations.

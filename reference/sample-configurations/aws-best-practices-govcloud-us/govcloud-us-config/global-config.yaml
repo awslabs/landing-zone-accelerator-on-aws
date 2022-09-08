@@ -17,4 +17,3 @@ logging:
   sessionManager:
     sendToCloudWatchLogs: true
     sendToS3: true
-

@@ -82,15 +82,18 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
     this.auditS3Key = new KeyLookup(this, 'AcceleratorAuditS3Key', {
       accountId: props.accountsConfig.getAuditAccountId(),
-      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: AcceleratorStack.S3_KEY_ARN_PARAMETER_NAME,
+      roleName: KeyStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+      keyArnParameterName: AcceleratorStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
       'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+      ),
     );
 
     // AWS Config - Set up recorder and delivery channel, only if Control Tower
@@ -282,7 +285,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
       if (this.props.securityConfig.awsConfig.enableDeliveryChannel) {
         new config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
-          s3BucketName: `${AcceleratorStack.CENTRAL_LOGS_BUCKET_NAME_PREFIX}-${this.logArchiveAccountId}-${this.props.globalConfig.homeRegion}`,
+          s3BucketName: `${AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX}-${this.logArchiveAccountId}-${this.props.globalConfig.homeRegion}`,
           configSnapshotDeliveryProperties: {
             deliveryFrequency: 'One_Hour',
           },
@@ -804,7 +807,10 @@ export class SecurityResourcesStack extends AcceleratorStack {
         return cdk.aws_kms.Key.fromKeyArn(
           this,
           pascalCase(ruleName) + '-AcceleratorGetS3Key',
-          cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.S3_KEY_ARN_PARAMETER_NAME),
+          cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            AcceleratorStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
+          ),
         ).keyArn;
       } else {
         // When specific Key ID is given
@@ -927,7 +933,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
         new SsmSessionManagerSettings(this, 'SsmSessionManagerSettings', {
           s3BucketName: `${
-            AcceleratorStack.CENTRAL_LOGS_BUCKET_NAME_PREFIX
+            AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
           }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.globalConfig.homeRegion}`,
           s3KeyPrefix: `session/${cdk.Aws.ACCOUNT_ID}/${cdk.Stack.of(this).region}`,
           s3BucketKeyArn: centralLogsBucketKey.keyArn,

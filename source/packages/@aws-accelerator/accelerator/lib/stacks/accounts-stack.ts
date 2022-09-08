@@ -44,13 +44,13 @@ export class AccountsStack extends AcceleratorStack {
         'AcceleratorGetCloudWatchKey',
         cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+          AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
         ),
       ) as cdk.aws_kms.Key;
     } else {
       this.cloudwatchKey = new cdk.aws_kms.Key(this, 'AcceleratorCloudWatchKey', {
-        alias: AcceleratorStack.CLOUDWATCH_LOG_KEY_ALIAS,
-        description: AcceleratorStack.CLOUDWATCH_LOG_KEY_DESCRIPTION,
+        alias: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ALIAS,
+        description: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_DESCRIPTION,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
@@ -73,7 +73,7 @@ export class AccountsStack extends AcceleratorStack {
       );
 
       new cdk.aws_ssm.StringParameter(this, 'AcceleratorCloudWatchKmsArnParameter', {
-        parameterName: AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        parameterName: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
         stringValue: this.cloudwatchKey.keyArn,
       });
     }
@@ -84,19 +84,22 @@ export class AccountsStack extends AcceleratorStack {
       this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
         this,
         'AcceleratorGetLambdaKey',
-        cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.LAMBDA_KEY_ARN_PARAMETER_NAME),
+        cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
+        ),
       ) as cdk.aws_kms.Key;
     } else {
       // Create KMS Key for Lambda environment variable encryption
       this.lambdaKey = new cdk.aws_kms.Key(this, 'AcceleratorLambdaKey', {
-        alias: AcceleratorStack.LAMBDA_KEY_ALIAS,
-        description: AcceleratorStack.LAMBDA_KEY_DESCRIPTION,
+        alias: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ALIAS,
+        description: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_DESCRIPTION,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
 
       new cdk.aws_ssm.StringParameter(this, 'AcceleratorLambdaKmsArnParameter', {
-        parameterName: AcceleratorStack.LAMBDA_KEY_ARN_PARAMETER_NAME,
+        parameterName: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
         stringValue: this.lambdaKey.keyArn,
       });
     }

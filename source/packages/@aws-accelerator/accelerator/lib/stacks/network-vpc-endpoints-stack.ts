@@ -61,7 +61,10 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
       'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+      ),
     ) as cdk.aws_kms.Key;
 
     //

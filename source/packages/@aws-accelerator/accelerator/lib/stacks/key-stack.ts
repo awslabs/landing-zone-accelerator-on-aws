@@ -126,7 +126,7 @@ export class KeyStack extends AcceleratorStack {
     // Only create this role in the home region stack
     if (cdk.Stack.of(this).region === props.globalConfig.homeRegion && props.organizationConfig.enable) {
       new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
-        roleName: AcceleratorStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+        roleName: AcceleratorStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
         assumedBy: new cdk.aws_iam.OrganizationPrincipal(this.organizationId),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
@@ -188,7 +188,7 @@ export class KeyStack extends AcceleratorStack {
         principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
       });
       new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
-        roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+        roleName: KeyStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
         assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
@@ -251,8 +251,8 @@ export class KeyStack extends AcceleratorStack {
   private createS3Key() {
     Logger.debug(`[key-stack] Create S3 Key`);
     const s3Key = new cdk.aws_kms.Key(this, 'AcceleratorAuditS3Key', {
-      alias: AcceleratorStack.S3_KEY_ALIAS,
-      description: AcceleratorStack.S3_KEY_DESCRIPTION,
+      alias: AcceleratorStack.ACCELERATOR_S3_KEY_ALIAS,
+      description: AcceleratorStack.ACCELERATOR_S3_KEY_DESCRIPTION,
       enableKeyRotation: true,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
@@ -318,7 +318,7 @@ export class KeyStack extends AcceleratorStack {
     });
 
     new cdk.aws_ssm.StringParameter(this, 'AcceleratorCloudWatchKmsArnParameter', {
-      parameterName: KeyStack.S3_KEY_ARN_PARAMETER_NAME,
+      parameterName: KeyStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
       stringValue: s3Key.keyArn,
     });
   }

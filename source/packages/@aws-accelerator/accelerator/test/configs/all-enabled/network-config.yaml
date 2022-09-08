@@ -555,6 +555,41 @@ vpcs:
               account: Network
               vpc: Network-Endpoints
               subnet: Network-Endpoints-A
+    vpcFlowLogs:
+      trafficType: ALL
+      maxAggregationInterval: 60
+      destinations:
+        - s3
+        - cloud-watch-logs
+      defaultFormat: true
+      customFields:
+        - version
+        - account-id
+        - interface-id
+        - srcaddr
+        - dstaddr
+        - srcport
+        - dstport
+        - protocol
+        - packets
+        - bytes
+        - start
+        - end
+        - action
+        - log-status
+        - vpc-id
+        - subnet-id
+        - instance-id
+        - tcp-flags
+        - type
+        - pkt-srcaddr
+        - pkt-dstaddr
+        - region
+        - az-id
+        - pkt-src-aws-service
+        - pkt-dst-aws-service
+        - flow-direction
+        - traffic-path
 
   - name: Network-Inspection
     account: Network
@@ -723,41 +758,46 @@ vpcs:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
-vpcFlowLogs:
-  trafficType: ALL
-  maxAggregationInterval: 600
-  destinations:
-    - s3
-    - cloud-watch-logs
-  defaultFormat: false
-  customFields:
-    - version
-    - account-id
-    - interface-id
-    - srcaddr
-    - dstaddr
-    - srcport
-    - dstport
-    - protocol
-    - packets
-    - bytes
-    - start
-    - end
-    - action
-    - log-status
-    - vpc-id
-    - subnet-id
-    - instance-id
-    - tcp-flags
-    - type
-    - pkt-srcaddr
-    - pkt-dstaddr
-    - region
-    - az-id
-    - pkt-src-aws-service
-    - pkt-dst-aws-service
-    - flow-direction
-    - traffic-path
+    vpcFlowLogs:
+      trafficType: ALL
+      maxAggregationInterval: 60
+      destinations:
+        - s3
+        - cloud-watch-logs
+      destinationsConfig:
+          s3:
+            lifecycleRules: []
+          cloudWatchLogs:
+            retentionInDays: 3653
+      defaultFormat: true
+      customFields:
+        - version
+        - account-id
+        - interface-id
+        - srcaddr
+        - dstaddr
+        - srcport
+        - dstport
+        - protocol
+        - packets
+        - bytes
+        - start
+        - end
+        - action
+        - log-status
+        - vpc-id
+        - subnet-id
+        - instance-id
+        - tcp-flags
+        - type
+        - pkt-srcaddr
+        - pkt-dstaddr
+        - region
+        - az-id
+        - pkt-src-aws-service
+        - pkt-dst-aws-service
+        - flow-direction
+        - traffic-path
 
 directConnectGateways:
   - name: Network-DXGW
@@ -791,3 +831,46 @@ vpcPeering:
     vpcs:
       - Network-Endpoints
       - Network-Inspection
+
+
+
+vpcFlowLogs:
+  trafficType: ALL
+  maxAggregationInterval: 60
+  destinations:
+    - s3
+    - cloud-watch-logs
+  destinationsConfig:
+      s3:
+        lifecycleRules: []
+      cloudWatchLogs:
+        retentionInDays: 3653
+  defaultFormat: true
+  customFields:
+    - version
+    - account-id
+    - interface-id
+    - srcaddr
+    - dstaddr
+    - srcport
+    - dstport
+    - protocol
+    - packets
+    - bytes
+    - start
+    - end
+    - action
+    - log-status
+    - vpc-id
+    - subnet-id
+    - instance-id
+    - tcp-flags
+    - type
+    - pkt-srcaddr
+    - pkt-dstaddr
+    - region
+    - az-id
+    - pkt-src-aws-service
+    - pkt-dst-aws-service
+    - flow-direction
+    - traffic-path

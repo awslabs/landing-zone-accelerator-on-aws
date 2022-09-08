@@ -30,13 +30,18 @@ import {
   SubnetConfig,
   SubnetSourceConfig,
   VpcConfig,
+  VpcFlowLogsConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import {
+  Bucket,
+  BucketEncryptionType,
+  CentralLogsBucket,
   DeleteDefaultVpc,
   DhcpOptions,
   GatewayLoadBalancer,
   IResourceShareItem,
+  KeyLookup,
   NatGateway,
   NetworkAcl,
   PrefixList,
@@ -84,6 +89,7 @@ export class NetworkVpcStack extends AcceleratorStack {
   private orgConfig: OrganizationConfig;
   private logRetention: number;
   readonly cloudwatchKey: cdk.aws_kms.Key;
+  private vpcFlowLogsBucket: Bucket | undefined;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -96,7 +102,10 @@ export class NetworkVpcStack extends AcceleratorStack {
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
       'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+      ),
     ) as cdk.aws_kms.Key;
 
     //
@@ -211,19 +220,6 @@ export class NetworkVpcStack extends AcceleratorStack {
           reason: 'DescribeTgwAttachRole needs access to every describe each transit gateway attachment in the account',
         },
       ]);
-    }
-
-    // Get the CentralLogsBucket, if needed to send vpc flow logs to
-    let centralLogsBucketArn: string | undefined = undefined;
-    if (props.networkConfig.vpcFlowLogs.destinations.includes('s3')) {
-      Logger.info(`[network-vpc-stack] S3 destination for VPC flow log detected, obtain the CentralLogsBucket`);
-
-      const centralLogsBucket = cdk.aws_s3.Bucket.fromBucketName(
-        this,
-        'CentralLogsBucket',
-        `aws-accelerator-central-logs-${this.accountsConfig.getLogArchiveAccountId()}-${props.globalConfig.homeRegion}`,
-      );
-      centralLogsBucketArn = centralLogsBucket.bucketArn;
     }
 
     //
@@ -472,6 +468,11 @@ export class NetworkVpcStack extends AcceleratorStack {
         Logger.info(`[network-vpc-stack] Adding VPC ${vpcItem.name}`);
 
         //
+        // Create Vpc flow log bucket when there are vpcs to be created
+        //
+        this.createVpcFlowLogsBucket(vpcItem);
+
+        //
         // Determine if using IPAM or manual CIDRs
         //
         let cidr: string | undefined = undefined;
@@ -596,19 +597,8 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         // Create VPC Flow Log
         //
-        let logFormat: string | undefined = undefined;
-        if (!props.networkConfig.vpcFlowLogs.defaultFormat) {
-          logFormat = props.networkConfig.vpcFlowLogs.customFields.map(c => `$\{${c}}`).join(' ');
-        }
-        vpc.addFlowLogs({
-          destinations: props.networkConfig.vpcFlowLogs.destinations,
-          trafficType: props.networkConfig.vpcFlowLogs.trafficType,
-          maxAggregationInterval: props.networkConfig.vpcFlowLogs.maxAggregationInterval,
-          logFormat,
-          logRetentionInDays: this.logRetention,
-          encryptionKey: this.cloudwatchKey,
-          bucketArn: centralLogsBucketArn,
-        });
+        this.createVpcFlowLogs(vpcItem, vpc);
+
         // Get Outpost Info
         let outpostMap = new Map<string, OutpostsConfig>();
         let outpostRouteTableMap = new Map<string, RouteTable>();
@@ -1685,5 +1675,129 @@ export class NetworkVpcStack extends AcceleratorStack {
         },
       );
     }
+  }
+
+  /**
+   * Create VPC flow logs bucket
+   */
+  private createVpcFlowLogsBucket(vpcItem: VpcConfig | VpcTemplatesConfig) {
+    let enableS3Destination = false;
+    let vpcFlowLogs: VpcFlowLogsConfig;
+    if (vpcItem.vpcFlowLogs) {
+      vpcFlowLogs = vpcItem.vpcFlowLogs;
+    } else {
+      vpcFlowLogs = this.props.networkConfig.vpcFlowLogs;
+    }
+
+    if (vpcFlowLogs.destinations.includes('s3')) {
+      enableS3Destination = true;
+    }
+
+    // When vpc item and global config do not have vpc flow log
+    if (!this.vpcFlowLogsBucket && enableS3Destination) {
+      const centralLogsBucketName = `${
+        AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+      }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.globalConfig.homeRegion}`;
+
+      this.vpcFlowLogsBucket = new Bucket(this, 'AcceleratorVpcFlowLogsBucket', {
+        encryptionType: BucketEncryptionType.SSE_KMS,
+        s3BucketName: `${AcceleratorStack.ACCELERATOR_VPC_FLOW_LOGS_BUCKET_NAME_PREFIX}-${cdk.Stack.of(this).account}-${
+          cdk.Stack.of(this).region
+        }`,
+        kmsKey: cdk.aws_kms.Key.fromKeyArn(
+          this,
+          'AcceleratorS3Key',
+          cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            AcceleratorStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
+          ),
+        ) as cdk.aws_kms.Key,
+        serverAccessLogsBucket: cdk.aws_s3.Bucket.fromBucketName(
+          this,
+          'AcceleratorS3AccessLogsBucket',
+          `${AcceleratorStack.ACCELERATOR_S3_ACCESS_LOGS_BUCKET_NAME_PREFIX}-${cdk.Stack.of(this).account}-${
+            cdk.Stack.of(this).region
+          }`,
+        ),
+        s3LifeCycleRules: this.getS3LifeCycleRules(vpcFlowLogs.destinationsConfig?.s3?.lifecycleRules),
+        replicationProps: {
+          destination: {
+            bucketName: centralLogsBucketName,
+            accountId: this.props.accountsConfig.getLogArchiveAccountId(),
+            keyArn: new KeyLookup(this, 'CentralLogsBucketKey', {
+              accountId: this.props.accountsConfig.getLogArchiveAccountId(),
+              keyRegion: this.props.globalConfig.homeRegion,
+              roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
+              keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
+              logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            }).getKey().keyArn,
+          },
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        },
+      });
+
+      this.vpcFlowLogsBucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow read bucket ACL access for delivery logging service principal',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['s3:GetBucketAcl'],
+          principals: [new cdk.aws_iam.ServicePrincipal(`delivery.logs.${cdk.Stack.of(this).urlSuffix}`)],
+          resources: [`${this.vpcFlowLogsBucket.getS3Bucket().bucketArn}`],
+        }),
+      );
+
+      this.vpcFlowLogsBucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          principals: [new cdk.aws_iam.ServicePrincipal(`delivery.logs.${cdk.Stack.of(this).urlSuffix}`)],
+          actions: ['s3:GetBucketAcl', 's3:ListBucket'],
+          resources: [this.vpcFlowLogsBucket.getS3Bucket().bucketArn],
+        }),
+      );
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `/${this.stackName}/AcceleratorVpcFlowLogsBucket/AcceleratorVpcFlowLogsBucketReplication/` +
+          pascalCase(centralLogsBucketName) +
+          '-ReplicationRole/DefaultPolicy/Resource',
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Allows only specific policy.',
+          },
+        ],
+      );
+    }
+  }
+
+  /**
+   * Function to create VPC flow logs
+   * @param vpcItem
+   * @param vpc
+   */
+  private createVpcFlowLogs(vpcItem: VpcConfig | VpcTemplatesConfig, vpc: Vpc) {
+    let logFormat: string | undefined = undefined;
+    let vpcFlowLogs: VpcFlowLogsConfig;
+
+    if (vpcItem.vpcFlowLogs) {
+      vpcFlowLogs = vpcItem.vpcFlowLogs;
+    } else {
+      vpcFlowLogs = this.props.networkConfig.vpcFlowLogs;
+    }
+
+    if (!vpcFlowLogs.defaultFormat) {
+      logFormat = vpcFlowLogs.customFields.map(c => `$\{${c}}`).join(' ');
+    }
+
+    vpc.addFlowLogs({
+      destinations: vpcFlowLogs.destinations,
+      trafficType: vpcFlowLogs.trafficType,
+      maxAggregationInterval: vpcFlowLogs.maxAggregationInterval,
+      logFormat,
+      logRetentionInDays: vpcFlowLogs.destinationsConfig?.cloudWatchLogs?.retentionInDays ?? this.logRetention,
+      encryptionKey: this.cloudwatchKey,
+      bucketArn: this.vpcFlowLogsBucket?.getS3Bucket().bucketArn,
+    });
   }
 }
