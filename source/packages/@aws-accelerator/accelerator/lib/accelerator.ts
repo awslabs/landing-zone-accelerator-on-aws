@@ -26,11 +26,6 @@ import { Logger } from './logger';
 import { AcceleratorToolkit } from './toolkit';
 
 /**
- * S3 server access logs bucket name prefix.
- */
-export const S3ServerAccessLogsBucketNamePrefix = 'aws-accelerator-s3-access-logs';
-
-/**
  * List of AWS ELB root account and regions mapping
  */
 export const AcceleratorElbRootAccounts: Record<string, string> = {

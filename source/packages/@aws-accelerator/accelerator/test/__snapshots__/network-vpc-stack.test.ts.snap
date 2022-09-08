@@ -7,6 +7,10 @@ Object {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/s3/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkipampoolshomeregionprodpoolidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
       "Default": "/accelerator/network/ipam/pools/home-region-prod-pool/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -127,6 +131,340 @@ Object {
         "PrefixListName": "accelerator-prefix-list",
       },
       "Type": "AWS::EC2::PrefixList",
+    },
+    "AcceleratorVpcFlowLogsBucketAcceleratorVpcFlowLogsBucketReplication101A908B": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
+            "Arn",
+          ],
+        },
+        "destinationAccountId": "333333333333",
+        "destinationBucketArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":s3:::aws-accelerator-central-logs-333333333333-us-east-1",
+            ],
+          ],
+        },
+        "destinationBucketKeyArn": Object {
+          "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+        },
+        "prefix": "",
+        "replicationRoleArn": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorVpcFlowLogsBucketAcceleratorVpcFlowLogsBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRole597E29D0",
+            "Arn",
+          ],
+        },
+        "sourceBucketName": Object {
+          "Ref": "AcceleratorVpcFlowLogsBucketC222BC85",
+        },
+      },
+      "Type": "Custom::S3PutBucketReplication",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorVpcFlowLogsBucketAcceleratorVpcFlowLogsBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRole597E29D0": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "s3.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Path": "/service-role/",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorVpcFlowLogsBucketAcceleratorVpcFlowLogsBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRoleDefaultPolicy9B37C6EA": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObjectLegalHold",
+                "s3:GetObjectRetention",
+                "s3:GetObjectVersion",
+                "s3:GetObjectVersionAcl",
+                "s3:GetObjectVersionForReplication",
+                "s3:GetObjectVersionTagging",
+                "s3:GetReplicationConfiguration",
+                "s3:ListBucket",
+                "s3:ReplicateDelete",
+                "s3:ReplicateObject",
+                "s3:ReplicateTags",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorVpcFlowLogsBucketC222BC85",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AcceleratorVpcFlowLogsBucketC222BC85",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "s3:GetBucketVersioning",
+                "s3:GetObjectVersionTagging",
+                "s3:ObjectOwnerOverrideToBucketOwner",
+                "s3:PutBucketVersioning",
+                "s3:ReplicateDelete",
+                "s3:ReplicateObject",
+                "s3:ReplicateTags",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":s3:::aws-accelerator-central-logs-333333333333-us-east-1/*",
+                  ],
+                ],
+              },
+            },
+            Object {
+              "Action": "kms:Decrypt",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            },
+            Object {
+              "Action": "kms:Encrypt",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ogsBucketAcceleratorVpcFlowLogsBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRoleDefaultPolicy9B37C6EA",
+        "Roles": Array [
+          Object {
+            "Ref": "AcceleratorVpcFlowLogsBucketAcceleratorVpcFlowLogsBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRole597E29D0",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AcceleratorVpcFlowLogsBucketC222BC85": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "BucketEncryption": Object {
+          "ServerSideEncryptionConfiguration": Array [
+            Object {
+              "ServerSideEncryptionByDefault": Object {
+                "KMSMasterKeyID": Object {
+                  "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                },
+                "SSEAlgorithm": "aws:kms",
+              },
+            },
+          ],
+        },
+        "BucketName": "aws-accelerator-vpc-555555555555-us-east-1",
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": "aws-accelerator-s3-access-logs-555555555555-us-east-1",
+          "LogFilePrefix": "aws-accelerator-vpc-555555555555-us-east-1/",
+        },
+        "OwnershipControls": Object {
+          "Rules": Array [
+            Object {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": Object {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "VersioningConfiguration": Object {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "AcceleratorVpcFlowLogsBucketPolicy1B925920": Object {
+      "Properties": Object {
+        "Bucket": Object {
+          "Ref": "AcceleratorVpcFlowLogsBucketC222BC85",
+        },
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "s3:*",
+              "Condition": Object {
+                "Bool": Object {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorVpcFlowLogsBucketC222BC85",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AcceleratorVpcFlowLogsBucketC222BC85",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "deny-insecure-connections",
+            },
+            Object {
+              "Action": "s3:GetBucketAcl",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "delivery.logs.",
+                      Object {
+                        "Ref": "AWS::URLSuffix",
+                      },
+                    ],
+                  ],
+                },
+              },
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "AcceleratorVpcFlowLogsBucketC222BC85",
+                  "Arn",
+                ],
+              },
+              "Sid": "Allow read bucket ACL access for delivery logging service principal",
+            },
+            Object {
+              "Action": Array [
+                "s3:GetBucketAcl",
+                "s3:ListBucket",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "delivery.logs.",
+                      Object {
+                        "Ref": "AWS::URLSuffix",
+                      },
+                    ],
+                  ],
+                },
+              },
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "AcceleratorVpcFlowLogsBucketC222BC85",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "CentralLogsBucketKeyLookup52CD8A37": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
+            ],
+          ],
+        },
+        "invokingAccountID": "555555555555",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "333333333333",
+        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
+        "parameterRegion": "us-east-1",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
     },
     "CustomDeleteDefaultVpcCustomResourceProviderHandler87E89F35": Object {
       "DependsOn": Array [
@@ -469,6 +807,199 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
+    "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C": Object {
+      "DependsOn": Array [
+        "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "iam:PassRole",
+                    "s3:PutLifecycleConfiguration",
+                    "s3:PutReplicationConfiguration",
+                    "s3:PutBucketVersioning",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "S3PutReplicationConfigurationTaskActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE": Object {
+      "DependsOn": Array [
+        "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "ssm:GetParameters",
+                    "ssm:GetParameter",
+                    "ssm:DescribeParameters",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    "*",
+                  ],
+                  "Sid": "SsmGetParameterActions",
+                },
+                Object {
+                  "Action": Array [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "StsAssumeRoleActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "DeleteDefaultVpc4DBAE36C": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
@@ -618,8 +1149,7 @@ Object {
           ],
         },
         "LogDestinationType": "cloud-watch-logs",
-        "LogFormat": "\${version} \${account-id} \${interface-id} \${srcaddr} \${dstaddr} \${srcport} \${dstport} \${protocol} \${packets} \${bytes} \${start} \${end} \${action} \${log-status} \${vpc-id} \${subnet-id} \${instance-id} \${tcp-flags} \${type} \${pkt-srcaddr} \${pkt-dstaddr} \${region} \${az-id} \${pkt-src-aws-service} \${pkt-dst-aws-service} \${flow-direction} \${traffic-path}",
-        "MaxAggregationInterval": 600,
+        "MaxAggregationInterval": 60,
         "ResourceId": Object {
           "Ref": "NetworkEndpointsVpc619A1F01",
         },
@@ -1177,17 +1707,18 @@ Object {
           "Fn::Join": Array [
             "",
             Array [
-              "arn:",
               Object {
-                "Ref": "AWS::Partition",
+                "Fn::GetAtt": Array [
+                  "AcceleratorVpcFlowLogsBucketC222BC85",
+                  "Arn",
+                ],
               },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-east-1",
+              "/vpc-flow-logs/",
             ],
           ],
         },
         "LogDestinationType": "s3",
-        "LogFormat": "\${version} \${account-id} \${interface-id} \${srcaddr} \${dstaddr} \${srcport} \${dstport} \${protocol} \${packets} \${bytes} \${start} \${end} \${action} \${log-status} \${vpc-id} \${subnet-id} \${instance-id} \${tcp-flags} \${type} \${pkt-srcaddr} \${pkt-dstaddr} \${region} \${az-id} \${pkt-src-aws-service} \${pkt-dst-aws-service} \${flow-direction} \${traffic-path}",
-        "MaxAggregationInterval": 600,
+        "MaxAggregationInterval": 60,
         "ResourceId": Object {
           "Ref": "NetworkEndpointsVpc619A1F01",
         },
@@ -1423,8 +1954,7 @@ Object {
           ],
         },
         "LogDestinationType": "cloud-watch-logs",
-        "LogFormat": "\${version} \${account-id} \${interface-id} \${srcaddr} \${dstaddr} \${srcport} \${dstport} \${protocol} \${packets} \${bytes} \${start} \${end} \${action} \${log-status} \${vpc-id} \${subnet-id} \${instance-id} \${tcp-flags} \${type} \${pkt-srcaddr} \${pkt-dstaddr} \${region} \${az-id} \${pkt-src-aws-service} \${pkt-dst-aws-service} \${flow-direction} \${traffic-path}",
-        "MaxAggregationInterval": 600,
+        "MaxAggregationInterval": 60,
         "ResourceId": Object {
           "Ref": "NetworkInspectionVpc302E00C0",
         },
@@ -1795,17 +2325,18 @@ Object {
           "Fn::Join": Array [
             "",
             Array [
-              "arn:",
               Object {
-                "Ref": "AWS::Partition",
+                "Fn::GetAtt": Array [
+                  "AcceleratorVpcFlowLogsBucketC222BC85",
+                  "Arn",
+                ],
               },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-east-1",
+              "/vpc-flow-logs/",
             ],
           ],
         },
         "LogDestinationType": "s3",
-        "LogFormat": "\${version} \${account-id} \${interface-id} \${srcaddr} \${dstaddr} \${srcport} \${dstport} \${protocol} \${packets} \${bytes} \${start} \${end} \${action} \${log-status} \${vpc-id} \${subnet-id} \${instance-id} \${tcp-flags} \${type} \${pkt-srcaddr} \${pkt-dstaddr} \${region} \${az-id} \${pkt-src-aws-service} \${pkt-dst-aws-service} \${flow-direction} \${traffic-path}",
-        "MaxAggregationInterval": 600,
+        "MaxAggregationInterval": 60,
         "ResourceId": Object {
           "Ref": "NetworkInspectionVpc302E00C0",
         },

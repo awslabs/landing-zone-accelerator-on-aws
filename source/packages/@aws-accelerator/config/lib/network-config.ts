@@ -435,6 +435,7 @@ export class NetworkConfigTypes {
     transitGatewayAttachments: t.optional(t.array(this.transitGatewayAttachmentConfig)),
     tags: t.optional(t.array(t.tag)),
     outposts: t.optional(t.array(this.outpostsConfig)),
+    vpcFlowLogs: t.optional(t.vpcFlowLogsConfig),
   });
 
   static readonly vpcTemplatesConfig = t.interface({
@@ -461,26 +462,7 @@ export class NetworkConfigTypes {
     subnets: t.optional(t.array(this.subnetConfig)),
     transitGatewayAttachments: t.optional(t.array(this.transitGatewayAttachmentConfig)),
     tags: t.optional(t.array(t.tag)),
-  });
-
-  static readonly trafficTypeEnum = t.enums(
-    'Flow LogTrafficType',
-    ['ALL', 'ACCEPT', 'REJECT'],
-    'Value should be a flow log traffic type',
-  );
-
-  static readonly logDestinationTypeEnum = t.enums(
-    'LogDestinationTypes',
-    ['s3', 'cloud-watch-logs'],
-    'Value should be a log destination type',
-  );
-
-  static readonly vpcFlowLogsConfig = t.interface({
-    trafficType: this.trafficTypeEnum,
-    maxAggregationInterval: t.number,
-    destinations: t.array(this.logDestinationTypeEnum),
-    defaultFormat: t.boolean,
-    customFields: t.optional(t.array(t.nonEmptyString)),
+    vpcFlowLogs: t.optional(t.vpcFlowLogsConfig),
   });
 
   static readonly ruleTypeEnum = t.enums('ResolverRuleType', ['FORWARD', 'RECURSIVE', 'SYSTEM']);
@@ -515,7 +497,7 @@ export class NetworkConfigTypes {
 
   static readonly dnsQueryLogsConfig = t.interface({
     name: t.nonEmptyString,
-    destinations: t.array(this.logDestinationTypeEnum),
+    destinations: t.array(t.logDestinationTypeEnum),
     shareTargets: t.optional(t.shareTargets),
   });
 
@@ -740,7 +722,7 @@ export class NetworkConfigTypes {
   });
 
   static readonly nfwLoggingConfig = t.interface({
-    destination: this.logDestinationTypeEnum,
+    destination: t.logDestinationTypeEnum,
     type: this.nfwLogType,
   });
 
@@ -804,7 +786,7 @@ export class NetworkConfigTypes {
     endpointPolicies: t.array(this.endpointPolicyConfig),
     transitGateways: t.array(this.transitGatewayConfig),
     vpcs: t.array(this.vpcConfig),
-    vpcFlowLogs: this.vpcFlowLogsConfig,
+    vpcFlowLogs: t.vpcFlowLogsConfig,
     centralNetworkServices: t.optional(this.centralNetworkServicesConfig),
     dhcpOptions: t.optional(t.array(this.dhcpOptsConfig)),
     directConnectGateways: t.optional(t.array(this.dxGatewayConfig)),
@@ -2323,6 +2305,11 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
    *
    */
   readonly tags: t.Tag[] | undefined = undefined;
+
+  /**
+   * VPC flog log configuration
+   */
+  readonly vpcFlowLogs: t.VpcFlowLogsConfig | undefined = undefined;
 }
 
 /**
@@ -2465,65 +2452,11 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
    *
    */
   readonly tags: t.Tag[] | undefined = undefined;
-}
 
-/**
- * VPC flow logs configuration.
- * Used to customize VPC flow log output.
- */
-export class VpcFlowLogsConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcFlowLogsConfig> {
   /**
-   * The type of traffic to log.
-   *
-   * @see {@link NetworkConfigTypes.trafficTypeEnum}
+   * VPC flog log configuration
    */
-  readonly trafficType = 'ALL';
-  /**
-   * The maximum log aggregation interval in days.
-   */
-  readonly maxAggregationInterval: number = 600;
-  /**
-   * An array of destination serviced for storing logs.
-   *
-   * @see {@link NetworkConfigTypes.logDestinationTypeEnum}
-   */
-  readonly destinations: t.TypeOf<typeof NetworkConfigTypes.logDestinationTypeEnum>[] = ['s3', 'cloud-watch-logs'];
-  /**
-   * Enable to use the default log format for flow logs.
-   */
-  readonly defaultFormat = false;
-  /**
-   * Custom fields to include in flow log outputs.
-   */
-  readonly customFields = [
-    'version',
-    'account-id',
-    'interface-id',
-    'srcaddr',
-    'dstaddr',
-    'srcport',
-    'dstport',
-    'protocol',
-    'packets',
-    'bytes',
-    'start',
-    'end',
-    'action',
-    'log-status',
-    'vpc-id',
-    'subnet-id',
-    'instance-id',
-    'tcp-flags',
-    'type',
-    'pkt-srcaddr',
-    'pkt-dstaddr',
-    'region',
-    'az-id',
-    'pkt-src-aws-service',
-    'pkt-dst-aws-service',
-    'flow-direction',
-    'traffic-path',
-  ];
+  readonly vpcFlowLogs: t.VpcFlowLogsConfig | undefined = undefined;
 }
 
 /**
@@ -2635,7 +2568,7 @@ export class DnsQueryLogsConfig implements t.TypeOf<typeof NetworkConfigTypes.dn
    *
    * @see {@link NetworkConfigTypes.logDestinationTypeEnum}
    */
-  readonly destinations: t.TypeOf<typeof NetworkConfigTypes.logDestinationTypeEnum>[] = ['s3'];
+  readonly destinations: t.TypeOf<typeof t.logDestinationTypeEnum>[] = ['s3'];
   /**
    * Resource Access Manager (RAM) share targets.
    *
@@ -3418,9 +3351,9 @@ export class NfwLoggingConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwL
   /**
    * The destination service to log to.
    *
-   * @see {@link NetworkConfigTypes.logDestinationTypeEnum}
+   * @see {@link t.logDestinationTypeEnum}
    */
-  readonly destination: t.TypeOf<typeof NetworkConfigTypes.logDestinationTypeEnum> = 's3';
+  readonly destination: t.TypeOf<typeof t.logDestinationTypeEnum> = 's3';
   /**
    * The type of actions to log.
    *
@@ -3699,9 +3632,9 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   /**
    * A VPC flow logs configuration.
    *
-   * @see {@link VpcFlowLogsConfig}
+   * @see {@link t.VpcFlowLogsConfig}
    */
-  readonly vpcFlowLogs: VpcFlowLogsConfig = new VpcFlowLogsConfig();
+  readonly vpcFlowLogs: t.VpcFlowLogsConfig = new t.VpcFlowLogsConfig();
 
   /**
    * An optional list of DHCP options set configurations.

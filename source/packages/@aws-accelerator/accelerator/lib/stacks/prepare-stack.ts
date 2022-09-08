@@ -111,8 +111,8 @@ export class PrepareStack extends AcceleratorStack {
 
       Logger.debug(`[prepare-stack] CloudWatch Encryption Key`);
       const cloudwatchKey = new cdk.aws_kms.Key(this, 'AcceleratorManagementCloudWatchKey', {
-        alias: AcceleratorStack.CLOUDWATCH_LOG_KEY_ALIAS,
-        description: AcceleratorStack.CLOUDWATCH_LOG_KEY_DESCRIPTION,
+        alias: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ALIAS,
+        description: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_DESCRIPTION,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
@@ -135,20 +135,20 @@ export class PrepareStack extends AcceleratorStack {
       );
 
       new cdk.aws_ssm.StringParameter(this, 'AcceleratorCloudWatchKmsArnParameter', {
-        parameterName: AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        parameterName: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
         stringValue: cloudwatchKey.keyArn,
       });
 
       Logger.debug(`[prepare-stack] Lambda Encryption Key`);
       const lambdaKey = new cdk.aws_kms.Key(this, 'AcceleratorManagementLambdaKey', {
-        alias: AcceleratorStack.LAMBDA_KEY_ALIAS,
-        description: AcceleratorStack.LAMBDA_KEY_DESCRIPTION,
+        alias: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ALIAS,
+        description: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_DESCRIPTION,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
 
       new cdk.aws_ssm.StringParameter(this, 'AcceleratorLambdaKmsArnParameter', {
-        parameterName: AcceleratorStack.LAMBDA_KEY_ARN_PARAMETER_NAME,
+        parameterName: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
         stringValue: lambdaKey.keyArn,
       });
 
