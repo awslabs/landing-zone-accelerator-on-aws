@@ -109,7 +109,7 @@ export class SecurityConfigTypes {
     /**
      * Declaration of a (S3 Bucket) Lifecycle rule.
      */
-    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
+    lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
   });
 
   /**
@@ -168,7 +168,7 @@ export class SecurityConfigTypes {
     /**
      * Declaration of a (S3 Bucket) Life cycle rule.
      */
-    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
+    lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
   });
 
   /**
@@ -204,7 +204,7 @@ export class SecurityConfigTypes {
     /**
      * Declaration of a (S3 Bucket) Life cycle rule for default audit report destination.
      */
-    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
+    lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
   });
 
   /**
@@ -565,7 +565,7 @@ export class MacieConfig implements t.TypeOf<typeof SecurityConfigTypes.macieCon
   /**
    * Declaration of a (S3 Bucket) Life cycle rule.
    */
-  readonly lifecycleRules: t.LifecycleRule[] | undefined = undefined;
+  readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
 }
 
 /**
@@ -628,7 +628,7 @@ export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guar
   /**
    * Declaration of a (S3 Bucket) Life cycle rule.
    */
-  readonly lifecycleRules: t.LifecycleRule[] | undefined = undefined;
+  readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
 }
 
 /**
@@ -668,7 +668,7 @@ export class AuditManagerConfig implements t.TypeOf<typeof SecurityConfigTypes.a
   /**
    * Declaration of a (S3 Bucket) Life cycle rule.
    */
-  readonly lifecycleRules: t.LifecycleRule[] | undefined = undefined;
+  readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
 }
 
 /**

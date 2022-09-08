@@ -48,7 +48,7 @@ export class SecurityStack extends AcceleratorStack {
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
     this.centralLogsBucketName = `${
-      AcceleratorStack.CENTRAL_LOGS_BUCKET_NAME_PREFIX
+      AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
     }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.globalConfig.homeRegion}`;
 
     this.centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
@@ -62,7 +62,10 @@ export class SecurityStack extends AcceleratorStack {
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
       'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+      ),
     ) as cdk.aws_kms.Key;
 
     //
@@ -189,8 +192,8 @@ export class SecurityStack extends AcceleratorStack {
         ) as cdk.aws_kms.Key;
       } else {
         ebsEncryptionKey = new cdk.aws_kms.Key(this, 'EbsEncryptionKey', {
-          alias: AcceleratorStack.EBS_DEFAULT_KEY_ALIAS,
-          description: AcceleratorStack.EBS_DEFAULT_KEY_DESCRIPTION,
+          alias: AcceleratorStack.ACCELERATOR_EBS_DEFAULT_KEY_ALIAS,
+          description: AcceleratorStack.ACCELERATOR_EBS_DEFAULT_KEY_DESCRIPTION,
           removalPolicy: cdk.RemovalPolicy.RETAIN,
           enableKeyRotation: true,
         });

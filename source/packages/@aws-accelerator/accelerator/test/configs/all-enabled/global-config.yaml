@@ -76,3 +76,4 @@ reports:
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
           address: myemail+pa-budg@example.com
+

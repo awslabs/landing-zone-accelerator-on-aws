@@ -43,9 +43,7 @@ import {
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { KeyStack } from './key-stack';
-import { LifecycleRule } from '@aws-accelerator/constructs/lib/aws-s3/bucket';
 import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
-import { S3ServerAccessLogsBucketNamePrefix } from '../accelerator';
 
 export class SecurityAuditStack extends AcceleratorStack {
   private readonly s3Key: cdk.aws_kms.Key;
@@ -59,20 +57,23 @@ export class SecurityAuditStack extends AcceleratorStack {
     super(scope, id, props);
 
     this.centralLogsBucketName = `${
-      AcceleratorStack.CENTRAL_LOGS_BUCKET_NAME_PREFIX
+      AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
     }-${props.accountsConfig.getLogArchiveAccountId()}-${props.globalConfig.homeRegion}`;
 
     this.s3Key = new KeyLookup(this, 'AcceleratorS3Key', {
       accountId: props.accountsConfig.getAuditAccountId(),
-      roleName: KeyStack.CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: AcceleratorStack.S3_KEY_ARN_PARAMETER_NAME,
+      roleName: KeyStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+      keyArnParameterName: AcceleratorStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
       'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+      ),
     );
 
     this.centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
@@ -150,46 +151,18 @@ export class SecurityAuditStack extends AcceleratorStack {
 
   private createCloudTrailLogsBucket() {
     Logger.info(`[security-audit-stack] CloudTrail Logging S3 Bucket`);
-    const lifecycleRules: LifecycleRule[] = [];
-    for (const lifecycleRule of this.props.globalConfig.logging.cloudtrail.lifecycleRules ?? []) {
-      const noncurrentVersionTransitions = [];
-      for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
-        noncurrentVersionTransitions.push({
-          storageClass: noncurrentVersionTransition.storageClass,
-          transitionAfter: noncurrentVersionTransition.transitionAfter,
-        });
-      }
-      const transitions = [];
-      for (const transition of lifecycleRule.transitions) {
-        transitions.push({
-          storageClass: transition.storageClass,
-          transitionAfter: transition.transitionAfter,
-        });
-      }
-      const rule: LifecycleRule = {
-        abortIncompleteMultipartUploadAfter: lifecycleRule.abortIncompleteMultipartUpload,
-        enabled: lifecycleRule.enabled,
-        expiration: lifecycleRule.expiration,
-        expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
-        id: lifecycleRule.id,
-        noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
-        noncurrentVersionTransitions,
-        transitions,
-      };
-      lifecycleRules.push(rule);
-    }
 
     const bucket = new Bucket(this, 'AcceleratorCloudTrailBucket', {
       encryptionType: BucketEncryptionType.SSE_KMS,
-      s3BucketName: `aws-accelerator-cloudtrail-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+      s3BucketName: `${AcceleratorStack.ACCELERATOR_CLOUDTRAIL_BUCKET_NAME_PREFIX}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
       kmsKey: this.s3Key,
-      serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-      lifecycleRules,
+      serverAccessLogsBucketName: `${AcceleratorStack.ACCELERATOR_S3_ACCESS_LOGS_BUCKET_NAME_PREFIX}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+      s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.cloudtrail.lifecycleRules),
       replicationProps: this.replicationProps,
     });
 
     new cdk.aws_ssm.StringParameter(this, 'SsmParamOrganizationCloudTrailLogBucketName', {
-      parameterName: '/accelerator/organization/security/cloudtrail/log/bucket-name',
+      parameterName: AcceleratorStack.ACCELERATOR_CLOUDTRAIL_BUCKET_NAME_PARAMETER_NAME,
       stringValue: bucket.getS3Bucket().bucketName,
     });
 
@@ -320,42 +293,14 @@ export class SecurityAuditStack extends AcceleratorStack {
     if (this.props.securityConfig.centralSecurityServices.auditManager?.enable) {
       Logger.info('[security-audit-stack] Adding Audit Manager ');
 
-      const lifecycleRules: LifecycleRule[] = [];
-      for (const lifecycleRule of this.props.securityConfig.centralSecurityServices.auditManager?.lifecycleRules ??
-        []) {
-        const noncurrentVersionTransitions = [];
-        for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
-          noncurrentVersionTransitions.push({
-            storageClass: noncurrentVersionTransition.storageClass,
-            transitionAfter: noncurrentVersionTransition.transitionAfter,
-          });
-        }
-        const transitions = [];
-        for (const transition of lifecycleRule.transitions) {
-          transitions.push({
-            storageClass: transition.storageClass,
-            transitionAfter: transition.transitionAfter,
-          });
-        }
-        const rule: LifecycleRule = {
-          abortIncompleteMultipartUploadAfter: lifecycleRule.abortIncompleteMultipartUpload,
-          enabled: lifecycleRule.enabled,
-          expiration: lifecycleRule.expiration,
-          expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
-          id: lifecycleRule.id,
-          noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
-          noncurrentVersionTransitions,
-          transitions,
-        };
-        lifecycleRules.push(rule);
-      }
-
       const bucket = new Bucket(this, 'AuditManagerPublishingDestinationBucket', {
         encryptionType: BucketEncryptionType.SSE_KMS,
-        s3BucketName: `aws-accelerator-auditmgr-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        s3BucketName: `${AcceleratorStack.ACCELERATOR_AUDIT_MANAGER_BUCKET_NAME_PREFIX}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         kmsKey: this.s3Key,
-        serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-        lifecycleRules,
+        serverAccessLogsBucketName: `${AcceleratorStack.ACCELERATOR_S3_ACCESS_LOGS_BUCKET_NAME_PREFIX}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        s3LifeCycleRules: this.getS3LifeCycleRules(
+          this.props.securityConfig.centralSecurityServices.auditManager?.lifecycleRules,
+        ),
         replicationProps: this.replicationProps,
       });
 
@@ -565,8 +510,8 @@ export class SecurityAuditStack extends AcceleratorStack {
     let snsKey: cdk.aws_kms.Key | undefined;
     if (this.props.securityConfig.centralSecurityServices.snsSubscriptions ?? [].length > 0) {
       snsKey = new cdk.aws_kms.Key(this, 'AcceleratorSnsKey', {
-        alias: AcceleratorStack.SNS_KEY_ALIAS,
-        description: AcceleratorStack.SNS_KEY_DESCRIPTION,
+        alias: AcceleratorStack.ACCELERATOR_SNS_KEY_ALIAS,
+        description: AcceleratorStack.ACCELERATOR_SNS_KEY_DESCRIPTION,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });

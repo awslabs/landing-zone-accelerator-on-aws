@@ -51,7 +51,7 @@ export abstract class GlobalConfigTypes {
     organizationTrail: t.boolean,
     organizationTrailSettings: t.optional(this.cloudTrailSettingsConfig),
     accountTrails: t.optional(t.array(this.accountCloudTrailConfig)),
-    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
+    lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
   });
 
   static readonly sessionManagerConfig = t.interface({
@@ -59,15 +59,15 @@ export abstract class GlobalConfigTypes {
     sendToS3: t.boolean,
     excludeRegions: t.optional(t.array(t.region)),
     excludeAccounts: t.optional(t.array(t.string)),
-    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
+    lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
   });
 
   static readonly accessLogBucketConfig = t.interface({
-    lifecycleRules: t.array(t.lifecycleRule),
+    lifecycleRules: t.array(t.lifecycleRuleConfig),
   });
 
   static readonly centralLogBucketConfig = t.interface({
-    lifecycleRules: t.array(t.lifecycleRule),
+    lifecycleRules: t.array(t.lifecycleRuleConfig),
   });
 
   static readonly cloudwatchLogsConfig = t.interface({
@@ -95,7 +95,7 @@ export abstract class GlobalConfigTypes {
     additionalArtifacts: t.optional(t.array(this.artifactTypeEnum)),
     refreshClosedReports: t.boolean,
     reportVersioning: t.enums('VersioningType', ['CREATE_NEW_REPORT', 'OVERWRITE_REPORT']),
-    lifecycleRules: t.optional(t.array(t.lifecycleRule)),
+    lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
   });
 
   static readonly notificationConfig = t.interface({
@@ -265,7 +265,7 @@ export class CloudTrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloud
   /**
    * Optional S3 Log Bucket Lifecycle rules
    */
-  readonly lifecycleRules: t.LifecycleRule[] = [];
+  readonly lifecycleRules: t.LifeCycleRule[] = [];
 }
 
 /**
@@ -293,7 +293,7 @@ export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.s
   /**
    * S3 Lifecycle rule for log storage
    */
-  readonly lifecycleRules: t.LifecycleRule[] = [];
+  readonly lifecycleRules: t.LifeCycleRule[] = [];
 }
 
 /**
@@ -303,13 +303,13 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
   /**
    * Declaration of (S3 Bucket) Lifecycle rules.
    */
-  readonly lifecycleRules: t.LifecycleRule[] = [];
+  readonly lifecycleRules: t.LifeCycleRule[] = [];
 }
 export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.centralLogBucketConfig> {
   /**
    * Declaration of (S3 Bucket) Lifecycle rules.
    */
-  readonly lifecycleRules: t.LifecycleRule[] = [];
+  readonly lifecycleRules: t.LifeCycleRule[] = [];
 }
 
 /**
@@ -394,7 +394,7 @@ export class CostAndUsageReportConfig implements t.TypeOf<typeof GlobalConfigTyp
   /**
    * Declaration of (S3 Bucket) Lifecycle rules.
    */
-  readonly lifecycleRules: t.LifecycleRule[] | undefined = undefined;
+  readonly lifecycleRules: t.LifeCycleRule[] | undefined = undefined;
 }
 
 /**
@@ -878,7 +878,6 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   }
 
   /**
-<<<<<<< source/packages/@aws-accelerator/config/lib/global-config.ts
    * Function to validate CloudWatch Logs Dynamic Partition and enforce format, key-value provided
    * @param values
    */

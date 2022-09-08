@@ -30,7 +30,7 @@ export class FinalizeStack extends AcceleratorStack {
         'AcceleratorGetCloudWatchKey',
         cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+          AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
         ),
       ) as cdk.aws_kms.Key;
 

@@ -19,6 +19,7 @@ import {
   DeploymentTargets,
   GlobalConfig,
   IamConfig,
+  LifeCycleRule,
   NetworkConfig,
   NetworkConfigTypes,
   OrganizationConfig,
@@ -27,6 +28,8 @@ import {
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
+
+import { S3LifeCycleRule } from '@aws-accelerator/constructs';
 
 import { version } from '../../../../../package.json';
 import { Logger } from '../logger';
@@ -49,15 +52,51 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected props: AcceleratorStackProps;
 
   /**
+   * Accelerator ELB logs bucket name prefix
+   */
+  public static readonly ACCELERATOR_ELB_LOGS_BUCKET_PREFIX = 'aws-accelerator-elb-access-logs';
+
+  /**
+   * Accelerator cost and usage report bucket name prefix
+   */
+  public static readonly ACCELERATOR_COST_USAGE_REPORT_BUCKET_PREFIX = 'aws-accelerator-cur';
+
+  /**
+   * Accelerator S3 access logs bucket name prefix
+   */
+  public static readonly ACCELERATOR_S3_ACCESS_LOGS_BUCKET_NAME_PREFIX = 'aws-accelerator-s3-access-logs';
+
+  /**
+   * Accelerator Audit Manager bucket name prefix
+   */
+  public static readonly ACCELERATOR_AUDIT_MANAGER_BUCKET_NAME_PREFIX = 'aws-accelerator-auditmgr';
+
+  /**
+   * Accelerator cloudtrail bucket name prefix
+   */
+  public static readonly ACCELERATOR_CLOUDTRAIL_BUCKET_NAME_PREFIX = 'aws-accelerator-cloudtrail';
+
+  /**
+   * Accelerator cloudtrail bucket name SSM parameter name
+   */
+  protected static readonly ACCELERATOR_CLOUDTRAIL_BUCKET_NAME_PARAMETER_NAME =
+    '/accelerator/organization/security/cloudtrail/log/bucket-name';
+
+  /**
+   * Accelerator VPC flow log bucket name prefix
+   */
+  public static readonly ACCELERATOR_VPC_FLOW_LOGS_BUCKET_NAME_PREFIX = 'aws-accelerator-vpc';
+
+  /**
    * Accelerator CentralLogs bucket name prefix
    */
-  public static readonly CENTRAL_LOGS_BUCKET_NAME_PREFIX = 'aws-accelerator-central-logs';
+  public static readonly ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX = 'aws-accelerator-central-logs';
   /**
    * Cross account IAM ROLE to read SSM parameter
    * IAM role to access SSM parameter from different or different region
    * This role is created in Key stack
    */
-  public static readonly CROSS_ACCOUNT_ACCESS_ROLE_NAME = 'AWSAccelerator-CrossAccount-SsmParameter-Role';
+  public static readonly ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME = 'AWSAccelerator-CrossAccount-SsmParameter-Role';
   /**
    * Accelerator generic KMS Key
    */
@@ -65,86 +104,88 @@ export abstract class AcceleratorStack extends cdk.Stack {
   /**
    * Accelerator ELB default encryption key arn SSM parameter name
    */
-  protected static readonly EBS_DEFAULT_KEY_ARN_PARAMETER_NAME = '/accelerator/ebs/default-encryption/key-arn';
+  protected static readonly ACCELERATOR_EBS_DEFAULT_KEY_ARN_PARAMETER_NAME =
+    '/accelerator/ebs/default-encryption/key-arn';
   /**
    * Accelerator ELB default encryption key alias, S3 CMK use to encrypt buckets
    * This key is created in logging stack
    */
-  protected static readonly EBS_DEFAULT_KEY_ALIAS = 'alias/accelerator/ebs/default-encryption/key';
+  protected static readonly ACCELERATOR_EBS_DEFAULT_KEY_ALIAS = 'alias/accelerator/ebs/default-encryption/key';
   /**
    * Accelerator ELB default encryption key description, S3 CMK use to encrypt buckets
    * This key is created in logging stack
    */
-  protected static readonly EBS_DEFAULT_KEY_DESCRIPTION = 'AWS Accelerator default EBS Volume Encryption key';
+  protected static readonly ACCELERATOR_EBS_DEFAULT_KEY_DESCRIPTION =
+    'AWS Accelerator default EBS Volume Encryption key';
   /**
    * Accelerator S3 encryption key arn SSM parameter name
    */
-  protected static readonly S3_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/s3/key-arn';
+  protected static readonly ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/s3/key-arn';
   /**
    * Accelerator S3 encryption key alias, S3 CMK use to encrypt buckets
    * This key is created in logging stack
    */
-  protected static readonly S3_KEY_ALIAS = 'alias/accelerator/kms/s3/key';
+  protected static readonly ACCELERATOR_S3_KEY_ALIAS = 'alias/accelerator/kms/s3/key';
   /**
    * Accelerator S3 encryption key description, S3 CMK use to encrypt buckets
    * This key is created in logging stack
    */
-  protected static readonly S3_KEY_DESCRIPTION = 'AWS Accelerator S3 Kms Key';
+  protected static readonly ACCELERATOR_S3_KEY_DESCRIPTION = 'AWS Accelerator S3 Kms Key';
   /**
    * Accelerator CloudWatch Log encryption key arn SSM parameter name
    */
-  protected static readonly CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/cloudwatch/key-arn';
+  protected static readonly ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/cloudwatch/key-arn';
   /**
    * Accelerator CloudWatch Log encryption key alias used to encrypt cloudwatch log groups
    * This key is created in Prepare, Accounts and Logging stacks
    */
-  protected static readonly CLOUDWATCH_LOG_KEY_ALIAS = 'alias/accelerator/kms/cloudwatch/key';
+  protected static readonly ACCELERATOR_CLOUDWATCH_LOG_KEY_ALIAS = 'alias/accelerator/kms/cloudwatch/key';
   /**
    * Accelerator CloudWatch Log encryption key description used to encrypt cloudwatch log groups
    * This key is created in Prepare, Accounts and Logging stacks
    */
-  protected static readonly CLOUDWATCH_LOG_KEY_DESCRIPTION = 'AWS Accelerator CloudWatch Kms Key';
+  protected static readonly ACCELERATOR_CLOUDWATCH_LOG_KEY_DESCRIPTION = 'AWS Accelerator CloudWatch Kms Key';
 
   /**
    * Accelerator Backup encryption key alias
    * Organization stack creates this key to encrypt AWS backup
    */
-  protected static readonly AWS_BACKUP_KEY_ALIAS = 'alias/accelerator/kms/backup/key';
+  protected static readonly ACCELERATOR_AWS_BACKUP_KEY_ALIAS = 'alias/accelerator/kms/backup/key';
 
   /**
    * Accelerator Backup encryption key description
    * Organization stack creates this key to encrypt AWS backup
    */
-  protected static readonly AWS_BACKUP_KEY_DESCRIPTION = 'AWS Accelerator Backup Kms Key';
+  protected static readonly ACCELERATOR_AWS_BACKUP_KEY_DESCRIPTION = 'AWS Accelerator Backup Kms Key';
 
   /**
    * Accelerator SNS encryption key alias
    * SecurityAudit stack creates this key to encrypt AWS SNS topics
    */
-  protected static readonly SNS_KEY_ALIAS = 'alias/accelerator/kms/sns/key';
+  protected static readonly ACCELERATOR_SNS_KEY_ALIAS = 'alias/accelerator/kms/sns/key';
 
   /**
    * Accelerator SNS encryption key description
    * SecurityAudit stack creates this key to encrypt AWS SNS topics
    */
-  protected static readonly SNS_KEY_DESCRIPTION = 'AWS Accelerator SNS Kms Key';
+  protected static readonly ACCELERATOR_SNS_KEY_DESCRIPTION = 'AWS Accelerator SNS Kms Key';
 
   /**
    * Accelerator Lambda Log encryption key alias
    * Accounts stack creates this key to encrypt lambda environment variables
    */
-  protected static readonly LAMBDA_KEY_ALIAS = 'alias/accelerator/kms/lambda/key';
+  protected static readonly ACCELERATOR_LAMBDA_KEY_ALIAS = 'alias/accelerator/kms/lambda/key';
 
   /**
    * Accelerator Lambda Log encryption key description
    * Key stack creates this key to encrypt Accelerator Audit account S3 encryption.
    * Audit account S3 buckets are accessed by every accounts to publish security services data
    */
-  protected static readonly LAMBDA_KEY_DESCRIPTION = 'AWS Accelerator Lambda Kms Key';
+  protected static readonly ACCELERATOR_LAMBDA_KEY_DESCRIPTION = 'AWS Accelerator Lambda Kms Key';
   /**
    * Accelerator  Lambda Log encryption key arn SSM parameter name
    */
-  protected static readonly LAMBDA_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/lambda/key-arn';
+  protected static readonly ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/lambda/key-arn';
 
   /**
    * @Deprecated
@@ -413,5 +454,42 @@ export abstract class AcceleratorStack extends cdk.Stack {
     }
 
     return false;
+  }
+
+  /**
+   * Function to get S3 life cycle rules
+   * @param lifecycleRules
+   * @returns
+   */
+  protected getS3LifeCycleRules(lifecycleRules: LifeCycleRule[] | undefined): S3LifeCycleRule[] {
+    const rules: S3LifeCycleRule[] = [];
+    for (const lifecycleRule of lifecycleRules ?? []) {
+      const noncurrentVersionTransitions = [];
+      for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions ?? []) {
+        noncurrentVersionTransitions.push({
+          storageClass: noncurrentVersionTransition.storageClass,
+          transitionAfter: noncurrentVersionTransition.transitionAfter,
+        });
+      }
+      const transitions = [];
+      for (const transition of lifecycleRule.transitions ?? []) {
+        transitions.push({
+          storageClass: transition.storageClass,
+          transitionAfter: transition.transitionAfter,
+        });
+      }
+      const rule: S3LifeCycleRule = {
+        abortIncompleteMultipartUploadAfter: lifecycleRule.abortIncompleteMultipartUpload,
+        enabled: lifecycleRule.enabled,
+        expiration: lifecycleRule.expiration,
+        expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
+        id: lifecycleRule.id,
+        noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
+        noncurrentVersionTransitions,
+        transitions,
+      };
+      rules.push(rule);
+    }
+    return rules;
   }
 }

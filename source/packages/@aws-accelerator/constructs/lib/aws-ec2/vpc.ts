@@ -593,7 +593,7 @@ export class Vpc extends cdk.Resource implements IVpc {
     if (options.destinations.includes('s3')) {
       new cdk.aws_ec2.CfnFlowLog(this, 'S3FlowLog', {
         logDestinationType: 's3',
-        logDestination: options.bucketArn,
+        logDestination: `${options.bucketArn}/vpc-flow-logs/`,
         resourceId: this.vpcId,
         resourceType: 'VPC',
         trafficType: options.trafficType,

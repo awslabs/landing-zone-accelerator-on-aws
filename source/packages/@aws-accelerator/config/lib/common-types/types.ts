@@ -278,7 +278,7 @@ export const transition = t.interface({
 
 export type Transition = t.TypeOf<typeof transition>;
 
-export const lifecycleRule = t.interface({
+export const lifecycleRuleConfig = t.interface({
   abortIncompleteMultipartUpload: optional(t.number),
   enabled: optional(t.boolean),
   expiration: optional(t.number),
@@ -289,7 +289,7 @@ export const lifecycleRule = t.interface({
   transitions: optional(t.array(transition)),
 });
 
-export class LifecycleRule implements t.TypeOf<typeof lifecycleRule> {
+export class LifeCycleRule implements t.TypeOf<typeof lifecycleRuleConfig> {
   readonly abortIncompleteMultipartUpload: number = 1;
   readonly enabled: boolean = true;
   readonly expiration: number = 1825;
@@ -325,4 +325,161 @@ export const tag = t.interface({
 export class Tag implements t.TypeOf<typeof tag> {
   readonly key: string = '';
   readonly value: string = '';
+}
+
+const trafficTypeEnum = enums(
+  'Flow LogTrafficType',
+  ['ALL', 'ACCEPT', 'REJECT'],
+  'Value should be a flow log traffic type',
+);
+
+export const logDestinationTypeEnum = enums(
+  'LogDestinationTypes',
+  ['s3', 'cloud-watch-logs'],
+  'Value should be a log destination type',
+);
+
+const vpcFlowLogsS3BucketConfig = t.interface({
+  lifecycleRules: optional(t.array(lifecycleRuleConfig)),
+});
+
+const vpcFlowLogsCloudWatchLogsConfig = t.interface({
+  retentionInDays: optional(t.number),
+  kms: optional(nonEmptyString),
+});
+
+const vpcFlowLogsDestinationConfig = t.interface({
+  s3: optional(vpcFlowLogsS3BucketConfig),
+  cloudWatchLogs: optional(vpcFlowLogsCloudWatchLogsConfig),
+});
+
+export const vpcFlowLogsConfig = t.interface({
+  trafficType: trafficTypeEnum,
+  maxAggregationInterval: t.number,
+  destinations: t.array(logDestinationTypeEnum),
+  destinationsConfig: optional(vpcFlowLogsDestinationConfig),
+  defaultFormat: t.boolean,
+  customFields: optional(t.array(nonEmptyString)),
+});
+
+/**
+ * VPC flow logs S3 destination bucket configuration.
+ */
+class VpcFlowLogsS3BucketConfig implements t.TypeOf<typeof vpcFlowLogsS3BucketConfig> {
+  /**
+   * @optional
+   * Flow log destination S3 bucket life cycle rules
+   */
+  readonly lifecycleRules: LifeCycleRule[] = [];
+}
+
+/**
+ * VPC flow logs CloudWatch logs destination configuration.
+ */
+class VpcFlowLogsCloudWatchLogsConfig implements t.TypeOf<typeof vpcFlowLogsCloudWatchLogsConfig> {
+  /**
+   * @optional
+   * CloudWatchLogs retention days
+   */
+  readonly retentionInDays = 3653;
+  /**
+   * @optional
+   * CloudWatchLogs encryption key name
+   */
+  readonly kms = undefined;
+}
+
+/**
+ * VPC flow logs destination configuration.
+ */
+class VpcFlowLogsDestinationConfig implements t.TypeOf<typeof vpcFlowLogsDestinationConfig> {
+  /**
+   * S3 Flow log destination configuration
+   * Use following configuration to enable S3 flow log destination
+   * @example
+   * ```
+   * destinations:
+   *     s3:
+   *       enable: true
+   *       lifecycleRules: []
+   * ```
+   */
+  readonly s3: VpcFlowLogsS3BucketConfig = new VpcFlowLogsS3BucketConfig();
+  /**
+   * CloudWatchLogs Flow log destination configuration
+   * Use following configuration to enable CloudWatchLogs flow log destination
+   * @example
+   * ```
+   * destinations:
+   *     cloudWatchLogs:
+   *       enable: true
+   *       retentionInDays: 3653
+   * ```
+   */
+  readonly cloudWatchLogs: VpcFlowLogsCloudWatchLogsConfig = new VpcFlowLogsCloudWatchLogsConfig();
+}
+
+/**
+ * VPC flow logs configuration.
+ * Used to customize VPC flow log output.
+ */
+export class VpcFlowLogsConfig implements t.TypeOf<typeof vpcFlowLogsConfig> {
+  /**
+   * The type of traffic to log.
+   *
+   * @see {@link trafficTypeEnum}
+   */
+  readonly trafficType = 'ALL';
+  /**
+   * The maximum log aggregation interval in days.
+   */
+  readonly maxAggregationInterval: number = 600;
+  /**
+   * An array of destination serviced for storing logs.
+   *
+   * @see {@link NetworkConfigTypes.logDestinationTypeEnum}
+   */
+  readonly destinations: t.TypeOf<typeof logDestinationTypeEnum>[] = ['s3', 'cloud-watch-logs'];
+  /**
+   * @optional
+   * VPC Flow log detonations properties. Use this property to specify S3 and CloudWatchLogs properties
+   * @see {@link VpcFlowLogsDestinationConfig}
+   */
+  readonly destinationsConfig: VpcFlowLogsDestinationConfig = new VpcFlowLogsDestinationConfig();
+  /**
+   * Enable to use the default log format for flow logs.
+   */
+  readonly defaultFormat = false;
+  /**
+   * Custom fields to include in flow log outputs.
+   */
+  readonly customFields = [
+    'version',
+    'account-id',
+    'interface-id',
+    'srcaddr',
+    'dstaddr',
+    'srcport',
+    'dstport',
+    'protocol',
+    'packets',
+    'bytes',
+    'start',
+    'end',
+    'action',
+    'log-status',
+    'vpc-id',
+    'subnet-id',
+    'instance-id',
+    'tcp-flags',
+    'type',
+    'pkt-srcaddr',
+    'pkt-dstaddr',
+    'region',
+    'az-id',
+    'pkt-src-aws-service',
+    'pkt-dst-aws-service',
+    'flow-direction',
+    'traffic-path',
+  ];
 }

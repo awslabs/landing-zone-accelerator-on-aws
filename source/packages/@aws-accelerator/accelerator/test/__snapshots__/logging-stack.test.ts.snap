@@ -2,12 +2,6 @@
 
 exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
 Object {
-  "Parameters": Object {
-    "SsmParameterValueacceleratorloggingcentralbucketkmsarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
-      "Default": "/accelerator/logging/central-bucket/kms/arn",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
-  },
   "Resources": Object {
     "Accelerator3KeyAliasA5E4BDCB": Object {
       "Properties": Object {
@@ -69,6 +63,35 @@ Object {
               },
               "Resource": "*",
               "Sid": "Allow S3 to use the encryption key",
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:GenerateDataKey",
+                "kms:GenerateDataKeyPair",
+                "kms:GenerateDataKeyPairWithoutPlaintext",
+                "kms:GenerateDataKeyWithoutPlaintext",
+                "kms:ReEncryptFrom",
+                "kms:ReEncryptTo",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "delivery.logs.",
+                      Object {
+                        "Ref": "AWS::URLSuffix",
+                      },
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+              "Sid": "Allow AWS Services to encrypt and describe logs",
             },
           ],
           "Version": "2012-10-17",
@@ -2158,7 +2181,10 @@ Object {
                   },
                   "Effect": "Allow",
                   "Resource": Object {
-                    "Ref": "SsmParameterValueacceleratorloggingcentralbucketkmsarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                    "Fn::GetAtt": Array [
+                      "CentralLogsBucketCmkBA0AB2FC",
+                      "Arn",
+                    ],
                   },
                 },
                 Object {
@@ -2273,7 +2299,10 @@ Object {
           "EncryptionConfiguration": Object {
             "KMSEncryptionConfig": Object {
               "AWSKMSKeyARN": Object {
-                "Ref": "SsmParameterValueacceleratorloggingcentralbucketkmsarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                "Fn::GetAtt": Array [
+                  "CentralLogsBucketCmkBA0AB2FC",
+                  "Arn",
+                ],
               },
             },
           },
@@ -2431,6 +2460,16 @@ Object {
       "Type": "AWS::IAM::Role",
     },
     "LogsKinesisStreamCfn": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-KDS3",
+              "reason": "Customer managed key is being used to encrypt Kinesis Data Stream",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,

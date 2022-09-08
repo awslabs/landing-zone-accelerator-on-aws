@@ -40,10 +40,8 @@ import {
   ReportDefinition,
   SecurityHubOrganizationAdminAccount,
 } from '@aws-accelerator/constructs';
-import { LifecycleRule } from '@aws-accelerator/constructs/lib/aws-s3/bucket';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
-import { S3ServerAccessLogsBucketNamePrefix } from '../accelerator';
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
@@ -73,7 +71,10 @@ export class OrganizationsStack extends AcceleratorStack {
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
       'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(this, AcceleratorStack.CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME),
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+      ),
     ) as cdk.aws_kms.Key;
 
     this.centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
@@ -87,7 +88,7 @@ export class OrganizationsStack extends AcceleratorStack {
     this.centralLogBucketReplicationProps = {
       destination: {
         bucketName: `${
-          AcceleratorStack.CENTRAL_LOGS_BUCKET_NAME_PREFIX
+          AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
         }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
           this.stackProperties.globalConfig.homeRegion
         }`,
@@ -183,8 +184,8 @@ export class OrganizationsStack extends AcceleratorStack {
       role.addManagedPolicy(managedBackupPolicy);
 
       const backupKey = new cdk.aws_kms.Key(this, 'AcceleratorBackupKey', {
-        alias: AcceleratorStack.AWS_BACKUP_KEY_ALIAS,
-        description: AcceleratorStack.AWS_BACKUP_KEY_DESCRIPTION,
+        alias: AcceleratorStack.ACCELERATOR_AWS_BACKUP_KEY_ALIAS,
+        description: AcceleratorStack.ACCELERATOR_AWS_BACKUP_KEY_DESCRIPTION,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
@@ -254,40 +255,15 @@ export class OrganizationsStack extends AcceleratorStack {
     if (this.stackProperties.globalConfig.reports?.costAndUsageReport) {
       Logger.info('[organizations-stack] Adding Cost and Usage Reports');
 
-      const lifecycleRules: LifecycleRule[] = [];
-      for (const lifecycleRule of this.stackProperties.globalConfig.reports.costAndUsageReport.lifecycleRules ?? []) {
-        const noncurrentVersionTransitions = [];
-        for (const noncurrentVersionTransition of lifecycleRule.noncurrentVersionTransitions) {
-          noncurrentVersionTransitions.push({
-            storageClass: noncurrentVersionTransition.storageClass,
-            transitionAfter: noncurrentVersionTransition.transitionAfter,
-          });
-        }
-        const transitions = [];
-        for (const transition of lifecycleRule.transitions) {
-          transitions.push({
-            storageClass: transition.storageClass,
-            transitionAfter: transition.transitionAfter,
-          });
-        }
-        const rule: LifecycleRule = {
-          abortIncompleteMultipartUploadAfter: lifecycleRule.abortIncompleteMultipartUpload,
-          enabled: lifecycleRule.enabled,
-          expiration: lifecycleRule.expiration,
-          expiredObjectDeleteMarker: lifecycleRule.expiredObjectDeleteMarker,
-          id: lifecycleRule.id,
-          noncurrentVersionExpiration: lifecycleRule.noncurrentVersionExpiration,
-          noncurrentVersionTransitions,
-          transitions,
-        };
-        lifecycleRules.push(rule);
-      }
-
       const reportBucket = new Bucket(this, 'ReportBucket', {
         encryptionType: BucketEncryptionType.SSE_S3, // CUR does not support KMS CMK
-        s3BucketName: `aws-accelerator-cur-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
-        serverAccessLogsBucketName: `${S3ServerAccessLogsBucketNamePrefix}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-        lifecycleRules,
+        s3BucketName: `${AcceleratorStack.ACCELERATOR_COST_USAGE_REPORT_BUCKET_PREFIX}-${cdk.Stack.of(this).account}-${
+          cdk.Stack.of(this).region
+        }`,
+        serverAccessLogsBucketName: `${AcceleratorStack.ACCELERATOR_S3_ACCESS_LOGS_BUCKET_NAME_PREFIX}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        s3LifeCycleRules: this.getS3LifeCycleRules(
+          this.stackProperties.globalConfig.reports.costAndUsageReport.lifecycleRules,
+        ),
         replicationProps: this.centralLogBucketReplicationProps,
       });
 
@@ -297,7 +273,7 @@ export class OrganizationsStack extends AcceleratorStack {
         `/${this.stackName}/ReportBucket/ReportBucketReplication/` +
           pascalCase(
             `${
-              AcceleratorStack.CENTRAL_LOGS_BUCKET_NAME_PREFIX
+              AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
             }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
               this.stackProperties.globalConfig.homeRegion
             }`,
@@ -672,7 +648,7 @@ export class OrganizationsStack extends AcceleratorStack {
           this,
           'CentralLogsBucket',
           `${
-            AcceleratorStack.CENTRAL_LOGS_BUCKET_NAME_PREFIX
+            AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
           }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${cdk.Stack.of(this).region}`,
         ),
         s3KeyPrefix: 'cloudtrail-organization',

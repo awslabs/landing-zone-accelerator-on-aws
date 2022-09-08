@@ -49,7 +49,7 @@ interface Transition {
   transitionAfter: number;
 }
 
-export interface LifecycleRule {
+export interface S3LifeCycleRule {
   abortIncompleteMultipartUploadAfter: number;
   enabled: boolean;
   expiration: number;
@@ -110,7 +110,7 @@ export interface BucketProps {
   /**
    *
    */
-  lifecycleRules?: LifecycleRule[];
+  s3LifeCycleRules?: S3LifeCycleRule[];
 
   /**
    * Prefix to use in the target bucket for server access logs.
@@ -315,8 +315,8 @@ export class Bucket extends Construct {
   }
 
   private setLifeCycleRules() {
-    if (this.props.lifecycleRules) {
-      for (const lifecycleRuleConfig of this.props.lifecycleRules) {
+    if (this.props.s3LifeCycleRules) {
+      for (const lifecycleRuleConfig of this.props.s3LifeCycleRules) {
         const transitions = [];
         const noncurrentVersionTransitions = [];
 
