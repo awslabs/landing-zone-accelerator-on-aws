@@ -29,8 +29,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const region = event.ResourceProperties['region'];
-  const inputStandards: { name: string; enable: boolean; controlsToDisable: string[] | undefined }[] =
-    event.ResourceProperties['standards'];
+
+  const inputStandards = JSON.parse(JSON.stringify(event.ResourceProperties['standards']));
 
   const securityHubClient = new AWS.SecurityHub({ region: region });
 
@@ -57,8 +57,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     inputStandards,
     awsSecurityHubStandards,
   );
-  console.log('standardsModificationList');
-  console.log(standardsModificationList);
 
   switch (event.RequestType) {
     case 'Create':
@@ -266,10 +264,6 @@ async function getControlArnsToModify(
       }
     }
   }
-  console.log('***********');
-  console.log(disableStandardControls);
-  console.log(enableStandardControls);
-  console.log('***********');
 
   return { disableStandardControlArns: disableStandardControls, enableStandardControlArns: enableStandardControls };
 }
@@ -282,7 +276,7 @@ async function getControlArnsToModify(
  */
 async function getStandardsModificationList(
   securityHubClient: AWS.SecurityHub,
-  inputStandards: { name: string; enable: boolean; controlsToDisable: string[] | undefined }[],
+  inputStandards: { name: string; enable: string; controlsToDisable: string[] | undefined }[],
   awsSecurityHubStandards: { [name: string]: string }[],
 ): Promise<{
   toEnableStandardRequests: AWS.SecurityHub.StandardsSubscriptionRequests;
@@ -292,8 +286,14 @@ async function getStandardsModificationList(
   const toEnableStandardRequests: AWS.SecurityHub.StandardsSubscriptionRequests = [];
   const toDisableStandardArns: string[] | undefined = [];
 
+  if (!inputStandards || inputStandards.length === 0) {
+    for (const existingEnabledStandard of existingEnabledStandards) {
+      toDisableStandardArns.push(existingEnabledStandard?.StandardsSubscriptionArn);
+    }
+  }
+
   for (const inputStandard of inputStandards) {
-    if (inputStandard.enable) {
+    if (inputStandard.enable === 'true') {
       for (const awsSecurityHubStandard of awsSecurityHubStandards) {
         if (awsSecurityHubStandard[inputStandard.name]) {
           const existingEnabledStandard = existingEnabledStandards.filter(
