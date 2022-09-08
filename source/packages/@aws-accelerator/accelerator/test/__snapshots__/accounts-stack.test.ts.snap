@@ -13,64 +13,6 @@ Object {
     },
   },
   "Resources": Object {
-    "AcceleratorLambdaKeyAlias4E15225B": Object {
-      "Properties": Object {
-        "AliasName": "alias/accelerator/kms/lambda/key",
-        "TargetKeyId": Object {
-          "Fn::GetAtt": Array [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::KMS::Alias",
-    },
-    "AcceleratorLambdaKeyD279839E": Object {
-      "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "Description": "AWS Accelerator Lambda Kms Key",
-        "EnableKeyRotation": true,
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
-              "Action": "kms:*",
-              "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "arn:",
-                      Object {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::111111111111:root",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::KMS::Key",
-      "UpdateReplacePolicy": "Retain",
-    },
-    "AcceleratorLambdaKmsArnParameterFECEE80C": Object {
-      "Properties": Object {
-        "Name": "/accelerator/kms/lambda/key-arn",
-        "Type": "String",
-        "Value": Object {
-          "Fn::GetAtt": Array [
-            "AcceleratorLambdaKeyD279839E",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
         "Name": "/accelerator/AWSAccelerator-AccountsStack-111111111111-us-east-1/version",
