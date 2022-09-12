@@ -2066,6 +2066,7 @@ Object {
 ]",
           },
         },
+        "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
         "Handler": "index.handler",
         "KmsKeyArn": Object {
           "Fn::GetAtt": Array [

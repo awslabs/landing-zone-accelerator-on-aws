@@ -44,7 +44,7 @@ export async function handler(event: AWSLambda.FirehoseTransformationEvent) {
       firehoseRecordsOutput.records.push(firehoseReturnErrorResult);
     }
   }
-  console.log(firehoseRecordsOutput);
+
   return firehoseRecordsOutput;
 }
 
