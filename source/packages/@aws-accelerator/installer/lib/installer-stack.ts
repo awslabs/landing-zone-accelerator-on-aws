@@ -699,7 +699,6 @@ export class InstallerStack extends cdk.Stack {
      * Update GitHub Token for Github Pipeline
      */
 
-    //const fileContents = fs.readFileSync('lib/lambdas/update-pipeline-github-token/index.js');
     const fileContents = fs.readFileSync(
       path.join(__dirname, '..', 'lib', 'lambdas/update-pipeline-github-token/index.js'),
     );
@@ -739,14 +738,14 @@ export class InstallerStack extends cdk.Stack {
 
     const passRoleStatement = new cdk.aws_iam.PolicyStatement({
       actions: ['iam:PassRole'],
-      resources: ['*'],
+      resources: [acceleratorPrincipalArn, gitHubPipelineRole.roleArn],
     });
 
-    updatePipelineLambdaRole.attachInlinePolicy(
-      new cdk.aws_iam.Policy(this, 'UpdatePipelineLambdaPolicy', {
-        statements: [codePipelineStatement, secretsManagerStatement, passRoleStatement, kmsStatement, cwLogsStatement],
-      }),
-    );
+    const updatePipelineLambdaPolicy = new cdk.aws_iam.Policy(this, 'UpdatePipelineLambdaPolicy', {
+      statements: [codePipelineStatement, secretsManagerStatement, passRoleStatement, kmsStatement, cwLogsStatement],
+    });
+
+    updatePipelineLambdaRole.attachInlinePolicy(updatePipelineLambdaPolicy);
 
     const updatePipelineGithubTokenFunction = new cdk.aws_lambda.Function(this, 'UpdatePipelineGithubTokenFunction', {
       code: new cdk.aws_lambda.InlineCode(fileContents.toString()),
@@ -794,6 +793,44 @@ export class InstallerStack extends cdk.Stack {
     });
 
     //
+    // cfn-nag suppressions
+    //
+    // W12 IAM Policy allows * on KMS decrypt because Secrets Manager key can be encrypted with user selected key.
+    const cfnLambdaFunctionPolicy = updatePipelineLambdaPolicy.node.findChild('Resource') as cdk.aws_iam.CfnPolicy;
+    cfnLambdaFunctionPolicy.cfnOptions.metadata = {
+      cfn_nag: {
+        rules_to_suppress: [
+          {
+            id: 'W12',
+            reason: `IAM policy should not allow * resource.`,
+          },
+        ],
+      },
+    };
+
+    const cfnLambdaFunction = updatePipelineGithubTokenFunction.node.findChild(
+      'Resource',
+    ) as cdk.aws_lambda.CfnFunction;
+    cfnLambdaFunction.cfnOptions.metadata = {
+      cfn_nag: {
+        rules_to_suppress: [
+          {
+            id: 'W58',
+            reason: `CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole`,
+          },
+          {
+            id: 'W89',
+            reason: `This function supports infrastructure deployment and is not deployed inside a VPC.`,
+          },
+          {
+            id: 'W92',
+            reason: `This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.`,
+          },
+        ],
+      },
+    };
+
+    //
     // cdk-nag suppressions
     //
     const iam4SuppressionPaths = [
@@ -806,8 +843,8 @@ export class InstallerStack extends cdk.Stack {
       'InstallerAdminRole/DefaultPolicy/Resource',
       'CodeCommitPipelineRole/DefaultPolicy/Resource',
       'CodeCommitPipeline/Source/Source/CodePipelineActionRole/DefaultPolicy/Resource',
-      'GitHubPipelineRole/DefaultPolicy/Resource',
       'UpdatePipelineLambdaPolicy/Resource',
+      'GitHubPipelineRole/DefaultPolicy/Resource',
     ];
 
     const cb3SuppressionPaths = ['InstallerProject/Resource'];
