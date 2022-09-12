@@ -142,9 +142,8 @@ Object {
             "Arn",
           ],
         },
-        "exportDestination": "S3",
+        "enableS3Protection": true,
         "exportFrequency": "FIFTEEN_MINUTES",
-        "isExportConfigEnable": true,
         "region": Object {
           "Ref": "AWS::Region",
         },

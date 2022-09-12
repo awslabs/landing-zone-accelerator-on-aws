@@ -28,17 +28,13 @@ export enum GuardDutyExportConfigDestinationTypes {
  */
 export interface GuardDutyDetectorConfigProps {
   /**
-   * Export config enable flag
-   */
-  readonly isExportConfigEnable: boolean;
-  /**
-   * Export config destination type, example s3
-   */
-  readonly exportDestination: string;
-  /**
    * FindingPublishingFrequency
    */
   readonly exportFrequency: string;
+  /**
+   * S3 Protection
+   */
+  readonly enableS3Protection: boolean;
   /**
    * Custom resource lambda log group encryption key
    */
@@ -84,9 +80,8 @@ export class GuardDutyDetectorConfig extends Construct {
       serviceToken: provider.serviceToken,
       properties: {
         region: cdk.Stack.of(this).region,
-        isExportConfigEnable: props.isExportConfigEnable,
-        exportDestination: props.exportDestination,
         exportFrequency: props.exportFrequency,
+        enableS3Protection: props.enableS3Protection,
       },
     });
 
