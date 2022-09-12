@@ -21,9 +21,8 @@ const testNamePrefix = 'Construct(GuardDutyDetectorConfig): ';
 const stack = new cdk.Stack();
 
 new GuardDutyDetectorConfig(stack, 'GuardDutyDetectorConfig', {
-  isExportConfigEnable: true,
-  exportDestination: 'S3',
   exportFrequency: 'FIFTEEN_MINUTES',
+  enableS3Protection: true,
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
 });

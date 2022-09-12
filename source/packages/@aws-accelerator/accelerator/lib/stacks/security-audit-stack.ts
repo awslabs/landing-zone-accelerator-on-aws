@@ -27,7 +27,6 @@ import {
   CentralLogsBucket,
   Document,
   GuardDutyDetectorConfig,
-  GuardDutyExportConfigDestinationTypes,
   AuditManagerDefaultReportsDestination,
   AuditManagerDefaultReportsDestinationTypes,
   GuardDutyMembers,
@@ -258,7 +257,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           cdk.Stack.of(this).region as Region,
         ) === -1
       ) {
-        Logger.info('[security-audit-stack] Adding GuardDuty ');
+        Logger.info('[security-audit-stack] Enabling GuardDuty for all existing accounts');
 
         const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
           enableS3Protection: this.props.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
@@ -266,18 +265,20 @@ export class SecurityAuditStack extends AcceleratorStack {
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
         });
 
-        new GuardDutyDetectorConfig(this, 'GuardDutyDetectorConfig', {
-          isExportConfigEnable:
-            this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.enable &&
-            !this.props.securityConfig.centralSecurityServices.guardduty.s3Protection.excludeRegions!.includes(
-              cdk.Stack.of(this).region as Region,
-            ),
-          exportDestination: GuardDutyExportConfigDestinationTypes.S3,
-          exportFrequency:
-            this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.exportFrequency,
-          kmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        }).node.addDependency(guardDutyMembers);
+        if (
+          this.props.securityConfig.centralSecurityServices.guardduty.s3Protection.excludeRegions!.indexOf(
+            cdk.Stack.of(this).region as Region,
+          ) === -1
+        ) {
+          new GuardDutyDetectorConfig(this, 'GuardDutyDetectorConfig', {
+            exportFrequency:
+              this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.exportFrequency ??
+              'FIFTEEN_MINUTES',
+            enableS3Protection: this.props.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+          }).node.addDependency(guardDutyMembers);
+        }
       }
     }
   }

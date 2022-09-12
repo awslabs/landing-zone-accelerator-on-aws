@@ -30,10 +30,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const region = event.ResourceProperties['region'];
   const adminAccountId = event.ResourceProperties['adminAccountId'];
-  const isExportConfigEnable = event.ResourceProperties['isExportConfigEnable'] === 'true';
-  const exportDestination = event.ResourceProperties['exportDestination'];
   const exportFrequency = event.ResourceProperties['exportFrequency'];
-
+  const enableS3Protection = event.ResourceProperties['enableS3Protection'] === 'true';
   const guardDutyClient = new AWS.GuardDuty({ region: region });
   const detectorId = await getDetectorId(guardDutyClient);
 
@@ -54,55 +52,52 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      console.log('starting - CreateMembersCommand');
-      if (isExportConfigEnable && exportDestination === 's3') {
-        await throttlingBackOff(() =>
-          guardDutyClient
-            .updateMemberDetectors({
-              DetectorId: detectorId,
-              AccountIds: existingMemberAccountIds,
-              DataSources: { S3Logs: { Enable: isExportConfigEnable } },
-            })
-            .promise(),
-        );
+      console.log('starting - UpdateMembersCommand');
+      await throttlingBackOff(() =>
+        guardDutyClient
+          .updateMemberDetectors({
+            DetectorId: detectorId,
+            AccountIds: existingMemberAccountIds,
+            DataSources: { S3Logs: { Enable: enableS3Protection } },
+          })
+          .promise(),
+      );
 
-        await throttlingBackOff(() =>
-          guardDutyClient
-            .updateDetector({
-              DetectorId: detectorId,
-              Enable: true,
-              FindingPublishingFrequency: exportFrequency,
-              DataSources: { S3Logs: { Enable: isExportConfigEnable } },
-            })
-            .promise(),
-        );
-      }
+      console.log('starting - UpdateDetectorCommand');
+      await throttlingBackOff(() =>
+        guardDutyClient
+          .updateDetector({
+            DetectorId: detectorId,
+            Enable: true,
+            FindingPublishingFrequency: exportFrequency,
+            DataSources: { S3Logs: { Enable: enableS3Protection } },
+          })
+          .promise(),
+      );
 
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
-      if (isExportConfigEnable && exportDestination === 's3') {
-        await throttlingBackOff(() =>
-          guardDutyClient
-            .updateDetector({
-              DetectorId: detectorId,
-              Enable: false,
-              FindingPublishingFrequency: exportFrequency,
-              DataSources: { S3Logs: { Enable: false } },
-            })
-            .promise(),
-        );
+      await throttlingBackOff(() =>
+        guardDutyClient
+          .updateDetector({
+            DetectorId: detectorId,
+            Enable: false,
+            FindingPublishingFrequency: exportFrequency,
+            DataSources: { S3Logs: { Enable: false } },
+          })
+          .promise(),
+      );
 
-        await throttlingBackOff(() =>
-          guardDutyClient
-            .updateMemberDetectors({
-              DetectorId: detectorId,
-              AccountIds: existingMemberAccountIds,
-              DataSources: { S3Logs: { Enable: false } },
-            })
-            .promise(),
-        );
-      }
+      await throttlingBackOff(() =>
+        guardDutyClient
+          .updateMemberDetectors({
+            DetectorId: detectorId,
+            AccountIds: existingMemberAccountIds,
+            DataSources: { S3Logs: { Enable: false } },
+          })
+          .promise(),
+      );
 
       return { Status: 'Success', StatusCode: 200 };
   }
