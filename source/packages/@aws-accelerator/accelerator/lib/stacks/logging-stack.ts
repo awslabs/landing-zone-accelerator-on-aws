@@ -336,22 +336,29 @@ export class LoggingStack extends AcceleratorStack {
     // First, logs receiving account will setup Kinesis DataStream and Firehose
     // in LogArchive account home region
     // KMS to encrypt Kinesis, Firehose and any Lambda environment variables for CloudWatchLogs to S3 replication
-    const logsReplicationKmsKey = new cdk.aws_kms.Key(this, 'LogsReplicationKey', { enableKeyRotation: true });
 
-    if (cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) {
-      const receivingLogs = this.cloudwatchLogReceivingAccount(
-        logsReplicationKmsKey,
-        this.centralLogsBucketName,
-        this.lambdaKey,
-      );
-      const creatingLogs = this.cloudwatchLogCreatingAccount();
+    // CloudWatch logs replication requires Kinesis Data stream, Firehose and AWS Organizations
+    // Some or all of these services may not be available in all regions.
+    // Only deploy in standard and GovCloud partitions
 
-      // Log receiving setup should be complete before logs creation setup can start or else there will be errors about destination not ready.
-      creatingLogs.node.addDependency(receivingLogs);
-    } else {
-      // Any account in LZA needs to setup log subscriptions for CloudWatch Logs
-      // The destination needs to be present before its setup
-      this.cloudwatchLogCreatingAccount();
+    if (props.partition === 'aws' || props.partition === 'aws-gov') {
+      const logsReplicationKmsKey = new cdk.aws_kms.Key(this, 'LogsReplicationKey', { enableKeyRotation: true });
+
+      if (cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) {
+        const receivingLogs = this.cloudwatchLogReceivingAccount(
+          logsReplicationKmsKey,
+          this.centralLogsBucketName,
+          this.lambdaKey,
+        );
+        const creatingLogs = this.cloudwatchLogCreatingAccount();
+
+        // Log receiving setup should be complete before logs creation setup can start or else there will be errors about destination not ready.
+        creatingLogs.node.addDependency(receivingLogs);
+      } else {
+        // Any account in LZA needs to setup log subscriptions for CloudWatch Logs
+        // The destination needs to be present before its setup
+        this.cloudwatchLogCreatingAccount();
+      }
     }
 
     Logger.debug(`[logging-stack] Stack synthesis complete`);
