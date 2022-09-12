@@ -124,112 +124,101 @@ export class KeyStack extends AcceleratorStack {
 
     // IAM Role to get access to accelerator organization level SSM parameters
     // Only create this role in the home region stack
-    if (cdk.Stack.of(this).region === props.globalConfig.homeRegion && props.organizationConfig.enable) {
-      new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
-        roleName: AcceleratorStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-        assumedBy: new cdk.aws_iam.OrganizationPrincipal(this.organizationId),
-        inlinePolicies: {
-          default: new cdk.aws_iam.PolicyDocument({
-            statements: [
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ssm:GetParameters', 'ssm:GetParameter'],
-                resources: [
-                  `arn:${cdk.Stack.of(this).partition}:ssm:*:${
-                    cdk.Stack.of(this).account
-                  }:parameter/accelerator/kms/key-arn`,
-                  `arn:${cdk.Stack.of(this).partition}:ssm:*:${
-                    cdk.Stack.of(this).account
-                  }:parameter/accelerator/kms/s3/key-arn`,
-                ],
-                conditions: {
-                  StringEquals: {
-                    'aws:PrincipalOrgID': this.organizationId,
+    if (cdk.Stack.of(this).region === props.globalConfig.homeRegion) {
+      if (props.organizationConfig.enable) {
+        new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
+          roleName: AcceleratorStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+          assumedBy: new cdk.aws_iam.OrganizationPrincipal(this.organizationId),
+          inlinePolicies: {
+            default: new cdk.aws_iam.PolicyDocument({
+              statements: [
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                  resources: [
+                    `arn:${cdk.Stack.of(this).partition}:ssm:*:${
+                      cdk.Stack.of(this).account
+                    }:parameter/accelerator/kms/key-arn`,
+                    `arn:${cdk.Stack.of(this).partition}:ssm:*:${
+                      cdk.Stack.of(this).account
+                    }:parameter/accelerator/kms/s3/key-arn`,
+                  ],
+                  conditions: {
+                    StringEquals: {
+                      'aws:PrincipalOrgID': this.organizationId,
+                    },
+                    ArnLike: {
+                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                    },
                   },
-                  ArnLike: {
-                    'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                }),
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:DescribeParameters'],
+                  resources: ['*'],
+                  conditions: {
+                    StringEquals: {
+                      'aws:PrincipalOrgID': this.organizationId,
+                    },
+                    ArnLike: {
+                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                    },
                   },
-                },
-              }),
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ssm:DescribeParameters'],
-                resources: ['*'],
-                conditions: {
-                  StringEquals: {
-                    'aws:PrincipalOrgID': this.organizationId,
-                  },
-                  ArnLike: {
-                    'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
-                  },
-                },
-              }),
-            ],
-          }),
-        },
-      });
-
-      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag
-      // rule suppression with evidence for this permission.
-      NagSuppressions.addResourceSuppressionsByPath(
-        this,
-        `${this.stackName}/CrossAccountAcceleratorSsmParamAccessRole/Resource`,
-        [
-          {
-            id: 'AwsSolutions-IAM5',
-            reason:
-              'This policy is required to give access to ssm parameters in every region where accelerator deployed. Various accelerator roles need permission to describe SSM parameters.',
+                }),
+              ],
+            }),
           },
-        ],
-      );
-    } else {
-      const principals: cdk.aws_iam.PrincipalBase[] = [];
-      accountIds.forEach(accountId => {
-        principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
-      });
-      new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
-        roleName: KeyStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-        assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
-        inlinePolicies: {
-          default: new cdk.aws_iam.PolicyDocument({
-            statements: [
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ssm:GetParameters', 'ssm:GetParameter'],
-                resources: [
-                  `arn:${cdk.Stack.of(this).partition}:ssm:*:${
-                    cdk.Stack.of(this).account
-                  }:parameter/accelerator/kms/key-arn`,
-                  `arn:${cdk.Stack.of(this).partition}:ssm:*:${
-                    cdk.Stack.of(this).account
-                  }:parameter/accelerator/kms/s3/key-arn`,
-                ],
-                conditions: {
-                  StringEquals: {
-                    'aws:PrincipalAccount': [...accountIds],
+        });
+      } else {
+        const principals: cdk.aws_iam.PrincipalBase[] = [];
+        accountIds.forEach(accountId => {
+          principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
+        });
+        new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
+          roleName: KeyStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+          assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
+          inlinePolicies: {
+            default: new cdk.aws_iam.PolicyDocument({
+              statements: [
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                  resources: [
+                    `arn:${cdk.Stack.of(this).partition}:ssm:*:${
+                      cdk.Stack.of(this).account
+                    }:parameter/accelerator/kms/key-arn`,
+                    `arn:${cdk.Stack.of(this).partition}:ssm:*:${
+                      cdk.Stack.of(this).account
+                    }:parameter/accelerator/kms/s3/key-arn`,
+                  ],
+                  conditions: {
+                    StringEquals: {
+                      'aws:PrincipalAccount': [...accountIds],
+                    },
+                    ArnLike: {
+                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                    },
                   },
-                  ArnLike: {
-                    'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                }),
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:DescribeParameters'],
+                  resources: ['*'],
+                  conditions: {
+                    StringEquals: {
+                      'aws:PrincipalAccount': [...accountIds],
+                    },
+                    ArnLike: {
+                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                    },
                   },
-                },
-              }),
-              new cdk.aws_iam.PolicyStatement({
-                effect: cdk.aws_iam.Effect.ALLOW,
-                actions: ['ssm:DescribeParameters'],
-                resources: ['*'],
-                conditions: {
-                  StringEquals: {
-                    'aws:PrincipalAccount': [...accountIds],
-                  },
-                  ArnLike: {
-                    'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
-                  },
-                },
-              }),
-            ],
-          }),
-        },
-      });
+                }),
+              ],
+            }),
+          },
+        });
+      }
+
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag
       // rule suppression with evidence for this permission.
       NagSuppressions.addResourceSuppressionsByPath(
