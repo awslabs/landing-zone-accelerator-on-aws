@@ -1987,6 +1987,24 @@ phases:
       "DependsOn": Array [
         "UpdatePipelineLambdaRole88CE0535",
       ],
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            Object {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            Object {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Code": Object {
           "ZipFile": "/**
@@ -2228,6 +2246,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             },
           ],
         },
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W12",
+              "reason": "IAM policy should not allow * resource.",
+            },
+          ],
+        },
       },
       "Properties": Object {
         "PolicyDocument": Object {
@@ -2313,7 +2339,30 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             Object {
               "Action": "iam:PassRole",
               "Effect": "Allow",
-              "Resource": "*",
+              "Resource": Array [
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":role/AWSAccelerator-*",
+                    ],
+                  ],
+                },
+                Object {
+                  "Fn::GetAtt": Array [
+                    "GitHubPipelineRole6F4DEF1B",
+                    "Arn",
+                  ],
+                },
+              ],
             },
             Object {
               "Action": "kms:Decrypt",
@@ -4349,6 +4398,24 @@ phases:
       "DependsOn": Array [
         "UpdatePipelineLambdaRole88CE0535",
       ],
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            Object {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            Object {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Code": Object {
           "ZipFile": "/**
@@ -4590,6 +4657,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             },
           ],
         },
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W12",
+              "reason": "IAM policy should not allow * resource.",
+            },
+          ],
+        },
       },
       "Properties": Object {
         "PolicyDocument": Object {
@@ -4675,7 +4750,30 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             Object {
               "Action": "iam:PassRole",
               "Effect": "Allow",
-              "Resource": "*",
+              "Resource": Array [
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":role/AWSAccelerator-*",
+                    ],
+                  ],
+                },
+                Object {
+                  "Fn::GetAtt": Array [
+                    "GitHubPipelineRole6F4DEF1B",
+                    "Arn",
+                  ],
+                },
+              ],
             },
             Object {
               "Action": "kms:Decrypt",
@@ -6884,6 +6982,24 @@ phases:
       "DependsOn": Array [
         "UpdatePipelineLambdaRole88CE0535",
       ],
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            Object {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            Object {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Code": Object {
           "ZipFile": "/**
@@ -7145,6 +7261,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             },
           ],
         },
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W12",
+              "reason": "IAM policy should not allow * resource.",
+            },
+          ],
+        },
       },
       "Properties": Object {
         "PolicyDocument": Object {
@@ -7238,7 +7362,34 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             Object {
               "Action": "iam:PassRole",
               "Effect": "Allow",
-              "Resource": "*",
+              "Resource": Array [
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":role/",
+                      Object {
+                        "Ref": "AcceleratorQualifier",
+                      },
+                      "-*",
+                    ],
+                  ],
+                },
+                Object {
+                  "Fn::GetAtt": Array [
+                    "GitHubPipelineRole6F4DEF1B",
+                    "Arn",
+                  ],
+                },
+              ],
             },
             Object {
               "Action": "kms:Decrypt",
@@ -9437,6 +9588,24 @@ phases:
       "DependsOn": Array [
         "UpdatePipelineLambdaRole88CE0535",
       ],
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            Object {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            Object {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Code": Object {
           "ZipFile": "/**
@@ -9698,6 +9867,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             },
           ],
         },
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W12",
+              "reason": "IAM policy should not allow * resource.",
+            },
+          ],
+        },
       },
       "Properties": Object {
         "PolicyDocument": Object {
@@ -9791,7 +9968,34 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
             Object {
               "Action": "iam:PassRole",
               "Effect": "Allow",
-              "Resource": "*",
+              "Resource": Array [
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":role/",
+                      Object {
+                        "Ref": "AcceleratorQualifier",
+                      },
+                      "-*",
+                    ],
+                  ],
+                },
+                Object {
+                  "Fn::GetAtt": Array [
+                    "GitHubPipelineRole6F4DEF1B",
+                    "Arn",
+                  ],
+                },
+              ],
             },
             Object {
               "Action": "kms:Decrypt",
