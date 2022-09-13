@@ -16,8 +16,7 @@ centralSecurityServices:
   delegatedAdminAccount: Audit
   ebsDefaultVolumeEncryption:
     enable: true
-    customConfigs:
-      kmsKeyName: key1
+    kmsKey: key1
     excludeRegions: []
   s3PublicAccessBlock:
     enable: true
