@@ -753,7 +753,7 @@ export class EbsDefaultVolumeEncryptionConfig
   /**
    * KMS key to encrypt EBS volume. When no value provided LZ Accelerator will create the KMS key.
    */
-  readonly kmsKey = '';
+  readonly kmsKey: undefined | string = undefined;
   /**
    * List of AWS Region names to be excluded from configuring AWS EBS volume default encryption
    */
@@ -1595,8 +1595,8 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
         this.validateKeyPolicyFiles(configDir);
 
         //
-        // Create list of custom CMKs got any services to be validated against key list from keyManagementService
-        const keyNames: string[] = [this.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey];
+        // Create list of custom CMKs, any services to be validated against key list from keyManagementService
+        const keyNames: string[] = [this.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey!];
 
         // Validate custom CMK names
         this.validateCustomKeyName(keyNames);
