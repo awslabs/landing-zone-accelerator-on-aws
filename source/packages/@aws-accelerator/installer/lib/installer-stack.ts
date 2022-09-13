@@ -510,7 +510,12 @@ export class InstallerStack extends cdk.Stack {
             ],
           },
           post_build: {
-            commands: [`aws codepipeline start-pipeline-execution --name ${acceleratorPipelineName}`],
+            commands: [
+              `inprogress_status_count=$(aws codepipeline get-pipeline-state --name "${acceleratorPipelineName}" | grep '"status": "InProgress"' | grep -v grep | wc -l)`,
+              `if [ $inprogress_status_count -eq 0 ]; then
+                aws codepipeline start-pipeline-execution --name "${acceleratorPipelineName}";
+                fi`,
+            ],
           },
         },
       }),
