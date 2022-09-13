@@ -253,10 +253,9 @@ export class SecurityConfigTypes {
 
   static readonly ebsDefaultVolumeEncryptionConfig = t.interface({
     enable: t.boolean,
+    kmsKey: t.optional(t.nonEmptyString),
     excludeRegions: t.optional(t.array(t.region)),
-    customConfigs: t.optional(t.customConfigs),
   });
-
   static readonly documentConfig = t.interface({
     name: t.nonEmptyString,
     template: t.nonEmptyString,
@@ -742,18 +741,6 @@ export class SnsSubscriptionConfig implements t.TypeOf<typeof SecurityConfigType
 }
 
 /**
- * AWS EBS custom configuration
- *
- * @see {@link t.customConfigs}
- */
-export class EbsCustomConfig implements t.TypeOf<typeof t.customConfigs> {
-  /**
-   * KMS key name to encrypt EBS volume. When no value provided LZ Accelerator will create the KMS key.
-   */
-  readonly kmsKeyName = '';
-}
-
-/**
  * AWS EBS default encryption configuration
  */
 export class EbsDefaultVolumeEncryptionConfig
@@ -763,16 +750,14 @@ export class EbsDefaultVolumeEncryptionConfig
    * Indicates whether AWS EBS volume have default encryption enabled.
    */
   readonly enable = false;
-
+  /**
+   * KMS key to encrypt EBS volume. When no value provided LZ Accelerator will create the KMS key.
+   */
+  readonly kmsKey: undefined | string = undefined;
   /**
    * List of AWS Region names to be excluded from configuring AWS EBS volume default encryption
    */
   readonly excludeRegions: t.Region[] = [];
-
-  /**
-   * EBS Custom configuration such as kms key
-   */
-  readonly customConfigs: EbsCustomConfig | undefined = undefined;
 }
 
 /**
@@ -1611,11 +1596,7 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
 
         //
         // Create list of custom CMKs, any services to be validated against key list from keyManagementService
-        const keyNames: string[] = [];
-
-        if (this.centralSecurityServices.ebsDefaultVolumeEncryption.customConfigs?.kmsKeyName) {
-          keyNames.push(this.centralSecurityServices.ebsDefaultVolumeEncryption.customConfigs.kmsKeyName);
-        }
+        const keyNames: string[] = [this.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey!];
 
         // Validate custom CMK names
         this.validateCustomKeyName(keyNames);
