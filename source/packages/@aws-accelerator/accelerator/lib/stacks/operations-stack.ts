@@ -55,10 +55,27 @@ export class OperationsStack extends AcceleratorStack {
       // Enable Budget Reports
       //
       if (props.globalConfig.reports?.budgets) {
-        for (const budgets of props.globalConfig.reports.budgets ?? []) {
-          if (this.isIncluded(budgets.deploymentTargets ?? [])) {
-            new BudgetDefinition(this, `${budgets.name}BudgetDefinition`, {
-              budgets: props.globalConfig.reports?.budgets,
+        for (const budget of props.globalConfig.reports.budgets ?? []) {
+          if (this.isIncluded(budget.deploymentTargets ?? [])) {
+            Logger.info(`[operations-stack] Add budget ${budget.name}`);
+            new BudgetDefinition(this, `${budget.name}BudgetDefinition`, {
+              amount: budget.amount,
+              includeCredit: budget.includeCredit,
+              includeDiscount: budget.includeDiscount,
+              includeOtherSubscription: budget.includeOtherSubscription,
+              includeRecurring: budget.includeRecurring,
+              includeRefund: budget.includeRefund,
+              includeSubscription: budget.includeSubscription,
+              includeSupport: budget.includeSupport,
+              includeTax: budget.includeTax,
+              includeUpfront: budget.includeUpfront,
+              name: budget.name,
+              notifications: budget.notifications,
+              timeUnit: budget.timeUnit,
+              type: budget.type,
+              useAmortized: budget.useAmortized,
+              useBlended: budget.useBlended,
+              unit: budget.unit,
             });
           }
         }
