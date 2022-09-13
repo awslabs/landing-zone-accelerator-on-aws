@@ -33,6 +33,11 @@ source/packages/@aws-accelerator/installer/bin/installer.ts:18
 source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:59
 source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:58
 
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:32
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:33
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:34
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:35
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:36
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:37
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:38
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:39
@@ -54,17 +59,9 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:54
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:55
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:56
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:57
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:58
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:59
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:60
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:61
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:62
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:376
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:468
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:455
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:478
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:485
-
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:494
 
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:57
 
