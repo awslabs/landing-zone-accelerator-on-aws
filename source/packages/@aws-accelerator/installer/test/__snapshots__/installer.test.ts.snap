@@ -1569,7 +1569,11 @@ phases:
                 "; fi
   post_build:
     commands:
-      - aws codepipeline start-pipeline-execution --name AWSAccelerator-Pipeline
+      - \\"inprogress_status_count=$(aws codepipeline get-pipeline-state --name \\\\\\"AWSAccelerator-Pipeline\\\\\\" | grep '\\\\\\"status\\\\\\": \\\\\\"InProgress\\\\\\"' | grep -v grep | wc -l)\\"
+      - |-
+        if [ $inprogress_status_count -eq 0 ]; then
+                        aws codepipeline start-pipeline-execution --name \\"AWSAccelerator-Pipeline\\";
+                        fi
 ",
               ],
             ],
@@ -3980,7 +3984,11 @@ phases:
                 "; fi
   post_build:
     commands:
-      - aws codepipeline start-pipeline-execution --name AWSAccelerator-Pipeline
+      - \\"inprogress_status_count=$(aws codepipeline get-pipeline-state --name \\\\\\"AWSAccelerator-Pipeline\\\\\\" | grep '\\\\\\"status\\\\\\": \\\\\\"InProgress\\\\\\"' | grep -v grep | wc -l)\\"
+      - |-
+        if [ $inprogress_status_count -eq 0 ]; then
+                        aws codepipeline start-pipeline-execution --name \\"AWSAccelerator-Pipeline\\";
+                        fi
 ",
               ],
             ],
@@ -6528,11 +6536,19 @@ phases:
                 "; fi
   post_build:
     commands:
-      - aws codepipeline start-pipeline-execution --name ",
+      - \\"inprogress_status_count=$(aws codepipeline get-pipeline-state --name \\\\\\"",
                 Object {
                   "Ref": "AcceleratorQualifier",
                 },
-                "-pipeline
+                "-pipeline\\\\\\" | grep '\\\\\\"status\\\\\\": \\\\\\"InProgress\\\\\\"' | grep -v grep | wc -l)\\"
+      - |-
+        if [ $inprogress_status_count -eq 0 ]; then
+                        aws codepipeline start-pipeline-execution --name \\"",
+                Object {
+                  "Ref": "AcceleratorQualifier",
+                },
+                "-pipeline\\";
+                        fi
 ",
               ],
             ],
@@ -9134,11 +9150,19 @@ phases:
                 "; fi
   post_build:
     commands:
-      - aws codepipeline start-pipeline-execution --name ",
+      - \\"inprogress_status_count=$(aws codepipeline get-pipeline-state --name \\\\\\"",
                 Object {
                   "Ref": "AcceleratorQualifier",
                 },
-                "-pipeline
+                "-pipeline\\\\\\" | grep '\\\\\\"status\\\\\\": \\\\\\"InProgress\\\\\\"' | grep -v grep | wc -l)\\"
+      - |-
+        if [ $inprogress_status_count -eq 0 ]; then
+                        aws codepipeline start-pipeline-execution --name \\"",
+                Object {
+                  "Ref": "AcceleratorQualifier",
+                },
+                "-pipeline\\";
+                        fi
 ",
               ],
             ],
