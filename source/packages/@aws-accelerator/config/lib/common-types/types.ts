@@ -483,3 +483,7 @@ export class VpcFlowLogsConfig implements t.TypeOf<typeof vpcFlowLogsConfig> {
     'traffic-path',
   ];
 }
+
+export const customConfigs = t.interface({
+  kmsKeyName: optional(nonEmptyString),
+});

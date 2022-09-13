@@ -181,13 +181,15 @@ export class SecurityStack extends AcceleratorStack {
     ) {
       let ebsEncryptionKey: cdk.aws_kms.Key;
 
-      if (this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey) {
+      if (this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.customConfigs?.kmsKeyName) {
         ebsEncryptionKey = cdk.aws_kms.Key.fromKeyArn(
           this,
-          pascalCase(this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey) + `-KmsKey`,
+          pascalCase(
+            this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.customConfigs?.kmsKeyName,
+          ) + `-KmsKey`,
           cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
-            `/accelerator/kms/${this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey}/key-arn`,
+            `/accelerator/kms/${this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.customConfigs?.kmsKeyName}/key-arn`,
           ),
         ) as cdk.aws_kms.Key;
       } else {
