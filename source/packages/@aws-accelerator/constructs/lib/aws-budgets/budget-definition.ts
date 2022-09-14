@@ -22,53 +22,53 @@ type Unit = 'USD' | string;
 
 export interface BudgetDefinitionProps {
   /**
-  * The total amount of costs, usage, RI utilization, RI coverage, Savings Plans utilization, or Savings Plans
-  * coverage that you want to track with your budget.
-  */
+   * The total amount of costs, usage, RI utilization, RI coverage, Savings Plans utilization, or Savings Plans
+   * coverage that you want to track with your budget.
+   */
   readonly amount: number;
   /**
-  * Specifies whether a budget includes credits.
-  */
+   * Specifies whether a budget includes credits.
+   */
   readonly includeCredit: boolean;
   /**
-  * Specifies whether a budget includes discounts.
-  */
+   * Specifies whether a budget includes discounts.
+   */
   readonly includeDiscount: boolean;
   /**
-  * Specifies whether a budget includes non-RI subscription costs.
-  */
+   * Specifies whether a budget includes non-RI subscription costs.
+   */
   readonly includeOtherSubscription: boolean;
   /**
-  * Specifies whether a budget includes recurring fees such as monthly RI fees.
-  */
+   * Specifies whether a budget includes recurring fees such as monthly RI fees.
+   */
   readonly includeRecurring: boolean;
   /**
-  * Specifies whether a budget includes refunds.
-  */
+   * Specifies whether a budget includes refunds.
+   */
   readonly includeRefund: boolean;
   /**
-  * Specifies whether a budget includes subscriptions.
-  */
+   * Specifies whether a budget includes subscriptions.
+   */
   readonly includeSubscription: boolean;
   /**
-  * Specifies whether a budget includes support subscription fees.
-  */
+   * Specifies whether a budget includes support subscription fees.
+   */
   readonly includeSupport: boolean;
   /**
-  * Specifies whether a budget includes taxes.
-  */
+   * Specifies whether a budget includes taxes.
+   */
   readonly includeTax: boolean;
   /**
-  * Specifies whether a budget includes upfront RI costs.
-  */
+   * Specifies whether a budget includes upfront RI costs.
+   */
   readonly includeUpfront: boolean;
   /**
-  * The name of the budget.
-  */
+   * The name of the budget.
+   */
   readonly name: string;
   /**
-  * List of notifications.
-  */
+   * List of notifications.
+   */
   readonly notifications?: {
     threshold: number;
     thresholdType: 'PERCENTAGE' | 'ABSOLUTE_VALUE' | string;
@@ -78,25 +78,25 @@ export interface BudgetDefinitionProps {
     subscriptionType: 'EMAIL' | 'SNS' | string;
   }[];
   /**
-  * The length of time until a budget resets the actual and forecasted spend.
-  */
+   * The length of time until a budget resets the actual and forecasted spend.
+   */
   readonly timeUnit: TimeUnit;
   /**
-  * Specifies whether this budget tracks costs, usage, RI utilization, RI coverage,
-  * Savings Plans utilization, or Savings Plans coverage.
-  */
+   * Specifies whether this budget tracks costs, usage, RI utilization, RI coverage,
+   * Savings Plans utilization, or Savings Plans coverage.
+   */
   readonly type: Type;
   /**
-  * Specifies whether a budget uses the amortized rate.
-  */
+   * Specifies whether a budget uses the amortized rate.
+   */
   readonly useAmortized: boolean;
   /**
-  * Specifies whether a budget uses a blended rate.
-  */
+   * Specifies whether a budget uses a blended rate.
+   */
   readonly useBlended: boolean;
   /**
-  * The unit of measurement that's used for the budget forecast, actual spend, or budget threshold, such as USD or GBP.
-  */
+   * The unit of measurement that's used for the budget forecast, actual spend, or budget threshold, such as USD or GBP.
+   */
   readonly unit: Unit;
 }
 
