@@ -22,12 +22,10 @@ import {
   NetworkAclSubnetSelection,
   NetworkConfigTypes,
   nonEmptyString,
-  OrganizationConfig,
   OutpostsConfig,
   PrefixListSourceConfig,
   SecurityGroupRuleConfig,
   SecurityGroupSourceConfig,
-  SubnetConfig,
   SubnetSourceConfig,
   VpcConfig,
   VpcFlowLogsConfig,
@@ -40,14 +38,10 @@ import {
   DeleteDefaultVpc,
   DhcpOptions,
   GatewayLoadBalancer,
-  IResourceShareItem,
   KeyLookup,
   NatGateway,
   NetworkAcl,
   PrefixList,
-  ResourceShare,
-  ResourceShareItem,
-  ResourceShareOwner,
   RouteTable,
   SecurityGroup,
   SecurityGroupEgressRuleProps,
@@ -59,6 +53,7 @@ import {
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+
 export interface SecurityGroupRuleProps {
   ipProtocol: string;
   cidrIp?: string;
@@ -82,11 +77,9 @@ const TCP_PROTOCOLS_PORT: { [key: string]: number } = {
   'ORACLE-RDS': 1521,
 };
 
-type ResourceShareType = SubnetConfig;
-
 export class NetworkVpcStack extends AcceleratorStack {
   private accountsConfig: AccountsConfig;
-  private orgConfig: OrganizationConfig;
+  private ipamPoolMap: Map<string, string>;
   private logRetention: number;
   readonly cloudwatchKey: cdk.aws_kms.Key;
   private vpcFlowLogsBucket: Bucket | undefined;
@@ -96,7 +89,6 @@ export class NetworkVpcStack extends AcceleratorStack {
 
     // Set private properties
     this.accountsConfig = props.accountsConfig;
-    this.orgConfig = props.organizationConfig;
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
@@ -107,6 +99,11 @@ export class NetworkVpcStack extends AcceleratorStack {
         AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
       ),
     ) as cdk.aws_kms.Key;
+
+    //
+    // Set IPAM map
+    //
+    this.ipamPoolMap = this.setIpamPoolMap(props);
 
     //
     // Delete Default VPCs
@@ -176,6 +173,7 @@ export class NetworkVpcStack extends AcceleratorStack {
               `${attachment.transitGateway.name}_TransitGatewayShare`,
               'ec2:TransitGateway',
               owningAccountId,
+              this.cloudwatchKey,
             ).resourceShareItemId;
 
             Logger.info(
@@ -476,16 +474,9 @@ export class NetworkVpcStack extends AcceleratorStack {
         // Determine if using IPAM or manual CIDRs
         //
         let cidr: string | undefined = undefined;
-        let delegatedAdminAccountId: string | undefined = undefined;
         let poolId: string | undefined = undefined;
         let poolNetmask: number | undefined = undefined;
         if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
-          if (vpcItem.cidrs && vpcItem.ipamAllocations) {
-            throw new Error(
-              `[network-vpc-stack] Attempting to define both a CIDR and IPAM allocation for VPC ${vpcItem.name}. Please choose only one.`,
-            );
-          }
-
           // Get first CIDR in array
           if (vpcItem.cidrs) {
             cidr = vpcItem.cidrs[0];
@@ -494,29 +485,12 @@ export class NetworkVpcStack extends AcceleratorStack {
 
         // Get IPAM details
         if (vpcItem.ipamAllocations) {
-          if (!props.networkConfig.centralNetworkServices?.ipams) {
+          poolId = this.ipamPoolMap.get(vpcItem.ipamAllocations[0].ipamPoolName);
+          if (!poolId) {
             throw new Error(
-              `[network-vpc-stack] Attempting to add IPAM allocation to VPC ${vpcItem.name} without any IPAMs declared.`,
+              `[network-vpc-stack] ${vpcItem.name}: unable to locate IPAM pool ${vpcItem.ipamAllocations[0].ipamPoolName}`,
             );
           }
-
-          delegatedAdminAccountId = this.accountsConfig.getAccountId(
-            props.networkConfig.centralNetworkServices?.delegatedAdminAccount,
-          );
-
-          if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
-            poolId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-              this,
-              `/accelerator/network/ipam/pools/${vpcItem.ipamAllocations[0].ipamPoolName}/id`,
-            );
-          } else {
-            poolId = this.getResourceShare(
-              `${vpcItem.ipamAllocations[0].ipamPoolName}_IpamPoolShare`,
-              'ec2:IpamPool',
-              delegatedAdminAccountId,
-            ).resourceShareItemId;
-          }
-
           poolNetmask = vpcItem.ipamAllocations[0].netmaskLength;
         }
 
@@ -555,18 +529,9 @@ export class NetworkVpcStack extends AcceleratorStack {
             Logger.info(
               `[network-vpc-stack] Adding secondary IPAM allocation with netmask ${alloc.netmaskLength} to VPC ${vpcItem.name}`,
             );
-            // Get IPAM pool ID
-            if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
-              poolId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                this,
-                `/accelerator/network/ipam/pools/${alloc.ipamPoolName}/id`,
-              );
-            } else {
-              poolId = this.getResourceShare(
-                `${alloc.ipamPoolName}_IpamPoolShare`,
-                'ec2:IpamPool',
-                delegatedAdminAccountId!,
-              ).resourceShareItemId;
+            poolId = this.ipamPoolMap.get(alloc.ipamPoolName);
+            if (!poolId) {
+              throw new Error(`[network-vpc-stack] ${vpcItem.name}: unable to locate IPAM pool ${alloc.ipamPoolName}`);
             }
             vpc.addCidr({ ipv4IpamPoolId: poolId, ipv4NetmaskLength: alloc.netmaskLength });
           }
@@ -680,18 +645,9 @@ export class NetworkVpcStack extends AcceleratorStack {
           // Check for base IPAM pool CIDRs in config
           let basePool: string[] | undefined = undefined;
           if (subnetItem.ipamAllocation) {
-            if (!props.networkConfig.centralNetworkServices?.ipams) {
-              throw new Error(
-                `[network-vpc-stack] Attempting to add IPAM allocation to subnet ${subnetItem.name} without any IPAMs declared.`,
-              );
-            }
-
-            for (const ipam of props.networkConfig.centralNetworkServices.ipams) {
+            for (const ipam of props.networkConfig.centralNetworkServices!.ipams!) {
               const pool = ipam.pools?.find(item => item.name === subnetItem.ipamAllocation!.ipamPoolName);
-
-              if (pool) {
-                basePool = pool.provisionedCidrs;
-              }
+              basePool = pool?.provisionedCidrs;
             }
 
             if (!basePool) {
@@ -1466,72 +1422,6 @@ export class NetworkVpcStack extends AcceleratorStack {
     return rules;
   }
 
-  /**
-   * Add RAM resource shares to the stack.
-   *
-   * @param item
-   * @param resourceShareName
-   * @param resourceArns
-   */
-  private addResourceShare(item: ResourceShareType, resourceShareName: string, resourceArns: string[]) {
-    // Build a list of principals to share to
-    const principals: string[] = [];
-
-    // Loop through all the defined OUs
-    for (const ouItem of item.shareTargets?.organizationalUnits ?? []) {
-      let ouArn = this.orgConfig.getOrganizationalUnitArn(ouItem);
-      // AWS::RAM::ResourceShare expects the organizations ARN if
-      // sharing with the entire org (Root)
-      if (ouItem === 'Root') {
-        ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
-      }
-      Logger.info(`[network-vpc-stack] Share ${resourceShareName} with Organizational Unit ${ouItem}: ${ouArn}`);
-      principals.push(ouArn);
-    }
-
-    // Loop through all the defined accounts
-    for (const account of item.shareTargets?.accounts ?? []) {
-      const accountId = this.accountsConfig.getAccountId(account);
-      Logger.info(`[network-vpc-stack] Share ${resourceShareName} with Account ${account}: ${accountId}`);
-      principals.push(accountId);
-    }
-
-    // Create the Resource Share
-    new ResourceShare(this, `${pascalCase(resourceShareName)}ResourceShare`, {
-      name: resourceShareName,
-      principals,
-      resourceArns: resourceArns,
-    });
-  }
-
-  /**
-   * Get the resource ID from a RAM share.
-   *
-   * @param resourceShareName
-   * @param itemType
-   * @param owningAccountId
-   */
-  private getResourceShare(resourceShareName: string, itemType: string, owningAccountId: string): IResourceShareItem {
-    // Generate a logical ID
-    const resourceName = resourceShareName.split('_')[0];
-    const logicalId = `${resourceName}${itemType.split(':')[1]}`;
-
-    // Lookup resource share
-    const resourceShare = ResourceShare.fromLookup(this, pascalCase(`${logicalId}Share`), {
-      resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
-      resourceShareName: resourceShareName,
-      owningAccountId,
-    });
-
-    // Represents the item shared by RAM
-    return ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
-      resourceShare,
-      resourceShareItemType: itemType,
-      kmsKey: this.cloudwatchKey,
-      logRetentionInDays: this.logRetention,
-    });
-  }
-
   private createGatewayLoadBalancer(loadBalancerItem: GwlbConfig, subnetMap: Map<string, Subnet>): void {
     const allowedPrincipals: string[] = [];
     const subnets: string[] = [];
@@ -1799,5 +1689,48 @@ export class NetworkVpcStack extends AcceleratorStack {
       encryptionKey: this.cloudwatchKey,
       bucketArn: this.vpcFlowLogsBucket?.getS3Bucket().bucketArn,
     });
+  }
+
+  /**
+   * Set IPAM pool map
+   * @param props
+   * @returns
+   */
+  private setIpamPoolMap(props: AcceleratorStackProps) {
+    const poolMap = new Map<string, string>();
+
+    if (props.networkConfig.centralNetworkServices?.ipams) {
+      const delegatedAdminAccountId = this.accountsConfig.getAccountId(
+        props.networkConfig.centralNetworkServices!.delegatedAdminAccount,
+      );
+
+      for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+        // Get account IDs
+        const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+
+        if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+          for (const alloc of vpcItem.ipamAllocations ?? []) {
+            if (!poolMap.has(alloc.ipamPoolName)) {
+              let poolId: string;
+              if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
+                poolId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                  this,
+                  `/accelerator/network/ipam/pools/${alloc.ipamPoolName}/id`,
+                );
+              } else {
+                poolId = this.getResourceShare(
+                  `${alloc.ipamPoolName}_IpamPoolShare`,
+                  'ec2:IpamPool',
+                  delegatedAdminAccountId,
+                  this.cloudwatchKey,
+                ).resourceShareItemId;
+              }
+              poolMap.set(alloc.ipamPoolName, poolId);
+            }
+          }
+        }
+      }
+    }
+    return poolMap;
   }
 }

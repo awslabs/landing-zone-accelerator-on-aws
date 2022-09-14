@@ -29,12 +29,8 @@ import {
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import {
-  IResourceShareItem,
   NetworkFirewall,
   ResolverEndpoint,
-  ResourceShare,
-  ResourceShareItem,
-  ResourceShareOwner,
   SecurityGroup,
   SecurityGroupEgressRuleProps,
   SecurityGroupIngressRuleProps,
@@ -50,6 +46,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
   private accountsConfig: AccountsConfig;
   private globalConfig: GlobalConfig;
   private logRetention: number;
+  private nfwPolicyMap: Map<string, string>;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -107,6 +104,11 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     }
 
     //
+    // Set Network Firewall policy map
+    //
+    this.nfwPolicyMap = this.setNfwPolicyMap(props);
+
+    //
     // Iterate through VPCs in this account and region
     //
     const firewallMap = new Map<string, NetworkFirewall>();
@@ -144,15 +146,6 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
           for (const firewallItem of firewalls) {
             if (firewallItem.vpc === vpcItem.name) {
               const firewallSubnets: string[] = [];
-              const delegatedAdminAccountId = this.accountsConfig.getAccountId(
-                props.networkConfig.centralNetworkServices.delegatedAdminAccount,
-              );
-              let owningAccountId: string | undefined = undefined;
-
-              // Check if this is not the delegated network admin account
-              if (delegatedAdminAccountId !== cdk.Stack.of(this).account) {
-                owningAccountId = delegatedAdminAccountId;
-              }
 
               // Check if VPC has matching subnets
               for (const subnetItem of firewallItem.subnets) {
@@ -169,13 +162,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
 
               // Create firewall
               if (firewallSubnets.length > 0) {
-                const nfw = this.createNetworkFirewall(
-                  firewallItem,
-                  vpcId,
-                  firewallSubnets,
-                  firewallLogBucket,
-                  owningAccountId,
-                );
+                const nfw = this.createNetworkFirewall(firewallItem, vpcId, firewallSubnets, firewallLogBucket);
                 firewallMap.set(firewallItem.name, nfw);
               }
             }
@@ -285,25 +272,17 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     vpcId: string,
     subnets: string[],
     firewallLogBucket: cdk.aws_s3.IBucket,
-    owningAccountId?: string,
   ): NetworkFirewall {
-    // Get firewall policy ARN
-    let policyArn: string;
-
-    if (!owningAccountId) {
-      policyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        `/accelerator/network/networkFirewall/policies/${firewallItem.firewallPolicy}/arn`,
-      );
-    } else {
-      policyArn = this.getResourceShare(
-        `${firewallItem.firewallPolicy}_NetworkFirewallPolicyShare`,
-        'network-firewall:FirewallPolicy',
-        owningAccountId,
-      ).resourceShareItemArn;
-    }
-
     Logger.info(`[network-vpc-endpoints-stack] Add Network Firewall ${firewallItem.name} to VPC ${firewallItem.vpc}`);
+
+    // Fetch policy ARN
+    const policyArn = this.nfwPolicyMap.get(firewallItem.firewallPolicy);
+    if (!policyArn) {
+      throw new Error(
+        `[network-vpc-endpoints-stack] Unable to locate Network Firewall policy ${firewallItem.firewallPolicy}`,
+      );
+    }
+    // Create firewall
     const nfw = new NetworkFirewall(this, pascalCase(`${firewallItem.vpc}${firewallItem.name}NetworkFirewall`), {
       firewallPolicyArn: policyArn,
       name: firewallItem.name,
@@ -791,30 +770,48 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
   }
 
   /**
-   * Get the resource ID from a RAM share.
-   *
-   * @param resourceShareName
-   * @param itemType
-   * @param owningAccountId
+   * Set Network Firewall policy map
+   * @param props
+   * @returns
    */
-  private getResourceShare(resourceShareName: string, itemType: string, owningAccountId: string): IResourceShareItem {
-    // Generate a logical ID
-    const resourceName = resourceShareName.split('_')[0];
-    const logicalId = `${resourceName}${itemType.split(':')[1]}`;
+  private setNfwPolicyMap(props: AcceleratorStackProps): Map<string, string> {
+    const policyMap = new Map<string, string>();
 
-    // Lookup resource share
-    const resourceShare = ResourceShare.fromLookup(this, pascalCase(`${logicalId}Share`), {
-      resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
-      resourceShareName: resourceShareName,
-      owningAccountId,
-    });
+    if (props.networkConfig.centralNetworkServices?.networkFirewall?.firewalls) {
+      const delegatedAdminAccountId = this.accountsConfig.getAccountId(
+        props.networkConfig.centralNetworkServices.delegatedAdminAccount,
+      );
+      const firewalls = props.networkConfig.centralNetworkServices?.networkFirewall?.firewalls;
 
-    // Represents the item shared by RAM
-    return ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
-      resourceShare,
-      resourceShareItemType: itemType,
-      kmsKey: this.cloudwatchKey,
-      logRetentionInDays: this.logRetention,
-    });
+      for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+        // Get account IDs
+        const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+
+        if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+          for (const firewallItem of firewalls ?? []) {
+            if (firewallItem.vpc === vpcItem.name && !policyMap.has(firewallItem.firewallPolicy)) {
+              // Get firewall policy ARN
+              let policyArn: string;
+
+              if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
+                policyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                  this,
+                  `/accelerator/network/networkFirewall/policies/${firewallItem.firewallPolicy}/arn`,
+                );
+              } else {
+                policyArn = this.getResourceShare(
+                  `${firewallItem.firewallPolicy}_NetworkFirewallPolicyShare`,
+                  'network-firewall:FirewallPolicy',
+                  delegatedAdminAccountId,
+                  this.cloudwatchKey,
+                ).resourceShareItemArn;
+              }
+              policyMap.set(firewallItem.firewallPolicy, policyArn);
+            }
+          }
+        }
+      }
+    }
+    return policyMap;
   }
 }

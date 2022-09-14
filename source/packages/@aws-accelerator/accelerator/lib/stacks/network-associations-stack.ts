@@ -32,14 +32,10 @@ import {
   AssociateHostedZones,
   DirectConnectGatewayAssociation,
   DirectConnectGatewayAssociationProps,
-  IResourceShareItem,
   PutSsmParameter,
   QueryLoggingConfigAssociation,
   ResolverFirewallRuleGroupAssociation,
   ResolverRuleAssociation,
-  ResourceShare,
-  ResourceShareItem,
-  ResourceShareOwner,
   ShareSubnetTags,
   SsmParameterLookup,
   TransitGatewayAttachment,
@@ -535,10 +531,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         } else {
           // Get ID from the resource share
           const ruleId = this.getResourceShare(
-            vpcItem.name,
             `${firewallItem.name}_ResolverFirewallRuleGroupShare`,
             'route53resolver:FirewallRuleGroup',
             owningAccountId,
+            this.cloudwatchKey,
           ).resourceShareItemId;
           this.dnsFirewallMap.set(firewallItem.name, ruleId);
         }
@@ -602,10 +598,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           } else {
             // Get ID from the resource share
             const configId = this.getResourceShare(
-              vpcItem.name,
               `${nameItem}_QueryLogConfigShare`,
               'route53resolver:ResolverQueryLogConfig',
               owningAccountId,
+              this.cloudwatchKey,
             ).resourceShareItemId;
             this.queryLogMap.set(nameItem, configId);
           }
@@ -651,10 +647,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         } else {
           // Get ID from the resource share
           const ruleId = this.getResourceShare(
-            vpcItem.name,
             `${ruleItem}_ResolverRule`,
             'route53resolver:ResolverRule',
             owningAccountId,
+            this.cloudwatchKey,
           ).resourceShareItemId;
           this.resolverRuleMap.set(ruleItem, ruleId);
         }
@@ -1211,41 +1207,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
   }
 
   /**
-   * Get the resource ID from a RAM share.
-   *
-   * @param vpcName
-   * @param resourceShareName
-   * @param itemType
-   * @param owningAccountId
-   */
-  private getResourceShare(
-    vpcName: string,
-    resourceShareName: string,
-    itemType: string,
-    owningAccountId: string,
-  ): IResourceShareItem {
-    // Generate a logical ID
-    const resourceName = resourceShareName.split('_')[0];
-    const logicalId = `${vpcName}${resourceName}${itemType.split(':')[1]}`;
-
-    Logger.debug('logicalId: ', logicalId);
-    // Lookup resource share
-    const resourceShare = ResourceShare.fromLookup(this, pascalCase(`${logicalId}Share`), {
-      resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
-      resourceShareName: resourceShareName,
-      owningAccountId,
-    });
-
-    // Represents the item shared by RAM
-    return ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
-      resourceShare,
-      resourceShareItemType: itemType,
-      kmsKey: this.cloudwatchKey,
-      logRetentionInDays: this.logRetention,
-    });
-  }
-
-  /**
    * Check if resource is shared with stack.
    *
    * @param shareTargets
@@ -1273,10 +1234,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             const shared = this.checkResourceShare(subnet.shareTargets);
             if (shared) {
               const sharedSubnet = this.getResourceShare(
-                vpc.name,
                 `${subnet.name}_SubnetShare`,
                 'ec2:Subnet',
                 owningAccountId,
+                this.cloudwatchKey,
+                vpc.name,
               );
               const vpcTags = vpc.tags;
               const subnetTags = subnet.tags;
