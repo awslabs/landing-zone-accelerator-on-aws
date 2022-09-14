@@ -4005,6 +4005,12 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
         // Validate route entries
         this.validateRouteTableEntries(routeTableItem, vpcItem, values);
       }
+      // Validate the VPC doesn't have a static CIDR and IPAM defined
+      if (NetworkConfigTypes.vpcConfig.is(vpcItem) && vpcItem.cidrs && vpcItem.ipamAllocations) {
+        this.errors.push(`[VPC ${vpcItem.name}]: Both a CIDR and IPAM allocation are defined. Please choose only one`);
+      }
+      // Validate IPAM allocations
+      this.validateIpamAllocations(vpcItem, values);
     }
   }
 
@@ -4178,6 +4184,43 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     for (const tgw of values.transitGateways ?? []) {
       for (const routeTable of tgw.routeTables ?? []) {
         this.validateTgwStaticRouteEntries(values, tgw, routeTable);
+      }
+    }
+  }
+
+  private validateIpamAllocations(
+    vpcItem: t.TypeOf<typeof NetworkConfigTypes.vpcConfig> | t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig>,
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+  ) {
+    const ipams = values.centralNetworkServices?.ipams;
+    // Check if targeted IPAM exists
+    for (const alloc of vpcItem.ipamAllocations ?? []) {
+      if (!ipams?.find(ipam => ipam.pools?.find(pool => pool.name === alloc.ipamPoolName))) {
+        this.errors.push(`[VPC ${vpcItem.name}]: target IPAM pool ${alloc.ipamPoolName} is not defined`);
+      }
+    }
+    for (const subnet of vpcItem.subnets ?? []) {
+      // Check if allocation is created for VPC
+      if (
+        subnet.ipamAllocation &&
+        !vpcItem.ipamAllocations?.find(alloc => alloc.ipamPoolName === subnet.ipamAllocation!.ipamPoolName)
+      ) {
+        this.errors.push(
+          `[VPC ${vpcItem.name} subnet ${subnet.name}]: target IPAM pool ${
+            subnet.ipamAllocation!.ipamPoolName
+          } is not a source pool of the VPC`,
+        );
+      }
+      // Check if targeted IPAM pool exists
+      if (
+        subnet.ipamAllocation &&
+        !ipams?.find(ipam => ipam.pools?.find(pool => pool.name === subnet.ipamAllocation!.ipamPoolName))
+      ) {
+        this.errors.push(
+          `[VPC ${vpcItem.name} subnet ${subnet.name}]: target IPAM pool ${
+            subnet.ipamAllocation!.ipamPoolName
+          } is not defined`,
+        );
       }
     }
   }

@@ -24,10 +24,8 @@ import {
   DnsQueryLogsConfig,
   DxGatewayConfig,
   IpamConfig,
-  IpamPoolConfig,
   NfwFirewallPolicyConfig,
   NfwRuleGroupConfig,
-  OrganizationConfig,
   TransitGatewayConfig,
 } from '@aws-accelerator/config';
 import {
@@ -43,7 +41,6 @@ import {
   ResolverFirewallDomainList,
   ResolverFirewallDomainListType,
   ResolverFirewallRuleGroup,
-  ResourceShare,
   TransitGateway,
   TransitGatewayRouteTable,
   VirtualInterface,
@@ -63,20 +60,11 @@ interface ResolverFirewallRuleProps {
   blockResponse?: string;
 }
 
-type ResourceShareType =
-  | DnsFirewallRuleGroupConfig
-  | DnsQueryLogsConfig
-  | IpamPoolConfig
-  | NfwRuleGroupConfig
-  | NfwFirewallPolicyConfig
-  | TransitGatewayConfig;
-
 export class NetworkPrepStack extends AcceleratorStack {
   private accountsConfig: AccountsConfig;
   private domainMap: Map<string, string>;
   private dxGatewayMap: Map<string, string>;
   private nfwRuleMap: Map<string, string>;
-  private orgConfig: OrganizationConfig;
   private cloudwatchKey: cdk.aws_kms.Key;
   private logRetention: number;
 
@@ -88,7 +76,6 @@ export class NetworkPrepStack extends AcceleratorStack {
     this.domainMap = new Map<string, string>();
     this.dxGatewayMap = new Map<string, string>();
     this.nfwRuleMap = new Map<string, string>();
-    this.orgConfig = props.organizationConfig;
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
@@ -863,43 +850,5 @@ export class NetworkPrepStack extends AcceleratorStack {
         this.addResourceShare(policyItem, `${policyItem.name}_NetworkFirewallPolicyShare`, [policy.policyArn]);
       }
     }
-  }
-
-  /**
-   * Add RAM resource shares to the stack.
-   *
-   * @param item
-   * @param resourceShareName
-   * @param resourceArns
-   */
-  private addResourceShare(item: ResourceShareType, resourceShareName: string, resourceArns: string[]) {
-    // Build a list of principals to share to
-    const principals: string[] = [];
-
-    // Loop through all the defined OUs
-    for (const ouItem of item.shareTargets?.organizationalUnits ?? []) {
-      let ouArn = this.orgConfig.getOrganizationalUnitArn(ouItem);
-      // AWS::RAM::ResourceShare expects the organizations ARN if
-      // sharing with the entire org (Root)
-      if (ouItem === 'Root') {
-        ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
-      }
-      Logger.info(`[network-prep-stack] Share ${resourceShareName} with Organizational Unit ${ouItem}: ${ouArn}`);
-      principals.push(ouArn);
-    }
-
-    // Loop through all the defined accounts
-    for (const account of item.shareTargets?.accounts ?? []) {
-      const accountId = this.accountsConfig.getAccountId(account);
-      Logger.info(`[network-prep-stack] Share ${resourceShareName} with Account ${account}: ${accountId}`);
-      principals.push(accountId);
-    }
-
-    // Create the Resource Share
-    new ResourceShare(this, `${pascalCase(resourceShareName)}ResourceShare`, {
-      name: resourceShareName,
-      principals,
-      resourceArns: resourceArns,
-    });
   }
 }

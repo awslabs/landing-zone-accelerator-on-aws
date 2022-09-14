@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+
 import { BudgetDefinition } from '../../lib/aws-budgets/budget-definition';
 import { snapShotTest } from '../snapshot-test';
 
@@ -24,34 +25,30 @@ const nativeEnv = { account: '333333333333', region: 'us-east-1' };
 const nativeStack = new cdk.Stack(app, 'NativeStack', { env: nativeEnv });
 
 new BudgetDefinition(nativeStack, 'TestBudgetDefinition', {
-  budgets: [
+  name: 'accel-budget',
+  timeUnit: 'MONTHLY',
+  type: 'COST',
+  amount: 2000,
+  includeUpfront: true,
+  includeTax: true,
+  includeSupport: true,
+  includeSubscription: true,
+  includeRecurring: true,
+  includeOtherSubscription: true,
+  includeDiscount: true,
+  includeCredit: false,
+  includeRefund: false,
+  useBlended: false,
+  useAmortized: false,
+  unit: 'USD',
+  notifications: [
     {
-      name: 'accel-budget',
-      timeUnit: 'MONTHLY',
-      type: 'COST',
-      amount: 2000,
-      includeUpfront: true,
-      includeTax: true,
-      includeSupport: true,
-      includeSubscription: true,
-      includeRecurring: true,
-      includeOtherSubscription: true,
-      includeDiscount: true,
-      includeCredit: false,
-      includeRefund: false,
-      useBlended: false,
-      useAmortized: false,
-      unit: 'USD',
-      notifications: [
-        {
-          type: 'ACTUAL',
-          thresholdType: 'PERCENTAGE',
-          threshold: 100,
-          comparisonOperator: 'GREATER_THAN',
-          subscriptionType: 'EMAIL',
-          address: 'myemail+pa-budg@example.com',
-        },
-      ],
+      type: 'ACTUAL',
+      thresholdType: 'PERCENTAGE',
+      threshold: 100,
+      comparisonOperator: 'GREATER_THAN',
+      subscriptionType: 'EMAIL',
+      address: 'myemail+pa-budg@example.com',
     },
   ],
 });
