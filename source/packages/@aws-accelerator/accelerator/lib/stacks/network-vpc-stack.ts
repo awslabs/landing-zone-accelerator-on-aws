@@ -386,6 +386,15 @@ export class NetworkVpcStack extends AcceleratorStack {
           }),
         },
       });
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      // rule suppression with evidence for this permission.
+      NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/VpcPeeringRole/Resource`, [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'VpcPeeringRole needs access to create peering connections for VPCs in the account ',
+        },
+      ]);
     }
 
     //
