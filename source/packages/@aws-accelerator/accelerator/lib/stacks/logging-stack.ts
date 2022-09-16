@@ -36,6 +36,7 @@ import { BucketAccessType } from '@aws-accelerator/constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { Logger } from '../logger';
 import path from 'path';
+import { VpcFlowLogsConfig } from '@aws-accelerator/config';
 
 export class LoggingStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.IKey;
@@ -60,9 +61,14 @@ export class LoggingStack extends AcceleratorStack {
         cdk.Stack.of(this).region
       }`,
     );
+
     //
     // Create S3 Key in all account
-    this.createS3Key();
+    const s3Key = this.createS3Key();
+
+    //
+    // Create VPC Flow logs destination bucket
+    this.createVpcFlowLogsBucket(s3Key);
 
     //
     // Create KMS keys defined in config
@@ -372,9 +378,9 @@ export class LoggingStack extends AcceleratorStack {
   /**
    * Function to create S3 Key
    */
-  private createS3Key() {
+  private createS3Key(): cdk.aws_kms.Key {
     //
-    // Crete S3 key in every account except audit account,
+    // Crete S3 key in every account
     // this is required for SSM automation to get right KMS key to encrypt unencrypted bucket
     if (cdk.Stack.of(this).account !== this.props.accountsConfig.getAuditAccountId()) {
       Logger.debug(`[Logging-stack] Create S3 Key`);
@@ -422,6 +428,193 @@ export class LoggingStack extends AcceleratorStack {
       new cdk.aws_ssm.StringParameter(this, 'AcceleratorS3KmsArnParameter', {
         parameterName: AcceleratorStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
         stringValue: s3Key.keyArn,
+      });
+
+      return s3Key;
+    } else {
+      return this.createAuditAccountS3Key();
+    }
+  }
+
+  /**
+   * Function to create Audit account S3 bucket
+   */
+  private createAuditAccountS3Key(): cdk.aws_kms.Key {
+    Logger.debug(`[key-stack] Create S3 Key`);
+    const s3Key = new cdk.aws_kms.Key(this, 'AcceleratorAuditS3Key', {
+      alias: AcceleratorStack.ACCELERATOR_S3_KEY_ALIAS,
+      description: AcceleratorStack.ACCELERATOR_S3_KEY_DESCRIPTION,
+      enableKeyRotation: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    s3Key.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: `Allow S3 to use the encryption key`,
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+        actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
+            'aws:PrincipalOrgId': `${this.organizationId}`,
+          },
+        },
+      }),
+    );
+
+    s3Key.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'Allow services to confirm encryption',
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+        actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'aws:PrincipalOrgId': `${this.organizationId}`,
+          },
+        },
+      }),
+    );
+
+    const allowedServicePrincipals: { name: string; principal: string }[] = [];
+
+    allowedServicePrincipals.push({ name: 'CloudTrail', principal: 'cloudtrail.amazonaws.com' });
+
+    if (this.props.securityConfig.centralSecurityServices.auditManager?.enable) {
+      allowedServicePrincipals.push({ name: 'AuditManager', principal: 'auditmanager.amazonaws.com' });
+      s3Key.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: `Allow Audit Manager service to provision encryption key grants`,
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          actions: ['kms:CreateGrant'],
+          conditions: {
+            StringLike: { 'kms:ViaService': 'auditmanager.*.amazonaws.com', 'aws:PrincipalOrgID': this.organizationId },
+            Bool: { 'kms:GrantIsForAWSResource': 'true' },
+          },
+          resources: ['*'],
+        }),
+      );
+    }
+
+    allowedServicePrincipals!.forEach(item => {
+      s3Key.addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: `Allow ${item.name} service to use the encryption key`,
+          principals: [new cdk.aws_iam.ServicePrincipal(item.principal)],
+          actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+          resources: ['*'],
+        }),
+      );
+    });
+
+    new cdk.aws_ssm.StringParameter(this, 'AcceleratorS3KmsArnParameter', {
+      parameterName: AcceleratorStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
+      stringValue: s3Key.keyArn,
+    });
+
+    return s3Key;
+  }
+
+  /**
+   * Function to get VPC flow logs configuration when any VPC have S3 flow logs destination
+   */
+  private getS3FlowLogsDestinationConfig(): VpcFlowLogsConfig | undefined {
+    let vpcFlowLogs: VpcFlowLogsConfig;
+    for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Get account IDs
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+        if (vpcItem.vpcFlowLogs) {
+          vpcFlowLogs = vpcItem.vpcFlowLogs;
+        } else {
+          vpcFlowLogs = this.props.networkConfig.vpcFlowLogs;
+        }
+        if (vpcFlowLogs.destinations.includes('s3')) {
+          return vpcFlowLogs;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Function to create VPC FlowLogs bucket
+   */
+  private createVpcFlowLogsBucket(s3Key: cdk.aws_kms.Key) {
+    const vpcFlowLogsConfig = this.getS3FlowLogsDestinationConfig();
+    if (vpcFlowLogsConfig) {
+      Logger.info(`[Logging-stack] Create S3 bucket for VPC flow logs destination`);
+      const centralLogsBucketName = `${
+        AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+      }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.globalConfig.homeRegion}`;
+
+      const vpcFlowLogsBucket = new Bucket(this, 'AcceleratorVpcFlowLogsBucket', {
+        encryptionType: BucketEncryptionType.SSE_KMS,
+        s3BucketName: `${AcceleratorStack.ACCELERATOR_VPC_FLOW_LOGS_BUCKET_NAME_PREFIX}-${cdk.Stack.of(this).account}-${
+          cdk.Stack.of(this).region
+        }`,
+        kmsKey: s3Key,
+        serverAccessLogsBucket: cdk.aws_s3.Bucket.fromBucketName(
+          this,
+          'AcceleratorS3AccessLogsBucket',
+          `${AcceleratorStack.ACCELERATOR_S3_ACCESS_LOGS_BUCKET_NAME_PREFIX}-${cdk.Stack.of(this).account}-${
+            cdk.Stack.of(this).region
+          }`,
+        ),
+        s3LifeCycleRules: this.getS3LifeCycleRules(vpcFlowLogsConfig.destinationsConfig?.s3?.lifecycleRules),
+        replicationProps: {
+          destination: {
+            bucketName: centralLogsBucketName,
+            accountId: this.props.accountsConfig.getLogArchiveAccountId(),
+            keyArn: new KeyLookup(this, 'CentralLogsBucketKey', {
+              accountId: this.props.accountsConfig.getLogArchiveAccountId(),
+              keyRegion: this.props.globalConfig.homeRegion,
+              roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
+              keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
+              logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            }).getKey().keyArn,
+          },
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        },
+      });
+
+      vpcFlowLogsBucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow read bucket ACL access for delivery logging service principal',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['s3:GetBucketAcl'],
+          principals: [new cdk.aws_iam.ServicePrincipal('delivery.logs.amazonaws.com')],
+          resources: [`${vpcFlowLogsBucket.getS3Bucket().bucketArn}`],
+        }),
+      );
+
+      vpcFlowLogsBucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          principals: [new cdk.aws_iam.ServicePrincipal('delivery.logs.amazonaws.com')],
+          actions: ['s3:GetBucketAcl', 's3:ListBucket'],
+          resources: [vpcFlowLogsBucket.getS3Bucket().bucketArn],
+        }),
+      );
+
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `/${this.stackName}/AcceleratorVpcFlowLogsBucket/AcceleratorVpcFlowLogsBucketReplication/` +
+          pascalCase(centralLogsBucketName) +
+          '-ReplicationRole/DefaultPolicy/Resource',
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Allows only specific policy.',
+          },
+        ],
+      );
+
+      new cdk.aws_ssm.StringParameter(this, 'AcceleratorVpcFlowLogsBucketArnParameter', {
+        parameterName: AcceleratorStack.ACCELERATOR_VPC_FLOW_LOGS_DESTINATION_S3_BUCKET_ARN_PARAMETER_NAME,
+        stringValue: vpcFlowLogsBucket.getS3Bucket().bucketArn,
       });
     }
   }
