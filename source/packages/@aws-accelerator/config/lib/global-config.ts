@@ -54,10 +54,6 @@ export abstract class GlobalConfigTypes {
     lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
   });
 
-  static readonly centralizeCdkBucketsConfig = t.interface({
-    enable: t.boolean,
-  });
-
   static readonly sessionManagerConfig = t.interface({
     sendToCloudWatchLogs: t.boolean,
     sendToS3: t.boolean,
@@ -151,7 +147,6 @@ export abstract class GlobalConfigTypes {
     cloudwatchLogRetentionInDays: t.number,
     terminationProtection: t.optional(t.boolean),
     controlTower: GlobalConfigTypes.controlTowerConfig,
-    centralizeCdkBuckets: t.optional(GlobalConfigTypes.centralizeCdkBucketsConfig),
     logging: GlobalConfigTypes.loggingConfig,
     reports: t.optional(GlobalConfigTypes.reportConfig),
   });
@@ -167,19 +162,6 @@ export class ControlTowerConfig implements t.TypeOf<typeof GlobalConfigTypes.con
    * When control tower is enabled, accelerator makes sure account configuration file have three mandatory AWS CT accounts.
    * In AWS Control Tower, three shared accounts in your landing zone are provisioned automatically during setup: the management account,
    * the log archive account, and the audit account.
-   */
-  readonly enable = true;
-}
-
-/**
- * AWS CDK Centralization configuration
- */
-export class centralizeCdkBucketsConfig implements t.TypeOf<typeof GlobalConfigTypes.centralizeCdkBucketsConfig> {
-  /**
-   * Indicates whether CDK stacks in workload accounts will utilzie S3 buckets in the management account rather than within the account.
-   *
-   * When the accelerator deploys resources using the AWS CDK, assets are first built and stored in S3. By default, the S3 bucket is
-   * located within the deployment target account.
    */
   readonly enable = true;
 }
@@ -655,17 +637,6 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * CloudWatchLogs retention in days, accelerator's custom resource lambda function logs retention period is configured based on this value.
    */
   readonly cloudwatchLogRetentionInDays = 3653;
-
-  /**
-   * To indicate workload accounts should utilize the cdk-assets S3 buckets in the managemenet account, you need to provide below value for this parameter.
-   *
-   * @example
-   * ```
-   * centralizeCdkBuckets:
-   *   enable: true
-   * ```
-   */
-  readonly centralizeCdkBuckets = new centralizeCdkBucketsConfig();
 
   /**
    * Whether to enable termination protection for this stack.
