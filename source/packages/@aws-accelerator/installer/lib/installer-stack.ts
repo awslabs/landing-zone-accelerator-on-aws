@@ -720,34 +720,38 @@ export class InstallerStack extends cdk.Stack {
     const installerPipelineArn = `arn:${this.partition}:codepipeline:${this.region}:${this.account}:${installerPipelineName}`;
     const acceleratorPipelineArn = `arn:${this.partition}:codepipeline:${this.region}:${this.account}:${acceleratorPipelineName}`;
 
-    const updatePipelineLambdaPolicy = new cdk.aws_iam.Policy(this, 'UpdatePipelineLambdaPolicy', {
-      statements: [
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['codepipeline:GetPipeline', 'codepipeline:UpdatePipeline'],
-          resources: [`${installerPipelineArn}*`, `${acceleratorPipelineArn}*`],
-        }),
-        new cdk.aws_iam.PolicyStatement({
-          actions: [
-            'secretsmanager:GetResourcePolicy',
-            'secretsmanager:GetSecretValue',
-            'secretsmanager:DescribeSecret',
-            'secretsmanager:ListSecretVersionIds',
-          ],
-          resources: [`${secretIdPrefix}*`],
-        }),
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['kms:Decrypt'],
-          resources: ['*'],
-        }),
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
-          resources: ['*'],
-        }),
-        new cdk.aws_iam.PolicyStatement({
-          actions: ['iam:PassRole'],
-          resources: [acceleratorPrincipalArn, gitHubPipelineRole.roleArn],
-        }),
+    const codePipelineStatement = new cdk.aws_iam.PolicyStatement({
+      actions: ['codepipeline:GetPipeline', 'codepipeline:UpdatePipeline'],
+      resources: [`${installerPipelineArn}*`, `${acceleratorPipelineArn}*`],
+    });
+
+    const secretsManagerStatement = new cdk.aws_iam.PolicyStatement({
+      actions: [
+        'secretsmanager:GetResourcePolicy',
+        'secretsmanager:GetSecretValue',
+        'secretsmanager:DescribeSecret',
+        'secretsmanager:ListSecretVersionIds',
       ],
+      resources: [`${secretIdPrefix}*`],
+    });
+
+    const kmsStatement = new cdk.aws_iam.PolicyStatement({
+      actions: ['kms:Decrypt'],
+      resources: ['*'],
+    });
+
+    const cwLogsStatement = new cdk.aws_iam.PolicyStatement({
+      actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents'],
+      resources: ['*'],
+    });
+
+    const passRoleStatement = new cdk.aws_iam.PolicyStatement({
+      actions: ['iam:PassRole'],
+      resources: [acceleratorPrincipalArn, gitHubPipelineRole.roleArn],
+    });
+
+    const updatePipelineLambdaPolicy = new cdk.aws_iam.Policy(this, 'UpdatePipelineLambdaPolicy', {
+      statements: [codePipelineStatement, secretsManagerStatement, passRoleStatement, kmsStatement, cwLogsStatement],
     });
 
     updatePipelineLambdaRole.attachInlinePolicy(updatePipelineLambdaPolicy);
@@ -766,11 +770,6 @@ export class InstallerStack extends cdk.Stack {
       role: updatePipelineLambdaRole,
     });
 
-    const eventTargetLambdaType = new cdk.aws_events_targets.LambdaFunction(updatePipelineGithubTokenFunction, {
-      maxEventAge: cdk.Duration.hours(4),
-      retryAttempts: 2,
-    });
-
     const updatePipelineGithubTokenRule = new cdk.aws_events.Rule(this, 'UpdatePipelineGithubTokenRule', {
       eventPattern: {
         detailType: ['AWS API Call via CloudTrail'],
@@ -787,41 +786,20 @@ export class InstallerStack extends cdk.Stack {
         },
       },
       description: 'Rule to trigger Lambda Function when the Github Accelerator Token has been updated.',
-      targets: [eventTargetLambdaType],
     });
 
-    const updatePipelineGithubTokenLogGroup = new cdk.aws_logs.LogGroup(
-      this,
-      `${updatePipelineGithubTokenFunction.node.id}LogGroup`,
-      {
-        logGroupName: `/aws/lambda/${updatePipelineGithubTokenFunction.functionName}`,
-        encryptionKey: installerKey,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      },
+    updatePipelineGithubTokenRule.addTarget(
+      new cdk.aws_events_targets.LambdaFunction(updatePipelineGithubTokenFunction, {
+        maxEventAge: cdk.Duration.hours(4),
+        retryAttempts: 2,
+      }),
     );
 
-    /**
-     * Only create GitHub Pipeline Update Resources if it is a GitHub Sourced Pipeline.
-     * Constructs must be cast down to L1 constructs in order to use conditions.
-     */
-    for (const x of updatePipelineGithubTokenRule.node.findAll()) {
-      if (x.node.id.includes('UpdatePipelineGithubTokenFunction')) {
-        const cfnGithubTokenPermission = updatePipelineGithubTokenRule.node.findChild(
-          x.node.id,
-        ) as cdk.aws_lambda.CfnPermission;
-        cfnGithubTokenPermission.cfnOptions.condition = useGitHubCondition;
-      }
-    }
-
-    const cfnUpdatePipelineLambdaRole = updatePipelineLambdaRole.node.defaultChild as cdk.aws_iam.CfnRole;
-    cfnUpdatePipelineLambdaRole.cfnOptions.condition = useGitHubCondition;
-
-    const cfnUpdatePipelineGithubTokenRule = updatePipelineGithubTokenRule.node.defaultChild as cdk.aws_events.CfnRule;
-    cfnUpdatePipelineGithubTokenRule.cfnOptions.condition = useGitHubCondition;
-
-    const cfnUpdatePipelineGithubTokenLogGroup = updatePipelineGithubTokenLogGroup.node
-      .defaultChild as cdk.aws_logs.CfnLogGroup;
-    cfnUpdatePipelineGithubTokenLogGroup.cfnOptions.condition = useGitHubCondition;
+    new cdk.aws_logs.LogGroup(this, `${updatePipelineGithubTokenFunction.node.id}LogGroup`, {
+      logGroupName: `/aws/lambda/${updatePipelineGithubTokenFunction.functionName}`,
+      encryptionKey: installerKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
 
     //
     // cfn-nag suppressions
@@ -838,7 +816,6 @@ export class InstallerStack extends cdk.Stack {
         ],
       },
     };
-    cfnLambdaFunctionPolicy.cfnOptions.condition = useGitHubCondition;
 
     const cfnLambdaFunction = updatePipelineGithubTokenFunction.node.findChild(
       'Resource',
@@ -861,8 +838,6 @@ export class InstallerStack extends cdk.Stack {
         ],
       },
     };
-
-    cfnLambdaFunction.cfnOptions.condition = useGitHubCondition;
 
     //
     // cdk-nag suppressions
