@@ -59,10 +59,6 @@ async function updateCodePipelineSourceStage(pipelineDetails, secretValue) {
   const pipelineStages = pipelineDetails.pipeline.stages;
   const sourceStage = pipelineStages.find(o => o.name == 'Source');
   const sourceAction = sourceStage.actions.find(a => a.name == 'Source');
-  if (sourceAction.provider != 'GitHub') {
-    console.log('Pipeline source is not GitHub, no action will be taken.');
-    return;
-  }
   sourceAction.configuration.OAuthToken = secretValue;
 
   return pipelineDetails;
@@ -91,9 +87,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     try {
       const pipelineDetails = await getPipelineDetails(pipeline);
       const updatedPipelineDetails = await updateCodePipelineSourceStage(pipelineDetails, secretValue);
-      if (updatedPipelineDetails) {
-        await updatePipeline(updatedPipelineDetails);
-      }
+      await updatePipeline(updatedPipelineDetails);
     } catch (error) {
       console.error(error);
       throw new Error(`Error occurred while updating pipeline ${pipeline}`);
