@@ -26,7 +26,10 @@ import {
 
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorStack, AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
+import {
+  AcceleratorStack,
+  AcceleratorStackProps,
+} from '../lib/stacks/accelerator-stack';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
 import { BootstrapStack } from '../lib/stacks/bootstrap-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
