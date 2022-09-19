@@ -4,8 +4,6 @@ enabledRegions:
 managementAccountAccessRole: AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 3653
 terminationProtection: true
-centralizeCdkBuckets:
-  enable: true
 controlTower:
   enable: true
 logging:
