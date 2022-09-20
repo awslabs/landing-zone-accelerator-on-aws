@@ -3,6 +3,8 @@ enabledRegions:
   - *HOME_REGION
 managementAccountAccessRole: AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 365
+centralizeCdkBuckets:
+  enable: true
 # Setting controlTower to false will enable accelerator to 
 # configure resources like AWS Config. 
 # If set to true, accelerator will assume Control Tower 
