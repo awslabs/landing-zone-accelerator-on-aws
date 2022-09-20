@@ -12,7 +12,7 @@
  */
 
 import { SdkProvider } from 'aws-cdk/lib/api/aws-auth';
-import { Bootstrapper, BootstrapSource } from 'aws-cdk/lib/api/bootstrap';
+import { BootstrapEnvironmentOptions, Bootstrapper, BootstrapSource } from 'aws-cdk/lib/api/bootstrap';
 import { CloudFormationDeployments } from 'aws-cdk/lib/api/cloudformation-deployments';
 import { StackSelector } from 'aws-cdk/lib/api/cxapp/cloud-assembly';
 import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
@@ -77,6 +77,7 @@ export class AcceleratorToolkit {
     caBundlePath?: string;
     ec2Creds?: boolean;
     proxyAddress?: string;
+    centralizeCdkBootstrap?: boolean;
   }): Promise<void> {
     // Logger
     if (options.accountId || options.region) {
@@ -154,15 +155,16 @@ export class AcceleratorToolkit {
 
     switch (options.command) {
       case Command.BOOTSTRAP:
-        const source: BootstrapSource = { source: 'default' };
-        const bootstrapper = new Bootstrapper(source);
+        let source: BootstrapSource;
+
         const environments = [`aws://${options.accountId}/${options.region}`];
         const trustedAccounts: string[] = [];
         if (options.trustedAccountId && options.trustedAccountId != options.accountId) {
           trustedAccounts.push(options.trustedAccountId);
         }
-        await cli.bootstrap(environments, bootstrapper, {
-          toolkitStackName,
+
+        const bootstrapEnvOptions: BootstrapEnvironmentOptions = {
+          toolkitStackName: toolkitStackName,
           parameters: {
             bucketName: configuration.settings.get(['toolkitBucket', 'bucketName']),
             kmsKeyId: configuration.settings.get(['toolkitBucket', 'kmsKeyId']),
@@ -170,7 +172,22 @@ export class AcceleratorToolkit {
             trustedAccounts,
             cloudFormationExecutionPolicies: [`arn:${options.partition}:iam::aws:policy/AdministratorAccess`],
           },
-        });
+        };
+
+        // Use custom bootstrapping template if centralizing CDK assets in a single S3 bucket
+        if (options.centralizeCdkBootstrap) {
+          process.env['CDK_NEW_BOOTSTRAP'] = '1';
+          const templatePath = `./cdk.out/${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${options.accountId}-${
+            options.region
+          }.template.json`;
+          source = { source: 'custom', templateFile: templatePath };
+        } else {
+          source = { source: 'default' };
+        }
+
+        const bootstrapper = new Bootstrapper(source);
+
+        await cli.bootstrap(environments, bootstrapper, bootstrapEnvOptions);
         break;
       case Command.DIFF:
         await cli.diff({ stackNames: [] });
