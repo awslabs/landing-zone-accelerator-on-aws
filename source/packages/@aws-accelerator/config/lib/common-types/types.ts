@@ -263,10 +263,10 @@ export class DeploymentTargets implements t.TypeOf<typeof deploymentTargets> {
 export const storageClass = enums('storageClass', [
   'DEEP_ARCHIVE',
   'GLACIER',
-  'GLACIER_INSTANT_RETRIEVAL',
-  'INFREQUENT_ACCESS',
+  'GLACIER_IR',
+  'STANDARD_IA',
   'INTELLIGENT_TIERING',
-  'ONE_ZONE_INFREQUENT_ACCESS',
+  'ONEZONE_IA',
   'Value should be an AWS S3 Storage Class.',
 ]);
 export type StorageClass = t.TypeOf<typeof storageClass>;
