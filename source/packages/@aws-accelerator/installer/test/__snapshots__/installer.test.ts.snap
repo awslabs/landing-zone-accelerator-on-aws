@@ -1988,6 +1988,7 @@ phases:
       "Type": "AWS::SSM::Parameter",
     },
     "UpdatePipelineGithubTokenFunction29B64F2E": Object {
+      "Condition": "UseGitHubCondition",
       "DependsOn": Array [
         "UpdatePipelineLambdaRole88CE0535",
       ],
@@ -2072,6 +2073,10 @@ async function updateCodePipelineSourceStage(pipelineDetails, secretValue) {
   const pipelineStages = pipelineDetails.pipeline.stages;
   const sourceStage = pipelineStages.find(o => o.name == 'Source');
   const sourceAction = sourceStage.actions.find(a => a.name == 'Source');
+  if (sourceAction.provider != 'GitHub') {
+    console.log('Pipeline source is not GitHub, no action will be taken.');
+    return;
+  }
   sourceAction.configuration.OAuthToken = secretValue;
 
   return pipelineDetails;
@@ -2100,7 +2105,9 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     try {
       const pipelineDetails = await getPipelineDetails(pipeline);
       const updatedPipelineDetails = await updateCodePipelineSourceStage(pipelineDetails, secretValue);
-      await updatePipeline(updatedPipelineDetails);
+      if (updatedPipelineDetails) {
+        await updatePipeline(updatedPipelineDetails);
+      }
     } catch (error) {
       console.error(error);
       throw new Error(\`Error occurred while updating pipeline \${pipeline}\`);
@@ -2135,6 +2142,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::Lambda::Function",
     },
     "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A": Object {
+      "Condition": "UseGitHubCondition",
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
@@ -2160,6 +2168,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "UpdateReplacePolicy": "Delete",
     },
     "UpdatePipelineGithubTokenRule79D83132": Object {
+      "Condition": "UseGitHubCondition",
       "Properties": Object {
         "Description": "Rule to trigger Lambda Function when the Github Accelerator Token has been updated.",
         "EventPattern": Object {
@@ -2222,6 +2231,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::Events::Rule",
     },
     "UpdatePipelineGithubTokenRuleAllowEventRuleAWSAcceleratorTestInstallerStackUpdatePipelineGithubTokenFunction78C173C279CEF0A3": Object {
+      "Condition": "UseGitHubCondition",
       "Properties": Object {
         "Action": "lambda:InvokeFunction",
         "FunctionName": Object {
@@ -2241,6 +2251,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::Lambda::Permission",
     },
     "UpdatePipelineLambdaPolicy284ABC36": Object {
+      "Condition": "UseGitHubCondition",
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [
@@ -2341,6 +2352,20 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
               },
             },
             Object {
+              "Action": "kms:Decrypt",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
               "Action": "iam:PassRole",
               "Effect": "Allow",
               "Resource": Array [
@@ -2368,20 +2393,6 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                 },
               ],
             },
-            Object {
-              "Action": "kms:Decrypt",
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-            Object {
-              "Action": Array [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
           ],
           "Version": "2012-10-17",
         },
@@ -2395,6 +2406,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::IAM::Policy",
     },
     "UpdatePipelineLambdaRole88CE0535": Object {
+      "Condition": "UseGitHubCondition",
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [
@@ -4403,6 +4415,7 @@ phases:
       "Type": "AWS::SSM::Parameter",
     },
     "UpdatePipelineGithubTokenFunction29B64F2E": Object {
+      "Condition": "UseGitHubCondition",
       "DependsOn": Array [
         "UpdatePipelineLambdaRole88CE0535",
       ],
@@ -4487,6 +4500,10 @@ async function updateCodePipelineSourceStage(pipelineDetails, secretValue) {
   const pipelineStages = pipelineDetails.pipeline.stages;
   const sourceStage = pipelineStages.find(o => o.name == 'Source');
   const sourceAction = sourceStage.actions.find(a => a.name == 'Source');
+  if (sourceAction.provider != 'GitHub') {
+    console.log('Pipeline source is not GitHub, no action will be taken.');
+    return;
+  }
   sourceAction.configuration.OAuthToken = secretValue;
 
   return pipelineDetails;
@@ -4515,7 +4532,9 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     try {
       const pipelineDetails = await getPipelineDetails(pipeline);
       const updatedPipelineDetails = await updateCodePipelineSourceStage(pipelineDetails, secretValue);
-      await updatePipeline(updatedPipelineDetails);
+      if (updatedPipelineDetails) {
+        await updatePipeline(updatedPipelineDetails);
+      }
     } catch (error) {
       console.error(error);
       throw new Error(\`Error occurred while updating pipeline \${pipeline}\`);
@@ -4550,6 +4569,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::Lambda::Function",
     },
     "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A": Object {
+      "Condition": "UseGitHubCondition",
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
@@ -4575,6 +4595,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "UpdateReplacePolicy": "Delete",
     },
     "UpdatePipelineGithubTokenRule79D83132": Object {
+      "Condition": "UseGitHubCondition",
       "Properties": Object {
         "Description": "Rule to trigger Lambda Function when the Github Accelerator Token has been updated.",
         "EventPattern": Object {
@@ -4637,6 +4658,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::Events::Rule",
     },
     "UpdatePipelineGithubTokenRuleAllowEventRuleAWSAcceleratorTestInstallerStackUpdatePipelineGithubTokenFunction78C173C279CEF0A3": Object {
+      "Condition": "UseGitHubCondition",
       "Properties": Object {
         "Action": "lambda:InvokeFunction",
         "FunctionName": Object {
@@ -4656,6 +4678,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::Lambda::Permission",
     },
     "UpdatePipelineLambdaPolicy284ABC36": Object {
+      "Condition": "UseGitHubCondition",
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [
@@ -4756,6 +4779,20 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
               },
             },
             Object {
+              "Action": "kms:Decrypt",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
               "Action": "iam:PassRole",
               "Effect": "Allow",
               "Resource": Array [
@@ -4783,20 +4820,6 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                 },
               ],
             },
-            Object {
-              "Action": "kms:Decrypt",
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-            Object {
-              "Action": Array [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
           ],
           "Version": "2012-10-17",
         },
@@ -4810,6 +4833,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::IAM::Policy",
     },
     "UpdatePipelineLambdaRole88CE0535": Object {
+      "Condition": "UseGitHubCondition",
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [
@@ -6995,6 +7019,7 @@ phases:
       "Type": "AWS::SSM::Parameter",
     },
     "UpdatePipelineGithubTokenFunction29B64F2E": Object {
+      "Condition": "UseGitHubCondition",
       "DependsOn": Array [
         "UpdatePipelineLambdaRole88CE0535",
       ],
@@ -7079,6 +7104,10 @@ async function updateCodePipelineSourceStage(pipelineDetails, secretValue) {
   const pipelineStages = pipelineDetails.pipeline.stages;
   const sourceStage = pipelineStages.find(o => o.name == 'Source');
   const sourceAction = sourceStage.actions.find(a => a.name == 'Source');
+  if (sourceAction.provider != 'GitHub') {
+    console.log('Pipeline source is not GitHub, no action will be taken.');
+    return;
+  }
   sourceAction.configuration.OAuthToken = secretValue;
 
   return pipelineDetails;
@@ -7107,7 +7136,9 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     try {
       const pipelineDetails = await getPipelineDetails(pipeline);
       const updatedPipelineDetails = await updateCodePipelineSourceStage(pipelineDetails, secretValue);
-      await updatePipeline(updatedPipelineDetails);
+      if (updatedPipelineDetails) {
+        await updatePipeline(updatedPipelineDetails);
+      }
     } catch (error) {
       console.error(error);
       throw new Error(\`Error occurred while updating pipeline \${pipeline}\`);
@@ -7162,6 +7193,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::Lambda::Function",
     },
     "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A": Object {
+      "Condition": "UseGitHubCondition",
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
@@ -7187,6 +7219,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "UpdateReplacePolicy": "Delete",
     },
     "UpdatePipelineGithubTokenRule79D83132": Object {
+      "Condition": "UseGitHubCondition",
       "Properties": Object {
         "Description": "Rule to trigger Lambda Function when the Github Accelerator Token has been updated.",
         "EventPattern": Object {
@@ -7249,6 +7282,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::Events::Rule",
     },
     "UpdatePipelineGithubTokenRuleAllowEventRuleAWSAcceleratorTestInstallerStackUpdatePipelineGithubTokenFunction78C173C279CEF0A3": Object {
+      "Condition": "UseGitHubCondition",
       "Properties": Object {
         "Action": "lambda:InvokeFunction",
         "FunctionName": Object {
@@ -7268,6 +7302,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::Lambda::Permission",
     },
     "UpdatePipelineLambdaPolicy284ABC36": Object {
+      "Condition": "UseGitHubCondition",
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [
@@ -7376,6 +7411,20 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
               },
             },
             Object {
+              "Action": "kms:Decrypt",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
               "Action": "iam:PassRole",
               "Effect": "Allow",
               "Resource": Array [
@@ -7407,20 +7456,6 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                 },
               ],
             },
-            Object {
-              "Action": "kms:Decrypt",
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-            Object {
-              "Action": Array [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
           ],
           "Version": "2012-10-17",
         },
@@ -7434,6 +7469,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::IAM::Policy",
     },
     "UpdatePipelineLambdaRole88CE0535": Object {
+      "Condition": "UseGitHubCondition",
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [
@@ -9609,6 +9645,7 @@ phases:
       "Type": "AWS::SSM::Parameter",
     },
     "UpdatePipelineGithubTokenFunction29B64F2E": Object {
+      "Condition": "UseGitHubCondition",
       "DependsOn": Array [
         "UpdatePipelineLambdaRole88CE0535",
       ],
@@ -9693,6 +9730,10 @@ async function updateCodePipelineSourceStage(pipelineDetails, secretValue) {
   const pipelineStages = pipelineDetails.pipeline.stages;
   const sourceStage = pipelineStages.find(o => o.name == 'Source');
   const sourceAction = sourceStage.actions.find(a => a.name == 'Source');
+  if (sourceAction.provider != 'GitHub') {
+    console.log('Pipeline source is not GitHub, no action will be taken.');
+    return;
+  }
   sourceAction.configuration.OAuthToken = secretValue;
 
   return pipelineDetails;
@@ -9721,7 +9762,9 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     try {
       const pipelineDetails = await getPipelineDetails(pipeline);
       const updatedPipelineDetails = await updateCodePipelineSourceStage(pipelineDetails, secretValue);
-      await updatePipeline(updatedPipelineDetails);
+      if (updatedPipelineDetails) {
+        await updatePipeline(updatedPipelineDetails);
+      }
     } catch (error) {
       console.error(error);
       throw new Error(\`Error occurred while updating pipeline \${pipeline}\`);
@@ -9776,6 +9819,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::Lambda::Function",
     },
     "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A": Object {
+      "Condition": "UseGitHubCondition",
       "DeletionPolicy": "Delete",
       "Properties": Object {
         "KmsKeyId": Object {
@@ -9801,6 +9845,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "UpdateReplacePolicy": "Delete",
     },
     "UpdatePipelineGithubTokenRule79D83132": Object {
+      "Condition": "UseGitHubCondition",
       "Properties": Object {
         "Description": "Rule to trigger Lambda Function when the Github Accelerator Token has been updated.",
         "EventPattern": Object {
@@ -9863,6 +9908,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::Events::Rule",
     },
     "UpdatePipelineGithubTokenRuleAllowEventRuleAWSAcceleratorTestInstallerStackUpdatePipelineGithubTokenFunction78C173C279CEF0A3": Object {
+      "Condition": "UseGitHubCondition",
       "Properties": Object {
         "Action": "lambda:InvokeFunction",
         "FunctionName": Object {
@@ -9882,6 +9928,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::Lambda::Permission",
     },
     "UpdatePipelineLambdaPolicy284ABC36": Object {
+      "Condition": "UseGitHubCondition",
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [
@@ -9990,6 +10037,20 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
               },
             },
             Object {
+              "Action": "kms:Decrypt",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
               "Action": "iam:PassRole",
               "Effect": "Allow",
               "Resource": Array [
@@ -10021,20 +10082,6 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                 },
               ],
             },
-            Object {
-              "Action": "kms:Decrypt",
-              "Effect": "Allow",
-              "Resource": "*",
-            },
-            Object {
-              "Action": Array [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents",
-              ],
-              "Effect": "Allow",
-              "Resource": "*",
-            },
           ],
           "Version": "2012-10-17",
         },
@@ -10048,6 +10095,7 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Type": "AWS::IAM::Policy",
     },
     "UpdatePipelineLambdaRole88CE0535": Object {
+      "Condition": "UseGitHubCondition",
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [
