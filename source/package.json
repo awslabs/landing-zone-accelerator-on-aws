@@ -42,7 +42,7 @@
     "cleanup:tsc": "lerna run cleanup:tsc --stream",
     "build": "lerna run build --stream",
     "validate-config": "ts-node $PWD/packages/@aws-accelerator/accelerator/lib/config-validator.ts",
-    "test": "export NODE_OPTIONS=\"--max_old_space_size=4096\" && env && lerna run test --stream",
+    "test": "lerna run test --stream --scope=@aws-accelerator/config --scope=@aws-accelerator/installer",
     "test:clean": "rm -f ./test-reports/*.xml",
     "docs": "yarn run typedoc --entryPointStrategy packages './packages/@aws-accelerator/*' './packages/@aws-cdk-extensions/*' --name 'Landing Zone Accelerator on AWS' --includeVersion --disableSources --logLevel Verbose",
     "viper-scan": "cd .. && wget -v \"https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip\" && unzip -qo viperlight.zip -d ../viperlight && rm -r ./viperlight.zip && ../viperlight/bin/viperlight scan",
