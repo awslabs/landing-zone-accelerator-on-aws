@@ -6,6 +6,8 @@ cloudwatchLogRetentionInDays: 3653
 terminationProtection: true
 controlTower:
   enable: true
+centralizeCdkBuckets:
+  enable: true
 logging:
   account: LogArchive
   cloudtrail:
