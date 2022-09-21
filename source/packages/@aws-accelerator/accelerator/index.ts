@@ -18,6 +18,7 @@ export * from './lib/logger';
 export * from './lib/pipeline';
 export * from './lib/stacks/accelerator-stack';
 export * from './lib/stacks/accounts-stack';
+export * from './lib/stacks/bootstrap-stack';
 export * from './lib/stacks/network-associations-stack';
 export * from './lib/stacks/network-prep-stack';
 export * from './lib/stacks/network-vpc-stack';

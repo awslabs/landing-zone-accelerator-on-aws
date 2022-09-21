@@ -28,6 +28,10 @@ export interface KeyLookupProps {
    */
   readonly accountId: string;
   /**
+   * Optional key region
+   */
+  readonly keyRegion?: string;
+  /**
    * The name of the cross account role to use when accessing
    */
   readonly roleName?: string;
@@ -49,14 +53,17 @@ export class KeyLookup extends Construct {
 
   constructor(scope: Construct, id: string, props: KeyLookupProps) {
     super(scope, id);
-
     let keyArn: string | undefined;
-    if (cdk.Stack.of(this).account === props.accountId) {
+    if (
+      cdk.Stack.of(this).account === props.accountId &&
+      cdk.Stack.of(this).region === (props.keyRegion ?? cdk.Stack.of(this).region)
+    ) {
       keyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(this, props.keyArnParameterName);
     } else {
       keyArn = new SsmParameterLookup(this, 'Lookup', {
         name: props.keyArnParameterName,
         accountId: props.accountId,
+        parameterRegion: props.keyRegion ?? cdk.Stack.of(this).region,
         roleName: props.roleName,
         kmsKey: props.kmsKey,
         logRetentionInDays: props.logRetentionInDays,

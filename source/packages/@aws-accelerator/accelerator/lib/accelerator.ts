@@ -67,6 +67,7 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.ORGANIZATIONS]: 'AWSAccelerator-OrganizationsStack',
   [AcceleratorStage.KEY]: 'AWSAccelerator-KeyStack',
   [AcceleratorStage.LOGGING]: 'AWSAccelerator-LoggingStack',
+  [AcceleratorStage.BOOTSTRAP]: 'AWSAccelerator-BootstrapStack',
   [AcceleratorStage.ACCOUNTS]: 'AWSAccelerator-AccountsStack',
   [AcceleratorStage.DEPENDENCIES]: 'AWSAccelerator-DependenciesStack',
   [AcceleratorStage.SECURITY]: 'AWSAccelerator-SecurityStack',
@@ -230,6 +231,7 @@ export abstract class Accelerator {
               caBundlePath: props.caBundlePath,
               ec2Creds: props.ec2Creds,
               proxyAddress: props.proxyAddress,
+              centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
             }),
           );
 
@@ -415,7 +417,6 @@ export abstract class Accelerator {
     }
 
     if (
-      props.stage === AcceleratorStage.LOGGING ||
       props.stage === AcceleratorStage.SECURITY ||
       props.stage === AcceleratorStage.SECURITY_RESOURCES ||
       props.stage === AcceleratorStage.OPERATIONS ||

@@ -30,7 +30,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
-  const region = event.ResourceProperties['region'];
+  const parameterRegion = event.ResourceProperties['parameterRegion'];
   const invokingAccountID = event.ResourceProperties['invokingAccountID'];
   const parameterAccountID = event.ResourceProperties['parameterAccountID'];
   const assumeRoleArn = event.ResourceProperties['assumeRoleArn'];
@@ -41,7 +41,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Update':
       let ssmClient: AWS.SSM;
       if (invokingAccountID !== parameterAccountID) {
-        const stsClient = new AWS.STS({ region: region });
+        const stsClient = new AWS.STS({ region: parameterRegion });
         const assumeRoleCredential = await throttlingBackOff(() =>
           stsClient
             .assumeRole({
@@ -50,9 +50,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             })
             .promise(),
         );
-        console.log(assumeRoleCredential);
         ssmClient = new AWS.SSM({
-          region: region,
+          region: parameterRegion,
           credentials: {
             accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId,
             secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey,
@@ -61,12 +60,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           },
         });
       } else {
-        ssmClient = new AWS.SSM({ region: region });
+        ssmClient = new AWS.SSM({ region: parameterRegion });
       }
 
       const response = await throttlingBackOff(() => ssmClient.getParameter({ Name: parameterName }).promise());
-
-      console.log(response.Parameter!.Value);
 
       return { PhysicalResourceId: response.Parameter!.Value, Status: 'SUCCESS' };
 

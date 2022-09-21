@@ -31,6 +31,7 @@ import {
   AcceleratorStackProps,
 } from '../lib/stacks/accelerator-stack';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
+import { BootstrapStack } from '../lib/stacks/bootstrap-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
 import { NetworkAssociationsGwlbStack } from '../lib/stacks/network-associations-gwlb-stack';
@@ -140,6 +141,9 @@ export class AcceleratorSynthStacks {
         break;
       case AcceleratorStage.ACCOUNTS:
         this.synthAccountStacks();
+        break;
+      case AcceleratorStage.BOOTSTRAP:
+        this.synthBootstrapStacks();
         break;
     }
   }
@@ -459,6 +463,29 @@ export class AcceleratorSynthStacks {
         this.stacks.set(
           `${account.name}-${region}`,
           new SecurityStack(this.app, `${AcceleratorStackNames[AcceleratorStage.SECURITY]}-${accountId}-${region}`, {
+            env: {
+              account: accountId,
+              region: region,
+            },
+            ...this.props,
+          }),
+        );
+      }
+    }
+  }
+  /**
+   * synth Bootstrap stacks
+   */
+  private synthBootstrapStacks() {
+    for (const region of this.props.globalConfig.enabledRegions) {
+      for (const account of [
+        ...this.props.accountsConfig.mandatoryAccounts,
+        ...this.props.accountsConfig.workloadAccounts,
+      ]) {
+        const accountId = this.props.accountsConfig.getAccountId(account.name);
+        this.stacks.set(
+          `${account.name}-${region}`,
+          new BootstrapStack(this.app, `${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${accountId}-${region}`, {
             env: {
               account: accountId,
               region: region,

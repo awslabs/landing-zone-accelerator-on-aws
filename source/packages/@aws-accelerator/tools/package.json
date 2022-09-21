@@ -60,6 +60,7 @@
     "@aws-sdk/client-codepipeline": "3.92.0",
     "@aws-sdk/client-kms": "3.92.0",
     "@aws-sdk/client-organizations": "3.92.0",
-    "@aws-sdk/client-s3": "3.92.0"
+    "@aws-sdk/client-s3": "3.92.0",
+    "@aws-sdk/client-iam": "3.92.0"
   }
 }

@@ -18,20 +18,28 @@ import { AcceleratorTool } from './lib/classes/accelerator-tool';
  * AWS Accelerator Uninstaller tool entry point.
  * Script Options:
  * <ul>
- * <li>--installerStackName The name of the installer cloudformation stack
- * <li>--keepBootstraps(optional) When this flag used CDK bootstrap stacks will be deleted
- * <li>--deleteData(optional) When this flag used S3 buckets, cloudwatch log groups etc. will be deleted.
- * <li>--deleteConfigRepo(optional) When this flag used configuration repository will be deleted.
- * <li>--deletePipelines(optional) When this flag used pipelined will be deleted.
- * <li>--ignoreTerminationProtection(optional) When this flag used termination protected stacks will be deleted.
+ * <li>--installer-stack-name The name of the installer cloudformation stack
+ * <li>--partition AWS partition
+ * <li>--debug Display debug logs
+ * <li>--installer-delete When this flag is set to true installer stack and pipeline will be deleted
+ * <li>--full-destroy(optional) When this flag is set to true every resources related to LZ Accelerator will be deleted, except installer-delete other flags will be ignored when full-destroy is set to true. Default is false
+ * <li>--delete-data(optional) When this flag is set to true S3 buckets, cloudwatch log groups etc. will be deleted.
+ * <li>--delete-config-repo(optional) When this flag is set to true configuration repository will be deleted.
+ * <li>--keep-bootstraps(optional) When this flag is set to true CDK bootstrap stacks will be deleted
+ * <li>--delete-pipelines(optional) When this flag is set to true pipelined will be deleted.
+ * <li>--ignore-termination-protection(optional) When this flag is set to true termination protected stacks will be deleted.
+ * <li>--stage-name(optional) Name of the LZ Accelerator pipeline stage. When this parameter is available LZ Accelerator pipeline from the given stage to the end of the pipeline will be deleted. Default is set to all.
+ * <li>--action-name(optional) Name of the LZ Accelerator pipeline stage action. When this parameter is available LZ Accelerator pipeline from the given stage action to the end of the pipeline will be deleted. Default is set to all.
+ *
  * </ul>
  * @example
  * ts-node uninstaller.ts --installer-stack-name <value> --keep-bootstraps --delete-data --delete-pipelines
  */
+const scriptUsage =
+  'Usage: yarn run ts-node --transpile-only uninstaller.ts --installer-stack-name <INSTALLER_STACK_NAME> --partition <PARTITION> [--debug] [--installer-delete] [--full-destroy] [--delete-data] [--delete-pipelines] [--delete-config-repo] [--ignore-termination-protection]  [--stage-name] <STAGE_NAME> [--action-name] <ACTION_NAME>';
 async function main(): Promise<string> {
   const start = new Date().getTime();
-  const usage =
-    '** Script Usage ** ts-node uninstaller.ts --installerStackName <value> [--partition] [--keepBootstraps] [--deleteData] [--deleteConfigRepo] [--deletePipelines] [--ignoreTerminationProtection]';
+  const usage = `** Script Usage ** ${scriptUsage}`;
 
   const argv = yargs(hideBin(process.argv)).argv;
   const installerStackName = argv['installerStackName'] as string;
@@ -41,28 +49,53 @@ async function main(): Promise<string> {
   }
 
   const partition = (argv['partition'] as string) ?? 'aws';
-  const keepBootstraps = (argv['keepBootstraps'] as boolean) ?? false;
-  const deleteData = (argv['deleteData'] as boolean) ?? false;
+  const fullDestroy = (argv['fullDestroy'] as boolean) ?? false;
+  const debug = (argv['debug'] as boolean) ?? false;
+
+  let stageName = 'all';
+  let actionName = 'all';
+  let deleteBootstraps = true;
+  let deleteData = true;
+  let deletePipelines = true;
+  let ignoreTerminationProtection = true;
+
+  if (!fullDestroy) {
+    stageName = (argv['stageName'] as string) ?? 'all';
+    actionName = (argv['actionName'] as string) ?? 'all';
+    deleteBootstraps = (argv['deleteBootstraps'] as boolean) ?? false;
+    deleteData = (argv['deleteData'] as boolean) ?? false;
+    deletePipelines = (argv['deletePipelines'] as boolean) ?? false;
+    ignoreTerminationProtection = (argv['ignoreTerminationProtection'] as boolean) ?? false;
+
+    if (stageName !== 'all' && actionName !== 'all') {
+      console.log(`Only one property of stageName and actionName can be provided.`);
+      throw new Error(`Usage: ${scriptUsage}`);
+    }
+  }
+
+  const installerDelete = (argv['installerDelete'] as boolean) ?? false;
   const deleteConfigRepo = (argv['deleteConfigRepo'] as boolean) ?? false;
-  const deletePipelines = (argv['deletePipelines'] as boolean) ?? false;
-  const ignoreTerminationProtection = (argv['ignoreTerminationProtection'] as boolean) ?? false;
 
   const acceleratorTool = new AcceleratorTool({
-    installerStackName: installerStackName,
-    partition: partition,
-    keepBootstraps: keepBootstraps,
-    deleteData: deleteData,
-    deleteConfigRepo: deleteConfigRepo,
-    deletePipelines: deletePipelines,
-    ignoreTerminationProtection: ignoreTerminationProtection,
+    debug,
+    installerStackName,
+    stageName,
+    actionName,
+    partition,
+    deleteBootstraps,
+    deleteData,
+    deleteConfigRepo,
+    deletePipelines,
+    ignoreTerminationProtection,
+    installerDelete,
   });
 
   const status = await acceleratorTool.uninstallAccelerator(installerStackName);
   const elapsed = Math.round((new Date().getTime() - start) / 60000);
 
   return status
-    ? `[uninstaller] Uninstallation completed successfully for installer stack "${installerStackName}". Elapsed time ~${elapsed} minutes`
-    : `[uninstaller] Uninstallation failed for installer stack "${installerStackName}". Elapsed time ~${elapsed} minutes`;
+    ? `[uninstaller] Un-installation completed successfully for installer stack "${installerStackName}". Elapsed time ~${elapsed} minutes`
+    : `[uninstaller] Un-installation failed for installer stack "${installerStackName}". Elapsed time ~${elapsed} minutes`;
 }
 
 process.on('unhandledRejection', (reason, _) => {

@@ -21,6 +21,7 @@ import {
   ResolverEndpointConfig,
   ResolverRuleConfig,
   VpcConfig,
+  VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import { HostedZone, RecordSet, ResolverRule } from '@aws-accelerator/constructs';
 
@@ -141,7 +142,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
         props.networkConfig.centralNetworkServices.delegatedAdminAccount,
       );
 
-      // Only deploy in the home region of the delegated admin account
+      // Only deploy in the delegated admin account
       if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
         this.createSystemRules(props.networkConfig.centralNetworkServices?.route53Resolver?.rules);
       }
@@ -159,7 +160,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
    * @param zoneMap
    */
   private createHostedZones(
-    vpcItem: VpcConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
     vpcId: string,
     endpointMap: Map<string, string>,
     zoneMap: Map<string, string>,
@@ -230,7 +231,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
    * @param resolverMap
    */
   private createForwardRules(
-    vpcItem: VpcConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
     endpointItem: ResolverEndpointConfig,
     resolverMap: Map<string, string>,
   ): void {
@@ -292,6 +293,7 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
   private createSystemRules(rules: ResolverRuleConfig[]): void {
     // Process SYSTEM rules
     for (const ruleItem of rules ?? []) {
+      // Only deploy if the region isn't excluded
       if (!ruleItem.excludedRegions?.includes(cdk.Stack.of(this).region as Region) || !ruleItem.excludedRegions) {
         Logger.info(`[network-vpc-dns-stack] Add Route 53 Resolver SYSTEM rule ${ruleItem.name}`);
 

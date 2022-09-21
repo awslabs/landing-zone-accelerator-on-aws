@@ -22,6 +22,7 @@ import * as fs from 'fs';
 import {
   Bucket,
   BucketEncryptionType,
+  BucketReplicationProps,
   CentralLogsBucket,
   KeyLookup,
   S3PublicAccessBlock,

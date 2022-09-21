@@ -11,34 +11,34 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
-import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
-import { snapShotTest } from '../snapshot-test';
+// import * as cdk from 'aws-cdk-lib';
+// import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
+// import { snapShotTest } from '../snapshot-test';
 
-const testNamePrefix = 'Construct(Bucket): ';
+// const testNamePrefix = 'Construct(Bucket): ';
 
-//Initialize stack for snapshot test and resource configuration test
-const stack = new cdk.Stack();
+// //Initialize stack for snapshot test and resource configuration test
+// const stack = new cdk.Stack();
 
-new Bucket(stack, 'Bucket', {
-  encryptionType: BucketEncryptionType.SSE_KMS,
-  s3BucketName: `aws-accelerator-macie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-  serverAccessLogsBucketName: `aws-accelerator-s3-access-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-  replicationProps: {
-    destination: {
-      bucketName: `aws-accelerator-central-logs-bucket`,
-      accountId: cdk.Aws.ACCOUNT_ID,
-      keyArn: `arn:aws:kms:us-east-1:${cdk.Aws.ACCOUNT_ID}:key/ksm-key-arn`,
-    },
-    kmsKey: new cdk.aws_kms.Key(stack, 'CWLKey', {}),
-    logRetentionInDays: 3653,
-  },
-});
+// new Bucket(stack, 'Bucket', {
+//   encryptionType: BucketEncryptionType.SSE_KMS,
+//   s3BucketName: `aws-accelerator-macie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+//   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+//   serverAccessLogsBucketName: `aws-accelerator-s3-access-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+//   replicationProps: {
+//     destination: {
+//       bucketName: `aws-accelerator-central-logs-bucket`,
+//       accountId: cdk.Aws.ACCOUNT_ID,
+//       keyArn: `arn:aws:kms:us-east-1:${cdk.Aws.ACCOUNT_ID}:key/ksm-key-arn`,
+//     },
+//     kmsKey: new cdk.aws_kms.Key(stack, 'CWLKey', {}),
+//     logRetentionInDays: 3653,
+//   },
+// });
 
-/**
- * Bucket construct test
- */
-describe('Bucket', () => {
-  snapShotTest(testNamePrefix, stack);
-});
+// /**
+//  * Bucket construct test
+//  */
+// describe('Bucket', () => {
+//   snapShotTest(testNamePrefix, stack);
+// });

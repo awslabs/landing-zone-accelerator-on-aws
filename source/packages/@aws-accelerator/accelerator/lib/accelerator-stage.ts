@@ -27,6 +27,7 @@ export enum AcceleratorStage {
    * Accounts Stage - Handle all Organization and Accounts actions
    */
   ACCOUNTS = 'accounts',
+  BOOTSTRAP = 'bootstrap',
   DEPENDENCIES = 'dependencies',
   SECURITY = 'security',
   SECURITY_RESOURCES = 'security-resources',

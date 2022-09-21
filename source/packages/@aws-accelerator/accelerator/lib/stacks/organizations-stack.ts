@@ -22,6 +22,8 @@ import {
   AuditManagerOrganizationAdminAccount,
   Bucket,
   BucketEncryptionType,
+  BucketReplicationProps,
+  CentralLogsBucket,
   DetectiveOrganizationAdminAccount,
   EnableAwsServiceAccess,
   EnablePolicyType,

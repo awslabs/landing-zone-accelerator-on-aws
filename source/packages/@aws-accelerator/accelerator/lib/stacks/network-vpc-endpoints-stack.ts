@@ -26,6 +26,7 @@ import {
   NfwFirewallConfig,
   ResolverEndpointConfig,
   VpcConfig,
+  VpcTemplatesConfig,
 } from '@aws-accelerator/config';
 import {
   NetworkFirewall,
@@ -227,7 +228,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
               const endpointSubnets: string[] = [];
 
               // Check if this is the delegated admin account
-              if (accountId !== delegatedAdminAccountId) {
+              if (cdk.Stack.of(this).account !== delegatedAdminAccountId) {
                 throw new Error(
                   '[network-vpc-endpoints-stack] VPC for Route 53 Resolver endpoints must be located in the delegated network administrator account',
                 );
@@ -357,7 +358,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
    * @param organizationId
    */
   private createGatewayEndpoints(
-    vpcItem: VpcConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
     vpcId: string,
     routeTableMap: Map<string, string>,
     //organizationId?: string,
@@ -425,7 +426,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
    * @param subnetMap
    */
   private createInterfaceEndpoints(
-    vpcItem: VpcConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
     vpcId: string,
     subnetMap: Map<string, string>,
     //organizationId?: string,
@@ -685,7 +686,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
    * @returns
    */
   private createVpcEndpointPolicy(
-    vpcItem: VpcConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
     endpointItem: GatewayEndpointServiceConfig | InterfaceEndpointServiceConfig,
     isGatewayEndpoint?: boolean,
   ): cdk.aws_iam.PolicyDocument | undefined {

@@ -17,6 +17,7 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 import * as t from './common-types';
+import * as emailValidator from 'email-validator';
 
 import { OrganizationConfig } from './organization-config';
 

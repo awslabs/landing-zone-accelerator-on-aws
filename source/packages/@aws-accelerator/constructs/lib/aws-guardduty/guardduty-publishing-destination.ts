@@ -25,9 +25,9 @@ export interface GuardDutyPublishingDestinationProps {
    */
   readonly exportDestinationType: string;
   /**
-   * Publishing destination bucket arn
+   * Publishing destination arn
    */
-  readonly bucketArn: string;
+  readonly destinationArn: string;
   /**
    * Publishing destination bucket encryption key
    */

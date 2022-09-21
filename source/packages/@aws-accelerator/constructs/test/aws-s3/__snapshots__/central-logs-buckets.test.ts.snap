@@ -486,6 +486,27 @@ Object {
                     "ssm:GetParameters",
                     "ssm:GetParameter",
                   ],
+                  "Condition": Object {
+                    "ArnLike": Object {
+                      "aws:PrincipalARN": Array [
+                        Object {
+                          "Fn::Join": Array [
+                            "",
+                            Array [
+                              "arn:",
+                              Object {
+                                "Ref": "AWS::Partition",
+                              },
+                              ":iam::*:role/AWSAccelerator-*",
+                            ],
+                          ],
+                        },
+                      ],
+                    },
+                    "StringEquals": Object {
+                      "aws:PrincipalOrgID": "acceleratorOrg",
+                    },
+                  },
                   "Effect": "Allow",
                   "Resource": Object {
                     "Fn::Join": Array [
@@ -513,6 +534,27 @@ Object {
                 },
                 Object {
                   "Action": "ssm:DescribeParameters",
+                  "Condition": Object {
+                    "ArnLike": Object {
+                      "aws:PrincipalARN": Array [
+                        Object {
+                          "Fn::Join": Array [
+                            "",
+                            Array [
+                              "arn:",
+                              Object {
+                                "Ref": "AWS::Partition",
+                              },
+                              ":iam::*:role/AWSAccelerator-*",
+                            ],
+                          ],
+                        },
+                      ],
+                    },
+                    "StringEquals": Object {
+                      "aws:PrincipalOrgID": "acceleratorOrg",
+                    },
+                  },
                   "Effect": "Allow",
                   "Resource": "*",
                 },
@@ -522,17 +564,7 @@ Object {
             "PolicyName": "default",
           },
         ],
-        "RoleName": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "AWSAccelerator-CentralBucketKMSArnSsmParam-",
-              Object {
-                "Ref": "AWS::Region",
-              },
-            ],
-          ],
-        },
+        "RoleName": "AWSAccelerator-CentralBucket-KeyArnParam-Role",
       },
       "Type": "AWS::IAM::Role",
     },

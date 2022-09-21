@@ -368,8 +368,8 @@ cloudWatch:
     - regions:
         - *HOME_REGION
       deploymentTargets:
-        accounts:
-          - Management
+        organizationalUnits:
+          - Root
       metrics:
         # CIS 1.1 – Avoid the use of the "root" account
         - filterName: RootAccountMetricFilter
@@ -480,8 +480,8 @@ cloudWatch:
     - regions:
         - *HOME_REGION
       deploymentTargets:
-        accounts:
-          - Management
+        organizationalUnits:
+          - Root
       alarms:
         # CIS 1.1 – Avoid the use of the "root" account
         - alarmName: CIS-1.1-RootAccountUsage

@@ -11,26 +11,16 @@
  *  and limitations under the License.
  */
 
-import * as cdk from 'aws-cdk-lib';
-import { SsmParameterLookup } from '../../index';
-import { snapShotTest } from '../snapshot-test';
+import { AcceleratorStage } from '../lib/accelerator-stage';
+import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
+import { describe } from '@jest/globals';
+import { snapShotTest } from './snapshot-test';
 
-const testNamePrefix = 'Construct(SsmParameterLookup): ';
+const testNamePrefix = 'Construct(BootstrapStack): ';
 
-//Initialize stack for snapshot test and resource configuration test
-const stack = new cdk.Stack();
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.BOOTSTRAP, 'all-enabled', 'aws');
+const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 
-new SsmParameterLookup(stack, 'SsmParameter', {
-  name: 'TestParameter',
-  accountId: '123123123123',
-  parameterRegion: 'us-east-1',
-  roleName: 'TestRole',
-  logRetentionInDays: 3653,
-});
-
-/**
- * SsmParameterLookup construct test
- */
-describe('SsmParameterLookup', () => {
+describe('BootstrapStack', () => {
   snapShotTest(testNamePrefix, stack);
 });
