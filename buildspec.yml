@@ -38,7 +38,3 @@ artifacts:
     - buildspec.yml
     - CHANGELOG.md
     - .cfnnag_*
-env:
-  variables:
-    NODE_OPTIONS: "--max_old_space_size=4096"
-    CDK_NEW_BOOTSTRAP: "1"
