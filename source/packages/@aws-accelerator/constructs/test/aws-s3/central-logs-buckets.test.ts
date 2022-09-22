@@ -11,31 +11,31 @@
  *  and limitations under the License.
  */
 
-// import * as cdk from 'aws-cdk-lib';
-// import { Bucket, BucketEncryptionType, CentralLogsBucket } from '@aws-accelerator/constructs';
-// import { snapShotTest } from '../snapshot-test';
+import * as cdk from 'aws-cdk-lib';
+import { Bucket, BucketEncryptionType, CentralLogsBucket } from '@aws-accelerator/constructs';
+import { snapShotTest } from '../snapshot-test';
 
-// const testNamePrefix = 'Construct(CentralLogsBucket): ';
+const testNamePrefix = 'Construct(CentralLogsBucket): ';
 
-// //Initialize stack for snapshot test and resource configuration test
-// const stack = new cdk.Stack();
+//Initialize stack for snapshot test and resource configuration test
+const stack = new cdk.Stack();
 
-// new CentralLogsBucket(stack, 'CentralLogsBucket', {
-//   s3BucketName: `aws-accelerator-central-logs-${stack.account}-${stack.region}`,
-//   serverAccessLogsBucket: new Bucket(stack, 'AccessLogsBucket', {
-//     encryptionType: BucketEncryptionType.SSE_KMS,
-//     s3BucketName: `aws-accelerator-s3-access-logs-${stack.account}-${stack.region}`,
-//     kmsAliasName: 'alias/accelerator/s3-access-logs/s3',
-//     kmsDescription: 'AWS Accelerator S3 Access Logs Bucket CMK',
-//   }),
-//   kmsAliasName: 'alias/accelerator/central-logs/s3',
-//   kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
-//   organizationId: 'acceleratorOrg',
-// });
+new CentralLogsBucket(stack, 'CentralLogsBucket', {
+  s3BucketName: `aws-accelerator-central-logs-${stack.account}-${stack.region}`,
+  serverAccessLogsBucket: new Bucket(stack, 'AccessLogsBucket', {
+    encryptionType: BucketEncryptionType.SSE_KMS,
+    s3BucketName: `aws-accelerator-s3-access-logs-${stack.account}-${stack.region}`,
+    kmsAliasName: 'alias/accelerator/s3-access-logs/s3',
+    kmsDescription: 'AWS Accelerator S3 Access Logs Bucket CMK',
+  }),
+  kmsAliasName: 'alias/accelerator/central-logs/s3',
+  kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
+  organizationId: 'acceleratorOrg',
+});
 
-// /**
-//  * CentralLogsBucket construct test
-//  */
-// describe('CentralLogsBucket', () => {
-//   snapShotTest(testNamePrefix, stack);
-// });
+/**
+ * CentralLogsBucket construct test
+ */
+describe('CentralLogsBucket', () => {
+  snapShotTest(testNamePrefix, stack);
+});
