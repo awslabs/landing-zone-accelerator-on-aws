@@ -35,6 +35,8 @@ artifacts:
     - source/**/*
     - .gitignore
     - sonar-project.properties
+    - LICENSE.txt
+    - NOTICE.txt
     - buildspec.yml
     - CHANGELOG.md
     - .cfnnag_*
