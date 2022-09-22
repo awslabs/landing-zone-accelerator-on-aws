@@ -285,20 +285,13 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected getAccountNamesFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
     const accountNames: string[] = [];
 
-    // Helper function to add an account to the list
-    const addAccountName = (accountName: string) => {
-      if (!accountNames.includes(accountName)) {
-        accountNames.push(accountName);
-      }
-    };
-
     for (const ou of deploymentTargets.organizationalUnits ?? []) {
       if (ou === 'Root') {
         for (const account of [
           ...this.props.accountsConfig.mandatoryAccounts,
           ...this.props.accountsConfig.workloadAccounts,
         ]) {
-          addAccountName(account.name);
+          accountNames.push(account.name);
         }
       } else {
         for (const account of [
@@ -306,17 +299,17 @@ export abstract class AcceleratorStack extends cdk.Stack {
           ...this.props.accountsConfig.workloadAccounts,
         ]) {
           if (ou === account.organizationalUnit) {
-            addAccountName(account.name);
+            accountNames.push(account.name);
           }
         }
       }
     }
 
     for (const account of deploymentTargets.accounts ?? []) {
-      addAccountName(account);
+      accountNames.push(account);
     }
 
-    return accountNames;
+    return [...new Set(accountNames)];
   }
 
   protected getAccountIdsFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {

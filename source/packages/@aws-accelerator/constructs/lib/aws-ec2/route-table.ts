@@ -192,6 +192,5 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
       });
       association.node.addDependency(this.vpc.internetGatewayAttachment!);
     }
-    // TODO: add case for virtual private gateways when supported
   }
 }

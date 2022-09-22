@@ -394,7 +394,7 @@ export abstract class Accelerator {
           Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
           const accountId = accountsConfig.getAccountId(account.name);
           await delay(1000);
-          if (!(accountId === logAccountId)) {
+          if (accountId !== logAccountId) {
             promises.push(
               AcceleratorToolkit.execute({
                 command: props.command,

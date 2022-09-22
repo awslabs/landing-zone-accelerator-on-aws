@@ -56,6 +56,7 @@ interface RemediationParameters {
   };
 }
 
+type CustomConfigRuleType = config.ManagedRule | config.CustomRule | undefined;
 /**
  * Security Stack, configures local account security services
  */
@@ -299,7 +300,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
    * @param rule
    * @returns
    */
-  private createManagedConfigRule(rule: ConfigRule): config.ManagedRule | config.CustomRule | undefined {
+  private createManagedConfigRule(rule: ConfigRule): CustomConfigRuleType {
     Logger.info(`[security-resources-stack] Creating managed rule ${rule.name}`);
 
     const resourceTypes: config.ResourceType[] = [];
@@ -325,7 +326,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
    * @param rule
    * @returns
    */
-  private createCustomConfigRule(rule: ConfigRule): config.ManagedRule | config.CustomRule | undefined {
+  private createCustomConfigRule(rule: ConfigRule): CustomConfigRuleType {
     Logger.info(`[security-resources-stack] Creating custom rule ${rule.name}`);
     let ruleScope: config.RuleScope | undefined;
 
@@ -527,7 +528,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
    */
   private createAwsConfigRules(ruleSet: AwsConfigRuleSet) {
     for (const rule of ruleSet.rules) {
-      let configRule: config.ManagedRule | config.CustomRule | undefined;
+      let configRule: CustomConfigRuleType;
 
       if (rule.type && rule.type === 'Custom') {
         configRule = this.createCustomConfigRule(rule);
