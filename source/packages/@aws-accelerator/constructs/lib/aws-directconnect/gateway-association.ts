@@ -54,7 +54,7 @@ export interface DirectConnectGatewayAssociationProps {
 
 export class DirectConnectGatewayAssociation extends cdk.Resource implements IDirectConnectGatewayAssociation {
   public readonly associationId: string;
-  public readonly transitGatewayAttachmentId?: string | undefined;
+  public readonly transitGatewayAttachmentId?: string;
 
   constructor(scope: Construct, id: string, props: DirectConnectGatewayAssociationProps) {
     super(scope, id);

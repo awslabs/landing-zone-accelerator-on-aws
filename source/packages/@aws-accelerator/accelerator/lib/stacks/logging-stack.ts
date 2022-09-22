@@ -31,9 +31,8 @@ import {
   CloudWatchLogsSubscriptionFilter,
   NewCloudWatchLogEvent,
   Organization,
+  BucketAccessType,
 } from '@aws-accelerator/constructs';
-
-import { BucketAccessType } from '@aws-accelerator/constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { Logger } from '../logger';
 import path from 'path';
@@ -497,7 +496,7 @@ export class LoggingStack extends AcceleratorStack {
       );
     }
 
-    allowedServicePrincipals!.forEach(item => {
+    allowedServicePrincipals.forEach(item => {
       s3Key.addToResourcePolicy(
         new cdk.aws_iam.PolicyStatement({
           sid: `Allow ${item.name} service to use the encryption key`,

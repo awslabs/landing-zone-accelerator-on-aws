@@ -1956,7 +1956,7 @@ Object {
       "Properties": Object {
         "Name": "/accelerator/PipelineStack/version",
         "Type": "String",
-        "Value": "1.1.0",
+        "Value": "1.2.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
