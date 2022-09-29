@@ -127,7 +127,8 @@ export abstract class Accelerator {
     let globalConfig = undefined;
     let assumeRolePlugin = undefined;
 
-    if (props.stage !== AcceleratorStage.PIPELINE) {
+    if (props.stage !== AcceleratorStage.PIPELINE && props.stage !== AcceleratorStage.TESTER_PIPELINE) {
+      console.log(props.stage);
       // Get management account credential when pipeline is executing outside of management account
       managementAccountCredentials = await this.getManagementAccountCredentials(props.partition);
 
