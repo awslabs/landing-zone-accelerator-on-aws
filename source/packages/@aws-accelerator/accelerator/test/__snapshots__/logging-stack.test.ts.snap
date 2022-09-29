@@ -1070,6 +1070,59 @@ Object {
             },
             Object {
               "Action": Array [
+                "s3:PutObjectAcl",
+                "s3:PutObject",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    Object {
+                      "Fn::GetAtt": Array [
+                        "CentralLogsBucket447B5C59",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+              "Sid": "Allow Organization principals to put objects",
+            },
+            Object {
+              "Action": "s3:GetEncryptionConfiguration",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "CentralLogsBucket447B5C59",
+                  "Arn",
+                ],
+              },
+              "Sid": "Allow Organization principals to get encryption context",
+            },
+            Object {
+              "Action": Array [
                 "s3:GetBucketLocation",
                 "s3:PutObject",
               ],

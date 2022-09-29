@@ -931,6 +931,15 @@ export class LoggingStack extends AcceleratorStack {
         });
       }
 
+      if (this.props.globalConfig.logging.sessionManager.sendToS3) {
+        Logger.debug(`[Logging-stack] Grant Session Manager access to Central Logs Bucket.`);
+        awsPrincipalAccesses.push({
+          name: 'SessionManager',
+          principal: 'session-manager.amazonaws.com',
+          accessType: BucketAccessType.NO_ACCESS,
+        });
+      }
+
       this.centralLogsBucket = new CentralLogsBucket(this, 'CentralLogsBucket', {
         s3BucketName: this.centralLogsBucketName,
         serverAccessLogsBucket: serverAccessLogsBucket,
@@ -953,13 +962,6 @@ export class LoggingStack extends AcceleratorStack {
           },
         ],
       );
-      if (this.props.globalConfig.logging.sessionManager.sendToS3) {
-        awsPrincipalAccesses.push({
-          name: 'SessionManager',
-          principal: 'session-manager.amazonaws.com',
-          accessType: BucketAccessType.NO_ACCESS,
-        });
-      }
     }
   }
 }

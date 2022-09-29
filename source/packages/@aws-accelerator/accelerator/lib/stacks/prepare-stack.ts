@@ -186,13 +186,13 @@ export class PrepareStack extends AcceleratorStack {
           removalPolicy: cdk.RemovalPolicy.DESTROY,
           pointInTimeRecovery: true,
         });
-  
+
         configTable.addLocalSecondaryIndex({
           indexName: 'awsResourceKeys',
           sortKey: { name: 'awsKey', type: cdk.aws_dynamodb.AttributeType.STRING },
           projectionType: cdk.aws_dynamodb.ProjectionType.KEYS_ONLY,
         });
-  
+
         // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
         NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/AcceleratorConfigTable/Resource`, [
           {
@@ -200,7 +200,7 @@ export class PrepareStack extends AcceleratorStack {
             reason: 'AcceleratorConfigTable DynamoDB table do not need point in time recovery, data can be re-created',
           },
         ]);
-  
+
         Logger.info(`[prepare-stack] Load Config Table`);
         const configRepoName = props.qualifier ? `${props.qualifier}-config` : 'aws-accelerator-config';
         const loadAcceleratorConfigTable = new LoadAcceleratorConfigTable(this, 'LoadAcceleratorConfigTable', {
@@ -220,7 +220,7 @@ export class PrepareStack extends AcceleratorStack {
           kmsKey: cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
-  
+
         Logger.info(`[prepare-stack] Call create ou construct`);
         const createOrganizationalUnits = new OrganizationalUnits(this, 'CreateOrganizationalUnits', {
           acceleratorConfigTable: configTable,
@@ -230,10 +230,10 @@ export class PrepareStack extends AcceleratorStack {
           kmsKey: cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
-  
+
         createOrganizationalUnits.node.addDependency(configTable);
         createOrganizationalUnits.node.addDependency(loadAcceleratorConfigTable);
-  
+
         // Invite Accounts to Organization (GovCloud)
         const inviteAccountsToOu = new Account(this, 'InviteAccountsToOu', {
           acceleratorConfigTable: configTable,
@@ -244,7 +244,7 @@ export class PrepareStack extends AcceleratorStack {
         });
         inviteAccountsToOu.node.addDependency(loadAcceleratorConfigTable);
         inviteAccountsToOu.node.addDependency(createOrganizationalUnits);
-  
+
         if (props.partition == 'aws') {
           let govCloudAccountMappingTable: cdk.aws_dynamodb.ITable | undefined;
           Logger.info(`[prepare-stack] newOrgAccountsTable`);
@@ -256,7 +256,7 @@ export class PrepareStack extends AcceleratorStack {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             pointInTimeRecovery: true,
           });
-  
+
           // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
           NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/NewOrgAccounts/Resource`, [
             {
@@ -264,7 +264,7 @@ export class PrepareStack extends AcceleratorStack {
               reason: 'NewOrgAccounts DynamoDB table do not need point in time recovery, data can be re-created',
             },
           ]);
-  
+
           Logger.info(`[prepare-stack] newControlTowerAccountsTable`);
           const newCTAccountsTable = new cdk.aws_dynamodb.Table(this, 'NewCTAccounts', {
             partitionKey: { name: 'accountEmail', type: cdk.aws_dynamodb.AttributeType.STRING },
@@ -274,7 +274,7 @@ export class PrepareStack extends AcceleratorStack {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             pointInTimeRecovery: true,
           });
-  
+
           // AwsSolutions-DDB3: The DynamoDB table does not have Point-in-time Recovery enabled.
           NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/NewCTAccounts/Resource`, [
             {
@@ -282,12 +282,12 @@ export class PrepareStack extends AcceleratorStack {
               reason: 'NewCTAccounts DynamoDB table do not need point in time recovery, data can be re-created',
             },
           ]);
-  
+
           new cdk.aws_ssm.StringParameter(this, 'NewCTAccountsTableNameParameter', {
             parameterName: `/accelerator/prepare-stack/NewCTAccountsTableName`,
             stringValue: newCTAccountsTable.tableName,
           });
-  
+
           if (props.accountsConfig.anyGovCloudAccounts()) {
             Logger.info(`[prepare-stack] Create GovCloudAccountsMappingTable`);
             govCloudAccountMappingTable = new cdk.aws_dynamodb.Table(this, 'govCloudAccountMapping', {
@@ -297,18 +297,18 @@ export class PrepareStack extends AcceleratorStack {
               encryptionKey: key,
               pointInTimeRecovery: true,
             });
-  
+
             new cdk.aws_ssm.StringParameter(this, 'GovCloudAccountMappingTableNameParameter', {
               parameterName: `/accelerator/prepare-stack/govCloudAccountMappingTableName`,
               stringValue: govCloudAccountMappingTable.tableName,
             });
           }
-  
+
           new cdk.aws_ssm.StringParameter(this, 'NewOrgAccountsTableNameParameter', {
             parameterName: `/accelerator/prepare-stack/NewOrgAccountsTableName`,
             stringValue: newOrgAccountsTable.tableName,
           });
-  
+
           Logger.info(`[prepare-stack] Validate Environment`);
           const validation = new ValidateEnvironmentConfig(this, 'ValidateEnvironmentConfig', {
             acceleratorConfigTable: configTable,
@@ -325,11 +325,11 @@ export class PrepareStack extends AcceleratorStack {
             driftDetectionParameter: driftDetectedParameter,
             driftDetectionMessageParameter: driftMessageParameter,
           });
-  
+
           validation.node.addDependency(loadAcceleratorConfigTable);
           validation.node.addDependency(createOrganizationalUnits);
           validation.node.addDependency(inviteAccountsToOu);
-  
+
           Logger.info(`[prepare-stack] Create new organization accounts`);
           const organizationAccounts = new CreateOrganizationAccounts(this, 'CreateOrganizationAccounts', {
             newOrgAccountsTable: newOrgAccountsTable,
@@ -339,7 +339,7 @@ export class PrepareStack extends AcceleratorStack {
             logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
           });
           organizationAccounts.node.addDependency(validation);
-  
+
           // cdk-nag suppressions
           const orgAccountsIam4SuppressionPaths = [
             'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onEvent/ServiceRole/Resource',
@@ -348,7 +348,7 @@ export class PrepareStack extends AcceleratorStack {
             'CreateOrganizationAccounts/CreateOrganizationAccounts/ServiceRole/Resource',
             'CreateOrganizationAccounts/CreateOrganizationAccountStatus/ServiceRole/Resource',
           ];
-  
+
           const orgAccountsIam5SuppressionPaths = [
             'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
             'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
@@ -356,21 +356,21 @@ export class PrepareStack extends AcceleratorStack {
             'CreateOrganizationAccounts/CreateOrganizationAccountStatus/ServiceRole/DefaultPolicy/Resource',
             'CreateOrganizationAccounts/CreateOrganizationAccountsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
           ];
-  
+
           // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
           for (const orgAccountsIam4SuppressionPath of orgAccountsIam4SuppressionPaths) {
             NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${orgAccountsIam4SuppressionPath}`, [
               { id: 'AwsSolutions-IAM4', reason: 'AWS Custom resource provider role created by cdk.' },
             ]);
           }
-  
+
           // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
           for (const orgAccountsIam5SuppressionPath of orgAccountsIam5SuppressionPaths) {
             NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${orgAccountsIam5SuppressionPath}`, [
               { id: 'AwsSolutions-IAM5', reason: 'AWS Custom resource provider role created by cdk.' },
             ]);
           }
-  
+
           if (props.globalConfig.controlTower.enable) {
             Logger.info(`[prepare-stack] Get Portfolio Id`);
             const portfolioResults = new GetPortfolioId(this, 'GetPortFolioId', {
@@ -388,7 +388,7 @@ export class PrepareStack extends AcceleratorStack {
             });
             controlTowerAccounts.node.addDependency(validation);
             controlTowerAccounts.node.addDependency(organizationAccounts);
-  
+
             // cdk-nag suppressions
             const ctAccountsIam4SuppressionPaths = [
               'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/Resource',
@@ -397,7 +397,7 @@ export class PrepareStack extends AcceleratorStack {
               'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/Resource',
               'CreateCTAccounts/CreateControlTowerAccount/ServiceRole/Resource',
             ];
-  
+
             const ctAccountsIam5SuppressionPaths = [
               'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/DefaultPolicy/Resource',
               'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
@@ -405,19 +405,23 @@ export class PrepareStack extends AcceleratorStack {
               'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
               'CreateCTAccounts/CreateControlTowerAcccountsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
             ];
-  
+
             // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
             for (const ctAccountsIam4SuppressionPath of ctAccountsIam4SuppressionPaths) {
-              NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${ctAccountsIam4SuppressionPath}`, [
-                { id: 'AwsSolutions-IAM4', reason: 'AWS Custom resource provider role created by cdk.' },
-              ]);
+              NagSuppressions.addResourceSuppressionsByPath(
+                this,
+                `${this.stackName}/${ctAccountsIam4SuppressionPath}`,
+                [{ id: 'AwsSolutions-IAM4', reason: 'AWS Custom resource provider role created by cdk.' }],
+              );
             }
-  
+
             // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
             for (const ctAccountsIam5SuppressionPath of ctAccountsIam5SuppressionPaths) {
-              NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${ctAccountsIam5SuppressionPath}`, [
-                { id: 'AwsSolutions-IAM5', reason: 'AWS Custom resource provider role created by cdk.' },
-              ]);
+              NagSuppressions.addResourceSuppressionsByPath(
+                this,
+                `${this.stackName}/${ctAccountsIam5SuppressionPath}`,
+                [{ id: 'AwsSolutions-IAM5', reason: 'AWS Custom resource provider role created by cdk.' }],
+              );
             }
             // resources for control tower lifecycle events
             const controlTowerOuEventsFunction = new cdk.aws_lambda.Function(this, 'ControlTowerOuEventsFunction', {
@@ -430,7 +434,7 @@ export class PrepareStack extends AcceleratorStack {
                 CONFIG_TABLE_NAME: configTable.tableName,
               },
             });
-  
+
             controlTowerOuEventsFunction.addToRolePolicy(
               new cdk.aws_iam.PolicyStatement({
                 sid: 'dynamodb',
@@ -439,7 +443,7 @@ export class PrepareStack extends AcceleratorStack {
                 resources: [configTable.tableArn],
               }),
             );
-  
+
             controlTowerOuEventsFunction.addToRolePolicy(
               new cdk.aws_iam.PolicyStatement({
                 sid: 'organizations',
@@ -448,7 +452,7 @@ export class PrepareStack extends AcceleratorStack {
                 resources: [`arn:aws:organizations::${props.accountsConfig.getManagementAccountId()}:account/o-*/*`],
               }),
             );
-  
+
             // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
             NagSuppressions.addResourceSuppressionsByPath(
               this,
@@ -460,14 +464,14 @@ export class PrepareStack extends AcceleratorStack {
                 },
               ],
             );
-  
+
             new cdk.aws_logs.LogGroup(this, `${controlTowerOuEventsFunction.node.id}LogGroup`, {
               logGroupName: `/aws/lambda/${controlTowerOuEventsFunction.functionName}`,
               retention: props.globalConfig.cloudwatchLogRetentionInDays,
               encryptionKey: cloudwatchKey,
               removalPolicy: cdk.RemovalPolicy.DESTROY,
             });
-  
+
             // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
             NagSuppressions.addResourceSuppressionsByPath(
               this,
@@ -479,7 +483,7 @@ export class PrepareStack extends AcceleratorStack {
                 },
               ],
             );
-  
+
             const controlTowerOuEventsRule = new cdk.aws_events.Rule(this, 'ControlTowerOuEventsRule', {
               description: 'Rule to monitor for Control Tower OU registration and de-registration events',
               eventPattern: {
@@ -490,17 +494,17 @@ export class PrepareStack extends AcceleratorStack {
                 },
               },
             });
-  
+
             controlTowerOuEventsRule.addTarget(
               new cdk.aws_events_targets.LambdaFunction(controlTowerOuEventsFunction, { retryAttempts: 3 }),
             );
-  
+
             const controlTowerNotificationTopic = new cdk.aws_sns.Topic(this, 'ControlTowerNotification', {
               topicName: 'AWSAccelerator-ControlTowerNotification',
               displayName: 'ForwardedControlTowerNotifications',
               masterKey: key,
             });
-  
+
             controlTowerNotificationTopic.addToResourcePolicy(
               new cdk.aws_iam.PolicyStatement({
                 sid: 'auditAccount',
@@ -509,13 +513,15 @@ export class PrepareStack extends AcceleratorStack {
                 resources: [controlTowerNotificationTopic.topicArn],
               }),
             );
-  
+
             // function to process control tower notifications
             const controlTowerNotificationsFunction = new cdk.aws_lambda.Function(
               this,
               'ControlTowerNotificationsFunction',
               {
-                code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/control-tower-notifications/dist')),
+                code: cdk.aws_lambda.Code.fromAsset(
+                  path.join(__dirname, '../lambdas/control-tower-notifications/dist'),
+                ),
                 runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
                 handler: 'index.handler',
                 description: 'Lambda function to process ControlTower notifications from audit account',
@@ -526,14 +532,14 @@ export class PrepareStack extends AcceleratorStack {
                 },
               },
             );
-  
+
             new cdk.aws_logs.LogGroup(this, `${controlTowerNotificationsFunction.node.id}LogGroup`, {
               logGroupName: `/aws/lambda/${controlTowerNotificationsFunction.functionName}`,
               retention: props.globalConfig.cloudwatchLogRetentionInDays,
               encryptionKey: cloudwatchKey,
               removalPolicy: cdk.RemovalPolicy.DESTROY,
             });
-  
+
             controlTowerNotificationsFunction.addEventSource(new SnsEventSource(controlTowerNotificationTopic));
             controlTowerNotificationsFunction.addToRolePolicy(
               new cdk.aws_iam.PolicyStatement({
@@ -543,7 +549,7 @@ export class PrepareStack extends AcceleratorStack {
                 resources: [driftDetectedParameter.parameterArn, driftMessageParameter.parameterArn],
               }),
             );
-  
+
             // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
             NagSuppressions.addResourceSuppressionsByPath(
               this,
