@@ -257,8 +257,8 @@ async function main() {
         description: `(SO0199-prepare) Landing Zone Accelerator on AWS. Version ${version}.`,
         synthesizer: new cdk.DefaultStackSynthesizer({
           generateBootstrapVersionRule: false,
-          bucketPrefix: props.globalConfig.centralizeCdkBuckets ? `${managementAccountId}/` : undefined,
-          fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets
+          bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${managementAccountId}/` : undefined,
+          fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
             ? `cdk-accel-assets-${managementAccountId}-${homeRegion}`
             : undefined,
         }),
@@ -282,8 +282,8 @@ async function main() {
           description: `(SO0199-finalize) Landing Zone Accelerator on AWS. Version ${version}.`,
           synthesizer: new cdk.DefaultStackSynthesizer({
             generateBootstrapVersionRule: false,
-            bucketPrefix: props.globalConfig.centralizeCdkBuckets ? `${managementAccountId}/` : undefined,
-            fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets
+            bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${managementAccountId}/` : undefined,
+            fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
               ? `cdk-accel-assets-${managementAccountId}-${globalRegion}`
               : undefined,
           }),
@@ -308,8 +308,8 @@ async function main() {
           description: `(SO0199-accounts) Landing Zone Accelerator on AWS. Version ${version}.`,
           synthesizer: new cdk.DefaultStackSynthesizer({
             generateBootstrapVersionRule: false,
-            bucketPrefix: props.globalConfig.centralizeCdkBuckets ? `${managementAccountId}/` : undefined,
-            fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets
+            bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${managementAccountId}/` : undefined,
+            fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
               ? `cdk-accel-assets-${managementAccountId}-${globalRegion}`
               : undefined,
           }),
@@ -337,8 +337,8 @@ async function main() {
             description: `(SO0199-organizations) Landing Zone Accelerator on AWS. Version ${version}.`,
             synthesizer: new cdk.DefaultStackSynthesizer({
               generateBootstrapVersionRule: false,
-              bucketPrefix: props.globalConfig.centralizeCdkBuckets ? `${managementAccountId}/` : undefined,
-              fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets
+              bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${managementAccountId}/` : undefined,
+              fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
                 ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
                 : undefined,
             }),
@@ -362,8 +362,8 @@ async function main() {
           description: `(SO0199-key) Landing Zone Accelerator on AWS. Version ${version}.`,
           synthesizer: new cdk.DefaultStackSynthesizer({
             generateBootstrapVersionRule: false,
-            bucketPrefix: props.globalConfig.centralizeCdkBuckets ? `${auditAccountId}/` : undefined,
-            fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets
+            bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${auditAccountId}/` : undefined,
+            fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
               ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
               : undefined,
           }),
@@ -384,8 +384,8 @@ async function main() {
             description: `(SO0199-securityaudit) Landing Zone Accelerator on AWS. Version ${version}.`,
             synthesizer: new cdk.DefaultStackSynthesizer({
               generateBootstrapVersionRule: false,
-              bucketPrefix: props.globalConfig.centralizeCdkBuckets ? `${auditAccountId}/` : undefined,
-              fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets
+              bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${auditAccountId}/` : undefined,
+              fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
                 ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
                 : undefined,
             }),
@@ -410,8 +410,8 @@ async function main() {
         };
         const stackSynthesizerProps = {
           generateBootstrapVersionRule: false,
-          bucketPrefix: props.globalConfig.centralizeCdkBuckets ? `${accountId}/` : undefined,
-          fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets
+          bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${accountId}/` : undefined,
+          fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
             ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
             : undefined,
         };
