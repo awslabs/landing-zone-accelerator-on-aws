@@ -119,6 +119,7 @@ export class TesterStack extends cdk.Stack {
         handler: 'index.handler',
         code: lambda.Code.fromAsset(path.join(__dirname, '../lambdas/dist')),
         description: `AWS Config custom rule function used for test case "${test.name}"`,
+        timeout: cdk.Duration.minutes(30),
       });
 
       lambdaFunction.role?.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('ReadOnlyAccess'));

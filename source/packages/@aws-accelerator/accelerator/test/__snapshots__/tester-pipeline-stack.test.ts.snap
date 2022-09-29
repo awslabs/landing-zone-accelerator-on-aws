@@ -229,6 +229,16 @@ Object {
       "Type": "AWS::Events::Rule",
     },
     "TesterPipelineDeployAdminRole3DA8CFF7": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Managed policies required for IAM role.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
           "Statement": Array [
@@ -260,6 +270,16 @@ Object {
       "Type": "AWS::IAM::Role",
     },
     "TesterPipelineDeployAdminRoleDefaultPolicy5D9BE98D": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "IAM role requires wildcard permissions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -511,7 +531,7 @@ Object {
           "rules_to_suppress": Array [
             Object {
               "id": "AwsSolutions-IAM5",
-              "reason": "PipelineRole DefaultPolicy is built by cdk.",
+              "reason": "IAM role requires wildcard permissions.",
             },
           ],
         },
@@ -808,7 +828,7 @@ Object {
           "rules_to_suppress": Array [
             Object {
               "id": "AwsSolutions-IAM5",
-              "reason": "Source code pipeline action DefaultPolicy is built by cdk.",
+              "reason": "IAM role requires wildcard permissions.",
             },
           ],
         },
@@ -946,7 +966,7 @@ Object {
           "rules_to_suppress": Array [
             Object {
               "id": "AwsSolutions-IAM5",
-              "reason": "Configuration source pipeline action DefaultPolicy is built by cdk.",
+              "reason": "IAM role requires wildcard permissions.",
             },
           ],
         },
