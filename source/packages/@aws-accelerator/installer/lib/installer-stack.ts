@@ -795,7 +795,7 @@ export class InstallerStack extends cdk.Stack {
       `${updatePipelineGithubTokenFunction.node.id}LogGroup`,
       {
         logGroupName: `/aws/lambda/${updatePipelineGithubTokenFunction.functionName}`,
-        encryptionKey: installerKey,
+
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       },
     );
