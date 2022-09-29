@@ -237,6 +237,7 @@ template_dist_dir="$template_dir/global-s3-assets"
 build_dist_dir="$template_dir/regional-s3-assets"
 source_dir="$template_dir/../source"
 installer_dir="$source_dir/packages/@aws-accelerator/installer"
+govcloud_vending_dir="$source_dir/packages/@aws-accelerator/govcloud-account-vending"
 
 echo "------------------------------------------------------------------------------"
 echo "${bold}[Init] Remove any old dist files from previous runs${normal}"
@@ -284,6 +285,9 @@ echo "--------------------------------------------------------------------------
 
 if fn_exists create_template_${template_format}; then
     do_cmd cd $installer_dir
+    create_template_${template_format}
+    do_cmd cd $source_dir
+    do_cmd cd $govcloud_vending_dir
     create_template_${template_format}
     do_cmd cd $source_dir
 else

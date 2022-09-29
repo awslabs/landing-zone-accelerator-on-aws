@@ -1,0 +1,85 @@
+/**
+ *  Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance
+ *  with the License. A copy of the License is located at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES
+ *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
+ *  and limitations under the License.
+ */
+
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import * as path from 'path';
+import { GovCloudAccountVendingProductStack } from './govcloud-avm-product-stack';
+import * as fs from 'fs';
+
+export class GovCloudAccountVendingStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    /** This stack creates service catalog product which can 
+     * create AWS GovCloud (US) accounts using the Organizations API
+    * "CreateGovCloudAccount". 
+    * 
+    * 
+    * The account where this stack is launched should 
+    * 1. be in commercial region with Organizations enabled
+    * 2. Have ability to create AWS GovCloud (US) Accounts
+    * Please read https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/getting-set-up.html
+    * and the API documentation 
+    * https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreateGovCloudAccount.html
+
+    */
+
+    /*
+     * Parameter for getting IAM Role ARN
+     * This role will have access to launch service catalog products
+     */
+
+    // Create a portfolio
+    const portfolio = new cdk.aws_servicecatalog.Portfolio(this, 'GovCloudAccountVendingPortfolio', {
+      displayName: 'Landing Zone Accelerator on AWS',
+      providerName: 'AWS Solutions',
+    });
+
+    // Create a GovCloud Account Vending service catalog product
+    const product = new cdk.aws_servicecatalog.CloudFormationProduct(this, 'GovCloudAccountVendingProduct', {
+      productName: 'Landing Zone Accelerator on AWS - AWS GovCloud (US) Account Vending',
+      owner: 'AWS Solutions',
+      productVersions: [
+        {
+          cloudFormationTemplate: cdk.aws_servicecatalog.CloudFormationTemplate.fromProductStack(
+            new GovCloudAccountVendingProductStack(this, 'GovCloudAccountVendingProductStack'),
+          ),
+          productVersionName: 'v1.0.0',
+          description:
+            'AWS GovCloud (US) Account Vending Product. Create AWS GovCloud (US) accounts. Required inputs are Account name, email and Organization Access Role.',
+        },
+      ],
+    });
+    // Associate product to the portfolio
+    portfolio.addProduct(product);
+
+    const fileContents = fs.readFileSync(path.join(__dirname, 'lambdas/create-govcloud-account/index.js'));
+
+    // Lambda function to be used in Custom Resource
+    new cdk.aws_lambda.Function(this, 'GovCloudAccountVendingFunction', {
+      code: new cdk.aws_lambda.InlineCode(fileContents.toString()),
+      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      handler: 'index.handler',
+      timeout: cdk.Duration.seconds(900),
+      functionName: 'AWSAccelerator-GovCloudAccountVending',
+      description: 'Create AWS GovCloud (US) Accounts',
+      initialPolicy: [
+        new cdk.aws_iam.PolicyStatement({
+          actions: ['organizations:CreateGovCloudAccount', 'organizations:DescribeCreateAccountStatus'],
+          resources: ['*'],
+        }),
+      ],
+    });
+  }
+}
