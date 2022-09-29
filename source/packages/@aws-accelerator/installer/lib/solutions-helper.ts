@@ -33,11 +33,11 @@ export class SolutionHelper extends Construct {
       description:
         'This function generates UUID for each deployment and sends anonymous data to the AWS Solutions team',
       code: lambda.Code.fromInline(`
-      const AWS = require('aws-sdk');
-      const response = require('cfn-response');
-      const https = require('https');
-      
-      async function post(url, data) {
+        const AWS = require('aws-sdk');
+        const response = require('cfn-response');
+        const https = require('https');
+
+        async function post(url, data) {
           const dataString = JSON.stringify(data)
           const options = {
               method: 'POST',
@@ -69,17 +69,17 @@ export class SolutionHelper extends Construct {
               req.write(dataString)
               req.end()
           })
-      }
-      
-      function uuidv4() {
+        }
+
+        function uuidv4() {
           return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
               var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
               return v.toString(16);
           });
-      }
-      
-      
-      function sanatizeData(resourceProperties) {
+        }
+
+
+        function sanatizeData(resourceProperties) {
           const keysToExclude = ['ServiceToken', 'Resource', 'SolutionId', 'UUID'];
           return Object.keys(resourceProperties).reduce((sanatizedData, key) => {
               if (!keysToExclude.includes(key)) {
@@ -87,9 +87,9 @@ export class SolutionHelper extends Construct {
               }
               return sanatizedData;
           }, {})
-      }
-      
-      exports.handler = async function (event, context) {
+        }
+
+        exports.handler = async function (event, context) {
           console.log(JSON.stringify(event, null, 4));
           const requestType = event.RequestType;
           const resourceProperties = event.ResourceProperties;
@@ -109,7 +109,7 @@ export class SolutionHelper extends Construct {
                       TimeStamp: currentDate.toISOString(),
                       Data: data
                   }
-      
+
                   console.log('Sending metrics data: ', JSON.stringify(payload, null, 2));
                   await post('https://metrics.awssolutionsbuilder.com/generic', payload);
                   console.log('Sent Data');
@@ -117,10 +117,15 @@ export class SolutionHelper extends Construct {
           } catch (error) {
               console.log(error);
           }
-      
-          await response.send(event, context, response.SUCCESS, data);
+
+          if (requestType === 'Create') {
+            await response.send(event, context, response.SUCCESS, data);
+          }
+          else if (requestType === 'Update'){
+            await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
+          }
           return;
-      } 
+        } 
       `),
       timeout: cdk.Duration.seconds(30),
     });
