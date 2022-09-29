@@ -2487,8 +2487,9 @@ Object {
       "Type": "AWS::Kinesis::Stream",
     },
     "LogsReplicationKeyAE749486": Object {
-      "DeletionPolicy": "Retain",
+      "DeletionPolicy": "Delete",
       "Properties": Object {
+        "Description": "AWS Accelerator CloudWatch Logs Replication Kms Key",
         "EnableKeyRotation": true,
         "KeyPolicy": Object {
           "Statement": Array [
@@ -2516,7 +2517,19 @@ Object {
         },
       },
       "Type": "AWS::KMS::Key",
-      "UpdateReplacePolicy": "Retain",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "LogsReplicationKeyAlias6226562C": Object {
+      "Properties": Object {
+        "AliasName": "alias/accelerator/kms/replication/cloudwatch/logs/key",
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "LogsReplicationKeyAE749486",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
     },
     "LogsSubscriptionFilter58C57C6B": Object {
       "DeletionPolicy": "Delete",
