@@ -346,7 +346,7 @@ export class LoggingStack extends AcceleratorStack {
     // Some or all of these services may not be available in all regions.
     // Only deploy in standard and GovCloud partitions
 
-    if (props.partition === 'aws' || props.partition === 'aws-gov') {
+    if (props.partition === 'aws' || props.partition === 'aws-us-gov') {
       const logsReplicationKmsKey = new cdk.aws_kms.Key(this, 'LogsReplicationKey', { enableKeyRotation: true });
 
       if (cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) {
