@@ -8,6 +8,24 @@ Object {
         "GovCloudAccountVendingFunctionServiceRoleDefaultPolicy02E0FF6C",
         "GovCloudAccountVendingFunctionServiceRole3F1EF782",
       ],
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W58",
+              "reason": "CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole",
+            },
+            Object {
+              "id": "W89",
+              "reason": "This function supports infrastructure deployment and is not deployed inside a VPC.",
+            },
+            Object {
+              "id": "W92",
+              "reason": "This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "Code": Object {
           "ZipFile": "/**
@@ -129,6 +147,16 @@ exports.handler = async (event, context) => {
       "Type": "AWS::IAM::Role",
     },
     "GovCloudAccountVendingFunctionServiceRoleDefaultPolicy02E0FF6C": Object {
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W12",
+              "reason": "IAM policy should not allow * resource.",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
