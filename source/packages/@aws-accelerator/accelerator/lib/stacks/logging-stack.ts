@@ -346,15 +346,10 @@ export class LoggingStack extends AcceleratorStack {
     // Some or all of these services may not be available in all regions.
     // Only deploy in standard and GovCloud partitions
 
-    if (props.partition === 'aws' || props.partition === 'aws-us-gov') {
-      const logsReplicationKmsKey = new cdk.aws_kms.Key(this, 'LogsReplicationKey', { enableKeyRotation: true });
 
+    if (props.partition === 'aws' || props.partition === 'aws-us-gov') {
       if (cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) {
-        const receivingLogs = this.cloudwatchLogReceivingAccount(
-          logsReplicationKmsKey,
-          this.centralLogsBucketName,
-          this.lambdaKey,
-        );
+        const receivingLogs = this.cloudwatchLogReceivingAccount(this.centralLogsBucketName, this.lambdaKey);
         const creatingLogs = this.cloudwatchLogCreatingAccount();
 
         // Log receiving setup should be complete before logs creation setup can start or else there will be errors about destination not ready.
@@ -604,11 +599,16 @@ export class LoggingStack extends AcceleratorStack {
     }
   }
 
-  private cloudwatchLogReceivingAccount(
-    logsReplicationKmsKey: cdk.aws_kms.Key,
-    centralLogsBucketName: string,
-    lambdaKey: cdk.aws_kms.IKey,
-  ) {
+  private cloudwatchLogReceivingAccount(centralLogsBucketName: string, lambdaKey: cdk.aws_kms.IKey) {
+    const logsReplicationKmsKey = new cdk.aws_kms.Key(this, 'LogsReplicationKey', {
+      alias: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_REPLICATION_KEY_ALIAS,
+      description: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_REPLICATION_KEY_DESCRIPTION,
+      enableKeyRotation: true,
+      // kms is used to encrypt kinesis data stream,
+      // unlike data store like s3, rds, dynamodb no snapshot/object is encrypted
+      // it can be destroyed as encrypts service
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
     // Check to see if Dynamic Partitioning was used
     let dynamicPartitionValue = '';
     if (this.props.globalConfig.logging.cloudwatchLogs?.dynamicPartitioning) {

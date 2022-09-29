@@ -177,6 +177,18 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected static readonly ACCELERATOR_CLOUDWATCH_LOG_KEY_DESCRIPTION = 'AWS Accelerator CloudWatch Kms Key';
 
   /**
+   * Accelerator CloudWatch Log replication encryption key alias used to encrypt kinesis data stream
+   * This key is created in Logging stack
+   */
+  protected static readonly ACCELERATOR_CLOUDWATCH_LOG_REPLICATION_KEY_ALIAS =
+    'alias/accelerator/kms/replication/cloudwatch/logs/key';
+  /**
+   * Accelerator CloudWatch Log encryption replication key description used to encrypt kinesis data stream
+   * This key is created in Logging stack
+   */
+  protected static readonly ACCELERATOR_CLOUDWATCH_LOG_REPLICATION_KEY_DESCRIPTION =
+    'AWS Accelerator CloudWatch Logs Replication Kms Key';
+  /**
    * Accelerator Backup encryption key alias
    * Organization stack creates this key to encrypt AWS backup
    */
