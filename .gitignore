@@ -1,5 +1,6 @@
 *.js
 !deployment/.typescript/cdk-solution-helper/index.js
+!**/create-govcloud-account/index.js
 package-lock.json
 !jest.config.js
 *.d.ts
