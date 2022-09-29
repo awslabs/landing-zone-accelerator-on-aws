@@ -2,6 +2,9 @@ enable: true
 organizationalUnits:
   - name: Security
   - name: GovCloud
+quarantineNewAccounts:
+  enable: true
+  scpPolicyName: Quarantine
 serviceControlPolicies: 
   # this policy prevents the use of commercial accounts that are tied to GovCloud
   # only actions by organization root management role AWSControlTowerExecution,
@@ -17,6 +20,15 @@ serviceControlPolicies:
     deploymentTargets:
       organizationalUnits:
         - GovCloud
+  - name: Quarantine
+    description: >
+      This SCP is used to prevent changes to new accounts until the Accelerator
+      has been executed successfully.
+      This policy will be applied upon account creation if enabled.
+    policy: service-control-policies/quarantine.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits: []
 
 taggingPolicies: []
 backupPolicies: []
