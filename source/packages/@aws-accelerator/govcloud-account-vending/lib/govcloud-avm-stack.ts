@@ -67,7 +67,7 @@ export class GovCloudAccountVendingStack extends cdk.Stack {
     const fileContents = fs.readFileSync(path.join(__dirname, 'lambdas/create-govcloud-account/index.js'));
 
     // Lambda function to be used in Custom Resource
-    new cdk.aws_lambda.Function(this, 'GovCloudAccountVendingFunction', {
+    const accountVendingFunction = new cdk.aws_lambda.Function(this, 'GovCloudAccountVendingFunction', {
       code: new cdk.aws_lambda.InlineCode(fileContents.toString()),
       runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
       handler: 'index.handler',
@@ -81,5 +81,41 @@ export class GovCloudAccountVendingStack extends cdk.Stack {
         }),
       ],
     });
+
+    //
+    // cfn-nag suppressions
+    //
+    const cfnLambdaFunctionPolicy = accountVendingFunction.node.findChild('ServiceRole').node.findChild('DefaultPolicy')
+      .node.defaultChild as cdk.aws_iam.CfnPolicy;
+    cfnLambdaFunctionPolicy.cfnOptions.metadata = {
+      cfn_nag: {
+        rules_to_suppress: [
+          {
+            id: 'W12',
+            reason: `IAM policy should not allow * resource.`,
+          },
+        ],
+      },
+    };
+
+    const cfnLambdaFunction = accountVendingFunction.node.defaultChild as cdk.aws_lambda.CfnFunction;
+    cfnLambdaFunction.cfnOptions.metadata = {
+      cfn_nag: {
+        rules_to_suppress: [
+          {
+            id: 'W58',
+            reason: `CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole`,
+          },
+          {
+            id: 'W89',
+            reason: `This function supports infrastructure deployment and is not deployed inside a VPC.`,
+          },
+          {
+            id: 'W92',
+            reason: `This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.`,
+          },
+        ],
+      },
+    };
   }
 }
