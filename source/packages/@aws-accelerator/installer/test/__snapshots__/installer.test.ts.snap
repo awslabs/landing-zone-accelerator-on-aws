@@ -2152,12 +2152,6 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Condition": "UseGitHubCondition",
       "DeletionPolicy": "Delete",
       "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
-            "InstallerKey2A6A8C6D",
-            "Arn",
-          ],
-        },
         "LogGroupName": Object {
           "Fn::Join": Array [
             "",
@@ -4586,12 +4580,6 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Condition": "UseGitHubCondition",
       "DeletionPolicy": "Delete",
       "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
-            "InstallerKey2A6A8C6D",
-            "Arn",
-          ],
-        },
         "LogGroupName": Object {
           "Fn::Join": Array [
             "",
@@ -7217,12 +7205,6 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Condition": "UseGitHubCondition",
       "DeletionPolicy": "Delete",
       "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
-            "InstallerKey2A6A8C6D",
-            "Arn",
-          ],
-        },
         "LogGroupName": Object {
           "Fn::Join": Array [
             "",
@@ -9850,12 +9832,6 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       "Condition": "UseGitHubCondition",
       "DeletionPolicy": "Delete",
       "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
-            "InstallerKey2A6A8C6D",
-            "Arn",
-          ],
-        },
         "LogGroupName": Object {
           "Fn::Join": Array [
             "",
