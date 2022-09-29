@@ -124,8 +124,8 @@ transitGateways:
 #         region: *HOME_REGION
 #         firewallPolicy: accelerator-policy
 #         subnets:
-#           - Network-Inspection-A
-#           - Network-Inspection-B
+#           - Network-Inspection-Firewall-A
+#           - Network-Inspection-Firewall-B
 #         vpc: Network-Inspection
 #         loggingConfiguration:
 #           - destination: s3
@@ -215,8 +215,8 @@ transitGateways:
 #   gatewayLoadBalancers:
 #     - name: Accelerator-GWLB
 #       subnets:
-#         - Network-Inspection-Firewall-A
-#         - Network-Inspection-Firewall-B
+#         - Network-Inspection-A
+#         - Network-Inspection-B
 #       vpc: Network-Inspection
 #       deletionProtection: true
 #       endpoints:
