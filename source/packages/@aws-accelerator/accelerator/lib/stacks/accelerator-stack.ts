@@ -324,22 +324,22 @@ export abstract class AcceleratorStack extends cdk.Stack {
     return [...new Set(accountNames)];
   }
 
+  // Helper function to add an account id to the list
+  private _addAccountId(ids: string[], accountId: string) {
+    if (!ids.includes(accountId)) {
+      ids.push(accountId);
+    }
+  }
+
   protected getAccountIdsFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
     const accountIds: string[] = [];
-
-    // Helper function to add an account id to the list
-    const addAccountId = (accountId: string) => {
-      if (!accountIds.includes(accountId)) {
-        accountIds.push(accountId);
-      }
-    };
 
     for (const ou of deploymentTargets.organizationalUnits ?? []) {
       // debug: processing ou
       if (ou === 'Root') {
         for (const account of this.props.accountsConfig.accountIds ?? []) {
           // debug: accountId
-          addAccountId(account.accountId);
+          this._addAccountId(accountIds, account.accountId);
         }
       } else {
         for (const account of [
@@ -349,7 +349,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
           if (ou === account.organizationalUnit) {
             const accountId = this.props.accountsConfig.getAccountId(account.name);
             // debug: accountId
-            addAccountId(accountId);
+            this._addAccountId(accountIds, accountId);
           }
         }
       }
@@ -357,7 +357,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
     for (const account of deploymentTargets.accounts ?? []) {
       const accountId = this.props.accountsConfig.getAccountId(account);
-      addAccountId(accountId);
+      this._addAccountId(accountIds, accountId);
     }
 
     return accountIds;
@@ -366,16 +366,9 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected getExcludedAccountIds(deploymentTargets: DeploymentTargets): string[] {
     const accountIds: string[] = [];
 
-    // Helper function to add an account id to the list
-    const addAccountId = (accountId: string) => {
-      if (!accountIds.includes(accountId)) {
-        accountIds.push(accountId);
-      }
-    };
-
     if (deploymentTargets.excludedAccounts) {
       deploymentTargets.excludedAccounts.forEach(account =>
-        addAccountId(this.props.accountsConfig.getAccountId(account)),
+        this._addAccountId(accountIds, this.props.accountsConfig.getAccountId(account)),
       );
     }
 
@@ -400,19 +393,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected getAccountIdsFromShareTarget(shareTargets: ShareTargets): string[] {
     const accountIds: string[] = [];
 
-    // Helper function to add an account id to the list
-    const addAccountId = (accountId: string) => {
-      if (!accountIds.includes(accountId)) {
-        accountIds.push(accountId);
-      }
-    };
-
     for (const ou of shareTargets.organizationalUnits ?? []) {
       // debug: processing ou
       if (ou === 'Root') {
         for (const account of this.props.accountsConfig.accountIds ?? []) {
           // debug: accountId
-          addAccountId(account.accountId);
+          this._addAccountId(accountIds, account.accountId);
         }
       } else {
         for (const account of [
@@ -422,7 +408,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
           if (ou === account.organizationalUnit) {
             const accountId = this.props.accountsConfig.getAccountId(account.name);
             // debug: accountId
-            addAccountId(accountId);
+            this._addAccountId(accountIds, accountId);
           }
         }
       }
@@ -431,7 +417,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     for (const account of shareTargets.accounts ?? []) {
       const accountId = this.props.accountsConfig.getAccountId(account);
       // debug: accountId
-      addAccountId(accountId);
+      this._addAccountId(accountIds, accountId);
     }
 
     return accountIds;
