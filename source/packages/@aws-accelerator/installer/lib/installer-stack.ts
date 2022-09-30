@@ -823,40 +823,51 @@ export class InstallerStack extends cdk.Stack {
       .defaultChild as cdk.aws_logs.CfnLogGroup;
     cfnUpdatePipelineGithubTokenLogGroup.cfnOptions.condition = useGitHubCondition;
 
+    // Suppressing due to missing field in aws-us-gov CFN spec
+    cfnUpdatePipelineGithubTokenLogGroup.cfnOptions.metadata = {
+      cfn_nag: {
+        rules_to_suppress: [
+          {
+            id: 'W84',
+            reason: 'CloudWatchLogs LogGroup should specify a KMS Key Id to encrypt the log data',
+          },
+        ],
+      },
+    };
+
     //
     // cfn-nag suppressions
     //
     // W12 IAM Policy allows * on KMS decrypt because Secrets Manager key can be encrypted with user selected key.
-    const cfnLambdaFunctionPolicy = updatePipelineLambdaPolicy.node.findChild('Resource') as cdk.aws_iam.CfnPolicy;
+    const cfnLambdaFunctionPolicy = updatePipelineLambdaPolicy.node.defaultChild as cdk.aws_iam.CfnPolicy;
     cfnLambdaFunctionPolicy.cfnOptions.metadata = {
       cfn_nag: {
         rules_to_suppress: [
           {
             id: 'W12',
-            reason: `IAM policy should not allow * resource.`,
+            reason: 'IAM policy should not allow * resource.',
           },
         ],
       },
     };
     cfnLambdaFunctionPolicy.cfnOptions.condition = useGitHubCondition;
 
-    const cfnLambdaFunction = updatePipelineGithubTokenFunction.node.findChild(
-      'Resource',
-    ) as cdk.aws_lambda.CfnFunction;
+    const cfnLambdaFunction = updatePipelineGithubTokenFunction.node.defaultChild as cdk.aws_lambda.CfnFunction;
     cfnLambdaFunction.cfnOptions.metadata = {
       cfn_nag: {
         rules_to_suppress: [
           {
             id: 'W58',
-            reason: `CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole`,
+            reason: 'CloudWatch Logs are enabled in AWSLambdaBasicExecutionRole',
           },
           {
             id: 'W89',
-            reason: `This function supports infrastructure deployment and is not deployed inside a VPC.`,
+            reason: 'This function supports infrastructure deployment and is not deployed inside a VPC.',
           },
           {
             id: 'W92',
-            reason: `This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.`,
+            reason:
+              'This function supports infrastructure deployment and does not require setting ReservedConcurrentExecutions.',
           },
         ],
       },
