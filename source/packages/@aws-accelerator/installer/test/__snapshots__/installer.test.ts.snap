@@ -2151,6 +2151,16 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A": Object {
       "Condition": "UseGitHubCondition",
       "DeletionPolicy": "Delete",
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W84",
+              "reason": "CloudWatchLogs LogGroup should specify a KMS Key Id to encrypt the log data",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -4579,6 +4589,16 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A": Object {
       "Condition": "UseGitHubCondition",
       "DeletionPolicy": "Delete",
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W84",
+              "reason": "CloudWatchLogs LogGroup should specify a KMS Key Id to encrypt the log data",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -7204,6 +7224,16 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A": Object {
       "Condition": "UseGitHubCondition",
       "DeletionPolicy": "Delete",
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W84",
+              "reason": "CloudWatchLogs LogGroup should specify a KMS Key Id to encrypt the log data",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "LogGroupName": Object {
           "Fn::Join": Array [
@@ -9831,6 +9861,16 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
     "UpdatePipelineGithubTokenFunctionLogGroupFCE3723A": Object {
       "Condition": "UseGitHubCondition",
       "DeletionPolicy": "Delete",
+      "Metadata": Object {
+        "cfn_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "W84",
+              "reason": "CloudWatchLogs LogGroup should specify a KMS Key Id to encrypt the log data",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "LogGroupName": Object {
           "Fn::Join": Array [
