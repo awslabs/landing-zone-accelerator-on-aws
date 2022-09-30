@@ -80,7 +80,7 @@ fs.readdirSync(global_s3_assets).forEach(file => {
       // Filter out the AWS GovCloud Account vending machine
       if (productArray[i].Description.includes('AWS GovCloud (US) Account Vending Product.')){
         
-        productArray[i].Info.LoadTemplateFromURL = 'https://s3.amazonaws.com/%%BUCKET_NAME%%/%%SOLUTION_NAME%%/%%VERSION%%/AWSAccelerator-GovCloudAccountVendingProduct.template';
+        productArray[i].Info.LoadTemplateFromURL = 'https://s3.amazonaws.com/%%PRODUCT_BUCKET%%/%%SOLUTION_NAME%%/%%VERSION%%/AWSAccelerator-GovCloudAccountVendingProduct.template';
         console.log(productArray[i].Info.LoadTemplateFromURL);
         i++;
       }

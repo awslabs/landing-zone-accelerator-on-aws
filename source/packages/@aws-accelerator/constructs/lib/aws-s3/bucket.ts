@@ -170,7 +170,6 @@ export class Bucket extends Construct {
     // set Lifecycle rules
     this.setLifeCycleRules();
 
-    // NOSONAR
     this.bucket = new s3.Bucket(this, 'Resource', {
       encryption: this.encryptionType,
       encryptionKey: this.cmk,
