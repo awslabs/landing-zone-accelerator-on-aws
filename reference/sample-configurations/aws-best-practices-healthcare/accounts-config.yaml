@@ -1,0 +1,40 @@
+mandatoryAccounts:
+  - name: Management
+    description: >-
+      The management (primary) account. Do not change the name field for this
+      mandatory account.
+    email: <<Update your management account email>>
+    organizationalUnit: Root
+  - name: LogArchive
+    description: >-
+      The log archive account. Do not change the name field for this mandatory
+      account.
+    email: <<Update your log account email>>
+    organizationalUnit: Security
+  - name: Audit
+    description: >-
+      The security audit account (also referred to as the audit account). Do not
+      change the name field for this mandatory account.
+    email: <<Update your audit account email>>
+    organizationalUnit: Security
+workloadAccounts:
+  # The "name" will be used to set the AWS Account name
+  # The "name" value does not currently support spaces
+  # The "name" value DOES NOT need to match the account name
+  # The "name" values below are currently referenced in network-config
+  - name: Network-Dev
+    description: The Network Dev account
+    email: <<network-Dev-account-email>>
+    organizationalUnit: Infrastructure/Infra-Dev    
+  - name: Network-Prod
+    description: The Network Prod account
+    email: <<network-Prod-account-email>>
+    organizationalUnit: Infrastructure/Infra-Prod
+  - name: Pacs-Non_prod
+    description: The Non Prod PACS account
+    email: <<workload-account-email>>
+    organizationalUnit: HIS/HIS-Non-Prod
+  - name: Pms-Prod
+    description: The PMS prod account
+    email: <<workload-account-email>>
+    organizationalUnit: HIS/HIS-Prod    
