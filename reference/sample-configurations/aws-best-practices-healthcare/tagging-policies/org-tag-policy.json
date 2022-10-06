@@ -1,0 +1,56 @@
+{
+  "tags": {
+    "CostCenter": {
+      "tag_key": {
+        "@@assign": "CostCenter"
+      },
+      "tag_value": {
+        "@@assign": [
+          "100",
+          "200"
+        ]
+      }
+    },
+    "EnvironmentType": {
+      "tag_key": {
+        "@@assign": "EnvironmentType"
+      },
+      "tag_value": {
+        "@@assign": [
+          "Prod",
+          "QA",
+          "Dev"
+        ]
+      }
+    },
+    "DataClassification": {
+      "tag_key": {
+        "@@assign": "DataClassification"
+      },
+      "tag_value": {
+        "@@assign": [
+          "NonConfidential",
+          "CompanyConfidential",
+          "PII",
+          "PHI"
+        ]
+      },
+      "enforced_for": {
+        "@@assign": [
+          "dms:*",
+          "dynamodb:table",
+          "ec2:instance",
+          "elasticfilesystem:*",
+          "eks:cluster",
+          "ecs:cluster",
+          "elasticmapreduce:cluster",
+          "fsx:*",
+          "rds:cluster-endpoint",
+          "redshift:*",
+          "s3:bucket"
+        ]
+      }
+    },
+    "AppID": {}
+  }
+}
