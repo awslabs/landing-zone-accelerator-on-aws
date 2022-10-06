@@ -21,16 +21,16 @@ mandatoryAccounts:
     email: <govCloud-audit-email@example.com> <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Security
 workloadAccounts: 
-  - name: GovCloudSharedServices 
+  - name: SharedServices 
     description: Shared services account for GovCloud. 
     # account mapping: 333333333333 is GovCloud account ID, 666666666666 is commercial account ID
     email: <govCloud-shared-services-email@example.com> <----- UPDATE EMAIL ADDRESS
-    organizationalUnit: Shared Services 
-  - name: GovCloudNetwork 
+    organizationalUnit: Infrastructure 
+  - name: Network 
     description: Network account for GovCloud. 
     # account mapping: 444444444444 is GovCloud account ID, 555555555555 is commercial account ID
     email: <govCloud-network-email@example.com> <----- UPDATE EMAIL ADDRESS
-    organizationalUnit: Shared Services 
+    organizationalUnit: Infrastructure 
 
 # this section enables LZA to invite the accounts into AWS Organization
 accountIds:
