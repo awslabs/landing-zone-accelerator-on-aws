@@ -1,0 +1,47 @@
+enable: true
+organizationalUnits:
+  - name: Security
+  - name: Infrastructure
+  - name: Infrastructure/Infra-Dev
+  - name: Infrastructure/Infra-Prod
+  - name: HIS
+  - name: EIS
+  - name: HIS/HIS-Non-Prod
+  - name: HIS/HIS-Prod
+serviceControlPolicies:
+  - name: Accelerator-SCP-root
+    description: >
+      baseline SCP to protect integrity of accelerator 
+    policy: service-control-policies/scp-accelerator.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+  - name: HLC-SCP-base-root
+    description: >
+      baseline SCP for healthcare customers
+    policy: service-control-policies/scp-hlc-base-root.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+taggingPolicies:
+  - name: general-tag-policy
+    description: Organization Tagging Policy
+    policy: tagging-policies/sample-policy.json
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+  - name: phi-tag-policy
+    description: Organization Tagging Policy
+    policy: tagging-policies/org-tag-policy.json
+    deploymentTargets:
+      organizationalUnits:
+        - HIS        
+backupPolicies:
+  - name: BackupPolicy
+    description: Organization Backup Policy
+    policy: backup-policies/org-backup-policies.json
+    deploymentTargets:
+      organizationalUnits:
+        - Root
