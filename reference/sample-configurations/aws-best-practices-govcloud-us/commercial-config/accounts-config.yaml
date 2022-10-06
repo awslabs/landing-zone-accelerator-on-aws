@@ -18,7 +18,7 @@ mandatoryAccounts:
     email: <commercial-audit-email@example.com> <----- UPDATE EMAIL ADDRESS 
     organizationalUnit: Security 
 workloadAccounts:
-  - name: GovCloudLogArchive 
+  - name: LogArchiveGC # referred to as LogArchive in the GovCloud account-config.yaml 
     description: The log archive account for GovCloud. 
     email: <govCloud-log-archive-email@example.com> <----- UPDATE EMAIL ADDRESS 
     # this OU has all GovCloud accounts. 
@@ -28,17 +28,17 @@ workloadAccounts:
     # enableGovCloud is a one-time non-reversible option
     # which only works with creation of new accounts
     enableGovCloud: true 
-  - name: GovCloudAudit 
+  - name: AuditGC # referred to as Audit in the GovCloud account-config.yaml 
     description: The security audit account (also referred to as the audit account) for GovCloud. 
     email: <govCloud-audit-email@example.com> <----- UPDATE EMAIL ADDRESS
     organizationalUnit: GovCloud 
     enableGovCloud: true
-  - name: GovCloudSharedServices 
+  - name: SharedServicesGC # referred to as SharedServices in the GovCloud account-config.yaml 
     description: Shared services account for GovCloud. 
     email: <govCloud-shared-services-email@example.com> <----- UPDATE EMAIL ADDRESS
     organizationalUnit: GovCloud 
     enableGovCloud: true
-  - name: GovCloudNetwork 
+  - name: NetworkGC # referred to as Network in the GovCloud account-config.yaml 
     description: Network account for GovCloud. 
     email: <govCloud-network-email@example.com> <----- UPDATE EMAIL ADDRESS
     organizationalUnit: GovCloud 
