@@ -951,8 +951,6 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     for (const eachItem of inputStr) {
       if (!this.isDynamicLogType(eachItem)) {
         this.errors.push(`Key value ${JSON.stringify(eachItem)} is incorrect. ${errorMessage}`);
-      } else {
-        console.log('Dynamic Partition is valid.');
       }
     }
   }

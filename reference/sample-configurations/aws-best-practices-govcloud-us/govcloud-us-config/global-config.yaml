@@ -2,7 +2,7 @@ homeRegion: &HOME_REGION us-gov-west-1
 enabledRegions:
   - *HOME_REGION
 managementAccountAccessRole: AWSControlTowerExecution
-cloudwatchLogRetentionInDays: 365
+cloudwatchLogRetentionInDays: 3653
 centralizeCdkBuckets:
   enable: true
 # Setting controlTower to false will enable accelerator to 
@@ -10,12 +10,44 @@ centralizeCdkBuckets:
 # If set to true, accelerator will assume Control Tower 
 # will manage resources.
 controlTower:
-  enable: false 
+  enable: false
 logging:
   account: LogArchive
   cloudtrail:
     enable: true
     organizationTrail: true
+    organizationTrailSettings:
+      multiRegionTrail: true
+      globalServiceEvents: true
+      managementEvents: true
+      s3DataEvents: true
+      lambdaDataEvents: true
+      sendToCloudWatchLogs: true
+      apiErrorRateInsight: false
+      apiCallRateInsight: false
+    accountTrails:
+      - name: AWSAccelerator-Account-Cloudtrail
+        regions:
+          - *HOME_REGION
+        deploymentTargets:
+          organizationalUnits:
+            - Root
+        settings:
+          multiRegionTrail: true
+          globalServiceEvents: true
+          managementEvents: true
+          s3DataEvents: true
+          lambdaDataEvents: true
+          sendToCloudWatchLogs: true
+          apiErrorRateInsight: true
+          apiCallRateInsight: true
+
+    lifecycleRules: []
   sessionManager:
     sendToCloudWatchLogs: true
-    sendToS3: true
+    sendToS3: false
+    excludeRegions: []
+    excludeAccounts: []
+    lifecycleRules: []
+  cloudwatchLogs:
+    dynamicPartitioning: dynamic-partitioning/log-filters.json
