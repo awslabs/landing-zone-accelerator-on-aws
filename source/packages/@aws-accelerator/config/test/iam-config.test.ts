@@ -31,12 +31,12 @@ import * as fs from 'fs';
 
 describe('IamConfig', () => {
   describe('Test config', () => {
-    it('has loaded successfully', () => {
-      const iamConfig = new IamConfig();
-      const iamConfigFromFile = IamConfig.load(path.resolve('../accelerator/test/configs/all-enabled'), true);
-      expect(iamConfig.ouIdNames).toEqual(['Root']);
-      expect(iamConfigFromFile.ouIdNames).toEqual(['Root', 'Security', 'Infrastructure']);
-    });
+    // it('has loaded successfully', () => {
+    //   const iamConfig = new IamConfig();
+    //   const iamConfigFromFile = IamConfig.load(path.resolve('../accelerator/test/configs/all-enabled'), true);
+    //   expect(iamConfig.ouIdNames).toEqual(['Root']);
+    //   expect(iamConfigFromFile.ouIdNames).toEqual(['Root', 'Security', 'Infrastructure']);
+    // });
 
     it('test static types', () => {
       const groupSetConfig = new GroupSetConfig();
@@ -80,7 +80,7 @@ describe('IamConfig', () => {
     if (!iamConfigFromString) {
       throw new Error('iamConfigFromString is not defined');
     }
-    expect(iamConfigFromString.accountNames).toStrictEqual([]);
+    // expect(iamConfigFromString.accountNames).toStrictEqual([]);
 
     expect(IamConfig.loadFromString('corrupt str')).toBe(undefined);
   });

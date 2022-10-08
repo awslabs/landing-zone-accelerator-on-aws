@@ -1541,22 +1541,6 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
   readonly awsConfig: AwsConfig = new AwsConfig();
   readonly cloudWatch: CloudWatchConfig = new CloudWatchConfig();
   readonly keyManagementService: KeyManagementServiceConfig = new KeyManagementServiceConfig();
-  /**
-   * Validation errors
-   */
-  readonly errors: string[] = [];
-  /**
-   * List of SSM Documents
-   */
-  readonly ssmDocuments: { name: string; template: string }[] = [];
-  /**
-   * OUid name list
-   */
-  readonly ouIdNames: string[] = ['Root'];
-  /**
-   * Account name list
-   */
-  readonly accountNames: string[] = [];
 
   /**
    *
@@ -1569,9 +1553,10 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
     configDir?: string,
     validateConfig?: boolean,
   ) {
-    //
-    //
-    //
+    const errors: string[] = [];
+    const ssmDocuments: { name: string; template: string }[] = [];
+    const ouIdNames: string[] = ['Root'];
+    const accountNames: string[] = [];
 
     if (values) {
       Object.assign(this, values);
@@ -1579,49 +1564,49 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
       if (configDir && validateConfig) {
         //
         // SSM Document validations
-        this.getSsmDocuments(values);
+        this.getSsmDocuments(values, ssmDocuments);
         //
         // Get list of OU ID names from organization config file
-        this.getOuIdNames(configDir);
+        this.getOuIdNames(configDir, ouIdNames);
 
         //
         // Get list of Account names from account config file
-        this.getAccountNames(configDir);
+        this.getAccountNames(configDir, accountNames);
 
         // Validate presence of SSM document files
-        this.validateSsmDocumentFiles(configDir);
+        this.validateSsmDocumentFiles(configDir, ssmDocuments, errors);
 
         // Validate KMS key policy files
-        this.validateKeyPolicyFiles(configDir);
+        this.validateKeyPolicyFiles(configDir, errors);
 
         //
         // Create list of custom CMKs, any services to be validated against key list from keyManagementService
         const keyNames: string[] = [this.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey!];
 
         // Validate custom CMK names
-        this.validateCustomKeyName(keyNames);
+        this.validateCustomKeyName(keyNames, errors);
 
         //
         // Validate deployment targets against organization config file
         // validate deployment target OUs for security services
-        this.validateDeploymentTargetOUs(values);
-        this.validateDeploymentTargetAccountNames(values);
+        this.validateDeploymentTargetOUs(values, ouIdNames, errors);
+        this.validateDeploymentTargetAccountNames(values, accountNames, errors);
 
         // Validate expiration for Macie and GuardDuty Lifecycle Rules
-        this.macieLifecycleRules(values);
-        this.guarddutyLifecycleRules(values);
+        this.macieLifecycleRules(values, errors);
+        this.guarddutyLifecycleRules(values, errors);
 
         //
         // Validate Config rule assets
         for (const ruleSet of values.awsConfig.ruleSets ?? []) {
-          this.validateConfigRuleAssets(configDir, ruleSet);
-          this.validateConfigRuleRemediationAssumeRoleFile(configDir, ruleSet);
-          this.validateConfigRuleRemediationTargetAssets(configDir, ruleSet);
+          this.validateConfigRuleAssets(configDir, ruleSet, errors);
+          this.validateConfigRuleRemediationAssumeRoleFile(configDir, ruleSet, errors);
+          this.validateConfigRuleRemediationTargetAssets(configDir, ruleSet, ssmDocuments, errors);
         }
       }
 
-      if (this.errors.length) {
-        throw new Error(`${SecurityConfig.FILENAME} has ${this.errors.length} issues: ${this.errors.join(' ')}`);
+      if (errors.length) {
+        throw new Error(`${SecurityConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
       }
     }
   }
@@ -1630,9 +1615,9 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * Prepare list of OU ids from organization config file
    * @param configDir
    */
-  private getOuIdNames(configDir: string) {
+  private getOuIdNames(configDir: string, ouIdNames: string[]) {
     for (const organizationalUnit of OrganizationConfig.load(configDir).organizationalUnits) {
-      this.ouIdNames.push(organizationalUnit.name);
+      ouIdNames.push(organizationalUnit.name);
     }
   }
 
@@ -1640,22 +1625,22 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * Prepare list of Account names from account config file
    * @param configDir
    */
-  private getAccountNames(configDir: string) {
+  private getAccountNames(configDir: string, accountNames: string[]) {
     for (const accountItem of [
       ...AccountsConfig.load(configDir).mandatoryAccounts,
       ...AccountsConfig.load(configDir).workloadAccounts,
     ]) {
-      this.accountNames.push(accountItem.name);
+      accountNames.push(accountItem.name);
     }
   }
 
   /**
    * Validate S3 lifecycle expiration to be smaller than noncurrentVersionExpiration
    */
-  private macieLifecycleRules(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
+  private macieLifecycleRules(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>, errors: string[]) {
     for (const lifecycleRule of values.centralSecurityServices?.macie?.lifecycleRules ?? []) {
       if (lifecycleRule.noncurrentVersionExpiration! <= lifecycleRule.expiration!) {
-        this.errors.push('The nonCurrentVersionExpiration value must be greater than that of the expiration value.');
+        errors.push('The nonCurrentVersionExpiration value must be greater than that of the expiration value.');
       }
     }
   }
@@ -1663,10 +1648,10 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
   /**
    * Validate S3 lifecycle expiration to be smaller than noncurrentVersionExpiration
    */
-  private guarddutyLifecycleRules(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
+  private guarddutyLifecycleRules(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>, errors: string[]) {
     for (const lifecycleRule of values.centralSecurityServices?.guardduty?.lifecycleRules ?? []) {
       if (lifecycleRule.noncurrentVersionExpiration! <= lifecycleRule.expiration!) {
-        this.errors.push('The nonCurrentVersionExpiration value must be greater than that of the expiration value.');
+        errors.push('The nonCurrentVersionExpiration value must be greater than that of the expiration value.');
       }
     }
   }
@@ -1675,11 +1660,14 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * Function to get SSM document names
    * @param values
    */
-  private getSsmDocuments(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
+  private getSsmDocuments(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    ssmDocuments: { name: string; template: string }[],
+  ) {
     // SSM Document validations
     for (const documentSet of values.centralSecurityServices.ssmAutomation.documentSets) {
       for (const document of documentSet.documents ?? []) {
-        this.ssmDocuments.push(document);
+        ssmDocuments.push(document);
       }
     }
   }
@@ -1688,11 +1676,15 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * Function to validate SSM document files existence
    * @param configDir
    */
-  private validateSsmDocumentFiles(configDir: string) {
+  private validateSsmDocumentFiles(
+    configDir: string,
+    ssmDocuments: { name: string; template: string }[],
+    errors: string[],
+  ) {
     // Validate presence of SSM document files
-    for (const ssmDocument of this.ssmDocuments) {
+    for (const ssmDocument of ssmDocuments) {
       if (!fs.existsSync(path.join(configDir, ssmDocument.template))) {
-        this.errors.push(`SSM document ${ssmDocument.name} template file ${ssmDocument.template} not found !!!`);
+        errors.push(`SSM document ${ssmDocument.name} template file ${ssmDocument.template} not found !!!`);
       }
     }
   }
@@ -1701,7 +1693,7 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * Function to validate KMS key policy files existence
    * @param configDir
    */
-  private validateKeyPolicyFiles(configDir: string) {
+  private validateKeyPolicyFiles(configDir: string, errors: string[]) {
     // Validate presence of KMS policy files
     if (!this.keyManagementService) {
       return;
@@ -1709,7 +1701,7 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
     for (const key of this.keyManagementService.keySets) {
       if (key.policy) {
         if (!fs.existsSync(path.join(configDir, key.policy))) {
-          this.errors.push(`KMS Key ${key.name} policy file ${key.policy} not found !!!`);
+          errors.push(`KMS Key ${key.name} policy file ${key.policy} not found !!!`);
         }
       }
     }
@@ -1718,16 +1710,16 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
   /**
    * Function to validate custom key existence in key list of keyManagementService
    */
-  private validateCustomKeyName(keyNames: string[]) {
+  private validateCustomKeyName(keyNames: string[], errors: string[]) {
     // Validate presence of KMS policy files
     for (const keyName of keyNames) {
       if (keyName) {
         if (!this.keyManagementService) {
-          this.errors.push(`Custom CMK object keyManagementService not defined, CMK ${keyName} can not be used !!!`);
+          errors.push(`Custom CMK object keyManagementService not defined, CMK ${keyName} can not be used !!!`);
           return;
         }
         if (!this.keyManagementService.keySets.find(item => item.name === keyName)) {
-          this.errors.push(
+          errors.push(
             `Custom CMK  ${keyName} is not part of keyManagementService key list [${
               this.keyManagementService.keySets.flatMap(item => item.name) ?? []
             }] !!!`,
@@ -1742,11 +1734,15 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * Make sure deployment target Accounts are part of account config file
    * @param values
    */
-  private validateConfigRuleDeploymentTargetAccounts(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
+  private validateConfigRuleDeploymentTargetAccounts(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
     for (const ruleSet of values.awsConfig.ruleSets ?? []) {
       for (const account of ruleSet.deploymentTargets.accounts ?? []) {
-        if (this.accountNames.indexOf(account) === -1) {
-          this.errors.push(
+        if (accountNames.indexOf(account) === -1) {
+          errors.push(
             `Deployment target account ${account} for AWS Config rules does not exists in accounts-config.yaml file.`,
           );
         }
@@ -1761,11 +1757,13 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    */
   private validateCloudWatchMetricsDeploymentTargetAccounts(
     values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    accountNames: string[],
+    errors: string[],
   ) {
     for (const metricSet of values.cloudWatch.metricSets ?? []) {
       for (const account of metricSet.deploymentTargets.accounts ?? []) {
-        if (this.accountNames.indexOf(account) === -1) {
-          this.errors.push(
+        if (accountNames.indexOf(account) === -1) {
+          errors.push(
             `Deployment target account ${account} for CloudWatch Metrics does not exists in accounts-config.yaml file.`,
           );
         }
@@ -1780,11 +1778,13 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    */
   private validateCloudWatchAlarmsDeploymentTargetAccounts(
     values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    accountNames: string[],
+    errors: string[],
   ) {
     for (const alarmSet of values.cloudWatch.alarmSets ?? []) {
       for (const account of alarmSet.deploymentTargets.accounts ?? []) {
-        if (this.accountNames.indexOf(account) === -1) {
-          this.errors.push(
+        if (accountNames.indexOf(account) === -1) {
+          errors.push(
             `Deployment target account ${account} for CloudWatch Alarms does not exists in accounts-config.yaml file.`,
           );
         }
@@ -1797,11 +1797,15 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * Make sure deployment target Accounts are part of account config file
    * @param values
    */
-  private validateSsmDocumentsDeploymentTargetAccounts(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
+  private validateSsmDocumentsDeploymentTargetAccounts(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
     for (const documentSet of values.centralSecurityServices.ssmAutomation.documentSets ?? []) {
       for (const account of documentSet.shareTargets.accounts ?? []) {
-        if (this.accountNames.indexOf(account) === -1) {
-          this.errors.push(
+        if (accountNames.indexOf(account) === -1) {
+          errors.push(
             `Deployment target account ${account} for SSM automation does not exists in accounts-config.yaml file.`,
           );
         }
@@ -1813,11 +1817,15 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * Function to validate Deployment targets account name for security services
    * @param values
    */
-  private validateDeploymentTargetAccountNames(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
-    this.validateConfigRuleDeploymentTargetAccounts(values);
-    this.validateCloudWatchMetricsDeploymentTargetAccounts(values);
-    this.validateCloudWatchAlarmsDeploymentTargetAccounts(values);
-    this.validateSsmDocumentsDeploymentTargetAccounts(values);
+  private validateDeploymentTargetAccountNames(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    this.validateConfigRuleDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateCloudWatchMetricsDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateCloudWatchAlarmsDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateSsmDocumentsDeploymentTargetAccounts(values, accountNames, errors);
   }
 
   /**
@@ -1825,11 +1833,15 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateConfigRuleDeploymentTargetOUs(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
+  private validateConfigRuleDeploymentTargetOUs(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
     for (const ruleSet of values.awsConfig.ruleSets ?? []) {
       for (const ou of ruleSet.deploymentTargets.organizationalUnits ?? []) {
-        if (this.ouIdNames.indexOf(ou) === -1) {
-          this.errors.push(
+        if (ouIdNames.indexOf(ou) === -1) {
+          errors.push(
             `Deployment target OU ${ou} for AWS Config rules does not exists in organization-config.yaml file.`,
           );
         }
@@ -1842,11 +1854,15 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateCloudWatchMetricsDeploymentTargetOUs(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
+  private validateCloudWatchMetricsDeploymentTargetOUs(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
     for (const metricSet of values.cloudWatch.metricSets ?? []) {
       for (const ou of metricSet.deploymentTargets.organizationalUnits ?? []) {
-        if (this.ouIdNames.indexOf(ou) === -1) {
-          this.errors.push(
+        if (ouIdNames.indexOf(ou) === -1) {
+          errors.push(
             `Deployment target OU ${ou} for CloudWatch metrics does not exists in organization-config.yaml file.`,
           );
         }
@@ -1859,11 +1875,15 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateCloudWatchAlarmsDeploymentTargetOUs(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
+  private validateCloudWatchAlarmsDeploymentTargetOUs(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
     for (const alarmSet of values.cloudWatch.alarmSets ?? []) {
       for (const ou of alarmSet.deploymentTargets.organizationalUnits ?? []) {
-        if (this.ouIdNames.indexOf(ou) === -1) {
-          this.errors.push(
+        if (ouIdNames.indexOf(ou) === -1) {
+          errors.push(
             `Deployment target OU ${ou} for CloudWatch alarms does not exists in organization-config.yaml file.`,
           );
         }
@@ -1876,13 +1896,15 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateSsmDocumentDeploymentTargetOUs(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
+  private validateSsmDocumentDeploymentTargetOUs(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
     for (const documentSet of values.centralSecurityServices.ssmAutomation.documentSets ?? []) {
       for (const ou of documentSet.shareTargets.organizationalUnits ?? []) {
-        if (this.ouIdNames.indexOf(ou) === -1) {
-          this.errors.push(
-            `Deployment target OU ${ou} for SSM documents does not exists in organization-config.yaml file.`,
-          );
+        if (ouIdNames.indexOf(ou) === -1) {
+          errors.push(`Deployment target OU ${ou} for SSM documents does not exists in organization-config.yaml file.`);
         }
       }
     }
@@ -1892,11 +1914,15 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * Function to validate Deployment targets OU name for security services
    * @param values
    */
-  private validateDeploymentTargetOUs(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>) {
-    this.validateSsmDocumentDeploymentTargetOUs(values);
-    this.validateCloudWatchAlarmsDeploymentTargetOUs(values);
-    this.validateCloudWatchMetricsDeploymentTargetOUs(values);
-    this.validateConfigRuleDeploymentTargetOUs(values);
+  private validateDeploymentTargetOUs(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
+    this.validateSsmDocumentDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateCloudWatchAlarmsDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateCloudWatchMetricsDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateConfigRuleDeploymentTargetOUs(values, ouIdNames, errors);
   }
 
   /**
@@ -1904,18 +1930,22 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    * @param configDir
    * @param ruleSet
    */
-  private validateConfigRuleAssets(configDir: string, ruleSet: t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet>) {
+  private validateConfigRuleAssets(
+    configDir: string,
+    ruleSet: t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet>,
+    errors: string[],
+  ) {
     for (const rule of ruleSet.rules) {
       if (rule.type === 'Custom' && rule.customRule) {
         // Validate presence of custom rule lambda function zip file
         if (!fs.existsSync(path.join(configDir, rule.customRule.lambda.sourceFilePath))) {
-          this.errors.push(
+          errors.push(
             `Custom rule: ${rule.name} lambda function file ${rule.customRule.lambda.sourceFilePath} not found`,
           );
         }
         // Validate presence of custom rule lambda function role policy file
         if (!fs.existsSync(path.join(configDir, rule.customRule.lambda.rolePolicyFile))) {
-          this.errors.push(
+          errors.push(
             `Custom rule: ${rule.name} lambda function role policy file ${rule.customRule.lambda.rolePolicyFile} not found`,
           );
         }
@@ -1931,12 +1961,13 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
   private validateConfigRuleRemediationAssumeRoleFile(
     configDir: string,
     ruleSet: t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet>,
+    errors: string[],
   ) {
     for (const rule of ruleSet.rules) {
       if (rule.remediation) {
         // Validate presence of rule remediation assume role definition file
         if (!fs.existsSync(path.join(configDir, rule.remediation.rolePolicyFile))) {
-          this.errors.push(
+          errors.push(
             `Rule: ${rule.name}, remediation assume role definition file ${rule.remediation.rolePolicyFile} not found`,
           );
         }
@@ -1952,18 +1983,20 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
   private validateConfigRuleRemediationTargetAssets(
     configDir: string,
     ruleSet: t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet>,
+    ssmDocuments: { name: string; template: string }[],
+    errors: string[],
   ) {
     for (const rule of ruleSet.rules) {
       if (rule.remediation) {
         // Validate presence of SSM document before used as remediation target
-        if (!this.ssmDocuments.find(item => item.name === rule.remediation?.targetId)) {
-          this.errors.push(
+        if (!ssmDocuments.find(item => item.name === rule.remediation?.targetId)) {
+          errors.push(
             `Rule: ${rule.name}, remediation target SSM document ${rule.remediation?.targetId} not found in ssm automation document lists`,
           );
           // Validate presence of custom rule's remediation SSM document invoke lambda function zip file
           if (rule.remediation.targetDocumentLambda) {
             if (!fs.existsSync(path.join(configDir, rule.remediation.targetDocumentLambda.sourceFilePath))) {
-              this.errors.push(
+              errors.push(
                 `Rule: ${rule.name}, remediation target SSM document lambda function file ${rule.remediation.targetDocumentLambda.sourceFilePath} not found`,
               );
             }

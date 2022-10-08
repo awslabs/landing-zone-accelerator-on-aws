@@ -188,15 +188,6 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   public accountIds: AccountIdConfig[] | undefined = undefined;
 
   /**
-   * Validation errors
-   */
-  readonly errors: string[] = [];
-  /**
-   * OUid name list
-   */
-  readonly ouIdNames: string[] = ['Root'];
-
-  /**
    *
    * @param props
    * @param values
@@ -208,29 +199,32 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     configDir?: string,
     validateConfig?: boolean,
   ) {
+    const errors: string[] = [];
+    const ouIdNames: string[] = ['Root'];
+
     if (values) {
       if (configDir && validateConfig) {
         //
         // Get list of OU ID names from organization config file
-        this.getOuIdNames(configDir);
+        this.getOuIdNames(configDir, ouIdNames);
 
         //
         // Validate OU name for account
-        this.validateAccountOrganizationalUnit(values);
+        this.validateAccountOrganizationalUnit(values, ouIdNames, errors);
 
         //
         // Verify mandatory account names did not change
         //
-        this.validateMandatoryAccountNames(values);
+        this.validateMandatoryAccountNames(values, errors);
 
         //
         // Verify account names are unique and name without space
-        this.validateAccountNames(values);
+        this.validateAccountNames(values, errors);
 
         //
         // Email validation
         //
-        this.validateEmails(values);
+        this.validateEmails(values, errors);
       }
 
       Object.assign(this, values);
@@ -260,8 +254,8 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
       ];
     }
 
-    if (this.errors.length) {
-      throw new Error(`${AccountsConfig.FILENAME} has ${this.errors.length} issues: ${this.errors.join(' ')}`);
+    if (errors.length) {
+      throw new Error(`${AccountsConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
     }
   }
 
@@ -269,7 +263,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
    * Function to validate email formats, default and duplicate email checks
    * @param values
    */
-  private validateEmails(values: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>) {
+  private validateEmails(values: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>, errors: string[]) {
     const emails = [...values.mandatoryAccounts, ...values.workloadAccounts].map(item => item.email);
     const defaultEmails = ['management-account@example.com', 'log-archive@example.com', 'audit@example.com'];
 
@@ -278,7 +272,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     //
     emails.forEach(item => {
       if (!emailValidator.validate(item)) {
-        this.errors.push(`Invalid email ${item}.`);
+        errors.push(`Invalid email ${item}.`);
       }
     });
 
@@ -287,12 +281,12 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     //
     defaultEmails.forEach(item => {
       if (emails.indexOf(item) !== -1) {
-        this.errors.push(`Default email (${item}) found.`);
+        errors.push(`Default email (${item}) found.`);
       }
     });
 
     if (new Set(emails).size !== emails.length) {
-      this.errors.push(`Duplicate emails defined [${emails}].`);
+      errors.push(`Duplicate emails defined [${emails}].`);
     }
   }
 
@@ -300,17 +294,15 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
    * Function to verify account names are unique and name without space
    * @param values
    */
-  private validateAccountNames(values: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>) {
+  private validateAccountNames(values: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>, errors: string[]) {
     const accountNames = [...values.mandatoryAccounts, ...values.workloadAccounts].map(item => item.name);
     if (new Set(accountNames).size !== accountNames.length) {
-      this.errors.push(`Duplicate account names defined [${accountNames}].`);
+      errors.push(`Duplicate account names defined [${accountNames}].`);
     }
 
     for (const account of [...values.mandatoryAccounts, ...values.workloadAccounts]) {
       if (account.name.indexOf(' ') > 0) {
-        this.errors.push(
-          `Account name (${account.name}) found with spaces. Please remove spaces and retry the pipeline.`,
-        );
+        errors.push(`Account name (${account.name}) found with spaces. Please remove spaces and retry the pipeline.`);
       }
     }
   }
@@ -319,14 +311,14 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
    * Function to verify mandatory account names did not change
    * @param values
    */
-  private validateMandatoryAccountNames(values: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>) {
+  private validateMandatoryAccountNames(values: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>, errors: string[]) {
     for (const accountName of [
       AccountsConfig.MANAGEMENT_ACCOUNT,
       AccountsConfig.AUDIT_ACCOUNT,
       AccountsConfig.LOG_ARCHIVE_ACCOUNT,
     ]) {
       if (!values.mandatoryAccounts.find(item => item.name === accountName)) {
-        this.errors.push(`Unable to find mandatory account with name ${accountName}.`);
+        errors.push(`Unable to find mandatory account with name ${accountName}.`);
       }
     }
   }
@@ -336,11 +328,15 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateAccountOrganizationalUnit(values: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>) {
+  private validateAccountOrganizationalUnit(
+    values: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
     for (const account of [...values.mandatoryAccounts, ...values.workloadAccounts] ?? []) {
       if (account.organizationalUnit) {
-        if (this.ouIdNames.indexOf(account.organizationalUnit) === -1) {
-          this.errors.push(
+        if (ouIdNames.indexOf(account.organizationalUnit) === -1) {
+          errors.push(
             `Deployment target OU ${account.organizationalUnit} for account ${account.name} not exists in organization-config.yaml file.`,
           );
         }
@@ -352,9 +348,9 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
    * Prepare list of OU ids from organization config file
    * @param configDir
    */
-  private getOuIdNames(configDir: string) {
+  private getOuIdNames(configDir: string, ouIdNames: string[]) {
     for (const organizationalUnit of OrganizationConfig.load(configDir).organizationalUnits) {
-      this.ouIdNames.push(organizationalUnit.name);
+      ouIdNames.push(organizationalUnit.name);
     }
   }
 

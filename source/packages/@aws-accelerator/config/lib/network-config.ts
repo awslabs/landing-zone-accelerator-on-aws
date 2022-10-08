@@ -3691,27 +3691,10 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   readonly vpcTemplates: VpcTemplatesConfig[] | undefined = undefined;
 
   /**
-   * Validation errors
-   */
-  readonly errors: string[] = [];
-
-  /**
-   * Domain lists
-   */
-  readonly domainLists: { name: string; document: string }[] = [];
-  /**
-   * OUid name list
-   */
-  readonly ouIdNames: string[] = ['Root'];
-  /**
-   * Account name list
-   */
-  readonly accountNames: string[] = [];
-
-  /**
    * An optional ELB root account ID
    */
   readonly elbAccountIds: ElbAccountIdsConfig[] | undefined = undefined;
+
   /**
    *
    * @param values
@@ -3723,56 +3706,62 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     configDir?: string,
     validateConfig?: boolean,
   ) {
+    const errors: string[] = [];
+    const ouIdNames: string[] = ['Root'];
+    const accountNames: string[] = [];
+
+    const domainLists: { name: string; document: string }[] = [];
+
     if (values) {
       if (configDir && validateConfig) {
         //
         // Get list of OU ID names from organization config file
-        this.getOuIdNames(configDir);
+        this.getOuIdNames(configDir, ouIdNames);
 
         //
         // Get list of Account names from account config file
-        this.getAccountNames(configDir);
+        this.getAccountNames(configDir, accountNames);
         //
         // Prepare Endpoint policy list
         this.prepareEndpointPolicies(values);
 
         //
         // Prepare Custom domain list
-        this.prepareCustomDomainList(values);
+        this.prepareCustomDomainList(values, domainLists);
 
         // Validate Endpoint policy document file existence
-        this.validateEndpointPolicyDocumentFile(configDir);
+        this.validateEndpointPolicyDocumentFile(configDir, errors);
 
         // Custom domain lists
-        this.validateCustomDomainListDocumentFile(configDir);
+        this.validateCustomDomainListDocumentFile(configDir, domainLists, errors);
 
         //
         // Validate deployment target OUs
-        this.validateDeploymentTargetOUs(values);
+        this.validateDeploymentTargetOUs(values, ouIdNames, errors);
 
         //
         // Validate deployment target accounts
-        this.validateDeploymentTargetAccountNames(values);
+        this.validateDeploymentTargetAccountNames(values, accountNames, errors);
 
         //
         // Validate VPC configurations
-        this.validateVpcConfiguration(values);
+        this.validateVpcConfiguration(values, errors);
 
         //
         // Validate TGW configurations
-        this.validateTgwConfiguration(values);
+        this.validateTgwConfiguration(values, errors);
 
         //
         // Validate DX gateway configurations
-        this.validateDxConfiguration(values);
+        this.validateDxConfiguration(values, errors);
 
         //
         // Validate GWLB configuration
-        this.validateGwlbConfiguration(values);
+        this.validateGwlbConfiguration(values, errors);
       }
 
-      if (this.errors.length) {
-        throw new Error(`${NetworkConfig.FILENAME} has ${this.errors.length} issues: ${this.errors.join(' ')}`);
+      if (errors.length) {
+        throw new Error(`${NetworkConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
       }
 
       Object.assign(this, values);
@@ -3783,9 +3772,9 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Prepare list of OU ids from organization config file
    * @param configDir
    */
-  private getOuIdNames(configDir: string) {
+  private getOuIdNames(configDir: string, ouIdNames: string[]) {
     for (const organizationalUnit of OrganizationConfig.load(configDir).organizationalUnits) {
-      this.ouIdNames.push(organizationalUnit.name);
+      ouIdNames.push(organizationalUnit.name);
     }
   }
 
@@ -3793,12 +3782,12 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Prepare list of Account names from account config file
    * @param configDir
    */
-  private getAccountNames(configDir: string) {
+  private getAccountNames(configDir: string, accountNames: string[]) {
     for (const accountItem of [
       ...AccountsConfig.load(configDir).mandatoryAccounts,
       ...AccountsConfig.load(configDir).workloadAccounts,
     ]) {
-      this.accountNames.push(accountItem.name);
+      accountNames.push(accountItem.name);
     }
   }
 
@@ -3807,11 +3796,15 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateTgwDeploymentTargetOUs(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  private validateTgwDeploymentTargetOUs(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
     for (const transitGateway of values.transitGateways ?? []) {
       for (const ou of transitGateway.shareTargets?.organizationalUnits ?? []) {
-        if (this.ouIdNames.indexOf(ou) === -1) {
-          this.errors.push(
+        if (ouIdNames.indexOf(ou) === -1) {
+          errors.push(
             `Deployment target OU ${ou} for transit gateways ${transitGateway.name} does not exists in organization-config.yaml file.`,
           );
         }
@@ -3824,12 +3817,16 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateIpamPoolDeploymentTargetOUs(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  private validateIpamPoolDeploymentTargetOUs(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
     for (const ipam of values.centralNetworkServices?.ipams ?? []) {
       for (const pool of ipam.pools ?? []) {
         for (const ou of pool.shareTargets?.organizationalUnits ?? []) {
-          if (this.ouIdNames.indexOf(ou) === -1) {
-            this.errors.push(
+          if (ouIdNames.indexOf(ou) === -1) {
+            errors.push(
               `Deployment target OU ${ou} for IPAM pool ${pool.name} does not exists in organization-config.yaml file.`,
             );
           }
@@ -3843,11 +3840,15 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Make sure deployment target accounts are part of account config file
    * @param values
    */
-  private validateTgwDeploymentTargetAccounts(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  private validateTgwDeploymentTargetAccounts(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
     for (const transitGateway of values.transitGateways ?? []) {
       for (const account of transitGateway.shareTargets?.accounts ?? []) {
-        if (this.accountNames.indexOf(account) === -1) {
-          this.errors.push(
+        if (accountNames.indexOf(account) === -1) {
+          errors.push(
             `Deployment target account ${account} for transit gateway ${transitGateway.name} does not exists in accounts-config.yaml file.`,
           );
         }
@@ -3860,12 +3861,16 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Make sure deployment target accounts are part of account config file
    * @param values
    */
-  private validateIpamPoolDeploymentTargetAccounts(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  private validateIpamPoolDeploymentTargetAccounts(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
     for (const ipam of values.centralNetworkServices?.ipams ?? []) {
       for (const pool of ipam.pools ?? []) {
         for (const account of pool.shareTargets?.accounts ?? []) {
-          if (this.accountNames.indexOf(account) === -1) {
-            this.errors.push(
+          if (accountNames.indexOf(account) === -1) {
+            errors.push(
               `Deployment target account ${account} for IPAM pool ${pool.name} does not exists in accounts-config.yaml file.`,
             );
           }
@@ -3879,11 +3884,15 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Make sure deployment target accounts are part of account config file
    * @param values
    */
-  private validateVpcTemplatesDeploymentTargetAccounts(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  private validateVpcTemplatesDeploymentTargetAccounts(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
     for (const vpc of values.vpcTemplates ?? []) {
       for (const account of vpc.deploymentTargets?.accounts ?? []) {
-        if (this.accountNames.indexOf(account) === -1) {
-          this.errors.push(
+        if (accountNames.indexOf(account) === -1) {
+          errors.push(
             `Deployment target account ${account} for VPC template ${vpc.name} does not exist in accounts-config.yaml file.`,
           );
         }
@@ -3896,11 +3905,15 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateVpcTemplatesDeploymentTargetOUs(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  private validateVpcTemplatesDeploymentTargetOUs(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
     for (const vpc of values.vpcTemplates ?? []) {
       for (const ou of vpc.deploymentTargets?.organizationalUnits ?? []) {
-        if (this.ouIdNames.indexOf(ou) === -1) {
-          this.errors.push(
+        if (ouIdNames.indexOf(ou) === -1) {
+          errors.push(
             `Deployment target OU ${ou} for VPC template ${vpc.name} does not exist in organization-config.yaml file.`,
           );
         }
@@ -3913,11 +3926,15 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Make sure deployment target accounts are part of account config file
    * @param values
    */
-  private validateGwlbDeploymentTargetAccounts(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  private validateGwlbDeploymentTargetAccounts(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
     for (const gwlb of values.centralNetworkServices?.gatewayLoadBalancers ?? []) {
       for (const endpoint of gwlb.endpoints ?? []) {
-        if (this.accountNames.indexOf(endpoint.account) === -1) {
-          this.errors.push(
+        if (accountNames.indexOf(endpoint.account) === -1) {
+          errors.push(
             `Deployment target account ${endpoint.account} for Gateway Load Balancer ${gwlb.name} endpoint ${endpoint.name} does not exist in accounts-config.yaml file.`,
           );
         }
@@ -3929,21 +3946,29 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Function to validate Deployment targets OU name for network services
    * @param values
    */
-  private validateDeploymentTargetOUs(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
-    this.validateTgwDeploymentTargetOUs(values);
-    this.validateIpamPoolDeploymentTargetOUs(values);
-    this.validateVpcTemplatesDeploymentTargetOUs(values);
+  private validateDeploymentTargetOUs(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
+    this.validateTgwDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateIpamPoolDeploymentTargetOUs(values, ouIdNames, errors);
+    this.validateVpcTemplatesDeploymentTargetOUs(values, ouIdNames, errors);
   }
 
   /**
    * Function to validate Deployment targets account name for network services
    * @param values
    */
-  private validateDeploymentTargetAccountNames(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
-    this.validateTgwDeploymentTargetAccounts(values);
-    this.validateIpamPoolDeploymentTargetAccounts(values);
-    this.validateVpcTemplatesDeploymentTargetAccounts(values);
-    this.validateGwlbDeploymentTargetAccounts(values);
+  private validateDeploymentTargetAccountNames(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    this.validateTgwDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateIpamPoolDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateVpcTemplatesDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateGwlbDeploymentTargetAccounts(values, accountNames, errors);
   }
 
   /**
@@ -3960,11 +3985,14 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Function to prepare custom domain list
    * @param values
    */
-  private prepareCustomDomainList(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  private prepareCustomDomainList(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    domainLists: { name: string; document: string }[],
+  ) {
     for (const ruleGroup of values.centralNetworkServices?.route53Resolver?.firewallRuleGroups ?? []) {
       for (const rule of ruleGroup.rules) {
         if (rule.customDomainList) {
-          this.domainLists.push({ name: rule.name, document: rule.customDomainList });
+          domainLists.push({ name: rule.name, document: rule.customDomainList });
         }
       }
     }
@@ -3974,10 +4002,10 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Function to validate Endpoint policy document file existence
    * @param configDir
    */
-  private validateEndpointPolicyDocumentFile(configDir: string) {
+  private validateEndpointPolicyDocumentFile(configDir: string, errors: string[]) {
     for (const policy of this.endpointPolicies) {
       if (!fs.existsSync(path.join(configDir, policy.document))) {
-        this.errors.push(`Endpoint policy ${policy.name} document file ${policy.document} not found!`);
+        errors.push(`Endpoint policy ${policy.name} document file ${policy.document} not found!`);
       }
     }
   }
@@ -3986,10 +4014,14 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Function to validate custom domain list document file existence
    * @param configDir
    */
-  private validateCustomDomainListDocumentFile(configDir: string) {
-    for (const list of this.domainLists) {
+  private validateCustomDomainListDocumentFile(
+    configDir: string,
+    domainLists: { name: string; document: string }[],
+    errors: string[],
+  ) {
+    for (const list of domainLists) {
       if (!fs.existsSync(path.join(configDir, list.document))) {
-        this.errors.push(`DNS firewall custom domain list ${list.name} document file ${list.document} not found!`);
+        errors.push(`DNS firewall custom domain list ${list.name} document file ${list.document} not found!`);
       }
     }
   }
@@ -3998,24 +4030,24 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Function to validate conditional dependencies for VPC configurations.
    * @param values
    */
-  private validateVpcConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  private validateVpcConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>, errors: string[]) {
     for (const vpcItem of [...values.vpcs, ...(values.vpcTemplates ?? [])] ?? []) {
       for (const routeTableItem of vpcItem.routeTables ?? []) {
         // Throw error if gateway association exists but no internet gateway
         if (routeTableItem.gatewayAssociation === 'internetGateway' && !vpcItem.internetGateway) {
-          this.errors.push(
+          errors.push(
             `[Route table ${routeTableItem.name} for VPC ${vpcItem.name}]: attempting to configure a gateway association with no IGW attached to the VPC!`,
           );
         }
         // Validate route entries
-        this.validateRouteTableEntries(routeTableItem, vpcItem, values);
+        this.validateRouteTableEntries(routeTableItem, vpcItem, values, errors);
       }
       // Validate the VPC doesn't have a static CIDR and IPAM defined
       if (NetworkConfigTypes.vpcConfig.is(vpcItem) && vpcItem.cidrs && vpcItem.ipamAllocations) {
-        this.errors.push(`[VPC ${vpcItem.name}]: Both a CIDR and IPAM allocation are defined. Please choose only one`);
+        errors.push(`[VPC ${vpcItem.name}]: Both a CIDR and IPAM allocation are defined. Please choose only one`);
       }
       // Validate IPAM allocations
-      this.validateIpamAllocations(vpcItem, values);
+      this.validateIpamAllocations(vpcItem, values, errors);
     }
   }
 
@@ -4027,16 +4059,17 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     routeTableItem: t.TypeOf<typeof NetworkConfigTypes.routeTableConfig>,
     vpcItem: t.TypeOf<typeof NetworkConfigTypes.vpcConfig> | t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig>,
     values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    errors: string[],
   ) {
     for (const routeTableEntryItem of routeTableItem.routes ?? []) {
       // Validate destination exists
       if (routeTableEntryItem.type && routeTableEntryItem.type !== 'gatewayEndpoint') {
-        this.validateRouteEntryDestination(routeTableEntryItem, routeTableItem.name, vpcItem.name, values);
+        this.validateRouteEntryDestination(routeTableEntryItem, routeTableItem.name, vpcItem.name, values, errors);
       }
 
       // Validate IGW route
       if (routeTableEntryItem.type && routeTableEntryItem.type === 'internetGateway') {
-        this.validateIgwRouteEntry(routeTableEntryItem, routeTableItem.name, vpcItem);
+        this.validateIgwRouteEntry(routeTableEntryItem, routeTableItem.name, vpcItem, errors);
       }
 
       // Validate target exists
@@ -4046,7 +4079,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
           routeTableEntryItem.type,
         )
       ) {
-        this.validateRouteEntryTarget(routeTableEntryItem, routeTableItem.name, vpcItem, values);
+        this.validateRouteEntryTarget(routeTableEntryItem, routeTableItem.name, vpcItem, values, errors);
       }
     }
   }
@@ -4062,31 +4095,32 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     routeTableName: string,
     vpcName: string,
     values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    errors: string[],
   ) {
     if (routeTableEntryItem.destinationPrefixList) {
       // Check if a CIDR destination is also defined
       if (routeTableEntryItem.destination) {
-        this.errors.push(
+        errors.push(
           `[Route table ${routeTableName} for VPC ${vpcName}]: route entry ${routeTableEntryItem.name} using destination and destinationPrefixList. Please choose only one destination type`,
         );
       }
 
       // Throw error if network firewall or GWLB are the target
       if (['networkFirewall', 'gatewayLoadBalancerEndpoint'].includes(routeTableEntryItem.type!)) {
-        this.errors.push(
+        errors.push(
           `[Route table ${routeTableName} for VPC ${vpcName}]: route entry ${routeTableEntryItem.name} with type ${routeTableEntryItem.type} does not support destinationPrefixList`,
         );
       }
 
       // Throw error if prefix list doesn't exist
       if (!values.prefixLists?.find(item => item.name === routeTableEntryItem.destinationPrefixList)) {
-        this.errors.push(
+        errors.push(
           `[Route table ${routeTableName} for VPC ${vpcName}]: route entry ${routeTableEntryItem.name} destinationPrefixList ${routeTableEntryItem.destinationPrefixList} does not exist`,
         );
       }
     } else {
       if (!routeTableEntryItem.destination) {
-        this.errors.push(
+        errors.push(
           `[Route table ${routeTableName} for VPC ${vpcName}]: route entry ${routeTableEntryItem.name} does not have a destination defined`,
         );
       }
@@ -4103,9 +4137,10 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     routeTableEntryItem: t.TypeOf<typeof NetworkConfigTypes.routeTableEntryConfig>,
     routeTableName: string,
     vpcItem: t.TypeOf<typeof NetworkConfigTypes.vpcConfig> | t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig>,
+    errors: string[],
   ) {
     if (!vpcItem.internetGateway) {
-      this.errors.push(
+      errors.push(
         `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} is targeting an IGW, but now IGW is attached to the VPC`,
       );
     }
@@ -4123,6 +4158,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     routeTableName: string,
     vpcItem: t.TypeOf<typeof NetworkConfigTypes.vpcConfig> | t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig>,
     values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    errors: string[],
   ) {
     const gwlbs = values.centralNetworkServices?.gatewayLoadBalancers;
     const networkFirewalls = values.centralNetworkServices?.networkFirewall?.firewalls;
@@ -4131,7 +4167,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
 
     // Throw error if no target defined
     if (!routeTableEntryItem.target) {
-      this.errors.push(
+      errors.push(
         `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} of type ${routeTableEntryItem.type} must include a target`,
       );
     }
@@ -4141,7 +4177,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
       routeTableEntryItem.type === 'gatewayLoadBalancerEndpoint' &&
       !gwlbs?.find(item => item.endpoints.find(endpoint => endpoint.name === routeTableEntryItem.target))
     ) {
-      this.errors.push(
+      errors.push(
         `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target ${routeTableEntryItem.target} does not exist`,
       );
     }
@@ -4151,14 +4187,14 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
       routeTableEntryItem.type === 'networkFirewall' &&
       !networkFirewalls?.find(item => item.name === routeTableEntryItem.target)
     ) {
-      this.errors.push(
+      errors.push(
         `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target ${routeTableEntryItem.target} does not exist`,
       );
     }
 
     // Throw error if network firewall target AZ doesn't exist
     if (routeTableEntryItem.type === 'networkFirewall' && !routeTableEntryItem.targetAvailabilityZone) {
-      this.errors.push(
+      errors.push(
         `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} with type networkFirewall must include targetAvailabilityZone`,
       );
     }
@@ -4168,14 +4204,14 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
       routeTableEntryItem.type === 'natGateway' &&
       !vpcs.find(item => item.natGateways?.find(nat => nat.name === routeTableEntryItem.target))
     ) {
-      this.errors.push(
+      errors.push(
         `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target ${routeTableEntryItem.target} does not exist`,
       );
     }
 
     // Throw error if transit gateway doesn't exist
     if (routeTableEntryItem.type === 'transitGateway' && !tgws.find(item => item.name === routeTableEntryItem.target)) {
-      this.errors.push(
+      errors.push(
         `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target ${routeTableEntryItem.target} does not exist`,
       );
     }
@@ -4185,10 +4221,10 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Function to validate conditional dependencies for TGW configurations
    * @param values
    */
-  private validateTgwConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  private validateTgwConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>, errors: string[]) {
     for (const tgw of values.transitGateways ?? []) {
       for (const routeTable of tgw.routeTables ?? []) {
-        this.validateTgwStaticRouteEntries(values, tgw, routeTable);
+        this.validateTgwStaticRouteEntries(values, tgw, routeTable, errors);
       }
     }
   }
@@ -4196,12 +4232,13 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   private validateIpamAllocations(
     vpcItem: t.TypeOf<typeof NetworkConfigTypes.vpcConfig> | t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig>,
     values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    errors: string[],
   ) {
     const ipams = values.centralNetworkServices?.ipams;
     // Check if targeted IPAM exists
     for (const alloc of vpcItem.ipamAllocations ?? []) {
       if (!ipams?.find(ipam => ipam.pools?.find(pool => pool.name === alloc.ipamPoolName))) {
-        this.errors.push(`[VPC ${vpcItem.name}]: target IPAM pool ${alloc.ipamPoolName} is not defined`);
+        errors.push(`[VPC ${vpcItem.name}]: target IPAM pool ${alloc.ipamPoolName} is not defined`);
       }
     }
     for (const subnet of vpcItem.subnets ?? []) {
@@ -4210,7 +4247,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
         subnet.ipamAllocation &&
         !vpcItem.ipamAllocations?.find(alloc => alloc.ipamPoolName === subnet.ipamAllocation!.ipamPoolName)
       ) {
-        this.errors.push(
+        errors.push(
           `[VPC ${vpcItem.name} subnet ${subnet.name}]: target IPAM pool ${
             subnet.ipamAllocation!.ipamPoolName
           } is not a source pool of the VPC`,
@@ -4221,7 +4258,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
         subnet.ipamAllocation &&
         !ipams?.find(ipam => ipam.pools?.find(pool => pool.name === subnet.ipamAllocation!.ipamPoolName))
       ) {
-        this.errors.push(
+        errors.push(
           `[VPC ${vpcItem.name} subnet ${subnet.name}]: target IPAM pool ${
             subnet.ipamAllocation!.ipamPoolName
           } is not defined`,
@@ -4237,25 +4274,26 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
     tgw: t.TypeOf<typeof NetworkConfigTypes.transitGatewayConfig>,
     routeTable: t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteTableConfig>,
+    errors: string[],
   ) {
     for (const entry of routeTable.routes ?? []) {
       // Catch error if an attachment and blackhole are both defined
       if (entry.attachment && entry.blackhole) {
-        this.errors.push(
+        errors.push(
           `[Transit Gateway route table ${routeTable.name}]: cannot define both an attachment and blackhole target`,
         );
       }
       // Catch error if destination CIDR and prefix list are both defined
       if (entry.destinationCidrBlock && entry.destinationPrefixList) {
-        this.errors.push(
+        errors.push(
           `[Transit Gateway route table ${routeTable.name}]: cannot define both a destination CIDR and destination prefix list`,
         );
       }
       // Validate VPC attachment routes
-      this.validateVpcStaticRouteEntry(values, routeTable.name, entry);
+      this.validateVpcStaticRouteEntry(values, routeTable.name, entry, errors);
 
       // Validate DX Gateway routes
-      this.validateDxGatewayStaticRouteEntry(values, routeTable.name, tgw, entry);
+      this.validateDxGatewayStaticRouteEntry(values, routeTable.name, tgw, entry, errors);
     }
   }
 
@@ -4269,13 +4307,14 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
     routeTableName: string,
     entry: t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteEntryConfig>,
+    errors: string[],
   ) {
     if (entry.attachment && NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig.is(entry.attachment)) {
       const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
       const vpcAttachment = entry.attachment as TransitGatewayRouteTableVpcEntryConfig;
       const vpc = vpcs.find(item => item.name === vpcAttachment.vpcName);
       if (!vpc) {
-        this.errors.push(`[Transit Gateway route table ${routeTableName}]: cannot find VPC ${vpcAttachment.vpcName}`);
+        errors.push(`[Transit Gateway route table ${routeTableName}]: cannot find VPC ${vpcAttachment.vpcName}`);
       }
     }
   }
@@ -4291,6 +4330,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     routeTableName: string,
     tgw: t.TypeOf<typeof NetworkConfigTypes.transitGatewayConfig>,
     entry: t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteEntryConfig>,
+    errors: string[],
   ) {
     if (entry.attachment && NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig.is(entry.attachment)) {
       const dxgws = [...(values.directConnectGateways ?? [])];
@@ -4298,20 +4338,20 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
       const dxgw = dxgws.find(item => item.name === dxAttachment.directConnectGatewayName);
       // Catch error if DXGW doesn't exist
       if (!dxgw) {
-        this.errors.push(
+        errors.push(
           `[Transit Gateway route table ${routeTableName}]: cannot find DX Gateway ${dxAttachment.directConnectGatewayName}`,
         );
       }
       if (dxgw) {
         // Catch error if DXGW is not in the same account as the TGW
         if (dxgw!.account !== tgw.account) {
-          this.errors.push(
+          errors.push(
             `[Transit Gateway route table ${routeTableName}]: cannot add route entry for DX Gateway ${dxAttachment.directConnectGatewayName}. DX Gateway and TGW ${tgw.name} reside in separate accounts`,
           );
         }
         // Catch error if there is no association with the TGW
         if (!dxgw.transitGatewayAssociations || !dxgw.transitGatewayAssociations.find(item => item.name === tgw.name)) {
-          this.errors.push(
+          errors.push(
             `[Transit Gateway route table ${routeTableName}]: cannot add route entry for DX Gateway ${dxAttachment.directConnectGatewayName}. DX Gateway and TGW ${tgw.name} are not associated`,
           );
         }
@@ -4323,12 +4363,12 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Function to validate DX gateway configurations.
    * @param values
    */
-  private validateDxConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  private validateDxConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>, errors: string[]) {
     for (const dxgw of values.directConnectGateways ?? []) {
       // Validate virtual interfaces
-      this.validateDxVirtualInterfaces(dxgw);
+      this.validateDxVirtualInterfaces(dxgw, errors);
       // Validate transit gateway attachments
-      this.validateDxTransitGatewayAssociations(values, dxgw);
+      this.validateDxTransitGatewayAssociations(values, dxgw, errors);
     }
   }
 
@@ -4336,32 +4376,32 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Function to validate DX virtual interface configurations.
    * @param dxgw
    */
-  private validateDxVirtualInterfaces(dxgw: t.TypeOf<typeof NetworkConfigTypes.dxGatewayConfig>) {
+  private validateDxVirtualInterfaces(dxgw: t.TypeOf<typeof NetworkConfigTypes.dxGatewayConfig>, errors: string[]) {
     for (const vif of dxgw.virtualInterfaces ?? []) {
       // Catch error for private VIFs with transit gateway associations
       if (vif.type === 'private' && dxgw.transitGatewayAssociations) {
-        this.errors.push(
+        errors.push(
           `[Direct Connect Gateway ${dxgw.name}]: cannot specify private virtual interface ${vif.name} with transit gateway associations`,
         );
       }
       // Catch error if ASNs match
       if (dxgw.asn === vif.customerAsn) {
-        this.errors.push(`[Direct Connect Gateway ${dxgw.name}]: Amazon ASN and customer ASN match for ${vif.name}`);
+        errors.push(`[Direct Connect Gateway ${dxgw.name}]: Amazon ASN and customer ASN match for ${vif.name}`);
       }
       // Catch error if ASN is not in the correct range
       if (vif.customerAsn < 1 || vif.customerAsn > 2147483647) {
-        this.errors.push(
+        errors.push(
           `[Direct Connect Gateway ${dxgw.name}]: ASN ${vif.customerAsn} out of range 1-2147483647 for virtual interface ${vif.name}`,
         );
       }
       // Catch error if VIF VLAN is not in range
       if (vif.vlan < 1 || vif.vlan > 4094) {
-        this.errors.push(
+        errors.push(
           `[Direct Connect Gateway ${dxgw.name}]: VLAN ${vif.vlan} out of range 1-4094 for virtual interface ${vif.name}`,
         );
       }
       // Validate peer IP addresses
-      this.validateDxVirtualInterfaceAddresses(dxgw, vif);
+      this.validateDxVirtualInterfaceAddresses(dxgw, vif, errors);
     }
   }
 
@@ -4373,24 +4413,23 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   private validateDxVirtualInterfaceAddresses(
     dxgw: t.TypeOf<typeof NetworkConfigTypes.dxGatewayConfig>,
     vif: t.TypeOf<typeof NetworkConfigTypes.dxVirtualInterfaceConfig>,
+    errors: string[],
   ) {
     // Catch error if one peer IP is defined and not the other
     if (vif.amazonAddress && !vif.customerAddress) {
-      this.errors.push(
+      errors.push(
         `[Direct Connect Gateway ${dxgw.name}]: Amazon peer IP defined but customer peer IP undefined for ${vif.name}`,
       );
     }
     if (!vif.amazonAddress && vif.customerAddress) {
-      this.errors.push(
+      errors.push(
         `[Direct Connect Gateway ${dxgw.name}]: Customer peer IP defined but Amazon peer IP undefined for ${vif.name}`,
       );
     }
     // Catch error if addresses match
     if (vif.amazonAddress && vif.customerAddress) {
       if (vif.amazonAddress === vif.customerAddress) {
-        this.errors.push(
-          `[Direct Connect Gateway ${dxgw.name}]: Amazon peer IP and customer peer IP match for ${vif.name}`,
-        );
+        errors.push(`[Direct Connect Gateway ${dxgw.name}]: Amazon peer IP and customer peer IP match for ${vif.name}`);
       }
     }
   }
@@ -4403,6 +4442,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   private validateDxTransitGatewayAssociations(
     values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
     dxgw: t.TypeOf<typeof NetworkConfigTypes.dxGatewayConfig>,
+    errors: string[],
   ) {
     for (const tgwAssociation of dxgw.transitGatewayAssociations ?? []) {
       const tgw = values.transitGateways.find(
@@ -4410,18 +4450,18 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
       );
       // Catch error if TGW isn't found
       if (!tgw) {
-        this.errors.push(
+        errors.push(
           `[Direct Connect Gateway ${dxgw.name}]: cannot find matching transit gateway for TGW association ${tgwAssociation.name}`,
         );
       }
       // Catch error if ASNs match
       if (tgw!.asn === dxgw.asn) {
-        this.errors.push(`[Direct Connect Gateway ${dxgw.name}]: DX Gateway ASN and TGW ASN match for ${tgw!.name}`);
+        errors.push(`[Direct Connect Gateway ${dxgw.name}]: DX Gateway ASN and TGW ASN match for ${tgw!.name}`);
       }
       // Catch error if TGW and DXGW account don't match and associations/propagations are configured
       if (tgw!.account !== dxgw.account) {
         if (tgwAssociation.routeTableAssociations || tgwAssociation.routeTablePropagations) {
-          this.errors.push(
+          errors.push(
             `[Direct Connect Gateway ${dxgw.name}]: DX Gateway association proposals cannot have TGW route table associations or propagations defined`,
           );
         }
@@ -4433,25 +4473,23 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Validate Gateway Load Balancer configuration
    * @param values
    */
-  private validateGwlbConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  private validateGwlbConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>, errors: string[]) {
     const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
     for (const gwlb of values.centralNetworkServices?.gatewayLoadBalancers ?? []) {
       const vpc = vpcs.find(item => item.name === gwlb.vpc);
       if (!vpc) {
-        this.errors.push(`[Gateway Load Balancer ${gwlb.name}]: VPC ${gwlb.vpc} does not exist`);
+        errors.push(`[Gateway Load Balancer ${gwlb.name}]: VPC ${gwlb.vpc} does not exist`);
       }
 
       // Validate subnets
       for (const gwlbSubnet of gwlb.subnets ?? []) {
         if (vpc && !vpc.subnets?.find(subnet => subnet.name === gwlbSubnet)) {
-          this.errors.push(
-            `[Gateway Load Balancer ${gwlb.name}]: subnet ${gwlbSubnet} does not exist in VPC ${vpc!.name}`,
-          );
+          errors.push(`[Gateway Load Balancer ${gwlb.name}]: subnet ${gwlbSubnet} does not exist in VPC ${vpc!.name}`);
         }
       }
 
       // Validate endpoints
-      this.validateGwlbEndpoints(gwlb, values);
+      this.validateGwlbEndpoints(gwlb, values, errors);
     }
   }
 
@@ -4463,19 +4501,20 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   private validateGwlbEndpoints(
     gwlb: t.TypeOf<typeof NetworkConfigTypes.gwlbConfig>,
     values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    errors: string[],
   ) {
     const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
     for (const gwlbEndpoint of gwlb.endpoints ?? []) {
       const vpc = vpcs.find(item => item.name === gwlbEndpoint.vpc);
       if (!vpc) {
-        this.errors.push(
+        errors.push(
           `[Gateway Load Balancer ${gwlb.name} endpoint ${gwlbEndpoint.name}]: VPC ${gwlbEndpoint.vpc} does not exist`,
         );
       }
 
       // Validate subnet
       if (vpc && !vpc.subnets?.find(subnet => subnet.name === gwlbEndpoint.subnet)) {
-        this.errors.push(
+        errors.push(
           `[Gateway Load Balancer ${gwlb.name} endpoint ${gwlbEndpoint.name}]: subnet ${gwlbEndpoint.subnet} does not exist in VPC ${vpc.name}`,
         );
       }
