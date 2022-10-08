@@ -9,11 +9,11 @@ centralSecurityServices:
     excludeAccounts: []
   snsSubscriptions:
     - level: High
-      email: <email alias>+gc-accel001-high@amazon.com
+      email: <notify-high>@example.com <----- UPDATE EMAIL ADDRESS
     - level: Medium
-      email: <email alias>+gc-accel001-medium@amazon.com
+      email: <notify-medium>@example.com <----- UPDATE EMAIL ADDRESS
     - level: Low
-      email: <email alias>+gc-accel001-low@amazon.com
+      email: <notify-low>@example.com <----- UPDATE EMAIL ADDRESS
   macie:
     enable: false
     excludeRegions: []
@@ -365,4 +365,3 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-
