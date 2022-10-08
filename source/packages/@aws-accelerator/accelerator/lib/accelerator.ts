@@ -235,7 +235,8 @@ export abstract class Accelerator {
             }),
           );
 
-          if (promises.length >= maxStacks) {
+          //override to prevent errors
+          if (promises.length >= 100) {
             await Promise.all(promises);
           }
         }

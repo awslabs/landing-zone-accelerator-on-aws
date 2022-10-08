@@ -223,53 +223,6 @@ Object {
       },
       "Type": "AWS::IAM::Policy",
     },
-    "AdminCdkToolkitRoleOverflowPolicy1B97AD4AA": Object {
-      "Properties": Object {
-        "Description": "Part of the policies for PipelineStack/AdminCdkToolkitRole",
-        "Path": "/",
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
-                "s3:GetObject*",
-                "s3:GetBucket*",
-                "s3:List*",
-              ],
-              "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
-                    "PipelineSecureBucketB3EEB324",
-                    "Arn",
-                  ],
-                },
-                Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
-                          "PipelineSecureBucketB3EEB324",
-                          "Arn",
-                        ],
-                      },
-                      "/*",
-                    ],
-                  ],
-                },
-              ],
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Roles": Array [
-          Object {
-            "Ref": "AdminCdkToolkitRole292E163A",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::ManagedPolicy",
-    },
     "Pipeline8E4BFAC9": Object {
       "DependsOn": Array [
         "PipelinePipelineRoleDefaultPolicy7D262A22",
@@ -960,7 +913,7 @@ Object {
             Object {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=4096",
+              "Value": "--max_old_space_size=8192",
             },
           ],
           "Image": "aws/codebuild/standard:5.0",
@@ -1876,12 +1829,17 @@ Object {
           "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "Environment": Object {
-          "ComputeType": "BUILD_GENERAL1_MEDIUM",
+          "ComputeType": "BUILD_GENERAL1_LARGE",
           "EnvironmentVariables": Array [
             Object {
               "Name": "NODE_OPTIONS",
               "Type": "PLAINTEXT",
-              "Value": "--max_old_space_size=4096",
+              "Value": "--max_old_space_size=8192",
+            },
+            Object {
+              "Name": "CDK_METHOD",
+              "Type": "PLAINTEXT",
+              "Value": "direct",
             },
             Object {
               "Name": "CDK_NEW_BOOTSTRAP",

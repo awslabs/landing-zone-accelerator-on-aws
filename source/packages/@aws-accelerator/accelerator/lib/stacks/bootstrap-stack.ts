@@ -67,7 +67,7 @@ export class BootstrapStack extends AcceleratorStack {
     // Create SSM Parameter for CDK Bootstrap Version
     const cdkBootstrapVersionParam = new cdk.aws_ssm.StringParameter(this, 'CdkBootstrapVersion', {
       parameterName: `/cdk-bootstrap/${this.qualifier}/version`,
-      stringValue: '13',
+      stringValue: '14',
     });
     // Override logical Id
     const cfnCdkBootstrapVersionParam = cdkBootstrapVersionParam.node.defaultChild as cdk.aws_ssm.CfnParameter;
@@ -346,7 +346,7 @@ export class BootstrapStack extends AcceleratorStack {
 
     // Outputs
     new cdk.CfnOutput(this, 'BootstrapVersion', {
-      value: '13',
+      value: '14',
       description: 'The version of the bootstrap resources that are currently mastered in this stack',
     });
 
