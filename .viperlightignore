@@ -22,12 +22,8 @@ docs
 source/test-reports
 
 # Ignore reference custom rules lambda zip files
-reference/sample-configurations/aws-best-practices/custom-config-rules/attach-ec2-instance-profile.zip
-reference/sample-configurations/aws-best-practices/custom-config-rules/ec2-instance-profile-permissions.zip
-reference/sample-configurations/aws-best-practices-govcloud-us/govcloud-us-config/custom-config-rules/attach-ec2-instance-profile.zip
-reference/sample-configurations/aws-best-practices-govcloud-us/govcloud-us-config/custom-config-rules/ec2-instance-profile-permissions.zip
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/custom-config-rules/attach-ec2-instance-profile.zip
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/custom-config-rules/ec2-instance-profile-permissions.zip
+^attach-ec2-instance-profile.zip
+^ec2-instance-profile-permissions.zip
 
 source/packages/@aws-accelerator/installer/bin/installer.ts:18
 source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:59
@@ -61,7 +57,7 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:56
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:57
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:455
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:485
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:496
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:499
 
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:57
 
