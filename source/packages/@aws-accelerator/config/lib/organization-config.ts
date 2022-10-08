@@ -474,6 +474,8 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
       let organizationsClient: AWS.Organizations;
       if (partition === 'aws-us-gov') {
         organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+      } else if (partition === 'aws-cn') {
+        organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
       } else {
         organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
       }

@@ -132,7 +132,7 @@ Object {
               ],
               "Condition": Object {
                 "StringEquals": Object {
-                  "aws:PrincipalOrgId": "o-asdf123456",
+                  "aws:PrincipalOrgID": "o-asdf123456",
                   "kms:ViaService": "s3.us-east-1.amazonaws.com",
                 },
               },
@@ -167,7 +167,7 @@ Object {
                   },
                 },
                 "StringEquals": Object {
-                  "aws:PrincipalOrgId": "o-asdf123456",
+                  "aws:PrincipalOrgID": "o-asdf123456",
                 },
               },
               "Effect": "Allow",

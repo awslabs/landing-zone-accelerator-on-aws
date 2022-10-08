@@ -74,6 +74,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   let organizationsClient: OrganizationsClient;
   if (partition === 'aws-us-gov') {
     organizationsClient = new OrganizationsClient({ region: 'us-gov-west-1' });
+  } else if (partition === 'aws-cn') {
+    organizationsClient = new OrganizationsClient({ region: 'cn-northwest-1' });
   } else {
     organizationsClient = new OrganizationsClient({ region: 'us-east-1' });
   }
@@ -157,6 +159,15 @@ async function inviteAccountToOu(
         sessionToken: assumeRoleResponse.Credentials?.SessionToken,
       },
       region: 'us-gov-west-1',
+    });
+  } else if (partition === 'aws-cn') {
+    acceptOrganizationsClient = new OrganizationsClient({
+      credentials: {
+        accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
+        secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
+        sessionToken: assumeRoleResponse.Credentials?.SessionToken,
+      },
+      region: 'cn-northwest-1',
     });
   } else {
     acceptOrganizationsClient = new OrganizationsClient({

@@ -259,6 +259,7 @@ export class NetworkConfigTypes {
 
   static readonly interfaceEndpointServiceConfig = t.interface({
     service: t.nonEmptyString,
+    serviceName: t.optional(t.nonEmptyString),
     policy: t.optional(t.nonEmptyString),
   });
 
@@ -1743,6 +1744,10 @@ export class InterfaceEndpointServiceConfig
    * The name of the service to create the endpoint for.
    */
   readonly service: string = '';
+  /**
+   * The full name of the service to create the endpoint for.
+   */
+  readonly serviceName: string | undefined = undefined;
   /**
    * The friendly name of a policy for the interface endpoint. If left undefined, the default policy will be used.
    */

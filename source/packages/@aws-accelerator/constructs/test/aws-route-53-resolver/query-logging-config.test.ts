@@ -25,26 +25,68 @@ const stack = new cdk.Stack();
 // Instantiate resources required for construct
 const bucket = cdk.aws_s3.Bucket.fromBucketName(stack, 'TestBucket', 'testbucket');
 const logGroup = new cdk.aws_logs.LogGroup(stack, 'TestLogGroup');
+const kmsKey = new cdk.aws_kms.Key(stack, 'Key', {});
 
 // S3 query logging config
 const s3Config = new QueryLoggingConfig(stack, 'S3QueryLoggingTest', {
   destination: bucket,
+  kmsKey: kmsKey,
+  logRetentionInDays: 3653,
   name: 'S3QueryLoggingTest',
+  partition: 'aws',
 });
 
 // CloudWatch Logs query logging config
 new QueryLoggingConfig(stack, 'CwlQueryLoggingTest', {
   destination: logGroup,
+  kmsKey: kmsKey,
+  logRetentionInDays: 3653,
   name: 'CwlQueryLoggingTest',
   organizationId: 'o-123test',
+  partition: 'aws',
 });
 
 // Config association
 new QueryLoggingConfigAssociation(stack, 'TestQueryLoggingAssoc', {
   resolverQueryLogConfigId: s3Config.logId,
   vpcId: 'TestVpc',
+  kmsKey: kmsKey,
+  logRetentionInDays: 3653,
+  partition: 'aws-cn',
+});
+
+// Test for China region.
+const cnStack = new cdk.Stack();
+const cnBucket = cdk.aws_s3.Bucket.fromBucketName(cnStack, 'TestBucket', 'testbucket');
+const cnLogGroup = new cdk.aws_logs.LogGroup(cnStack, 'TestLogGroup');
+const cnKmsKey = new cdk.aws_kms.Key(cnStack, 'Key', {});
+
+const cnS3Config = new QueryLoggingConfig(cnStack, 'S3QueryLoggingTest', {
+  destination: cnBucket,
+  kmsKey: cnKmsKey,
+  logRetentionInDays: 3653,
+  name: 'S3QueryLoggingTest',
+  partition: 'aws-cn',
+});
+
+new QueryLoggingConfig(cnStack, 'CwlQueryLoggingTest', {
+  destination: cnLogGroup,
+  kmsKey: cnKmsKey,
+  logRetentionInDays: 3653,
+  name: 'CwlQueryLoggingTest',
+  organizationId: 'o-123test',
+  partition: 'aws-cn',
+});
+
+new QueryLoggingConfigAssociation(cnStack, 'TestQueryLoggingAssoc', {
+  resolverQueryLogConfigId: cnS3Config.logId,
+  vpcId: 'TestVpc',
+  kmsKey: cnKmsKey,
+  logRetentionInDays: 3653,
+  partition: 'aws-cn',
 });
 
 describe('QueryLoggingConfig', () => {
   snapShotTest(testNamePrefix, stack);
+  snapShotTest(testNamePrefix, cnStack);
 });

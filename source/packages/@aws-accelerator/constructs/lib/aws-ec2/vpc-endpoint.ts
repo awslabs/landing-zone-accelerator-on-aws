@@ -39,6 +39,8 @@ export interface VpcEndpointProps {
   readonly privateDnsEnabled?: boolean;
   readonly policyDocument?: cdk.aws_iam.PolicyDocument;
   readonly routeTables?: string[];
+  readonly partition?: string;
+  readonly serviceName?: string;
 }
 
 export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
@@ -65,7 +67,12 @@ export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
       if (this.service === 's3-global.accesspoint') {
         serviceName = `com.aws.${props.service}`;
       }
-
+      // Add the ability against China region to override serviceName due to the prefix of
+      // serviceName is inconsistent (com.amazonaws vs cn.com.amazonaws) for VPC interface
+      // endpoints in that region.
+      if (props.serviceName) {
+        serviceName = props.serviceName;
+      }
       const resource = new cdk.aws_ec2.CfnVPCEndpoint(this, 'Resource', {
         serviceName,
         vpcEndpointType: props.vpcEndpointType,
@@ -99,7 +106,8 @@ export class VpcEndpoint extends cdk.Resource implements IVpcEndpoint {
     }
 
     if (props.vpcEndpointType === VpcEndpointType.GWLB) {
-      const serviceName = `com.amazonaws.vpce.${cdk.Stack.of(this).region}.${props.service}`;
+      const servicePrefix = props.partition === 'aws-cn' ? 'cn.com.amazonaws' : 'com.amazonaws';
+      const serviceName = `${servicePrefix}.vpce.${cdk.Stack.of(this).region}.${props.service}`;
 
       const resource = new cdk.aws_ec2.CfnVPCEndpoint(this, 'Resource', {
         serviceName,

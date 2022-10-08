@@ -59,7 +59,9 @@ export class AccountsStack extends AcceleratorStack {
       this.cloudwatchKey.addToResourcePolicy(
         new cdk.aws_iam.PolicyStatement({
           sid: `Allow Cloudwatch logs to use the encryption key`,
-          principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+          principals: [
+            new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
+          ],
           actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
           resources: ['*'],
           conditions: {
@@ -109,62 +111,65 @@ export class AccountsStack extends AcceleratorStack {
     //
     if (props.globalRegion === cdk.Stack.of(this).region) {
       if (props.organizationConfig.enable) {
-        const enablePolicyTypeScp = new EnablePolicyType(this, 'enablePolicyTypeScp', {
-          policyType: PolicyTypeEnum.SERVICE_CONTROL_POLICY,
-          kmsKey: this.cloudwatchKey,
-          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-        });
-
-        // Deploy SCPs
         let quarantineScpId = '';
-        for (const serviceControlPolicy of props.organizationConfig.serviceControlPolicies) {
-          Logger.info(`[accounts-stack] Adding service control policy (${serviceControlPolicy.name})`);
-
-          const scp = new Policy(this, serviceControlPolicy.name, {
-            description: serviceControlPolicy.description,
-            name: serviceControlPolicy.name,
-            path: path.join(props.configDirPath, serviceControlPolicy.policy),
-            type: PolicyType.SERVICE_CONTROL_POLICY,
+        // SCP is not supported in China Region.
+        if (props.partition !== 'aws-cn') {
+          const enablePolicyTypeScp = new EnablePolicyType(this, 'enablePolicyTypeScp', {
+            policyType: PolicyTypeEnum.SERVICE_CONTROL_POLICY,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-            acceleratorPrefix: 'AWSAccelerator',
-            managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
           });
-          scp.node.addDependency(enablePolicyTypeScp);
 
-          if (
-            serviceControlPolicy.name == props.organizationConfig.quarantineNewAccounts?.scpPolicyName &&
-            props.partition == 'aws'
-          ) {
-            new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${scp.name}ScpPolicyId`), {
-              parameterName: `/accelerator/organizations/scp/${scp.name}/id`,
-              stringValue: scp.id,
-            });
-            quarantineScpId = scp.id;
-          }
+          // Deploy SCPs
+          for (const serviceControlPolicy of props.organizationConfig.serviceControlPolicies) {
+            Logger.info(`[accounts-stack] Adding service control policy (${serviceControlPolicy.name})`);
 
-          for (const organizationalUnit of serviceControlPolicy.deploymentTargets.organizationalUnits ?? []) {
-            Logger.info(
-              `[accounts-stack] Attaching service control policy (${serviceControlPolicy.name}) to organizational unit (${organizationalUnit})`,
-            );
-
-            new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${organizationalUnit}`), {
-              policyId: scp.id,
-              targetId: props.organizationConfig.getOrganizationalUnitId(organizationalUnit),
+            const scp = new Policy(this, serviceControlPolicy.name, {
+              description: serviceControlPolicy.description,
+              name: serviceControlPolicy.name,
+              path: path.join(props.configDirPath, serviceControlPolicy.policy),
               type: PolicyType.SERVICE_CONTROL_POLICY,
               kmsKey: this.cloudwatchKey,
               logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+              acceleratorPrefix: 'AWSAccelerator',
+              managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
             });
-          }
+            scp.node.addDependency(enablePolicyTypeScp);
 
-          for (const account of serviceControlPolicy.deploymentTargets.accounts ?? []) {
-            new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${account}`), {
-              policyId: scp.id,
-              targetId: props.accountsConfig.getAccountId(account),
-              type: PolicyType.SERVICE_CONTROL_POLICY,
-              kmsKey: this.cloudwatchKey,
-              logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-            });
+            if (
+              serviceControlPolicy.name == props.organizationConfig.quarantineNewAccounts?.scpPolicyName &&
+              props.partition == 'aws'
+            ) {
+              new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${scp.name}ScpPolicyId`), {
+                parameterName: `/accelerator/organizations/scp/${scp.name}/id`,
+                stringValue: scp.id,
+              });
+              quarantineScpId = scp.id;
+            }
+
+            for (const organizationalUnit of serviceControlPolicy.deploymentTargets.organizationalUnits ?? []) {
+              Logger.info(
+                `[accounts-stack] Attaching service control policy (${serviceControlPolicy.name}) to organizational unit (${organizationalUnit})`,
+              );
+
+              new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${organizationalUnit}`), {
+                policyId: scp.id,
+                targetId: props.organizationConfig.getOrganizationalUnitId(organizationalUnit),
+                type: PolicyType.SERVICE_CONTROL_POLICY,
+                kmsKey: this.cloudwatchKey,
+                logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+              });
+            }
+
+            for (const account of serviceControlPolicy.deploymentTargets.accounts ?? []) {
+              new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${account}`), {
+                policyId: scp.id,
+                targetId: props.accountsConfig.getAccountId(account),
+                type: PolicyType.SERVICE_CONTROL_POLICY,
+                kmsKey: this.cloudwatchKey,
+                logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+              });
+            }
           }
         }
 

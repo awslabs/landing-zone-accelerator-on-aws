@@ -227,7 +227,7 @@ export class NetworkVpcStack extends AcceleratorStack {
 
       if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         if (vpcItem.useCentralEndpoints) {
-          if (props.partition !== 'aws') {
+          if (props.partition !== 'aws' && props.partition !== 'aws-cn') {
             throw new Error(
               'useCentralEndpoints set to true, but AWS Partition is not commercial. Please change it to false.',
             );
@@ -541,7 +541,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         // identify which VPCs in a target account to create private hosted zone
         // associations for.
         //
-        if (vpcItem.useCentralEndpoints && props.partition !== 'aws') {
+        if (vpcItem.useCentralEndpoints && props.partition !== 'aws' && props.partition !== 'aws-cn') {
           throw new Error(
             'useCentralEndpoints set to true, but AWS Partition is not commercial. No tags will be added',
           );

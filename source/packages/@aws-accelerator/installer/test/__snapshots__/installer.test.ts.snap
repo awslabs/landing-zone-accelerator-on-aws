@@ -45,6 +45,9 @@ Object {
       "aws": Object {
         "regionName": "us-east-1",
       },
+      "aws-cn": Object {
+        "regionName": "cn-northwest-1",
+      },
       "aws-iso": Object {
         "regionName": "us-iso-east-1",
       },
@@ -2493,6 +2496,9 @@ Object {
       "aws": Object {
         "regionName": "us-east-1",
       },
+      "aws-cn": Object {
+        "regionName": "cn-northwest-1",
+      },
       "aws-iso": Object {
         "regionName": "us-iso-east-1",
       },
@@ -4930,6 +4936,9 @@ Object {
     "GlobalRegionMap": Object {
       "aws": Object {
         "regionName": "us-east-1",
+      },
+      "aws-cn": Object {
+        "regionName": "cn-northwest-1",
       },
       "aws-iso": Object {
         "regionName": "us-iso-east-1",
@@ -7577,6 +7586,9 @@ Object {
     "GlobalRegionMap": Object {
       "aws": Object {
         "regionName": "us-east-1",
+      },
+      "aws-cn": Object {
+        "regionName": "cn-northwest-1",
       },
       "aws-iso": Object {
         "regionName": "us-iso-east-1",

@@ -121,10 +121,15 @@ export interface ReportDefinitionProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * The partition of this stack.
+   */
+  readonly partition: string;
 }
 
 export class ReportDefinition extends cdk.Resource implements IReportDefinition {
   public readonly reportName: string;
+  private readonly globalRegion: string;
 
   constructor(scope: Construct, id: string, props: ReportDefinitionProps) {
     super(scope, id, {
@@ -133,6 +138,13 @@ export class ReportDefinition extends cdk.Resource implements IReportDefinition 
 
     this.reportName = this.physicalName;
 
+    if (props.partition === 'aws-cn') {
+      this.globalRegion = 'cn-northwest-1';
+    } else {
+      this.globalRegion = 'us-east-1';
+    }
+
+    // Cfn resource AWS::CUR::ReportDefinition is available in region us-east-1 only.
     if (cdk.Stack.of(this).region === 'us-east-1') {
       // Use native Cfn construct
       new cdk.aws_cur.CfnReportDefinition(this, 'Resource', {
@@ -213,7 +225,7 @@ export class ReportDefinition extends cdk.Resource implements IReportDefinition 
       resources: [bucket.bucketArn],
       conditions: {
         StringEquals: {
-          'aws:SourceArn': `arn:aws:cur:us-east-1:${cdk.Aws.ACCOUNT_ID}:definition/*`,
+          'aws:SourceArn': `arn:${cdk.Aws.PARTITION}:cur:${this.globalRegion}:${cdk.Aws.ACCOUNT_ID}:definition/*`,
           'aws:SourceAccount': `${cdk.Aws.ACCOUNT_ID}`,
         },
       },
@@ -226,7 +238,7 @@ export class ReportDefinition extends cdk.Resource implements IReportDefinition 
       resources: [bucket.arnForObjects('*')],
       conditions: {
         StringEquals: {
-          'aws:SourceArn': `arn:aws:cur:us-east-1:${cdk.Aws.ACCOUNT_ID}:definition/*`,
+          'aws:SourceArn': `arn:${cdk.Aws.PARTITION}:cur:${this.globalRegion}:${cdk.Aws.ACCOUNT_ID}:definition/*`,
           'aws:SourceAccount': `${cdk.Aws.ACCOUNT_ID}`,
         },
       },
