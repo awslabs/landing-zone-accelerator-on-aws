@@ -534,6 +534,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         vpcId,
         vpcEndpointType: VpcEndpointType.INTERFACE,
         service: endpointItem.service,
+        serviceName: endpointItem.serviceName,
         subnets,
         securityGroups: [endpointSg],
         privateDnsEnabled: privateDnsValue,

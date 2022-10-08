@@ -413,7 +413,7 @@ export class BootstrapStack extends AcceleratorStack {
         conditions: {
           StringEquals: {
             'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
-            'aws:PrincipalOrgId': `${this.organizationId}`,
+            ...this.getPrincipalOrgIdCondition(this.organizationId),
           },
         },
       }),
@@ -427,7 +427,7 @@ export class BootstrapStack extends AcceleratorStack {
         resources: ['*'],
         conditions: {
           StringEquals: {
-            'aws:PrincipalOrgId': `${this.organizationId}`,
+            ...this.getPrincipalOrgIdCondition(this.organizationId),
           },
           ArnLike: {
             'aws:PrincipalARN': `arn:${props.partition}:iam::*:role/AWSAccelerator-*`,
@@ -454,7 +454,7 @@ export class BootstrapStack extends AcceleratorStack {
       objectOwnership: cdk.aws_s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
     });
 
-    assetBucket.grantReadWrite(new cdk.aws_iam.OrganizationPrincipal(this.organizationId));
+    assetBucket.grantReadWrite(this.getOrgPrincipals(this.organizationId));
     assetBucket.grantReadWrite(new cdk.aws_iam.ServicePrincipal('cloudformation.amazonaws.com'));
     assetBucket.grantReadWrite(new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'));
 

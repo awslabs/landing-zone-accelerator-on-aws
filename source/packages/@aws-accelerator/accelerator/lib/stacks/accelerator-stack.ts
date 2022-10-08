@@ -587,4 +587,39 @@ export abstract class AcceleratorStack extends cdk.Stack {
       logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
     });
   }
+
+  /**
+   * Get the IAM condition context key for the organization.
+   */
+  protected getPrincipalOrgIdCondition(organizationId: string): { [key: string]: string | string[] } {
+    let principalOrgIdCondition: { [key: string]: string | string[] };
+    if (this.props.partition === 'aws-cn' || !this.props.organizationConfig.enable) {
+      principalOrgIdCondition = {
+        'aws:PrincipalAccount': this.props?.accountsConfig?.accountIds?.map(item => item.accountId) || [],
+      };
+    } else {
+      principalOrgIdCondition = {
+        'aws:PrincipalOrgID': organizationId,
+      };
+    }
+    return principalOrgIdCondition;
+  }
+
+  /**
+   * Get the IAM principals for the organization.
+   */
+  protected getOrgPrincipals(organizationId: string): cdk.aws_iam.IPrincipal {
+    let orgPrincipals: cdk.aws_iam.IPrincipal;
+    if (this.props.partition === 'aws-cn' || !this.props.organizationConfig.enable) {
+      const accountIds = this.props.accountsConfig.getAccountIds();
+      const principals: cdk.aws_iam.PrincipalBase[] = [];
+      accountIds.forEach(accountId => {
+        principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
+      });
+      orgPrincipals = new cdk.aws_iam.CompositePrincipal(...principals);
+    } else {
+      orgPrincipals = new cdk.aws_iam.OrganizationPrincipal(organizationId);
+    }
+    return orgPrincipals;
+  }
 }

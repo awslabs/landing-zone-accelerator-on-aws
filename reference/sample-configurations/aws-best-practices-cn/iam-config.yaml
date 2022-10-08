@@ -1,0 +1,54 @@
+policySets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+    policies:
+      - name: Default-Boundary-Policy
+        policy: iam-policies/boundary-policy.json
+# providers:
+  # - name: ActiveDirectory
+  #   metadataDocument: iam-providers/active-directory.xml
+roleSets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+    roles:
+      - name: EC2-Default-SSM-AD-Role
+        instanceProfile: true
+        assumedBy:
+          - type: service
+            principal: ec2.amazonaws.com.cn
+        policies:
+          awsManaged:
+            - AmazonSSMManagedInstanceCore
+            - AmazonSSMDirectoryServiceAccess
+            - CloudWatchAgentServerPolicy
+        boundaryPolicy: Default-Boundary-Policy
+      # - name: SecurityAuditors
+      #   assumedBy:
+      #     - type: provider
+      #       principal: ActiveDirectory
+      #   policies:
+      #     awsManaged:
+      #       - SecurityAudit
+      #   boundaryPolicy: Default-Boundary-Policy
+groupSets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+    groups:
+      - name: Administrators
+        policies:
+          awsManaged:
+            - AdministratorAccess
+userSets:
+  - deploymentTargets:
+      accounts:
+        - Management
+    users:
+      - username: breakGlassUser01
+        group: Administrators
+        boundaryPolicy: Default-Boundary-Policy
+      - username: breakGlassUser02
+        group: Administrators
+        boundaryPolicy: Default-Boundary-Policy

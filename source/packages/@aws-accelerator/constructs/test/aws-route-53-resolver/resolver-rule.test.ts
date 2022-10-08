@@ -17,25 +17,43 @@ import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(ResolverRule): ';
 
-const stack = new cdk.Stack();
+const forwardRuleStack = new cdk.Stack();
+const systemRuleStack = new cdk.Stack();
 
 const ipAddresses = [{ ip: '1.1.1.1' }, { ip: '2.2.2.2' }];
 
-const rule = new ResolverRule(stack, 'TestResolverRule', {
+const forwardRule = new ResolverRule(forwardRuleStack, 'TestResolverRule', {
   domainName: 'test.com',
   name: 'TestResolverRule',
   resolverEndpointId: 'TestEndpoint',
   targetIps: ipAddresses,
   tags: [],
-  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  kmsKey: new cdk.aws_kms.Key(forwardRuleStack, 'CustomKey', {}),
   logRetentionInDays: 3653,
 });
 
-new ResolverRuleAssociation(stack, 'TestResolverRuleAssoc', {
-  resolverRuleId: rule.ruleId,
+new ResolverRuleAssociation(forwardRuleStack, 'TestResolverRuleAssoc', {
+  resolverRuleId: forwardRule.ruleId,
+  vpcId: 'TestVpc',
+});
+
+const systemRule = new ResolverRule(systemRuleStack, 'TestResolverRule', {
+  domainName: 'test.com',
+  name: 'TestResolverRule',
+  resolverEndpointId: 'TestEndpoint',
+  targetIps: ipAddresses,
+  tags: [],
+  kmsKey: new cdk.aws_kms.Key(systemRuleStack, 'CustomKey', {}),
+  logRetentionInDays: 3653,
+  ruleType: 'SYSTEM',
+});
+
+new ResolverRuleAssociation(systemRuleStack, 'TestResolverRuleAssoc', {
+  resolverRuleId: systemRule.ruleId,
   vpcId: 'TestVpc',
 });
 
 describe('ResolverRule', () => {
-  snapShotTest(testNamePrefix, stack);
+  snapShotTest(testNamePrefix, forwardRuleStack);
+  snapShotTest(testNamePrefix, systemRuleStack);
 });

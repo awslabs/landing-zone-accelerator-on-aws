@@ -20,11 +20,14 @@ AWS.config.logger = console;
 /**
  * cross-region-report-definition - lambda handler
  *
- * @param event
+ * @param event, context
  * @returns
  */
 
-export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
+export async function handler(
+  event: AWSLambda.CloudFormationCustomResourceEvent,
+  context: AWSLambda.Context,
+): Promise<
   | {
       PhysicalResourceId: string;
       Status: string;
@@ -46,8 +49,15 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     BillingViewArn?: string;
   }
 
+  const partition = context.invokedFunctionArn.split(':')[1];
+
+  let globalRegion = 'us-east-1';
+  if (partition === 'aws-cn') {
+    globalRegion = 'cn-northwest-1';
+  }
+
   const reportDefinition: ReportDefinition = event.ResourceProperties['reportDefinition'];
-  const curClient = new AWS.CUR({ region: 'us-east-1' });
+  const curClient = new AWS.CUR({ region: globalRegion });
 
   // Handle case where boolean is passed as string
   if (reportDefinition.RefreshClosedReports) {

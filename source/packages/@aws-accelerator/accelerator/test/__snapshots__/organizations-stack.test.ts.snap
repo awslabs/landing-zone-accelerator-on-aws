@@ -2063,7 +2063,11 @@ Object {
                     "Fn::Join": Array [
                       "",
                       Array [
-                        "arn:aws:cur:us-east-1:",
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":cur:us-east-1:",
                         Object {
                           "Ref": "AWS::AccountId",
                         },
@@ -2095,7 +2099,11 @@ Object {
                     "Fn::Join": Array [
                       "",
                       Array [
-                        "arn:aws:cur:us-east-1:",
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":cur:us-east-1:",
                         Object {
                           "Ref": "AWS::AccountId",
                         },

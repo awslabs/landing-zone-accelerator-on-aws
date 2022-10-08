@@ -420,7 +420,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         item.region === cdk.Stack.of(this).region,
     );
 
-    if (this.props.partition !== 'aws' && centralEndpointVpcs.length > 0) {
+    if (this.props.partition !== 'aws' && this.props.partition !== 'aws-cn' && centralEndpointVpcs.length > 0) {
       throw new Error('Central Endpoint VPC is only possible in commercial regions');
     }
 
@@ -617,6 +617,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         new QueryLoggingConfigAssociation(this, pascalCase(`${vpcItem.name}${nameItem}QueryLogAssociation`), {
           resolverQueryLogConfigId: this.queryLogMap.get(nameItem),
           vpcId: vpcId,
+          partition: this.props.partition,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.logRetention,
         });
       }
     }

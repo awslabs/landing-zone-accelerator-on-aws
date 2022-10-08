@@ -153,7 +153,22 @@ export class OperationsStack extends AcceleratorStack {
             }
 
             if (assumedByItem.type === 'provider') {
-              principals.push(new cdk.aws_iam.SamlConsolePrincipal(providers[assumedByItem.principal]));
+              // workaround due to https://github.com/aws/aws-cdk/issues/22091
+              if (props.partition === 'aws-cn') {
+                principals.push(
+                  new cdk.aws_iam.FederatedPrincipal(
+                    providers[assumedByItem.principal].samlProviderArn,
+                    {
+                      StringEquals: {
+                        'SAML:aud': 'https://signin.amazonaws.cn/saml',
+                      },
+                    },
+                    'sts:AssumeRoleWithSAML',
+                  ),
+                );
+              } else {
+                principals.push(new cdk.aws_iam.SamlConsolePrincipal(providers[assumedByItem.principal]));
+              }
             }
           }
 

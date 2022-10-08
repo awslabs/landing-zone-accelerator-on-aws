@@ -19,11 +19,21 @@ const testNamePrefix = 'Construct(CloudWatchDestination): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
+const cnStack = new cdk.Stack();
 
 new CloudWatchDestination(stack, 'CloudWatchDestination', {
   kinesisKmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   kinesisStream: new cdk.aws_kinesis.Stream(stack, 'CustomStream', {}),
   orgId: 'o-some-org-id',
+  partition: 'aws',
+});
+
+new CloudWatchDestination(cnStack, 'CloudWatchDestination', {
+  kinesisKmsKey: new cdk.aws_kms.Key(cnStack, 'CustomKey', {}),
+  kinesisStream: new cdk.aws_kinesis.Stream(cnStack, 'CustomStream', {}),
+  orgId: 'o-some-org-id',
+  accountIds: ['111111111111', '222222222222'],
+  partition: 'aws-cn',
 });
 
 /**
@@ -31,4 +41,5 @@ new CloudWatchDestination(stack, 'CloudWatchDestination', {
  */
 describe('CloudWatchDestination', () => {
   snapShotTest(testNamePrefix, stack);
+  snapShotTest(testNamePrefix, cnStack);
 });

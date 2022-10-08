@@ -44,6 +44,7 @@ new ReportDefinition(nativeStack, 'TestReportDefinition', {
   timeUnit: 'DAILY',
   kmsKey: nativeKey,
   logRetentionInDays: 3653,
+  partition: 'aws',
 });
 
 new ReportDefinition(customStack, 'TestReportDefinition', {
@@ -58,6 +59,7 @@ new ReportDefinition(customStack, 'TestReportDefinition', {
   timeUnit: 'DAILY',
   kmsKey: customKey,
   logRetentionInDays: 3653,
+  partition: 'aws',
 });
 
 /**

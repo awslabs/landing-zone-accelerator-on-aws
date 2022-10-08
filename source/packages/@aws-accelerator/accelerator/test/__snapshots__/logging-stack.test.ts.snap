@@ -51,7 +51,7 @@ Object {
               ],
               "Condition": Object {
                 "StringEquals": Object {
-                  "aws:PrincipalOrgId": Object {
+                  "aws:PrincipalOrgID": Object {
                     "Ref": "Organization29A5FC3F",
                   },
                   "kms:ViaService": "s3.us-east-1.amazonaws.com",
@@ -78,17 +78,7 @@ Object {
               ],
               "Effect": "Allow",
               "Principal": Object {
-                "Service": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "delivery.logs.",
-                      Object {
-                        "Ref": "AWS::URLSuffix",
-                      },
-                    ],
-                  ],
-                },
+                "Service": "delivery.logs.amazonaws.com",
               },
               "Resource": "*",
               "Sid": "Allow AWS Services to encrypt and describe logs",
@@ -153,7 +143,17 @@ Object {
               },
               "Effect": "Allow",
               "Principal": Object {
-                "Service": "logs.us-east-1.amazonaws.com",
+                "Service": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "logs.us-east-1.",
+                      Object {
+                        "Ref": "AWS::URLSuffix",
+                      },
+                    ],
+                  ],
+                },
               },
               "Resource": "*",
               "Sid": "Allow Cloudwatch logs to use the encryption key",
@@ -2416,15 +2416,15 @@ Object {
           "Fn::Join": Array [
             "",
             Array [
-              "{\\"Version\\":\\"2012-10-17\\",\\"Statement\\":[{\\"Effect\\":\\"Allow\\",\\"Principal\\":\\"*\\",\\"Action\\":\\"logs:PutSubscriptionFilter\\",\\"Resource\\":\\"arn:",
+              "{\\"Version\\":\\"2012-10-17\\",\\"Statement\\":[{\\"Effect\\":\\"Allow\\",\\"Principal\\":{\\"AWS\\":[\\"*\\"]},\\"Action\\":\\"logs:PutSubscriptionFilter\\",\\"Resource\\":\\"arn:",
               Object {
                 "Ref": "AWS::Partition",
               },
-              ":logs:us-east-1:333333333333:destination:AWSAcceleratorCloudWatchToS3\\",\\"Condition\\":{\\"StringEquals\\":{\\"aws:PrincipalOrgID\\":[\\"",
+              ":logs:us-east-1:333333333333:destination:AWSAcceleratorCloudWatchToS3\\",\\"Condition\\":{\\"StringEquals\\":{\\"aws:PrincipalOrgID\\":\\"",
               Object {
                 "Ref": "Organization29A5FC3F",
               },
-              "\\"]}}}]}",
+              "\\"}}}]}",
             ],
           ],
         },
@@ -2452,7 +2452,15 @@ Object {
               "Effect": "Allow",
               "Principal": Object {
                 "Service": Object {
-                  "Fn::Sub": "logs.\${AWS::Region}.amazonaws.com",
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "logs.us-east-1.",
+                      Object {
+                        "Ref": "AWS::URLSuffix",
+                      },
+                    ],
+                  ],
                 },
               },
             },
@@ -2930,7 +2938,15 @@ Object {
               "Effect": "Allow",
               "Principal": Object {
                 "Service": Object {
-                  "Fn::Sub": "logs.\${AWS::Region}.amazonaws.com",
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "logs.us-east-1.",
+                      Object {
+                        "Ref": "AWS::URLSuffix",
+                      },
+                    ],
+                  ],
                 },
               },
             },

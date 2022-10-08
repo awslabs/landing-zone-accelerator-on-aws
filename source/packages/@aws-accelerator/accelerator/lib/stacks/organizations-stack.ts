@@ -303,6 +303,7 @@ export class OrganizationsStack extends AcceleratorStack {
         additionalSchemaElements: this.stackProperties.globalConfig.reports.costAndUsageReport.additionalSchemaElements,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
+        partition: this.props.partition,
       });
     }
   }
@@ -619,7 +620,9 @@ export class OrganizationsStack extends AcceleratorStack {
         new cdk.aws_iam.PolicyStatement({
           sid: 'Allow logs use of the key',
           actions: ['kms:*'],
-          principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+          principals: [
+            new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
+          ],
           resources: ['*'],
           conditions: {
             ArnEquals: {

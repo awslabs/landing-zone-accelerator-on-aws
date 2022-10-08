@@ -715,6 +715,9 @@ export class NetworkPrepStack extends AcceleratorStack {
       const s3QueryLogConfig = new QueryLoggingConfig(this, pascalCase(`${logItem.name}S3QueryLogConfig`), {
         destination: centralLogsBucket,
         name: `${logItem.name}-s3`,
+        partition: this.props.partition,
+        logRetentionInDays: this.logRetention,
+        kmsKey: this.cloudwatchKey,
       });
       new ssm.StringParameter(this, pascalCase(`SsmParam${logItem.name}S3QueryLogConfig`), {
         parameterName: `/accelerator/network/route53Resolver/queryLogConfigs/${logItem.name}-s3/id`,
@@ -742,6 +745,9 @@ export class NetworkPrepStack extends AcceleratorStack {
         destination: logGroup,
         name: `${logItem.name}-cwl`,
         organizationId: organization.id,
+        partition: this.props.partition,
+        logRetentionInDays: this.logRetention,
+        kmsKey: this.cloudwatchKey,
       });
       new ssm.StringParameter(this, pascalCase(`SsmParam${logItem.name}CwlQueryLogConfig`), {
         parameterName: `/accelerator/network/route53Resolver/queryLogConfigs/${logItem.name}-cwl/id`,

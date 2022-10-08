@@ -16,6 +16,7 @@ import { Bucket, BucketEncryptionType, CentralLogsBucket } from '@aws-accelerato
 import { snapShotTest } from '../snapshot-test';
 
 const testNamePrefix = 'Construct(CentralLogsBucket): ';
+const organizationId = 'acceleratorOrg';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
@@ -31,6 +32,8 @@ new CentralLogsBucket(stack, 'CentralLogsBucket', {
   kmsAliasName: 'alias/accelerator/central-logs/s3',
   kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
   organizationId: 'acceleratorOrg',
+  principalOrgIdCondition: { 'aws:PrincipalOrgID': organizationId },
+  orgPrincipals: new cdk.aws_iam.OrganizationPrincipal(organizationId),
 });
 
 /**
