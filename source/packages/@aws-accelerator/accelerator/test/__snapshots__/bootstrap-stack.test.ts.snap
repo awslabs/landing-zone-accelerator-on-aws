@@ -5,7 +5,7 @@ Object {
   "Outputs": Object {
     "BootstrapVersion": Object {
       "Description": "The version of the bootstrap resources that are currently mastered in this stack",
-      "Value": "13",
+      "Value": "14",
     },
     "BucketDomainName": Object {
       "Description": "The domain name of the S3 bucket owned by the CDK toolkit stack",
@@ -247,7 +247,7 @@ Object {
       "Properties": Object {
         "Name": "/cdk-bootstrap/accel/version",
         "Type": "String",
-        "Value": "13",
+        "Value": "14",
       },
       "Type": "AWS::SSM::Parameter",
     },
