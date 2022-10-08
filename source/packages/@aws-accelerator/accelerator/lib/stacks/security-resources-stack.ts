@@ -69,10 +69,12 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
   organizationId: string | undefined;
   configRecorder: config.CfnConfigurationRecorder | undefined;
+  accountTrailCloudWatchLogGroups: Map<string, cdk.aws_logs.LogGroup>;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
+    this.accountTrailCloudWatchLogGroups = new Map<string, cdk.aws_logs.LogGroup>();
     this.stackProperties = props;
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
@@ -116,6 +118,11 @@ export class SecurityResourcesStack extends AcceleratorStack {
     this.setupAwsConfigRules();
 
     //
+    // Configure Account CloudTrail Logs
+    //
+    this.configureAccountCloudTrails();
+
+    //
     // CloudWatch Metrics
     //
     for (const metricSetItem of props.securityConfig.cloudWatch.metricSets ?? []) {
@@ -131,8 +138,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
       for (const metricItem of metricSetItem.metrics ?? []) {
         Logger.info(`[security-resources-stack] Creating CloudWatch metric filter ${metricItem.filterName}`);
-
-        new cdk.aws_logs.MetricFilter(this, pascalCase(metricItem.filterName), {
+        const metricFilter = new cdk.aws_logs.MetricFilter(this, pascalCase(metricItem.filterName), {
           logGroup: cdk.aws_logs.LogGroup.fromLogGroupName(
             this,
             `${pascalCase(metricItem.filterName)}_${pascalCase(metricItem.logGroupName)}`,
@@ -143,6 +149,10 @@ export class SecurityResourcesStack extends AcceleratorStack {
           filterPattern: cdk.aws_logs.FilterPattern.literal(metricItem.filterPattern),
           metricValue: metricItem.metricValue,
         });
+
+        if (this.accountTrailCloudWatchLogGroups.get(metricItem.logGroupName)) {
+          metricFilter.node.addDependency(this.accountTrailCloudWatchLogGroups.get(metricItem.logGroupName)!);
+        }
       }
     }
 
@@ -158,11 +168,6 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
     // SecurityHub Log event to CloudWatch
     this.securityHubEventForwardToLogs();
-
-    //
-    // Configure Account CloudTrail Logs
-    //
-    this.configureAccountCloudTrails();
 
     Logger.info('[security-resources-stack] Completed stack synthesis');
   }
@@ -1034,11 +1039,13 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
       let accountTrailCloudWatchLogGroup: cdk.aws_logs.LogGroup | undefined = undefined;
       if (accountTrail.settings.sendToCloudWatchLogs) {
+        const logGroupName = `aws-accelerator-cloudtrail-${accountTrail.name}`;
         accountTrailCloudWatchLogGroup = new cdk.aws_logs.LogGroup(this, `CloudTrailLogGroup-${accountTrail.name}`, {
           retention: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
           encryptionKey: this.cloudwatchKey,
-          logGroupName: `aws-accelerator-cloudtrail-${accountTrail.name}`,
+          logGroupName,
         });
+        this.accountTrailCloudWatchLogGroups.set(logGroupName, accountTrailCloudWatchLogGroup);
       }
 
       let managementEventType = cdk.aws_cloudtrail.ReadWriteType.NONE;
