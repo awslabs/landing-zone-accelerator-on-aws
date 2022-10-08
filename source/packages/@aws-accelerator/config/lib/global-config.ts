@@ -752,19 +752,6 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    */
   readonly reports: ReportConfig | undefined = undefined;
 
-  //
-  // Validation errors
-  //
-  private readonly errors: string[] = [];
-  /**
-   * OUid name list
-   */
-  readonly ouIdNames: string[] = ['Root'];
-  /**
-   * Account name list
-   */
-  readonly accountNames: string[] = [];
-
   /**
    *
    * @param props
@@ -780,6 +767,10 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     configDir?: string,
     validateConfig?: boolean,
   ) {
+    const errors: string[] = [];
+    const ouIdNames: string[] = ['Root'];
+    const accountNames: string[] = [];
+
     if (values) {
       Object.assign(this, values);
 
@@ -788,42 +779,42 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       if (configDir && validateConfig) {
         //
         // Get list of OU ID names from organization config file
-        this.getOuIdNames(configDir);
+        this.getOuIdNames(configDir, ouIdNames);
 
         //
         // Get list of Account names from account config file
-        this.getAccountNames(configDir);
+        this.getAccountNames(configDir, accountNames);
         //
         // Validate logging account name
         //
-        this.validateLoggingAccountName(values);
+        this.validateLoggingAccountName(values, accountNames, errors);
         //
         // Validate budget deployment target OU
         //
-        this.validateBudgetDeploymentTargetOUs(values);
+        this.validateBudgetDeploymentTargetOUs(values, ouIdNames, errors);
         //
         // budget notification email validation
         //
-        this.validateBudgetNotificationEmailIds(values);
+        this.validateBudgetNotificationEmailIds(values, errors);
         //
         // lifecycle rule expiration validation
         //
-        this.validateLifecycleRuleExpiration(values);
+        this.validateLifecycleRuleExpiration(values, errors);
         //
         // validate cloudwatch logging
         //
-        this.validateCloudWatchDynamicPartition(values, configDir);
+        this.validateCloudWatchDynamicPartition(values, configDir, errors);
         // cloudtrail settings validation
         //
-        this.validateCloudTrailSettings(values);
+        this.validateCloudTrailSettings(values, errors);
       }
     } else {
       this.homeRegion = props.homeRegion;
       this.enabledRegions = [props.homeRegion as t.Region];
     }
 
-    if (this.errors.length) {
-      throw new Error(`${GlobalConfig.FILENAME} has ${this.errors.length} issues: ${this.errors.join(' ')}`);
+    if (errors.length) {
+      throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
     }
   }
 
@@ -831,9 +822,9 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * Prepare list of OU ids from organization config file
    * @param configDir
    */
-  private getOuIdNames(configDir: string) {
+  private getOuIdNames(configDir: string, ouIdNames: string[]) {
     for (const organizationalUnit of OrganizationConfig.load(configDir).organizationalUnits) {
-      this.ouIdNames.push(organizationalUnit.name);
+      ouIdNames.push(organizationalUnit.name);
     }
   }
 
@@ -841,12 +832,12 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * Prepare list of Account names from account config file
    * @param configDir
    */
-  private getAccountNames(configDir: string) {
+  private getAccountNames(configDir: string, accountNames: string[]) {
     for (const accountItem of [
       ...AccountsConfig.load(configDir).mandatoryAccounts,
       ...AccountsConfig.load(configDir).workloadAccounts,
     ]) {
-      this.accountNames.push(accountItem.name);
+      accountNames.push(accountItem.name);
     }
   }
 
@@ -855,11 +846,15 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * Make sure deployment target OUs are part of Organization config file
    * @param values
    */
-  private validateBudgetDeploymentTargetOUs(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>) {
+  private validateBudgetDeploymentTargetOUs(
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
     for (const budget of values.reports?.budgets ?? []) {
       for (const ou of budget.deploymentTargets?.organizationalUnits ?? []) {
-        if (this.ouIdNames.indexOf(ou) === -1) {
-          this.errors.push(
+        if (ouIdNames.indexOf(ou) === -1) {
+          errors.push(
             `Deployment target OU ${ou} for budget ${budget.name} does not exists in organization-config.yaml file.`,
           );
         }
@@ -872,9 +867,13 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * Make sure deployment target accounts are part of account config file
    * @param values
    */
-  private validateLoggingAccountName(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>) {
-    if (this.accountNames.indexOf(values.logging.account) === -1) {
-      this.errors.push(
+  private validateLoggingAccountName(
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    if (accountNames.indexOf(values.logging.account) === -1) {
+      errors.push(
         `Deployment target account ${values.logging.account} for logging does not exists in accounts-config.yaml file.`,
       );
     }
@@ -884,11 +883,14 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * Function to validate budget notification email address
    * @param values
    */
-  private validateBudgetNotificationEmailIds(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>) {
+  private validateBudgetNotificationEmailIds(
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    errors: string[],
+  ) {
     for (const budget of values.reports?.budgets ?? []) {
       for (const notification of budget.notifications ?? []) {
         if (!emailValidator.validate(notification.address!)) {
-          this.errors.push(`Invalid report notification email ${notification.address!}.`);
+          errors.push(`Invalid report notification email ${notification.address!}.`);
         }
       }
     }
@@ -898,10 +900,10 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * Function to validate S3 lifecycle expiration to be smaller than noncurrentVersionExpiration
    * @param values
    */
-  private validateLifecycleRuleExpiration(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>) {
+  private validateLifecycleRuleExpiration(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>, errors: string[]) {
     for (const lifecycleRule of values.reports?.costAndUsageReport?.lifecycleRules ?? []) {
       if (lifecycleRule.noncurrentVersionExpiration! <= lifecycleRule.expiration!) {
-        this.errors.push('The nonCurrentVersionExpiration value must be greater than that of the expiration value.');
+        errors.push('The nonCurrentVersionExpiration value must be greater than that of the expiration value.');
       }
     }
   }
@@ -913,6 +915,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   private validateCloudWatchDynamicPartition(
     values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
     configDir: string,
+    errors: string[],
   ) {
     const exampleString = JSON.stringify([
       {
@@ -930,27 +933,29 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         'utf-8',
       );
       if (JSON.parse(dynamicPartitionValue)) {
-        this.checkForArray(JSON.parse(dynamicPartitionValue), errorMessage);
+        this.checkForArray(JSON.parse(dynamicPartitionValue), errorMessage, errors);
       } else {
-        this.errors.push(`Not valid Json for Dynamic Partition in CloudWatch logs. ${errorMessage}`);
+        errors.push(`Not valid Json for Dynamic Partition in CloudWatch logs. ${errorMessage}`);
       }
     }
   }
 
   // Check if input is valid array and proceed to check schema
-  private checkForArray(inputStr: string, errorMessage: string) {
+  private checkForArray(inputStr: string, errorMessage: string, errors: string[]) {
     if (Array.isArray(inputStr)) {
-      this.checkSchema(inputStr, errorMessage);
+      this.checkSchema(inputStr, errorMessage, errors);
     } else {
-      this.errors.push(`Provided file is not a JSON array. ${errorMessage}`);
+      errors.push(`Provided file is not a JSON array. ${errorMessage}`);
     }
   }
 
   // check schema of each json input. Even if one is wrong abort, report bad item and provide example.
-  private checkSchema(inputStr: string, errorMessage: string) {
+  private checkSchema(inputStr: string, errorMessage: string, errors: string[]) {
     for (const eachItem of inputStr) {
       if (!this.isDynamicLogType(eachItem)) {
-        this.errors.push(`Key value ${JSON.stringify(eachItem)} is incorrect. ${errorMessage}`);
+        errors.push(`Key value ${JSON.stringify(eachItem)} is incorrect. ${errorMessage}`);
+      } else {
+        console.log('Dynamic Partition is valid.');
       }
     }
   }
@@ -965,19 +970,19 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * If multiRegion is enabled then globalServiceEvents
    * must be enabled as well
    */
-  private validateCloudTrailSettings(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>) {
+  private validateCloudTrailSettings(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>, errors: string[]) {
     if (
       values.logging.cloudtrail.organizationTrail &&
       values.logging.cloudtrail.organizationTrailSettings?.multiRegionTrail &&
       !values.logging.cloudtrail.organizationTrailSettings.globalServiceEvents
     ) {
-      this.errors.push(
+      errors.push(
         `The organization CloudTrail setting multiRegionTrail is enabled, the globalServiceEvents must be enabled as well`,
       );
     }
     for (const accountTrail of values.logging.cloudtrail.accountTrails ?? []) {
       if (accountTrail.settings.multiRegionTrail && !accountTrail.settings.globalServiceEvents) {
-        this.errors.push(
+        errors.push(
           `The account CloudTrail with the name ${accountTrail.name} setting multiRegionTrail is enabled, the globalServiceEvents must be enabled as well`,
         );
       }

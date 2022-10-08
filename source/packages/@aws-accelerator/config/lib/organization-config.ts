@@ -363,10 +363,6 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    */
   readonly backupVault: BackupVaultConfig | undefined;
 
-  //
-  // Validation errors
-  //
-  readonly errors: string[] = [];
   /**
    *
    * @param values
@@ -378,20 +374,22 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
     configDir?: string,
     validateConfig?: boolean,
   ) {
+    const errors: string[] = [];
+
     if (values) {
       if (configDir && validateConfig) {
         // Validate presence of service control policy file
-        this.validateServiceControlPolicyFile(configDir, values);
+        this.validateServiceControlPolicyFile(configDir, values, errors);
 
         // Validate presence of tagging policy file
-        this.validateTaggingPolicyFile(configDir, values);
+        this.validateTaggingPolicyFile(configDir, values, errors);
 
         // Validate presence of backup policy file
-        this.validateBackupPolicyFile(configDir, values);
+        this.validateBackupPolicyFile(configDir, values, errors);
       }
 
-      if (this.errors.length) {
-        throw new Error(`${OrganizationConfig.FILENAME} has ${this.errors.length} issues: ${this.errors.join(' ')}`);
+      if (errors.length) {
+        throw new Error(`${OrganizationConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
       }
       Object.assign(this, values);
     }
@@ -405,10 +403,11 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
   private validateServiceControlPolicyFile(
     configDir: string,
     values: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
+    errors: string[],
   ) {
     for (const serviceControlPolicy of values.serviceControlPolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, serviceControlPolicy.policy))) {
-        this.errors.push(
+        errors.push(
           `Invalid policy file ${serviceControlPolicy.policy} for service control policy ${serviceControlPolicy.name} !!!`,
         );
       }
@@ -423,10 +422,11 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
   private validateTaggingPolicyFile(
     configDir: string,
     values: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
+    errors: string[],
   ) {
     for (const taggingPolicy of values.taggingPolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, taggingPolicy.policy))) {
-        this.errors.push(`Invalid policy file ${taggingPolicy.policy} for tagging policy ${taggingPolicy.name} !!!`);
+        errors.push(`Invalid policy file ${taggingPolicy.policy} for tagging policy ${taggingPolicy.name} !!!`);
       }
     }
   }
@@ -439,11 +439,12 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
   private validateBackupPolicyFile(
     configDir: string,
     values: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
+    errors: string[],
   ) {
     // Validate presence of backup policy file
     for (const backupPolicy of values.backupPolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, backupPolicy.policy))) {
-        this.errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name} !!!`);
+        errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name} !!!`);
       }
     }
   }
