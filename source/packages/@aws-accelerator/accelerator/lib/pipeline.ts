@@ -226,7 +226,7 @@ export class AcceleratorPipeline extends Construct {
         environmentVariables: {
           NODE_OPTIONS: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: '--max_old_space_size=4096',
+            value: '--max_old_space_size=8192',
           },
         },
       },
@@ -281,11 +281,15 @@ export class AcceleratorPipeline extends Construct {
       environment: {
         buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
         privileged: true, // Allow access to the Docker daemon
-        computeType: codebuild.ComputeType.MEDIUM,
+        computeType: codebuild.ComputeType.LARGE,
         environmentVariables: {
           NODE_OPTIONS: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: '--max_old_space_size=4096',
+            value: '--max_old_space_size=8192',
+          },
+          CDK_METHOD: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: 'direct',
           },
           CDK_NEW_BOOTSTRAP: {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
