@@ -20,6 +20,8 @@ export interface CentralLogsBucketProps {
   s3BucketName: string;
   kmsAliasName: string;
   kmsDescription: string;
+  principalOrgIdCondition: { [key: string]: string | string[] };
+  orgPrincipals: cdk.aws_iam.IPrincipal;
   serverAccessLogsBucket: Bucket;
   organizationId?: string;
   s3LifeCycleRules?: S3LifeCycleRule[];
@@ -171,7 +173,7 @@ export class CentralLogsBucket extends Construct {
               resources: [`${this.bucket.getS3Bucket().bucketArn}/*`],
               conditions: {
                 StringEquals: {
-                  'aws:PrincipalOrgID': props.organizationId,
+                  ...props.principalOrgIdCondition,
                 },
               },
             }),
@@ -186,7 +188,7 @@ export class CentralLogsBucket extends Construct {
               resources: [`${this.bucket.getS3Bucket().bucketArn}`],
               conditions: {
                 StringEquals: {
-                  'aws:PrincipalOrgID': props.organizationId,
+                  ...props.principalOrgIdCondition,
                 },
               },
             }),
@@ -204,7 +206,7 @@ export class CentralLogsBucket extends Construct {
           resources: [this.bucket.getS3Bucket().bucketArn, `${this.bucket.getS3Bucket().bucketArn}/*`],
           conditions: {
             StringEquals: {
-              'aws:PrincipalOrgID': props.organizationId,
+              ...props.principalOrgIdCondition,
             },
           },
         }),
@@ -226,7 +228,7 @@ export class CentralLogsBucket extends Construct {
           resources: [this.bucket.getS3Bucket().bucketArn, this.bucket.getS3Bucket().arnForObjects('*')],
           conditions: {
             StringEquals: {
-              'aws:PrincipalOrgID': props.organizationId,
+              ...props.principalOrgIdCondition,
             },
           },
         }),
@@ -250,7 +252,7 @@ export class CentralLogsBucket extends Construct {
           resources: ['*'],
           conditions: {
             StringEquals: {
-              'aws:PrincipalOrgID': props.organizationId,
+              ...props.principalOrgIdCondition,
             },
           },
         }),
@@ -270,7 +272,7 @@ export class CentralLogsBucket extends Construct {
         new cdk.aws_iam.Role(this, 'CrossAccountCentralBucketKMSArnSsmParamAccessRole', {
           // roleName: `AWSAccelerator-CentralBucketKMSArnSsmParam-${cdk.Stack.of(this).region}`,
           roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
-          assumedBy: new cdk.aws_iam.OrganizationPrincipal(props.organizationId),
+          assumedBy: props.orgPrincipals,
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({
               statements: [
@@ -280,7 +282,7 @@ export class CentralLogsBucket extends Construct {
                   resources: [centralLogBucketKmsKeyArnSsmParameter.parameterArn],
                   conditions: {
                     StringEquals: {
-                      'aws:PrincipalOrgID': props.organizationId,
+                      ...props.principalOrgIdCondition,
                     },
                     ArnLike: {
                       'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
@@ -293,7 +295,7 @@ export class CentralLogsBucket extends Construct {
                   resources: ['*'],
                   conditions: {
                     StringEquals: {
-                      'aws:PrincipalOrgID': props.organizationId,
+                      ...props.principalOrgIdCondition,
                     },
                     ArnLike: {
                       'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
@@ -308,7 +310,7 @@ export class CentralLogsBucket extends Construct {
         new cdk.aws_iam.Role(this, 'CrossAccountCentralBucketKMSArnSsmParamAccessRole', {
           // roleName: `AWSAccelerator-CentralBucketKMSArnSsmParam-${cdk.Stack.of(this).region}`,
           roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
-          assumedBy: new cdk.aws_iam.OrganizationPrincipal(props.organizationId),
+          assumedBy: props.orgPrincipals,
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({
               statements: [

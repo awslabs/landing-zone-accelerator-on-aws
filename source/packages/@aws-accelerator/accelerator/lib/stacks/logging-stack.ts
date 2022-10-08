@@ -311,7 +311,7 @@ export class LoggingStack extends AcceleratorStack {
             ],
             conditions: {
               StringEquals: {
-                'aws:PrincipalOrgID': this.organizationId,
+                ...this.getPrincipalOrgIdCondition(this.organizationId),
               },
             },
           }),
@@ -346,8 +346,7 @@ export class LoggingStack extends AcceleratorStack {
     // Some or all of these services may not be available in all regions.
     // Only deploy in standard and GovCloud partitions
 
-
-    if (props.partition === 'aws' || props.partition === 'aws-us-gov') {
+    if (props.partition === 'aws' || props.partition === 'aws-us-gov' || props.partition === 'aws-cn') {
       if (cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) {
         const receivingLogs = this.cloudwatchLogReceivingAccount(this.centralLogsBucketName, this.lambdaKey);
         const creatingLogs = this.cloudwatchLogCreatingAccount();
@@ -394,7 +393,7 @@ export class LoggingStack extends AcceleratorStack {
           conditions: {
             StringEquals: {
               'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
-              'aws:PrincipalOrgId': `${this.organizationId}`,
+              ...this.getPrincipalOrgIdCondition(this.organizationId!),
             },
           },
         }),
@@ -414,7 +413,7 @@ export class LoggingStack extends AcceleratorStack {
             'kms:ReEncryptFrom',
             'kms:ReEncryptTo',
           ],
-          principals: [new cdk.aws_iam.ServicePrincipal(`delivery.logs.${cdk.Stack.of(this).urlSuffix}`)],
+          principals: [new cdk.aws_iam.ServicePrincipal(`delivery.logs.amazonaws.com`)],
           resources: ['*'],
         }),
       );
@@ -451,7 +450,7 @@ export class LoggingStack extends AcceleratorStack {
         conditions: {
           StringEquals: {
             'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
-            'aws:PrincipalOrgId': `${this.organizationId}`,
+            ...this.getPrincipalOrgIdCondition(this.organizationId!),
           },
         },
       }),
@@ -465,7 +464,7 @@ export class LoggingStack extends AcceleratorStack {
         resources: ['*'],
         conditions: {
           StringEquals: {
-            'aws:PrincipalOrgId': `${this.organizationId}`,
+            ...this.getPrincipalOrgIdCondition(this.organizationId!),
           },
         },
       }),
@@ -483,7 +482,10 @@ export class LoggingStack extends AcceleratorStack {
           principals: [new cdk.aws_iam.AnyPrincipal()],
           actions: ['kms:CreateGrant'],
           conditions: {
-            StringLike: { 'kms:ViaService': 'auditmanager.*.amazonaws.com', 'aws:PrincipalOrgID': this.organizationId },
+            StringLike: {
+              'kms:ViaService': 'auditmanager.*.amazonaws.com',
+              ...this.getPrincipalOrgIdCondition(this.organizationId!),
+            },
             Bool: { 'kms:GrantIsForAWSResource': 'true' },
           },
           resources: ['*'],
@@ -646,6 +648,8 @@ export class LoggingStack extends AcceleratorStack {
       kinesisKmsKey: logsReplicationKmsKey,
       kinesisStream: logsKinesisStream,
       orgId: this.organizationId!,
+      partition: this.props.partition,
+      accountIds: this.props.partition === 'aws-cn' ? this.props.accountsConfig.getAccountIds() : undefined,
     });
 
     // Setup Firehose to take records from Kinesis and place in S3
@@ -710,7 +714,7 @@ export class LoggingStack extends AcceleratorStack {
     // Since this is deployed organization wide, this role is required
     // https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CreateSubscriptionFilter-IAMrole.html
     const subscriptionFilterRole = new cdk.aws_iam.Role(this, 'SubscriptionFilterRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal(cdk.Fn.sub('logs.${AWS::Region}.amazonaws.com')),
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
       description: 'Role used by Subscription Filter to allow access to CloudWatch Destination',
       inlinePolicies: {
         accessLogEvents: new cdk.aws_iam.PolicyDocument({
@@ -818,7 +822,9 @@ export class LoggingStack extends AcceleratorStack {
     cloudwatchKey.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: `Allow Cloudwatch logs to use the encryption key`,
-        principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+        principals: [
+          new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
+        ],
         actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
         resources: ['*'],
         conditions: {
@@ -945,6 +951,8 @@ export class LoggingStack extends AcceleratorStack {
         kmsAliasName: 'alias/accelerator/central-logs/s3',
         kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
         organizationId: this.organizationId,
+        principalOrgIdCondition: this.getPrincipalOrgIdCondition(this.organizationId!),
+        orgPrincipals: this.getOrgPrincipals(this.organizationId!),
         s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.centralLogBucket?.lifecycleRules),
         awsPrincipalAccesses,
       });

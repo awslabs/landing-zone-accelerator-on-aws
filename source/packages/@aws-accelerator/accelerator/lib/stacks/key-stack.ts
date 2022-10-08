@@ -47,7 +47,7 @@ export class KeyStack extends AcceleratorStack {
           resources: ['*'],
           conditions: {
             StringEquals: {
-              'aws:PrincipalOrgID': this.organizationId,
+              ...this.getPrincipalOrgIdCondition(this.organizationId),
             },
             ArnLike: {
               'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
@@ -61,12 +61,16 @@ export class KeyStack extends AcceleratorStack {
     key.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: `Allow Cloudwatch logs to use the encryption key`,
-        principals: [new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.amazonaws.com`)],
+        principals: [
+          new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
+        ],
         actions: ['kms:Encrypt*', 'kms:Decrypt*', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:Describe*'],
         resources: ['*'],
         conditions: {
           ArnLike: {
-            'kms:EncryptionContext:aws:logs:arn': `arn:aws:logs:${cdk.Stack.of(this).region}:*:log-group:*`,
+            'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
+              cdk.Stack.of(this).region
+            }:*:log-group:*`,
           },
         },
       }),
@@ -98,7 +102,10 @@ export class KeyStack extends AcceleratorStack {
           principals: [new cdk.aws_iam.AnyPrincipal()],
           actions: ['kms:CreateGrant'],
           conditions: {
-            StringLike: { 'kms:ViaService': 'auditmanager.*.amazonaws.com', 'aws:PrincipalOrgID': this.organizationId },
+            StringLike: {
+              'kms:ViaService': 'auditmanager.*.amazonaws.com',
+              ...this.getPrincipalOrgIdCondition(this.organizationId),
+            },
             Bool: { 'kms:GrantIsForAWSResource': 'true' },
           },
           resources: ['*'],
@@ -128,7 +135,7 @@ export class KeyStack extends AcceleratorStack {
       if (props.organizationConfig.enable) {
         new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
           roleName: AcceleratorStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-          assumedBy: new cdk.aws_iam.OrganizationPrincipal(this.organizationId),
+          assumedBy: this.getOrgPrincipals(this.organizationId),
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({
               statements: [
@@ -145,7 +152,7 @@ export class KeyStack extends AcceleratorStack {
                   ],
                   conditions: {
                     StringEquals: {
-                      'aws:PrincipalOrgID': this.organizationId,
+                      ...this.getPrincipalOrgIdCondition(this.organizationId),
                     },
                     ArnLike: {
                       'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
@@ -158,7 +165,7 @@ export class KeyStack extends AcceleratorStack {
                   resources: ['*'],
                   conditions: {
                     StringEquals: {
-                      'aws:PrincipalOrgID': this.organizationId,
+                      ...this.getPrincipalOrgIdCondition(this.organizationId),
                     },
                     ArnLike: {
                       'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],

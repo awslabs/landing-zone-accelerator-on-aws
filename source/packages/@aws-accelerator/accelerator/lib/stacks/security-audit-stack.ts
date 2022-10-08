@@ -178,7 +178,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         resources: [bucket.getS3Bucket().bucketArn, `${bucket.getS3Bucket().bucketArn}/*`],
         conditions: {
           StringEquals: {
-            'aws:PrincipalOrgID': this.organizationId,
+            ...this.getPrincipalOrgIdCondition(this.organizationId),
           },
         },
       }),
@@ -193,7 +193,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         resources: [`${bucket.getS3Bucket().bucketArn}`],
         conditions: {
           StringEquals: {
-            'aws:PrincipalOrgID': this.organizationId,
+            ...this.getPrincipalOrgIdCondition(this.organizationId),
           },
         },
       }),
@@ -352,7 +352,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           resources: [bucket.getS3Bucket().bucketArn, `${bucket.getS3Bucket().bucketArn}/*`],
           conditions: {
             StringEquals: {
-              'aws:PrincipalOrgID': this.organizationId,
+              ...this.getPrincipalOrgIdCondition(this.organizationId),
             },
           },
         }),
@@ -539,7 +539,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
       // Allowing Publish from Organization
       topic.grantPublish({
-        grantPrincipal: new cdk.aws_iam.OrganizationPrincipal(this.organizationId),
+        grantPrincipal: this.getOrgPrincipals(this.organizationId),
       });
 
       topic.addToResourcePolicy(
@@ -550,7 +550,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           resources: [topic.topicArn],
           conditions: {
             StringEquals: {
-              'aws:PrincipalOrgID': this.organizationId,
+              ...this.getPrincipalOrgIdCondition(this.organizationId),
             },
           },
         }),

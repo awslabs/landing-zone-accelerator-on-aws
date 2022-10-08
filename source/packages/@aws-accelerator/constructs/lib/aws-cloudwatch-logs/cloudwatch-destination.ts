@@ -31,6 +31,14 @@ export interface CloudWatchDestinationProps {
    * Organization ID to restrict the usage within specific org
    */
   orgId: string;
+  /**
+   * Partition to determine the IAM condition.
+   */
+  partition: string;
+  /**
+   * Account IDs for the IAM condition.
+   */
+  accountIds?: string[];
 }
 /**
  * Class to configure CloudWatch Destination on logs receiving account
@@ -68,7 +76,7 @@ export class CloudWatchDestination extends Construct {
 
     // Create a role for CloudWatch Logs destination
     const logsKinesisRole = new cdk.aws_iam.Role(this, 'LogsKinesisRole', {
-      assumedBy: new cdk.aws_iam.ServicePrincipal(cdk.Fn.sub('logs.${AWS::Region}.amazonaws.com')),
+      assumedBy: new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
       // this needs to be inline to ensure role is created with proper access
       // if not, CloudWatch destination creation fails with no permission to access Kinesis or KMS (generateDataKey access error)
       inlinePolicies: {
@@ -77,21 +85,34 @@ export class CloudWatchDestination extends Construct {
       },
     });
 
+    let principalOrgIdCondition: object | undefined = undefined;
+    let accountPrincipals: object | cdk.aws_iam.IPrincipal;
+
+    if (props.partition === 'aws-cn') {
+      // Only principal block with list of account id is supported in China region.
+      accountPrincipals = {
+        AWS: props.accountIds,
+      };
+    } else {
+      principalOrgIdCondition = {
+        StringEquals: {
+          'aws:PrincipalOrgID': props.orgId,
+        },
+      };
+      accountPrincipals = new cdk.aws_iam.AnyPrincipal();
+    }
+
     const logDestinationPolicy = JSON.stringify({
       Version: '2012-10-17',
       Statement: [
         {
           Effect: 'Allow',
-          Principal: '*',
+          Principal: accountPrincipals,
           Action: 'logs:PutSubscriptionFilter',
           Resource: `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
             cdk.Stack.of(this).account
           }:destination:AWSAcceleratorCloudWatchToS3`,
-          Condition: {
-            StringEquals: {
-              'aws:PrincipalOrgID': [props.orgId],
-            },
-          },
+          Condition: principalOrgIdCondition,
         },
       ],
     });

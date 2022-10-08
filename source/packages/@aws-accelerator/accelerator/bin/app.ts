@@ -92,6 +92,17 @@ export class IsobOverrides implements cdk.IAspect {
   }
 }
 
+export class CnOverrides implements cdk.IAspect {
+  public visit(node: IConstruct): void {
+    if (node instanceof cdk.aws_logs.CfnLogGroup) {
+      node.addPropertyDeletionOverride('Tags');
+    }
+    if (node instanceof cdk.aws_cloudtrail.CfnTrail) {
+      node.addPropertyDeletionOverride('IsOrganizationTrail');
+    }
+  }
+}
+
 async function main() {
   Logger.info('[app] Begin Accelerator CDK App');
   const app = new cdk.App();
@@ -116,6 +127,11 @@ async function main() {
   if (partition === 'aws-iso-b') {
     cdk.Aspects.of(app).add(new IsobOverrides());
     globalRegion = 'us-isob-east-1';
+  }
+
+  if (partition === 'aws-cn') {
+    globalRegion = 'cn-northwest-1';
+    cdk.Aspects.of(app).add(new CnOverrides());
   }
 
   const includeStage = (props: { stage: string; account: string; region: string }): boolean => {

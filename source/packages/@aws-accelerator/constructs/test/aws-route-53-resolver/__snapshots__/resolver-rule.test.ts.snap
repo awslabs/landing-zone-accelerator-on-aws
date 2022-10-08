@@ -41,8 +41,85 @@ Object {
     "TestResolverRule183FBE0C": Object {
       "Properties": Object {
         "DomainName": "test.com",
+        "Name": "TestResolverRule",
         "ResolverEndpointId": "TestEndpoint",
         "RuleType": "FORWARD",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "TestResolverRule",
+          },
+        ],
+        "TargetIps": Array [
+          Object {
+            "Ip": "1.1.1.1",
+          },
+          Object {
+            "Ip": "2.2.2.2",
+          },
+        ],
+      },
+      "Type": "AWS::Route53Resolver::ResolverRule",
+    },
+    "TestResolverRuleAssoc7E0DCDC2": Object {
+      "Properties": Object {
+        "ResolverRuleId": Object {
+          "Fn::GetAtt": Array [
+            "TestResolverRule183FBE0C",
+            "ResolverRuleId",
+          ],
+        },
+        "VPCId": "TestVpc",
+      },
+      "Type": "AWS::Route53Resolver::ResolverRuleAssociation",
+    },
+  },
+}
+`;
+
+exports[`ResolverRule Construct(ResolverRule):  Snapshot Test 2`] = `
+Object {
+  "Resources": Object {
+    "CustomKey1E6D0D07": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TestResolverRule183FBE0C": Object {
+      "Properties": Object {
+        "DomainName": "test.com",
+        "Name": "TestResolverRule",
+        "RuleType": "SYSTEM",
         "Tags": Array [
           Object {
             "Key": "Name",

@@ -106,8 +106,9 @@ export class ResolverRule extends cdk.Resource implements IResolverRule {
 
     const resource = new cdk.aws_route53resolver.CfnResolverRule(this, 'Resource', {
       domainName: props.domainName,
-      resolverEndpointId: props.resolverEndpointId,
+      resolverEndpointId: props.ruleType === 'SYSTEM' ? undefined : props.resolverEndpointId,
       ruleType: props.ruleType ?? 'FORWARD',
+      name: this.name,
       targetIps: this.targetIps,
       tags: props.tags,
     });

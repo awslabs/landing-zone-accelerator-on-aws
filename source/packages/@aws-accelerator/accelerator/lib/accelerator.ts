@@ -250,7 +250,10 @@ export abstract class Accelerator {
       globalRegion = 'us-gov-west-1';
     } else if (props.partition === 'aws-iso-b') {
       globalRegion = 'us-isob-east-1';
+    } else if (props.partition === 'aws-cn') {
+      globalRegion = 'cn-northwest-1';
     }
+
     // Control Tower: To start a well-planned OU structure in your landing zone, AWS Control Tower
     // sets up a Security OU for you. This OU contains three shared accounts: the management
     // (primary) account, the log archive account, and the security audit account (also referred to

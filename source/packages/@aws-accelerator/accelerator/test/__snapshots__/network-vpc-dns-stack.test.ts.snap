@@ -76,6 +76,7 @@ Object {
     "AcceleratorOutboundResolverRuleExampleRule8B329125": Object {
       "Properties": Object {
         "DomainName": "example.com",
+        "Name": "example-rule",
         "ResolverEndpointId": Object {
           "Ref": "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratoroutboundidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
@@ -101,6 +102,7 @@ Object {
     "AcceleratorOutboundResolverRuleInboundTargetRule35E9CFD7": Object {
       "Properties": Object {
         "DomainName": "aws.internal.domain",
+        "Name": "inbound-target-rule",
         "ResolverEndpointId": Object {
           "Ref": "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratoroutboundidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },

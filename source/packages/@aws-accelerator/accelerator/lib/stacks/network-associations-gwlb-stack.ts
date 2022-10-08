@@ -146,7 +146,13 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
 
       // Create GWLB endpoints and add them to a map
       for (const loadBalancerItem of loadBalancers) {
-        const lbItemEndpointMap = this.createGwlbEndpointMap(vpcId, vpcItem, loadBalancerItem, delegatedAdminAccountId);
+        const lbItemEndpointMap = this.createGwlbEndpointMap(
+          vpcId,
+          vpcItem,
+          loadBalancerItem,
+          delegatedAdminAccountId,
+          props.partition,
+        );
         lbItemEndpointMap.forEach((endpoint, name) => gwlbEndpointMap.set(name, endpoint));
       }
     }
@@ -166,6 +172,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
     vpcItem: VpcConfig | VpcTemplatesConfig,
     loadBalancerItem: GwlbConfig,
     delegatedAdminAccountId: string,
+    partition: string,
   ): Map<string, VpcEndpoint> {
     const endpointMap = new Map<string, VpcEndpoint>();
     let endpointServiceId: string | undefined = undefined;
@@ -193,7 +200,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
         }
 
         // Create endpoint and add to map
-        const endpoint = this.createGwlbEndpointItem(endpointItem, vpcId, endpointServiceId);
+        const endpoint = this.createGwlbEndpointItem(endpointItem, vpcId, endpointServiceId, partition);
         endpointMap.set(endpointItem.name, endpoint);
       }
     }
@@ -211,6 +218,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
     endpointItem: GwlbEndpointConfig,
     vpcId: string,
     endpointServiceId: string,
+    partition: string,
   ): VpcEndpoint {
     const subnetKey = `${endpointItem.vpc}_${endpointItem.subnet}`;
     const subnet = this.subnetMap.get(subnetKey);
@@ -230,6 +238,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
       vpcEndpointType: VpcEndpointType.GWLB,
       vpcId,
       subnets: [subnet],
+      partition: partition,
     });
   }
 
