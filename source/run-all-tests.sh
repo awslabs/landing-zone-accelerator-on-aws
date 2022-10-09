@@ -144,7 +144,7 @@ coverage_reports_top_path=$source_dir/test/coverage-reports
 
 # Install lerna
 echo "Install lerna"
-yarn add lerna@5.1.8 -W
+yarn add lerna@5.5.2 -W
 
 # Test the CDK project
 run_cdk_project_test $source_dir
