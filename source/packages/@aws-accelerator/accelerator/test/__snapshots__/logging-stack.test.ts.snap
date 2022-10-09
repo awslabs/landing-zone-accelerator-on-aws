@@ -2115,8 +2115,9 @@ Object {
         "Environment": Object {
           "Variables": Object {
             "DynamicS3LogPartitioningMapping": "[
-  { \\"logGroupPattern\\": \\"/AWSAccelerator/SecurityHub\\", \\"s3Prefix\\": \\"security-hub\\" } 
-]",
+  { \\"logGroupPattern\\": \\"/AWSAccelerator-SecurityHub\\", \\"s3Prefix\\": \\"security-hub\\" }
+]
+",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
