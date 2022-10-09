@@ -74,7 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(installer): Enable pipeline notification only for the regions that support AWS CodeStar
 - chore(build): upgrade to cdk v2.28.0
 
-## [1.1.0] - 2022-07-18
+## [1.1.0] - 2022-08-22
 
 ### Added
 
