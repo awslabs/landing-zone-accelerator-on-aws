@@ -30,7 +30,7 @@ export interface CloudWatchDestinationProps {
   /**
    * Organization ID to restrict the usage within specific org
    */
-  orgId: string;
+  organizationId?: string | undefined;
   /**
    * Partition to determine the IAM condition.
    */
@@ -88,15 +88,15 @@ export class CloudWatchDestination extends Construct {
     let principalOrgIdCondition: object | undefined = undefined;
     let accountPrincipals: object | cdk.aws_iam.IPrincipal;
 
-    if (props.partition === 'aws-cn') {
-      // Only principal block with list of account id is supported in China region.
+    if (props.partition === 'aws-cn' || !props.organizationId) {
+      // Only principal block with list of account id is supported.
       accountPrincipals = {
         AWS: props.accountIds,
       };
     } else {
       principalOrgIdCondition = {
         StringEquals: {
-          'aws:PrincipalOrgID': props.orgId,
+          'aws:PrincipalOrgID': props.organizationId,
         },
       };
       accountPrincipals = new cdk.aws_iam.AnyPrincipal();

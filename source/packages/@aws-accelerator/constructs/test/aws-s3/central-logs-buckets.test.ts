@@ -31,7 +31,6 @@ new CentralLogsBucket(stack, 'CentralLogsBucket', {
   }),
   kmsAliasName: 'alias/accelerator/central-logs/s3',
   kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
-  organizationId: 'acceleratorOrg',
   principalOrgIdCondition: { 'aws:PrincipalOrgID': organizationId },
   orgPrincipals: new cdk.aws_iam.OrganizationPrincipal(organizationId),
 });
