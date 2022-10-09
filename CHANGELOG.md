@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2022-10-13
+
+### Added
+
+- feat(govcloud): add updated govcloud config files
+- feat(govcloud): add govcloud account vending service catalog product
+- feat(configs): add healthcare best practices config files
+- feat(configs): add support aws-cn and config files
+
+### Changed
+
+- fix(cloudwatch): change security config to support CT organization-level cloudtrail log metrics creation
+- fix(logging): cloudwatch log replication in aws-us-gov partition
+- fix(config): syntax error AWS GovCloud (US) config
+- fix(bootstrap): cdk centralization bug fix
+- fix(logging): move session manager principal access
+- fix(security): update package dependencies
+- fix(installer): solution-helper is emitting delete event
+- fix(installer): remove installer kms key from loggroup
+- fix(logging): log replication KMS created in log receiving account only
+- fix(config): update network config to align with best practices diagram
+- fix(logging): set resource dependence for accountTrail CloudWatch log group.
+- fix (pipeline): fix issue with changeset creation and bootstrap
+
 ## [1.2.0] - 2022-09-22
 
 ### Added
