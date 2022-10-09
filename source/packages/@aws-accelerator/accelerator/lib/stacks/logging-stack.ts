@@ -298,25 +298,23 @@ export class LoggingStack extends AcceleratorStack {
         elbAccessLogsBucket.getS3Bucket().addToResourcePolicy(item);
       });
 
-      if (this.organizationId) {
-        elbAccessLogsBucket.getS3Bucket().addToResourcePolicy(
-          new cdk.aws_iam.PolicyStatement({
-            sid: 'Allow Organization principals to use of the bucket',
-            effect: cdk.aws_iam.Effect.ALLOW,
-            actions: ['s3:GetBucketLocation', 's3:PutObject'],
-            principals: [new cdk.aws_iam.AnyPrincipal()],
-            resources: [
-              `${elbAccessLogsBucket.getS3Bucket().bucketArn}`,
-              `${elbAccessLogsBucket.getS3Bucket().bucketArn}/*`,
-            ],
-            conditions: {
-              StringEquals: {
-                ...this.getPrincipalOrgIdCondition(this.organizationId),
-              },
+      elbAccessLogsBucket.getS3Bucket().addToResourcePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'Allow Organization principals to use of the bucket',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['s3:GetBucketLocation', 's3:PutObject'],
+          principals: [new cdk.aws_iam.AnyPrincipal()],
+          resources: [
+            `${elbAccessLogsBucket.getS3Bucket().bucketArn}`,
+            `${elbAccessLogsBucket.getS3Bucket().bucketArn}/*`,
+          ],
+          conditions: {
+            StringEquals: {
+              ...this.getPrincipalOrgIdCondition(this.organizationId),
             },
-          }),
-        );
-      }
+          },
+        }),
+      );
 
       // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
       NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/ElbAccessLogsBucket/Resource/Resource`, [
@@ -393,7 +391,7 @@ export class LoggingStack extends AcceleratorStack {
           conditions: {
             StringEquals: {
               'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
-              ...this.getPrincipalOrgIdCondition(this.organizationId!),
+              ...this.getPrincipalOrgIdCondition(this.organizationId),
             },
           },
         }),
@@ -450,7 +448,7 @@ export class LoggingStack extends AcceleratorStack {
         conditions: {
           StringEquals: {
             'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
-            ...this.getPrincipalOrgIdCondition(this.organizationId!),
+            ...this.getPrincipalOrgIdCondition(this.organizationId),
           },
         },
       }),
@@ -464,7 +462,7 @@ export class LoggingStack extends AcceleratorStack {
         resources: ['*'],
         conditions: {
           StringEquals: {
-            ...this.getPrincipalOrgIdCondition(this.organizationId!),
+            ...this.getPrincipalOrgIdCondition(this.organizationId),
           },
         },
       }),
@@ -484,7 +482,7 @@ export class LoggingStack extends AcceleratorStack {
           conditions: {
             StringLike: {
               'kms:ViaService': 'auditmanager.*.amazonaws.com',
-              ...this.getPrincipalOrgIdCondition(this.organizationId!),
+              ...this.getPrincipalOrgIdCondition(this.organizationId),
             },
             Bool: { 'kms:GrantIsForAWSResource': 'true' },
           },
@@ -647,9 +645,12 @@ export class LoggingStack extends AcceleratorStack {
     const cloudwatchCfnDestination = new CloudWatchDestination(this, 'LogsDestinationSetup', {
       kinesisKmsKey: logsReplicationKmsKey,
       kinesisStream: logsKinesisStream,
-      orgId: this.organizationId!,
+      organizationId: this.organizationId,
       partition: this.props.partition,
-      accountIds: this.props.partition === 'aws-cn' ? this.props.accountsConfig.getAccountIds() : undefined,
+      accountIds:
+        this.props.partition === 'aws-cn' || !this.organizationId
+          ? this.props.accountsConfig.getAccountIds()
+          : undefined,
     });
 
     // Setup Firehose to take records from Kinesis and place in S3
@@ -950,9 +951,8 @@ export class LoggingStack extends AcceleratorStack {
         serverAccessLogsBucket: serverAccessLogsBucket,
         kmsAliasName: 'alias/accelerator/central-logs/s3',
         kmsDescription: 'AWS Accelerator Central Logs Bucket CMK',
-        organizationId: this.organizationId,
-        principalOrgIdCondition: this.getPrincipalOrgIdCondition(this.organizationId!),
-        orgPrincipals: this.getOrgPrincipals(this.organizationId!),
+        principalOrgIdCondition: this.getPrincipalOrgIdCondition(this.organizationId),
+        orgPrincipals: this.getOrgPrincipals(this.organizationId),
         s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.centralLogBucket?.lifecycleRules),
         awsPrincipalAccesses,
       });

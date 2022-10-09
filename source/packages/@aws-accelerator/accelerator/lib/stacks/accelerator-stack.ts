@@ -591,35 +591,40 @@ export abstract class AcceleratorStack extends cdk.Stack {
   /**
    * Get the IAM condition context key for the organization.
    */
-  protected getPrincipalOrgIdCondition(organizationId: string): { [key: string]: string | string[] } {
-    let principalOrgIdCondition: { [key: string]: string | string[] };
+  protected getPrincipalOrgIdCondition(organizationId: string | undefined): { [key: string]: string | string[] } {
     if (this.props.partition === 'aws-cn' || !this.props.organizationConfig.enable) {
-      principalOrgIdCondition = {
-        'aws:PrincipalAccount': this.props?.accountsConfig?.accountIds?.map(item => item.accountId) || [],
-      };
-    } else {
-      principalOrgIdCondition = {
+      const accountIds = this.props.accountsConfig.getAccountIds();
+      if (accountIds) {
+        return {
+          'aws:PrincipalAccount': accountIds,
+        };
+      }
+    }
+    if (organizationId) {
+      return {
         'aws:PrincipalOrgID': organizationId,
       };
     }
-    return principalOrgIdCondition;
+    throw new Error('Organization ID not found or account IDs not found');
   }
 
   /**
    * Get the IAM principals for the organization.
    */
-  protected getOrgPrincipals(organizationId: string): cdk.aws_iam.IPrincipal {
-    let orgPrincipals: cdk.aws_iam.IPrincipal;
+  protected getOrgPrincipals(organizationId: string | undefined): cdk.aws_iam.IPrincipal {
     if (this.props.partition === 'aws-cn' || !this.props.organizationConfig.enable) {
       const accountIds = this.props.accountsConfig.getAccountIds();
-      const principals: cdk.aws_iam.PrincipalBase[] = [];
-      accountIds.forEach(accountId => {
-        principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
-      });
-      orgPrincipals = new cdk.aws_iam.CompositePrincipal(...principals);
-    } else {
-      orgPrincipals = new cdk.aws_iam.OrganizationPrincipal(organizationId);
+      if (accountIds) {
+        const principals: cdk.aws_iam.PrincipalBase[] = [];
+        accountIds.forEach(accountId => {
+          principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
+        });
+        return new cdk.aws_iam.CompositePrincipal(...principals);
+      }
     }
-    return orgPrincipals;
+    if (organizationId) {
+      return new cdk.aws_iam.OrganizationPrincipal(organizationId);
+    }
+    throw new Error('Organization ID not found or account IDs not found');
   }
 }
