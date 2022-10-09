@@ -24,14 +24,14 @@ const cnStack = new cdk.Stack();
 new CloudWatchDestination(stack, 'CloudWatchDestination', {
   kinesisKmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   kinesisStream: new cdk.aws_kinesis.Stream(stack, 'CustomStream', {}),
-  orgId: 'o-some-org-id',
+  organizationId: 'o-some-org-id',
   partition: 'aws',
 });
 
 new CloudWatchDestination(cnStack, 'CloudWatchDestination', {
   kinesisKmsKey: new cdk.aws_kms.Key(cnStack, 'CustomKey', {}),
   kinesisStream: new cdk.aws_kinesis.Stream(cnStack, 'CustomStream', {}),
-  orgId: 'o-some-org-id',
+  organizationId: 'o-some-org-id',
   accountIds: ['111111111111', '222222222222'],
   partition: 'aws-cn',
 });
