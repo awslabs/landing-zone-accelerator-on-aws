@@ -795,11 +795,6 @@ Object {
                         },
                       ],
                     },
-                    "StringEquals": Object {
-                      "aws:PrincipalOrgID": Object {
-                        "Ref": "Organization29A5FC3F",
-                      },
-                    },
                   },
                   "Effect": "Allow",
                   "Resource": Object {
@@ -836,11 +831,6 @@ Object {
                           ],
                         },
                       ],
-                    },
-                    "StringEquals": Object {
-                      "aws:PrincipalOrgID": Object {
-                        "Ref": "Organization29A5FC3F",
-                      },
                     },
                   },
                   "Effect": "Allow",
@@ -2906,7 +2896,7 @@ Object {
       "Properties": Object {
         "Name": "/accelerator/AWSAccelerator-LoggingStack-333333333333-us-east-1/version",
         "Type": "String",
-        "Value": "1.2.0",
+        "Value": "1.2.1",
       },
       "Type": "AWS::SSM::Parameter",
     },
