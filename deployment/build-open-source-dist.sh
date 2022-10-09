@@ -123,6 +123,8 @@ echo "find $dist_dir -iname "dist" -type d -exec rm -rf "{}" \; 2> /dev/null"
 find $dist_dir -iname "dist" -type d -exec rm -rf "{}" \; 2> /dev/null
 echo "find $dist_dir -iname "package-lock.json" -type f -exec rm -f "{}" \; 2> /dev/null"
 find $dist_dir -iname "package-lock.json" -type f -exec rm -f "{}" \; 2> /dev/null
+echo "find $dist_dir -iname "*.log" -type f -exec rm -f "{}" \; 2> /dev/null"
+find $dist_dir -iname "*.log" -type f -exec rm -f "{}" \; 2> /dev/null
 
 echo "------------------------------------------------------------------------------"
 echo "[Packing] Create GitHub (open-source) zip file"
