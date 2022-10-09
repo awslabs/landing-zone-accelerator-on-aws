@@ -919,7 +919,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   ) {
     const exampleString = JSON.stringify([
       {
-        logGroupPattern: '/AWSAccelerator/SecurityHub',
+        logGroupPattern: '/AWSAccelerator-SecurityHub',
         s3Prefix: 'security-hub',
       },
     ]);
