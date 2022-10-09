@@ -503,9 +503,6 @@ Object {
                         },
                       ],
                     },
-                    "StringEquals": Object {
-                      "aws:PrincipalOrgID": "acceleratorOrg",
-                    },
                   },
                   "Effect": "Allow",
                   "Resource": Object {
@@ -550,9 +547,6 @@ Object {
                           ],
                         },
                       ],
-                    },
-                    "StringEquals": Object {
-                      "aws:PrincipalOrgID": "acceleratorOrg",
                     },
                   },
                   "Effect": "Allow",
