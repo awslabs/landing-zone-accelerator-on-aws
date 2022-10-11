@@ -173,51 +173,7 @@ export class OrganizationsStack extends AcceleratorStack {
     if (this.stackProperties.organizationConfig.backupPolicies.length > 0) {
       Logger.info(`[organizations-stack] Adding Backup Policies`);
 
-      const role = new cdk.aws_iam.Role(this, 'BackupRole', {
-        roleName: 'Backup-Role',
-        assumedBy: new cdk.aws_iam.ServicePrincipal('backup.amazonaws.com'),
-      });
-
-      const managedBackupPolicy = cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(
-        'service-role/AWSBackupServiceRolePolicyForBackup',
-      );
-      role.addManagedPolicy(managedBackupPolicy);
-
-      const backupKey = new cdk.aws_kms.Key(this, 'AcceleratorBackupKey', {
-        alias: AcceleratorStack.ACCELERATOR_AWS_BACKUP_KEY_ALIAS,
-        description: AcceleratorStack.ACCELERATOR_AWS_BACKUP_KEY_DESCRIPTION,
-        enableKeyRotation: true,
-        removalPolicy: cdk.RemovalPolicy.RETAIN,
-      });
-
-      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
-      // rule suppression with evidence for this permission.
-      NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/BackupRole/Resource`, [
-        {
-          id: 'AwsSolutions-IAM4',
-          reason:
-            'BackupRole needs service-role/AWSBackupServiceRolePolicyForBackup managed policy to manage backup vault',
-        },
-      ]);
-
-      // Added enable value to allow customer to use default key or management key.
-      // Additionally, when creating the BackupVault if redeployed then a new name will be required.
-      if (this.stackProperties.organizationConfig.backupVault?.enableManagementKey) {
-        new cdk.aws_backup.BackupVault(
-          this,
-          `AcceleratorManagementBackupVault${this.stackProperties.organizationConfig.backupVault.name}`,
-          {
-            backupVaultName: `AcceleratorManagement${this.stackProperties.organizationConfig.backupVault.name}`,
-            encryptionKey: backupKey,
-          },
-        );
-      } else {
-        new cdk.aws_backup.BackupVault(this, `AcceleratorBackupVaultDefault`, {
-          backupVaultName: `AcceleratorBackupVaultDefault`,
-        });
-      }
-
-      new EnablePolicyType(this, 'enableManagementKeyPolicyBackup', {
+      const enablePolicyTypeBackup = new EnablePolicyType(this, 'enablePolicyTypeBackup', {
         policyType: PolicyTypeEnum.BACKUP_POLICY,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
@@ -235,6 +191,8 @@ export class OrganizationsStack extends AcceleratorStack {
             acceleratorPrefix: 'AWSAccelerator',
             managementAccountAccessRole: this.stackProperties.globalConfig.managementAccountAccessRole,
           });
+
+          policy.node.addDependency(enablePolicyTypeBackup);
 
           new PolicyAttachment(this, pascalCase(`Attach_${backupPolicies.name}_${orgUnit}`), {
             policyId: policy.id,
@@ -550,7 +508,7 @@ export class OrganizationsStack extends AcceleratorStack {
   private addTaggingPolicies() {
     if (this.stackProperties.organizationConfig.taggingPolicies.length > 0) {
       Logger.info(`[organizations-stack] Adding Tagging Policies`);
-      const tagPolicy = new EnablePolicyType(this, 'enablePolicyTypeTag', {
+      const enablePolicyTypeTag = new EnablePolicyType(this, 'enablePolicyTypeTag', {
         policyType: PolicyTypeEnum.TAG_POLICY,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
@@ -568,7 +526,7 @@ export class OrganizationsStack extends AcceleratorStack {
             managementAccountAccessRole: this.stackProperties.globalConfig.managementAccountAccessRole,
           });
 
-          policy.node.addDependency(tagPolicy);
+          policy.node.addDependency(enablePolicyTypeTag);
 
           new PolicyAttachment(this, pascalCase(`Attach_${taggingPolicy.name}_${orgUnit}`), {
             policyId: policy.id,

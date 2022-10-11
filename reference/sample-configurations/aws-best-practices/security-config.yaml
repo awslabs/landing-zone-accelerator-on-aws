@@ -36,7 +36,7 @@ centralSecurityServices:
       enable: true
       destinationType: S3
   detective:
-    enable: true
+    enable: false
     excludeRegions: []
   securityHub:
     enable: true
@@ -367,13 +367,13 @@ cloudWatch:
   metricSets:
     - regions:
         - *HOME_REGION
-#####################################
-# With landing zone version 3.0, AWS Control Tower now supports organization-level AWS CloudTrail trails.                                          #
-# Going forward from landing zone 3.0, AWS Control Tower no longer will support account-level trails that AWS manages.                             #
-# If your environment runs on prior version (3.0) of landing zone, you can change deployment targets for the metrics to Root organizational units  #
-# Metrics deployment target should be management account for environment with landing zone version 3.0                                            #
-# Please refer https://docs.aws.amazon.com/controltower/latest/userguide/2022-all.html#version-3.0 for more information                            #  
-#####################################        
+      #####################################
+      # With landing zone version 3.0, AWS Control Tower now supports organization-level AWS CloudTrail trails.                                          #
+      # Going forward from landing zone 3.0, AWS Control Tower no longer will support account-level trails that AWS manages.                             #
+      # If your environment runs on prior version (3.0) of landing zone, you can change deployment targets for the metrics to Root organizational units  #
+      # Metrics deployment target should be management account for environment with landing zone version 3.0                                             #
+      # Please refer https://docs.aws.amazon.com/controltower/latest/userguide/2022-all.html#version-3.0 for more information                            #
+      #####################################
       deploymentTargets:
         accounts:
           - Management
@@ -486,9 +486,16 @@ cloudWatch:
   alarmSets:
     - regions:
         - *HOME_REGION
+      #####################################
+      # With landing zone version 3.0, AWS Control Tower now supports organization-level AWS CloudTrail trails.                                          #
+      # Going forward from landing zone 3.0, AWS Control Tower no longer will support account-level trails that AWS manages.                             #
+      # If your environment runs on prior version (3.0) of landing zone, you can change deployment targets for the metrics to Root organizational units  #
+      # Metrics deployment target should be management account for environment with landing zone version 3.0                                             #
+      # Please refer https://docs.aws.amazon.com/controltower/latest/userguide/2022-all.html#version-3.0 for more information                            #
+      #####################################
       deploymentTargets:
-        organizationalUnits:
-          - Root
+        accounts:
+          - Management
       alarms:
         # CIS 1.1 – Avoid the use of the "root" account
         - alarmName: CIS-1.1-RootAccountUsage

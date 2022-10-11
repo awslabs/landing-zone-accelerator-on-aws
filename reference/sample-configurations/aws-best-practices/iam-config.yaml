@@ -21,6 +21,17 @@ roleSets:
             - AmazonSSMDirectoryServiceAccess
             - CloudWatchAgentServerPolicy
         boundaryPolicy: Default-Boundary-Policy
+      # This role is utilized by the Backup Plans defined in global-config.yaml
+      # We create this role in every account where we plan to have Backup Plans
+      # and Backup Vaults
+      - name: Backup-Role
+        assumedBy:
+          - type: service
+            principal: backup.amazonaws.com
+        policies:
+          awsManaged:
+            - service-role/AWSBackupServiceRolePolicyForBackup
+            - service-role/AWSBackupServiceRolePolicyForRestores
 groupSets:
   - deploymentTargets:
       organizationalUnits:

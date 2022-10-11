@@ -24,7 +24,7 @@ logging:
       apiCallRateInsight: false
     accountTrails:
       - name: AccountTrail
-        regions: 
+        regions:
           - *HOME_REGION
         deploymentTargets:
           accounts: []
@@ -55,8 +55,8 @@ reports:
     reportVersioning: CREATE_NEW_REPORT
   budgets:
     - deploymentTargets:
-        organizationalUnits:
-          - Root
+        accounts:
+          - Management
       name: accel-budget
       timeUnit: MONTHLY
       type: COST
@@ -79,28 +79,33 @@ reports:
           threshold: 100
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: myemail+pa-budg@example.com
+          address: <budget-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 90
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: myemail+pa-budg@example.com
+          address: <budget-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 80
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: myemail+pa-budg@example.com
+          address: <budget-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 75
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: myemail+pa-budg@example.com
+          address: <budget-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
         - type: ACTUAL
           thresholdType: PERCENTAGE
           threshold: 50
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: myemail+pa-budg@example.com
+          address: <budget-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
+backupVaults:
+  - name: BackupVault
+    deploymentTargets:
+      organizationalUnits:
+        - Root

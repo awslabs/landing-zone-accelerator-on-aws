@@ -144,6 +144,15 @@ export abstract class GlobalConfigTypes {
     budgets: t.optional(t.array(this.budgetConfig)),
   });
 
+  static readonly vaultConfig = t.interface({
+    name: t.nonEmptyString,
+    deploymentTargets: t.deploymentTargets,
+  });
+
+  static readonly backupConfig = t.interface({
+    vaults: t.array(this.vaultConfig),
+  });
+
   static readonly globalConfig = t.interface({
     homeRegion: t.nonEmptyString,
     enabledRegions: t.array(t.region),
@@ -154,6 +163,7 @@ export abstract class GlobalConfigTypes {
     centralizeCdkBuckets: t.optional(GlobalConfigTypes.centralizeCdkBucketsConfig),
     logging: GlobalConfigTypes.loggingConfig,
     reports: t.optional(GlobalConfigTypes.reportConfig),
+    backup: t.optional(GlobalConfigTypes.backupConfig),
   });
 }
 
@@ -604,6 +614,25 @@ export class ReportConfig implements t.TypeOf<typeof GlobalConfigTypes.reportCon
   readonly budgets: BudgetReportConfig[] = [];
 }
 
+export class VaultConfig implements t.TypeOf<typeof GlobalConfigTypes.vaultConfig> {
+  /**
+   * Name that will be used to create the vault.
+   */
+  readonly name = 'BackupVault';
+
+  /**
+   * Which OU's or Accounts the vault will be deployed to
+   */
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
+export class BackupConfig implements t.TypeOf<typeof GlobalConfigTypes.backupConfig> {
+  /**
+   * List of AWS Backup Vaults
+   */
+  readonly vaults: VaultConfig[] = [];
+}
+
 /**
  * Accelerator global configuration
  */
@@ -751,6 +780,22 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * ```
    */
   readonly reports: ReportConfig | undefined = undefined;
+
+  /**
+   * Backup Vaults Configuration
+   *
+   * To generate vaults, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * backupVaults:
+   *   - name: MyBackUpVault
+   *     deploymentTargets:
+   *       organizationalUnits:
+   *         - Root
+   * ```
+   */
+  readonly backup: BackupConfig | undefined = undefined;
 
   /**
    *
