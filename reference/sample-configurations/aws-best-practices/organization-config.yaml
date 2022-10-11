@@ -45,10 +45,7 @@ taggingPolicies:
 backupPolicies:
   - name: BackupPolicy
     description: Organization Backup Policy
-    policy: backup-policies/org-backup-policies.json
+    policy: backup-policies/backup-plan.json
     deploymentTargets:
       organizationalUnits:
         - Root
-backupVault:
-  enableManagementKey: false
-  name: DefaultVault
