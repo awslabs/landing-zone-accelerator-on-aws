@@ -88,10 +88,18 @@ export interface TransitGatewayAttachmentProps {
   readonly tags?: cdk.CfnTag[];
 }
 
+export enum TransitGatewayAttachmentType {
+  DXGW = 'direct-connect-gateway',
+  PEERING = 'peering',
+  VPC = 'vpc',
+  VPN = 'vpn',
+}
+
 export interface TransitGatewayAttachmentLookupOptions {
   readonly name: string;
   readonly owningAccountId: string;
   readonly transitGatewayId: string;
+  readonly type: TransitGatewayAttachmentType;
   readonly roleName?: string;
   /**
    * Custom resource lambda log group encryption key
@@ -127,8 +135,26 @@ export class TransitGatewayAttachment extends cdk.Resource implements ITransitGa
               Action: ['sts:AssumeRole'],
               Resource: '*',
             },
+            {
+              Effect: 'Allow',
+              Action: ['ec2:DescribeTransitGatewayAttachments', 'ec2:DescribeVpnConnections'],
+              Resource: '*',
+            },
           ],
         });
+
+        // Construct role arn if this is a cross-account lookup
+        let roleArn: string | undefined = undefined;
+        if (options.roleName) {
+          roleArn = cdk.Stack.of(this).formatArn({
+            service: 'iam',
+            region: '',
+            account: options.owningAccountId,
+            resource: 'role',
+            arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
+            resourceName: options.roleName,
+          });
+        }
 
         const resource = new cdk.CustomResource(this, 'Resource', {
           resourceType: GET_TRANSIT_GATEWAY_ATTACHMENT,
@@ -136,14 +162,8 @@ export class TransitGatewayAttachment extends cdk.Resource implements ITransitGa
           properties: {
             name: options.name,
             transitGatewayId: options.transitGatewayId,
-            roleArn: cdk.Stack.of(this).formatArn({
-              service: 'iam',
-              region: '',
-              account: options.owningAccountId,
-              resource: 'role',
-              arnFormat: cdk.ArnFormat.SLASH_RESOURCE_NAME,
-              resourceName: options.roleName,
-            }),
+            type: options.type,
+            roleArn,
             uuid: uuidv4(), // Generates a new UUID to force the resource to update
           },
         });

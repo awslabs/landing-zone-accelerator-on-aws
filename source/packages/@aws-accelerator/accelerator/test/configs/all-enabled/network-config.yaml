@@ -25,6 +25,9 @@ transitGateways:
           - destinationCidrBlock: 10.200.0.0/16
             attachment:
               directConnectGatewayName: Network-DXGW
+          - destinationCidrBlock: 10.300.0.0/16
+            attachment:
+              vpnConnectionName: accelerator-vpn
           - destinationCidrBlock: 1.1.1.1/32
             blackhole: true
           - destinationPrefixList: accelerator-prefix-list
@@ -832,6 +835,25 @@ vpcPeering:
       - Network-Endpoints
       - Network-Inspection
 
+customerGateways:
+  - name: accelerator-cgw
+    account: Network
+    region: *HOME_REGION
+    ipAddress: 1.1.1.1
+    asn: 65500
+    vpnConnections:
+      - name: accelerator-vpn
+        transitGateway: Network-Main
+        staticRoutesOnly: false
+        routeTableAssociations:
+          - Network-Main-Core
+        routeTablePropagations:
+          - Network-Main-Core
+        tunnelSpecifications:
+          - tunnelInsideCidr: 169.254.200.0/30
+            preSharedKey: Key1-AbcXyz
+          - tunnelInsideCidr: 169.254.200.100/30
+            preSharedKey: Key2-AbcXyz
 
 
 vpcFlowLogs:
