@@ -22,6 +22,7 @@ import { OrganizationConfig } from './organization-config';
 /**
  * Network configuration items.
  */
+
 export class NetworkConfigTypes {
   static readonly defaultVpcsConfig = t.interface({
     delete: t.boolean,
@@ -37,12 +38,20 @@ export class NetworkConfigTypes {
     directConnectGatewayName: t.nonEmptyString,
   });
 
+  static readonly transitGatewayRouteTableVpnEntryConfig = t.interface({
+    vpnConnectionName: t.nonEmptyString,
+  });
+
   static readonly transitGatewayRouteEntryConfig = t.interface({
     destinationCidrBlock: t.optional(t.nonEmptyString),
     destinationPrefixList: t.optional(t.nonEmptyString),
     blackhole: t.optional(t.boolean),
     attachment: t.optional(
-      t.union([this.transitGatewayRouteTableVpcEntryConfig, this.transitGatewayRouteTableDxGatewayEntryConfig]),
+      t.union([
+        this.transitGatewayRouteTableVpcEntryConfig,
+        this.transitGatewayRouteTableDxGatewayEntryConfig,
+        this.transitGatewayRouteTableVpnEntryConfig,
+      ]),
     ),
   });
 
@@ -408,6 +417,31 @@ export class NetworkConfigTypes {
     arn: t.nonEmptyString,
     availabilityZone: t.nonEmptyString,
     localGateway: t.optional(this.localGatewayConfig),
+  });
+
+  static readonly vpnTunnelOptionsSpecificationsConfig = t.interface({
+    preSharedKey: t.optional(t.nonEmptyString),
+    tunnelInsideCidr: t.optional(t.nonEmptyString),
+  });
+
+  static readonly vpnConnectionConfig = t.interface({
+    name: t.nonEmptyString,
+    transitGateway: t.nonEmptyString,
+    routeTableAssociations: t.optional(t.array(t.nonEmptyString)),
+    routeTablePropagations: t.optional(t.array(t.nonEmptyString)),
+    staticRoutesOnly: t.optional(t.boolean),
+    tunnelSpecifications: t.optional(t.array(this.vpnTunnelOptionsSpecificationsConfig)),
+    tags: t.optional(t.array(t.tag)),
+  });
+
+  static readonly customerGatewayConfig = t.interface({
+    name: t.nonEmptyString,
+    account: t.nonEmptyString,
+    region: t.region,
+    ipAddress: t.nonEmptyString,
+    asn: t.number,
+    tags: t.optional(t.array(t.tag)),
+    vpnConnections: t.optional(t.array(this.vpnConnectionConfig)),
   });
 
   static readonly vpcConfig = t.interface({
@@ -789,6 +823,7 @@ export class NetworkConfigTypes {
     vpcs: t.array(this.vpcConfig),
     vpcFlowLogs: t.vpcFlowLogsConfig,
     centralNetworkServices: t.optional(this.centralNetworkServicesConfig),
+    customerGateways: t.optional(t.array(this.customerGatewayConfig)),
     dhcpOptions: t.optional(t.array(this.dhcpOptsConfig)),
     directConnectGateways: t.optional(t.array(this.dxGatewayConfig)),
     prefixLists: t.optional(t.array(this.prefixListConfig)),
@@ -849,6 +884,23 @@ export class TransitGatewayRouteTableDxGatewayEntryConfig
 }
 
 /**
+ * Transit Gateway VPN entry configuration.
+ * Used to define a VPN attachment for Transit
+ * Gateway static routes.
+ */
+export class TransitGatewayRouteTableVpnEntryConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig>
+{
+  /**
+   * The name of the VPN connection
+   *
+   * @remarks
+   * Note: This is the `name` property of the VPN connection.
+   */
+  readonly vpnConnectionName: string = '';
+}
+
+/**
  * Transit Gateway route entry configuration.
  * Used to define static route entries in a Transit Gateway route table.
  */
@@ -875,11 +927,12 @@ export class TransitGatewayRouteEntryConfig
    * A Transit Gateway VPC or DX Gateway entry configuration.
    * Leave undefined if specifying a blackhole destination.
    *
-   * @see {@link TransitGatewayRouteTableVpcEntryConfig} {@link TransitGatewayRouteTableDxGatewayEntryConfig}
+   * @see {@link TransitGatewayRouteTableVpcEntryConfig} {@link TransitGatewayRouteTableDxGatewayEntryConfig} {@link TransitGatewayRouteTableVpnEntryConfig}
    */
   readonly attachment:
     | TransitGatewayRouteTableVpcEntryConfig
     | TransitGatewayRouteTableDxGatewayEntryConfig
+    | TransitGatewayRouteTableVpnEntryConfig
     | undefined = undefined;
 }
 
@@ -2159,6 +2212,187 @@ export class EndpointPolicyConfig implements t.TypeOf<typeof NetworkConfigTypes.
    * A file path for a JSON-formatted policy document.
    */
   readonly document: string = '';
+}
+
+/**
+ * VPN tunnel options specification configuration.
+ * Used to define tunnel IP addresses and/or pre-shared keys
+ * for a site-to-site VPN connection
+ *
+ * @example
+ * ```
+ * tunnelSpecifications:
+ *   - tunnelInsideCidr: 169.254.200.0/30
+ *     preSharedKey: Key1-AbcXyz
+ *   - tunnelInsideCidr: 169.254.200.100/30
+ * ```
+ */
+export class VpnTunnelOptionsSpecificationsConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.vpnTunnelOptionsSpecificationsConfig>
+{
+  /**
+   * The Secrets Manager name that stores the pre-shared key (PSK), that exists in the same account
+   * and region that the VPN Connection will be created in.
+   * @remarks
+   * Include the random hash that prepends the Secrets Manager name.
+   */
+  readonly preSharedKey: string | undefined = undefined;
+
+  /**
+   * The range of inside IP addresses for the tunnel. Any specified CIDR blocks must be unique across
+   * all VPN connections that use the same virtual private gateway.
+   * @remarks
+   * The following CIDR blocks are reserved
+   * and cannot be used: - 169.254.0.0/30 - 169.254.1.0/30 - 169.254.2.0/30 - 169.254.3.0/30 - 169.254.4.0/30
+   * - 169.254.5.0/30 - 169.254.169.252/30
+   */
+  readonly tunnelInsideCidr: string | undefined = undefined;
+}
+/**
+ * VPN Connection configuration.
+ * Used to define the VPN Connection and its termination point.
+ * ```
+ *   vpnConnections:
+ *     - name: accelerator-vpn
+ *       transitGateway: Network-Main
+ *       routeTableAssociations:
+ *         - Network-Main-Core
+ *       routeTablePropagations:
+ *         - Network-Main-Core
+ *       staticRoutesOnly: false
+ *       tunnelSpecifications:
+ *         - tunnelInsideCidr: 169.254.200.0/30
+ *           preSharedKey: Key1-AbcXyz
+ *         - tunnelInsideCidr: 169.254.200.100/30
+ * ```
+ */
+export class VpnConnectionConfig implements t.TypeOf<typeof NetworkConfigTypes.vpnConnectionConfig> {
+  /**
+   * The name of the VPN Connection.
+   *
+   * The value of this property will be utilized as the logical id for this
+   * resource. Any references to this object should specify this value.
+   */
+  readonly name: string = '';
+
+  /**
+   * The logical name of the Transit Gateway that the customer Gateway is attached to
+   * so that a VPN connection is established.
+   * @remarks
+   * Must specify either the Transit Gateway name or the Virtual Private Gateway, not
+   * both.
+   */
+  readonly transitGateway = '';
+
+  /**
+   * (OPTIONAL) An array of Transit Gateway route table names to associate the VPN attachment to
+   *
+   * @remarks
+   * This is the `name` property of the Transit Gateway route table
+   *
+   * This property should only be defined if creating a VPN connection to a Transit Gateway.
+   * Leave undefined for VPN connections to virtual private gateways.
+   */
+  readonly routeTableAssociations: string[] | undefined = undefined;
+
+  /**
+   * (OPTIONAL) An array of Transit Gateway route table names to propagate the VPN attachment to
+   *
+   * @remarks
+   * This is the `name` property of the Transit Gateway route table
+   *
+   * This property should only be defined if creating a VPN connection to a Transit Gateway.
+   * Leave undefined for VPN connections to virtual private gateways.
+   */
+  readonly routeTablePropagations: string[] | undefined = undefined;
+
+  /**
+   * @remarks
+   * If creating a VPN connection for a device that doesn't support Border Gateway Protocol (BGP)
+   * declare true as a value, otherwise, use false.
+   */
+  readonly staticRoutesOnly: boolean | undefined = true;
+
+  /**
+   * An array of tags for the VPN Connection.
+   */
+  readonly tags: t.Tag[] | undefined = undefined;
+
+  /**
+   * Define the optional VPN Tunnel configuration
+   * @see {@link VpnTunnelOptionsSpecificationsConfig}
+   */
+  readonly tunnelSpecifications: VpnTunnelOptionsSpecificationsConfig[] = [];
+}
+
+/**
+ * CGW Configuration
+ * Used to define Customer Gateways and site-to-site VPN connections.
+ *
+ * @example
+ * ```
+ * customerGateways:
+ *   - name: accelerator-cgw
+ *     account: Network
+ *     region: *HOME_REGION
+ *     ipAddress: 1.1.1.1
+ *     asn: 65500
+ *   vpnConnections:
+ *     - name: accelerator-vpn
+ *       transitGateway: Network-Main
+ *       routeTableAssociations:
+ *         - Network-Main-Core
+ *       routeTablePropagations:
+ *         - Network-Main-Core
+ *       staticRoutesOnly: false
+ *       tunnelSpecifications:
+ *         - tunnelInsideCidr: 169.254.200.0/30
+ *           preSharedKey: Key1-AbcXyz
+ *         - tunnelInsideCidr: 169.254.200.100/30
+ * ```
+ */
+export class CustomerGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.customerGatewayConfig> {
+  /**
+   * The name of the CGW.
+   *
+   * The value of this property will be utilized as the logical id for this
+   * resource. Any references to this object should specify this value.
+   */
+  readonly name = '';
+
+  /**
+   * The logical name of the account to deploy the VPC to
+   */
+  readonly account = '';
+
+  /**
+   * The AWS region to provision the customer gateway in
+   */
+  readonly region = 'us-east-1';
+
+  /**
+   * Defines the IP address of the Customer Gateway
+   */
+  readonly ipAddress: string = '';
+
+  /**
+   * Define the ASN used for the Customer Gateway
+   *
+   * @remarks
+   * The private ASN range is 64512 to 65534. The default is 65000.
+   */
+  readonly asn = 65000;
+
+  /**
+   * Define tags for the Customer Gateway
+   */
+  readonly tags: t.Tag[] | undefined = undefined;
+
+  /**
+   * Define the optional VPN Connection configuration
+   * @see {@link VpnConnectionConfig}
+   */
+  readonly vpnConnections: VpnConnectionConfig[] | undefined = undefined;
 }
 
 /**
@@ -3620,6 +3854,13 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   readonly transitGateways: TransitGatewayConfig[] = [];
 
   /**
+   * An array of Customer Gateway configurations.
+   *
+   * @see {@link CustomerGatewayConfig}
+   */
+  readonly customerGateways: CustomerGatewayConfig[] | undefined = undefined;
+
+  /**
    * A list of VPC configurations.
    * An array of VPC endpoint policies.
    *
@@ -3758,6 +3999,10 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
         //
         // Validate GWLB configuration
         this.validateGwlbConfiguration(values, errors);
+
+        //
+        // Validate CGW configuration
+        this.validateCgwConfiguration(values, errors);
       }
 
       if (errors.length) {
@@ -3900,6 +4145,20 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     }
   }
 
+  private validateCgwTargetAccounts(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const cgw of values.customerGateways ?? []) {
+      if (accountNames.indexOf(cgw.account) === -1) {
+        errors.push(
+          `Target account ${cgw.account} for customer gateway ${cgw.name} does not exist in accounts-config.yaml file.`,
+        );
+      }
+    }
+  }
+
   /**
    * Function to validate existence of VPC deployment target OUs
    * Make sure deployment target OUs are part of Organization config file
@@ -3969,6 +4228,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     this.validateIpamPoolDeploymentTargetAccounts(values, accountNames, errors);
     this.validateVpcTemplatesDeploymentTargetAccounts(values, accountNames, errors);
     this.validateGwlbDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateCgwTargetAccounts(values, accountNames, errors);
   }
 
   /**
@@ -4283,6 +4543,12 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
           `[Transit Gateway route table ${routeTable.name}]: cannot define both an attachment and blackhole target`,
         );
       }
+      // Catch error if neither attachment or blackhole are defined
+      if (!entry.attachment && !entry.blackhole) {
+        errors.push(
+          `[Transit Gateway route table ${routeTable.name}]: must define either an attachment or blackhole target`,
+        );
+      }
       // Catch error if destination CIDR and prefix list are both defined
       if (entry.destinationCidrBlock && entry.destinationPrefixList) {
         errors.push(
@@ -4294,6 +4560,9 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
 
       // Validate DX Gateway routes
       this.validateDxGatewayStaticRouteEntry(values, routeTable.name, tgw, entry, errors);
+
+      // Validate VPN static route entry
+      this.validateVpnStaticRouteEntry(values, routeTable.name, entry, errors);
     }
   }
 
@@ -4355,6 +4624,31 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
             `[Transit Gateway route table ${routeTableName}]: cannot add route entry for DX Gateway ${dxAttachment.directConnectGatewayName}. DX Gateway and TGW ${tgw.name} are not associated`,
           );
         }
+      }
+    }
+  }
+
+  /**
+   * Function to validate transit gateway static route entries for VPN attachments
+   * @param values
+   * @param routeTableName
+   * @param entry
+   */
+  private validateVpnStaticRouteEntry(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    routeTableName: string,
+    entry: t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteEntryConfig>,
+    errors: string[],
+  ) {
+    if (entry.attachment && NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(entry.attachment)) {
+      const vpnAttachment = entry.attachment as TransitGatewayRouteTableVpnEntryConfig;
+      const vpn = values.customerGateways?.find(cgwItem =>
+        cgwItem.vpnConnections?.find(vpnItem => vpnItem.name === vpnAttachment.vpnConnectionName),
+      );
+      if (!vpn) {
+        errors.push(
+          `[Transit Gateway route table ${routeTableName}]: cannot find VPN ${vpnAttachment.vpnConnectionName}`,
+        );
       }
     }
   }
@@ -4517,6 +4811,78 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
         errors.push(
           `[Gateway Load Balancer ${gwlb.name} endpoint ${gwlbEndpoint.name}]: subnet ${gwlbEndpoint.subnet} does not exist in VPC ${vpc.name}`,
         );
+      }
+    }
+  }
+
+  /**
+   * Validate customer gateways and VPN conections
+   * @param values
+   */
+  private validateCgwConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>, errors: string[]) {
+    for (const cgw of values.customerGateways ?? []) {
+      if (cgw.asn < 1 || cgw.asn > 2147483647) {
+        errors.push(`[Customer Gateway ${cgw.name}]: ASN ${cgw.asn} out of range 1-2147483647`);
+      }
+
+      // Validate VPN configurations
+      this.validateVpnConfiguration(cgw, values, errors);
+    }
+  }
+
+  /**
+   * Validate site-to-site VPN connections
+   * @param cgw
+   * @param values
+   */
+  private validateVpnConfiguration(
+    cgw: t.TypeOf<typeof NetworkConfigTypes.customerGatewayConfig>,
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    errors: string[],
+  ) {
+    for (const vpn of cgw.vpnConnections ?? []) {
+      // Validate target TGW exists
+      const tgw = values.transitGateways.find(tgw => tgw.name === vpn.transitGateway);
+      if (!tgw) {
+        errors.push(
+          `[Customer Gateway ${cgw.name} VPN connection ${vpn.name}]: Transit Gateway ${vpn.transitGateway} does not exist`,
+        );
+      }
+
+      // Validate TGW account matches
+      if (tgw && tgw.account !== cgw.account) {
+        errors.push(
+          `[Customer Gateway ${cgw.name} VPN connection ${vpn.name}]: VPN connection must reside in the same account as Transit Gateway ${tgw.name}`,
+        );
+      }
+
+      // Validate length of tunnel specifications
+      if (vpn.tunnelSpecifications) {
+        if (vpn.tunnelSpecifications.length < 2 || vpn.tunnelSpecifications.length > 2) {
+          errors.push(
+            `[Customer Gateway ${cgw.name} VPN connection ${vpn.name}]: tunnel specifications must have exactly 2 definitions`,
+          );
+        }
+      }
+
+      // Validate associations/propagations
+      if (tgw) {
+        const routeTableArray: string[] = [];
+        if (vpn.routeTableAssociations) {
+          routeTableArray.push(...vpn.routeTableAssociations);
+        }
+        if (vpn.routeTablePropagations) {
+          routeTableArray.push(...vpn.routeTablePropagations);
+        }
+        const tgwRouteTableSet = new Set(routeTableArray);
+
+        for (const routeTable of tgwRouteTableSet ?? []) {
+          if (!tgw.routeTables.find(item => item.name === routeTable)) {
+            errors.push(
+              `[Customer Gateway ${cgw.name} VPN connection ${vpn.name}]: route table ${routeTable} does not exist on Transit Gateway ${tgw.name}`,
+            );
+          }
+        }
       }
     }
   }

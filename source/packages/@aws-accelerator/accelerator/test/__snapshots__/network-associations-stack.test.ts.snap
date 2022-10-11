@@ -93,6 +93,50 @@ Object {
     },
   },
   "Resources": Object {
+    "AcceleratorVpnNetworkMainCoreAssociationEF397C51": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "AcceleratorVpnVpnTransitGatewayAttachmentFBF8EE77",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "AcceleratorVpnNetworkMainCorePropagation585EB5AE": Object {
+      "Properties": Object {
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "AcceleratorVpnVpnTransitGatewayAttachmentFBF8EE77",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "AcceleratorVpnVpnTransitGatewayAttachmentFBF8EE77": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "name": "accelerator-vpn",
+        "transitGatewayId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "type": "vpn",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
+      "UpdateReplacePolicy": "Delete",
+    },
     "AssociateHostedZonesF0E2F0DA": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
@@ -308,6 +352,14 @@ Object {
                 Object {
                   "Action": Array [
                     "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+                Object {
+                  "Action": Array [
+                    "ec2:DescribeTransitGatewayAttachments",
+                    "ec2:DescribeVpnConnections",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
@@ -729,6 +781,18 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayRoute",
     },
+    "NetworkMainCore103000016acceleratorvpnStaticRoute674FF3C8": Object {
+      "Properties": Object {
+        "DestinationCidrBlock": "10.300.0.0/16",
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "AcceleratorVpnVpnTransitGatewayAttachmentFBF8EE77",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainCoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
+    },
     "NetworkMainCore111132blackholeStaticRouteEF8CDB96": Object {
       "Properties": Object {
         "Blackhole": true,
@@ -838,6 +902,7 @@ Object {
         "transitGatewayId": Object {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
+        "type": "vpc",
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::GetTransitGatewayAttachment",
