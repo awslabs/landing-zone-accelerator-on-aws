@@ -548,103 +548,106 @@ export class OrganizationsStack extends AcceleratorStack {
       `[organizations-stack] logging.cloudtrail.organizationTrail: ${this.stackProperties.globalConfig.logging.cloudtrail.organizationTrail}`,
     );
 
-    let enableCloudtrailServiceAccess: EnableAwsServiceAccess;
     if (this.stackProperties.globalConfig.logging.cloudtrail.enable) {
       Logger.info('[organizations-stack] Enable CloudTrail Service Access');
-      enableCloudtrailServiceAccess = new EnableAwsServiceAccess(this, 'EnableOrganizationsCloudTrail', {
+      const enableCloudtrailServiceAccess = new EnableAwsServiceAccess(this, 'EnableOrganizationsCloudTrail', {
         servicePrincipal: 'cloudtrail.amazonaws.com',
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
       });
-    }
 
-    if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrail) {
-      Logger.info('[organizations-stack] Adding Organizations CloudTrail');
+      if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrail) {
+        Logger.info('[organizations-stack] Adding Organizations CloudTrail');
 
-      const cloudTrailCloudWatchCmk = new cdk.aws_kms.Key(this, 'CloudTrailCloudWatchCmk', {
-        enableKeyRotation: true,
-        description: 'CloudTrail Log Group CMK',
-        alias: 'accelerator/organizations-cloudtrail/log-group/',
-      });
-      cloudTrailCloudWatchCmk.addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'Allow Account use of the key',
-          actions: ['kms:*'],
-          principals: [new cdk.aws_iam.AccountRootPrincipal()],
-          resources: ['*'],
-        }),
-      );
-      cloudTrailCloudWatchCmk.addToResourcePolicy(
-        new cdk.aws_iam.PolicyStatement({
-          sid: 'Allow logs use of the key',
-          actions: ['kms:*'],
-          principals: [
-            new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
-          ],
-          resources: ['*'],
-          conditions: {
-            ArnEquals: {
-              'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
-                cdk.Stack.of(this).region
-              }:${cdk.Stack.of(this).account}:*`,
+        const cloudTrailCloudWatchCmk = new cdk.aws_kms.Key(this, 'CloudTrailCloudWatchCmk', {
+          enableKeyRotation: true,
+          description: 'CloudTrail Log Group CMK',
+          alias: 'accelerator/organizations-cloudtrail/log-group/',
+        });
+        cloudTrailCloudWatchCmk.addToResourcePolicy(
+          new cdk.aws_iam.PolicyStatement({
+            sid: 'Allow Account use of the key',
+            actions: ['kms:*'],
+            principals: [new cdk.aws_iam.AccountRootPrincipal()],
+            resources: ['*'],
+          }),
+        );
+        cloudTrailCloudWatchCmk.addToResourcePolicy(
+          new cdk.aws_iam.PolicyStatement({
+            sid: 'Allow logs use of the key',
+            actions: ['kms:*'],
+            principals: [
+              new cdk.aws_iam.ServicePrincipal(`logs.${cdk.Stack.of(this).region}.${cdk.Stack.of(this).urlSuffix}`),
+            ],
+            resources: ['*'],
+            conditions: {
+              ArnEquals: {
+                'kms:EncryptionContext:aws:logs:arn': `arn:${cdk.Stack.of(this).partition}:logs:${
+                  cdk.Stack.of(this).region
+                }:${cdk.Stack.of(this).account}:*`,
+              },
             },
-          },
-        }),
-      );
+          }),
+        );
 
-      const cloudTrailCloudWatchCmkLogGroup = new cdk.aws_logs.LogGroup(this, 'CloudTrailCloudWatchLogGroup', {
-        retention: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
-        encryptionKey: cloudTrailCloudWatchCmk,
-        logGroupName: 'aws-accelerator-cloudtrail-logs',
-      });
+        const cloudTrailCloudWatchCmkLogGroup = new cdk.aws_logs.LogGroup(this, 'CloudTrailCloudWatchLogGroup', {
+          retention: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
+          encryptionKey: cloudTrailCloudWatchCmk,
+          logGroupName: 'aws-accelerator-cloudtrail-logs',
+        });
 
-      let managementEventType = cdk.aws_cloudtrail.ReadWriteType.ALL;
-      if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings !== undefined) {
-        if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings.managementEvents === false) {
-          managementEventType = cdk.aws_cloudtrail.ReadWriteType.NONE;
+        let managementEventType = cdk.aws_cloudtrail.ReadWriteType.ALL;
+        if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings !== undefined) {
+          if (
+            this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings.managementEvents === false
+          ) {
+            managementEventType = cdk.aws_cloudtrail.ReadWriteType.NONE;
+          }
         }
-      }
-      const organizationsTrail = new cdk_extensions.Trail(this, 'OrganizationsCloudTrail', {
-        bucket: cdk.aws_s3.Bucket.fromBucketName(
-          this,
-          'CentralLogsBucket',
-          `${
-            AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
-          }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${cdk.Stack.of(this).region}`,
-        ),
-        s3KeyPrefix: 'cloudtrail-organization',
-        cloudWatchLogGroup: cloudTrailCloudWatchCmkLogGroup,
-        cloudWatchLogsRetention: cdk.aws_logs.RetentionDays.TEN_YEARS,
-        enableFileValidation: true,
-        encryptionKey: this.centralLogsBucketKey,
-        includeGlobalServiceEvents:
-          this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.globalServiceEvents ?? true,
-        isMultiRegionTrail:
-          this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.multiRegionTrail ?? true,
-        isOrganizationTrail: true,
-        apiCallRateInsight:
-          this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.apiCallRateInsight ?? false,
-        apiErrorRateInsight:
-          this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.apiErrorRateInsight ?? false,
-        managementEvents: managementEventType,
-        sendToCloudWatchLogs:
-          this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.sendToCloudWatchLogs ?? true,
-        trailName: 'AWSAccelerator-Organizations-CloudTrail',
-      });
+        const organizationsTrail = new cdk_extensions.Trail(this, 'OrganizationsCloudTrail', {
+          bucket: cdk.aws_s3.Bucket.fromBucketName(
+            this,
+            'CentralLogsBucket',
+            `${
+              AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+            }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${cdk.Stack.of(this).region}`,
+          ),
+          s3KeyPrefix: 'cloudtrail-organization',
+          cloudWatchLogGroup: cloudTrailCloudWatchCmkLogGroup,
+          cloudWatchLogsRetention: cdk.aws_logs.RetentionDays.TEN_YEARS,
+          enableFileValidation: true,
+          encryptionKey: this.centralLogsBucketKey,
+          includeGlobalServiceEvents:
+            this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.globalServiceEvents ?? true,
+          isMultiRegionTrail:
+            this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.multiRegionTrail ?? true,
+          isOrganizationTrail: true,
+          apiCallRateInsight:
+            this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.apiCallRateInsight ?? false,
+          apiErrorRateInsight:
+            this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.apiErrorRateInsight ??
+            false,
+          managementEvents: managementEventType,
+          sendToCloudWatchLogs:
+            this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.sendToCloudWatchLogs ??
+            true,
+          trailName: 'AWSAccelerator-Organizations-CloudTrail',
+        });
 
-      if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.s3DataEvents ?? true) {
-        organizationsTrail.addEventSelector(cdk.aws_cloudtrail.DataResourceType.S3_OBJECT, [
-          `arn:${cdk.Stack.of(this).partition}:s3:::`,
-        ]);
-      }
+        if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.s3DataEvents ?? true) {
+          organizationsTrail.addEventSelector(cdk.aws_cloudtrail.DataResourceType.S3_OBJECT, [
+            `arn:${cdk.Stack.of(this).partition}:s3:::`,
+          ]);
+        }
 
-      if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.lambdaDataEvents ?? true) {
-        organizationsTrail.addEventSelector(cdk.aws_cloudtrail.DataResourceType.LAMBDA_FUNCTION, [
-          `arn:${cdk.Stack.of(this).partition}:lambda`,
-        ]);
-      }
+        if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrailSettings?.lambdaDataEvents ?? true) {
+          organizationsTrail.addEventSelector(cdk.aws_cloudtrail.DataResourceType.LAMBDA_FUNCTION, [
+            `arn:${cdk.Stack.of(this).partition}:lambda`,
+          ]);
+        }
 
-      organizationsTrail.node.addDependency(enableCloudtrailServiceAccess!);
+        organizationsTrail.node.addDependency(enableCloudtrailServiceAccess!);
+      }
     }
   }
 }

@@ -20,6 +20,7 @@ import * as path from 'path';
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { BudgetDefinition } from '@aws-accelerator/constructs';
+import { RoleConfig } from '@aws-accelerator/config';
 
 export interface OperationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
@@ -144,6 +145,72 @@ export class OperationsStack extends AcceleratorStack {
   }
 
   /**
+   * Generates the list of role principals for the provided roleItem
+   *
+   * @param roleItem
+   * @returns List of cdk.aws_iam.PrincipalBase
+   */
+  private getRolePrincipals(roleItem: RoleConfig): cdk.aws_iam.PrincipalBase[] {
+    const principals: cdk.aws_iam.PrincipalBase[] = [];
+
+    for (const assumedByItem of roleItem.assumedBy ?? []) {
+      Logger.info(
+        `[operations-stack] Role - assumed by type(${assumedByItem.type}) principal(${assumedByItem.principal})`,
+      );
+
+      if (assumedByItem.type === 'service') {
+        principals.push(new cdk.aws_iam.ServicePrincipal(assumedByItem.principal));
+      }
+
+      if (assumedByItem.type === 'account') {
+        principals.push(new cdk.aws_iam.AccountPrincipal(assumedByItem.principal));
+      }
+
+      if (assumedByItem.type === 'provider') {
+        // workaround due to https://github.com/aws/aws-cdk/issues/22091
+        if (this.props.partition === 'aws-cn') {
+          principals.push(
+            new cdk.aws_iam.FederatedPrincipal(
+              this.providers[assumedByItem.principal].samlProviderArn,
+              {
+                StringEquals: {
+                  'SAML:aud': 'https://signin.amazonaws.cn/saml',
+                },
+              },
+              'sts:AssumeRoleWithSAML',
+            ),
+          );
+        } else {
+          principals.push(new cdk.aws_iam.SamlConsolePrincipal(this.providers[assumedByItem.principal]));
+        }
+      }
+    }
+
+    return principals;
+  }
+
+  /**
+   * Generates the list of managed policies for the provided roleItem
+   *
+   * @param roleItem
+   * @returns List of cdk.aws_iam.IManagedPolicy
+   */
+  private getManagedPolicies(roleItem: RoleConfig): cdk.aws_iam.IManagedPolicy[] {
+    const managedPolicies: cdk.aws_iam.IManagedPolicy[] = [];
+
+    for (const policyItem of roleItem.policies?.awsManaged ?? []) {
+      Logger.info(`[operations-stack] Role - aws managed policy ${policyItem}`);
+      managedPolicies.push(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(policyItem));
+    }
+    for (const policyItem of roleItem.policies?.customerManaged ?? []) {
+      Logger.info(`[operations-stack] Role - customer managed policy ${policyItem}`);
+      managedPolicies.push(this.policies[policyItem]);
+    }
+
+    return managedPolicies;
+  }
+
+  /**
    * Adds IAM Roles
    */
   private addRoles() {
@@ -156,51 +223,8 @@ export class OperationsStack extends AcceleratorStack {
       for (const roleItem of roleSetItem.roles) {
         Logger.info(`[operations-stack] Add role ${roleItem.name}`);
 
-        const principals: cdk.aws_iam.PrincipalBase[] = [];
-
-        for (const assumedByItem of roleItem.assumedBy ?? []) {
-          Logger.info(
-            `[operations-stack] Role - assumed by type(${assumedByItem.type}) principal(${assumedByItem.principal})`,
-          );
-
-          if (assumedByItem.type === 'service') {
-            principals.push(new cdk.aws_iam.ServicePrincipal(assumedByItem.principal));
-          }
-
-          if (assumedByItem.type === 'account') {
-            principals.push(new cdk.aws_iam.AccountPrincipal(assumedByItem.principal));
-          }
-
-          if (assumedByItem.type === 'provider') {
-            // workaround due to https://github.com/aws/aws-cdk/issues/22091
-            if (this.props.partition === 'aws-cn') {
-              principals.push(
-                new cdk.aws_iam.FederatedPrincipal(
-                  this.providers[assumedByItem.principal].samlProviderArn,
-                  {
-                    StringEquals: {
-                      'SAML:aud': 'https://signin.amazonaws.cn/saml',
-                    },
-                  },
-                  'sts:AssumeRoleWithSAML',
-                ),
-              );
-            } else {
-              principals.push(new cdk.aws_iam.SamlConsolePrincipal(this.providers[assumedByItem.principal]));
-            }
-          }
-        }
-
-        const managedPolicies: cdk.aws_iam.IManagedPolicy[] = [];
-
-        for (const policyItem of roleItem.policies?.awsManaged ?? []) {
-          Logger.info(`[operations-stack] Role - aws managed policy ${policyItem}`);
-          managedPolicies.push(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(policyItem));
-        }
-        for (const policyItem of roleItem.policies?.customerManaged ?? []) {
-          Logger.info(`[operations-stack] Role - customer managed policy ${policyItem}`);
-          managedPolicies.push(this.policies[policyItem]);
-        }
+        const principals = this.getRolePrincipals(roleItem);
+        const managedPolicies = this.getManagedPolicies(roleItem);
 
         let assumedBy: cdk.aws_iam.IPrincipal;
         if (roleItem.assumedBy.find(item => item.type === 'provider')) {
