@@ -249,7 +249,7 @@ export class PrepareStack extends AcceleratorStack {
         inviteAccountsToOu.node.addDependency(loadAcceleratorConfigTable);
         inviteAccountsToOu.node.addDependency(createOrganizationalUnits);
 
-        if (props.partition == 'aws' || props.partition == 'aws-cn') {
+        if (props.partition == 'aws') {
           let govCloudAccountMappingTable: cdk.aws_dynamodb.ITable | undefined;
           Logger.info(`[prepare-stack] newOrgAccountsTable`);
           const newOrgAccountsTable = new cdk.aws_dynamodb.Table(this, 'NewOrgAccounts', {

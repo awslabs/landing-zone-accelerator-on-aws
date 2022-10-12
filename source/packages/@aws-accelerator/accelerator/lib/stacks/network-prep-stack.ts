@@ -20,7 +20,6 @@ import * as path from 'path';
 
 import {
   AccountsConfig,
-  CustomerGatewayConfig,
   DnsFirewallRuleGroupConfig,
   DnsQueryLogsConfig,
   DxGatewayConfig,
@@ -28,10 +27,8 @@ import {
   NfwFirewallPolicyConfig,
   NfwRuleGroupConfig,
   TransitGatewayConfig,
-  VpnConnectionConfig,
 } from '@aws-accelerator/config';
 import {
-  CustomerGateway,
   DirectConnectGateway,
   FirewallPolicyProperty,
   Ipam,
@@ -48,7 +45,6 @@ import {
   TransitGatewayRouteTable,
   VirtualInterface,
   VirtualInterfaceProps,
-  VpnConnection,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
@@ -69,7 +65,6 @@ export class NetworkPrepStack extends AcceleratorStack {
   private domainMap: Map<string, string>;
   private dxGatewayMap: Map<string, string>;
   private nfwRuleMap: Map<string, string>;
-  private transitGatewayMap: Map<string, string>;
   private cloudwatchKey: cdk.aws_kms.Key;
   private logRetention: number;
 
@@ -95,12 +90,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     //
     // Generate Transit Gateways
     //
-    this.transitGatewayMap = this.createTransitGateways(props);
-
-    //
-    // Create Site-to-Site VPN connections
-    //
-    this.createVpnConnectionResources(props);
+    this.createTransitGateways(props);
 
     //
     // Create Direct Connect Gateways and virtual interfaces
@@ -119,136 +109,65 @@ export class NetworkPrepStack extends AcceleratorStack {
    * Create transit gateways
    * @param props
    */
-  private createTransitGateways(props: AcceleratorStackProps): Map<string, string> {
-    const transitGatewayMap = new Map<string, string>();
+  private createTransitGateways(props: AcceleratorStackProps) {
     for (const tgwItem of props.networkConfig.transitGateways ?? []) {
-      const accountId = this.accountsConfig.getAccountId(tgwItem.account);
-
-      if (accountId === cdk.Stack.of(this).account && tgwItem.region == cdk.Stack.of(this).region) {
-        const tgw = this.createTransitGatewayItem(tgwItem);
-        transitGatewayMap.set(tgwItem.name, tgw.transitGatewayId);
-      }
+      this.createTransitGatewayItem(tgwItem);
     }
-    return transitGatewayMap;
   }
 
   /**
    * Create transit gateway
    * @param tgwItem
    */
-  private createTransitGatewayItem(tgwItem: TransitGatewayConfig): TransitGateway {
-    Logger.info(`[network-prep-stack] Add Transit Gateway ${tgwItem.name}`);
+  private createTransitGatewayItem(tgwItem: TransitGatewayConfig): void {
+    const accountId = this.accountsConfig.getAccountId(tgwItem.account);
+    if (accountId === cdk.Stack.of(this).account && tgwItem.region == cdk.Stack.of(this).region) {
+      Logger.info(`[network-prep-stack] Add Transit Gateway ${tgwItem.name}`);
 
-    const tgw = new TransitGateway(this, pascalCase(`${tgwItem.name}TransitGateway`), {
-      name: tgwItem.name,
-      amazonSideAsn: tgwItem.asn,
-      autoAcceptSharedAttachments: tgwItem.autoAcceptSharingAttachments,
-      defaultRouteTableAssociation: tgwItem.defaultRouteTableAssociation,
-      defaultRouteTablePropagation: tgwItem.defaultRouteTablePropagation,
-      dnsSupport: tgwItem.dnsSupport,
-      vpnEcmpSupport: tgwItem.vpnEcmpSupport,
-      tags: tgwItem.tags,
-    });
+      const tgw = new TransitGateway(this, pascalCase(`${tgwItem.name}TransitGateway`), {
+        name: tgwItem.name,
+        amazonSideAsn: tgwItem.asn,
+        autoAcceptSharedAttachments: tgwItem.autoAcceptSharingAttachments,
+        defaultRouteTableAssociation: tgwItem.defaultRouteTableAssociation,
+        defaultRouteTablePropagation: tgwItem.defaultRouteTablePropagation,
+        dnsSupport: tgwItem.dnsSupport,
+        vpnEcmpSupport: tgwItem.vpnEcmpSupport,
+        tags: tgwItem.tags,
+      });
 
-    new ssm.StringParameter(this, pascalCase(`SsmParam${tgwItem.name}TransitGatewayId`), {
-      parameterName: `/accelerator/network/transitGateways/${tgwItem.name}/id`,
-      stringValue: tgw.transitGatewayId,
-    });
+      new ssm.StringParameter(this, pascalCase(`SsmParam${tgwItem.name}TransitGatewayId`), {
+        parameterName: `/accelerator/network/transitGateways/${tgwItem.name}/id`,
+        stringValue: tgw.transitGatewayId,
+      });
 
-    for (const routeTableItem of tgwItem.routeTables ?? []) {
-      Logger.info(`[network-prep-stack] Add Transit Gateway Route Tables ${routeTableItem.name}`);
+      for (const routeTableItem of tgwItem.routeTables ?? []) {
+        Logger.info(`[network-prep-stack] Add Transit Gateway Route Tables ${routeTableItem.name}`);
 
-      const routeTable = new TransitGatewayRouteTable(
-        this,
-        pascalCase(`${routeTableItem.name}TransitGatewayRouteTable`),
-        {
-          transitGatewayId: tgw.transitGatewayId,
-          name: routeTableItem.name,
-          tags: routeTableItem.tags,
-        },
-      );
+        const routeTable = new TransitGatewayRouteTable(
+          this,
+          pascalCase(`${routeTableItem.name}TransitGatewayRouteTable`),
+          {
+            transitGatewayId: tgw.transitGatewayId,
+            name: routeTableItem.name,
+            tags: routeTableItem.tags,
+          },
+        );
 
-      new ssm.StringParameter(
-        this,
-        pascalCase(`SsmParam${tgwItem.name}${routeTableItem.name}TransitGatewayRouteTableId`),
-        {
-          parameterName: `/accelerator/network/transitGateways/${tgwItem.name}/routeTables/${routeTableItem.name}/id`,
-          stringValue: routeTable.id,
-        },
-      );
-    }
+        new ssm.StringParameter(
+          this,
+          pascalCase(`SsmParam${tgwItem.name}${routeTableItem.name}TransitGatewayRouteTableId`),
+          {
+            parameterName: `/accelerator/network/transitGateways/${tgwItem.name}/routeTables/${routeTableItem.name}/id`,
+            stringValue: routeTable.id,
+          },
+        );
+      }
 
-    if (tgwItem.shareTargets) {
-      Logger.info(`[network-prep-stack] Share transit gateway`);
-      this.addResourceShare(tgwItem, `${tgwItem.name}_TransitGatewayShare`, [tgw.transitGatewayArn]);
-    }
-    return tgw;
-  }
-
-  /**
-   * Create VPN connection resources
-   * @param props
-   */
-  private createVpnConnectionResources(props: AcceleratorStackProps) {
-    //
-    // Generate Customer Gateways
-    //
-    for (const cgwItem of props.networkConfig.customerGateways ?? []) {
-      const accountId = this.accountsConfig.getAccountId(cgwItem.account);
-      if (accountId === cdk.Stack.of(this).account && cgwItem.region == cdk.Stack.of(this).region) {
-        Logger.info(`[network-prep-stack] Add Customer Gateway ${cgwItem.name} in ${cgwItem.region}`);
-        const cgw = new CustomerGateway(this, pascalCase(`${cgwItem.name}CustomerGateway`), {
-          name: cgwItem.name,
-          bgpAsn: cgwItem.asn,
-          ipAddress: cgwItem.ipAddress,
-          tags: cgwItem.tags,
-        });
-
-        new ssm.StringParameter(this, pascalCase(`SsmParam${cgwItem.name}CustomerGateway`), {
-          parameterName: `/accelerator/network/customerGateways/${cgwItem.name}/id`,
-          stringValue: cgw.customerGatewayId,
-        });
-
-        for (const vpnConnectItem of cgwItem.vpnConnections ?? []) {
-          this.createVpnConnection(cgw, cgwItem, vpnConnectItem);
-        }
+      if (tgwItem.shareTargets) {
+        Logger.info(`[network-prep-stack] Share transit gateway`);
+        this.addResourceShare(tgwItem, `${tgwItem.name}_TransitGatewayShare`, [tgw.transitGatewayArn]);
       }
     }
-  }
-
-  /**
-   * Create VPN connection item
-   * @param cgw
-   * @param cgwItem
-   * @param vpnConnectItem
-   */
-  private createVpnConnection(
-    cgw: CustomerGateway,
-    cgwItem: CustomerGatewayConfig,
-    vpnConnectItem: VpnConnectionConfig,
-  ) {
-    // Get the Transit Gateway ID
-    const transitGatewayId = this.transitGatewayMap.get(vpnConnectItem.transitGateway);
-    if (!transitGatewayId) {
-      throw new Error(`Transit Gateway ${vpnConnectItem.transitGateway} not found`);
-    }
-
-    Logger.info(
-      `[network-prep-stack] Attaching Customer Gateway ${cgwItem.name} to ${vpnConnectItem.transitGateway} in ${cgwItem.region}`,
-    );
-    const vpnConnection = new VpnConnection(this, pascalCase(`${vpnConnectItem.name}VpnConnection`), {
-      name: vpnConnectItem.name,
-      customerGatewayId: cgw.customerGatewayId,
-      staticRoutesOnly: vpnConnectItem.staticRoutesOnly,
-      tags: vpnConnectItem.tags,
-      transitGatewayId: transitGatewayId,
-      vpnTunnelOptionsSpecifications: vpnConnectItem.tunnelSpecifications,
-    });
-
-    new ssm.StringParameter(this, pascalCase(`SsmParam${vpnConnectItem.name}VpnConnection`), {
-      parameterName: `/accelerator/network/vpnConnection/${vpnConnectItem.name}/id`,
-      stringValue: vpnConnection.vpnConnectionId,
-    });
   }
 
   /**

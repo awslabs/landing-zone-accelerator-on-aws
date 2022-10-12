@@ -782,22 +782,6 @@ vpcFlowLogs:
     - flow-direction
     - traffic-path
 
-###########################################
-# Customer Gateways-- use this object to  #
-# deploy customer gateways and S2S VPN    #
-# connections                             #
-###########################################
-# customerGateways:
-#   - name: accelerator-cgw
-#     account: Network
-#     region: *HOME_REGION
-#     ipAddress: 1.1.1.1
-#     asn: 65500
-#     vpnConnections:
-#       - name: accelerator-vpn
-#         transitGateway: Network-Main
-#         staticRoutesOnly: false
-
 #####################################
 # Direct Connect Gateways-- use this #
 # object to deploy DX Gateways,      #      

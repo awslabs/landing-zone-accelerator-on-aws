@@ -12,32 +12,31 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import { NagSuppressions } from 'cdk-nag';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
-import * as fs from 'fs';
+import { AcceleratorElbRootAccounts } from '../accelerator';
 import { pascalCase } from 'pascal-case';
-import path from 'path';
+import * as fs from 'fs';
 
-import { VpcFlowLogsConfig } from '@aws-accelerator/config';
 import {
   Bucket,
-  BucketAccessType,
   BucketEncryptionType,
   BucketReplicationProps,
   CentralLogsBucket,
-  CloudWatchDestination,
-  CloudWatchLogsSubscriptionFilter,
-  CloudWatchToS3Firehose,
   KeyLookup,
+  S3PublicAccessBlock,
+  CloudWatchDestination,
+  CloudWatchToS3Firehose,
+  CloudWatchLogsSubscriptionFilter,
   NewCloudWatchLogEvent,
   Organization,
-  S3PublicAccessBlock,
+  BucketAccessType,
 } from '@aws-accelerator/constructs';
-
-import { AcceleratorElbRootAccounts } from '../accelerator';
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { Logger } from '../logger';
+import path from 'path';
+import { VpcFlowLogsConfig } from '@aws-accelerator/config';
 
 export class LoggingStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.IKey;

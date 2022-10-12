@@ -18,7 +18,6 @@ import { Construct } from 'constructs';
 
 import {
   AccountsConfig,
-  CustomerGatewayConfig,
   DxGatewayConfig,
   DxTransitGatewayAssociationConfig,
   NetworkConfigTypes,
@@ -28,7 +27,6 @@ import {
   TransitGatewayRouteTableConfig,
   VpcConfig,
   VpcTemplatesConfig,
-  VpnConnectionConfig,
 } from '@aws-accelerator/config';
 import {
   AssociateHostedZones,
@@ -41,7 +39,6 @@ import {
   ShareSubnetTags,
   SsmParameterLookup,
   TransitGatewayAttachment,
-  TransitGatewayAttachmentType,
   TransitGatewayPrefixListReference,
   TransitGatewayRouteTableAssociation,
   TransitGatewayRouteTablePropagation,
@@ -103,7 +100,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
     //
     // Create transit gateway route table associations, propagations,
-    // for VPC and VPN attachments
+    // for VPC attachments
     //
     this.createTransitGatewayResources(props);
 
@@ -183,21 +180,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     // for VPC attachments
     //
     for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
-      this.setTransitGatewayVpcAttachmentsMap(vpcItem);
+      this.setTransitGatewayAttachmentsMap(vpcItem);
       this.createVpcTransitGatewayAssociations(vpcItem);
       this.createVpcTransitGatewayPropagations(vpcItem);
-    }
-
-    //
-    // Create Transit Gateway route table associations and propagations
-    // for VPN attachments
-    //
-    for (const cgwItem of props.networkConfig.customerGateways ?? []) {
-      for (const vpnItem of cgwItem.vpnConnections ?? []) {
-        this.setTransitGatewayVpnAttachmentsMap(props, cgwItem, vpnItem);
-        this.createVpnTransitGatewayAssociations(cgwItem, vpnItem);
-        this.createVpnTransitGatewayPropagations(cgwItem, vpnItem);
-      }
     }
   }
 
@@ -255,7 +240,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
    * Create a map of transit gateway attachments
    * @param vpcItem
    */
-  private setTransitGatewayVpcAttachmentsMap(vpcItem: VpcConfig | VpcTemplatesConfig) {
+  private setTransitGatewayAttachmentsMap(vpcItem: VpcConfig | VpcTemplatesConfig) {
     // Get account names for attachment keys
     const [accountNames, excludedAccountIds] = this.getTransitGatewayAttachmentAccounts(vpcItem);
 
@@ -300,7 +285,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                   name: tgwAttachmentItem.name,
                   owningAccountId,
                   transitGatewayId,
-                  type: TransitGatewayAttachmentType.VPC,
                   roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
                   kmsKey: this.cloudwatchKey,
                   logRetentionInDays: this.logRetention,
@@ -420,130 +404,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             }
           }
         }
-      }
-    }
-  }
-
-  /**
-   * Set VPN attachment items in TGW map
-   * @param props
-   * @param cgwItem
-   * @param vpnItem
-   */
-  private setTransitGatewayVpnAttachmentsMap(
-    props: AcceleratorStackProps,
-    cgwItem: CustomerGatewayConfig,
-    vpnItem: VpnConnectionConfig,
-  ): void {
-    const accountId = props.accountsConfig.getAccountId(cgwItem.account);
-    if (
-      accountId === cdk.Stack.of(this).account &&
-      cgwItem.region === cdk.Stack.of(this).region &&
-      vpnItem.transitGateway
-    ) {
-      // Lookup TGW attachment ID for VPN
-      const tgw = props.networkConfig.transitGateways.find(tgwItem => tgwItem.name === vpnItem.transitGateway)!;
-      const transitGatewayId = this.transitGateways.get(tgw.name);
-
-      if (!transitGatewayId) {
-        throw new Error(`Transit Gateway ${tgw.name} not found`);
-      }
-
-      const vpnAttachmentId = TransitGatewayAttachment.fromLookup(
-        this,
-        pascalCase(`${vpnItem.name}VpnTransitGatewayAttachment`),
-        {
-          name: vpnItem.name,
-          owningAccountId: accountId,
-          transitGatewayId,
-          type: TransitGatewayAttachmentType.VPN,
-          kmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.logRetention,
-        },
-      ).transitGatewayAttachmentId;
-      // Add to Transit Gateway Attachment Map
-      this.transitGatewayAttachments.set(`${vpnItem.name}_${tgw.name}`, vpnAttachmentId);
-    }
-  }
-
-  /**
-   * Create VPN TGW route table associations
-   * @param cgwItem
-   * @param vpnItem
-   */
-  private createVpnTransitGatewayAssociations(cgwItem: CustomerGatewayConfig, vpnItem: VpnConnectionConfig): void {
-    const accountId = this.props.accountsConfig.getAccountId(cgwItem.account);
-    if (
-      accountId === cdk.Stack.of(this).account &&
-      cgwItem.region === cdk.Stack.of(this).region &&
-      vpnItem.routeTableAssociations
-    ) {
-      // Lookup TGW attachment ID for VPN
-      const attachmentKey = `${vpnItem.name}_${vpnItem.transitGateway}`;
-      const transitGatewayAttachmentId = this.transitGatewayAttachments.get(attachmentKey);
-
-      if (!transitGatewayAttachmentId) {
-        throw new Error(`Transit Gateway attachment ${attachmentKey} not found`);
-      }
-
-      // Create route table associations
-      for (const routeTableItem of vpnItem.routeTableAssociations ?? []) {
-        const routeTableKey = `${vpnItem.transitGateway}_${routeTableItem}`;
-        const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(routeTableKey);
-
-        if (!transitGatewayRouteTableId) {
-          throw new Error(`Transit Gateway Route Table ${routeTableKey} not found`);
-        }
-
-        new TransitGatewayRouteTableAssociation(
-          this,
-          `${pascalCase(vpnItem.name)}${pascalCase(routeTableItem)}Association`,
-          {
-            transitGatewayAttachmentId,
-            transitGatewayRouteTableId,
-          },
-        );
-      }
-    }
-  }
-
-  /**
-   * Create VPN TGW route table propagations
-   * @param cgwItem
-   * @param vpnItem
-   */
-  private createVpnTransitGatewayPropagations(cgwItem: CustomerGatewayConfig, vpnItem: VpnConnectionConfig): void {
-    const accountId = this.props.accountsConfig.getAccountId(cgwItem.account);
-    if (
-      accountId === cdk.Stack.of(this).account &&
-      cgwItem.region === cdk.Stack.of(this).region &&
-      vpnItem.routeTablePropagations
-    ) {
-      // Lookup TGW attachment ID for VPN
-      const attachmentKey = `${vpnItem.name}_${vpnItem.transitGateway}`;
-      const transitGatewayAttachmentId = this.transitGatewayAttachments.get(attachmentKey);
-
-      if (!transitGatewayAttachmentId) {
-        throw new Error(`Transit Gateway attachment ${attachmentKey} not found`);
-      }
-
-      // Create route table propagations
-      for (const routeTableItem of vpnItem.routeTablePropagations ?? []) {
-        const routeTableKey = `${vpnItem.transitGateway}_${routeTableItem}`;
-        const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(routeTableKey);
-
-        if (!transitGatewayRouteTableId) {
-          throw new Error(`Transit Gateway Route Table ${routeTableKey} not found`);
-        }
-
-        new TransitGatewayRouteTablePropagation(
-          this,
-          `${pascalCase(vpnItem.name)}${pascalCase(routeTableItem)}Propagation`,
-          {
-            transitGatewayAttachmentId,
-            transitGatewayRouteTableId,
-          },
-        );
       }
     }
   }
@@ -1214,6 +1074,19 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     routeItem: TransitGatewayRouteEntryConfig,
     transitGatewayRouteTableId: string,
   ): void {
+    // Throw exception when a blackhole route and a VPC attachment is presented.
+    if (routeItem.blackhole && routeItem.attachment) {
+      throw new Error(
+        `[network-associations-stack] Transit gateway route specifies both blackhole and attachment target. Please choose only one.`,
+      );
+    }
+
+    if (routeItem.destinationCidrBlock && routeItem.destinationPrefixList) {
+      throw new Error(
+        `[network-associations-stack] Transit gateway route using destination and destinationPrefixList. Please choose only one destination type`,
+      );
+    }
+
     //
     // Create static routes
     //
@@ -1227,7 +1100,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-blackhole`;
       }
 
-      // If route is for VPC attachment
       if (routeItem.attachment && NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig.is(routeItem.attachment)) {
         Logger.info(
           `[network-associations-stack] Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
@@ -1240,7 +1112,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         );
       }
 
-      // If route is for DX Gateway attachment
       if (
         routeItem.attachment &&
         NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig.is(routeItem.attachment)
@@ -1253,19 +1124,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         // Get TGW attachment ID
         transitGatewayAttachmentId = this.transitGatewayAttachments.get(
           `${routeItem.attachment.directConnectGatewayName}_${tgwItem.name}`,
-        );
-      }
-
-      // If route is for VPN attachment
-      if (routeItem.attachment && NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeItem.attachment)) {
-        Logger.info(
-          `[network-associations-stack] Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
-        );
-        routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpnConnectionName}`;
-
-        // Get TGW attachment ID
-        transitGatewayAttachmentId = this.transitGatewayAttachments.get(
-          `${routeItem.attachment.vpnConnectionName}_${tgwItem.name}`,
         );
       }
 
@@ -1302,8 +1160,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         );
         plRouteId = pascalCase(`${routeTableItem.name}${routeItem.destinationPrefixList}Blackhole`);
       }
-
-      // If route is for VPC attachment
       if (routeItem.attachment && NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig.is(routeItem.attachment)) {
         Logger.info(
           `[network-associations-stack] Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
@@ -1318,7 +1174,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         );
       }
 
-      // If route is for DX Gateway attachment
       if (
         routeItem.attachment &&
         NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig.is(routeItem.attachment)
@@ -1333,21 +1188,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         // Get TGW attachment ID
         transitGatewayAttachmentId = this.transitGatewayAttachments.get(
           `${routeItem.attachment.directConnectGatewayName}_${tgwItem.name}`,
-        );
-      }
-
-      // If route is for VPN attachment
-      if (routeItem.attachment && NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeItem.attachment)) {
-        Logger.info(
-          `[network-associations-stack] Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
-        );
-        plRouteId = pascalCase(
-          `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.vpnConnectionName}`,
-        );
-
-        // Get TGW attachment ID
-        transitGatewayAttachmentId = this.transitGatewayAttachments.get(
-          `${routeItem.attachment.vpnConnectionName}_${tgwItem.name}`,
         );
       }
 

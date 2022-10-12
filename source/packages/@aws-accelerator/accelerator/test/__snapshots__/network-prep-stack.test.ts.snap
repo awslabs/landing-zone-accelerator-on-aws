@@ -72,20 +72,6 @@ Object {
       },
       "Type": "AWS::Route53Resolver::FirewallRuleGroup",
     },
-    "AcceleratorCgwCustomerGateway56465E97": Object {
-      "Properties": Object {
-        "BgpAsn": 65500,
-        "IpAddress": "1.1.1.1",
-        "Tags": Array [
-          Object {
-            "Key": "Name",
-            "Value": "accelerator-cgw",
-          },
-        ],
-        "Type": "ipsec.1",
-      },
-      "Type": "AWS::EC2::CustomerGateway",
-    },
     "AcceleratorIpamIpamB72C793C": Object {
       "Properties": Object {
         "Description": "Accelerator IPAM",
@@ -297,57 +283,6 @@ Object {
         "Type": "STATEFUL",
       },
       "Type": "AWS::NetworkFirewall::RuleGroup",
-    },
-    "AcceleratorVpnVpnConnection4C6D9196": Object {
-      "Properties": Object {
-        "CustomerGatewayId": Object {
-          "Ref": "AcceleratorCgwCustomerGateway56465E97",
-        },
-        "StaticRoutesOnly": false,
-        "Tags": Array [
-          Object {
-            "Key": "Name",
-            "Value": "accelerator-vpn",
-          },
-        ],
-        "TransitGatewayId": Object {
-          "Ref": "NetworkMainTransitGatewayF6473E53",
-        },
-        "Type": "ipsec.1",
-        "VpnTunnelOptionsSpecifications": Array [
-          Object {
-            "PreSharedKey": Object {
-              "Fn::Join": Array [
-                "",
-                Array [
-                  "{{resolve:secretsmanager:arn:",
-                  Object {
-                    "Ref": "AWS::Partition",
-                  },
-                  ":secretsmanager:us-east-1:555555555555:secret:Key1-AbcXyz:SecretString:::}}",
-                ],
-              ],
-            },
-            "TunnelInsideCidr": "169.254.200.0/30",
-          },
-          Object {
-            "PreSharedKey": Object {
-              "Fn::Join": Array [
-                "",
-                Array [
-                  "{{resolve:secretsmanager:arn:",
-                  Object {
-                    "Ref": "AWS::Partition",
-                  },
-                  ":secretsmanager:us-east-1:555555555555:secret:Key2-AbcXyz:SecretString:::}}",
-                ],
-              ],
-            },
-            "TunnelInsideCidr": "169.254.200.100/30",
-          },
-        ],
-      },
-      "Type": "AWS::EC2::VPNConnection",
     },
     "AwsManagedDomainsBotnetCommandandControlDomainList1AA90CC1": Object {
       "DeletionPolicy": "Delete",
@@ -1148,16 +1083,6 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamacceleratorCgwCustomerGateway984E0261": Object {
-      "Properties": Object {
-        "Name": "/accelerator/network/customerGateways/accelerator-cgw/id",
-        "Type": "String",
-        "Value": Object {
-          "Ref": "AcceleratorCgwCustomerGateway56465E97",
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
     "SsmParamacceleratorIpamIpamId271C0A36": Object {
       "Properties": Object {
         "Name": "/accelerator/network/ipam/accelerator-ipam/id",
@@ -1210,16 +1135,6 @@ Object {
         "Type": "String",
         "Value": Object {
           "Ref": "AcceleratorRuleGroupNetworkFirewallRuleGroup3B409F78",
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
-    "SsmParamacceleratorVpnVpnConnection261CAE04": Object {
-      "Properties": Object {
-        "Name": "/accelerator/network/vpnConnection/accelerator-vpn/id",
-        "Type": "String",
-        "Value": Object {
-          "Ref": "AcceleratorVpnVpnConnection4C6D9196",
         },
       },
       "Type": "AWS::SSM::Parameter",
