@@ -118,6 +118,7 @@ export class ValidateEnvironmentConfig extends Construct {
         controlTowerEnabled: props.controlTowerEnabled,
         commitId: props.commitId,
         stackName: props.stackName,
+        partition: props.partition,
         driftDetectionParameterName: props.driftDetectionParameter.parameterName,
         driftDetectionMessageParameterName: props.driftDetectionMessageParameter.parameterName,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
