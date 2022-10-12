@@ -1,0 +1,75 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VpnConnection Construct(VpnConnection):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestVpnVpnConnection655CF32D": Object {
+      "Properties": Object {
+        "CustomerGatewayId": "Test-Cgw",
+        "StaticRoutesOnly": true,
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Test-Vpn",
+          },
+          Object {
+            "Key": "Test-Key",
+            "Value": "Test-Value",
+          },
+        ],
+        "TransitGatewayId": "Test-tgw",
+        "Type": "ipsec.1",
+        "VpnTunnelOptionsSpecifications": Array [
+          Object {
+            "PreSharedKey": Object {
+              "Fn::Join": Array [
+                "",
+                Array [
+                  "{{resolve:secretsmanager:arn:",
+                  Object {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:",
+                  Object {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  Object {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":secret:test-key-1:SecretString:::}}",
+                ],
+              ],
+            },
+            "TunnelInsideCidr": "169.254.200.0/30",
+          },
+          Object {
+            "PreSharedKey": Object {
+              "Fn::Join": Array [
+                "",
+                Array [
+                  "{{resolve:secretsmanager:arn:",
+                  Object {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:",
+                  Object {
+                    "Ref": "AWS::Region",
+                  },
+                  ":",
+                  Object {
+                    "Ref": "AWS::AccountId",
+                  },
+                  ":secret:test-key-1:SecretString:::}}",
+                ],
+              ],
+            },
+            "TunnelInsideCidr": "169.254.100.0/30",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPNConnection",
+    },
+  },
+}
+`;

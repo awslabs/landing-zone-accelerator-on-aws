@@ -30,6 +30,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
+  const attachmentType = event.ResourceProperties['type'];
   const name = event.ResourceProperties['name'];
   const transitGatewayId = event.ResourceProperties['transitGatewayId'];
   const roleArn = event.ResourceProperties['roleArn'];
@@ -37,40 +38,50 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const stsClient = new AWS.STS({});
+      let ec2Client: AWS.EC2;
+      if (roleArn) {
+        const stsClient = new AWS.STS({});
 
-      const assumeRoleResponse = await throttlingBackOff(() =>
-        stsClient
-          .assumeRole({
-            RoleArn: roleArn,
-            RoleSessionName: 'GetTransitGatewayAttachmentSession',
-          })
-          .promise(),
-      );
+        const assumeRoleResponse = await throttlingBackOff(() =>
+          stsClient
+            .assumeRole({
+              RoleArn: roleArn,
+              RoleSessionName: 'GetTransitGatewayAttachmentSession',
+            })
+            .promise(),
+        );
 
-      const ec2Client = new AWS.EC2({
-        credentials: {
-          accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
-          secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
-          sessionToken: assumeRoleResponse.Credentials?.SessionToken,
-        },
-      });
+        ec2Client = new AWS.EC2({
+          credentials: {
+            accessKeyId: assumeRoleResponse.Credentials?.AccessKeyId ?? '',
+            secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
+            sessionToken: assumeRoleResponse.Credentials?.SessionToken,
+          },
+        });
+      } else {
+        ec2Client = new AWS.EC2();
+      }
 
       let nextToken: string | undefined = undefined;
       do {
         const page = await throttlingBackOff(() =>
-          ec2Client.describeTransitGatewayAttachments({ NextToken: nextToken }).promise(),
+          ec2Client
+            .describeTransitGatewayAttachments({
+              Filters: [{ Name: 'resource-type', Values: [attachmentType] }],
+              NextToken: nextToken,
+            })
+            .promise(),
         );
         for (const attachment of page.TransitGatewayAttachments ?? []) {
-          if (attachment.TransitGatewayId === transitGatewayId && attachment.State === 'available') {
-            const nameTag = attachment.Tags?.find(t => t.Key === 'Name');
-            if (nameTag && nameTag.Value === name) {
-              console.log(attachment);
-              return {
-                PhysicalResourceId: attachment.TransitGatewayAttachmentId,
-                Status: 'SUCCESS',
-              };
-            }
+          if (
+            attachment.TransitGatewayId === transitGatewayId &&
+            attachment.State === 'available' &&
+            (await validateAttachment(attachment, name, attachmentType, transitGatewayId, ec2Client))
+          ) {
+            return {
+              PhysicalResourceId: attachment.TransitGatewayAttachmentId,
+              Status: 'SUCCESS',
+            };
           }
         }
         nextToken = page.NextToken;
@@ -85,4 +96,44 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         Status: 'SUCCESS',
       };
   }
+}
+
+async function validateAttachment(
+  attachment: AWS.EC2.TransitGatewayAttachment,
+  name: string,
+  attachmentType: string,
+  tgwId: string,
+  ec2Client: AWS.EC2,
+): Promise<boolean> {
+  switch (attachmentType) {
+    case 'vpc':
+      const nameTag = attachment.Tags?.find(t => t.Key === 'Name');
+      if (nameTag && nameTag.Value === name) {
+        return true;
+      }
+      return false;
+
+    case 'vpn':
+      const vpnResponse = await throttlingBackOff(() =>
+        ec2Client
+          .describeVpnConnections({
+            Filters: [
+              { Name: 'tag:Name', Values: [name] },
+              { Name: 'transit-gateway-id', Values: [tgwId] },
+            ],
+          })
+          .promise(),
+      );
+
+      if (vpnResponse.VpnConnections) {
+        if (vpnResponse.VpnConnections.length > 1 || vpnResponse.VpnConnections.length === 0) {
+          throw new Error(`Unable to find VPN attachment ${name}`);
+        }
+        if (vpnResponse.VpnConnections[0].VpnConnectionId === attachment.ResourceId) {
+          return true;
+        }
+      }
+      return false;
+  }
+  return false;
 }
