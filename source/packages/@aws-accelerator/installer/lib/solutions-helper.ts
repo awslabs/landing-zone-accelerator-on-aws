@@ -79,13 +79,13 @@ export class SolutionHelper extends Construct {
         }
 
 
-        function sanatizeData(resourceProperties) {
+        function sanitizeData(resourceProperties) {
           const keysToExclude = ['ServiceToken', 'Resource', 'SolutionId', 'UUID'];
-          return Object.keys(resourceProperties).reduce((sanatizedData, key) => {
+          return Object.keys(resourceProperties).reduce((sanitizedData, key) => {
               if (!keysToExclude.includes(key)) {
-                  sanatizedData[key] = resourceProperties[key];
+                  sanitizedData[key] = resourceProperties[key];
               }
-              return sanatizedData;
+              return sanitizedData;
           }, {})
         }
 
@@ -101,7 +101,7 @@ export class SolutionHelper extends Construct {
               }
               if (resource === 'AnonymousMetric') {
                   const currentDate = new Date()
-                  data = sanatizeData(resourceProperties);
+                  data = sanitizeData(resourceProperties);
                   data['RequestType'] = requestType;
                   const payload = {
                       Solution: resourceProperties.SolutionId,
@@ -121,7 +121,7 @@ export class SolutionHelper extends Construct {
           if (requestType === 'Create') {
             await response.send(event, context, response.SUCCESS, data);
           }
-          else if (requestType === 'Update'){
+          else {
             await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
           }
           return;
