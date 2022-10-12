@@ -1115,7 +1115,7 @@ export class AcceleratorTool {
     // const promises: Promise<boolean>[] = [];
     // const deleteStackStartedPromises: Promise<DeleteStackCommandOutput>[] = [];
     // const deleteStackCompletedPromises: Promise<WaiterResult>[] = [];
-    const assumeRoleName = 'AWSControlTowerExecution';
+    const assumeRoleName = this.globalConfig?.managementAccountAccessRole || 'AWSControlTowerExecution';
     let cloudFormationClient: CloudFormationClient;
     let s3Client: S3Client;
     let kMSClient: KMSClient;
