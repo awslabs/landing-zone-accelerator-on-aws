@@ -30,7 +30,7 @@ export interface CloudWatchDestinationProps {
   /**
    * Organization ID to restrict the usage within specific org
    */
-  organizationId?: string | undefined;
+  organizationId?: string;
   /**
    * Partition to determine the IAM condition.
    */
