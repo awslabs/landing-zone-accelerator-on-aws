@@ -36,16 +36,26 @@ interface AccountConfig {
 }
 
 type AccountConfigs = Array<AccountConfig>;
-
-const organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+let organizationsClient: AWS.Organizations;
 
 //eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function handler(event: any): Promise<
+export async function handler(
+  event: AWSLambda.CloudFormationCustomResourceEvent,
+  context: AWSLambda.Context,
+): Promise<
   | {
       IsComplete: boolean;
     }
   | undefined
 > {
+  const partition = context.invokedFunctionArn.split(':')[1];
+
+  if (partition === 'aws-cn') {
+    organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
+  } else {
+    organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+  }
+
   console.log(event);
   // get a single accountConfig from table and attempt to create
   // if no record is returned then all new accounts are provisioned
