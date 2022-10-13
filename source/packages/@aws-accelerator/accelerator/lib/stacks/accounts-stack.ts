@@ -128,7 +128,7 @@ export class AccountsStack extends AcceleratorStack {
               description: serviceControlPolicy.description,
               name: serviceControlPolicy.name,
               partition: props.partition,
-              path: this.generatePolicyReplacements(path.join(props.configDirPath, serviceControlPolicy.policy)),
+              path: this.generatePolicyReplacements(path.join(props.configDirPath, serviceControlPolicy.policy), true),
               type: PolicyType.SERVICE_CONTROL_POLICY,
               kmsKey: this.cloudwatchKey,
               logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,

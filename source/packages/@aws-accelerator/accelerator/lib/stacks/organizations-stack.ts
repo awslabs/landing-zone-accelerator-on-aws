@@ -185,7 +185,10 @@ export class OrganizationsStack extends AcceleratorStack {
             description: backupPolicies.description,
             name: backupPolicies.name,
             partition: this.props.partition,
-            path: this.generatePolicyReplacements(path.join(this.stackProperties.configDirPath, backupPolicies.policy)),
+            path: this.generatePolicyReplacements(
+              path.join(this.stackProperties.configDirPath, backupPolicies.policy),
+              true,
+            ),
             type: PolicyType.BACKUP_POLICY,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.logRetention,
@@ -518,7 +521,10 @@ export class OrganizationsStack extends AcceleratorStack {
             description: taggingPolicy.description,
             name: taggingPolicy.name,
             partition: this.props.partition,
-            path: this.generatePolicyReplacements(path.join(this.stackProperties.configDirPath, taggingPolicy.policy)),
+            path: this.generatePolicyReplacements(
+              path.join(this.stackProperties.configDirPath, taggingPolicy.policy),
+              true,
+            ),
             type: PolicyType.TAG_POLICY,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.logRetention,

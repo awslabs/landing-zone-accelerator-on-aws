@@ -631,13 +631,15 @@ export abstract class AcceleratorStack extends cdk.Stack {
     }
     throw new Error('Organization ID not found or account IDs not found');
   }
+
   /**
-   * Generate policy replacements and return a temp path
+   * Generate policy replacements and optionally return a temp path
    * to the transformed document
-   * @param path
+   * @param policyPath
+   * @param returnTempPath
    * @returns
    */
-  protected generatePolicyReplacements(policyPath: string): string {
+  protected generatePolicyReplacements(policyPath: string, returnTempPath: boolean): string {
     // Transform policy document
     let policyContent: string = JSON.stringify(require(policyPath));
     policyContent = policyReplacements({
@@ -645,9 +647,28 @@ export abstract class AcceleratorStack extends cdk.Stack {
       acceleratorPrefix: 'AWSAccelerator',
       managementAccountAccessRole: this.props.globalConfig.managementAccountAccessRole,
       partition: this.props.partition,
-      additionalReplacements: {},
+      additionalReplacements: {
+        '\\${ACCOUNT_ID}': cdk.Stack.of(this).account,
+        '\\${AUDIT_ACCOUNT_ID}': this.props.accountsConfig.getAuditAccountId(),
+        '\\${LOGARCHIVE_ACCOUNT_ID}': this.props.accountsConfig.getLogArchiveAccountId(),
+        '\\${MANAGEMENT_ACCOUNT_ID}': this.props.accountsConfig.getManagementAccountId(),
+        '\\${REGION}': cdk.Stack.of(this).region,
+      },
     });
 
+    if (returnTempPath) {
+      return this.createTempFile(policyContent);
+    } else {
+      return policyContent;
+    }
+  }
+
+  /**
+   * Create a temp file of a transformed policy document
+   * @param policyContent
+   * @returns
+   */
+  private createTempFile(policyContent: string): string {
     // Generate unique file path in temporary directory
     let tempDir: string;
     if (process.platform === 'win32') {
