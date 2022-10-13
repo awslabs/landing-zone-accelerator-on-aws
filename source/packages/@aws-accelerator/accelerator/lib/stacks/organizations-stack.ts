@@ -184,12 +184,11 @@ export class OrganizationsStack extends AcceleratorStack {
           const policy = new Policy(this, backupPolicies.name, {
             description: backupPolicies.description,
             name: backupPolicies.name,
-            path: path.join(this.stackProperties.configDirPath, backupPolicies.policy),
+            partition: this.props.partition,
+            path: this.generatePolicyReplacements(path.join(this.stackProperties.configDirPath, backupPolicies.policy)),
             type: PolicyType.BACKUP_POLICY,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.logRetention,
-            acceleratorPrefix: 'AWSAccelerator',
-            managementAccountAccessRole: this.stackProperties.globalConfig.managementAccountAccessRole,
           });
 
           policy.node.addDependency(enablePolicyTypeBackup);
@@ -518,12 +517,11 @@ export class OrganizationsStack extends AcceleratorStack {
           const policy = new Policy(this, taggingPolicy.name, {
             description: taggingPolicy.description,
             name: taggingPolicy.name,
-            path: path.join(this.stackProperties.configDirPath, taggingPolicy.policy),
+            partition: this.props.partition,
+            path: this.generatePolicyReplacements(path.join(this.stackProperties.configDirPath, taggingPolicy.policy)),
             type: PolicyType.TAG_POLICY,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.logRetention,
-            acceleratorPrefix: 'AWSAccelerator',
-            managementAccountAccessRole: this.stackProperties.globalConfig.managementAccountAccessRole,
           });
 
           policy.node.addDependency(enablePolicyTypeTag);

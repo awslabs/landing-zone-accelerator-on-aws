@@ -11,12 +11,11 @@
  *  and limitations under the License.
  */
 
-import * as assets from 'aws-cdk-lib/aws-s3-assets';
 import * as cdk from 'aws-cdk-lib';
-import { v4 as uuidv4 } from 'uuid';
+import * as assets from 'aws-cdk-lib/aws-s3-assets';
 import { Construct } from 'constructs';
-
-const path = require('path');
+import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
 export enum PolicyType {
   AISERVICES_OPT_OUT_POLICY = 'AISERVICES_OPT_OUT_POLICY',
@@ -25,33 +24,15 @@ export enum PolicyType {
   TAG_POLICY = 'TAG_POLICY',
 }
 
-/**
- * <p>A custom key-value pair associated with a resource within your organization.</p>
- *         <p>You can attach tags to any of the following organization resources.</p>
- *         <ul>
- *             <li>
- *                 <p>AWS account</p>
- *             </li>
- *             <li>
- *                 <p>Organizational unit (OU)</p>
- *             </li>
- *             <li>
- *                 <p>Organization root</p>
- *             </li>
- *             <li>
- *                 <p>Policy</p>
- *             </li>
- *          </ul>
- */
 export interface Tag {
   /**
-   * <p>The key identifier, or name, of the tag.</p>
+   * The key identifier, or name, of the tag.
    */
   Key: string | undefined;
 
   /**
-   * <p>The string value that's associated with the key of the tag. You can set the value of a
-   *             tag to an empty string, but you can't set the value of a tag to null.</p>
+   * The string value that's associated with the key of the tag. You can set the value of a
+   * tag to an empty string, but you can't set the value of a tag to null.
    */
   Value: string | undefined;
 }
@@ -60,11 +41,6 @@ export interface Tag {
  * Initialized Policy properties
  */
 export interface PolicyProps {
-  readonly path: string;
-  readonly name: string;
-  readonly description?: string;
-  readonly type: PolicyType;
-  readonly tags?: Tag[];
   /**
    * Custom resource lambda log group encryption key
    */
@@ -73,8 +49,30 @@ export interface PolicyProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
-  readonly acceleratorPrefix: string;
-  readonly managementAccountAccessRole: string;
+  /**
+   * The friendly name of the policy
+   */
+  readonly name: string;
+  /**
+   * The AWS partition the policy will be created in
+   */
+  readonly partition: string;
+  /**
+   * The path of the file for the policy
+   */
+  readonly path: string;
+  /**
+   * The type of policy to create
+   */
+  readonly type: PolicyType;
+  /**
+   * An optional description of the policy
+   */
+  readonly description?: string;
+  /**
+   * An optional list of tags for the policy
+   */
+  readonly tags?: Tag[];
 }
 
 /**
@@ -143,11 +141,8 @@ export class Policy extends Construct {
       properties: {
         bucket: asset.s3BucketName,
         key: asset.s3ObjectKey,
-        partition: cdk.Aws.PARTITION,
-        acceleratorPrefix: props.acceleratorPrefix,
-        managementAccountAccessRole: props.managementAccountAccessRole,
+        partition: props.partition,
         uuid: uuidv4(),
-        path: props.path,
         name: props.name,
         description: props.description,
         type: props.type,
