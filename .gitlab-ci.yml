@@ -1,12 +1,5 @@
 image: public.ecr.aws/bitnami/node:14
 
-variables:
-  KUBERNETES_CPU_REQUEST: 3
-  KUBERNETES_CPU_LIMIT: 5
-  KUBERNETES_MEMORY_REQUEST: 6Gi
-  KUBERNETES_MEMORY_LIMIT: 8Gi
-  KUBERNETES_EPHEMERAL_STORAGE_REQUEST: 512Mi
-  KUBERNETES_EPHEMERAL_STORAGE_LIMIT: 1Gi
 
 stages:
   - build
@@ -15,6 +8,9 @@ stages:
 
 accelerator-build:
   stage: build
+  tags:
+    - arch:amd64
+    - size:large
   script:
     - "export NODE_OPTIONS=--max_old_space_size=4096"
     - "cd source"
@@ -33,18 +29,35 @@ accelerator-build:
       - AWSAccelerator-InstallerStack.template.json
 accelerator-test:
   stage: test
+  tags:
+    - arch:amd64
+    - size:large
   script:
+    - "export NODE_OPTIONS=--max_old_space_size=4096"
+    - "cd source"
+    - "npm install --global yarn"
+    - "yarn install"
+    - "yarn lint"
+    - "yarn lerna link"
+    - "yarn build"
+    - "yarn test"
     ## Temporary disabled viperlight till the issue fixed      
     # - "wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip'"
     # - "unzip -qo viperlight.zip -d ../viperlight"
     # - "rm -r ./viperlight.zip"
     # - "../viperlight/bin/viperlight scan"
-    - "echo Temporary disabled viperlight till the issue fixed"
+    - "echo Temporary disabled viperlight till the issue fixed"  
   artifacts:
-    untracked: true
+    when: always
+    reports:
+      junit:
+        - source/test-reports/*.xml
     expire_in: 1 day
 pages:
   stage: metadata
+  tags:
+    - arch:amd64
+    - size:large
   script:
     - "export NODE_OPTIONS=--max_old_space_size=8192"
     - "cd source"
