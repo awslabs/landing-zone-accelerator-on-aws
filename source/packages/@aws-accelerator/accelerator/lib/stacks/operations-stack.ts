@@ -17,10 +17,11 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
+import { RoleConfig } from '@aws-accelerator/config';
+import { BudgetDefinition } from '@aws-accelerator/constructs';
+
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { BudgetDefinition } from '@aws-accelerator/constructs';
-import { RoleConfig } from '@aws-accelerator/config';
 
 export interface OperationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
@@ -113,7 +114,9 @@ export class OperationsStack extends AcceleratorStack {
         Logger.info(`[operations-stack] Add customer managed policy ${policyItem.name}`);
 
         // Read in the policy document which should be properly formatted json
-        const policyDocument = require(path.join(this.props.configDirPath, policyItem.policy));
+        const policyDocument = JSON.parse(
+          this.generatePolicyReplacements(path.join(this.props.configDirPath, policyItem.policy), false),
+        );
 
         // Create a statements list using the PolicyStatement factory
         const statements: cdk.aws_iam.PolicyStatement[] = [];
