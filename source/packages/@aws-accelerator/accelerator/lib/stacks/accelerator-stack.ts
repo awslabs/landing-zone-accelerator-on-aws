@@ -14,6 +14,9 @@
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
+import * as fs from 'fs';
+import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
   AccountsConfig,
@@ -44,6 +47,7 @@ import {
   ResourceShareOwner,
   S3LifeCycleRule,
 } from '@aws-accelerator/constructs';
+import { policyReplacements } from '@aws-accelerator/utils';
 
 import { version } from '../../../../../package.json';
 import { Logger } from '../logger';
@@ -626,5 +630,49 @@ export abstract class AcceleratorStack extends cdk.Stack {
       return new cdk.aws_iam.OrganizationPrincipal(organizationId);
     }
     throw new Error('Organization ID not found or account IDs not found');
+  }
+  /**
+   * Generate policy replacements and return a temp path
+   * to the transformed document
+   * @param path
+   * @returns
+   */
+  protected generatePolicyReplacements(policyPath: string): string {
+    // Transform policy document
+    let policyContent: string = JSON.stringify(require(policyPath));
+    policyContent = policyReplacements({
+      content: policyContent,
+      acceleratorPrefix: 'AWSAccelerator',
+      managementAccountAccessRole: this.props.globalConfig.managementAccountAccessRole,
+      partition: this.props.partition,
+      additionalReplacements: {},
+    });
+
+    // Generate unique file path in temporary directory
+    let tempDir: string;
+    if (process.platform === 'win32') {
+      try {
+        fs.accessSync(process.env['Temp']!, fs.constants.W_OK);
+      } catch (e) {
+        Logger.error(`Unable to write files to temp directory: ${e}`);
+      }
+      tempDir = path.join(process.env['Temp']!, 'temp-accelerator-policies');
+    } else {
+      try {
+        fs.accessSync('/tmp', fs.constants.W_OK);
+      } catch (e) {
+        Logger.error(`Unable to write files to temp directory: ${e}`);
+      }
+      tempDir = path.join('/tmp', 'temp-accelerator-policies');
+    }
+    const tempPath = path.join(tempDir, `${uuidv4()}.json`);
+
+    // Write transformed file
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+    fs.writeFileSync(tempPath, policyContent, 'utf-8');
+
+    return tempPath;
   }
 }
