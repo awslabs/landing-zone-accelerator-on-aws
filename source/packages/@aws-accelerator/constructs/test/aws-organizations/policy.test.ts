@@ -12,6 +12,7 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+
 import { Policy, PolicyType } from '../../index';
 import { snapShotTest } from '../snapshot-test';
 
@@ -23,6 +24,7 @@ const stack = new cdk.Stack();
 new Policy(stack, 'Policy', {
   path: '.',
   name: 'TestPolicy',
+  partition: 'aws',
   description: 'Testing Policy construct',
   type: PolicyType.SERVICE_CONTROL_POLICY,
   tags: [
@@ -31,8 +33,6 @@ new Policy(stack, 'Policy', {
   ],
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
-  acceleratorPrefix: 'AWSAccelerator',
-  managementAccountAccessRole: 'AWSControlTowerExecution',
 });
 
 /**

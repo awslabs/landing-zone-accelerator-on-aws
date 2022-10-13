@@ -12,12 +12,12 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
-import * as iam from 'aws-cdk-lib/aws-iam';
 import { EnablePolicyType, Policy, PolicyAttachment, PolicyType, PolicyTypeEnum } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
@@ -117,7 +117,7 @@ export class AccountsStack extends AcceleratorStack {
           const enablePolicyTypeScp = new EnablePolicyType(this, 'enablePolicyTypeScp', {
             policyType: PolicyTypeEnum.SERVICE_CONTROL_POLICY,
             kmsKey: this.cloudwatchKey,
-            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           });
 
           // Deploy SCPs
@@ -127,12 +127,11 @@ export class AccountsStack extends AcceleratorStack {
             const scp = new Policy(this, serviceControlPolicy.name, {
               description: serviceControlPolicy.description,
               name: serviceControlPolicy.name,
-              path: path.join(props.configDirPath, serviceControlPolicy.policy),
+              partition: props.partition,
+              path: this.generatePolicyReplacements(path.join(props.configDirPath, serviceControlPolicy.policy)),
               type: PolicyType.SERVICE_CONTROL_POLICY,
               kmsKey: this.cloudwatchKey,
               logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-              acceleratorPrefix: 'AWSAccelerator',
-              managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
             });
             scp.node.addDependency(enablePolicyTypeScp);
 

@@ -163,18 +163,13 @@ Object {
             "Arn",
           ],
         },
-        "acceleratorPrefix": "AWSAccelerator",
         "bucket": Object {
           "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
         },
         "description": "Testing Policy construct",
         "key": "REPLACED-GENERATED-NAME.zip",
-        "managementAccountAccessRole": "AWSControlTowerExecution",
         "name": "TestPolicy",
-        "partition": Object {
-          "Ref": "AWS::Partition",
-        },
-        "path": ".",
+        "partition": "aws",
         "tags": Array [
           Object {
             "Key": "name",
