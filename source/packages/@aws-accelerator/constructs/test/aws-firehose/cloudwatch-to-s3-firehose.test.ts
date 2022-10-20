@@ -30,9 +30,22 @@ new CloudWatchToS3Firehose(stack, 'CloudWatchToS3Firehose', {
   homeRegion: 'someregion',
 });
 
+new CloudWatchToS3Firehose(stack, 'CloudWatchToS3FirehoseBucketName', {
+  firehoseKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyBucketName', {}),
+  lambdaKey: new cdk.aws_kms.Key(stack, 'CustomLambdaKeyBucketName', {}),
+  kinesisStream: new cdk.aws_kinesis.Stream(stack, 'CustomStreamBucketName', {}),
+  kinesisKmsKey: new cdk.aws_kms.Key(stack, 'CustomKinesisKeyBucketName', {}),
+  bucketName: 'somebucket',
+  dynamicPartitioningValue: '',
+  homeRegion: 'someregion',
+});
 /**
  * CloudWatchDestination construct test
  */
 describe('CloudWatchToS3Firehose', () => {
+  snapShotTest(testNamePrefix, stack);
+});
+
+describe('CloudWatchToS3FirehoseBucketName', () => {
   snapShotTest(testNamePrefix, stack);
 });

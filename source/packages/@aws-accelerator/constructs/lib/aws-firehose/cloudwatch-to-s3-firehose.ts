@@ -88,6 +88,64 @@ export class CloudWatchToS3Firehose extends Construct {
     } else {
       logsStorageBucket = props.bucket!;
     }
+    const glueDatabase = new cdk.aws_glue.CfnDatabase(this, 'FirehoseCloudWatchDb', {
+      catalogId: cdk.Stack.of(this).account,
+      databaseInput: {
+        description: 'Glue database to store AWS Accelerator CloudWatch logs',
+      },
+    });
+
+    const glueTable = new cdk.aws_glue.CfnTable(this, 'FirehoseCloudWatchTable', {
+      catalogId: cdk.Stack.of(this).account,
+      databaseName: glueDatabase.ref,
+      tableInput: {
+        description: 'Glue table to store AWS Accelerator CloudWatch logs',
+        name: 'aws-accelerator-firehose-transformation-table',
+        tableType: 'EXTERNAL_TABLE',
+        storageDescriptor: {
+          // Ref: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/ValidateLogEventFlow.html
+          columns: [
+            {
+              name: 'messagetype',
+              comment:
+                'Data messages use the "DATA_MESSAGE" type. Sometimes CloudWatch Logs may emit Kinesis records with a "CONTROL_MESSAGE" type, mainly for checking if the destination is reachable.',
+              type: 'string',
+            },
+            {
+              name: 'owner',
+              comment: 'The AWS Account ID of the originating log data',
+              type: 'string',
+            },
+            {
+              name: 'loggroup',
+              comment: 'The log group name of the originating log data.',
+              type: 'string',
+            },
+            {
+              name: 'subscriptionfilters',
+              comment:
+                'The list of comma delimited subscription filter names that matched with the originating log data.',
+              type: 'string',
+            },
+            {
+              name: 'logeventsid',
+              comment: 'The ID property is a unique identifier for every log event.',
+              type: 'string',
+            },
+            {
+              name: 'logeventstimestamp',
+              comment: 'Timestamp of the log event',
+              type: 'timestamp',
+            },
+            {
+              name: 'logeventsmessage',
+              comment: 'Actual message of the log event which is in json string',
+              type: 'string',
+            },
+          ],
+        },
+      },
+    });
 
     const firehosePrefixProcessingLambda = new cdk.aws_lambda.Function(this, 'FirehosePrefixProcessingLambda', {
       runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
@@ -134,6 +192,22 @@ export class CloudWatchToS3Firehose extends Construct {
           resources: [
             `${firehosePrefixProcessingLambda.functionArn}:*`,
             `${firehosePrefixProcessingLambda.functionArn}`,
+          ],
+        }),
+        // granting firehose access to glue for record conversion
+        // Ref: https://docs.aws.amazon.com/firehose/latest/dev/controlling-access.html#using-iam-glue
+        new cdk.aws_iam.PolicyStatement({
+          actions: ['glue:GetTable', 'glue:GetTableVersion', 'glue:GetTableVersions'],
+          resources: [
+            `arn:${cdk.Stack.of(this).partition}:glue:${cdk.Stack.of(this).region}:${
+              cdk.Stack.of(this).account
+            }:catalog`,
+            `arn:${cdk.Stack.of(this).partition}:glue:${cdk.Stack.of(this).region}:${
+              cdk.Stack.of(this).account
+            }:database/${glueDatabase.ref}`,
+            `arn:${cdk.Stack.of(this).partition}:glue:${cdk.Stack.of(this).region}:${
+              cdk.Stack.of(this).account
+            }:table/${glueDatabase.ref}/${glueTable.ref}`,
           ],
         }),
       ],
@@ -190,7 +264,7 @@ export class CloudWatchToS3Firehose extends Construct {
         bucketArn: logsStorageBucket.bucketArn,
         bufferingHints: {
           intervalInSeconds: 60,
-          sizeInMBs: 64, // Minimum with dynamic partitioning
+          sizeInMBs: 128, // Maximum possible value
         },
         compressionFormat: 'UNCOMPRESSED',
         roleArn: firehoseServiceRole.roleArn,
@@ -221,6 +295,28 @@ export class CloudWatchToS3Firehose extends Construct {
               ],
             },
           ],
+        },
+        dataFormatConversionConfiguration: {
+          enabled: true,
+          inputFormatConfiguration: {
+            deserializer: {
+              openXJsonSerDe: {
+                caseInsensitive: true,
+              },
+            },
+          },
+          outputFormatConfiguration: {
+            serializer: {
+              parquetSerDe: {
+                compression: 'SNAPPY',
+              },
+            },
+          },
+          schemaConfiguration: {
+            databaseName: glueDatabase.ref,
+            roleArn: firehoseServiceRole.roleArn,
+            tableName: glueTable.ref,
+          },
         },
       },
     });

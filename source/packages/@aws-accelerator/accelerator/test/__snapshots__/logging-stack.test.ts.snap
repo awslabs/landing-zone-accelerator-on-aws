@@ -2031,6 +2031,68 @@ Object {
       },
       "Type": "AWS::S3::BucketPolicy",
     },
+    "FirehoseToS3SetupFirehoseCloudWatchDb3683542E": Object {
+      "Properties": Object {
+        "CatalogId": "333333333333",
+        "DatabaseInput": Object {
+          "Description": "Glue database to store AWS Accelerator CloudWatch logs",
+        },
+      },
+      "Type": "AWS::Glue::Database",
+    },
+    "FirehoseToS3SetupFirehoseCloudWatchTable07CBDE10": Object {
+      "Properties": Object {
+        "CatalogId": "333333333333",
+        "DatabaseName": Object {
+          "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
+        },
+        "TableInput": Object {
+          "Description": "Glue table to store AWS Accelerator CloudWatch logs",
+          "Name": "aws-accelerator-firehose-transformation-table",
+          "StorageDescriptor": Object {
+            "Columns": Array [
+              Object {
+                "Comment": "Data messages use the \\"DATA_MESSAGE\\" type. Sometimes CloudWatch Logs may emit Kinesis records with a \\"CONTROL_MESSAGE\\" type, mainly for checking if the destination is reachable.",
+                "Name": "messagetype",
+                "Type": "string",
+              },
+              Object {
+                "Comment": "The AWS Account ID of the originating log data",
+                "Name": "owner",
+                "Type": "string",
+              },
+              Object {
+                "Comment": "The log group name of the originating log data.",
+                "Name": "loggroup",
+                "Type": "string",
+              },
+              Object {
+                "Comment": "The list of comma delimited subscription filter names that matched with the originating log data.",
+                "Name": "subscriptionfilters",
+                "Type": "string",
+              },
+              Object {
+                "Comment": "The ID property is a unique identifier for every log event.",
+                "Name": "logeventsid",
+                "Type": "string",
+              },
+              Object {
+                "Comment": "Timestamp of the log event",
+                "Name": "logeventstimestamp",
+                "Type": "timestamp",
+              },
+              Object {
+                "Comment": "REPLACED-JSON-PATH.json",
+                "Name": "logeventsmessage",
+                "Type": "string",
+              },
+            ],
+          },
+          "TableType": "EXTERNAL_TABLE",
+        },
+      },
+      "Type": "AWS::Glue::Table",
+    },
     "FirehoseToS3SetupFirehoseKinesisStreamServiceRoleDCF2BF9E": Object {
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
@@ -2298,6 +2360,62 @@ Object {
                     },
                   ],
                 },
+                Object {
+                  "Action": Array [
+                    "glue:GetTable",
+                    "glue:GetTableVersion",
+                    "glue:GetTableVersions",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":glue:us-east-1:333333333333:catalog",
+                        ],
+                      ],
+                    },
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":glue:us-east-1:333333333333:database/",
+                          Object {
+                            "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
+                          },
+                        ],
+                      ],
+                    },
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":glue:us-east-1:333333333333:table/",
+                          Object {
+                            "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
+                          },
+                          "/",
+                          Object {
+                            "Ref": "FirehoseToS3SetupFirehoseCloudWatchTable07CBDE10",
+                          },
+                        ],
+                      ],
+                    },
+                  ],
+                },
               ],
               "Version": "2012-10-17",
             },
@@ -2335,9 +2453,40 @@ Object {
           },
           "BufferingHints": Object {
             "IntervalInSeconds": 60,
-            "SizeInMBs": 64,
+            "SizeInMBs": 128,
           },
           "CompressionFormat": "UNCOMPRESSED",
+          "DataFormatConversionConfiguration": Object {
+            "Enabled": true,
+            "InputFormatConfiguration": Object {
+              "Deserializer": Object {
+                "OpenXJsonSerDe": Object {
+                  "CaseInsensitive": true,
+                },
+              },
+            },
+            "OutputFormatConfiguration": Object {
+              "Serializer": Object {
+                "ParquetSerDe": Object {
+                  "Compression": "SNAPPY",
+                },
+              },
+            },
+            "SchemaConfiguration": Object {
+              "DatabaseName": Object {
+                "Ref": "FirehoseToS3SetupFirehoseCloudWatchDb3683542E",
+              },
+              "RoleARN": Object {
+                "Fn::GetAtt": Array [
+                  "FirehoseToS3SetupFirehoseS3ServiceRole1E95E56A",
+                  "Arn",
+                ],
+              },
+              "TableName": Object {
+                "Ref": "FirehoseToS3SetupFirehoseCloudWatchTable07CBDE10",
+              },
+            },
+          },
           "DynamicPartitioningConfiguration": Object {
             "Enabled": true,
           },
