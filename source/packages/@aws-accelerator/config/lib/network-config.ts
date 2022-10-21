@@ -698,6 +698,7 @@ export class NetworkConfigTypes {
     rulesString: t.optional(t.nonEmptyString),
     statefulRules: t.optional(t.array(this.nfwRuleSourceStatefulRuleConfig)),
     statelessRulesAndCustomActions: t.optional(this.nfwStatelessRulesAndCustomActionsConfig),
+    rulesFile: t.optional(t.nonEmptyString),
   });
 
   static readonly nfwRuleVariableDefinitionConfig = t.interface({
@@ -3331,6 +3332,13 @@ export class NfwRuleSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.n
    * @see {@link NfwStatelessRulesAndCustomActionsConfig}
    */
   readonly statelessRulesAndCustomActions: NfwStatelessRulesAndCustomActionsConfig | undefined = undefined;
+  /**
+   * Suricata rules file.
+   *
+   * @see {@link https://suricata.readthedocs.io/en/suricata-6.0.2/rules/intro.html}
+   *
+   */
+  readonly rulesFile: string | undefined = undefined;
 }
 
 /**
@@ -3962,17 +3970,20 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
         //
         // Get list of Account names from account config file
         this.getAccountNames(configDir, accountNames);
-        //
-        // Prepare Endpoint policy list
-        this.prepareEndpointPolicies(values);
 
         //
         // Prepare Custom domain list
         this.prepareCustomDomainList(values, domainLists);
 
+        //
         // Validate Endpoint policy document file existence
-        this.validateEndpointPolicyDocumentFile(configDir, errors);
+        this.validateEndpointPolicyDocumentFile(values, configDir, errors);
 
+        //
+        // Validate suricata rule file
+        this.validateSuricataFile(values, configDir, errors);
+
+        //
         // Custom domain lists
         this.validateCustomDomainListDocumentFile(configDir, domainLists, errors);
 
@@ -3983,6 +3994,14 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
         //
         // Validate deployment target accounts
         this.validateDeploymentTargetAccountNames(values, accountNames, errors);
+
+        //
+        // Validate resource account name
+        this.validateResourceAccountName(values, accountNames, errors);
+
+        //
+        // Validate transit gateway names in VPC tgw attachments
+        this.validateVpcTgwName(values, errors);
 
         //
         // Validate VPC configurations
@@ -4092,9 +4111,91 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   ) {
     for (const transitGateway of values.transitGateways ?? []) {
       for (const account of transitGateway.shareTargets?.accounts ?? []) {
+        console.log(account);
         if (accountNames.indexOf(account) === -1) {
           errors.push(
             `Deployment target account ${account} for transit gateway ${transitGateway.name} does not exists in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of transit gateway account name
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateTgwAccountName(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const transitGateway of values.transitGateways ?? []) {
+      if (accountNames.indexOf(transitGateway.account) === -1) {
+        errors.push(
+          `Transit Gateway "${transitGateway.name}" account name "${transitGateway.account}" does not exists in accounts-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of vpc account name
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateVpcAccountName(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const vpcItem of values.vpcs ?? []) {
+      if (accountNames.indexOf(vpcItem.account) === -1) {
+        errors.push(
+          `Vpc "${vpcItem.name}" account name "${vpcItem.account}" does not exists in accounts-config.yaml file.`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of vpc transit gateway account name
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateVpcTwgAccountName(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const vpcItem of values.vpcs ?? []) {
+      for (const tgwAttachment of vpcItem.transitGatewayAttachments ?? []) {
+        if (accountNames.indexOf(tgwAttachment.transitGateway.account) === -1) {
+          errors.push(
+            `Vpc "${vpcItem.name}" tgw attachment "${tgwAttachment.transitGateway.name}" account name "${tgwAttachment.transitGateway.account}" does not exists in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of vpc transit gateway names
+   * Make sure that transit gateway is present in network-config file
+   * @param values
+   */
+  private validateVpcTgwName(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>, errors: string[]) {
+    const transitGatewayNames: string[] = [];
+    for (const transitGateway of values.transitGateways) {
+      transitGatewayNames.push(transitGateway.name);
+    }
+
+    for (const vpcItem of values.vpcs ?? []) {
+      for (const tgwAttachment of vpcItem.transitGatewayAttachments ?? []) {
+        if (transitGatewayNames.indexOf(tgwAttachment.transitGateway.name) === -1) {
+          errors.push(
+            `Vpc "${vpcItem.name}" tgw attachment "${tgwAttachment.transitGateway.name}" name "${tgwAttachment.transitGateway.name}" does not exists in network-config.yaml file.`,
           );
         }
       }
@@ -4216,6 +4317,20 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
   }
 
   /**
+   * Function to validate resource account name for network services
+   * @param values
+   */
+  private validateResourceAccountName(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    this.validateTgwAccountName(values, accountNames, errors);
+    this.validateVpcAccountName(values, accountNames, errors);
+    this.validateVpcTwgAccountName(values, accountNames, errors);
+  }
+
+  /**
    * Function to validate Deployment targets account name for network services
    * @param values
    */
@@ -4229,16 +4344,6 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     this.validateVpcTemplatesDeploymentTargetAccounts(values, accountNames, errors);
     this.validateGwlbDeploymentTargetAccounts(values, accountNames, errors);
     this.validateCgwTargetAccounts(values, accountNames, errors);
-  }
-
-  /**
-   * Function to prepare Endpoint policies
-   * @param values
-   */
-  private prepareEndpointPolicies(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
-    for (const policy of values.endpointPolicies ?? []) {
-      this.endpointPolicies.push(policy);
-    }
   }
 
   /**
@@ -4262,10 +4367,48 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Function to validate Endpoint policy document file existence
    * @param configDir
    */
-  private validateEndpointPolicyDocumentFile(configDir: string, errors: string[]) {
-    for (const policy of this.endpointPolicies) {
-      if (!fs.existsSync(path.join(configDir, policy.document))) {
-        errors.push(`Endpoint policy ${policy.name} document file ${policy.document} not found!`);
+  private validateEndpointPolicyDocumentFile(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    configDir: string,
+    errors: string[],
+  ) {
+    for (const policyItem of values.endpointPolicies ?? []) {
+      if (!fs.existsSync(path.join(configDir, policyItem.document))) {
+        errors.push(`Endpoint policy ${policyItem.name} document file ${policyItem.document} not found!`);
+      }
+    }
+  }
+
+  /**
+   * Function to validate Endpoint policy document file existence
+   * @param configDir
+   */
+  private validateSuricataFile(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    configDir: string,
+    errors: string[],
+  ) {
+    for (const rule of values.centralNetworkServices?.networkFirewall?.rules ?? []) {
+      if (rule.ruleGroup?.rulesSource.rulesFile) {
+        if (!fs.existsSync(path.join(configDir, rule.ruleGroup?.rulesSource.rulesFile))) {
+          errors.push(`Suricata rules file ${rule.ruleGroup?.rulesSource.rulesFile} not found !!`);
+        } else {
+          const fileContent = fs.readFileSync(path.join(configDir, rule.ruleGroup?.rulesSource.rulesFile), 'utf8');
+          const rules: string[] = [];
+          // Suricata supported action type list
+          // @link https://suricata.readthedocs.io/en/suricata-6.0.2/rules/intro.html#action
+          const suricataRuleActionType = ['alert', 'pass', 'drop', 'reject', 'rejectsrc', 'rejectdst', 'rejectboth'];
+          fileContent.split(/\r?\n/).forEach(line => {
+            const ruleAction = line.split(' ')[0];
+            if (suricataRuleActionType.includes(ruleAction)) {
+              rules.push(line);
+            }
+          });
+
+          if (rules.length === 0) {
+            errors.push(`No rule definition found in suricata rules file ${rule.ruleGroup?.rulesSource.rulesFile}!!`);
+          }
+        }
       }
     }
   }

@@ -45,6 +45,7 @@ const ruleGroup: NfwRuleGroupRuleConfig = {
     rulesSourceList: undefined,
     statelessRulesAndCustomActions: undefined,
     rulesString: undefined,
+    rulesFile: '../../accelerator/test/configs/all-enabled/firewall-rules/rules.txt',
   },
   ruleVariables: undefined,
   statefulRuleOptions: 'STRICT_ORDER',

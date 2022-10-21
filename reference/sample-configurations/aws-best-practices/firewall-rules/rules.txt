@@ -1,0 +1,16 @@
+#####################################################################################################################
+# List of Suricata compatible Intrusion prevention system (IPS) rules.                                              #
+# Suricata is an open source network IPS that includes a standard rule-based language for traffic inspection.       #
+# Please refer for https://suricata.readthedocs.io/en/suricata-6.0.2/rules/intro.html Suricata rule syntax.         #
+# Invalid rule syntax will cause LZA pipeline failure, please review rule syntax of each line before using.         #
+# This file can have one rule definition per line.
+# A line starts with suricata supported action types (alert, pass, drop, reject, rejectsrc, rejectdst, rejectboth)  #
+# are considered to be rule definition line.                                                                        #
+#####################################################################################################################
+
+
+pass ip 10.1.0.0/16 any -> 10.0.0.0/16 any (sid:100;)
+drop ip any any <> any any (sid:101;)
+alert tcp any any -> 1.1.1.1/32 80 (sid:102;msg:"example message";)
+drop tls $HOME_NET any -> $EXTERNAL_NET any (tls.sni; content:"example.com"; startswith; nocase; endswith; msg:"matching TLS denylisted FQDNs"; priority:1; flow:to_server, established; sid:103; rev:1;)
+drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; startswith; endswith; msg:"matching HTTP denylisted FQDNs"; priority:1; flow:to_server, established; sid:104; rev:1;)
