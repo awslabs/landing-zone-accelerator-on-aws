@@ -39,7 +39,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const allowedPrefixesInitial: string[] = event.ResourceProperties['allowedPrefixes'];
   const directConnectGatewayId: string = event.ResourceProperties['directConnectGatewayId'];
   const dx = new AWS.DirectConnect();
+  const ec2 = new AWS.EC2();
   const gatewayId: string = event.ResourceProperties['gatewayId'];
+  const lambdaClient = new AWS.Lambda();
   let attachmentId: string | undefined = undefined;
 
   switch (event.RequestType) {
@@ -66,61 +68,90 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         );
       }
 
-      // Get attachment ID
-      await validateAssociationState(dx, associationId);
-      attachmentId = await getDxAttachmentId(directConnectGatewayId);
+      // Validate association state
+      if (await validateAssociationState(dx, associationId, 'associated')) {
+        attachmentId = await getDxAttachmentId(ec2, directConnectGatewayId, gatewayId);
+        return {
+          PhysicalResourceId: associationId,
+          Data: {
+            TransitGatewayAttachmentId: attachmentId,
+          },
+          Status: 'SUCCESS',
+        };
+      }
 
-      return {
-        PhysicalResourceId: associationId,
-        Data: {
-          TransitGatewayAttachmentId: attachmentId,
-        },
-        Status: 'SUCCESS',
-      };
+      // Retry Lambda
+      await retryLambda(lambdaClient, event);
+      await sleep(120000);
+      return;
 
     case 'Update':
-      const allowedPrefixesPrevious: string[] = event.OldResourceProperties['allowedPrefixes'];
-      const [addPrefixes, removePrefixes] = getPrefixUpdates(allowedPrefixesInitial, allowedPrefixesPrevious);
-      attachmentId = await getDxAttachmentId(directConnectGatewayId);
-
       // Update association
-      await throttlingBackOff(() =>
-        dx
-          .updateDirectConnectGatewayAssociation({
-            associationId: event.PhysicalResourceId,
-            addAllowedPrefixesToDirectConnectGateway: addPrefixes,
-            removeAllowedPrefixesToDirectConnectGateway: removePrefixes,
-          })
-          .promise(),
-      );
+      if (!(await inProgress(dx, event.PhysicalResourceId))) {
+        const allowedPrefixesPrevious: string[] = event.OldResourceProperties['allowedPrefixes'];
+        const [addPrefixes, removePrefixes] = getPrefixUpdates(allowedPrefixesInitial, allowedPrefixesPrevious);
 
-      return {
-        PhysicalResourceId: event.PhysicalResourceId,
-        Data: {
-          TransitGatewayAttachmentId: attachmentId,
-        },
-        Status: 'SUCCESS',
-      };
+        await throttlingBackOff(() =>
+          dx
+            .updateDirectConnectGatewayAssociation({
+              associationId: event.PhysicalResourceId,
+              addAllowedPrefixesToDirectConnectGateway: addPrefixes,
+              removeAllowedPrefixesToDirectConnectGateway: removePrefixes,
+            })
+            .promise(),
+        );
+      }
+
+      if (await validateAssociationState(dx, event.PhysicalResourceId, 'associated')) {
+        attachmentId = await getDxAttachmentId(ec2, directConnectGatewayId, gatewayId);
+        return {
+          PhysicalResourceId: event.PhysicalResourceId,
+          Data: {
+            TransitGatewayAttachmentId: attachmentId,
+          },
+          Status: 'SUCCESS',
+        };
+      }
+
+      // Retry Lambda
+      await retryLambda(lambdaClient, event);
+      await sleep(120000);
+      return;
 
     case 'Delete':
-      await throttlingBackOff(() =>
-        dx.deleteDirectConnectGatewayAssociation({ associationId: event.PhysicalResourceId }).promise(),
-      );
+      if (!(await inProgress(dx, event.PhysicalResourceId))) {
+        await throttlingBackOff(() =>
+          dx.deleteDirectConnectGatewayAssociation({ associationId: event.PhysicalResourceId }).promise(),
+        );
+      }
 
-      return {
-        PhysicalResourceId: event.PhysicalResourceId,
-        Status: 'SUCCESS',
-      };
+      if (await validateAssociationState(dx, event.PhysicalResourceId, 'disassociated')) {
+        return {
+          PhysicalResourceId: event.PhysicalResourceId,
+          Status: 'SUCCESS',
+        };
+      }
+
+      // Retry Lambda
+      await retryLambda(lambdaClient, event);
+      await sleep(120000);
+      return;
   }
 }
 
 /**
  * Validate the gateway association state is `associated`
+ * or `disassociated`
  * @param dx
  * @param associationId
+ * @param expectedState
  */
-async function validateAssociationState(dx: AWS.DirectConnect, associationId: string): Promise<void> {
-  let state: string | undefined;
+async function validateAssociationState(
+  dx: AWS.DirectConnect,
+  associationId: string,
+  expectedState: string,
+): Promise<boolean> {
+  let currentState: string | undefined;
   let retries = 0;
 
   // Describe gateway association until it is in the expected state
@@ -131,18 +162,25 @@ async function validateAssociationState(dx: AWS.DirectConnect, associationId: st
     if (!response.directConnectGatewayAssociations) {
       throw new Error(`Unable to retrieve gateway association ${associationId}`);
     }
-    // Determine association state
-    state = response.directConnectGatewayAssociations[0].associationState;
-    if (state !== 'associated') {
-      await sleep(30000);
+
+    // Check case where association ID is removed from the list during deletion
+    if (expectedState === 'disassociated' && response.directConnectGatewayAssociations.length === 0) {
+      return true;
     }
 
-    // Increase retry index
-    retries += 1;
-    if (retries > 28) {
-      throw new Error(`Gateway association ${associationId} did not complete within the expected time interval.`);
+    // Determine association state
+    currentState = response.directConnectGatewayAssociations[0].associationState;
+    if (currentState !== expectedState) {
+      await sleep(60000);
     }
-  } while (state !== 'associated');
+
+    // Increase retry index until timeout nears
+    retries += 1;
+    if (retries > 13) {
+      return false;
+    }
+  } while (currentState !== expectedState);
+  return true;
 }
 
 /**
@@ -150,8 +188,7 @@ async function validateAssociationState(dx: AWS.DirectConnect, associationId: st
  * @param directConnectGatewayId
  * @returns
  */
-async function getDxAttachmentId(directConnectGatewayId: string): Promise<string> {
-  const ec2 = new AWS.EC2();
+async function getDxAttachmentId(ec2: AWS.EC2, directConnectGatewayId: string, gatewayId: string): Promise<string> {
   let nextToken: string | undefined = undefined;
   let attachmentId: string | undefined = undefined;
 
@@ -160,7 +197,10 @@ async function getDxAttachmentId(directConnectGatewayId: string): Promise<string
     const page = await throttlingBackOff(() =>
       ec2
         .describeTransitGatewayAttachments({
-          Filters: [{ Name: 'resource-id', Values: [directConnectGatewayId] }],
+          Filters: [
+            { Name: 'resource-id', Values: [directConnectGatewayId] },
+            { Name: 'transit-gateway-id', Values: [gatewayId] },
+          ],
           NextToken: nextToken,
         })
         .promise(),
@@ -210,6 +250,64 @@ function getPrefixUpdates(
   return [addPrefixes, removePrefixes];
 }
 
+/**
+ * Re-invoke the Lambda function if the timeout is close to being reached
+ * @param lambdaClient
+ * @param event
+ */
+async function retryLambda(
+  lambdaClient: AWS.Lambda,
+  event: AWSLambda.CloudFormationCustomResourceEvent,
+): Promise<void> {
+  // Add retry attempt to event
+  if (!event.ResourceProperties['retryAttempt']) {
+    event.ResourceProperties['retryAttempt'] = 0;
+  }
+  event.ResourceProperties['retryAttempt'] += 1;
+
+  // Throw error for max number of retries
+  if (event.ResourceProperties['retryAttempt'] > 3) {
+    throw new Error(
+      `Exceeded maximum number of retries. Please check the Direct Connect console for the status of your gateway association.`,
+    );
+  }
+
+  // Invoke Lambda
+  await throttlingBackOff(() =>
+    lambdaClient
+      .invoke({ FunctionName: event.ServiceToken, InvocationType: 'Event', Payload: JSON.stringify(event) })
+      .promise(),
+  );
+}
+
+/**
+ * Check if a mutating action is in progress
+ * @param dx
+ * @param associationId
+ * @returns
+ */
+async function inProgress(dx: AWS.DirectConnect, associationId: string): Promise<boolean> {
+  const response = await throttlingBackOff(() =>
+    dx.describeDirectConnectGatewayAssociations({ associationId }).promise(),
+  );
+
+  if (!response.directConnectGatewayAssociations) {
+    throw new Error(`Unable to retrieve gateway association ${associationId}`);
+  }
+  if (
+    response.directConnectGatewayAssociations.length === 0 ||
+    ['associated', 'disassociated'].includes(response.directConnectGatewayAssociations[0].associationState!)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Sleep for a specified number of milliseconds
+ * @param ms
+ * @returns
+ */
 async function sleep(ms: number) {
   return new Promise(f => setTimeout(f, ms));
 }

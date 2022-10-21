@@ -87,6 +87,33 @@ Object {
                   "Resource": "*",
                   "Sid": "DirectConnectGatewayCRUD",
                 },
+                Object {
+                  "Action": Array [
+                    "lambda:InvokeFunction",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":lambda:",
+                        Object {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":function:AWSAccelerator-NetworkAss-CustomDirectConnect*",
+                      ],
+                    ],
+                  },
+                  "Sid": "InvokeSelf",
+                },
               ],
               "Version": "2012-10-17",
             },
