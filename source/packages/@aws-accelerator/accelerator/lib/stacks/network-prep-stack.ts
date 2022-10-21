@@ -790,9 +790,9 @@ export class NetworkPrepStack extends AcceleratorStack {
       const centralLogsBucket = cdk.aws_s3.Bucket.fromBucketName(
         this,
         'CentralLogsBucket',
-        `aws-accelerator-central-logs-${this.accountsConfig.getLogArchiveAccountId()}-${
-          this.props.globalConfig.homeRegion
-        }`,
+        `${
+          AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+        }-${this.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
       );
 
       const s3QueryLogConfig = new QueryLoggingConfig(this, pascalCase(`${logItem.name}S3QueryLogConfig`), {

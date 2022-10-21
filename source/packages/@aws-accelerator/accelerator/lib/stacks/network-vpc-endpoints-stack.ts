@@ -21,7 +21,6 @@ import * as path from 'path';
 import {
   AccountsConfig,
   GatewayEndpointServiceConfig,
-  GlobalConfig,
   InterfaceEndpointServiceConfig,
   NfwFirewallConfig,
   ResolverEndpointConfig,
@@ -44,7 +43,6 @@ import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 export class NetworkVpcEndpointsStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.Key;
   private accountsConfig: AccountsConfig;
-  private globalConfig: GlobalConfig;
   private logRetention: number;
   private nfwPolicyMap: Map<string, string>;
 
@@ -53,7 +51,6 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
 
     // Set private properties
     this.accountsConfig = props.accountsConfig;
-    this.globalConfig = props.globalConfig;
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
@@ -115,7 +112,9 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     const firewallLogBucket = cdk.aws_s3.Bucket.fromBucketName(
       this,
       'FirewallLogsBucket',
-      `aws-accelerator-central-logs-${this.accountsConfig.getLogArchiveAccountId()}-${this.globalConfig.homeRegion}`,
+      `${
+        AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+      }-${this.accountsConfig.getLogArchiveAccountId()}-${props.centralizedLoggingRegion}`,
     );
     for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
       // Get account IDs
@@ -333,6 +332,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         destinationConfigs.push({
           logDestination: {
             bucketName: firewallLogBucket.bucketName,
+            prefix: 'firewall',
           },
           logDestinationType: 'S3',
           logType: logItem.type,

@@ -57,7 +57,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
     this.centralLogsBucketName = `${
       AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
-    }-${props.accountsConfig.getLogArchiveAccountId()}-${props.globalConfig.homeRegion}`;
+    }-${props.accountsConfig.getLogArchiveAccountId()}-${props.centralizedLoggingRegion}`;
 
     this.s3Key = new KeyLookup(this, 'AcceleratorS3Key', {
       accountId: props.accountsConfig.getAuditAccountId(),
@@ -77,7 +77,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
     this.centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
       accountId: props.accountsConfig.getLogArchiveAccountId(),
-      keyRegion: props.globalConfig.homeRegion,
+      keyRegion: props.centralizedLoggingRegion,
       roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
       keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,

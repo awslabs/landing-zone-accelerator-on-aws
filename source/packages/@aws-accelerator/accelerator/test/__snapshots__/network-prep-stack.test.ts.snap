@@ -191,7 +191,7 @@ Object {
               Object {
                 "Ref": "AWS::Partition",
               },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-east-1",
+              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
             ],
           ],
         },

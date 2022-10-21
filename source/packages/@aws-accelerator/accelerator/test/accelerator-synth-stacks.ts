@@ -26,10 +26,7 @@ import {
 
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import {
-  AcceleratorStack,
-  AcceleratorStackProps,
-} from '../lib/stacks/accelerator-stack';
+import { AcceleratorStack, AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
 import { BootstrapStack } from '../lib/stacks/bootstrap-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
@@ -73,15 +70,18 @@ export class AcceleratorSynthStacks {
     });
     this.configDirPath = this.app.node.tryGetContext('config-dir');
 
+    const globalConfig = GlobalConfig.load(this.configDirPath);
+
     this.props = {
       configDirPath: this.configDirPath,
       accountsConfig: AccountsConfig.load(this.configDirPath),
-      globalConfig: GlobalConfig.load(this.configDirPath),
+      globalConfig,
       iamConfig: IamConfig.load(this.configDirPath),
       networkConfig: NetworkConfig.load(this.configDirPath),
       organizationConfig: OrganizationConfig.load(this.configDirPath),
       securityConfig: SecurityConfig.load(this.configDirPath),
       partition: this.partition,
+      centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
     };
 
     this.homeRegion = this.props.globalConfig.homeRegion;

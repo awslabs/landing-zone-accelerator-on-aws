@@ -291,7 +291,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
       if (this.props.securityConfig.awsConfig.enableDeliveryChannel) {
         new config.CfnDeliveryChannel(this, 'ConfigDeliveryChannel', {
-          s3BucketName: `${AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX}-${this.logArchiveAccountId}-${this.props.globalConfig.homeRegion}`,
+          s3BucketName: `${AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
           configSnapshotDeliveryProperties: {
             deliveryFrequency: 'One_Hour',
           },
@@ -931,7 +931,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
       ) {
         const centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
           accountId: this.props.accountsConfig.getLogArchiveAccountId(),
-          keyRegion: this.props.globalConfig.homeRegion,
+          keyRegion: this.props.centralizedLoggingRegion,
           roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
           keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
@@ -940,7 +940,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         new SsmSessionManagerSettings(this, 'SsmSessionManagerSettings', {
           s3BucketName: `${
             AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
-          }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.globalConfig.homeRegion}`,
+          }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
           s3KeyPrefix: `session/${cdk.Aws.ACCOUNT_ID}/${cdk.Stack.of(this).region}`,
           s3BucketKeyArn: centralLogsBucketKey.keyArn,
           sendToCloudWatchLogs: this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
@@ -1057,9 +1057,9 @@ export class SecurityResourcesStack extends AcceleratorStack {
         bucket: cdk.aws_s3.Bucket.fromBucketName(
           this,
           'CloudTrailLogBucket',
-          `aws-accelerator-cloudtrail-${this.stackProperties.accountsConfig.getAuditAccountId()}-${
-            cdk.Stack.of(this).region
-          }`,
+          `${
+            AcceleratorStack.ACCELERATOR_CLOUDTRAIL_BUCKET_NAME_PREFIX
+          }-${this.stackProperties.accountsConfig.getAuditAccountId()}-${cdk.Stack.of(this).region}`,
         ),
         s3KeyPrefix: `cloudtrail-${accountTrail.name}`,
         cloudWatchLogGroup: accountTrailCloudWatchLogGroup,
