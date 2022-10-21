@@ -146,6 +146,25 @@ transitGateways:
 #           organizationalUnits:
 #             - Infrastructure
 #     rules:
+#        - name: accelerator-suricata-rule-group
+#        regions:
+#          - *HOME_REGION
+#        capacity: 100
+#        type: STATEFUL
+#        ruleGroup:
+#          rulesSource:
+#            rulesFile: firewall-rules/rules.txt
+#          ruleVariables:
+#            ipSets:
+#              name: HOME_NET
+#              definition:
+#                - 10.0.0.0/16
+#                - 10.1.0.0/16
+#            portSets:
+#              name: HOME_NET
+#              definition:
+#                - '80'
+#                - '443'
 #       - name: accelerator-rule-group
 #         regions:
 #           - *HOME_REGION
@@ -750,8 +769,10 @@ vpcFlowLogs:
   trafficType: ALL
   maxAggregationInterval: 600
   destinations:
-    - s3
     - cloud-watch-logs
+  destinationsConfig:
+    cloudWatchLogs:
+      retentionInDays: 30
   defaultFormat: false
   customFields:
     - version

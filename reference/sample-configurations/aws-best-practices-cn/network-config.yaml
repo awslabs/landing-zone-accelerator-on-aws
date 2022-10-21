@@ -423,8 +423,10 @@ vpcFlowLogs:
   trafficType: ALL
   maxAggregationInterval: 600
   destinations:
-    - s3
     - cloud-watch-logs
+  destinationsConfig:
+    cloudWatchLogs:
+      retentionInDays: 30
   defaultFormat: false
   customFields:
     - version

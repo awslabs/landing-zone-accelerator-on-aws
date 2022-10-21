@@ -17,6 +17,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import * as fs from 'fs';
 
 import {
   AccountsConfig,
@@ -27,6 +28,7 @@ import {
   IpamConfig,
   NfwFirewallPolicyConfig,
   NfwRuleGroupConfig,
+  NfwRuleGroupRuleConfig,
   TransitGatewayConfig,
   VpnConnectionConfig,
 } from '@aws-accelerator/config';
@@ -843,6 +845,31 @@ export class NetworkPrepStack extends AcceleratorStack {
   }
 
   /**
+   * Function to read suricata rule file and get rule definition
+   * @param fileName
+   * @param fileContent
+   * @returns
+   */
+  private getSuricataRules(fileName: string, fileContent: string): string {
+    const rules: string[] = [];
+    // Suricata supported action type list
+    // @link https://suricata.readthedocs.io/en/suricata-6.0.2/rules/intro.html#action
+    const suricataRuleActionType = ['alert', 'pass', 'drop', 'reject', 'rejectsrc', 'rejectdst', 'rejectboth'];
+    fileContent.split(/\r?\n/).forEach(line => {
+      const ruleAction = line.split(' ')[0];
+      if (suricataRuleActionType.includes(ruleAction)) {
+        rules.push(line);
+      }
+    });
+
+    if (rules.length > 0) {
+      return rules.join('\n');
+    } else {
+      throw new Error(`[network-prep-stack] No rule definition found in suricata rules file ${fileName}`);
+    }
+  }
+
+  /**
    * Create AWS Network Firewall rule group
    * @param accountId
    * @param ruleItem
@@ -855,12 +882,34 @@ export class NetworkPrepStack extends AcceleratorStack {
     // Create regional rule groups in the delegated admin account
     if (accountId === cdk.Stack.of(this).account && regions.includes(cdk.Stack.of(this).region)) {
       Logger.info(`[network-prep-stack] Create network firewall rule group ${ruleItem.name}`);
+      let nfwRuleGroupRuleConfig: NfwRuleGroupRuleConfig | undefined;
+
+      //
+      // When suricata rule files used
+      if (ruleItem.ruleGroup?.rulesSource.rulesFile) {
+        nfwRuleGroupRuleConfig = {
+          rulesSource: {
+            rulesString: this.getSuricataRules(
+              ruleItem.ruleGroup?.rulesSource.rulesFile,
+              fs.readFileSync(path.join(this.props.configDirPath, ruleItem.ruleGroup?.rulesSource.rulesFile), 'utf8'),
+            ),
+            rulesSourceList: undefined,
+            statefulRules: undefined,
+            statelessRulesAndCustomActions: undefined,
+            rulesFile: undefined,
+          },
+          ruleVariables: ruleItem.ruleGroup?.ruleVariables,
+          statefulRuleOptions: undefined,
+        };
+      } else {
+        nfwRuleGroupRuleConfig = ruleItem.ruleGroup;
+      }
       const rule = new NetworkFirewallRuleGroup(this, pascalCase(`${ruleItem.name}NetworkFirewallRuleGroup`), {
         capacity: ruleItem.capacity,
         name: ruleItem.name,
         type: ruleItem.type,
         description: ruleItem.description,
-        ruleGroup: ruleItem.ruleGroup,
+        ruleGroup: nfwRuleGroupRuleConfig,
         tags: ruleItem.tags ?? [],
       });
       this.nfwRuleMap.set(ruleItem.name, rule.groupArn);
