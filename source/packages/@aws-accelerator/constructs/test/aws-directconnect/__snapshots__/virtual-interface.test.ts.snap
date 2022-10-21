@@ -173,6 +173,7 @@ Object {
                     "directconnect:CreatePrivateVirtualInterface",
                     "directconnect:CreateTransitVirtualInterface",
                     "directconnect:DeleteVirtualInterface",
+                    "directconnect:DescribeVirtualInterfaces",
                     "directconnect:TagResource",
                     "directconnect:UntagResource",
                     "directconnect:UpdateVirtualInterfaceAttributes",
@@ -180,6 +181,33 @@ Object {
                   "Effect": "Allow",
                   "Resource": "*",
                   "Sid": "DxVirtualInterfaceCRUD",
+                },
+                Object {
+                  "Action": Array [
+                    "lambda:InvokeFunction",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":lambda:",
+                        Object {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":function:AWSAccelerator-NetworkPre-CustomDirectConnect*",
+                      ],
+                    ],
+                  },
+                  "Sid": "InvokeSelf",
                 },
               ],
               "Version": "2012-10-17",
