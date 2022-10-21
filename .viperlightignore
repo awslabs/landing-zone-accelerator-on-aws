@@ -57,7 +57,7 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:56
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:57
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:455
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:485
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:500
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:506
 
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:57
 
@@ -74,12 +74,16 @@ source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1
 source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1492
 source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1637
 
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1138
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1147
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1157
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1166
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1175
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1184
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1231
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1240
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1250
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1259
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1268
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1277
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1918
+
+
+
 
 source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:68
 source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:82
