@@ -132,7 +132,7 @@ Object {
         "invokingRegion": "us-east-1",
         "parameterAccountID": "333333333333",
         "parameterName": "/accelerator/logging/central-bucket/kms/arn",
-        "parameterRegion": "us-east-1",
+        "parameterRegion": "us-west-2",
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::SsmGetParameterValue",
@@ -2060,7 +2060,7 @@ Object {
               Object {
                 "Ref": "AWS::Partition",
               },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-east-1",
+              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
             ],
           ],
         },
@@ -2070,7 +2070,7 @@ Object {
         "prefix": "",
         "replicationRoleArn": Object {
           "Fn::GetAtt": Array [
-            "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRole2AB02841",
+            "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole125103F9",
             "Arn",
           ],
         },
@@ -2081,7 +2081,7 @@ Object {
       "Type": "Custom::S3PutBucketReplication",
       "UpdateReplacePolicy": "Delete",
     },
-    "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRole2AB02841": Object {
+    "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole125103F9": Object {
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
           "Statement": Array [
@@ -2099,7 +2099,7 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRoleDefaultPolicy33BD9814": Object {
+    "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy390C828B": Object {
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [
@@ -2170,7 +2170,7 @@ Object {
                     Object {
                       "Ref": "AWS::Partition",
                     },
-                    ":s3:::aws-accelerator-central-logs-333333333333-us-east-1/*",
+                    ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
                   ],
                 ],
               },
@@ -2185,10 +2185,10 @@ Object {
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRoleDefaultPolicy33BD9814",
+        "PolicyName": "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy390C828B",
         "Roles": Array [
           Object {
-            "Ref": "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRole2AB02841",
+            "Ref": "ReportBucketReportBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole125103F9",
           },
         ],
       },

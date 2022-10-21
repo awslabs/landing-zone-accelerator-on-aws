@@ -52,7 +52,7 @@ export class LoggingStack extends AcceleratorStack {
 
     this.centralLogsBucketName = `${
       AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
-    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.globalConfig.homeRegion}`;
+    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
 
     // Set Organization ID
     this.setOrganizationId();
@@ -188,14 +188,14 @@ export class LoggingStack extends AcceleratorStack {
     this.createCentralLogsBucket(serverAccessLogsBucket);
 
     //
-    // When home region central log bucket will be present to get key arn, custom resource will not be needed to get key arn from ssm parameter
+    // For stacks in CentralLogs bucket region, bucket will be present to get key arn, custom resource will not be needed to get key arn from ssm parameter
 
     if (this.centralLogsBucket) {
       this.centralLogBucketKey = this.centralLogsBucket.getS3Bucket().getKey();
     } else {
       this.centralLogBucketKey = new KeyLookup(this, 'AcceleratorCentralLogBucketKeyLookup', {
         accountId: this.props.accountsConfig.getLogArchiveAccountId(),
-        keyRegion: this.props.globalConfig.homeRegion,
+        keyRegion: this.props.centralizedLoggingRegion,
         roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
         keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
         kmsKey: this.cloudwatchKey,
@@ -909,7 +909,7 @@ export class LoggingStack extends AcceleratorStack {
    */
   private createCentralLogsBucket(serverAccessLogsBucket: Bucket) {
     if (
-      cdk.Stack.of(this).region === this.props.globalConfig.homeRegion &&
+      cdk.Stack.of(this).region === this.props.centralizedLoggingRegion &&
       cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId()
     ) {
       const awsPrincipalAccesses: { name: string; principal: string; accessType: string }[] = [];

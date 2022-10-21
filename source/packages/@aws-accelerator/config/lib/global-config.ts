@@ -80,6 +80,7 @@ export abstract class GlobalConfigTypes {
 
   static readonly loggingConfig = t.interface({
     account: t.nonEmptyString,
+    centralizedLoggingRegion: t.optional(t.nonEmptyString),
     cloudtrail: GlobalConfigTypes.cloudTrailConfig,
     sessionManager: GlobalConfigTypes.sessionManagerConfig,
     accessLogBucket: t.optional(GlobalConfigTypes.accessLogBucketConfig),
@@ -357,6 +358,12 @@ export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingC
    * This account maintains consolidated logs.
    */
   readonly account = 'LogArchive';
+  /**
+   * Accelerator central logs bucket region name.
+   * Accelerator use CentralLogs bucket to store various log files, Accelerator created buckets and CWL replicates to CentralLogs bucket.
+   * CentralLogs bucket region is optional, when not provided this bucket will be created in Accelerator home region.
+   */
+  readonly centralizedLoggingRegion: undefined | string = undefined;
   /**
    * CloudTrail logging configuration
    */
@@ -834,6 +841,10 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         //
         this.validateLoggingAccountName(values, accountNames, errors);
         //
+        // Validate CentralLogs bucket region name
+        //
+        this.validateCentralLogsBucketRegionName(values, errors);
+        //
         // Validate budget deployment target OU
         //
         this.validateBudgetDeploymentTargetOUs(values, ouIdNames, errors);
@@ -920,6 +931,30 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     if (accountNames.indexOf(values.logging.account) === -1) {
       errors.push(
         `Deployment target account ${values.logging.account} for logging does not exists in accounts-config.yaml file.`,
+      );
+    }
+  }
+
+  /**
+   * Function to validate existence of central logs bucket region in enabled region list
+   * CentralLogs bucket region name must part of pipeline enabled region
+   * @param values
+   * @param errors
+   */
+  private validateCentralLogsBucketRegionName(
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    errors: string[],
+  ) {
+    if (values.logging.centralizedLoggingRegion) {
+      for (const region of this.enabledRegions) {
+        if (region === values.logging.centralizedLoggingRegion) {
+          return;
+        }
+      }
+      errors.push(
+        `CentralLogs bucket region name ${
+          values.logging.centralizedLoggingRegion
+        } not part of pipeline enabled regions [${this.enabledRegions.toString()}].`,
       );
     }
   }

@@ -25,7 +25,7 @@ Object {
             "Arn",
           ],
         },
-        "bucketName": "aws-accelerator-central-logs-333333333333-us-east-1",
+        "bucketName": "aws-accelerator-central-logs-333333333333-us-west-2",
         "keyPrefix": "macie/111111111111/",
         "kmsKeyArn": Object {
           "Ref": "CentralLogsBucketKeyLookup52CD8A37",
@@ -63,7 +63,7 @@ Object {
         "invokingRegion": "us-east-1",
         "parameterAccountID": "333333333333",
         "parameterName": "/accelerator/logging/central-bucket/kms/arn",
-        "parameterRegion": "us-east-1",
+        "parameterRegion": "us-west-2",
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::SsmGetParameterValue",
@@ -704,7 +704,7 @@ Object {
               Object {
                 "Ref": "AWS::Partition",
               },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-east-1",
+              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
             ],
           ],
         },

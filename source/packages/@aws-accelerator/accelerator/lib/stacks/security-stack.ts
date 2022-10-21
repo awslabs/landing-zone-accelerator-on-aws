@@ -49,11 +49,11 @@ export class SecurityStack extends AcceleratorStack {
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
     this.centralLogsBucketName = `${
       AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
-    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.globalConfig.homeRegion}`;
+    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
 
     this.centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
       accountId: props.accountsConfig.getLogArchiveAccountId(),
-      keyRegion: props.globalConfig.homeRegion,
+      keyRegion: props.centralizedLoggingRegion,
       roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
       keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,

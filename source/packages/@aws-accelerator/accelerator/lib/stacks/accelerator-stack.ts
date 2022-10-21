@@ -74,6 +74,7 @@ export interface AcceleratorStackProps extends cdk.StackProps {
   readonly qualifier?: string;
   readonly configCommitId?: string;
   readonly globalRegion?: string;
+  readonly centralizedLoggingRegion: string;
 }
 
 export abstract class AcceleratorStack extends cdk.Stack {
