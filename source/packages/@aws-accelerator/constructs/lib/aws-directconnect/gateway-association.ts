@@ -93,6 +93,12 @@ export class DirectConnectGatewayAssociation extends cdk.Resource implements IDi
           ],
           Resource: '*',
         },
+        {
+          Sid: 'InvokeSelf',
+          Effect: 'Allow',
+          Action: ['lambda:InvokeFunction'],
+          Resource: `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:AWSAccelerator-NetworkAss-CustomDirectConnect*`,
+        },
       ];
     }
 

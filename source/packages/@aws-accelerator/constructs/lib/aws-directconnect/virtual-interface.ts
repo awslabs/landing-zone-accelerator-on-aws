@@ -141,11 +141,18 @@ export class VirtualInterface extends cdk.Resource implements IVirtualInterface 
             'directconnect:CreatePrivateVirtualInterface',
             'directconnect:CreateTransitVirtualInterface',
             'directconnect:DeleteVirtualInterface',
+            'directconnect:DescribeVirtualInterfaces',
             'directconnect:TagResource',
             'directconnect:UntagResource',
             'directconnect:UpdateVirtualInterfaceAttributes',
           ],
           Resource: '*',
+        },
+        {
+          Sid: 'InvokeSelf',
+          Effect: 'Allow',
+          Action: ['lambda:InvokeFunction'],
+          Resource: `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:AWSAccelerator-NetworkPre-CustomDirectConnect*`,
         },
       ];
     }
@@ -154,6 +161,7 @@ export class VirtualInterface extends cdk.Resource implements IVirtualInterface 
       codeDirectory,
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
       policyStatements,
+      timeout: cdk.Duration.minutes(15),
     });
 
     const resource = new cdk.CustomResource(this, 'Resource', {
