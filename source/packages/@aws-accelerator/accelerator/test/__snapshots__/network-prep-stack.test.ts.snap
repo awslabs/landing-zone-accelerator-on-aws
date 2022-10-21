@@ -298,6 +298,47 @@ Object {
       },
       "Type": "AWS::NetworkFirewall::RuleGroup",
     },
+    "AcceleratorSuricataRuleGroupNetworkFirewallRuleGroup7657B52C": Object {
+      "Properties": Object {
+        "Capacity": 100,
+        "RuleGroup": Object {
+          "RuleVariables": Object {
+            "IPSets": Object {
+              "HOME_NET": Object {
+                "Definition": Array [
+                  "10.0.0.0/16",
+                  "10.1.0.0/16",
+                ],
+              },
+            },
+            "PortSets": Object {
+              "HOME_NET": Object {
+                "Definition": Array [
+                  "80",
+                  "443",
+                ],
+              },
+            },
+          },
+          "RulesSource": Object {
+            "RulesString": "pass ip 10.1.0.0/16 any -> 10.0.0.0/16 any (sid:100;)
+drop ip any any <> any any (sid:101;)
+alert tcp any any -> 1.1.1.1/32 80 (sid:102;msg:\\"example message\\";)
+drop tls $HOME_NET any -> $EXTERNAL_NET any (tls.sni; content:\\"example.com\\"; startswith; nocase; endswith; msg:\\"matching TLS denylisted FQDNs\\"; priority:1; flow:to_server, established; sid:103; rev:1;)
+drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:\\"example.com\\"; startswith; endswith; msg:\\"matching HTTP denylisted FQDNs\\"; priority:1; flow:to_server, established; sid:104; rev:1;)",
+          },
+        },
+        "RuleGroupName": "accelerator-suricata-rule-group",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "accelerator-suricata-rule-group",
+          },
+        ],
+        "Type": "STATEFUL",
+      },
+      "Type": "AWS::NetworkFirewall::RuleGroup",
+    },
     "AcceleratorVpnVpnConnection4C6D9196": Object {
       "Properties": Object {
         "CustomerGatewayId": Object {
@@ -1210,6 +1251,16 @@ Object {
         "Type": "String",
         "Value": Object {
           "Ref": "AcceleratorRuleGroupNetworkFirewallRuleGroup3B409F78",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-suricata-rule-group/arn",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "AcceleratorSuricataRuleGroupNetworkFirewallRuleGroup7657B52C",
         },
       },
       "Type": "AWS::SSM::Parameter",
