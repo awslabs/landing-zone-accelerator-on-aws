@@ -1,0 +1,184 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ValidateScpCount Construct(ValidateScpCount):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CustomKey1E6D0D07": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomValidateScpCountCustomResourceProviderHandlerEE8CD0C0": Object {
+      "DependsOn": Array [
+        "CustomValidateScpCountCustomResourceProviderRole6657C548",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomValidateScpCountCustomResourceProviderRole6657C548",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomValidateScpCountCustomResourceProviderLogGroup79E9A7D0": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomValidateScpCountCustomResourceProviderHandlerEE8CD0C0",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomValidateScpCountCustomResourceProviderRole6657C548": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:DescribeOrganization",
+                    "organizations:ListRoots",
+                    "organizations:ListPoliciesForTarget",
+                    "organizations:ListTargetsForPolicy",
+                    "organizations:DescribePolicy",
+                    "organizations:DescribeAccount",
+                    "organizations:ListPolicies",
+                    "organizations:ListAccountsForParent",
+                    "organizations:ListAccounts",
+                    "organizations:DescribeOrganizationalUnit",
+                    "organizations:ListParents",
+                    "organizations:ListOrganizationalUnitsForParent",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateScpCount271EA5CB": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomValidateScpCountCustomResourceProviderLogGroup79E9A7D0",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomValidateScpCountCustomResourceProviderHandlerEE8CD0C0",
+            "Arn",
+          ],
+        },
+        "accounts": Array [
+          Object {
+            "accountId": "000000000000",
+            "name": "Admin",
+          },
+        ],
+        "organizationUnits": Array [
+          Object {
+            "id": "o-1234567",
+            "name": "batman",
+          },
+        ],
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "scps": Array [
+          Object {
+            "appliedScpName": Array [
+              "JusticeLeague",
+              "Gotham",
+            ],
+            "orgEntity": "Test",
+            "orgEntityId": "o-1234567",
+            "orgEntityType": "OU",
+          },
+        ],
+      },
+      "Type": "Custom::ValidateScpCount",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;
