@@ -7,11 +7,17 @@ Please read through this document before submitting any issues or pull requests 
 information to effectively respond to your bug report or contribution.
 
 
+## Project Governance
+
+The Landing Zone Accelerator on AWS will use GitHub [Issues](https://docs.github.com/en/github/managing-your-work-on-github/creating-an-issue) and [Pull Request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request) mechanisms for community engagement. AWS employees, AWS partners, customers and the general public, can create Issue(s) for the repo, such as: bugs, feature requests, or questions on the code itself. You should not communicate [security](#security-issue-notifications) issues through GitHub.
+
+Stakeholders are also encouraged to create Pull Requests that could potentially address issues or add functionality. Stakeholders can also express sentiments on issues such as upvote/downvote in order to influence prioritization. The Product Manager, working with all stakeholders, will use a GitHub Kanban board to publicly document the ongoing project work and prioritization using the available feedback.
+
 ## Reporting Bugs/Feature Requests
 
 We welcome you to use the GitHub issue tracker to report bugs or suggest features.
 
-When filing an issue, please check [existing open](https://github.com/awslabs/aws-compliance-accelerator/issues), or [recently closed](https://github.com/awslabs/aws-compliance-accelerator/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20), issues to make sure somebody else hasn't already
+When filing an issue, please check [existing open](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues), or [recently closed](https://github.com/awslabs/landing-zone-accelerator-on-aws/issues?q=is%3Aissue+is%3Aclosed), issues to make sure somebody else hasn't already
 reported the issue. Please try to include as much information as you can. Details like these are incredibly useful:
 
 * A reproducible test case or series of steps
@@ -23,7 +29,7 @@ reported the issue. Please try to include as much information as you can. Detail
 ## Contributing via Pull Requests
 Contributions via pull requests are much appreciated. Before sending us a pull request, please ensure that:
 
-1. You are working against the latest source on the *master* branch.
+1. You are working against the latest source on the *main* branch.
 2. You check existing open, and recently merged, pull requests to make sure someone else hasn't addressed the problem already.
 3. You open an issue to discuss any significant work - we would hate for your time to be wasted.
 
@@ -42,7 +48,7 @@ GitHub provides additional document on [forking a repository](https://help.githu
 
 
 ## Finding contributions to work on
-Looking at the existing issues is a great way to find something to contribute on. As our projects, by default, use the default GitHub issue labels ((enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any ['help wanted'](https://github.com/awslabs/aws-compliance-accelerator/labels/help%20wanted) issues is a great place to start.
+Looking at the existing issues is a great way to find something to contribute on. As our projects, by default, use the default GitHub issue labels ((enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any ['help wanted'](https://github.com/awslabs/landing-zone-accelerator-on-aws/labels/help%20wanted) issues is a great place to start.
 
 
 ## Code of Conduct
@@ -57,6 +63,6 @@ If you discover a potential security issue in this project we ask that you notif
 
 ## Licensing
 
-See the [LICENSE](https://github.com/awslabs/aws-compliance-accelerator/blob/master/LICENSE) file for our project's licensing. We will ask you to confirm the licensing of your contribution.
+See the [LICENSE](https://github.com/awslabs/landing-zone-accelerator-on-aws/blob/main/LICENSE.txt) file for our project's licensing. We will ask you to confirm the licensing of your contribution.
 
 We may ask you to sign a [Contributor License Agreement (CLA)](http://en.wikipedia.org/wiki/Contributor_License_Agreement) for larger changes.
