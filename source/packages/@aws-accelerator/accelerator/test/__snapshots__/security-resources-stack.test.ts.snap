@@ -388,7 +388,7 @@ Object {
       },
       "Type": "AWS::IAM::Policy",
     },
-    "AcceleratorAuditS3KeyLookup03A4D144": Object {
+    "AcceleratorCentralLogS3KeyLookupC2EF784A": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
@@ -408,13 +408,13 @@ Object {
               Object {
                 "Ref": "AWS::Partition",
               },
-              ":iam::222222222222:role/AWSAccelerator-CrossAccount-SsmParameter-Role",
+              ":iam::333333333333:role/AWSAccelerator-CrossAccount-SsmParameter-Role",
             ],
           ],
         },
         "invokingAccountID": "111111111111",
         "invokingRegion": "us-east-1",
-        "parameterAccountID": "222222222222",
+        "parameterAccountID": "333333333333",
         "parameterName": "/accelerator/kms/s3/key-arn",
         "parameterRegion": "us-east-1",
         "uuid": "REPLACED-UUID",

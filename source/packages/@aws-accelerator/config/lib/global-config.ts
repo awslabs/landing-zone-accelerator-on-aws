@@ -230,7 +230,8 @@ export class CloudTrailSettingsConfig implements t.TypeOf<typeof GlobalConfigTyp
    */
   lambdaDataEvents = true;
   /**
-   * If CloudTrail pushes logs to CloudWatch Logs in addition to S3.
+   * If CloudTrail pushes logs to CloudWatch Logs in addition to S3.  CloudWatch Logs
+   * will also be replicated to S3.
    */
   sendToCloudWatchLogs = true;
   /**
