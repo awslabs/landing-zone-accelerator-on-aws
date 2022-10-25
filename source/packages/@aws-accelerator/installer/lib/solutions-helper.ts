@@ -117,7 +117,7 @@ export class SolutionHelper extends Construct {
           } catch (error) {
               console.log(error);
           }
-
+      
           if (requestType === 'Create') {
             await response.send(event, context, response.SUCCESS, data);
           }
