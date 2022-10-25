@@ -372,10 +372,50 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
     values: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
     errors: string[],
   ) {
+    type validateScpItem = {
+      orgEntity: string;
+      orgEntityType: string;
+      appliedScpName: string[];
+    };
+    const validateScpCountForOrg: validateScpItem[] = [];
     for (const serviceControlPolicy of values.serviceControlPolicies ?? []) {
       if (!fs.existsSync(path.join(configDir, serviceControlPolicy.policy))) {
         errors.push(
           `Invalid policy file ${serviceControlPolicy.policy} for service control policy ${serviceControlPolicy.name} !!!`,
+        );
+      }
+
+      for (const orgUnitScp of serviceControlPolicy.deploymentTargets.organizationalUnits ?? []) {
+        //check in array to see if OU is already there
+        const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(orgUnitScp);
+        if (index > -1) {
+          validateScpCountForOrg[index].appliedScpName.push(serviceControlPolicy.name);
+        } else {
+          validateScpCountForOrg.push({
+            orgEntity: orgUnitScp,
+            orgEntityType: 'Organization Unit',
+            appliedScpName: [serviceControlPolicy.name],
+          });
+        }
+      }
+      for (const accUnitScp of serviceControlPolicy.deploymentTargets.accounts ?? []) {
+        //check in array to see if account is already there
+        const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(accUnitScp);
+        if (index > -1) {
+          validateScpCountForOrg[index].appliedScpName.push(serviceControlPolicy.name);
+        } else {
+          validateScpCountForOrg.push({
+            orgEntity: accUnitScp,
+            orgEntityType: 'Account',
+            appliedScpName: [serviceControlPolicy.name],
+          });
+        }
+      }
+    }
+    for (const validateOrgEntity of validateScpCountForOrg) {
+      if (validateOrgEntity.appliedScpName.length > 5) {
+        errors.push(
+          `${validateOrgEntity.orgEntityType} - ${validateOrgEntity.orgEntity} has ${validateOrgEntity.appliedScpName.length} out of 5 allowed scps`,
         );
       }
     }

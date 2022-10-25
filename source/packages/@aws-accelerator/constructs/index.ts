@@ -72,6 +72,7 @@ export * from './lib/aws-organizations/organizational-units';
 export * from './lib/aws-organizations/policy';
 export * from './lib/aws-organizations/policy-attachment';
 export * from './lib/aws-organizations/register-delegated-administrator';
+export * from './lib/aws-organizations/validate-scp-count';
 export * from './lib/aws-ram/enable-sharing-with-aws-organization';
 export * from './lib/aws-ram/resource-share';
 export * from './lib/aws-ram/share-subnet-tags';
