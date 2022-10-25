@@ -61,7 +61,7 @@ type CustomConfigRuleType = config.ManagedRule | config.CustomRule | undefined;
  * Security Stack, configures local account security services
  */
 export class SecurityResourcesStack extends AcceleratorStack {
-  readonly auditS3Key: cdk.aws_kms.Key;
+  readonly centralLogS3Key: cdk.aws_kms.IKey;
   readonly cloudwatchKey: cdk.aws_kms.IKey;
   readonly auditAccountId: string;
   readonly logArchiveAccountId: string;
@@ -83,8 +83,8 @@ export class SecurityResourcesStack extends AcceleratorStack {
     // Set Organization Id
     this.setOrganizationId();
 
-    this.auditS3Key = new KeyLookup(this, 'AcceleratorAuditS3Key', {
-      accountId: props.accountsConfig.getAuditAccountId(),
+    this.centralLogS3Key = new KeyLookup(this, 'AcceleratorCentralLogS3Key', {
+      accountId: props.accountsConfig.getLogArchiveAccountId(),
       roleName: KeyStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
       keyArnParameterName: AcceleratorStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
@@ -1057,15 +1057,13 @@ export class SecurityResourcesStack extends AcceleratorStack {
         bucket: cdk.aws_s3.Bucket.fromBucketName(
           this,
           'CloudTrailLogBucket',
-          `${
-            AcceleratorStack.ACCELERATOR_CLOUDTRAIL_BUCKET_NAME_PREFIX
-          }-${this.stackProperties.accountsConfig.getAuditAccountId()}-${cdk.Stack.of(this).region}`,
+          `${AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX}-${this.logArchiveAccountId}-${this.props.globalConfig.homeRegion}`,
         ),
         s3KeyPrefix: `cloudtrail-${accountTrail.name}`,
         cloudWatchLogGroup: accountTrailCloudWatchLogGroup,
         cloudWatchLogsRetention: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
         enableFileValidation: true,
-        encryptionKey: this.auditS3Key,
+        encryptionKey: this.centralLogS3Key,
         includeGlobalServiceEvents: accountTrail.settings.globalServiceEvents ?? false,
         isMultiRegionTrail: accountTrail.settings.multiRegionTrail ?? false,
         isOrganizationTrail: false,
