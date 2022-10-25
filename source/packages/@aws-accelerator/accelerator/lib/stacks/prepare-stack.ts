@@ -620,7 +620,7 @@ export class PrepareStack extends AcceleratorStack {
     for (const scpItem of this.props.organizationConfig.serviceControlPolicies) {
       //only check scp that is being applied to either account or orgUnit
       if (scpItem.deploymentTargets.organizationalUnits.length > 0 || scpItem.deploymentTargets.accounts.length > 0) {
-        for (const orgUnitScp of scpItem.deploymentTargets.organizationalUnits) {
+        for (const orgUnitScp of scpItem.deploymentTargets.organizationalUnits ?? []) {
           //check in array to see if OU is already there
           const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(orgUnitScp);
           if (index > -1) {
@@ -634,7 +634,7 @@ export class PrepareStack extends AcceleratorStack {
             });
           }
         }
-        for (const acc of scpItem.deploymentTargets.accounts) {
+        for (const acc of scpItem.deploymentTargets.accounts ?? []) {
           //check in array to see if OU is already there
           const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(acc);
           if (index > -1) {
