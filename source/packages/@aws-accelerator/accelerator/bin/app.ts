@@ -89,6 +89,14 @@ export class IsobOverrides implements cdk.IAspect {
       node.addPropertyDeletionOverride('PublicAccessBlockConfiguration');
       node.addPropertyDeletionOverride('OwnershipControls');
     }
+    if (node instanceof cdk.aws_cloudtrail.CfnTrail) {
+      node.addPropertyDeletionOverride('InsightSelectors');
+      node.addPropertyDeletionOverride('IsOrganizationTrail');
+    }
+    if (node instanceof cdk.aws_ec2.CfnVPCEndpoint) {
+      const ServiceName = node.serviceName.replace('com.amazonaws.us', 'gov.sgov.sc2s.us');
+      node.addPropertyOverride('ServiceName', ServiceName);
+    }
   }
 }
 
