@@ -140,78 +140,7 @@ export class SecurityAuditStack extends AcceleratorStack {
     //
     this.configureControlTowerNotification();
 
-    //
-    // CloudTrail Logs Bucket Creation
-    //
-    this.createCloudTrailLogsBucket();
-
     Logger.info('[security-audit-stack] Completed stack synthesis');
-  }
-
-  private createCloudTrailLogsBucket() {
-    Logger.info(`[security-audit-stack] CloudTrail Logging S3 Bucket`);
-
-    const bucket = new Bucket(this, 'AcceleratorCloudTrailBucket', {
-      encryptionType: BucketEncryptionType.SSE_KMS,
-      s3BucketName: `${AcceleratorStack.ACCELERATOR_CLOUDTRAIL_BUCKET_NAME_PREFIX}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-      kmsKey: this.s3Key,
-      serverAccessLogsBucketName: `${AcceleratorStack.ACCELERATOR_S3_ACCESS_LOGS_BUCKET_NAME_PREFIX}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
-      s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.cloudtrail.lifecycleRules),
-      replicationProps: this.replicationProps,
-    });
-
-    new cdk.aws_ssm.StringParameter(this, 'SsmParamOrganizationCloudTrailLogBucketName', {
-      parameterName: AcceleratorStack.ACCELERATOR_CLOUDTRAIL_BUCKET_NAME_PARAMETER_NAME,
-      stringValue: bucket.getS3Bucket().bucketName,
-    });
-
-    // Grant cloudtrail access to the bucket
-    bucket.getS3Bucket().grantReadWrite(new cdk.aws_iam.ServicePrincipal('cloudtrail.amazonaws.com'));
-
-    // Grant organization principals to use the bucket
-    bucket.getS3Bucket().addToResourcePolicy(
-      new cdk.aws_iam.PolicyStatement({
-        sid: 'Allow Organization principals to use of the bucket',
-        effect: cdk.aws_iam.Effect.ALLOW,
-        actions: ['s3:GetBucketLocation', 's3:PutObject', 's3:PutObjectAcl'],
-        principals: [new cdk.aws_iam.AnyPrincipal()],
-        resources: [bucket.getS3Bucket().bucketArn, `${bucket.getS3Bucket().bucketArn}/*`],
-        conditions: {
-          StringEquals: {
-            ...this.getPrincipalOrgIdCondition(this.organizationId),
-          },
-        },
-      }),
-    );
-
-    bucket.getS3Bucket().addToResourcePolicy(
-      new cdk.aws_iam.PolicyStatement({
-        sid: 'Allow Organization principals to get encryption context',
-        effect: cdk.aws_iam.Effect.ALLOW,
-        actions: ['s3:GetEncryptionConfiguration'],
-        principals: [new cdk.aws_iam.AnyPrincipal()],
-        resources: [`${bucket.getS3Bucket().bucketArn}`],
-        conditions: {
-          StringEquals: {
-            ...this.getPrincipalOrgIdCondition(this.organizationId),
-          },
-        },
-      }),
-    );
-
-    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `/${this.stackName}/AcceleratorCloudTrailBucket/AcceleratorCloudTrailBucketReplication/` +
-        pascalCase(this.centralLogsBucketName) +
-        '-ReplicationRole/DefaultPolicy/Resource',
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'Allows only specific policy.',
-        },
-      ],
-    );
   }
 
   /**
