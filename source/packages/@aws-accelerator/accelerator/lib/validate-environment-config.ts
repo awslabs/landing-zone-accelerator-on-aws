@@ -69,6 +69,7 @@ export class ValidateEnvironmentConfig extends Construct {
             'organizations:ListOrganizationalUnitsForParent',
             'organizations:ListRoots',
             'organizations:ListAccountsForParent',
+            'organizations:ListParents',
           ],
           Resource: '*',
         },
