@@ -804,7 +804,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
       const values = t.parse(IamConfigTypes.iamConfig, yaml.load(content));
       return new IamConfig(values);
     } catch (e) {
-      console.log('[iam-config] Error parsing input, global config undefined');
+      console.log('[iam-config] Error parsing input, iam config undefined');
       console.log(`${e}`);
       return undefined;
     }
