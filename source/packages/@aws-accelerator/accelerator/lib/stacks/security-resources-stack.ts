@@ -33,7 +33,6 @@ import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { KeyStack } from './key-stack';
 
 enum ACCEL_LOOKUP_TYPE {
   KMS = 'KMS',
@@ -84,10 +83,11 @@ export class SecurityResourcesStack extends AcceleratorStack {
     this.setOrganizationId();
 
     this.centralLogS3Key = new KeyLookup(this, 'AcceleratorCentralLogS3Key', {
-      accountId: props.accountsConfig.getLogArchiveAccountId(),
-      roleName: KeyStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: AcceleratorStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
-      logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      accountId: this.props.accountsConfig.getLogArchiveAccountId(),
+      keyRegion: this.props.centralizedLoggingRegion,
+      roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
+      keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
+      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
@@ -929,20 +929,12 @@ export class SecurityResourcesStack extends AcceleratorStack {
         !this.isAccountExcluded(this.props.globalConfig.logging.sessionManager.excludeAccounts ?? []) ||
         !this.isRegionExcluded(this.props.globalConfig.logging.sessionManager.excludeRegions ?? [])
       ) {
-        const centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
-          accountId: this.props.accountsConfig.getLogArchiveAccountId(),
-          keyRegion: this.props.centralizedLoggingRegion,
-          roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
-          keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
-          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        }).getKey();
-
         new SsmSessionManagerSettings(this, 'SsmSessionManagerSettings', {
           s3BucketName: `${
             AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
           }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
           s3KeyPrefix: `session/${cdk.Aws.ACCOUNT_ID}/${cdk.Stack.of(this).region}`,
-          s3BucketKeyArn: centralLogsBucketKey.keyArn,
+          s3BucketKeyArn: this.centralLogS3Key.keyArn,
           sendToCloudWatchLogs: this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
           sendToS3: this.props.globalConfig.logging.sessionManager.sendToS3,
           cloudWatchEncryptionEnabled:
@@ -1057,7 +1049,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         bucket: cdk.aws_s3.Bucket.fromBucketName(
           this,
           'CloudTrailLogBucket',
-          `${AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX}-${this.logArchiveAccountId}-${this.props.globalConfig.homeRegion}`,
+          `${AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX}-${this.logArchiveAccountId}-${this.props.centralizedLoggingRegion}`,
         ),
         s3KeyPrefix: `cloudtrail-${accountTrail.name}`,
         cloudWatchLogGroup: accountTrailCloudWatchLogGroup,
