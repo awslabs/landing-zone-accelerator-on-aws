@@ -21,6 +21,7 @@ export interface ValidateEnvironmentConfigProps {
   readonly newOrgAccountsTable: cdk.aws_dynamodb.ITable;
   readonly newCTAccountsTable: cdk.aws_dynamodb.ITable;
   readonly controlTowerEnabled: boolean;
+  readonly organizationsEnabled: boolean;
   readonly commitId: string;
   readonly stackName: string;
   readonly region: string;
@@ -58,13 +59,16 @@ export class ValidateEnvironmentConfig extends Construct {
       timeout: cdk.Duration.minutes(10),
       policyStatements: [
         {
-          Sid: 'organizations',
           Effect: 'Allow',
+          Sid: 'OrganizationsLookup',
           Action: [
             'organizations:ListAccounts',
             'servicecatalog:SearchProvisionedProducts',
             'organizations:ListChildren',
             'organizations:ListPoliciesForTarget',
+            'organizations:ListOrganizationalUnitsForParent',
+            'organizations:ListRoots',
+            'organizations:ListAccountsForParent',
           ],
           Resource: '*',
         },
@@ -116,6 +120,7 @@ export class ValidateEnvironmentConfig extends Construct {
         newOrgAccountsTableName: props.newOrgAccountsTable.tableName,
         newCTAccountsTableName: props.newCTAccountsTable?.tableName || '',
         controlTowerEnabled: props.controlTowerEnabled,
+        organizationsEnabled: props.organizationsEnabled,
         commitId: props.commitId,
         stackName: props.stackName,
         partition: props.partition,

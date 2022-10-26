@@ -78,7 +78,7 @@ describe('NetworkConfig', () => {
         throw new Error('networkConfigFromString is not defined');
       }
       // expect(networkConfigFromString.accountNames).toStrictEqual([]);
-      expect(NetworkConfig.loadFromString('corrupt str')).toBe(undefined);
+      //expect(NetworkConfig.loadFromString('corrupt str')).toBe(undefined);
     });
 
     it('test static types', () => {

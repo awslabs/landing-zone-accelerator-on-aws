@@ -449,6 +449,13 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected isAccountIncluded(accounts: string[]): boolean {
     for (const account of accounts ?? []) {
       if (cdk.Stack.of(this).account === this.props.accountsConfig.getAccountId(account)) {
+        const accountConfig = this.props.accountsConfig.getAccount(account);
+        if (this.props.organizationConfig.isIgnored(accountConfig.organizationalUnit)) {
+          Logger.info(
+            `[accelerator-stack] Account ${account} was not included as it is a member of an ignored organizational unit.`,
+          );
+          return false;
+        }
         Logger.info(`[accelerator-stack] ${account} account explicitly included`);
         return true;
       }
@@ -458,11 +465,6 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   protected isOrganizationalUnitIncluded(organizationalUnits: string[]): boolean {
     if (organizationalUnits) {
-      // If Root is specified, return right away
-      if (organizationalUnits.includes('Root')) {
-        return true;
-      }
-
       // Full list of all accounts
       const accounts = [...this.props.accountsConfig.mandatoryAccounts, ...this.props.accountsConfig.workloadAccounts];
 
@@ -472,8 +474,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
       );
 
       if (account) {
-        if (organizationalUnits.indexOf(account.organizationalUnit) != -1) {
-          Logger.info(`[accelerator-stack] ${account.organizationalUnit} organizational unit explicitly included`);
+        if (organizationalUnits.indexOf(account.organizationalUnit) != -1 || organizationalUnits.includes('Root')) {
+          const ignored = this.props.organizationConfig.isIgnored(account.organizationalUnit);
+          if (ignored) {
+            Logger.info(`[accelerator-stack] ${account.organizationalUnit} is ignored and not included`);
+          }
+          Logger.info(`[accelerator-stack] ${account.organizationalUnit} organizational unit included`);
           return true;
         }
       }

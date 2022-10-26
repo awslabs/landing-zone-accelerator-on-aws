@@ -320,6 +320,7 @@ export class PrepareStack extends AcceleratorStack {
             newOrgAccountsTable: newOrgAccountsTable,
             newCTAccountsTable: newCTAccountsTable,
             controlTowerEnabled: props.globalConfig.controlTower.enable,
+            organizationsEnabled: props.organizationConfig.enable,
             commitId: loadAcceleratorConfigTable.id,
             stackName: cdk.Stack.of(this).stackName,
             region: cdk.Stack.of(this).region,

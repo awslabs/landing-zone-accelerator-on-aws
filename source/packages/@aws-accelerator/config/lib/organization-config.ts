@@ -24,6 +24,7 @@ import * as t from './common-types';
 export abstract class OrganizationConfigTypes {
   static readonly organizationalUnitConfig = t.interface({
     name: t.nonEmptyString,
+    ignore: t.optional(t.boolean),
   });
 
   static readonly organizationalUnitIdConfig = t.interface({
@@ -88,6 +89,12 @@ export abstract class OrganizationalUnitConfig
    * - name: Sandbox/Development/Application1
    */
   readonly name: string = '';
+  /**
+   * Optional property used to ignore organizational unit and
+   * the associated accounts
+   * Default value is false
+   */
+  readonly ignore: boolean | undefined = undefined;
 }
 
 /**
@@ -247,9 +254,11 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
   readonly organizationalUnits: OrganizationalUnitConfig[] = [
     {
       name: 'Security',
+      ignore: undefined,
     },
     {
       name: 'Infrastructure',
+      ignore: undefined,
     },
   ];
 
@@ -571,6 +580,14 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
       }
     }
     throw new Error("Organizations not enabled or OU doesn't exist");
+  }
+
+  public isIgnored(name: string): boolean {
+    const ou = this.organizationalUnits?.find(item => item.name === name);
+    if (ou?.ignore) {
+      return true;
+    }
+    return false;
   }
 
   public getPath(name: string): string {

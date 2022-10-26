@@ -80,8 +80,5 @@ describe('IamConfig', () => {
     if (!iamConfigFromString) {
       throw new Error('iamConfigFromString is not defined');
     }
-    // expect(iamConfigFromString.accountNames).toStrictEqual([]);
-
-    expect(IamConfig.loadFromString('corrupt str')).toBe(undefined);
   });
 });
