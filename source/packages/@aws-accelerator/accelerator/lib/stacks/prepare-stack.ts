@@ -618,9 +618,12 @@ export class PrepareStack extends AcceleratorStack {
     const validateScpCountForOrg: validateScpItem[] = [];
 
     for (const scpItem of this.props.organizationConfig.serviceControlPolicies) {
+      const orgArray = scpItem.deploymentTargets.organizationalUnits ?? [];
+      const accountArray = scpItem.deploymentTargets.accounts ?? [];
+
       //only check scp that is being applied to either account or orgUnit
-      if (scpItem.deploymentTargets.organizationalUnits.length > 0 || scpItem.deploymentTargets.accounts.length > 0) {
-        for (const orgUnitScp of scpItem.deploymentTargets.organizationalUnits ?? []) {
+      if (orgArray.length > 0 || accountArray.length > 0) {
+        for (const orgUnitScp of orgArray) {
           //check in array to see if OU is already there
           const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(orgUnitScp);
           if (index > -1) {
@@ -634,7 +637,7 @@ export class PrepareStack extends AcceleratorStack {
             });
           }
         }
-        for (const acc of scpItem.deploymentTargets.accounts ?? []) {
+        for (const acc of accountArray) {
           //check in array to see if OU is already there
           const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(acc);
           if (index > -1) {
