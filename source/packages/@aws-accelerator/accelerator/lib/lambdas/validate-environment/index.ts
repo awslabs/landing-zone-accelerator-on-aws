@@ -161,6 +161,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       const validateAccountsAreInOu = await validateAccountsInOu(configTableName, configActiveOuKeys);
       validationErrors.push(...validateAccountsAreInOu);
 
+      const validateAllAwsAccountsAreInConfig = await validateAllAwsAccountsInConfig();
+      validationErrors.push(...validateAllAwsAccountsAreInConfig);
+
       // find organization accounts that need to be created
       console.log(`controlTowerEnabled value: ${controlTowerEnabled}`);
       if (controlTowerEnabled === 'false' && mandatoryAccounts) {
@@ -653,6 +656,26 @@ async function validateAllOuInConfig(): Promise<string[]> {
     } else {
       errors.push(
         `Organizational Unit '${ouKeys.acceleratorKey}' with id of '${ouKeys.awsKey}' was not found in the organization configuration.`,
+      );
+    }
+  }
+  return errors;
+}
+
+async function validateAllAwsAccountsInConfig(): Promise<string[]> {
+  const errors: string[] = [];
+  for (const account of organizationAccounts) {
+    if (workloadAccounts.find(item => item['acceleratorKey'] === account.Email!)) {
+      continue;
+    }
+    if (mandatoryAccounts.find(item => item['acceleratorKey'] === account.Email!)) {
+      continue;
+    }
+    //check if ou is ignored
+    const response = await throttlingBackOff(() => organizationsClient.listParents({ ChildId: account.Id! }).promise());
+    if (!configIgnoredOuKeys.find(item => item.awsKey === response.Parents![0].Id)) {
+      errors.push(
+        `Account with Id ${account.Id} and email ${account.Email} is not in the accounts configuration and is not a member of an ignored OU.`,
       );
     }
   }
