@@ -408,15 +408,15 @@ Object {
               Object {
                 "Ref": "AWS::Partition",
               },
-              ":iam::333333333333:role/AWSAccelerator-CrossAccount-SsmParameter-Role",
+              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
             ],
           ],
         },
         "invokingAccountID": "111111111111",
         "invokingRegion": "us-east-1",
         "parameterAccountID": "333333333333",
-        "parameterName": "/accelerator/kms/s3/key-arn",
-        "parameterRegion": "us-east-1",
+        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
+        "parameterRegion": "us-west-2",
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::SsmGetParameterValue",
@@ -1767,40 +1767,6 @@ Object {
       },
       "Type": "AWS::Logs::MetricFilter",
     },
-    "CentralLogsBucketKeyLookup52CD8A37": Object {
-      "DeletionPolicy": "Delete",
-      "DependsOn": Array [
-        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
-      ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
-            "Arn",
-          ],
-        },
-        "assumeRoleArn": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "arn:",
-              Object {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
-            ],
-          ],
-        },
-        "invokingAccountID": "111111111111",
-        "invokingRegion": "us-east-1",
-        "parameterAccountID": "333333333333",
-        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
-        "parameterRegion": "us-west-2",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::SsmGetParameterValue",
-      "UpdateReplacePolicy": "Delete",
-    },
     "Cis11RootAccountUsage27B8A444": Object {
       "Properties": Object {
         "AlarmActions": Array [
@@ -3095,7 +3061,7 @@ Object {
               ],
               "Effect": "Allow",
               "Resource": Object {
-                "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+                "Ref": "AcceleratorCentralLogS3KeyLookupC2EF784A",
               },
             },
             Object {
