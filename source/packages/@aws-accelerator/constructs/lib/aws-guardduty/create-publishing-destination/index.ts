@@ -32,6 +32,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const exportDestinationType = event.ResourceProperties['exportDestinationType'];
   const destinationArn = event.ResourceProperties['destinationArn'];
   const kmsKeyArn = event.ResourceProperties['kmsKeyArn'];
+  const overrideExisting = event.ResourceProperties['exportDestinationOverride'];
 
   const guardDutyClient = new AWS.GuardDuty({ region: region });
 
@@ -52,35 +53,57 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
       detectorId = await getDetectorId(guardDutyClient);
 
-      await throttlingBackOff(() =>
-        guardDutyClient
-          .createPublishingDestination({
-            DetectorId: detectorId!,
-            DestinationType: exportDestinationType,
-            DestinationProperties: { DestinationArn: destinationArn, KmsKeyArn: kmsKeyArn },
-          })
-          .promise(),
-      );
+      if (overrideExisting) {
+        await overrideExistingDestination(
+          guardDutyClient,
+          detectorId!,
+          destinationArn,
+          kmsKeyArn,
+          exportDestinationType,
+        );
+      } else {
+        await throttlingBackOff(() =>
+          guardDutyClient
+            .createPublishingDestination({
+              DetectorId: detectorId!,
+              DestinationType: exportDestinationType,
+              DestinationProperties: { DestinationArn: destinationArn, KmsKeyArn: kmsKeyArn },
+            })
+            .promise(),
+        );
+      }
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Update':
       console.log('starting - UpdatePublishingDestination');
 
-      const updateResponse = await getPublishingDestinations(guardDutyClient, detectorId!);
-
-      const updateDestinationId =
-        updateResponse.Destinations ?? [].length === 1 ? updateResponse.Destinations[0].DestinationId : undefined;
-
-      if (updateResponse.Destinations.length === 1) {
-        await throttlingBackOff(() =>
-          guardDutyClient
-            .updatePublishingDestination({
-              DetectorId: detectorId!,
-              DestinationId: updateDestinationId!,
-              DestinationProperties: { DestinationArn: destinationArn, KmsKeyArn: kmsKeyArn },
-            })
-            .promise(),
+      // if override is enabled, then follow that workflow
+      // Note: override will check destinationArn of s3 and kmsKeyArn. If they are the same no change will be done.
+      if (overrideExisting) {
+        await overrideExistingDestination(
+          guardDutyClient,
+          detectorId!,
+          destinationArn,
+          kmsKeyArn,
+          exportDestinationType,
         );
+      } else {
+        const updateResponse = await getPublishingDestinations(guardDutyClient, detectorId!);
+
+        const updateDestinationId =
+          updateResponse.Destinations ?? [].length === 1 ? updateResponse.Destinations[0].DestinationId : undefined;
+
+        if (updateResponse.Destinations.length === 1) {
+          await throttlingBackOff(() =>
+            guardDutyClient
+              .updatePublishingDestination({
+                DetectorId: detectorId!,
+                DestinationId: updateDestinationId!,
+                DestinationProperties: { DestinationArn: destinationArn, KmsKeyArn: kmsKeyArn },
+              })
+              .promise(),
+          );
+        }
       }
       return { Status: 'Success', StatusCode: 200 };
 
@@ -122,4 +145,61 @@ async function getPublishingDestinations(
       })
       .promise(),
   );
+}
+
+async function overrideExistingDestination(
+  guardDutyClient: AWS.GuardDuty,
+  detectorId: string,
+  destinationArn: string,
+  kmsKeyArn: string,
+  exportDestinationType: string,
+) {
+  // Check account for destination
+  const publishingDestinations = await getPublishingDestinations(guardDutyClient, detectorId);
+  if (publishingDestinations.Destinations.length > 0) {
+    for (const pubDestination of publishingDestinations.Destinations) {
+      // only s3 is possible but leaving this logic in place, incase guard duty service has more destinations
+      if (pubDestination.DestinationType == 'S3') {
+        //get current destination id and find the destination arn
+        const pubDestinationArn = await throttlingBackOff(() =>
+          guardDutyClient
+            .describePublishingDestination({
+              DestinationId: pubDestination.DestinationId,
+              DetectorId: detectorId,
+            })
+            .promise(),
+        );
+
+        if (
+          pubDestinationArn.DestinationProperties.DestinationArn === destinationArn &&
+          pubDestinationArn.DestinationProperties.KmsKeyArn === kmsKeyArn
+        ) {
+          // kms and destination are same as input. So no change is needed.
+          console.log('No changes are necessary. Destination Arn and KMS key are the same.');
+        } else {
+          // kms and destination are not the same. So update destination
+          await throttlingBackOff(() =>
+            guardDutyClient
+              .updatePublishingDestination({
+                DetectorId: detectorId!,
+                DestinationId: pubDestination.DestinationId,
+                DestinationProperties: { DestinationArn: destinationArn, KmsKeyArn: kmsKeyArn },
+              })
+              .promise(),
+          );
+        }
+      }
+    }
+  } else {
+    // there are no destinations. Create one
+    await throttlingBackOff(() =>
+      guardDutyClient
+        .createPublishingDestination({
+          DetectorId: detectorId!,
+          DestinationType: exportDestinationType,
+          DestinationProperties: { DestinationArn: destinationArn, KmsKeyArn: kmsKeyArn },
+        })
+        .promise(),
+    );
+  }
 }

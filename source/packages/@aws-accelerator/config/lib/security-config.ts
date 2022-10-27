@@ -135,6 +135,10 @@ export class SecurityConfigTypes {
      */
     enable: t.boolean,
     /**
+     * Indicates whether AWS GuardDuty Export Findings destination can be overwritten.
+     */
+    overrideExisting: t.optional(t.boolean),
+    /**
      * The type of resource for the publishing destination. Currently only Amazon S3 buckets are supported.
      */
     destinationType: t.enums('DestinationType', ['S3']),
@@ -592,6 +596,10 @@ export class GuardDutyExportFindingsConfig
    * Indicates whether AWS GuardDuty Export Findings enabled.
    */
   readonly enable = false;
+  /**
+   * Indicates whether AWS GuardDuty Export Findings can be overwritten.
+   */
+  readonly overrideExisting = false;
   /**
    * The type of resource for the publishing destination. Currently only Amazon S3 buckets are supported.
    */
