@@ -67,12 +67,11 @@ export class OperationsStack extends AcceleratorStack {
       this.addRoles();
       this.addGroups();
       this.addUsers();
+      //
+      // Budgets
+      //
+      this.enableBudgetReports();
     }
-
-    //
-    // Budgets
-    //
-    this.enableBudgetReports();
 
     //
     // Backup Vaults
