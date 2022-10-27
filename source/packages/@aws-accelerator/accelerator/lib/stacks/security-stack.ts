@@ -135,6 +135,8 @@ export class SecurityStack extends AcceleratorStack {
           new GuardDutyPublishingDestination(this, 'GuardDutyPublishingDestination', {
             exportDestinationType:
               this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.destinationType,
+            exportDestinationOverride:
+              this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideExisting ?? false,
             destinationArn: `arn:${cdk.Stack.of(this).partition}:s3:::${this.centralLogsBucketName}`,
             destinationKmsKey: this.centralLogsBucketKey,
             logKmsKey: this.cloudwatchKey,

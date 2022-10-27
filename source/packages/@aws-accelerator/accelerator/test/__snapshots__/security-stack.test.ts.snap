@@ -241,6 +241,7 @@ Object {
                     "guardDuty:UpdatePublishingDestination",
                     "guardDuty:ListDetectors",
                     "guardDuty:ListPublishingDestinations",
+                    "guardduty:DescribePublishingDestination",
                     "iam:CreateServiceLinkedRole",
                   ],
                   "Effect": "Allow",
@@ -708,6 +709,7 @@ Object {
             ],
           ],
         },
+        "exportDestinationOverride": true,
         "exportDestinationType": "S3",
         "kmsKeyArn": Object {
           "Ref": "CentralLogsBucketKeyLookup52CD8A37",
