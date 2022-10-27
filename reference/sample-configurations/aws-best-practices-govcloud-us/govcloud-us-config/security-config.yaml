@@ -27,6 +27,7 @@ centralSecurityServices:
       excludeRegions: []
     exportConfiguration:
       enable: true
+      overrideExisting: true
       destinationType: S3
       exportFrequency: FIFTEEN_MINUTES
   securityHub:

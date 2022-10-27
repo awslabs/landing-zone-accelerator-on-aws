@@ -25,6 +25,10 @@ export interface GuardDutyPublishingDestinationProps {
    */
   readonly exportDestinationType: string;
   /**
+   * Export destination type
+   */
+  readonly exportDestinationOverride: boolean;
+  /**
    * Publishing destination arn
    */
   readonly destinationArn: string;
@@ -67,6 +71,7 @@ export class GuardDutyPublishingDestination extends Construct {
             'guardDuty:UpdatePublishingDestination',
             'guardDuty:ListDetectors',
             'guardDuty:ListPublishingDestinations',
+            'guardduty:DescribePublishingDestination',
             'iam:CreateServiceLinkedRole',
           ],
           Resource: '*',
@@ -80,6 +85,7 @@ export class GuardDutyPublishingDestination extends Construct {
       properties: {
         region: cdk.Stack.of(this).region,
         exportDestinationType: props.exportDestinationType,
+        exportDestinationOverride: props.exportDestinationOverride,
         destinationArn: props.destinationArn,
         kmsKeyArn: props.destinationKmsKey.keyArn,
       },
