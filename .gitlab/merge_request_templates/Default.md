@@ -1,7 +1,7 @@
 <!--- Provide a general summary of your changes in the Title above -->
 
 ## Description
-<!--- Describe your changes in detail -->
+<!--- Describe your changes. Assume the reviewer is unfamiliar with your technology and explain as you would to a general Amazon audience. -->
 
 ## Related Issue
 <!--- This project only accepts pull requests related to open issues -->
@@ -9,8 +9,13 @@
 <!--- If fixing a bug, there should be an issue describing it with steps to reproduce -->
 <!--- Please link to the issue here: -->
 
-## Motivation and Context
-<!--- Why is this change required? What problem does it solve? -->
+## Areas for Expansion or Enhancement
+<!--- In a future release, how could you build upon this feature? -->
+<!--- This could include supporting additional use cases or performance improvements -->
+
+## If promised $1MM, how would you try to exploit this feature?
+<!--- For example, can you force it to fail into an insecure state (https://panost.pages.aws.dev/proserve-security-guidance/controls/c9/), or exploit over-scoped permissions (https://panost.pages.aws.dev/proserve-security-guidance/controls/c3/). -->
+<!--- Please describe the prerequisites for success. -->
 
 ## How Has This Been Tested?
 <!--- Please describe in detail how you tested your changes. -->
