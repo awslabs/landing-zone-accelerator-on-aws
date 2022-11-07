@@ -611,6 +611,8 @@ export class PrepareStack extends AcceleratorStack {
       appliedScpName: string[];
     };
 
+    Logger.info('[prepare-stack] Validate SCP Count');
+
     // Get all account and organization unit for custom resource
     const accounts: accountOutputItem[] = [];
     const orgUnits: orgOutputItem[] = [];
@@ -657,11 +659,19 @@ export class PrepareStack extends AcceleratorStack {
 
     const allAccounts = [...this.props.accountsConfig.mandatoryAccounts, ...this.props.accountsConfig.workloadAccounts];
     for (const accountItem of allAccounts) {
-      accounts.push({ accountId: this.props.accountsConfig.getAccountId(accountItem.name), name: accountItem.name });
+      try {
+        accounts.push({ accountId: this.props.accountsConfig.getAccountId(accountItem.name), name: accountItem.name });
+      } catch (e) {
+        Logger.debug(`[prepare-stack] Account ${accountItem.name} not found to validate scp count.`);
+      }
     }
 
     for (const orgItem of this.props.organizationConfig.organizationalUnitIds!) {
-      orgUnits.push({ id: orgItem.id, name: orgItem.name });
+      try {
+        orgUnits.push({ id: orgItem.id, name: orgItem.name });
+      } catch (e) {
+        Logger.debug(`[prepare-stack] Organization ${orgItem.name} not found to validate scp count.`);
+      }
     }
 
     return { configAccounts: accounts, configOu: orgUnits, configScps: validateScpCountForOrg };
