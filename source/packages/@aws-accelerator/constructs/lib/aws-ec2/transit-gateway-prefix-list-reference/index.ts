@@ -22,7 +22,6 @@ import * as AWS from 'aws-sdk';
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
 
-const ec2 = new AWS.EC2();
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string | undefined;
@@ -37,6 +36,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   }
 
   const props: ReferenceProps = event.ResourceProperties['prefixListReference'];
+  const solutionId = process.env['SOLUTION_ID'];
+
+  const ec2 = new AWS.EC2({ customUserAgent: solutionId });
 
   // Handle case where boolean is passed as string
   if (props.Blackhole) {

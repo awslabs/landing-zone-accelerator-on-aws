@@ -26,10 +26,11 @@ import {
   DescribeOrganizationalUnitCommand,
 } from '@aws-sdk/client-organizations';
 
-const configTableName = process.env['CONFIG_TABLE_NAME'] ?? '';
+const configTableName: string = process.env['CONFIG_TABLE_NAME'] ?? '';
+const solutionId: string = process.env['SOLUTION_ID'] ?? '';
 
-const organizationsClient = new OrganizationsClient({});
-const dynamodbClient = new DynamoDBClient({});
+const organizationsClient = new OrganizationsClient({ customUserAgent: solutionId });
+const dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
 const ddbDocumentClient = DynamoDBDocumentClient.from(dynamodbClient);
 /**
  * Control Tower OU Events  - lambda handler

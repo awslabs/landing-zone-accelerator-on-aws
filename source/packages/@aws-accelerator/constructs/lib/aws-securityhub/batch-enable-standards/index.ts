@@ -29,10 +29,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const region = event.ResourceProperties['region'];
-
+  const solutionId = process.env['SOLUTION_ID'];
   const inputStandards = JSON.parse(JSON.stringify(event.ResourceProperties['standards']));
 
-  const securityHubClient = new AWS.SecurityHub({ region: region });
+  const securityHubClient = new AWS.SecurityHub({ region: region, customUserAgent: solutionId });
 
   // Get AWS defined security standards name and ARN
   const awsSecurityHubStandards: { [name: string]: string }[] = [];

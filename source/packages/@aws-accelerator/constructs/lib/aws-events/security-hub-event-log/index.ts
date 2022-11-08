@@ -16,8 +16,8 @@ import * as AWS from 'aws-sdk';
 import * as uuid from 'uuid';
 
 AWS.config.logger = console;
-
-const logsClient = new AWS.CloudWatchLogs();
+const solutionId = process.env['SOLUTION_ID'];
+const logsClient = new AWS.CloudWatchLogs({ customUserAgent: solutionId });
 
 export async function handler(event: AWSLambda.ScheduledEvent) {
   // Make sure event comes from Security Hub if not do not process

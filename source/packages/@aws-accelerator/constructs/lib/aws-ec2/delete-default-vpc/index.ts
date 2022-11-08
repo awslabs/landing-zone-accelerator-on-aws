@@ -31,7 +31,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   // Retrieve operating region that stack is ran
   const region = event.ResourceProperties['region'];
-  const ec2Client = new AWS.EC2({ region: region });
+  const solutionId = process.env['SOLUTION_ID'];
+  const ec2Client = new AWS.EC2({ region: region, customUserAgent: solutionId });
   const defaultVpcIds: string[] = [];
 
   switch (event.RequestType) {

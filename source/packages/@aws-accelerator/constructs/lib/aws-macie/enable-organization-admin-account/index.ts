@@ -30,7 +30,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const adminAccountId = event.ResourceProperties['adminAccountId'];
   const region = event.ResourceProperties['region'];
-  const macie2Client = new AWS.Macie2({ region: region });
+  const solutionId = process.env['SOLUTION_ID'];
+
+  const macie2Client = new AWS.Macie2({ region: region, customUserAgent: solutionId });
 
   const macieDelegatedAccount = await getMacieDelegatedAccount(macie2Client, adminAccountId);
 

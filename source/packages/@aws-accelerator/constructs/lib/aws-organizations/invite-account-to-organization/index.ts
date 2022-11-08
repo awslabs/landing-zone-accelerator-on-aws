@@ -35,12 +35,9 @@ const unmarshallOptions = {
   wrapNumbers: false,
 };
 const translateConfig = { marshallOptions, unmarshallOptions };
-const dynamodbClient = new DynamoDBClient({});
-const documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
-const paginationConfig: DynamoDBDocumentPaginationConfiguration = {
-  client: documentClient,
-  pageSize: 100,
-};
+let dynamodbClient: DynamoDBClient;
+let documentClient: DynamoDBDocumentClient;
+let paginationConfig: DynamoDBDocumentPaginationConfiguration;
 
 type OrganizationIdentifier = {
   acceleratorKey: string;
@@ -70,14 +67,22 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const commitId = event.ResourceProperties['commitId'];
   const assumeRoleName = event.ResourceProperties['assumeRoleName'];
   const partition = event.ResourceProperties['partition'];
+  const solutionId = process.env['SOLUTION_ID'];
+
+  dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
+  documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
+  paginationConfig = {
+    client: documentClient,
+    pageSize: 100,
+  };
 
   let organizationsClient: OrganizationsClient;
   if (partition === 'aws-us-gov') {
-    organizationsClient = new OrganizationsClient({ region: 'us-gov-west-1' });
+    organizationsClient = new OrganizationsClient({ region: 'us-gov-west-1', customUserAgent: solutionId });
   } else if (partition === 'aws-cn') {
-    organizationsClient = new OrganizationsClient({ region: 'cn-northwest-1' });
+    organizationsClient = new OrganizationsClient({ region: 'cn-northwest-1', customUserAgent: solutionId });
   } else {
-    organizationsClient = new OrganizationsClient({ region: 'us-east-1' });
+    organizationsClient = new OrganizationsClient({ region: 'us-east-1', customUserAgent: solutionId });
   }
 
   if (partition !== 'aws-us-gov') {

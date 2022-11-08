@@ -57,7 +57,8 @@ export async function handler(
   }
 
   const reportDefinition: ReportDefinition = event.ResourceProperties['reportDefinition'];
-  const curClient = new AWS.CUR({ region: globalRegion });
+  const solutionId = process.env['SOLUTION_ID'];
+  const curClient = new AWS.CUR({ region: globalRegion, customUserAgent: solutionId });
 
   // Handle case where boolean is passed as string
   if (reportDefinition.RefreshClosedReports) {

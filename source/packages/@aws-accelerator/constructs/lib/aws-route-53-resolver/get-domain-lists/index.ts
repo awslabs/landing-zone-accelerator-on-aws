@@ -32,7 +32,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const region: string = event.ResourceProperties['region'];
   const listName: string = event.ResourceProperties['listName'];
-  const resolverClient = new AWS.Route53Resolver({ region: region });
+  const solutionId = process.env['SOLUTION_ID'];
+  const resolverClient = new AWS.Route53Resolver({ region: region, customUserAgent: solutionId });
 
   switch (event.RequestType) {
     case 'Create':

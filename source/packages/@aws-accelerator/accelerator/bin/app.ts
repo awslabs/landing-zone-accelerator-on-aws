@@ -111,6 +111,17 @@ export class CnOverrides implements cdk.IAspect {
   }
 }
 
+export class AwsSolutionAspect implements cdk.IAspect {
+  visit(node: IConstruct): void {
+    if (node instanceof cdk.CfnResource) {
+      if (node.cfnResourceType === 'AWS::Lambda::Function') {
+        node.addPropertyOverride('Environment.Variables.solutionId', `AwsSolution/SO0199/${version}`);
+        console.log(node);
+      }
+    }
+  }
+}
+
 async function main() {
   Logger.info('[app] Begin Accelerator CDK App');
   const app = new cdk.App();
@@ -141,6 +152,8 @@ async function main() {
       globalRegion = 'cn-northwest-1';
       cdk.Aspects.of(app).add(new CnOverrides());
     }
+
+    cdk.Aspects.of(app).add(new AwsSolutionAspect());
 
     const includeStage = (props: { stage: string; account: string; region: string }): boolean => {
       if (stage === undefined) {

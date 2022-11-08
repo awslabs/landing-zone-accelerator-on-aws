@@ -33,8 +33,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const destinationArn = event.ResourceProperties['destinationArn'];
   const kmsKeyArn = event.ResourceProperties['kmsKeyArn'];
   const overrideExisting = event.ResourceProperties['exportDestinationOverride'];
+  const solutionId = process.env['SOLUTION_ID'];
 
-  const guardDutyClient = new AWS.GuardDuty({ region: region });
+  const guardDutyClient = new AWS.GuardDuty({ region: region, customUserAgent: solutionId });
 
   let detectorId = await getDetectorId(guardDutyClient);
 

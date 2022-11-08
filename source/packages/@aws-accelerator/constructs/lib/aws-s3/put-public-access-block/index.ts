@@ -33,8 +33,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const blockPublicPolicy: boolean = event.ResourceProperties['blockPublicPolicy'] === 'true';
   const ignorePublicAcls: boolean = event.ResourceProperties['ignorePublicAcls'] === 'true';
   const restrictPublicBuckets: boolean = event.ResourceProperties['restrictPublicBuckets'] === 'true';
+  const solutionId = process.env['SOLUTION_ID'];
 
-  const s3ControlClient = new AWS.S3Control({});
+  const s3ControlClient = new AWS.S3Control({ customUserAgent: solutionId });
 
   switch (event.RequestType) {
     case 'Create':

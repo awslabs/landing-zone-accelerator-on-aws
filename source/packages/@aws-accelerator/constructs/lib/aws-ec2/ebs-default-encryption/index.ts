@@ -21,7 +21,6 @@
 import * as AWS from 'aws-sdk';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 
-const ec2 = new AWS.EC2();
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string | undefined;
@@ -30,7 +29,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const kmsKeyId = event.ResourceProperties['kmsKeyId'] || undefined;
+  const solutionId = process.env['SOLUTION_ID'];
 
+  const ec2 = new AWS.EC2({ customUserAgent: solutionId });
   switch (event.RequestType) {
     case 'Create':
     case 'Update':

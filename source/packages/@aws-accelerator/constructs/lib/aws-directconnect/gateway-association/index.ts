@@ -38,10 +38,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   // Set variables
   const allowedPrefixesInitial: string[] = event.ResourceProperties['allowedPrefixes'];
   const directConnectGatewayId: string = event.ResourceProperties['directConnectGatewayId'];
-  const dx = new AWS.DirectConnect();
-  const ec2 = new AWS.EC2();
+  const solutionId = process.env['SOLUTION_ID'];
+  const dx = new AWS.DirectConnect({ customUserAgent: solutionId });
+  const ec2 = new AWS.EC2({ customUserAgent: solutionId });
   const gatewayId: string = event.ResourceProperties['gatewayId'];
-  const lambdaClient = new AWS.Lambda();
+  const lambdaClient = new AWS.Lambda({ customUserAgent: solutionId });
   let attachmentId: string | undefined = undefined;
 
   switch (event.RequestType) {

@@ -32,7 +32,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const accountId = event.ResourceProperties['accountId'];
   const region = event.ResourceProperties['region'];
-  const ec2Client = new AWS.EC2({ region: region });
+  const solutionId = process.env['SOLUTION_ID'];
+  const ec2Client = new AWS.EC2({ region: region, customUserAgent: solutionId });
 
   switch (event.RequestType) {
     case 'Create':

@@ -27,7 +27,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
-  const client = new AWS.RAM({});
+  const client = new AWS.RAM({ customUserAgent: process.env['SOLUTION_ID'] });
 
   switch (event.RequestType) {
     case 'Create':
