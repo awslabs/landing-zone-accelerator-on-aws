@@ -34,6 +34,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const name = event.ResourceProperties['name'];
   const transitGatewayId = event.ResourceProperties['transitGatewayId'];
   const roleArn = event.ResourceProperties['roleArn'];
+  const solutionId = process.env['SOLUTION_ID'];
 
   switch (event.RequestType) {
     case 'Create':
@@ -57,9 +58,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
             secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
             sessionToken: assumeRoleResponse.Credentials?.SessionToken,
           },
+          customUserAgent: solutionId,
         });
       } else {
-        ec2Client = new AWS.EC2();
+        ec2Client = new AWS.EC2({ customUserAgent: solutionId });
       }
 
       let nextToken: string | undefined = undefined;

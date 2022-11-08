@@ -31,10 +31,14 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   // Set variables
+  const solutionId = process.env['SOLUTION_ID'];
   const vif = vifInit(event);
   const apiProps = setApiProps(vif);
-  const dx = new AWS.DirectConnect({ region: event.ResourceProperties['region'] });
-  const lambdaClient = new AWS.Lambda();
+  const dx = new AWS.DirectConnect({
+    region: event.ResourceProperties['region'],
+    customUserAgent: solutionId,
+  });
+  const lambdaClient = new AWS.Lambda({ customUserAgent: solutionId });
 
   // Event handler
   switch (event.RequestType) {

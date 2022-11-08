@@ -36,16 +36,13 @@ const unmarshallOptions = {
   wrapNumbers: false,
 };
 const translateConfig = { marshallOptions, unmarshallOptions };
-const dynamodbClient = new DynamoDBClient({});
-const documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
-const serviceCatalogClient = new AWS.ServiceCatalog();
-const cloudformationClient = new CloudFormationClient({});
-const ssmClient = new SSMClient({});
+let paginationConfig: DynamoDBDocumentPaginationConfiguration;
+let dynamodbClient: DynamoDBClient;
+let documentClient: DynamoDBDocumentClient;
+let serviceCatalogClient: AWS.ServiceCatalog;
+let cloudformationClient: CloudFormationClient;
+let ssmClient: SSMClient;
 let organizationsClient: AWS.Organizations;
-const paginationConfig: DynamoDBDocumentPaginationConfiguration = {
-  client: documentClient,
-  pageSize: 100,
-};
 
 type AccountToAdd = {
   name: string;
@@ -108,15 +105,27 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const stackName = event.ResourceProperties['stackName'];
   driftDetectionParameterName = event.ResourceProperties['driftDetectionParameterName'];
   driftDetectionMessageParameterName = event.ResourceProperties['driftDetectionMessageParameterName'];
+  const solutionId = process.env['SOLUTION_ID'];
 
   if (partition === 'aws-us-gov') {
     organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
   } else if (partition === 'aws-cn') {
     organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
   } else {
-    organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+    organizationsClient = new AWS.Organizations({ region: 'us-east-1', customUserAgent: solutionId });
   }
 
+  dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
+  documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
+  serviceCatalogClient = new AWS.ServiceCatalog({ customUserAgent: solutionId });
+  cloudformationClient = new CloudFormationClient({ customUserAgent: solutionId });
+  ssmClient = new SSMClient({});
+  paginationConfig = {
+    client: documentClient,
+    pageSize: 100,
+  };
+
+  console.log(stackName);
   switch (event.RequestType) {
     case 'Create':
     case 'Update':

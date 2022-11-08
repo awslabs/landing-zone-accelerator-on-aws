@@ -35,7 +35,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const endpointAz: string = event.ResourceProperties['endpointAz'];
   const firewallArn: string = event.ResourceProperties['firewallArn'];
   const region: string = event.ResourceProperties['region'];
-  const nfwClient = new AWS.NetworkFirewall({ region: region });
+  const solutionId = process.env['SOLUTION_ID'];
+
+  const nfwClient = new AWS.NetworkFirewall({ region: region, customUserAgent: solutionId });
 
   switch (event.RequestType) {
     case 'Create':

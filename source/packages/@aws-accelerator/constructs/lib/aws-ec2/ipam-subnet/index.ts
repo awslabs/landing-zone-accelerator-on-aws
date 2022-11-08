@@ -17,7 +17,7 @@ import { throttlingBackOff } from '@aws-accelerator/utils';
 
 import { Vpc, vpcInit } from './vpc';
 
-const ec2 = new AWS.EC2();
+let ec2: AWS.EC2;
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
   | {
       PhysicalResourceId: string;
@@ -51,6 +51,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const tags: Tag[] = event.ResourceProperties['tags'];
   const vpcId: string = event.ResourceProperties['vpcId'];
   const outpostArn: string = event.ResourceProperties['outpostArn'] ?? undefined;
+  const solutionId = process.env['SOLUTION_ID'];
+
+  ec2 = new AWS.EC2({ customUserAgent: solutionId });
 
   // Set vpc variable
   let vpc: Vpc;

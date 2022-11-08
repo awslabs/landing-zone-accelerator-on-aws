@@ -33,6 +33,7 @@ export interface SsmParameterProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+
   readonly parameter: {
     /**
      * Name of the parameter

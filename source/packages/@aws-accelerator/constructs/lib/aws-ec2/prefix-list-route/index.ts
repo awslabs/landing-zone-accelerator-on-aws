@@ -22,7 +22,6 @@ import * as AWS from 'aws-sdk';
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
 
-const ec2 = new AWS.EC2();
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
   | {
       Status: string | undefined;
@@ -44,6 +43,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     readonly VpcPeeringConnectionId?: string;
   }
 
+  const ec2 = new AWS.EC2({ customUserAgent: process.env['SOLUTION_ID'] });
   const props: RouteProps = event.ResourceProperties['routeDefinition'];
 
   switch (event.RequestType) {

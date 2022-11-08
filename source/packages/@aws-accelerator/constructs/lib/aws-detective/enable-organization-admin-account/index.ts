@@ -35,8 +35,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const region = event.ResourceProperties['region'];
   const adminAccountId = event.ResourceProperties['adminAccountId'];
+  const solutionId = process.env['SOLUTION_ID'];
 
-  const detectiveClient = new DetectiveClient({ region: region });
+  const detectiveClient = new DetectiveClient({ region: region, customUserAgent: solutionId });
 
   const detectiveAdminAccount = await isDetectiveEnable(detectiveClient);
 

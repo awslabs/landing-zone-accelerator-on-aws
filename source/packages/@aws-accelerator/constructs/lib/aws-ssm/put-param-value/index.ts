@@ -37,10 +37,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const assumeRoleArn = event.ResourceProperties['assumeRoleArn'];
   const parameterName = event.ResourceProperties['parameterName'];
   const parameterValue = event.ResourceProperties['parameterValue'];
+  const solutionId = process.env['SOLUTION_ID'];
 
   let ssmClient: AWS.SSM;
   if (invokingAccountID !== parameterAccountID) {
-    const stsClient = new AWS.STS({ region: region });
+    const stsClient = new AWS.STS({ region: region, customUserAgent: solutionId });
     const assumeRoleCredential = await throttlingBackOff(() =>
       stsClient
         .assumeRole({
@@ -57,9 +58,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         sessionToken: assumeRoleCredential.Credentials!.SessionToken,
         expireTime: assumeRoleCredential.Credentials!.Expiration,
       },
+      customUserAgent: solutionId,
     });
   } else {
-    ssmClient = new AWS.SSM({ region: region });
+    ssmClient = new AWS.SSM({ region: region, customUserAgent: solutionId });
   }
 
   switch (event.RequestType) {

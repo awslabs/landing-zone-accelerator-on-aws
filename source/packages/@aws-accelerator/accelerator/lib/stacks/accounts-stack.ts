@@ -232,7 +232,9 @@ export class AccountsStack extends AcceleratorStack {
             handler: 'index.handler',
             description: 'Lambda function to attach quarantine scp to new accounts',
             timeout: cdk.Duration.minutes(5),
-            environment: { SCP_POLICY_NAME: props.organizationConfig.quarantineNewAccounts?.scpPolicyName ?? '' },
+            environment: {
+              SCP_POLICY_NAME: props.organizationConfig.quarantineNewAccounts?.scpPolicyName ?? '',
+            },
             environmentEncryption: this.lambdaKey,
             initialPolicy: [orgPolicyRead, orgPolicyWrite],
           });

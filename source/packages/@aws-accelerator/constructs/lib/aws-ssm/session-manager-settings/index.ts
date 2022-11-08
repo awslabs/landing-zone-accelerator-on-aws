@@ -17,7 +17,6 @@ import { CreateDocumentRequest, UpdateDocumentRequest } from 'aws-sdk/clients/ss
 AWS.config.logger = console;
 
 const documentName = 'SSM-SessionManagerRunShell';
-const ssm = new AWS.SSM();
 
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
   | {
@@ -32,6 +31,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const cloudWatchLogGroupName: string = event.ResourceProperties['cloudWatchLogGroupName'];
   const cloudWatchEncryptionEnabled: boolean = event.ResourceProperties['cloudWatchEncryptionEnabled'] === 'true';
   const kmsKeyId: string = event.ResourceProperties['kmsKeyId'];
+  const solutionId = process.env['SOLUTION_ID'];
+
+  const ssm = new AWS.SSM({ customUserAgent: solutionId });
+
   switch (event.RequestType) {
     case 'Create':
     case 'Update':

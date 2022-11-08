@@ -28,7 +28,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
-  const ramClient = new AWS.RAM({});
+  const ramClient = new AWS.RAM({ customUserAgent: process.env['SOLUTION_ID'] });
 
   switch (event.RequestType) {
     case 'Create':
@@ -64,7 +64,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           nextToken = page.nextToken;
         }
       } while (nextToken);
-      // let nextToken2: string | undefined = undefined;
       nextToken = undefined;
       do {
         const page = await throttlingBackOff(() =>

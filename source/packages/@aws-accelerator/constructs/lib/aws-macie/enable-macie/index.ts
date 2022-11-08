@@ -31,8 +31,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const region = event.ResourceProperties['region'];
   const findingPublishingFrequency = event.ResourceProperties['findingPublishingFrequency'];
   const isSensitiveSh = event.ResourceProperties['isSensitiveSh'] === 'true';
+  const solutionId = process.env['SOLUTION_ID'];
 
-  const macie2Client = new AWS.Macie2({ region: region });
+  const macie2Client = new AWS.Macie2({ region: region, customUserAgent: solutionId });
 
   switch (event.RequestType) {
     case 'Create':

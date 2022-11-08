@@ -21,10 +21,11 @@ import * as AWS from 'aws-sdk';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import { v4 as uuidv4 } from 'uuid';
 
-const documentClient = new AWS.DynamoDB.DocumentClient();
-const serviceCatalogClient = new AWS.ServiceCatalog();
-
 const tableName = process.env['NewAccountsTableName'] ?? '';
+const solutionId = process.env['SolutionId'] ?? '';
+
+const documentClient = new AWS.DynamoDB.DocumentClient({ customUserAgent: solutionId });
+const serviceCatalogClient = new AWS.ServiceCatalog({ customUserAgent: solutionId });
 
 interface AccountConfig {
   name: string;

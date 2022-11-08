@@ -29,11 +29,12 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const displayName = event.ResourceProperties['displayName'];
   const providerName = event.ResourceProperties['providerName'];
+  const solutionId = process.env['SOLUTION_ID'];
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const serviceCatalogClient = new AWS.ServiceCatalog();
+      const serviceCatalogClient = new AWS.ServiceCatalog({ customUserAgent: solutionId });
       let nextToken: string | undefined = undefined;
       do {
         const page = await throttlingBackOff(() =>

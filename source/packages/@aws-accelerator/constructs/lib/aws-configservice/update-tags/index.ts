@@ -21,7 +21,7 @@ import {
   Tag,
 } from '@aws-sdk/client-config-service';
 import { v4 as uuidv4 } from 'uuid';
-const configClient = new ConfigServiceClient({});
+let configClient: ConfigServiceClient;
 
 /**
  * configservice-update-tags - lambda handler
@@ -35,6 +35,8 @@ async function onEvent(
   event: AWSLambda.CloudFormationCustomResourceEvent,
 ): Promise<{ PhysicalResourceId: string | undefined; Status: string } | undefined> {
   console.log(JSON.stringify(event));
+  const solutionId = process.env['SOLUTION_ID'];
+  configClient = new ConfigServiceClient({ customUserAgent: solutionId });
   switch (event.RequestType) {
     case 'Create':
       return onCreate(event);

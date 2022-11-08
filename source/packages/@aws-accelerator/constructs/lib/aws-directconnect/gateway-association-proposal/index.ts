@@ -32,7 +32,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const allowedPrefixesInitial: string[] = event.ResourceProperties['allowedPrefixes'];
   const directConnectGatewayId: string = event.ResourceProperties['directConnectGatewayId'];
   const directConnectGatewayOwnerAccount: string = event.ResourceProperties['directConnectGatewayOwnerAccount'];
-  const dx = new AWS.DirectConnect();
+  const solutionId = process.env['SOLUTION_ID'];
+  const dx = new AWS.DirectConnect({ customUserAgent: solutionId });
   const gatewayId: string = event.ResourceProperties['gatewayId'];
 
   switch (event.RequestType) {

@@ -31,17 +31,18 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const region = event.ResourceProperties['region'];
   const partition = event.ResourceProperties['partition'];
   const enableS3Protection: boolean = event.ResourceProperties['enableS3Protection'] === 'true';
+  const solutionId = process.env['SOLUTION_ID'];
 
   let organizationsClient: AWS.Organizations;
   if (partition === 'aws-us-gov') {
-    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+    organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1', customUserAgent: solutionId });
   } else if (partition === 'aws-cn') {
-    organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
+    organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1', customUserAgent: solutionId });
   } else {
-    organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+    organizationsClient = new AWS.Organizations({ region: 'us-east-1', customUserAgent: solutionId });
   }
 
-  const guardDutyClient = new AWS.GuardDuty({ region: region });
+  const guardDutyClient = new AWS.GuardDuty({ region: region, customUserAgent: solutionId });
 
   const detectorId = await getDetectorId(guardDutyClient);
 

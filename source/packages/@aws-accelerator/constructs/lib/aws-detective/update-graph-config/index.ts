@@ -31,7 +31,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const region = event.ResourceProperties['region'];
-  const detectiveClient = new DetectiveClient({ region: region });
+  const solutionId = process.env['SOLUTION_ID'];
+  const detectiveClient = new DetectiveClient({ region: region, customUserAgent: solutionId });
   const graphArn = await getGraphArn(detectiveClient);
   let nextToken: string | undefined = undefined;
   do {

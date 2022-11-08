@@ -25,6 +25,7 @@ const documentClient = new AWS.DynamoDB.DocumentClient();
 const newOrgAccountsTableName = process.env['NewOrgAccountsTableName'] ?? '';
 const govCloudAccountMappingTableName = process.env['GovCloudAccountMappingTableName'] ?? '';
 const accountRoleName = process.env['AccountRoleName'];
+const solutionId = process.env['SolutionId'] ?? '';
 
 interface AccountConfig {
   name: string;
@@ -51,9 +52,9 @@ export async function handler(
   const partition = context.invokedFunctionArn.split(':')[1];
 
   if (partition === 'aws-cn') {
-    organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
+    organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1', customUserAgent: solutionId });
   } else {
-    organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+    organizationsClient = new AWS.Organizations({ region: 'us-east-1', customUserAgent: solutionId });
   }
 
   console.log(event);
