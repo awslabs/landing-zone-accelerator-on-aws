@@ -15,8 +15,9 @@ import { SNSClient, PublishCommand, PublishCommandInput } from '@aws-sdk/client-
 import { throttlingBackOff } from '@aws-accelerator/utils';
 
 const snsTopicArn: string = process.env['SNS_TOPIC_ARN'] ?? '';
+const solutionId: string = process.env['SOLUTION_ID'] ?? '';
 
-const snsClient = new SNSClient({});
+const snsClient = new SNSClient({ customUserAgent: solutionId });
 /**
  * control-tower-notification-forwarder - lambda handler
  *

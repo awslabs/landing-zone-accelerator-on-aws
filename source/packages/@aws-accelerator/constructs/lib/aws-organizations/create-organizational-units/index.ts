@@ -21,6 +21,7 @@ import {
   paginateQuery,
   DynamoDBDocumentPaginationConfiguration,
 } from '@aws-sdk/lib-dynamodb';
+
 AWS.config.logger = console;
 let organizationsClient: AWS.Organizations;
 const marshallOptions = {
@@ -33,12 +34,10 @@ const unmarshallOptions = {
   wrapNumbers: false,
 };
 const translateConfig = { marshallOptions, unmarshallOptions };
-const dynamodbClient = new DynamoDBClient({});
-const documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
-const paginationConfig: DynamoDBDocumentPaginationConfiguration = {
-  client: documentClient,
-  pageSize: 100,
-};
+let paginationConfig: DynamoDBDocumentPaginationConfiguration;
+let dynamodbClient: DynamoDBClient;
+let documentClient: DynamoDBDocumentClient;
+
 type OrganizationConfigRecord = {
   dataType: string;
   acceleratorKey: string;
@@ -65,6 +64,15 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const organizationsEnabled = event.ResourceProperties['organizationsEnabled'];
   const partition = event.ResourceProperties['partition'];
   const organizationalUnitsToCreate: OrganizationConfigRecords = [];
+  const solutionId = process.env['SOLUTION_ID'];
+
+  dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
+  documentClient = DynamoDBDocumentClient.from(dynamodbClient, translateConfig);
+  paginationConfig = {
+    client: documentClient,
+    pageSize: 100,
+  };
+
   switch (event.RequestType) {
     case 'Create':
     case 'Update':

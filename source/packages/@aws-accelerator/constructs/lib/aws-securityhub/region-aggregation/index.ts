@@ -29,8 +29,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const region = event.ResourceProperties['region'];
+  const solutionId = process.env['SOLUTION_ID'];
 
-  const securityHubClient = new AWS.SecurityHub({ region: region });
+  const securityHubClient = new AWS.SecurityHub({ region: region, customUserAgent: solutionId });
 
   // check if existing finding aggregator exists
   const result = await throttlingBackOff(() => securityHubClient.listFindingAggregators({}).promise());

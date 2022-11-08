@@ -31,7 +31,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
-      const iamClient = new AWS.IAM({});
+      const iamClient = new AWS.IAM({ customUserAgent: process.env['SOLUTION_ID'] });
       await throttlingBackOff(() =>
         iamClient
           .updateAccountPasswordPolicy({

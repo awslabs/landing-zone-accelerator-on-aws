@@ -16,7 +16,9 @@ import { SSMClient, PutParameterCommand, PutParameterCommandInput } from '@aws-s
 
 const driftParameterName: string = process.env['DRIFT_PARAMETER_NAME'] ?? '';
 const driftMessageParameterName: string = process.env['DRIFT_MESSAGE_PARAMETER_NAME'] ?? '';
-const ssmClient = new SSMClient({});
+const solutionId: string = process.env['SOLUTION_ID'] ?? '';
+
+const ssmClient = new SSMClient({ customUserAgent: solutionId });
 /**
  * Control Tower Notifications - lambda handler
  *

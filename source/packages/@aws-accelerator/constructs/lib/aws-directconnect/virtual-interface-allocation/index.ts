@@ -33,7 +33,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   // Set variables
   const vif = vifInit(event);
   const apiProps = setApiProps(vif);
-  const dx = new AWS.DirectConnect({ region: event.ResourceProperties['region'] });
+  const dx = new AWS.DirectConnect({
+    region: event.ResourceProperties['region'],
+    customUserAgent: process.env['SOLUTION_ID'],
+  });
 
   // Event handler
   switch (event.RequestType) {

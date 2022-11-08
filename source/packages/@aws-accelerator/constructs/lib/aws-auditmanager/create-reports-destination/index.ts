@@ -32,8 +32,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const defaultReportsDestinationType = event.ResourceProperties['defaultReportsDestinationType'];
   const bucket = event.ResourceProperties['bucket'];
   const kmsKeyArn = event.ResourceProperties['kmsKeyArn'];
+  const solutionId = process.env['SOLUTION_ID'];
 
-  const auditManagerClient = new AWS.AuditManager({ region: region });
+  const auditManagerClient = new AWS.AuditManager({ region: region, customUserAgent: solutionId });
 
   switch (event.RequestType) {
     case 'Create':

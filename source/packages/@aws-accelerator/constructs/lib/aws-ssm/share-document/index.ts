@@ -30,7 +30,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   const name = event.ResourceProperties['name'];
   const accountIds: string[] = event.ResourceProperties['accountIds'];
-  const ssmClient = new AWS.SSM({});
+  const solutionId = process.env['SOLUTION_ID'];
+
+  const ssmClient = new AWS.SSM({ customUserAgent: solutionId });
 
   const documentPermission = await throttlingBackOff(() =>
     ssmClient.describeDocumentPermission({ Name: name, PermissionType: 'Share' }).promise(),

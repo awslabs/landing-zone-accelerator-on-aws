@@ -20,7 +20,7 @@ AWS.config.logger = console;
  * @param event
  * @returns
  */
-const logsClient = new AWS.CloudWatchLogs();
+let logsClient: AWS.CloudWatchLogs;
 
 export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent): Promise<
   | {
@@ -34,6 +34,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const logDestinationArn = event.ResourceProperties['LogDestination']!;
   const logRetention = event.ResourceProperties['LogRetention']!;
   const logKmsKey = event.ResourceProperties['LogKmsKeyArn']!;
+  const solutionId = process.env['SOLUTION_ID'];
+
+  logsClient = new AWS.CloudWatchLogs({ customUserAgent: solutionId });
 
   switch (event.RequestType) {
     case 'Create':

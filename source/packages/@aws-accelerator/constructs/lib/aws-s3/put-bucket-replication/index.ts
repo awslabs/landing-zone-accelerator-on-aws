@@ -30,8 +30,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   const sourceBucketName: string = event.ResourceProperties['sourceBucketName'];
+  const solutionId = process.env['SOLUTION_ID'];
 
-  const s3Client = new AWS.S3({});
+  const s3Client = new AWS.S3({ customUserAgent: solutionId });
 
   switch (event.RequestType) {
     case 'Create':

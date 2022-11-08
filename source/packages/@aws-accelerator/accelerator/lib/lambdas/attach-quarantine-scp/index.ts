@@ -14,7 +14,10 @@
 import * as AWS from 'aws-sdk';
 import { delay, throttlingBackOff } from '@aws-accelerator/utils';
 
-const organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+const organizationsClient = new AWS.Organizations({
+  region: 'us-east-1',
+  customUserAgent: process.env['SOLUTION_ID'],
+});
 
 /**
  * attach-quarantine-scp - lambda handler

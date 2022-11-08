@@ -34,10 +34,10 @@ declare global {
   type ReadableStream = unknown;
 }
 
-const dynamodbClient = new DynamoDBClient({});
-const documentClient = DynamoDBDocumentClient.from(dynamodbClient);
-const cloudformationClient = new CloudFormationClient({});
-const s3Client = new S3Client({});
+let dynamodbClient: DynamoDBClient;
+let documentClient: DynamoDBDocumentClient;
+let cloudformationClient: CloudFormationClient;
+let s3Client: S3Client;
 
 /**
  * load-config-table - lambda handler
@@ -64,9 +64,15 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const commitId: string = event.ResourceProperties['commitId'] ?? '';
   const partition: string = event.ResourceProperties['partition'];
   const stackName: string = event.ResourceProperties['stackName'];
+  const solutionId = process.env['SOLUTION_ID'];
 
   console.log(`Configuration Table Name: ${configTableName}`);
   console.log(`Configuration Repository Name: ${configRepositoryName}`);
+
+  dynamodbClient = new DynamoDBClient({ customUserAgent: solutionId });
+  documentClient = DynamoDBDocumentClient.from(dynamodbClient);
+  cloudformationClient = new CloudFormationClient({ customUserAgent: solutionId });
+  s3Client = new S3Client({ customUserAgent: solutionId });
 
   switch (event.RequestType) {
     case 'Create':

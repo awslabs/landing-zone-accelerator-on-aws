@@ -32,7 +32,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const adminAccountId = event.ResourceProperties['adminAccountId'];
   const exportFrequency = event.ResourceProperties['exportFrequency'];
   const enableS3Protection = event.ResourceProperties['enableS3Protection'] === 'true';
-  const guardDutyClient = new AWS.GuardDuty({ region: region });
+  const solutionId = process.env['SOLUTION_ID'];
+
+  const guardDutyClient = new AWS.GuardDuty({ region: region, customUserAgent: solutionId });
   const detectorId = await getDetectorId(guardDutyClient);
 
   const existingMemberAccountIds: string[] = [adminAccountId];

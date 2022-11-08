@@ -20,7 +20,7 @@ import {
   DescribeSubnetsCommand,
 } from '@aws-sdk/client-ec2';
 
-const ec2Client = new EC2Client({});
+let ec2Client: EC2Client;
 interface Tag {
   readonly Key: string;
   readonly Value: string;
@@ -44,6 +44,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const vpcTags = event.ResourceProperties['vpcTags'] || [];
   const subnetTags = event.ResourceProperties['subnetTags'] || [];
   const sharedSubnetId: string = event.ResourceProperties['sharedSubnetId'];
+  const solutionId = process.env['SOLUTION_ID'];
+
+  ec2Client = new EC2Client({ customUserAgent: solutionId });
 
   switch (event.RequestType) {
     case 'Create':

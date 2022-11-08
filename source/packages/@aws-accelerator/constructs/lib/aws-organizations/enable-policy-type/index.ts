@@ -32,6 +32,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Create':
       const policyType = event.ResourceProperties['policyType'];
       const partition = event.ResourceProperties['partition'];
+      const solutionId = process.env['SOLUTION_ID'];
 
       if (partition === 'aws-us-gov' && policyType == ('TAG_POLICY' || 'BACKUP_POLICY')) {
         throw new Error(`Policy Type ${policyType} not supported.`);
@@ -42,11 +43,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       //
       let organizationsClient: AWS.Organizations;
       if (partition === 'aws-us-gov') {
-        organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+        organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1', customUserAgent: solutionId });
       } else if (partition === 'aws-cn') {
-        organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
+        organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1', customUserAgent: solutionId });
       } else {
-        organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+        organizationsClient = new AWS.Organizations({ region: 'us-east-1', customUserAgent: solutionId });
       }
 
       // Verify policy type from the listRoots call

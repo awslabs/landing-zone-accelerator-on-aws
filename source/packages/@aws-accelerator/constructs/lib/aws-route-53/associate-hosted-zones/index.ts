@@ -28,6 +28,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
+  const solutionId = process.env['SOLUTION_ID'];
+
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
@@ -49,15 +51,15 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         //
         let targetEc2Client: AWS.EC2;
         let targetRoute53Client: AWS.Route53;
-        const hostedZoneRoute53Client: AWS.Route53 = new AWS.Route53({});
+        const hostedZoneRoute53Client: AWS.Route53 = new AWS.Route53({ customUserAgent: solutionId });
 
         if (accountId === hostedZoneAccountId) {
           console.log('Running in hosted zone account, create local clients');
-          targetEc2Client = new AWS.EC2({});
-          targetRoute53Client = new AWS.Route53({});
+          targetEc2Client = new AWS.EC2({ customUserAgent: solutionId });
+          targetRoute53Client = new AWS.Route53({ customUserAgent: solutionId });
         } else {
           console.log('Not running in hosted zone account, assume role to create clients');
-          const stsClient = new AWS.STS({});
+          const stsClient = new AWS.STS({ customUserAgent: solutionId });
           const assumeRoleResponse = await throttlingBackOff(() =>
             stsClient
               .assumeRole({
@@ -73,6 +75,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
               secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
               sessionToken: assumeRoleResponse.Credentials?.SessionToken,
             },
+            customUserAgent: solutionId,
           });
 
           targetRoute53Client = new AWS.Route53({
@@ -81,6 +84,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
               secretAccessKey: assumeRoleResponse.Credentials?.SecretAccessKey ?? '',
               sessionToken: assumeRoleResponse.Credentials?.SessionToken,
             },
+            customUserAgent: solutionId,
           });
         }
 

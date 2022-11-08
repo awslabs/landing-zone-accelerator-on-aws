@@ -14,12 +14,13 @@ import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
 
-const logsClient = new AWS.CloudWatchLogs();
-
 const logSubscriptionRoleArn = process.env['LogSubscriptionRole']!;
 const logDestinationArn = process.env['LogDestination']!;
 const logRetention = process.env['LogRetention']!;
 const logKmsKey = process.env['LogKmsKeyArn']!;
+const solutionId = process.env['SOLUTION_ID'];
+
+const logsClient = new AWS.CloudWatchLogs({ customUserAgent: solutionId });
 
 export async function handler(event: AWSLambda.ScheduledEvent) {
   const logGroupName = event.detail.requestParameters.logGroupName as string;
