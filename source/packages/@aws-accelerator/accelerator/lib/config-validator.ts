@@ -14,9 +14,9 @@ import {
   AccountsConfig,
   GlobalConfig,
   IamConfig,
-  NetworkConfig,
   OrganizationConfig,
   SecurityConfig,
+  NetworkConfigValidator,
 } from '@aws-accelerator/config';
 import { Logger } from './logger';
 
@@ -45,7 +45,7 @@ if (configDirPath) {
   }
 
   try {
-    NetworkConfig.load(configDirPath, true);
+    new NetworkConfigValidator(configDirPath);
   } catch (e) {
     errors.push({ file: 'network-config.yaml', message: e });
   }

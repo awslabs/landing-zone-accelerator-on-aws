@@ -35,6 +35,7 @@ export * from './lib/aws-ec2/prefix-list';
 export * from './lib/aws-ec2/prefix-list-route';
 export * from './lib/aws-ec2/route-table';
 export * from './lib/aws-ec2/transit-gateway';
+export * from './lib/aws-ec2/transit-gateway-peering';
 export * from './lib/aws-ec2/transit-gateway-prefix-list-reference';
 export * from './lib/aws-ec2/transit-gateway-route-table';
 export * from './lib/aws-ec2/transit-gateway-static-route';

@@ -3,6 +3,6 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "include": ["lib/**/*", "index.ts"],
+  "include": ["lib/**/*", "index.ts", "validator/network-config-validator.ts"],
   "exclude": ["test/**/*"]
 }

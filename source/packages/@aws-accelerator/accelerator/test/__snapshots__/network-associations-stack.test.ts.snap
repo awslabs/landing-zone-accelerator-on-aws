@@ -857,6 +857,40 @@ Object {
       "Type": "Custom::TransitGatewayPrefixListReference",
       "UpdateReplacePolicy": "Delete",
     },
+    "NetworkMainShared102000016NetworkMainAndSharedServicesMainPeeringStaticRoute6433AEC2": Object {
+      "Properties": Object {
+        "DestinationCidrBlock": "10.200.0.0/16",
+        "TransitGatewayAttachmentId": Object {
+          "Ref": "NetworkNetworkMainAndSharedServicesMainPeeringTransitGatewayPeeringAttachment6A5D4528",
+        },
+        "TransitGatewayRouteTableId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainrouteTablesNetworkMainSharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
+    },
+    "NetworkNetworkMainAndSharedServicesMainPeeringTransitGatewayPeeringAttachment6A5D4528": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
+            "Arn",
+          ],
+        },
+        "name": "Network-Main-And-SharedServices-Main-Peering",
+        "transitGatewayId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "type": "peering",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetTransitGatewayAttachment",
+      "UpdateReplacePolicy": "Delete",
+    },
     "SharedServicesMainNetworkMainCorePropagationB8A9444B": Object {
       "Properties": Object {
         "TransitGatewayAttachmentId": Object {

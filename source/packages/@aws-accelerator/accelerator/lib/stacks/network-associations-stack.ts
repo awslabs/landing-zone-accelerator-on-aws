@@ -262,6 +262,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     if (vpcItem.region === cdk.Stack.of(this).region) {
       for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
         const accountId = this.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
+
         if (accountId === cdk.Stack.of(this).account) {
           // Get the Transit Gateway ID
           const transitGatewayId = this.transitGateways.get(tgwAttachmentItem.transitGateway.name);
@@ -1269,6 +1270,23 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         );
       }
 
+      // If route is for TGW peering attachment
+      if (
+        routeItem.attachment &&
+        NetworkConfigTypes.transitGatewayRouteTableTgwPeeringEntryConfig.is(routeItem.attachment)
+      ) {
+        Logger.info(
+          `[network-associations-stack] Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        );
+        routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.transitGatewayPeeringName}`;
+
+        // Get TGW attachment ID
+        transitGatewayAttachmentId = this.getTgwPeeringAttachmentId(
+          routeItem.attachment.transitGatewayPeeringName,
+          tgwItem,
+        );
+      }
+
       if (routeItem.attachment && !transitGatewayAttachmentId) {
         throw new Error(
           `[network-associations-stack] Unable to locate transit gateway attachment ID for route table item ${routeTableItem.name}`,
@@ -1351,6 +1369,25 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         );
       }
 
+      // If route is for TGW peering attachment
+      if (
+        routeItem.attachment &&
+        NetworkConfigTypes.transitGatewayRouteTableTgwPeeringEntryConfig.is(routeItem.attachment)
+      ) {
+        Logger.info(
+          `[network-associations-stack] Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        );
+        plRouteId = pascalCase(
+          `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.transitGatewayPeeringName}`,
+        );
+
+        // Get TGW attachment ID
+        transitGatewayAttachmentId = this.getTgwPeeringAttachmentId(
+          routeItem.attachment.transitGatewayPeeringName,
+          tgwItem,
+        );
+      }
+
       if (routeItem.attachment && !transitGatewayAttachmentId) {
         throw new Error(
           `[network-associations-stack] Unable to locate transit gateway attachment ID for route table item ${routeTableItem.name}`,
@@ -1369,6 +1406,60 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     }
   }
 
+  /**
+   * Function to get transit gateway peering attachment ID
+   * @param transitGatewayPeeringName
+   * @param tgwItem
+   * @returns
+   */
+  private getTgwPeeringAttachmentId(transitGatewayPeeringName: string, tgwItem: TransitGatewayConfig): string {
+    const requesterConfig = this.props.networkConfig.getTgwPeeringRequesterAccepterConfig(
+      transitGatewayPeeringName,
+      'requester',
+    );
+    const accepterConfig = this.props.networkConfig.getTgwPeeringRequesterAccepterConfig(
+      transitGatewayPeeringName,
+      'accepter',
+    );
+
+    if (!requesterConfig || !accepterConfig) {
+      throw new Error(`Transit gateway peering ${transitGatewayPeeringName} not found !!!`);
+    }
+
+    // Get TGW attachment ID for requester
+    if (this.props.accountsConfig.getAccountId(requesterConfig.account) === cdk.Stack.of(this).account) {
+      return cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        `/accelerator/network/transitGateways/${tgwItem.name}/peering/${transitGatewayPeeringName}/id`,
+      );
+    }
+
+    // Get TGW attachment ID for accepter
+    if (this.props.accountsConfig.getAccountId(accepterConfig.account) === cdk.Stack.of(this).account) {
+      const transitGatewayId = this.transitGateways.get(accepterConfig.transitGatewayName);
+      if (!transitGatewayId) {
+        throw new Error(`Transit Gateway ${accepterConfig.transitGatewayName} not found`);
+      }
+
+      Logger.info(
+        `[network-associations-stack] Looking up transit gateway peering attachment id of accepter account ${accepterConfig.account}`,
+      );
+      return TransitGatewayAttachment.fromLookup(
+        this,
+        pascalCase(`${accepterConfig.account}${transitGatewayPeeringName}TransitGatewayPeeringAttachment`),
+        {
+          name: transitGatewayPeeringName,
+          owningAccountId: cdk.Stack.of(this).account,
+          transitGatewayId,
+          type: TransitGatewayAttachmentType.PEERING,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.logRetention,
+        },
+      ).transitGatewayAttachmentId;
+    }
+
+    throw new Error(`Transit Gateway attachment id not found for ${transitGatewayPeeringName}`);
+  }
   /**
    * Check if resource is shared with stack.
    *

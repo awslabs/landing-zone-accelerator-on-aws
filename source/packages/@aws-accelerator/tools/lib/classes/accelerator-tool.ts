@@ -401,10 +401,9 @@ export class AcceleratorTool {
           // AcceleratorTool.resetCredentialEnvironment();
           await this.deleteStack(new CloudFormationClient({}), 'AWSAccelerator-CDKToolkit');
         }
+        //start final resource cleanup, CWL logs are re-created post CFN stack deletion so these needs to be clean
+        await this.finalCleanup(acceleratorQualifier);
       }
-
-      //start final resource cleanup, CWL logs are re-created post CFN stack deletion so these needs to be clean
-      await this.finalCleanup(acceleratorQualifier);
     }
     return true;
   }

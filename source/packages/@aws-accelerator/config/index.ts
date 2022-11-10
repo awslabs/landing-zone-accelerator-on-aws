@@ -16,5 +16,6 @@ export * from './lib/common-types';
 export * from './lib/global-config';
 export * from './lib/iam-config';
 export * from './lib/network-config';
+export * from './validator/network-config-validator';
 export * from './lib/organization-config';
 export * from './lib/security-config';
