@@ -1,0 +1,238 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TransitGatewayPeering Construct(TransitGatewayPrefixListReference):  Snapshot Test 1`] = `
+Object {
+  "Parameters": Object {
+    "SsmParameterValueacceleratornetworktransitGatewaysSharedServicesTGWidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/transitGateways/SharedServices-TGW/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": Object {
+    "CustomTransitGatewayAcceptPeeringCustomResourceProviderHandler692671C6": Object {
+      "DependsOn": Array [
+        "CustomTransitGatewayAcceptPeeringCustomResourceProviderRole0A88B1D1",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomTransitGatewayAcceptPeeringCustomResourceProviderRole0A88B1D1",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomTransitGatewayAcceptPeeringCustomResourceProviderLogGroupB843F457": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "TestKms67078DF1",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomTransitGatewayAcceptPeeringCustomResourceProviderHandler692671C6",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomTransitGatewayAcceptPeeringCustomResourceProviderRole0A88B1D1": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:aws:iam::",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":role/ABC",
+                      ],
+                    ],
+                  },
+                  "Sid": "AllowAssumeRole",
+                },
+                Object {
+                  "Action": Array [
+                    "ec2:AssociateTransitGatewayRouteTable",
+                    "ec2:DisassociateTransitGatewayRouteTable",
+                    "ec2:DescribeTransitGatewayPeeringAttachments",
+                    "ec2:DescribeTransitGatewayAttachments",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AllowModifyPeeringReferences",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "TestKms67078DF1": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "TransitGatewayPeering3AEAB3EC": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomTransitGatewayAcceptPeeringCustomResourceProviderLogGroupB843F457",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomTransitGatewayAcceptPeeringCustomResourceProviderHandler692671C6",
+            "Arn",
+          ],
+        },
+        "accepterAccountId": Object {
+          "Ref": "AWS::AccountId",
+        },
+        "accepterRegion": "us-west-2",
+        "accepterRoleArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::",
+              Object {
+                "Ref": "AWS::AccountId",
+              },
+              ":role/ABC",
+            ],
+          ],
+        },
+        "accepterTransitGatewayId": "tgw-0001",
+        "accepterTransitGatewayRouteTableId": "rt-001",
+        "autoAccept": true,
+        "peeringTags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "SharedServices-And-Network-Main-Peering",
+          },
+        ],
+        "requesterAccountId": Object {
+          "Ref": "AWS::AccountId",
+        },
+        "requesterRegion": Object {
+          "Ref": "AWS::Region",
+        },
+        "requesterTransitGatewayAttachmentId": Object {
+          "Fn::GetAtt": Array [
+            "TransitGatewayPeeringNetworkMainTgwToSharedServicesTgw8B9A3F31",
+            "TransitGatewayAttachmentId",
+          ],
+        },
+        "requesterTransitGatewayRouteTableId": "tgw-0002",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::TransitGatewayAcceptPeering",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "TransitGatewayPeeringNetworkMainTgwToSharedServicesTgw8B9A3F31": Object {
+      "Properties": Object {
+        "PeerAccountId": Object {
+          "Ref": "AWS::AccountId",
+        },
+        "PeerRegion": "us-west-2",
+        "PeerTransitGatewayId": "tgw-0001",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "SharedServices-And-Network-Main-Peering",
+          },
+        ],
+        "TransitGatewayId": Object {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysSharedServicesTGWidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayPeeringAttachment",
+    },
+  },
+}
+`;

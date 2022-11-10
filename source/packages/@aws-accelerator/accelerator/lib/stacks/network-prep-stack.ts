@@ -100,6 +100,11 @@ export class NetworkPrepStack extends AcceleratorStack {
     this.transitGatewayMap = this.createTransitGateways(props);
 
     //
+    // Create Transit Gateway Peering Role
+    //
+    this.createTransitGatewayPeeringRole();
+
+    //
     // Create Site-to-Site VPN connections
     //
     this.createVpnConnectionResources(props);
@@ -185,6 +190,75 @@ export class NetworkPrepStack extends AcceleratorStack {
       this.addResourceShare(tgwItem, `${tgwItem.name}_TransitGatewayShare`, [tgw.transitGatewayArn]);
     }
     return tgw;
+  }
+
+  /**
+   * Function to create TGW peering role. This role is used to access acceptor TGW information.
+   * This role will be assumed by requestor to complete acceptance of peering request.
+   * This role is created only if account is used as accepter in TGW peering.
+   * This role gets created only in home region
+   * @returns
+   */
+  private createTransitGatewayPeeringRole() {
+    for (const transitGatewayPeeringItem of this.props.networkConfig.transitGatewayPeering ?? []) {
+      const accepterAccountId = this.props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account);
+
+      if (
+        accepterAccountId === cdk.Stack.of(this).account &&
+        this.props.globalConfig.homeRegion === cdk.Stack.of(this).region
+      ) {
+        const principals: cdk.aws_iam.PrincipalBase[] = [];
+
+        const requestorAccounts = this.props.networkConfig.getTgwRequestorAccountNames(
+          transitGatewayPeeringItem.accepter.account,
+        );
+
+        requestorAccounts.forEach(item => {
+          principals.push(new cdk.aws_iam.AccountPrincipal(this.props.accountsConfig.getAccountId(item)));
+        });
+
+        new cdk.aws_iam.Role(this, 'TgwPeeringRole', {
+          roleName: AcceleratorStack.ACCELERATOR_TGW_PEERING_ROLE_NAME,
+          assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
+          inlinePolicies: {
+            default: new cdk.aws_iam.PolicyDocument({
+              statements: [
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                  resources: [
+                    `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/network/transitGateways/*`,
+                  ],
+                }),
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: [
+                    'ec2:DescribeTransitGatewayPeeringAttachments',
+                    'ec2:AcceptTransitGatewayPeeringAttachment',
+                    'ec2:AssociateTransitGatewayRouteTable',
+                    'ec2:DisassociateTransitGatewayRouteTable',
+                    'ec2:DescribeTransitGatewayAttachments',
+                    'ec2:CreateTags',
+                  ],
+                  resources: ['*'],
+                }),
+              ],
+            }),
+          },
+        });
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+        // rule suppression with evidence for this permission.
+        NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/TgwPeeringRole/Resource`, [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'TgwPeeringRole needs access to create peering connections for TGWs in the account ',
+          },
+        ]);
+
+        return; // So that same env (account & region) do not try to create duplicate role, if there is multiple tgw peering for same account
+      }
+    }
   }
 
   /**

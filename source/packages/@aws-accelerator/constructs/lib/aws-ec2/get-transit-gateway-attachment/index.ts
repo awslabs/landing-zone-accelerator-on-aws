@@ -109,6 +109,7 @@ async function validateAttachment(
 ): Promise<boolean> {
   switch (attachmentType) {
     case 'vpc':
+    case 'peering':
       const nameTag = attachment.Tags?.find(t => t.Key === 'Name');
       if (nameTag && nameTag.Value === name) {
         return true;
