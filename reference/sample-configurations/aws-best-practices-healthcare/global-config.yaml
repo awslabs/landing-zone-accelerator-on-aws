@@ -15,8 +15,9 @@ logging:
     sendToS3: false
     excludeRegions: []
     excludeAccounts: []
-backupVaults:
-  - name: BackupVault
-    deploymentTargets:
-      organizationalUnits:
-        - Root
+backup:
+  vaults:
+    - name: BackupVault
+      deploymentTargets:
+        organizationalUnits:
+          - Root

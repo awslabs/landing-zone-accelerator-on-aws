@@ -33,6 +33,119 @@ Object {
       },
       "Type": "AWS::IAM::Group",
     },
+    "BackupKey60B97760": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "Description": "AWS Accelerator Backup Kms Key",
+        "EnableKeyRotation": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "BackupKeyAliasA9FE2B6D": Object {
+      "Properties": Object {
+        "AliasName": "alias/accelerator/kms/backup/key",
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "BackupKey60B97760",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
+    "BackupRoleF43CFD90": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "IAM Role created as per accelerator iam-config needs AWS managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "backup.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup",
+              ],
+            ],
+          },
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores",
+              ],
+            ],
+          },
+        ],
+        "RoleName": "Backup-Role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "BackupVaultBackupVaultACBCC720": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "BackupVaultName": "BackupVault",
+        "EncryptionKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "BackupKey60B97760",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Backup::BackupVault",
+      "UpdateReplacePolicy": "Retain",
+    },
     "BreakGlassUser01AA051328": Object {
       "Properties": Object {
         "Groups": Array [

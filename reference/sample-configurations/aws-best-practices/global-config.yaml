@@ -104,8 +104,9 @@ reports:
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
           address: <budget-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
-backupVaults:
-  - name: BackupVault
-    deploymentTargets:
-      organizationalUnits:
-        - Root
+backup:
+  vaults:
+    - name: BackupVault
+      deploymentTargets:
+        organizationalUnits:
+          - Root
