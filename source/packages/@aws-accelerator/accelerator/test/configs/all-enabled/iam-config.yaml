@@ -21,6 +21,14 @@ roleSets:
             - AmazonSSMDirectoryServiceAccess
             - CloudWatchAgentServerPolicy
         boundaryPolicy: Default-Boundary-Policy
+      - name: Backup-Role
+        assumedBy:
+          - type: service
+            principal: backup.amazonaws.com
+        policies:
+          awsManaged:
+            - service-role/AWSBackupServiceRolePolicyForBackup
+            - service-role/AWSBackupServiceRolePolicyForRestores
 groupSets:
   - deploymentTargets:
       organizationalUnits:

@@ -78,4 +78,9 @@ reports:
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
           address: myemail+pa-budg@example.com
-
+backup:
+  vaults:
+    - name: BackupVault
+      deploymentTargets:
+        organizationalUnits:
+          - Root

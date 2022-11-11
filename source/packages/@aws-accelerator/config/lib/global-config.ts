@@ -788,11 +788,12 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *
    * @example
    * ```
-   * backupVaults:
-   *   - name: MyBackUpVault
-   *     deploymentTargets:
-   *       organizationalUnits:
-   *         - Root
+   * backup:
+   *   vaults:
+   *     - name: MyBackUpVault
+   *       deploymentTargets:
+   *         organizationalUnits:
+   *           - Root
    * ```
    */
   readonly backup: BackupConfig | undefined = undefined;
