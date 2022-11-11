@@ -1,6 +1,8 @@
-import * as t from '../lib/common-types';
 import * as fs from 'fs';
 import * as path from 'path';
+
+import { AccountsConfig } from '../lib/accounts-config';
+import * as t from '../lib/common-types';
 import {
   NetworkConfig,
   NetworkConfigTypes,
@@ -9,7 +11,6 @@ import {
   TransitGatewayRouteTableVpnEntryConfig,
 } from '../lib/network-config';
 import { OrganizationConfig } from '../lib/organization-config';
-import { AccountsConfig } from '../lib/accounts-config';
 
 /**
  * Network Configuration validator.
@@ -924,9 +925,14 @@ class VpcValidator {
         this.validateRouteTableEntries(routeTableItem, vpcItem, values, errors);
       }
       // Validate the VPC doesn't have a static CIDR and IPAM defined
-      if (NetworkConfigTypes.vpcConfig.is(vpcItem) && vpcItem.cidrs && vpcItem.ipamAllocations) {
+      if (vpcItem.cidrs && vpcItem.ipamAllocations) {
         errors.push(`[VPC ${vpcItem.name}]: Both a CIDR and IPAM allocation are defined. Please choose only one`);
       }
+      // Validate the VPC doesn't have a static CIDR and IPAM defined
+      if (!vpcItem.cidrs && !vpcItem.ipamAllocations) {
+        errors.push(`[VPC ${vpcItem.name}]: Neither a CIDR or IPAM allocation are defined. Please define one property`);
+      }
+
       // Validate IPAM allocations
       this.validateIpamAllocations(vpcItem, values, errors);
     }

@@ -503,7 +503,7 @@ export class NetworkConfigTypes {
     name: t.nonEmptyString,
     region: t.region,
     deploymentTargets: t.deploymentTargets,
-    ipamAllocations: t.array(this.ipamAllocationConfig),
+    cidrs: t.optional(t.array(t.nonEmptyString)),
     dhcpOptions: t.optional(t.nonEmptyString),
     dnsFirewallRuleGroups: t.optional(t.array(this.vpcDnsFirewallAssociationConfig)),
     enableDnsHostnames: t.optional(t.boolean),
@@ -512,6 +512,7 @@ export class NetworkConfigTypes {
     instanceTenancy: t.optional(this.instanceTenancyTypeEnum),
     interfaceEndpoints: t.optional(this.interfaceEndpointConfig),
     internetGateway: t.optional(t.boolean),
+    ipamAllocations: t.optional(t.array(this.ipamAllocationConfig)),
     natGateways: t.optional(t.array(this.natGatewayConfig)),
     useCentralEndpoints: t.optional(t.boolean),
     securityGroups: t.optional(t.array(this.securityGroupConfig)),
@@ -2543,7 +2544,43 @@ export class CustomerGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes
 
 /**
  * VPC configuration.
- * Used to define a VPC.
+ * Used to define a VPC deployed to a single account.
+ *
+ * @example
+ * With VPC IPAM allocations:
+ * ```
+ * vpcs:
+ *   - name: Accelerator-Vpc
+ *     region: *HOME_REGION
+ *     account: Network
+ *     ipamAllocations:
+ *       - ipamPoolName: home-region-prod-pool
+ *          netmaskLength: 25
+ *     internetGateway: false
+ *     enableDnsHostnames: true
+ *     enableDnsSupport: true
+ *     instanceTenancy: default
+ *     routeTables: []
+ *     subnets: []
+ *     transitGatewayAttachments: []
+ * ````
+ *
+ * With static CIDR allocations:
+ * ```
+ * vpcs:
+ *   - name: Accelerator-Vpc
+ *     region: *HOME_REGION
+ *     account: Network
+ *     cidrs:
+ *       - 10.0.0.0/16
+ *     internetGateway: false
+ *     enableDnsHostnames: true
+ *     enableDnsSupport: true
+ *     instanceTenancy: default
+ *     routeTables: []
+ *     subnets: []
+ *     transitGatewayAttachments: []
+ * ````
  */
 export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> {
   /**
@@ -2569,7 +2606,7 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
    *
    * @remarks
    * At least one CIDR should be
-   * provided if not using `ipamAllocation`.
+   * provided if not using `ipamAllocations`.
    *
    * Use CIDR notation, i.e. 10.0.0.0/16
    */
@@ -2699,7 +2736,47 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
 
 /**
  * VPC templates configuration.
- * Used to define a VPC that is deployed to multiple accounts/OUs.
+ * Used to define a common VPC that is deployed to multiple accounts/OUs.
+ *
+ * @example
+ * With VPC IPAM allocations:
+ * ```
+ * vpcTemplates:
+ *   - name: Accelerator-Template
+ *     region: *HOME_REGION
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Infrastructure
+ *     ipamAllocations:
+ *       - ipamPoolName: home-region-prod-pool
+ *          netmaskLength: 25
+ *     internetGateway: false
+ *     enableDnsHostnames: true
+ *     enableDnsSupport: true
+ *     instanceTenancy: default
+ *     routeTables: []
+ *     subnets: []
+ *     transitGatewayAttachments: []
+ * ````
+ *
+ * With static CIDR allocations:
+ * ```
+ * vpcTemplates:
+ *   - name: Accelerator-Template
+ *     region: *HOME_REGION
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Infrastructure
+ *     cidrs:
+ *       - 10.0.0.0/16
+ *     internetGateway: false
+ *     enableDnsHostnames: true
+ *     enableDnsSupport: true
+ *     instanceTenancy: default
+ *     routeTables: []
+ *     subnets: []
+ *     transitGatewayAttachments: []
+ * ````
  */
 export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig> {
   /**
@@ -2726,11 +2803,22 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 
   /**
+   * A list of CIDRs to associate with the VPC.
+   *
+   * @remarks
+   * At least one CIDR should be
+   * provided if not using `ipamAllocations`.
+   *
+   * Use CIDR notation, i.e. 10.0.0.0/16
+   */
+  readonly cidrs: string[] | undefined = undefined;
+
+  /**
    * An array of IPAM allocation configurations.
    *
    * @see {@link IpamAllocationConfig}
    */
-  readonly ipamAllocations: IpamAllocationConfig[] = [];
+  readonly ipamAllocations: IpamAllocationConfig[] | undefined = undefined;
 
   /**
    * The friendly name of a DHCP options set.
