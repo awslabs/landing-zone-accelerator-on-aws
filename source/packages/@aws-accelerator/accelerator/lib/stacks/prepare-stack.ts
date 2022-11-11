@@ -339,7 +339,7 @@ export class PrepareStack extends AcceleratorStack {
           // cannot add 5 scps from console or cli externally.
           // LZA needs to have some value in configScps - which are scps from config file
           // putting an if condition here to only create custom resource; optimize performance
-          if (scpValidateInput.configScps) {
+          if (scpValidateInput.configScps.length) {
             new ValidateScpCount(this, 'ValidateScpCount', {
               organizationUnits: scpValidateInput.configOu,
               accounts: scpValidateInput.configAccounts,
