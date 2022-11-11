@@ -49,9 +49,6 @@ backupPolicies:
     deploymentTargets:
       organizationalUnits:
         - Root
-backupVault:
-  enableManagementKey: false
-  name: DefaultVault
 organizationalUnitIds:
   - name: Root
     id: r-asdf
