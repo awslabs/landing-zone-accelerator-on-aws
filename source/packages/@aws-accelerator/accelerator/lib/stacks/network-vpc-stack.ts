@@ -482,11 +482,9 @@ export class NetworkVpcStack extends AcceleratorStack {
         let cidr: string | undefined = undefined;
         let poolId: string | undefined = undefined;
         let poolNetmask: number | undefined = undefined;
-        if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
-          // Get first CIDR in array
-          if (vpcItem.cidrs) {
-            cidr = vpcItem.cidrs[0];
-          }
+        // Get first CIDR in array
+        if (vpcItem.cidrs) {
+          cidr = vpcItem.cidrs[0];
         }
 
         // Get IPAM details
@@ -521,12 +519,10 @@ export class NetworkVpcStack extends AcceleratorStack {
         });
 
         // Create additional CIDRs or IPAM allocations as needed
-        if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
-          if (vpcItem.cidrs && vpcItem.cidrs.length > 1) {
-            for (const vpcCidr of vpcItem.cidrs.slice(1)) {
-              Logger.info(`[network-vpc-stack] Adding secondary CIDR ${vpcCidr} to VPC ${vpcItem.name}`);
-              vpc.addCidr({ cidrBlock: vpcCidr });
-            }
+        if (vpcItem.cidrs && vpcItem.cidrs.length > 1) {
+          for (const vpcCidr of vpcItem.cidrs.slice(1)) {
+            Logger.info(`[network-vpc-stack] Adding secondary CIDR ${vpcCidr} to VPC ${vpcItem.name}`);
+            vpc.addCidr({ cidrBlock: vpcCidr });
           }
         }
 
@@ -611,7 +607,6 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         // Create Subnets
         //
-
         const subnetMap = new Map<string, Subnet>();
         const ipamSubnetMap = new Map<number, Subnet>();
 
@@ -688,6 +683,11 @@ export class NetworkVpcStack extends AcceleratorStack {
               stringValue: subnet.subnetId,
             },
           );
+
+          // If the VPC has additional CIDR blocks, depend on those CIDRs to be associated
+          for (const cidr of vpc.cidrs ?? []) {
+            subnet.node.addDependency(cidr);
+          }
 
           // Need to ensure IPAM subnets are created one at a time to avoid duplicate allocations
           // Add dependency on previously-created IPAM subnet, if it exists

@@ -912,6 +912,7 @@ Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkEndpointsVpcVpcCidrBlockC483B99B",
       ],
       "Properties": Object {
         "ServiceToken": Object {
@@ -938,6 +939,9 @@ Object {
       "UpdateReplacePolicy": "Delete",
     },
     "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497": Object {
+      "DependsOn": Array [
+        "NetworkEndpointsVpcVpcCidrBlockC483B99B",
+      ],
       "Properties": Object {
         "RouteTableId": Object {
           "Ref": "NetworkEndpointsVpcNetworkEndpointsARouteTable5B9BF71B",
@@ -1012,6 +1016,7 @@ Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkEndpointsVpcVpcCidrBlockC483B99B",
         "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
         "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497",
       ],
@@ -1041,6 +1046,7 @@ Object {
     },
     "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153": Object {
       "DependsOn": Array [
+        "NetworkEndpointsVpcVpcCidrBlockC483B99B",
         "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
         "NetworkEndpointsVpcNetworkEndpointsASubnetRouteTableAssociation9EE74497",
       ],
@@ -1072,6 +1078,7 @@ Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkEndpointsVpcVpcCidrBlockC483B99B",
         "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
         "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153",
       ],
@@ -1101,6 +1108,7 @@ Object {
     },
     "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52": Object {
       "DependsOn": Array [
+        "NetworkEndpointsVpcVpcCidrBlockC483B99B",
         "NetworkEndpointsVpcNetworkEndpointsBSubnet1CF39812",
         "NetworkEndpointsVpcNetworkEndpointsBSubnetRouteTableAssociation68383153",
       ],
@@ -1118,6 +1126,7 @@ Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
         "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkEndpointsVpcVpcCidrBlockC483B99B",
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52",
       ],
@@ -1147,6 +1156,7 @@ Object {
     },
     "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnetRouteTableAssociation958ED1AB": Object {
       "DependsOn": Array [
+        "NetworkEndpointsVpcVpcCidrBlockC483B99B",
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
         "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52",
       ],
@@ -1597,6 +1607,9 @@ Object {
       "Type": "AWS::EC2::Route",
     },
     "NetworkInspectionVpcNetworkInspectionASubnet01E2BD4D": Object {
+      "DependsOn": Array [
+        "NetworkInspectionVpcVpcCidrBlock343B2A17",
+      ],
       "Properties": Object {
         "AvailabilityZone": "us-east-1a",
         "CidrBlock": "10.2.0.0/24",
@@ -1613,6 +1626,9 @@ Object {
       "Type": "AWS::EC2::Subnet",
     },
     "NetworkInspectionVpcNetworkInspectionASubnetRouteTableAssociation36C3A49A": Object {
+      "DependsOn": Array [
+        "NetworkInspectionVpcVpcCidrBlock343B2A17",
+      ],
       "Properties": Object {
         "RouteTableId": Object {
           "Ref": "NetworkInspectionVpcNetworkInspectionARouteTableED0E5084",
@@ -1653,6 +1669,9 @@ Object {
       "Type": "AWS::EC2::Route",
     },
     "NetworkInspectionVpcNetworkInspectionBSubnet064602BF": Object {
+      "DependsOn": Array [
+        "NetworkInspectionVpcVpcCidrBlock343B2A17",
+      ],
       "Properties": Object {
         "AvailabilityZone": "us-east-1b",
         "CidrBlock": "10.2.1.0/24",
@@ -1669,6 +1688,9 @@ Object {
       "Type": "AWS::EC2::Subnet",
     },
     "NetworkInspectionVpcNetworkInspectionBSubnetRouteTableAssociationBF1B26ED": Object {
+      "DependsOn": Array [
+        "NetworkInspectionVpcVpcCidrBlock343B2A17",
+      ],
       "Properties": Object {
         "RouteTableId": Object {
           "Ref": "NetworkInspectionVpcNetworkInspectionBRouteTable1410DC9F",
@@ -1722,6 +1744,9 @@ Object {
       "Type": "AWS::EC2::RouteTable",
     },
     "NetworkInspectionVpcNetworkInspectionTgwAttachASubnetAB4DCECD": Object {
+      "DependsOn": Array [
+        "NetworkInspectionVpcVpcCidrBlock343B2A17",
+      ],
       "Properties": Object {
         "AvailabilityZone": "us-east-1a",
         "CidrBlock": "10.2.3.208/28",
@@ -1738,6 +1763,9 @@ Object {
       "Type": "AWS::EC2::Subnet",
     },
     "NetworkInspectionVpcNetworkInspectionTgwAttachASubnetRouteTableAssociation7B585652": Object {
+      "DependsOn": Array [
+        "NetworkInspectionVpcVpcCidrBlock343B2A17",
+      ],
       "Properties": Object {
         "RouteTableId": Object {
           "Ref": "NetworkInspectionVpcNetworkInspectionTgwARouteTable1753FE94",
@@ -1749,6 +1777,9 @@ Object {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
     },
     "NetworkInspectionVpcNetworkInspectionTgwAttachBSubnet58B77365": Object {
+      "DependsOn": Array [
+        "NetworkInspectionVpcVpcCidrBlock343B2A17",
+      ],
       "Properties": Object {
         "AvailabilityZone": "us-east-1b",
         "CidrBlock": "10.2.3.224/28",
@@ -1765,6 +1796,9 @@ Object {
       "Type": "AWS::EC2::Subnet",
     },
     "NetworkInspectionVpcNetworkInspectionTgwAttachBSubnetRouteTableAssociation30CB945F": Object {
+      "DependsOn": Array [
+        "NetworkInspectionVpcVpcCidrBlock343B2A17",
+      ],
       "Properties": Object {
         "RouteTableId": Object {
           "Ref": "NetworkInspectionVpcNetworkInspectionTgwBRouteTable4D355F69",
