@@ -761,7 +761,7 @@ class VpcValidator {
   ) {
     if (!vpcItem.internetGateway) {
       errors.push(
-        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} is targeting an IGW, but now IGW is attached to the VPC`,
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} is targeting an IGW, but no IGW is attached to the VPC`,
       );
     }
   }
