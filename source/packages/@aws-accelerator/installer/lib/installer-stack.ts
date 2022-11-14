@@ -484,8 +484,11 @@ export class InstallerStack extends cdk.Stack {
               'if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ' +
                 'ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; ' +
                 'fi',
-              'if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit; then ' +
-                'BOOTSTRAPPED="no"; ' +
+              `if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ${cdk.Aws.REGION}; then ` +
+                'BOOTSTRAPPED_HOME="no"; ' +
+                'fi',
+              `if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ${globalRegion}; then ` +
+                'BOOTSTRAPPED_GLOBAL="no"; ' +
                 'fi',
             ],
           },
@@ -496,17 +499,20 @@ export class InstallerStack extends cdk.Stack {
               'yarn lerna link',
               'yarn build',
               'cd packages/@aws-accelerator/installer',
-              `if [ "$BOOTSTRAPPED" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel; fi`,
-              `if [ "$BOOTSTRAPPED" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${globalRegion} --qualifier accel; fi`,
+              `if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel; fi`,
+              `if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${globalRegion} --qualifier accel; fi`,
               `if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                   export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:${
                     cdk.Stack.of(this).partition
                   }:iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));
-                  if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit; then MGMT_BOOTSTRAPPED="no"; fi;
-                  if [ "$MGMT_BOOTSTRAPPED" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${
+                  if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ${
+                    cdk.Aws.REGION
+                  }; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
+                  if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ${globalRegion}; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
+                  if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${
                     cdk.Aws.REGION
                   } --qualifier accel; fi;
-                  if [ "$MGMT_BOOTSTRAPPED" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${globalRegion} --qualifier accel; fi;
+                  if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${globalRegion} --qualifier accel; fi;
                   unset AWS_ACCESS_KEY_ID;
                   unset AWS_SECRET_ACCESS_KEY;
                   unset AWS_SESSION_TOKEN;
