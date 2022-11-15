@@ -11,14 +11,15 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as AWS from 'aws-sdk';
+import * as emailValidator from 'email-validator';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
-import * as t from './common-types';
-import * as emailValidator from 'email-validator';
 
+import { throttlingBackOff } from '@aws-accelerator/utils';
+
+import * as t from './common-types';
 import { OrganizationConfig } from './organization-config';
 
 /**
@@ -58,7 +59,17 @@ export class AccountIdConfig implements t.TypeOf<typeof AccountsConfigTypes.acco
 }
 
 /**
+ * {@link AccountsConfig} / {@link AccountConfig}
+ *
  * Account configuration
+ *
+ * @example
+ * ```
+ * - name: Workload01
+ *   description: Workload account 01
+ *   email: example-email+workload01@example.com
+ *   organizationalUnit: Workloads
+ * ```
  */
 export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accountConfig> {
   /**
@@ -100,9 +111,19 @@ export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accoun
 }
 
 /**
+ * *{@link AccountsConfig} / {@link GovCloudAccountConfig}
+ *
  * GovCloud Account configuration
  * Used instead of the account configuration in the commercial
  * partition when creating GovCloud partition linked accounts.
+ *
+ * ```
+ * - name: Workload01
+ *   description: Workload account 01
+ *   email: example-email+workload01@example.com
+ *   organizationalUnit: Workloads
+ *   enableGovCloud: true
+ * ```
  */
 export class GovCloudAccountConfig implements t.TypeOf<typeof AccountsConfigTypes.govCloudAccountConfig> {
   /**

@@ -864,8 +864,17 @@ export class NetworkConfigTypes {
 }
 
 /**
+ * *{@link NetworkConfig} / {@link DefaultVpcsConfig}*
+ *
  * Default VPC configuration.
  * Choose whether or not to delete default VPCs.
+ *
+ * @example
+ * ```
+ * defaultVpcs:
+ *   delete: true
+ *   excludeAccounts: []
+ * ```
  */
 export class DefaultVpcsConfig implements t.TypeOf<typeof NetworkConfigTypes.defaultVpcsConfig> {
   /**
@@ -880,8 +889,16 @@ export class DefaultVpcsConfig implements t.TypeOf<typeof NetworkConfigTypes.def
 }
 
 /**
+ * *{@link NetworkConfig} / {@link TransitGatewayConfig} / {@link TransitGatewayRouteTableConfig} / {@link TransitGatewayRouteEntryConfig} / {@link TransitGatewayRouteTableVpcEntryConfig}*
+ *
  * Transit Gateway VPC entry configuration.
  * Used to define an account and VPC name for Transit Gateway static route entries.
+ *
+ * @example
+ * ```
+ * account: Network
+ * vpcName: Network-Inspection
+ * ```
  */
 export class TransitGatewayRouteTableVpcEntryConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig>
@@ -897,9 +914,16 @@ export class TransitGatewayRouteTableVpcEntryConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link TransitGatewayConfig} / {@link TransitGatewayRouteTableConfig} / {@link TransitGatewayRouteEntryConfig} / {@link TransitGatewayRouteTableDxGatewayEntryConfig}*
+ *
  * Transit Gateway Direct Connect Gateway entry configuration.
  * Used to define a Direct Connect Gateway attachment for Transit
  * Gateway static routes.
+ *
+ * @example
+ * ```
+ * directConnectGatewayName: Accelerator-DXGW
+ * ```
  */
 export class TransitGatewayRouteTableDxGatewayEntryConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig>
@@ -914,9 +938,16 @@ export class TransitGatewayRouteTableDxGatewayEntryConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link TransitGatewayConfig} / {@link TransitGatewayRouteTableConfig} / {@link TransitGatewayRouteEntryConfig} / {@link TransitGatewayRouteTableVpnEntryConfig}*
+ *
  * Transit Gateway VPN entry configuration.
  * Used to define a VPN attachment for Transit
  * Gateway static routes.
+ *
+ * @example
+ * ```
+ * vpnConnectionName: accelerator-vpc
+ * ```
  */
 export class TransitGatewayRouteTableVpnEntryConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig>
@@ -931,8 +962,54 @@ export class TransitGatewayRouteTableVpnEntryConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link TransitGatewayConfig} / {@link TransitGatewayRouteTableConfig} / {@link TransitGatewayRouteEntryConfig} / {@link TransitGatewayRouteTableTgwPeeringEntryConfig}*
+ *
+ * Transit Gateway peering route entry configuration.
+ * Used to define a peering attachment for Transit
+ * Gateway static routes.
+ *
+ * @example
+ * ```
+ * transitGatewayPeeringName: Accelerator-TGW-Peering
+ * ```
+ */
+export class TransitGatewayRouteTableTgwPeeringEntryConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteTableTgwPeeringEntryConfig>
+{
+  /**
+   * The name of the Direct Connect Gateway
+   *
+   * @remarks
+   * Note: This is the `name` property of the Transit Gateway peering connection.
+   */
+  readonly transitGatewayPeeringName: string = '';
+}
+
+/**
+ * *{@link NetworkConfig} / {@link TransitGatewayConfig} / {@link TransitGatewayRouteTableConfig} / {@link TransitGatewayRouteEntryConfig}*
+ *
  * Transit Gateway route entry configuration.
  * Used to define static route entries in a Transit Gateway route table.
+ *
+ * @example
+ * Destination CIDR:
+ * ```
+ * - destinationCidrBlock: 0.0.0.0/0
+ *   attachment:
+ *     account: Network
+ *     vpcName: Network-Inspection
+ * ```
+ * Destination prefix list:
+ * ```
+ * - destinationPrefixList: accelerator-pl
+ *   attachment:
+ *     vpnConnectionName: accelerator-vpn
+ * ```
+ * Blackhole route:
+ * ```
+ * - destinationCidrBlock: 1.1.1.1/32
+ *   blackhole: true
+ * ```
  */
 export class TransitGatewayRouteEntryConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteEntryConfig>
@@ -963,12 +1040,21 @@ export class TransitGatewayRouteEntryConfig
     | TransitGatewayRouteTableVpcEntryConfig
     | TransitGatewayRouteTableDxGatewayEntryConfig
     | TransitGatewayRouteTableVpnEntryConfig
+    | TransitGatewayRouteTableTgwPeeringEntryConfig
     | undefined = undefined;
 }
 
 /**
+ * *{@link NetworkConfig} / {@link TransitGatewayConfig} / {@link TransitGatewayRouteTableConfig}*
+ *
  * Transit Gateway route table configuration.
  * Used to define a Transit Gateway route table.
+ *
+ * @example
+ * ```
+ * - name: Network-Main-Shared
+ *   routes: []
+ * ```
  */
 export class TransitGatewayRouteTableConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayRouteTableConfig>
@@ -990,7 +1076,20 @@ export class TransitGatewayRouteTableConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link TransitGatewayPeeringConfig} / {@link TransitGatewayPeeringRequesterConfig}*
+ *
  * Transit Gateway peering requester configuration
+ *
+ * @example
+ * ```
+ * transitGatewayName: SharedServices-Main
+ * account: SharedServices
+ * region: us-west-2
+ * routeTableAssociations: SharedServices-Main-Core
+ * tags:
+ *   - key: Name
+ *     value: Network-Main-And-SharedServices-Main-Peering
+ * ```
  */
 export class TransitGatewayPeeringRequesterConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayPeeringRequesterConfig>
@@ -1018,7 +1117,19 @@ export class TransitGatewayPeeringRequesterConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link TransitGatewayPeeringConfig} / {@link TransitGatewayPeeringAccepterConfig}*
+ *
  * Transit Gateway peering accepter configuration
+ *
+ * @example
+ * ```
+ * transitGatewayName: Network-Main
+ * account: Network
+ * region: us-east-1
+ * routeTableAssociations: Network-Main-Core
+ * autoAccept: true
+ * applyTags: false
+ * ```
  */
 export class TransitGatewayPeeringAccepterConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayPeeringAccepterConfig>
@@ -1053,6 +1164,8 @@ export class TransitGatewayPeeringAccepterConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link TransitGatewayPeeringConfig}*
+ *
  * Transit Gateway peering configuration
  *
  * To use TGW peering with requester TGW SharedServices-Main of SharedServices account in us-west-2 region with SharedServices-Main-Core TGW route table association
@@ -1108,8 +1221,28 @@ export class TransitGatewayPeeringConfig implements t.TypeOf<typeof NetworkConfi
 }
 
 /**
+ * *{@link NetworkConfig} / {@link TransitGatewayConfig}*
+ *
  * Transit Gateway configuration.
  * Used to define a Transit Gateway.
+ *
+ * @example
+ * ```
+ * transitGateways:
+ *   - name: Network-Main
+ *     account: Network
+ *     region: us-east-1
+ *     shareTargets:
+ *       organizationalUnits: []
+ *     asn: 65000
+ *     dnsSupport: enable
+ *     vpnEcmpSupport: enable
+ *     defaultRouteTableAssociation: disable
+ *     defaultRouteTablePropagation: disable
+ *     autoAcceptSharingAttachments: enable
+ *     routeTables: []
+ *     tags: []
+ * ```
  */
 export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayConfig> {
   /**
@@ -1192,6 +1325,8 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
 }
 
 /**
+ * *{@link NetworkConfig} / {@link DxGatewayConfig} / {@link DxVirtualInterfaceConfig}*
+ *
  * Direct Connect Gateway virtual interface configuration.
  * Use to create a virtual interface to a DX Gateway.
  *
@@ -1314,6 +1449,8 @@ export class DxVirtualInterfaceConfig implements t.TypeOf<typeof NetworkConfigTy
 }
 
 /**
+ * *{@link NetworkConfig} / {@link DxGatewayConfig} / {@link DxTransitGatewayAssociationConfig}*
+ *
  * Direct Connect Gateway transit gateway association configuration.
  * Use this object to define transit gateway attachments for a DX gateway.
  *
@@ -1363,18 +1500,21 @@ export class DxTransitGatewayAssociationConfig
   readonly routeTablePropagations: string[] | undefined = undefined;
 }
 /**
+ * *{@link NetworkConfig} / {@link DxGatewayConfig}*
+ *
  * Direct Connect Gateway configuration.
  * Used to define Direct Connect Gateways, virtual interfaces,
  * and gateway associations.
  *
  * @example
  * ```
- * - name: Accelerator-DXGW
- *   account: Network
- *   asn: 64512
- *   gamewayName: Accelerator-DXGW
- *   virtualInterfaces: []
- *   transitGatewayAssociations: []
+ * directConnectGateways:
+ *   - name: Accelerator-DXGW
+ *     account: Network
+ *     asn: 64512
+ *     gatewayName: Accelerator-DXGW
+ *     virtualInterfaces: []
+ *     transitGatewayAssociations: []
  * ```
  */
 export class DxGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.dxGatewayConfig> {
@@ -1427,8 +1567,17 @@ export class DxGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.dxGat
   readonly transitGatewayAssociations: DxTransitGatewayAssociationConfig[] | undefined = undefined;
 }
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link IpamConfig} / {@link IpamScopeConfig}*
+ *
  * IPAM scope configuration.
  * Used to define a custom IPAM scope.
+ *
+ * @example
+ * ```
+ * - name: accelerator-scope
+ *   description: Custom scope
+ *   tags: []
+ * ```
  */
 export class IpamScopeConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamScopeConfig> {
   /**
@@ -1446,8 +1595,29 @@ export class IpamScopeConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamS
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link IpamConfig} / {@link IpamPoolConfig}*
+ *
  * IPAM pool configuration.
  * Used to define an IPAM pool.
+ *
+ * @example
+ * Base pool:
+ * ```
+ * - name: accelerator-base-pool
+ *   description: Base IPAM pool
+ *   provisionedCidrs:
+ *     - 10.0.0.0/16
+ *   tags: []
+ * ```
+ * Regional pool:
+ * ```
+ * - name: accelerator-regional-pool
+ *   description: Regional pool for us-east-1
+ *   locale: us-east-1
+ *   provisionedCidrs:
+ *     - 10.0.0.0/24
+ *   sourceIpamPool: accelerator-base-pool
+ * ```
  */
 export class IpamPoolConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamPoolConfig> {
   /**
@@ -1538,6 +1708,25 @@ export class IpamPoolConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamPo
   readonly tags: t.Tag[] | undefined = undefined;
 }
 
+/**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link IpamConfig}*
+ *
+ * IPAM configuration. Used to define an AWS-managed VPC IPAM.
+ *
+ * @example
+ * ```
+ * ipams:
+ *   - name: accelerator-ipam
+ *     region: us-east-1
+ *     description: Accelerator IPAM
+ *     operatingRegions:
+ *       - us-east-1
+ *       - us-west-2
+ *     scopes: []
+ *     pools: []
+ *     tags: []
+ * ```
+ */
 export class IpamConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamConfig> {
   /**
    * A friendly name for the IPAM.
@@ -1578,6 +1767,8 @@ export class IpamConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link RouteTableConfig} / {@link RouteTableEntryConfig}*
+ *
  * VPC route table entry configuration.
  * Used to define static route entries in a VPC route table.
  *
@@ -1693,6 +1884,8 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link RouteTableConfig}*
+ *
  * VPC route table configuration.
  * Used to define a VPC route table.
  *
@@ -1735,8 +1928,30 @@ export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.rout
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link SubnetConfig}*
+ *
  * VPC subnet configuration.
  * Used to define a VPC subnet.
+ *
+ * @example
+ * Static CIDR:
+ * ```
+ * - name: accelerator-cidr-subnet-a
+ *   availabilityZone: a
+ *   routeTable: accelerator-cidr-subnet-a
+ *   ipv4CidrBlock: 10.0.0.0/26
+ *   tags: []
+ * ```
+ * IPAM allocation:
+ * ```
+ * - name: accelerator-ipam-subnet-a
+ *   availabilityZone: a
+ *   routeTable: accelerator-cidr-subnet-a
+ *   ipamAllocation:
+ *     ipamPoolName: accelerator-regional-pool
+ *     netmaskLength: 26
+ *   tags: []
+ * ```
  */
 export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetConfig> {
   /**
@@ -1800,8 +2015,17 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link NatGatewayConfig}*
+ *
  * NAT Gateway configuration.
  * Used to define an AWS-managed NAT Gateway.
+ *
+ * @example
+ * ```
+ * - name: accelerator-nat-gw
+ *   subnet: accelerator-cidr-subnet-a
+ *   tags: []
+ * ```
  */
 export class NatGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.natGatewayConfig> {
   /**
@@ -1819,8 +2043,16 @@ export class NatGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.natG
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link TransitGatewayAttachmentConfig} / {@link TransitGatewayAttachmentTargetConfig}*
+ *
  * Transit Gateway attachment target configuration.
  * Used to define a target account for attachments.
+ *
+ * @example
+ * ```
+ * - name: Network-Main
+ *   account: Network
+ * ```
  */
 export class TransitGatewayAttachmentTargetConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayAttachmentTargetConfig>
@@ -1836,8 +2068,17 @@ export class TransitGatewayAttachmentTargetConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link TransitGatewayAttachmentConfig} / {@link TransitGatewayAttachmentOptionsConfig}*
+ *
  * Transit Gateway attachment options configuration.
  * Used to specify advanced options for the attachment.
+ *
+ * @example
+ * ```
+ * applianceModeSupport: enable
+ * dnsSupport: enable
+ * ipv6Support disable
+ * ```
  */
 export class TransitGatewayAttachmentOptionsConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayAttachmentOptionsConfig>
@@ -1860,8 +2101,16 @@ export class TransitGatewayAttachmentOptionsConfig
   readonly ipv6Support: t.EnableDisable | undefined = undefined;
 }
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} / {@link OutpostsConfig} / {@link LocalGatewayConfig} / {@link LocalGatewayRouteTableConfig}*
+ *
  * Local Gateway route table configuration.
  * Used to define a Local Gateway route table.
+ *
+ * @example
+ * ```
+ * - name: accelerator-local-gateway-rtb
+ *   id: lgw-rtb-abcxyz
+ * ```
  */
 export class LocalGatewayRouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.localGatewayRouteTableConfig> {
   /**
@@ -1874,8 +2123,16 @@ export class LocalGatewayRouteTableConfig implements t.TypeOf<typeof NetworkConf
   readonly id = '';
 }
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} / {@link OutpostsConfig} / {@link LocalGatewayConfig}*
+ *
  * Local Gateway configuration.
  * Used to define a Local Gateway
+ *
+ * @example
+ * ```
+ * name: accelerator-lgw
+ * id: lgw-abcxyz
+ * ```
  */
 export class LocalGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.localGatewayConfig> {
   /**
@@ -1893,8 +2150,21 @@ export class LocalGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.lo
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} / {@link OutpostsConfig}*
+ *
  * Outpost configuration.
  * Used to define an Outpost.
+ *
+ * @example
+ * ```
+ * - name: accelerator-outpost
+ *   arn: <outpost-resource-arn>
+ *   availabilityZone: a
+ *   localGateway:
+ *     name: accelerator-lgw
+ *     id: lgw-abcxyz
+ *     routeTables: []
+ * ```
  */
 export class OutpostsConfig implements t.TypeOf<typeof NetworkConfigTypes.outpostsConfig> {
   /**
@@ -1916,8 +2186,24 @@ export class OutpostsConfig implements t.TypeOf<typeof NetworkConfigTypes.outpos
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link TransitGatewayAttachmentConfig}*
+ *
  * Transit Gateway attachment configuration.
  * Used to define a Transit Gateway attachment.
+ *
+ * @example
+ * ```
+ * - name: Network-Inspection
+ *   transitGateway:
+ *     name: Network-Main
+ *     account: Network
+ *   subnets: []
+ *   routeTableAssociations: []
+ *   routeTablePropagations: []
+ *   options:
+ *     applianceModeSupport: enable
+ *   tags: []
+ * ```
  */
 export class TransitGatewayAttachmentConfig
   implements t.TypeOf<typeof NetworkConfigTypes.transitGatewayAttachmentConfig>
@@ -1957,8 +2243,16 @@ export class TransitGatewayAttachmentConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link GatewayEndpointConfig} / {@link GatewayEndpointServiceConfig}*
+ *
  * VPC gateway endpoint service configuration.
  * Used to define the service and policy for gateway endpoints.
+ *
+ * @example
+ * ```
+ * - service: s3
+ *   policy: Default
+ * ```
  */
 export class GatewayEndpointServiceConfig implements t.TypeOf<typeof NetworkConfigTypes.gatewayEndpointServiceConfig> {
   /**
@@ -1974,8 +2268,16 @@ export class GatewayEndpointServiceConfig implements t.TypeOf<typeof NetworkConf
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link GatewayEndpointConfig}*
+ *
  * VPC gateway endpoint configuration.
  * Used to define a gateway endpoints.
+ *
+ * @example
+ * ```
+ * defaultPolicy: Default
+ * endpoints []
+ * ```
  */
 export class GatewayEndpointConfig implements t.TypeOf<typeof NetworkConfigTypes.gatewayEndpointConfig> {
   /**
@@ -1989,8 +2291,16 @@ export class GatewayEndpointConfig implements t.TypeOf<typeof NetworkConfigTypes
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link InterfaceEndpointConfig} / {@link InterfaceEndpointServiceConfig}*
+ *
  * VPC interface endpoint service configuration.
  * Used to define the service and policy for interface endpoints.
+ *
+ * @example
+ * ```
+ * - service: ec2
+ *   policy: Default
+ * ```
  */
 export class InterfaceEndpointServiceConfig
   implements t.TypeOf<typeof NetworkConfigTypes.interfaceEndpointServiceConfig>
@@ -2010,8 +2320,17 @@ export class InterfaceEndpointServiceConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link InterfaceEndpointConfig}*
+ *
  * VPC interface endpoint configuration.
  * Used to define interface endpoints for a VPC.
+ *
+ * @example
+ * ```
+ * defaultPolicy: Default
+ * endpoints: []
+ * subnets: []
+ * ```
  */
 export class InterfaceEndpointConfig implements t.TypeOf<typeof NetworkConfigTypes.interfaceEndpointConfig> {
   /**
@@ -2047,8 +2366,17 @@ export class InterfaceEndpointConfig implements t.TypeOf<typeof NetworkConfigTyp
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link SecurityGroupConfig} / {@link SecurityGroupRuleConfig} / {@link SubnetSourceConfig}*
+ *
  * VPC subnet source configuration.
  * Used to define a subnet as a source in a security group rule.
+ *
+ * @example
+ * ```
+ * - account: Network
+ *   vpc: Network-Inspection
+ *   subnets: []
+ * ```
  */
 export class SubnetSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetSourceConfig> {
   /**
@@ -2066,8 +2394,16 @@ export class SubnetSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.su
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link SecurityGroupConfig} / {@link SecurityGroupRuleConfig} / {@link SecurityGroupSourceConfig}*
+ *
  * Security group source configuration.
  * Used to define a security group as a source in a security group rule.
+ *
+ * @example
+ * ```
+ * - securityGroups:
+ *   - accelerator-sg
+ * ```
  */
 export class SecurityGroupSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.securityGroupSourceConfig> {
   /**
@@ -2077,8 +2413,16 @@ export class SecurityGroupSourceConfig implements t.TypeOf<typeof NetworkConfigT
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link SecurityGroupConfig} / {@link SecurityGroupRuleConfig} / {@link PrefixListSourceConfig}*
+ *
  * Prefix list source configuration.
  * Used to define a prefix list as a source in a security group rule.
+ *
+ * @example
+ * ```
+ * - prefixLists:
+ *   - accelerator-pl
+ * ```
  */
 export class PrefixListSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.prefixListSourceConfig> {
   /**
@@ -2088,8 +2432,25 @@ export class PrefixListSourceConfig implements t.TypeOf<typeof NetworkConfigType
 }
 
 /**
+ * *{@link NetworkConfig} / {@link PrefixListConfig}*
+ *
  * Prefix list configuration.
  * Used to define a custom prefix list.
+ *
+ * @example
+ * ```
+ * prefixLists:
+ *   - name: accelerator-pl
+ *     accounts:
+ *       - Network
+ *     regions:
+ *       - us-east-1
+ *     addressFamily: IPv4
+ *     maxEntries: 10
+ *     entries:
+ *       - 10.0.0.0/16
+ *     tags: []
+ * ```
  */
 export class PrefixListConfig implements t.TypeOf<typeof NetworkConfigTypes.prefixListConfig> {
   /**
@@ -2128,8 +2489,19 @@ export class PrefixListConfig implements t.TypeOf<typeof NetworkConfigTypes.pref
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link SecurityGroupConfig} / {@link SecurityGroupRuleConfig}*
+ *
  * Security group rule configuration.
  * Used to define a security group rule.
+ *
+ * @example
+ * ```
+ * - description: Remote access security group
+ *   types:
+ *     - RDP
+ *     - SSH
+ *   sources: []
+ * ```
  */
 export class SecurityGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.securityGroupRuleConfig> {
   /**
@@ -2175,8 +2547,29 @@ export class SecurityGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTyp
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link SecurityGroupConfig}*
+ *
  * Security group configuration.
  * Used to define a security group.
+ *
+ * @example
+ * ```
+ * - name: accelerator-sg
+ *   description: Accelerator security group
+ *   inboundRules:
+ *     - description: Remote access security group rule
+ *       types:
+ *         - RDP
+ *         - SSH
+ *       sources:
+ *         - 10.0.0.0/16
+ *   outboundRules:
+ *     - description: Allow all outbound
+ *       types:
+ *         - ALL
+ *       sources:
+ *         - 0.0.0.0/0
+ * ```
  */
 export class SecurityGroupConfig implements t.TypeOf<typeof NetworkConfigTypes.securityGroupConfig> {
   /**
@@ -2206,8 +2599,17 @@ export class SecurityGroupConfig implements t.TypeOf<typeof NetworkConfigTypes.s
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link NetworkAclConfig} / {@link NetworkAclInboundRuleConfig} | {@link NetworkAclOutboundRuleConfig} / {@link NetworkAclSubnetSelection}*
+ *
  * Network ACL subnet selection configuration.
  * Used to specify a subnet as a source for a network ACL.
+ *
+ * @example
+ * ```
+ * account: Network
+ * vpc: Network-Inspection
+ * subnet: Network-Inspection-A
+ * ```
  */
 export class NetworkAclSubnetSelection implements t.TypeOf<typeof NetworkConfigTypes.networkAclSubnetSelection> {
   /**
@@ -2225,8 +2627,20 @@ export class NetworkAclSubnetSelection implements t.TypeOf<typeof NetworkConfigT
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link NetworkAclConfig} / {@link NetworkAclInboundRuleConfig}*
+ *
  * Network ACL inbound rule configuration.
  * Used to define an inbound rule for a network ACL.
+ *
+ * @example
+ * ```
+ * - rule: 200
+ *   protocol: -1
+ *   fromPort: 22
+ *   toPort: 22
+ *   action: allow
+ *   source: 10.0.0.0/16
+ * ```
  */
 export class NetworkAclInboundRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.networkAclInboundRuleConfig> {
   /**
@@ -2264,8 +2678,20 @@ export class NetworkAclInboundRuleConfig implements t.TypeOf<typeof NetworkConfi
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link NetworkAclConfig} / {@link NetworkAclOutboundRuleConfig}*
+ *
  * Network ACL outbound rule configuration.
  * Used to define an outbound rule for a network ACL.
+ *
+ * @example
+ * ```
+ * - rule: 200
+ *   protocol: -1
+ *   fromPort: 1024
+ *   toPort: 65535
+ *   action: allow
+ *   destination: 10.0.0.0/16
+ * ```
  */
 export class NetworkAclOutboundRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.networkAclOutboundRuleConfig> {
   /**
@@ -2303,8 +2729,32 @@ export class NetworkAclOutboundRuleConfig implements t.TypeOf<typeof NetworkConf
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / {@link NetworkAclConfig}*
+ *
  * Network ACL configuration.
  * Used to define the properties to configure a Network Access Control List (ACL)
+ *
+ * @example
+ * ```
+ * - name: accelerator-nacl
+ *   subnetAssociations:
+ *     - Subnet-A
+ *   inboundRules:
+ *     - rule: 200
+ *       protocol: -1
+ *       fromPort: 22
+ *       toPort: 22
+ *       action: allow
+ *       source: 10.0.0.0/16
+ *   outboundRules:
+ *     - rule: 200
+ *       protocol: -1
+ *       fromPort: 1024
+ *       toPort: 65535
+ *       action: allow
+ *       destination: 10.0.0.0/16
+ *   tags: []
+ * ```
  */
 export class NetworkAclConfig implements t.TypeOf<typeof NetworkConfigTypes.networkAclConfig> {
   /**
@@ -2339,6 +2789,23 @@ export class NetworkAclConfig implements t.TypeOf<typeof NetworkConfigTypes.netw
   readonly tags: t.Tag[] | undefined = undefined;
 }
 
+/**
+ * *{@link NetworkConfig} / {@link VpcConfig} | {@link VpcTemplatesConfig} / ({@link SubnetConfig}) / {@link IpamAllocationConfig}*
+ *
+ * IPAM allocation config. Use to dynamically assign a VPC or subnet CIDR from an IPAM pool.
+ *
+ * @example
+ * VPC allocations:
+ * ```
+ * - ipamPoolName: accelerator-regional-pool
+ *   netmaskLength: 24
+ * ```
+ * Subnet allocations:
+ * ```
+ * ipamPoolName: accelerator-regional-pool
+ * netmaskLength: 24
+ * ```
+ */
 export class IpamAllocationConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamAllocationConfig> {
   /**
    * The IPAM Pool name to request the allocation from.
@@ -2355,8 +2822,24 @@ export class IpamAllocationConfig implements t.TypeOf<typeof NetworkConfigTypes.
 }
 
 /**
+ * *{@link NetworkConfig} / {@link DhcpOptsConfig}*
+ *
  * DHCP options configuration.
  * Used to define a custom DHCP options set.
+ *
+ * @example
+ * ```
+ * dhcpOptions:
+ *   - name: accelerator-dhcp-opts
+ *     accounts:
+ *       - Network
+ *     regions:
+ *       - us-east-1
+ *     domainName: example.com
+ *     domainNameServers
+ *       - 1.1.1.1
+ *     tags: []
+ * ```
  */
 export class DhcpOptsConfig implements t.TypeOf<typeof NetworkConfigTypes.dhcpOptsConfig> {
   /**
@@ -2402,8 +2885,17 @@ export class DhcpOptsConfig implements t.TypeOf<typeof NetworkConfigTypes.dhcpOp
 }
 
 /**
+ * *{@link NetworkConfig} / {@link EndpointPolicyConfig}*
+ *
  * VPC endpoint policy configuration.
  * Used to define VPC endpoint policies.
+ *
+ * @example
+ * ```
+ * endpointPolicies:
+ *   - name: Default
+ *     document: path/to/document.json
+ * ```
  */
 export class EndpointPolicyConfig implements t.TypeOf<typeof NetworkConfigTypes.endpointPolicyConfig> {
   /**
@@ -2417,16 +2909,17 @@ export class EndpointPolicyConfig implements t.TypeOf<typeof NetworkConfigTypes.
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CustomerGatewayConfig} / {@link VpnConnectionConfig} / {@link VpnTunnelOptionsSpecificationsConfig}*
+ *
  * VPN tunnel options specification configuration.
  * Used to define tunnel IP addresses and/or pre-shared keys
  * for a site-to-site VPN connection
  *
  * @example
  * ```
- * tunnelSpecifications:
- *   - tunnelInsideCidr: 169.254.200.0/30
- *     preSharedKey: Key1-AbcXyz
- *   - tunnelInsideCidr: 169.254.200.100/30
+ * - tunnelInsideCidr: 169.254.200.0/30
+ *   preSharedKey: Key1-AbcXyz
+ * - tunnelInsideCidr: 169.254.200.100/30
  * ```
  */
 export class VpnTunnelOptionsSpecificationsConfig
@@ -2451,21 +2944,24 @@ export class VpnTunnelOptionsSpecificationsConfig
   readonly tunnelInsideCidr: string | undefined = undefined;
 }
 /**
+ * *{@link NetworkConfig} / {@link CustomerGatewayConfig} / {@link VpnConnectionConfig}*
+ *
  * VPN Connection configuration.
  * Used to define the VPN Connection and its termination point.
+ *
+ * @example
  * ```
- *   vpnConnections:
- *     - name: accelerator-vpn
- *       transitGateway: Network-Main
- *       routeTableAssociations:
- *         - Network-Main-Core
- *       routeTablePropagations:
- *         - Network-Main-Core
- *       staticRoutesOnly: false
- *       tunnelSpecifications:
- *         - tunnelInsideCidr: 169.254.200.0/30
- *           preSharedKey: Key1-AbcXyz
- *         - tunnelInsideCidr: 169.254.200.100/30
+ * - name: accelerator-vpn
+ *   transitGateway: Network-Main
+ *   routeTableAssociations:
+ *     - Network-Main-Core
+ *   routeTablePropagations:
+ *     - Network-Main-Core
+ *   staticRoutesOnly: false
+ *   tunnelSpecifications:
+ *     - tunnelInsideCidr: 169.254.200.0/30
+ *       preSharedKey: Key1-AbcXyz
+ *     - tunnelInsideCidr: 169.254.200.100/30
  * ```
  */
 export class VpnConnectionConfig implements t.TypeOf<typeof NetworkConfigTypes.vpnConnectionConfig> {
@@ -2528,6 +3024,8 @@ export class VpnConnectionConfig implements t.TypeOf<typeof NetworkConfigTypes.v
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CustomerGatewayConfig}*
+ *
  * CGW Configuration
  * Used to define Customer Gateways and site-to-site VPN connections.
  *
@@ -2598,44 +3096,47 @@ export class CustomerGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig}*
+ *
  * VPC configuration.
- * Used to define a VPC deployed to a single account.
+ * Used to define a VPC.
  *
  * @example
- * With VPC IPAM allocations:
+ * Static CIDR:
  * ```
  * vpcs:
- *   - name: Accelerator-Vpc
- *     region: *HOME_REGION
+ *   - name: Network-Inspection
  *     account: Network
- *     ipamAllocations:
- *       - ipamPoolName: home-region-prod-pool
- *          netmaskLength: 25
- *     internetGateway: false
- *     enableDnsHostnames: true
- *     enableDnsSupport: true
- *     instanceTenancy: default
- *     routeTables: []
- *     subnets: []
- *     transitGatewayAttachments: []
- * ````
- *
- * With static CIDR allocations:
- * ```
- * vpcs:
- *   - name: Accelerator-Vpc
- *     region: *HOME_REGION
- *     account: Network
+ *     region: us-east-1
  *     cidrs:
- *       - 10.0.0.0/16
- *     internetGateway: false
+ *       - 10.0.0.0/24
  *     enableDnsHostnames: true
  *     enableDnsSupport: true
  *     instanceTenancy: default
  *     routeTables: []
  *     subnets: []
+ *     natGateways: []
  *     transitGatewayAttachments: []
- * ````
+ *     tags: []
+ * ```
+ * IPAM allocation:
+ * ```
+ * vpcs:
+ *   - name: Network-Inspection
+ *     account: Network
+ *     region: us-east-1
+ *     ipamAllocations:
+ *       - ipamPoolName: accelerator-regional-pool
+ *         netmaskLength: 24
+ *     enableDnsHostnames: true
+ *     enableDnsSupport: true
+ *     instanceTenancy: default
+ *     routeTables: []
+ *     subnets: []
+ *     natGateways: []
+ *     transitGatewayAttachments: []
+ *     tags: []
+ * ```
  */
 export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> {
   /**
@@ -2790,48 +3291,50 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcTemplatesConfig}*
+ *
  * VPC templates configuration.
- * Used to define a common VPC that is deployed to multiple accounts/OUs.
+ * Used to define a VPC that is deployed to multiple accounts/OUs.
  *
- * @example
- * With VPC IPAM allocations:
+ * Static CIDR:
  * ```
  * vpcTemplates:
  *   - name: Accelerator-Template
- *     region: *HOME_REGION
  *     deploymentTargets:
  *       organizationalUnits:
  *         - Infrastructure
- *     ipamAllocations:
- *       - ipamPoolName: home-region-prod-pool
- *          netmaskLength: 25
- *     internetGateway: false
- *     enableDnsHostnames: true
- *     enableDnsSupport: true
- *     instanceTenancy: default
- *     routeTables: []
- *     subnets: []
- *     transitGatewayAttachments: []
- * ````
- *
- * With static CIDR allocations:
- * ```
- * vpcTemplates:
- *   - name: Accelerator-Template
- *     region: *HOME_REGION
- *     deploymentTargets:
- *       organizationalUnits:
- *         - Infrastructure
+ *     region: us-east-1
  *     cidrs:
- *       - 10.0.0.0/16
- *     internetGateway: false
+ *       - 10.0.0.0/24
  *     enableDnsHostnames: true
  *     enableDnsSupport: true
  *     instanceTenancy: default
  *     routeTables: []
  *     subnets: []
+ *     natGateways: []
  *     transitGatewayAttachments: []
- * ````
+ *     tags: []
+ * ```
+ * IPAM allocation:
+ * ```
+ * vpcTemplates:
+ *   - name: Accelerator-Template
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Infrastructure
+ *     region: us-east-1
+ *     ipamAllocations:
+ *       - ipamPoolName: accelerator-regional-pool
+ *         netmaskLength: 24
+ *     enableDnsHostnames: true
+ *     enableDnsSupport: true
+ *     instanceTenancy: default
+ *     routeTables: []
+ *     subnets: []
+ *     natGateways: []
+ *     transitGatewayAttachments: []
+ *     tags: []
+ * ```
  */
 export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig> {
   /**
@@ -2988,8 +3491,23 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link ResolverConfig} / ({@link ResolverEndpointConfig}) / {@link ResolverRuleConfig}*
+ *
  * Route 53 resolver rule configuration.
  * Used to define resolver rules.
+ *
+ * @example
+ * ```
+ * - name: accelerator-rule
+ *   domainName: example.com
+ *   ruleType: FORWARD
+ *   shareTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   targetIps:
+ *     - ip: 1.1.1.1
+ *   tags: []
+ * ```
  */
 export class ResolverRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.resolverRuleConfig> {
   /**
@@ -3044,8 +3562,37 @@ export class ResolverRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.re
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link ResolverConfig} / {@link ResolverEndpointConfig}*
+ *
  * Route 53 resolver endpoint configuration.
  * Used to define a resolver endpoint.
+ *
+ * @example
+ * Outbound endpoint:
+ * ```
+ * - name: accelerator-outbound
+ *   type: OUTBOUND
+ *   vpc: Network-Endpoints
+ *   allowedCidrs:
+ *     - 10.0.0.0/16
+ *   subnets:
+ *     - Subnet-A
+ *     - Subnet-B
+ *   rules: []
+ *   tags: []
+ * ```
+ * Inbound Endpoint:
+ * ```
+ * - name: accelerator-inbound
+ *   type: INBOUND
+ *   vpc: Network-Endpoints
+ *   allowedCidrs:
+ *     - 10.0.0.0/16
+ *   subnets:
+ *     - Subnet-A
+ *     - Subnet-B
+ *   tags: []
+ * ```
  */
 export class ResolverEndpointConfig implements t.TypeOf<typeof NetworkConfigTypes.resolverEndpointConfig> {
   /**
@@ -3083,8 +3630,21 @@ export class ResolverEndpointConfig implements t.TypeOf<typeof NetworkConfigType
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link ResolverConfig} / {@link DnsQueryLogsConfig}*
+ *
  * Route 53 DNS query logging configuration.
  * Use to define query logging configs.
+ *
+ * @example
+ * ```
+ * name: accelerator-query-logs
+ * destinations:
+ *   - s3
+ *   - cloud-watch-logs
+ * shareTargets:
+ *   organizationalUnits:
+ *     - Root
+ * ```
  */
 export class DnsQueryLogsConfig implements t.TypeOf<typeof NetworkConfigTypes.dnsQueryLogsConfig> {
   /**
@@ -3109,8 +3669,19 @@ export class DnsQueryLogsConfig implements t.TypeOf<typeof NetworkConfigTypes.dn
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link ResolverConfig} / {@link DnsFirewallRuleGroupConfig} / {@link DnsFirewallRulesConfig}*
+ *
  * Route 53 DNS firewall rule configuration.
  * Used to define DNS firewall rules.
+ *
+ * @example
+ * ```
+ * - name: accelerator-dns-rule
+ *   action: BLOCK
+ *   priority: 100
+ *   blockResponse: NXDOMAIN
+ *   customDomainList: path/to/domains.txt
+ * ```
  */
 export class DnsFirewallRulesConfig implements t.TypeOf<typeof NetworkConfigTypes.dnsFirewallRulesConfig> {
   /**
@@ -3158,8 +3729,27 @@ export class DnsFirewallRulesConfig implements t.TypeOf<typeof NetworkConfigType
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link ResolverConfig} / {@link DnsFirewallRuleGroupConfig}*
+ *
  * Route 53 DNS firewall rule group configuration.
  * Used to define a DNS firewall rule group.
+ *
+ * @example
+ * ```
+ * - name: accelerator-rule-group
+ *   regions:
+ *     - us-east-1
+ *   rules:
+ *     - name: accelerator-dns-rule
+ *       action: BLOCK
+ *       priority: 100
+ *       blockResponse: NXDOMAIN
+ *       customDomainList: path/to/domains.txt
+ *   shareTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   tags: []
+ * ```
  */
 export class DnsFirewallRuleGroupConfig implements t.TypeOf<typeof NetworkConfigTypes.dnsFirewallRuleGroupConfig> {
   /**
@@ -3194,8 +3784,48 @@ export class DnsFirewallRuleGroupConfig implements t.TypeOf<typeof NetworkConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link ResolverConfig}*
+ *
  * Route 53 resolver configuration.
  * Used to define configurations for Route 53 resolver.
+ *
+ * @example
+ * ```
+ * route53Resolver:
+ *   endpoints:
+ *     - name: accelerator-outbound
+ *       type: OUTBOUND
+ *       vpc: Network-Endpoints
+ *       allowedCidrs:
+ *         - 10.0.0.0/16
+ *       subnets:
+ *         - Subnet-A
+ *         - Subnet-B
+ *       rules: []
+ *       tags: []
+ *   firewallRuleGroups:
+ *     - name: accelerator-rule-group
+ *       regions:
+ *         - us-east-1
+ *       rules:
+ *         - name: accelerator-dns-rule
+ *           action: BLOCK
+ *           priority: 100
+ *           blockResponse: NXDOMAIN
+ *           customDomainList: path/to/domains.txt
+ *       shareTargets:
+ *         organizationalUnits:
+ *           - Root
+ *       tags: []
+ *   queryLogs:
+ *     name: accelerator-query-logs
+ *     destinations:
+ *       - s3
+ *       - cloud-watch-logs
+ *     shareTargets:
+ *       organizationalUnits:
+ *         - Root
+ * ```
  */
 export class ResolverConfig implements t.TypeOf<typeof NetworkConfigTypes.resolverConfig> {
   /**
@@ -3227,10 +3857,20 @@ export class ResolverConfig implements t.TypeOf<typeof NetworkConfigTypes.resolv
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig} / {@link NfwRuleSourceListConfig}*
+ *
  * Network Firewall rule source list configuration.
  * Used to define DNS allow and deny lists for Network Firewall.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-rulessourcelist.html}
+ *
+ * @example
+ * ```
+ * generatedRulesType: DENYLIST
+ * targets:
+ *   - .example.com
+ * targetTypes: ['TLS_SNI', 'HTTP_HOST']
+ * ```
  */
 export class NfwRuleSourceListConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceListConfig> {
   /**
@@ -3257,10 +3897,22 @@ export class NfwRuleSourceListConfig implements t.TypeOf<typeof NetworkConfigTyp
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig} / {@link NfwRuleSourceStatefulRuleConfig} / {@link NfwRuleSourceStatefulRuleHeaderConfig}*
+ *
  * Network Firewall stateful rule header configuration.
  * Used to specify a stateful rule in a header-type format.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-header.html}
+ *
+ * @example
+ * ```
+ * source: 10.1.0.0/16
+ * sourcePort: ANY
+ * destination: 10.0.0.0/16
+ * destinationPort: ANY
+ * direction: FORWARD
+ * protocol: IP
+ * ```
  */
 export class NfwRuleSourceStatefulRuleHeaderConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatefulRuleHeaderConfig>
@@ -3318,10 +3970,18 @@ export class NfwRuleSourceStatefulRuleHeaderConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig} / {@link NfwRuleSourceStatefulRuleConfig} / {@link NfwRuleSourceStatefulRuleOptionsConfig}*
+ *
  * Network Firewall stateful rule options configuration.
  * Use to specify keywords and settings for stateful rules.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-ruleoption.html}
+ *
+ * @example
+ * ```
+ * - keyword: sid
+ *   settings: ['100']
+ * ```
  */
 export class NfwRuleSourceStatefulRuleOptionsConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatefulRuleOptionsConfig>
@@ -3337,10 +3997,27 @@ export class NfwRuleSourceStatefulRuleOptionsConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig} / {@link NfwRuleSourceStatefulRuleConfig}*
+ *
  * Network Firewall stateful rule configuration.
  * Use to define stateful rules for Network Firewall.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-statefulrule.html}
+ *
+ * @example
+ * ```
+ * - action: PASS
+ *   header:
+ *     source: 10.1.0.0/16
+ *     sourcePort: ANY
+ *     destination: 10.0.0.0/16
+ *     destinationPort: ANY
+ *     direction: FORWARD
+ *     protocol: IP
+ *   ruleOptions:
+ *     - keyword: sid
+ *       settings: ['100']
+ * ```
  */
 export class NfwRuleSourceStatefulRuleConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatefulRuleConfig>
@@ -3366,10 +4043,18 @@ export class NfwRuleSourceStatefulRuleConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig} / {@link NfwStatelessRulesAndCustomActionsConfig} / {@link NfwRuleSourceCustomActionConfig} / {@link NfwRuleSourceCustomActionDefinitionConfig} / {@link NfwRuleSourceCustomActionDimensionConfig}*
+ *
  * Network Firewall custom actions dimensions.
  * Used to define custom actions to log in CloudWatch metrics.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-dimension.html}
+ *
+ * @example
+ * ```
+ * dimensions:
+ *   - CustomValue
+ * ```
  */
 export class NfwRuleSourceCustomActionDimensionConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceCustomActionDimensionConfig>
@@ -3381,10 +4066,19 @@ export class NfwRuleSourceCustomActionDimensionConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig} / {@link NfwStatelessRulesAndCustomActionsConfig} / {@link NfwRuleSourceCustomActionConfig} / {@link NfwRuleSourceCustomActionDefinitionConfig}*
+ *
  * Network Firewall custom action definition configuration.
  * Used to define custom metrics for Network Firewall.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-actiondefinition.html}
+ *
+ * @example
+ * ```
+ * publishMetricAction:
+ *   dimensions:
+ *     - CustomValue
+ * ```
  */
 export class NfwRuleSourceCustomActionDefinitionConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceCustomActionDefinitionConfig>
@@ -3399,10 +4093,21 @@ export class NfwRuleSourceCustomActionDefinitionConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig} / {@link NfwStatelessRulesAndCustomActionsConfig} / {@link NfwRuleSourceCustomActionConfig}*
+ *
  * Network Firewall custom action configuration.
  * Used to define custom actions for Network Firewall.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-customaction.html}
+ *
+ * @example
+ * ```
+ * actionDefinition:
+ *   publishMetricAction:
+ *     dimensions:
+ *       - CustomValue
+ * actionName: CustomAction
+ * ```
  */
 export class NfwRuleSourceCustomActionConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceCustomActionConfig>
@@ -3421,10 +4126,18 @@ export class NfwRuleSourceCustomActionConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig} / {@link NfwStatelessRulesAndCustomActionsConfig} / {@link NfwRuleSourceStatelessRuleConfig} / {@link NfwRuleSourceStatelessRuleDefinitionConfig} / {@link NfwRuleSourceStatelessMatchAttributesConfig} / {@link NfwRuleSourceStatelessPortRangeConfig}*
+ *
  * Network Firewall stateless port range configuration.
  * Used to define a port range in stateless rules.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-portrange.html}
+ *
+ * @example
+ * ```
+ * - fromPort: 22
+ *   toPort: 22
+ * ```
  */
 export class NfwRuleSourceStatelessPortRangeConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatelessPortRangeConfig>
@@ -3440,10 +4153,18 @@ export class NfwRuleSourceStatelessPortRangeConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig} / {@link NfwStatelessRulesAndCustomActionsConfig} / {@link NfwRuleSourceStatelessRuleConfig} / {@link NfwRuleSourceStatelessRuleDefinitionConfig} / {@link NfwRuleSourceStatelessMatchAttributesConfig} / {@link NfwRuleSourceStatelessTcpFlagsConfig}*
+ *
  * Network Firewall stateless TCP flags configuration.
  * Used to define TCP flags to inspect in stateless rules.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-tcpflagfield.html}
+ *
+ * @example
+ * ```
+ * - flags: ['SYN', 'ECE']
+ *   masks: []
+ * ```
  */
 export class NfwRuleSourceStatelessTcpFlagsConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatelessTcpFlagsConfig>
@@ -3471,10 +4192,26 @@ export class NfwRuleSourceStatelessTcpFlagsConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig} / {@link NfwStatelessRulesAndCustomActionsConfig} / {@link NfwRuleSourceStatelessRuleConfig} / {@link NfwRuleSourceStatelessRuleDefinitionConfig} / {@link NfwRuleSourceStatelessMatchAttributesConfig}*
+ *
  * Network Firewall stateless rule match attributes configuration.
  * Used to define stateless rule match attributes for Network Firewall.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-matchattributes.html}
+ *
+ * @example
+ * ```
+ * sources:
+ *   - 10.1.0.0/16
+ * sourcePorts:
+ *   - fromPort: 1024
+ *     toPort: 65535
+ * destinations:
+ *   - 10.0.0.0/16
+ * destinationPorts:
+ *   - fromPort: 22
+ *     toPort: 22
+ * ```
  */
 export class NfwRuleSourceStatelessMatchAttributesConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatelessMatchAttributesConfig>
@@ -3518,10 +4255,28 @@ export class NfwRuleSourceStatelessMatchAttributesConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig} / {@link NfwStatelessRulesAndCustomActionsConfig} / {@link NfwRuleSourceStatelessRuleConfig} / {@link NfwRuleSourceStatelessRuleDefinitionConfig}*
+ *
  * Network Firewall stateless rule definition configuration.
  * Used to define a stateless rule definition.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-ruledefinition.html}
+ *
+ * @example
+ * ```
+ * actions: ['aws:pass']
+ * matchAttributes:
+ *   sources:
+ *     - 10.1.0.0/16
+ *   sourcePorts:
+ *     - fromPort: 1024
+ *       toPort: 65535
+ *   destinations:
+ *     - 10.0.0.0/16
+ *   destinationPorts:
+ *     - fromPort: 22
+ *       toPort: 22
+ * ```
  */
 export class NfwRuleSourceStatelessRuleDefinitionConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatelessRuleDefinitionConfig>
@@ -3542,10 +4297,30 @@ export class NfwRuleSourceStatelessRuleDefinitionConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig} / {@link NfwStatelessRulesAndCustomActionsConfig} / {@link NfwRuleSourceStatelessRuleConfig}*
+ *
  * Network Firewall stateless rule configuration.
  * Used to define a stateless rule for Network Firewall.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-statelessrule.html}
+ *
+ * @example
+ * ```
+ * - priority: 100
+ *   ruleDefinition:
+ *     actions: ['aws:pass']
+ *     matchAttributes:
+ *       sources:
+ *         - 10.1.0.0/16
+ *       sourcePorts:
+ *         - fromPort: 1024
+ *           toPort: 65535
+ *       destinations:
+ *         - 10.0.0.0/16
+ *       destinationPorts:
+ *         - fromPort: 22
+ *           toPort: 22
+ * ```
  */
 export class NfwRuleSourceStatelessRuleConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceStatelessRuleConfig>
@@ -3567,10 +4342,37 @@ export class NfwRuleSourceStatelessRuleConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig} / {@link NfwStatelessRulesAndCustomActionsConfig}*
+ *
  * Network Firewall stateless rules and custom metrics configuration.
  * Used to define stateless rules and/or custom metrics for Network Firewall.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-statelessrulesandcustomactions.html}
+ *
+ * @example
+ * ```
+ * statelessRules:
+ *   - priority: 100
+ *     ruleDefinition:
+ *       actions: ['aws:pass']
+ *       matchAttributes:
+ *         sources:
+ *           - 10.1.0.0/16
+ *         sourcePorts:
+ *           - fromPort: 1024
+ *             toPort: 65535
+ *         destinations:
+ *           - 10.0.0.0/16
+ *         destinationPorts:
+ *           - fromPort: 22
+ *             toPort: 22
+ * customActions:
+ *   actionDefinition:
+ *     publishMetricAction:
+ *       dimensions:
+ *         - CustomValue
+ *   actionName: CustomAction
+ * ```
  */
 export class NfwStatelessRulesAndCustomActionsConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwStatelessRulesAndCustomActionsConfig>
@@ -3590,10 +4392,64 @@ export class NfwStatelessRulesAndCustomActionsConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleSourceConfig}*
+ *
  * Network Firewall rule source configuration.
  * Used to define rules for a Network Firewall.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-rulessource.html}
+ *
+ * @example
+ * File with list of Suricata rules:
+ * ```
+ * rulesFile: path/to/rules.txt
+ * ```
+ * DNS rule list:
+ * ```
+ * rulesSourceList:
+ *   generatedRulesType: DENYLIST
+ *   targets:
+ *     - .example.com
+ *   targetTypes: ['TLS_SNI', 'HTTP_HOST']
+ * ```
+ * Single Suricata rule:
+ * ```
+ * rulesString: 'pass ip 10.1.0.0/16 any -> 10.0.0.0/16 any (sid:100;)'
+ * ```
+ * Stateful rules:
+ * ```
+ * statefulRules:
+ *   - action: PASS
+ *     header:
+ *       source: 10.1.0.0/16
+ *       sourcePort: ANY
+ *       destination: 10.0.0.0/16
+ *       destinationPort: ANY
+ *       direction: FORWARD
+ *       protocol: IP
+ *     ruleOptions:
+ *       - keyword: sid
+ *         settings: ['100']
+ * ```
+ * Stateless rules:
+ * ```
+ * statelessRulesAndCustomActions:
+ *   statelessRules:
+ *     - priority: 100
+ *       ruleDefinition:
+ *         actions: ['aws:pass']
+ *         matchAttributes:
+ *           sources:
+ *             - 10.1.0.0/16
+ *           sourcePorts:
+ *             - fromPort: 1024
+ *               toPort: 65535
+ *           destinations:
+ *             - 10.0.0.0/16
+ *           destinationPorts:
+ *             - fromPort: 22
+ *               toPort: 22
+ * ```
  */
 export class NfwRuleSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleSourceConfig> {
   /**
@@ -3630,10 +4486,18 @@ export class NfwRuleSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.n
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleVariableConfig} / {@link NfwRuleVariableDefinitionConfig}*
+ *
  * Network Firewall rule variable definition configuration.
  * Used to define a rule variable definition for Network Firewall.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-rulevariables.html}
+ *
+ * @example
+ * ```
+ * name: HOME_NET
+ * definition: ['10.0.0.0/16']
+ * ```
  */
 export class NfwRuleVariableDefinitionConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleVariableDefinitionConfig>
@@ -3649,10 +4513,22 @@ export class NfwRuleVariableDefinitionConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig} / {@link NfwRuleVariableConfig}*
+ *
  * Network Firewall rule variable configuration.
  * Used to define a rule variable for Network Firewall.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-rulevariables.html}
+ *
+ * @example
+ * ```
+ * ipSets:
+ *   name: HOME_NET
+ *   definition: ['10.0.0.0/16']
+ * portSets:
+ *   name: HOME_NET
+ *   definition: ['80', '443']
+ * ```
  */
 export class NfwRuleVariableConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleVariableConfig> {
   /**
@@ -3670,10 +4546,25 @@ export class NfwRuleVariableConfig implements t.TypeOf<typeof NetworkConfigTypes
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig} / {@link NfwRuleGroupRuleConfig}*
+ *
  * Network Firewall rule group rule configuration.
  * Used to define rules for a Network Firewall rule group.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-rulegroup.html}
+ *
+ * @example
+ * ```
+ * rulesSource:
+ *   rulesFile: path/to/rules.txt
+ * ruleVariables:
+ *   ipSets:
+ *     name: HOME_NET
+ *     definition: ['10.0.0.0/16']
+ *   portSets:
+ *     name: HOME_NET
+ *     definition: ['80', '443']
+ * ```
  */
 export class NfwRuleGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleGroupRuleConfig> {
   /**
@@ -3697,10 +4588,59 @@ export class NfwRuleGroupRuleConfig implements t.TypeOf<typeof NetworkConfigType
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwRuleGroupConfig}*
+ *
  * Network Firewall rule group configuration.
  * Used to define a rule group for Network Firewall.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-networkfirewall-rulegroup.html}
+ *
+ * @example
+ * Stateful rule group:
+ * ```
+ * - name: accelerator-stateful-group
+ *   regions:
+ *     - us-east-1
+ *   capacity: 100
+ *   type: STATEFUL
+ *   ruleGroup:
+ *     rulesSource:
+ *       rulesFile: path/to/rules.txt
+ *   shareTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   tags: []
+ * ```
+ * Stateless rule group:
+ * ```
+ * - name: accelerator-stateless-group
+ *   regions:
+ *     - us-east-1
+ *   capacity: 100
+ *   type: STATELESS
+ *   ruleGroup:
+ *     rulesSource:
+ *       statelessRulesAndCustomActions:
+ *         statelessRules:
+ *           - priority: 100
+ *             ruleDefinition:
+ *               actions: ['aws:pass']
+ *               matchAttributes:
+ *                 sources:
+ *                   - 10.1.0.0/16
+ *                 sourcePorts:
+ *                   - fromPort: 1024
+ *                     toPort: 65535
+ *                 destinations:
+ *                   - 10.0.0.0/16
+ *                 destinationPorts:
+ *                   - fromPort: 22
+ *                     toPort: 22
+ *   shareTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   tags: []
+ * ```
  */
 export class NfwRuleGroupConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleGroupConfig> {
   /**
@@ -3749,10 +4689,17 @@ export class NfwRuleGroupConfig implements t.TypeOf<typeof NetworkConfigTypes.nf
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwFirewallPolicyConfig} / {@link NfwFirewallPolicyPolicyConfig} / {@link NfwStatefulRuleGroupReferenceConfig}*
+ *
  * Network Firewall stateful rule group reference configuration.
  * Used to reference a stateful rule group in a Network Firewall policy.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-firewallpolicy-statefulrulegroupreference.html}
+ *
+ * @example
+ * ```
+ * - name: accelerator-stateful-group
+ * ```
  */
 export class NfwStatefulRuleGroupReferenceConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwStatefulRuleGroupReferenceConfig>
@@ -3768,10 +4715,18 @@ export class NfwStatefulRuleGroupReferenceConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwFirewallPolicyConfig} / {@link NfwFirewallPolicyPolicyConfig} / {@link NfwStatelessRuleGroupReferenceConfig}*
+ *
  * Network Firewall stateless rule group configuration.
  * Used to reference a stateless rule group in a Network Firewall policy.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-firewallpolicy-statelessrulegroupreference.html}
+ *
+ * @example
+ * ```
+ * - name: accelerator-stateless-group
+ *   priority: 100
+ * ```
  */
 export class NfwStatelessRuleGroupReferenceConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwStatelessRuleGroupReferenceConfig>
@@ -3787,10 +4742,23 @@ export class NfwStatelessRuleGroupReferenceConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwFirewallPolicyConfig} / {@link NfwFirewallPolicyPolicyConfig}*
+ *
  * Network Firewall policy policy configuration.
  * Used to define the configuration of a Network Firewall policy.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-firewallpolicy-firewallpolicy.html}
+ *
+ * @example:
+ * ```
+ * statelessDefaultActions: ['aws:forward_to_sfe']
+ * statelessFragmentDefaultActions: ['aws:forward_to_sfe']
+ * statefulRuleGroups:
+ *   - name: accelerator-stateful-group
+ * statelessRuleGroups:
+ *   - name: accelerator-stateless-group
+ *     priority: 100
+ * ```
  */
 export class NfwFirewallPolicyPolicyConfig
   implements t.TypeOf<typeof NetworkConfigTypes.nfwFirewallPolicyPolicyConfig>
@@ -3835,10 +4803,31 @@ export class NfwFirewallPolicyPolicyConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwFirewallPolicyConfig}*
+ *
  * Network Firewall policy configuration.
  * Used to define a Network Firewall policy.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-networkfirewall-firewallpolicy.html}
+ *
+ * @example
+ * ```
+ * - name: accelerator-nfw-policy
+ *   firewallPolicy:
+ *     statelessDefaultActions: ['aws:forward_to_sfe']
+ *     statelessFragmentDefaultActions: ['aws:forward_to_sfe']
+ *     statefulRuleGroups:
+ *       - name: accelerator-stateful-group
+ *     statelessRuleGroups:
+ *       - name: accelerator-stateless-group
+ *         priority: 100
+ *   regions:
+ *     - us-east-1
+ *   shareTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   tags: []
+ * ```
  */
 export class NfwFirewallPolicyConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwFirewallPolicyConfig> {
   /**
@@ -3877,10 +4866,18 @@ export class NfwFirewallPolicyConfig implements t.TypeOf<typeof NetworkConfigTyp
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwFirewallConfig} / {@link NfwLoggingConfig}*
+ *
  * Network Firewall logging configuration.
  * Used to define logging destinations for Network Firewall.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-loggingconfiguration-logdestinationconfig.html}
+ *
+ * @example
+ * ```
+ * - destination: s3
+ *   type: ALERT
+ * ```
  */
 export class NfwLoggingConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwLoggingConfig> {
   /**
@@ -3898,10 +4895,27 @@ export class NfwLoggingConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwL
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig} / {@link NfwFirewallConfig}*
+ *
  * Network Firewall firewall configuration.
  * Used to define a Network Firewall firewall.
  *
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-networkfirewall-firewall.html}
+ *
+ * @example
+ * ```
+ * - name: accelerator-nfw
+ *   description: Accelerator Firewall
+ *   firewallPolicy: accelerator-nfw-policy
+ *   subnets:
+ *     - Subnet-A
+ *     - Subnet-B
+ *   vpc: Network-Inspection
+ *   loggingConfiguration:
+ *     - destination: s3
+ *       type: ALERT
+ *   tags: []
+ * ```
  */
 export class NfwFirewallConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwFirewallConfig> {
   /**
@@ -3949,8 +4963,56 @@ export class NfwFirewallConfig implements t.TypeOf<typeof NetworkConfigTypes.nfw
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link NfwConfig}*
+ *
  * Network Firewall configuration.
  * Used to define Network Firewall configurations for the accelerator.
+ *
+ * @example
+ * ```
+ * networkFirewall:
+ *   firewalls:
+ *     - name: accelerator-nfw
+ *       description: Accelerator Firewall
+ *       firewallPolicy: accelerator-nfw-policy
+ *       subnets:
+ *         - Subnet-A
+ *         - Subnet-B
+ *       vpc: Network-Inspection
+ *       loggingConfiguration:
+ *         - destination: s3
+ *           type: ALERT
+ *       tags: []
+ *   policies:
+ *     - name: accelerator-nfw-policy
+ *       firewallPolicy:
+ *         statelessDefaultActions: ['aws:forward_to_sfe']
+ *         statelessFragmentDefaultActions: ['aws:forward_to_sfe']
+ *         statefulRuleGroups:
+ *           - name: accelerator-stateful-group
+ *         statelessRuleGroups:
+ *           - name: accelerator-stateless-group
+ *             priority: 100
+ *       regions:
+ *         - us-east-1
+ *       shareTargets:
+ *         organizationalUnits:
+ *           - Root
+ *       tags: []
+ *   rules:
+ *     - name: accelerator-stateful-group
+ *       regions:
+ *         - us-east-1
+ *       capacity: 100
+ *       type: STATEFUL
+ *       ruleGroup:
+ *         rulesSource:
+ *           rulesFile: path/to/rules.txt
+ *       shareTargets:
+ *         organizationalUnits:
+ *           - Root
+ *       tags: []
+ * ```
  */
 export class NfwConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwConfig> {
   /**
@@ -3974,20 +5036,21 @@ export class NfwConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwConfig> 
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link GwlbConfig} / {@link GwlbEndpointConfig}*
+ *
  * Gateway Load Balancer endpoint configuration.
  * Use to define Gateway Load Balancer endpoints.
  *
  * @example
  * ```
- * endpoints:
- *   - name: Endpoint-A
- *     account: Network
- *     subnet: Network-Inspection-A
- *     vpc: Network-Inspection
- *   - name: Endpoint-B
- *     account: Network
- *     subnet: Network-Inspection-B
- *     vpc: Network-Inspection
+ * - name: Endpoint-A
+ *   account: Network
+ *   subnet: Network-Inspection-A
+ *   vpc: Network-Inspection
+ * - name: Endpoint-B
+ *   account: Network
+ *   subnet: Network-Inspection-B
+ *   vpc: Network-Inspection
  * ```
  */
 export class GwlbEndpointConfig implements t.TypeOf<typeof NetworkConfigTypes.gwlbEndpointConfig> {
@@ -4010,6 +5073,8 @@ export class GwlbEndpointConfig implements t.TypeOf<typeof NetworkConfigTypes.gw
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig} / {@link GwlbConfig}*
+ *
  * Gateway Load Balancer configuration.
  * Used to define Gateway Load Balancer configurations for the accelerator.
  *
@@ -4065,8 +5130,20 @@ export class GwlbConfig implements t.TypeOf<typeof NetworkConfigTypes.gwlbConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CentralNetworkServicesConfig}*
+ *
  * Central network services configuration.
  * Used to define centralized networking services for the accelerator.
+ *
+ * @example
+ * ```
+ * centralNetworkServices:
+ *   delegatedAdminAccount: Network
+ *   gatewayLoadBalancers: []
+ *   ipams: []
+ *   networkFirewall: []
+ *   route53Resolver: []
+ * ```
  */
 export class CentralNetworkServicesConfig implements t.TypeOf<typeof NetworkConfigTypes.centralNetworkServicesConfig> {
   /**
@@ -4100,16 +5177,19 @@ export class CentralNetworkServicesConfig implements t.TypeOf<typeof NetworkConf
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcPeeringConfig}*
+ *
  * VPC peering configuration.
  * Used to define VPC peering connections.
  *
  * @example
  * ```
  * vpcPeering:
- *   - name: acccelerator-peer
+ *   - name: Peering
  *     vpcs:
  *       - VPC-A
  *       - VPC-B
+ *     tags: []
  * ```
  */
 export class VpcPeeringConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcPeeringConfig> {

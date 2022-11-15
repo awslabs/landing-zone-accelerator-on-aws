@@ -11,13 +11,13 @@
  *  and limitations under the License.
  */
 
-import * as t from './common-types';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as yaml from 'js-yaml';
+import * as path from 'path';
 
-import { OrganizationConfig } from './organization-config';
 import { AccountsConfig } from './accounts-config';
+import * as t from './common-types';
+import { OrganizationConfig } from './organization-config';
 
 /**
  * IAM Configuration items.
@@ -169,7 +169,16 @@ export class IamConfigTypes {
 }
 
 /**
+ * *{@link IamConfig} / {@link SamlProviderConfig}*
+ *
  * SAML provider configuration
+ *
+ * @example
+ * ```
+ * providers:
+ *   - name: accelerator-provider
+ *     metadataDocument: path/to/metadata.xml
+ * ```
  */
 export class SamlProviderConfig implements t.TypeOf<typeof IamConfigTypes.samlProviderConfig> {
   /**
@@ -189,7 +198,16 @@ export class SamlProviderConfig implements t.TypeOf<typeof IamConfigTypes.samlPr
 }
 
 /**
+ * *{@link IamConfig} / {@link UserSetConfig} / {@link UserConfig}*
+ *
  * IAM User configuration
+ *
+ * @example
+ * ```
+ * - username: accelerator-user
+ *   boundaryPolicy: Default-Boundary-Policy
+ *   group: Admins
+ * ```
  */
 export class UserConfig implements t.TypeOf<typeof IamConfigTypes.userConfig> {
   /**
@@ -215,7 +233,20 @@ export class UserConfig implements t.TypeOf<typeof IamConfigTypes.userConfig> {
 }
 
 /**
+ * *{@link IamConfig} / {@link UserSetConfig}*
+ *
  * User set configuration
+ *
+ * ```
+ * userSets:
+ *   - deploymentTargets:
+ *       accounts:
+ *         - Management
+ *     users:
+ *       - username: accelerator-user
+ *         boundaryPolicy: Default-Boundary-Policy
+ *         group: Admins
+ * ```
  */
 export class UserSetConfig implements t.TypeOf<typeof IamConfigTypes.userSetConfig> {
   /**
@@ -229,7 +260,17 @@ export class UserSetConfig implements t.TypeOf<typeof IamConfigTypes.userSetConf
 }
 
 /**
+ * *{@link IamConfig} / {@link GroupConfig} | {@link RoleConfig} / {@link PoliciesConfig}*
+ *
  * IAM policies configuration
+ *
+ * @example
+ * ```
+ * awsManaged:
+ *   - AdministratorAccess
+ * customerManaged:
+ *   - PolicyName
+ * ```
  */
 export class PoliciesConfig implements t.TypeOf<typeof IamConfigTypes.policiesConfig> {
   /**
@@ -243,7 +284,17 @@ export class PoliciesConfig implements t.TypeOf<typeof IamConfigTypes.policiesCo
 }
 
 /**
+ * *{@link IamConfig} / {@link GroupSetConfig} / {@link GroupConfig}*
+ *
  * IAM group configuration
+ *
+ * @example
+ * ```
+ * - name: Admins
+ *   policies:
+ *     awsManaged:
+ *       - AdministratorAccess
+ * ```
  */
 export class GroupConfig implements t.TypeOf<typeof IamConfigTypes.groupConfig> {
   /**
@@ -261,7 +312,22 @@ export class GroupConfig implements t.TypeOf<typeof IamConfigTypes.groupConfig> 
 }
 
 /**
+ * *{@link IamConfig} / {@link GroupSetConfig}*
+ *
  * IAM group set configuration
+ *
+ * @example
+ * ```
+ * groupSets:
+ *   - deploymentTargets:
+ *       accounts:
+ *         - Management
+ *     groups:
+ *       - name: Admins
+ *         policies:
+ *           awsManaged:
+ *             - AdministratorAccess
+ * ```
  */
 export class GroupSetConfig implements t.TypeOf<typeof IamConfigTypes.groupSetConfig> {
   /**
@@ -275,7 +341,15 @@ export class GroupSetConfig implements t.TypeOf<typeof IamConfigTypes.groupSetCo
 }
 
 /**
+ * *{@link IamConfig} / {@link RoleSetConfig} / {@link RoleConfig} / {@link AssumedByConfig}*
+ *
  * Assumedby configuration
+ *
+ * @example
+ * ```
+ * - principal: ec2.amazonaws.com
+ *   type: service
+ * ```
  */
 export class AssumedByConfig implements t.TypeOf<typeof IamConfigTypes.assumedByConfig> {
   /**
@@ -291,7 +365,24 @@ export class AssumedByConfig implements t.TypeOf<typeof IamConfigTypes.assumedBy
 }
 
 /**
+ * *{@link IamConfig} / {@link RoleSetConfig} / {@link RoleConfig}*
+ *
  * IAM Role configuration
+ *
+ * @example
+ * ```
+ * - name: EC2-Default-SSM-AD-Role
+ *   assumedBy:
+ *     - principal: ec2.amazonaws.com
+ *       type: service
+ *   boundaryPolicy: Default-Boundary-Policy
+ *   instanceProfile: true
+ *   policies:
+ *     awsManaged:
+ *       - AmazonSSMManagedInstanceCore
+ *       - AmazonSSMDirectoryServiceAccess
+ *       - CloudWatchAgentServerPolicy
+ * ```
  */
 export class RoleConfig implements t.TypeOf<typeof IamConfigTypes.roleConfig> {
   /**
@@ -317,7 +408,29 @@ export class RoleConfig implements t.TypeOf<typeof IamConfigTypes.roleConfig> {
 }
 
 /**
+ * *{@link IamConfig} / {@link RoleSetConfig}*
+ *
  * Role set configuration
+ *
+ * @example
+ * ```
+ * roleSets:
+ *   - deploymentTargets:
+ *       organizationalUnits:
+ *         - Root
+ *     roles:
+ *       - name: EC2-Default-SSM-AD-Role
+ *         assumedBy:
+ *           - principal: ec2.amazonaws.com
+ *             type: service
+ *         boundaryPolicy: Default-Boundary-Policy
+ *         instanceProfile: true
+ *         policies:
+ *           awsManaged:
+ *             - AmazonSSMManagedInstanceCore
+ *             - AmazonSSMDirectoryServiceAccess
+ *             - CloudWatchAgentServerPolicy
+ * ```
  */
 export class RoleSetConfig implements t.TypeOf<typeof IamConfigTypes.roleSetConfig> {
   /**
@@ -335,7 +448,15 @@ export class RoleSetConfig implements t.TypeOf<typeof IamConfigTypes.roleSetConf
 }
 
 /**
+ * *{@link IamConfig} / {@link PolicySetConfig} / {@link PolicyConfig}*
+ *
  * IAM policy configuration
+ *
+ * @example
+ * ```
+ * - name: Default-Boundary-Policy
+ *   policy: path/to/policy.json
+ * ```
  */
 export class PolicyConfig implements t.TypeOf<typeof IamConfigTypes.policyConfig> {
   /**
@@ -343,13 +464,26 @@ export class PolicyConfig implements t.TypeOf<typeof IamConfigTypes.policyConfig
    */
   readonly name: string = '';
   /**
-   * A XML file containing policy boundary definition
+   * A JSON file containing policy boundary definition
    */
   readonly policy: string = '';
 }
 
 /**
+ * *{@link IamConfig} / {@link PolicySetConfig}*
+ *
  * Policy set configuration
+ *
+ * @example
+ * ```
+ * policySets:
+ *   - deploymentTargets:
+ *       organizationalUnits:
+ *         - Root
+ *     policies:
+ *       - name: Default-Boundary-Policy
+ *         policy: path/to/policy.json
+ * ```
  */
 export class PolicySetConfig implements t.TypeOf<typeof IamConfigTypes.policySetConfig> {
   /**
@@ -378,8 +512,8 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    * @example
    * ```
    * providers:
-   *  name: <PROVIDER_NAME>,
-   *  metadataDocument: <METADATA_DOCUMENT_FILE>,
+   *  - name: <PROVIDER_NAME>
+   *    metadataDocument: <METADATA_DOCUMENT_FILE>
    */
   readonly providers: SamlProviderConfig[] = [];
 
