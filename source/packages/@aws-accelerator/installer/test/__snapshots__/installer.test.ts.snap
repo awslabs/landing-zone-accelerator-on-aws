@@ -1489,7 +1489,22 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT=\\"no\\"
       - if [ ! -z \\"$MANAGEMENT_ACCOUNT_ID\\" ] && [ ! -z \\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT=\\"yes\\"; fi
-      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit; then BOOTSTRAPPED=\\"no\\"; fi
+      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+                "; then BOOTSTRAPPED_HOME=\\"no\\"; fi
+      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
+                  ],
+                },
+                "; then BOOTSTRAPPED_GLOBAL=\\"no\\"; fi
   build:
     commands:
       - cd source
@@ -1497,7 +1512,7 @@ phases:
       - yarn lerna link
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - if [ \\"$BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ \\"$BOOTSTRAPPED_HOME\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
                 Object {
                   "Ref": "AWS::AccountId",
                 },
@@ -1506,7 +1521,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi
-      - if [ \\"$BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ \\"$BOOTSTRAPPED_GLOBAL\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
                 Object {
                   "Ref": "AWS::AccountId",
                 },
@@ -1528,13 +1543,28 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 ":iam::\\"$MANAGEMENT_ACCOUNT_ID\\":role/\\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" --role-session-name acceleratorAssumeRoleSession --query \\"Credentials.[AccessKeyId,SecretAccessKey,SessionToken]\\" --output text));
-                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit; then MGMT_BOOTSTRAPPED=\\"no\\"; fi;
-                          if [ \\"$MGMT_BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+                "; then MGMT_BOOTSTRAPPED_HOME=\\"no\\"; fi;
+                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
+                  ],
+                },
+                "; then MGMT_BOOTSTRAPPED_GLOBAL=\\"no\\"; fi;
+                          if [ \\"$MGMT_BOOTSTRAPPED_HOME\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi;
-                          if [ \\"$MGMT_BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if [ \\"$MGMT_BOOTSTRAPPED_GLOBAL\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
                   "Fn::FindInMap": Array [
                     "GlobalRegionMap",
@@ -3930,7 +3960,22 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT=\\"no\\"
       - if [ ! -z \\"$MANAGEMENT_ACCOUNT_ID\\" ] && [ ! -z \\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT=\\"yes\\"; fi
-      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit; then BOOTSTRAPPED=\\"no\\"; fi
+      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+                "; then BOOTSTRAPPED_HOME=\\"no\\"; fi
+      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
+                  ],
+                },
+                "; then BOOTSTRAPPED_GLOBAL=\\"no\\"; fi
   build:
     commands:
       - cd source
@@ -3938,7 +3983,7 @@ phases:
       - yarn lerna link
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - if [ \\"$BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ \\"$BOOTSTRAPPED_HOME\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
                 Object {
                   "Ref": "AWS::AccountId",
                 },
@@ -3947,7 +3992,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi
-      - if [ \\"$BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ \\"$BOOTSTRAPPED_GLOBAL\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
                 Object {
                   "Ref": "AWS::AccountId",
                 },
@@ -3969,13 +4014,28 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 ":iam::\\"$MANAGEMENT_ACCOUNT_ID\\":role/\\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" --role-session-name acceleratorAssumeRoleSession --query \\"Credentials.[AccessKeyId,SecretAccessKey,SessionToken]\\" --output text));
-                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit; then MGMT_BOOTSTRAPPED=\\"no\\"; fi;
-                          if [ \\"$MGMT_BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+                "; then MGMT_BOOTSTRAPPED_HOME=\\"no\\"; fi;
+                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
+                  ],
+                },
+                "; then MGMT_BOOTSTRAPPED_GLOBAL=\\"no\\"; fi;
+                          if [ \\"$MGMT_BOOTSTRAPPED_HOME\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi;
-                          if [ \\"$MGMT_BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if [ \\"$MGMT_BOOTSTRAPPED_GLOBAL\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
                   "Fn::FindInMap": Array [
                     "GlobalRegionMap",
@@ -6508,7 +6568,22 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT=\\"no\\"
       - if [ ! -z \\"$MANAGEMENT_ACCOUNT_ID\\" ] && [ ! -z \\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT=\\"yes\\"; fi
-      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit; then BOOTSTRAPPED=\\"no\\"; fi
+      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+                "; then BOOTSTRAPPED_HOME=\\"no\\"; fi
+      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
+                  ],
+                },
+                "; then BOOTSTRAPPED_GLOBAL=\\"no\\"; fi
   build:
     commands:
       - cd source
@@ -6516,7 +6591,7 @@ phases:
       - yarn lerna link
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - if [ \\"$BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ \\"$BOOTSTRAPPED_HOME\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
                 Object {
                   "Ref": "AWS::AccountId",
                 },
@@ -6525,7 +6600,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi
-      - if [ \\"$BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ \\"$BOOTSTRAPPED_GLOBAL\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
                 Object {
                   "Ref": "AWS::AccountId",
                 },
@@ -6547,13 +6622,28 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 ":iam::\\"$MANAGEMENT_ACCOUNT_ID\\":role/\\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" --role-session-name acceleratorAssumeRoleSession --query \\"Credentials.[AccessKeyId,SecretAccessKey,SessionToken]\\" --output text));
-                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit; then MGMT_BOOTSTRAPPED=\\"no\\"; fi;
-                          if [ \\"$MGMT_BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+                "; then MGMT_BOOTSTRAPPED_HOME=\\"no\\"; fi;
+                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
+                  ],
+                },
+                "; then MGMT_BOOTSTRAPPED_GLOBAL=\\"no\\"; fi;
+                          if [ \\"$MGMT_BOOTSTRAPPED_HOME\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi;
-                          if [ \\"$MGMT_BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if [ \\"$MGMT_BOOTSTRAPPED_GLOBAL\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
                   "Fn::FindInMap": Array [
                     "GlobalRegionMap",
@@ -9148,7 +9238,22 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT=\\"no\\"
       - if [ ! -z \\"$MANAGEMENT_ACCOUNT_ID\\" ] && [ ! -z \\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT=\\"yes\\"; fi
-      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit; then BOOTSTRAPPED=\\"no\\"; fi
+      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+                "; then BOOTSTRAPPED_HOME=\\"no\\"; fi
+      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
+                  ],
+                },
+                "; then BOOTSTRAPPED_GLOBAL=\\"no\\"; fi
   build:
     commands:
       - cd source
@@ -9156,7 +9261,7 @@ phases:
       - yarn lerna link
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - if [ \\"$BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ \\"$BOOTSTRAPPED_HOME\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
                 Object {
                   "Ref": "AWS::AccountId",
                 },
@@ -9165,7 +9270,7 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi
-      - if [ \\"$BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ \\"$BOOTSTRAPPED_GLOBAL\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
                 Object {
                   "Ref": "AWS::AccountId",
                 },
@@ -9187,13 +9292,28 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 ":iam::\\"$MANAGEMENT_ACCOUNT_ID\\":role/\\"$MANAGEMENT_ACCOUNT_ROLE_NAME\\" --role-session-name acceleratorAssumeRoleSession --query \\"Credentials.[AccessKeyId,SecretAccessKey,SessionToken]\\" --output text));
-                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit; then MGMT_BOOTSTRAPPED=\\"no\\"; fi;
-                          if [ \\"$MGMT_BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+                "; then MGMT_BOOTSTRAPPED_HOME=\\"no\\"; fi;
+                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                Object {
+                  "Fn::FindInMap": Array [
+                    "GlobalRegionMap",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    "regionName",
+                  ],
+                },
+                "; then MGMT_BOOTSTRAPPED_GLOBAL=\\"no\\"; fi;
+                          if [ \\"$MGMT_BOOTSTRAPPED_HOME\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi;
-                          if [ \\"$MGMT_BOOTSTRAPPED\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if [ \\"$MGMT_BOOTSTRAPPED_GLOBAL\\" = \\"no\\" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 Object {
                   "Fn::FindInMap": Array [
                     "GlobalRegionMap",
