@@ -11,11 +11,13 @@
  *  and limitations under the License.
  */
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
+
+import { throttlingBackOff } from '@aws-accelerator/utils';
+
 import * as t from './common-types';
 
 /**
@@ -71,7 +73,17 @@ export abstract class OrganizationConfigTypes {
 }
 
 /**
+ * *{@link OrganizationConfig} / {@link OrganizationalUnitConfig}*
+ *
  * AWS Organizational Unit (OU) configuration
+ *
+ * @example
+ * ```
+ * organizationalUnits:
+ *   - name: Sandbox
+ *   - name: Suspended
+ *     ignore: true
+ * ```
  */
 export abstract class OrganizationalUnitConfig
   implements t.TypeOf<typeof OrganizationConfigTypes.organizationalUnitConfig>
@@ -98,7 +110,17 @@ export abstract class OrganizationalUnitConfig
 }
 
 /**
- * Organizational unit in configuration
+ * *{@link OrganizationConfig} / {@link OrganizationalUnitIdConfig}
+ *
+ * Organizational unit id configuration
+ *
+ * @example
+ * ```
+ * organizationalUnitIds:
+ *   - name: Sandbox
+ *     id: o-abc123
+ *     arn: <ARN_of_OU>
+ * ```
  */
 export abstract class OrganizationalUnitIdConfig
   implements t.TypeOf<typeof OrganizationConfigTypes.organizationalUnitIdConfig>
@@ -118,7 +140,16 @@ export abstract class OrganizationalUnitIdConfig
 }
 
 /**
+ * *{@link OrganizationConfig} / {@link QuarantineNewAccountsConfig}*
+ *
  * Quarantine SCP application configuration
+ *
+ * @example
+ * ```
+ * quarantineNewAccounts:
+ *   enable: true
+ *   scpPolicyName: QuarantineAccounts
+ * ```
  */
 export abstract class QuarantineNewAccountsConfig
   implements t.TypeOf<typeof OrganizationConfigTypes.quarantineNewAccountsConfig>
@@ -138,7 +169,19 @@ export abstract class QuarantineNewAccountsConfig
 }
 
 /**
+ * *{@link OrganizationConfig} / {@link ServiceControlPolicyConfig}*
+ *
  * Service control policy configuration
+ *
+ * @example
+ * ```
+ * serviceControlPolicies:
+ *   - name: QuarantineAccounts
+ *     policy: path/to/policy.json
+ *     type: customerManaged
+ *     deploymentTargets:
+ *       organizationalUnits: []
+ * ```
  */
 export abstract class ServiceControlPolicyConfig
   implements t.TypeOf<typeof OrganizationConfigTypes.serviceControlPolicyConfig>
@@ -167,10 +210,23 @@ export abstract class ServiceControlPolicyConfig
 }
 
 /**
+ * *{@link OrganizationConfig} / {@link TaggingPolicyConfig}*
+ *
  * Organizations tag policy.
  *
  * Tag policies help you standardize tags on all tagged resources across your organization.
  * You can use tag policies to define tag keys (including how they should be capitalized) and their allowed values.
+ *
+ * @example
+ * ```
+ * taggingPolicies:
+ *   - name: TagPolicy
+ *     description: Organization Tagging Policy
+ *     policy: tagging-policies/org-tag-policy.json
+ *     deploymentTargets:
+ *         organizationalUnits:
+ *           - Root
+ * ```
  */
 export abstract class TaggingPolicyConfig implements t.TypeOf<typeof OrganizationConfigTypes.tagPolicyConfig> {
   /**
@@ -193,10 +249,23 @@ export abstract class TaggingPolicyConfig implements t.TypeOf<typeof Organizatio
 }
 
 /**
+ * *{@link OrganizationConfig} / {@link BackupPolicyConfig}*
+ *
  * Organization backup policy
  *
  * Backup policies enable you to deploy organization-wide backup plans to help ensure compliance across your organization's accounts.
  * Using policies helps ensure consistency in how you implement your backup plans
+ *
+ * @example
+ * ```
+ * backupPolicies:
+ *   - name: BackupPolicy
+ *     description: Organization Backup Policy
+ *     policy: backup-policies/org-backup-policies.json
+ *     deploymentTargets:
+ *         organizationalUnits:
+ *           - Root
+ * ```
  */
 export abstract class BackupPolicyConfig implements t.TypeOf<typeof OrganizationConfigTypes.backupPolicyConfig> {
   /**
