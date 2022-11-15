@@ -1,6 +1,8 @@
-import * as t from '../lib/common-types';
 import * as fs from 'fs';
 import * as path from 'path';
+
+import { AccountsConfig } from '../lib/accounts-config';
+import * as t from '../lib/common-types';
 import {
   NetworkConfig,
   NetworkConfigTypes,
@@ -9,7 +11,6 @@ import {
   TransitGatewayRouteTableVpnEntryConfig,
 } from '../lib/network-config';
 import { OrganizationConfig } from '../lib/organization-config';
-import { AccountsConfig } from '../lib/accounts-config';
 
 /**
  * Network Configuration validator.
@@ -597,6 +598,10 @@ class VpcValidator {
     // Validate VPC configurations
     //
     this.validateVpcConfiguration(values, errors);
+    //
+    // Validate VPC peering configurations
+    //
+    this.validateVpcPeeringConfiguration(values, errors);
   }
 
   /**
@@ -783,6 +788,7 @@ class VpcValidator {
     const networkFirewalls = values.centralNetworkServices?.networkFirewall?.firewalls;
     const tgws = values.transitGateways;
     const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
+    const vpcPeers = values.vpcPeering;
 
     // Throw error if no target defined
     if (!routeTableEntryItem.target) {
@@ -834,6 +840,16 @@ class VpcValidator {
         `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target ${routeTableEntryItem.target} does not exist`,
       );
     }
+
+    // Throw error if VPC peering doesn't exist
+    if (
+      routeTableEntryItem.type === 'vpcPeering' &&
+      !vpcPeers?.find(item => item.name === routeTableEntryItem.target)
+    ) {
+      errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} target ${routeTableEntryItem.target} does not exist`,
+      );
+    }
   }
 
   /**
@@ -860,7 +876,7 @@ class VpcValidator {
       // Validate target exists
       if (
         routeTableEntryItem.type &&
-        ['gatewayLoadBalancerEndpoint', 'natGateway', 'networkFirewall', 'transitGateway'].includes(
+        ['gatewayLoadBalancerEndpoint', 'natGateway', 'networkFirewall', 'transitGateway', 'vpcPeering'].includes(
           routeTableEntryItem.type,
         )
       ) {
@@ -929,6 +945,28 @@ class VpcValidator {
       }
       // Validate IPAM allocations
       this.validateIpamAllocations(vpcItem, values, errors);
+    }
+  }
+
+  private validateVpcPeeringConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>, errors: string[]) {
+    const vpcs = values.vpcs;
+    for (const peering of values.vpcPeering ?? []) {
+      // Ensure exactly two VPCs are defined
+      if (peering.vpcs.length < 2 || peering.vpcs.length > 2) {
+        errors.push(
+          `[VPC peering connection ${peering.name}]: exactly two VPCs must be defined for a VPC peering connection`,
+        );
+      }
+
+      // Ensure VPCs exist and more than one is not defined
+      for (const vpc of peering.vpcs) {
+        if (!vpcs.find(item => item.name === vpc)) {
+          errors.push(`[VPC peering connection ${peering.name}]: VPC ${vpc} does not exist`);
+        }
+        if (vpcs.filter(item => item.name === vpc).length > 1) {
+          errors.push(`[VPC peering connection ${peering.name}]: more than one VPC named ${vpc}`);
+        }
+      }
     }
   }
 }
