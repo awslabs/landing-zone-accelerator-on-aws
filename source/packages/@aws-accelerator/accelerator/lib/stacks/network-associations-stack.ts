@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
+import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
@@ -32,6 +33,7 @@ import {
 } from '@aws-accelerator/config';
 import {
   AssociateHostedZones,
+  CrossAccountRouteFramework,
   DirectConnectGatewayAssociation,
   DirectConnectGatewayAssociationProps,
   PutSsmParameter,
@@ -65,12 +67,15 @@ export class NetworkAssociationsStack extends AcceleratorStack {
   private logRetention: number;
   private dnsFirewallMap: Map<string, string>;
   private dxGatewayMap: Map<string, string>;
+  private peeringList: Peering[];
   private prefixListMap: Map<string, string>;
   private queryLogMap: Map<string, string>;
   private resolverRuleMap: Map<string, string>;
+  private routeTableMap: Map<string, string>;
   private transitGateways: Map<string, string>;
   private transitGatewayRouteTables: Map<string, string>;
   private transitGatewayAttachments: Map<string, string>;
+  private crossAcctRouteProvider?: cdk.custom_resources.Provider;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -80,7 +85,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
     this.dnsFirewallMap = new Map<string, string>();
     this.dxGatewayMap = new Map<string, string>();
-    this.prefixListMap = new Map<string, string>();
     this.queryLogMap = new Map<string, string>();
     this.resolverRuleMap = new Map<string, string>();
     this.transitGateways = new Map<string, string>();
@@ -97,9 +101,24 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     ) as cdk.aws_kms.Key;
 
     //
+    // Build VPC peering list
+    //
+    this.peeringList = this.setPeeringList();
+
+    //
+    // Create cross-account peering route provider, if required
+    //
+    this.crossAcctRouteProvider = this.createCrossAcctRouteProvider();
+
+    //
     // Build prefix list map
     //
-    this.setPrefixListMap(props);
+    this.prefixListMap = this.setPrefixListMap(props);
+
+    //
+    // Build route table map
+    //
+    this.routeTableMap = this.setRouteTableMap(props);
 
     //
     // Create transit gateway route table associations, propagations,
@@ -142,10 +161,90 @@ export class NetworkAssociationsStack extends AcceleratorStack {
   }
 
   /**
+   * Create an array of peering connections
+   */
+  private setPeeringList() {
+    const peeringList: Peering[] = [];
+    for (const peering of this.props.networkConfig.vpcPeering ?? []) {
+      // Get requester and accepter VPC configurations
+      const requesterVpc = this.props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[0]);
+      const accepterVpc = this.props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[1]);
+      const requesterAccountId = this.accountsConfig.getAccountId(requesterVpc[0].account);
+
+      // Check if requester VPC is in this account and region
+      if (cdk.Stack.of(this).account === requesterAccountId && cdk.Stack.of(this).region === requesterVpc[0].region) {
+        peeringList.push({
+          name: peering.name,
+          requester: requesterVpc[0],
+          accepter: accepterVpc[0],
+          tags: peering.tags,
+        });
+      }
+    }
+    return peeringList;
+  }
+
+  /**
+   * Create a custom resource provider to handle cross-account VPC peering routes
+   * @returns
+   */
+  private createCrossAcctRouteProvider(): cdk.custom_resources.Provider | undefined {
+    let createFramework = false;
+    for (const peering of this.peeringList) {
+      for (const routeTable of peering.accepter.routeTables ?? []) {
+        for (const routeTableEntry of routeTable.routes ?? []) {
+          if (
+            routeTableEntry.type &&
+            routeTableEntry.type === 'vpcPeering' &&
+            routeTableEntry.target === peering.name &&
+            (peering.accepter.account !== peering.requester.account ||
+              peering.accepter.region !== peering.requester.region)
+          ) {
+            createFramework = true;
+          }
+        }
+      }
+    }
+
+    if (createFramework) {
+      const provider = new CrossAccountRouteFramework(this, 'CrossAccountRouteFramework', {
+        logGroupKmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.logRetention,
+      }).provider;
+
+      const iam4Paths = [
+        `${this.stackName}/CrossAccountRouteFramework/CrossAccountRouteFunction/ServiceRole/Resource`,
+        `${this.stackName}/CrossAccountRouteFramework/CrossAccountRouteProvider/framework-onEvent/ServiceRole/Resource`,
+      ];
+
+      const iam5Paths = [
+        `${this.stackName}/CrossAccountRouteFramework/CrossAccountRouteFunction/ServiceRole/DefaultPolicy/Resource`,
+        `${this.stackName}/CrossAccountRouteFramework/CrossAccountRouteProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+      ];
+
+      for (const iam4Path of iam4Paths) {
+        NagSuppressions.addResourceSuppressionsByPath(this, iam4Path, [
+          { id: 'AwsSolutions-IAM4', reason: 'Custom resource provider requires managed policy' },
+        ]);
+      }
+
+      for (const iam5Path of iam5Paths) {
+        NagSuppressions.addResourceSuppressionsByPath(this, iam5Path, [
+          { id: 'AwsSolutions-IAM5', reason: 'Custom resource provider requires access to assume cross-account role' },
+        ]);
+      }
+
+      return provider;
+    }
+    return undefined;
+  }
+
+  /**
    * Create a map of prefix list IDs
    * @param props
    */
-  private setPrefixListMap(props: AcceleratorStackProps): void {
+  private setPrefixListMap(props: AcceleratorStackProps): Map<string, string> {
+    const prefixListMap = new Map<string, string>();
     for (const prefixListItem of props.networkConfig.prefixLists ?? []) {
       // Check if the set belongs in this account/region
       const accountIds = prefixListItem.accounts.map(item => {
@@ -160,9 +259,122 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           this,
           `/accelerator/network/prefixList/${prefixListItem.name}/id`,
         );
-        this.prefixListMap.set(prefixListItem.name, prefixListId);
+        prefixListMap.set(prefixListItem.name, prefixListId);
       }
     }
+
+    // Get cross-account prefix list IDs as needed
+    const crossAcctPrefixLists = this.setCrossAcctPrefixLists();
+    crossAcctPrefixLists.forEach((value, key) => prefixListMap.set(key, value));
+    return prefixListMap;
+  }
+
+  /**
+   * Get cross-account prefix list IDs
+   */
+  private setCrossAcctPrefixLists(): Map<string, string> {
+    const prefixListMap = new Map<string, string>();
+    for (const peering of this.peeringList) {
+      // Get account IDs
+      const requesterAccountId = this.accountsConfig.getAccountId(peering.requester.account);
+      const accepterAccountId = this.accountsConfig.getAccountId(peering.accepter.account);
+      const crossAccountCondition =
+        accepterAccountId !== requesterAccountId || peering.accepter.region !== peering.requester.region;
+
+      for (const routeTable of peering.accepter.routeTables ?? []) {
+        for (const routeTableEntry of routeTable.routes ?? []) {
+          const mapKey = `${peering.accepter.account}_${peering.accepter.region}_${routeTableEntry.destinationPrefixList}`;
+          if (
+            routeTableEntry.type &&
+            routeTableEntry.type === 'vpcPeering' &&
+            routeTableEntry.target === peering.name &&
+            crossAccountCondition &&
+            routeTableEntry.destinationPrefixList &&
+            !prefixListMap.has(mapKey)
+          ) {
+            const prefixListId = new SsmParameterLookup(
+              this,
+              pascalCase(`SsmParamLookup${routeTableEntry.destinationPrefixList}`),
+              {
+                name: `/accelerator/network/prefixList/${routeTableEntry.destinationPrefixList}/id`,
+                accountId: accepterAccountId,
+                parameterRegion: peering.accepter.region,
+                roleName: `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`,
+                kmsKey: this.cloudwatchKey,
+                logRetentionInDays: this.logRetention,
+              },
+            ).value;
+            prefixListMap.set(mapKey, prefixListId);
+          }
+        }
+      }
+    }
+    return prefixListMap;
+  }
+
+  /**
+   * Create a map of route table IDs
+   * @param props
+   */
+  private setRouteTableMap(props: AcceleratorStackProps): Map<string, string> {
+    const routeTableMap = new Map<string, string>();
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      // Get account IDs
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+
+      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+        // Set route table IDs
+        for (const routeTableItem of vpcItem.routeTables ?? []) {
+          const routeTableId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            `/accelerator/network/vpc/${vpcItem.name}/routeTable/${routeTableItem.name}/id`,
+          );
+          routeTableMap.set(`${vpcItem.name}_${routeTableItem.name}`, routeTableId);
+        }
+      }
+    }
+
+    // Get cross-account prefix list IDs as needed
+    const crossAcctRouteTables = this.setCrossAcctRouteTables();
+    crossAcctRouteTables.forEach((value, key) => routeTableMap.set(key, value));
+    return routeTableMap;
+  }
+
+  /**
+   * Get cross-account route tables
+   */
+  private setCrossAcctRouteTables(): Map<string, string> {
+    const routeTableMap = new Map<string, string>();
+    for (const peering of this.peeringList) {
+      // Get account IDs
+      const requesterAccountId = this.accountsConfig.getAccountId(peering.requester.account);
+      const accepterAccountId = this.accountsConfig.getAccountId(peering.accepter.account);
+      const crossAccountCondition =
+        accepterAccountId !== requesterAccountId || peering.accepter.region !== peering.requester.region;
+
+      for (const routeTable of peering.accepter.routeTables ?? []) {
+        for (const routeTableEntry of routeTable.routes ?? []) {
+          if (
+            routeTableEntry.type &&
+            routeTableEntry.type === 'vpcPeering' &&
+            routeTableEntry.target === peering.name &&
+            crossAccountCondition &&
+            !routeTableMap.has(`${peering.accepter.name}_${routeTable.name}`)
+          ) {
+            const routeTableId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${routeTable.name}`), {
+              name: `/accelerator/network/vpc/${peering.accepter.name}/routeTable/${routeTable.name}/id`,
+              accountId: accepterAccountId,
+              parameterRegion: peering.accepter.region,
+              roleName: `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`,
+              kmsKey: this.cloudwatchKey,
+              logRetentionInDays: this.logRetention,
+            }).value;
+            routeTableMap.set(`${peering.accepter.name}_${routeTable.name}`, routeTableId);
+          }
+        }
+      }
+    }
+    return routeTableMap;
   }
 
   /**
@@ -816,37 +1028,13 @@ export class NetworkAssociationsStack extends AcceleratorStack {
    * Create VPC peering connections
    */
   private createVpcPeeringConnections(): void {
-    const peeringList: Peering[] = [];
-    for (const peering of this.props.networkConfig.vpcPeering ?? []) {
-      // Check to ensure only two VPCs are defined
-      if (peering.vpcs.length > 2) {
-        throw new Error(`[network-vpc-stack] VPC peering connection ${peering.name} has more than two VPCs defined`);
-      }
-
-      // Get requester and accepter VPC configurations
-      const requesterVpc = this.props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[0]);
-      const accepterVpc = this.props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[1]);
-
-      if (requesterVpc.length === 1 && accepterVpc.length === 1) {
-        const requesterAccountId = this.accountsConfig.getAccountId(requesterVpc[0].account);
-
-        // Check if requester VPC is in this account and region
-        if (cdk.Stack.of(this).account === requesterAccountId && cdk.Stack.of(this).region === requesterVpc[0].region) {
-          peeringList.push({
-            name: peering.name,
-            requester: requesterVpc[0],
-            accepter: accepterVpc[0],
-            tags: peering.tags,
-          });
-        }
-      }
-    }
-
     // Create VPC peering connections
-    for (const peering of peeringList ?? []) {
+    for (const peering of this.peeringList) {
       // Get account IDs
       const requesterAccountId = this.accountsConfig.getAccountId(peering.requester.account);
       const accepterAccountId = this.accountsConfig.getAccountId(peering.accepter.account);
+      const crossAccountCondition =
+        accepterAccountId !== requesterAccountId || peering.accepter.region !== peering.requester.region;
 
       // Get SSM parameters
       const requesterVpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
@@ -856,7 +1044,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
       let accepterVpcId: string;
       let accepterRoleName: string | undefined = undefined;
-      if (requesterAccountId !== accepterAccountId) {
+      if (crossAccountCondition) {
         accepterVpcId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${peering.name}`), {
           name: `/accelerator/network/vpc/${peering.accepter.name}/id`,
           accountId: accepterAccountId,
@@ -893,10 +1081,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       });
 
       // Put cross-account SSM parameter if necessary
-      if (requesterAccountId !== accepterAccountId) {
+      if (crossAccountCondition) {
         new PutSsmParameter(this, pascalCase(`CrossAcctSsmParam${pascalCase(peering.name)}VpcPeering`), {
           region: peering.accepter.region,
-          partition: cdk.Stack.of(this).partition,
+          partition: this.props.partition,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
           parameter: {
@@ -907,6 +1095,162 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           },
           invokingAccountID: cdk.Stack.of(this).account,
         });
+      }
+
+      // Create peering routes
+      this.createVpcPeeringRoutes(accepterAccountId, peering.requester, peering.accepter, vpcPeering);
+    }
+  }
+
+  /**
+   * Create VPC peering routes
+   * @param requesterAccountId
+   * @param accepterAccountId
+   * @param requesterVpc
+   * @param accepterVpc
+   * @param peering
+   */
+  private createVpcPeeringRoutes(
+    accepterAccountId: string,
+    requesterVpc: VpcConfig,
+    accepterVpc: VpcConfig,
+    peering: VpcPeering,
+  ): void {
+    // Create requester VPC routes
+    this.createRequesterVpcPeeringRoutes(requesterVpc, peering);
+
+    // Create accepter account routes
+    this.createAccepterVpcPeeringRoutes(accepterAccountId, accepterVpc, requesterVpc, peering);
+  }
+
+  /**
+   * Create requester peering routes
+   * @param requesterVpc
+   * @param peering
+   */
+  private createRequesterVpcPeeringRoutes(requesterVpc: VpcConfig, peering: VpcPeering): void {
+    for (const routeTable of requesterVpc.routeTables ?? []) {
+      for (const routeTableEntry of routeTable.routes ?? []) {
+        if (routeTableEntry.type && routeTableEntry.type === 'vpcPeering' && routeTableEntry.target === peering.name) {
+          Logger.info(
+            `[network-associations-stack] Add route ${routeTableEntry.name} targeting VPC peer ${peering.name}`,
+          );
+          let destination: string | undefined = undefined;
+          let destinationPrefixListId: string | undefined = undefined;
+          const routeTableId = this.routeTableMap.get(`${requesterVpc.name}_${routeTable.name}`);
+          const routeId =
+            pascalCase(`${requesterVpc.name}Vpc`) +
+            pascalCase(`${routeTable.name}RouteTable`) +
+            pascalCase(routeTableEntry.name);
+          if (!routeTableId) {
+            throw new Error(`Route Table ${routeTable.name} not found`);
+          }
+
+          if (routeTableEntry.destinationPrefixList) {
+            // Get PL ID from map
+            destinationPrefixListId = this.prefixListMap.get(routeTableEntry.destinationPrefixList);
+            if (!destinationPrefixListId) {
+              throw new Error(
+                `[network-associations-stack] Prefix list ${routeTableEntry.destinationPrefixList} not found`,
+              );
+            }
+          } else {
+            destination = routeTableEntry.destination;
+          }
+
+          peering.addPeeringRoute(
+            routeId,
+            routeTableId,
+            destination,
+            destinationPrefixListId,
+            this.cloudwatchKey,
+            this.logRetention,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Create accepter VPC routes
+   * @param accepterAccountId
+   * @param accepterVpc
+   * @param requesterVpc
+   * @param peering
+   */
+  private createAccepterVpcPeeringRoutes(
+    accepterAccountId: string,
+    accepterVpc: VpcConfig,
+    requesterVpc: VpcConfig,
+    peering: VpcPeering,
+  ): void {
+    for (const routeTable of accepterVpc.routeTables ?? []) {
+      for (const routeTableEntry of routeTable.routes ?? []) {
+        if (routeTableEntry.type && routeTableEntry.type === 'vpcPeering' && routeTableEntry.target === peering.name) {
+          Logger.info(
+            `[network-associations-stack] Add route ${routeTableEntry.name} targeting VPC peer ${peering.name}`,
+          );
+          let destination: string | undefined = undefined;
+          let destinationPrefixListId: string | undefined = undefined;
+          const routeId =
+            pascalCase(`${accepterVpc.name}Vpc`) +
+            pascalCase(`${routeTable.name}RouteTable`) +
+            pascalCase(routeTableEntry.name);
+          const routeTableId = this.routeTableMap.get(`${accepterVpc.name}_${routeTable.name}`);
+          if (!routeTableId) {
+            throw new Error(`[network-associations-stack] Route Table ${routeTable.name} not found`);
+          }
+
+          if (requesterVpc.account === accepterVpc.account && requesterVpc.region === accepterVpc.region) {
+            if (routeTableEntry.destinationPrefixList) {
+              // Get PL ID from map
+              destinationPrefixListId = this.prefixListMap.get(routeTableEntry.destinationPrefixList);
+              if (!destinationPrefixListId) {
+                throw new Error(
+                  `[network-associations-stack] Prefix list ${routeTableEntry.destinationPrefixList} not found`,
+                );
+              }
+            } else {
+              destination = routeTableEntry.destination;
+            }
+
+            peering.addPeeringRoute(
+              routeId,
+              routeTableId,
+              destination,
+              destinationPrefixListId,
+              this.cloudwatchKey,
+              this.logRetention,
+            );
+          } else {
+            if (routeTableEntry.destinationPrefixList) {
+              // Get PL ID from map
+              destinationPrefixListId = this.prefixListMap.get(
+                `${accepterVpc.account}_${accepterVpc.region}_${routeTableEntry.destinationPrefixList}`,
+              );
+            } else {
+              destination = routeTableEntry.destination;
+            }
+
+            if (!this.crossAcctRouteProvider) {
+              throw new Error(
+                `[network-associations-stack] Cross-account route provider not created but required for ${routeTableEntry.name}`,
+              );
+            }
+
+            peering.addCrossAcctPeeringRoute(
+              routeId,
+              accepterAccountId,
+              accepterVpc.region,
+              this.props.partition,
+              this.crossAcctRouteProvider,
+              `AWSAccelerator-VpcPeeringRole-${accepterVpc.region}`,
+              routeTableId,
+              destination,
+              destinationPrefixListId,
+            );
+          }
+        }
       }
     }
   }

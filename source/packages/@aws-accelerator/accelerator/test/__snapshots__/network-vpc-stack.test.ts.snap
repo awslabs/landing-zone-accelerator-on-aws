@@ -457,7 +457,6 @@ Object {
                 Object {
                   "Action": Array [
                     "ec2:CreateRoute",
-                    "ec2:ReplaceRoute",
                     "ec2:DeleteRoute",
                   ],
                   "Effect": "Allow",
