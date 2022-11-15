@@ -15,10 +15,10 @@ import * as emailValidator from 'email-validator';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
-import * as t from './common-types';
 
-import { OrganizationConfig } from './organization-config';
 import { AccountsConfig } from './accounts-config';
+import * as t from './common-types';
+import { OrganizationConfig } from './organization-config';
 
 /**
  * Global configuration items.
@@ -169,7 +169,15 @@ export abstract class GlobalConfigTypes {
 }
 
 /**
+ * *{@link GlobalConfig} / {@link ControlTowerConfig}*
+ *
  * AWS ControlTower configuration
+ *
+ * @example
+ * ```
+ * controlTower:
+ *   enable: true
+ * ```
  */
 export class ControlTowerConfig implements t.TypeOf<typeof GlobalConfigTypes.controlTowerConfig> {
   /**
@@ -183,7 +191,15 @@ export class ControlTowerConfig implements t.TypeOf<typeof GlobalConfigTypes.con
 }
 
 /**
+ * *{@link GlobalConfig} / {@link centralizeCdkBucketsConfig}*
+ *
  * AWS CDK Centralization configuration
+ *
+ * @example
+ * ```
+ * centralizeCdkBuckets:
+ *   enable: true
+ * ```
  */
 export class centralizeCdkBucketsConfig implements t.TypeOf<typeof GlobalConfigTypes.centralizeCdkBucketsConfig> {
   /**
@@ -196,7 +212,21 @@ export class centralizeCdkBucketsConfig implements t.TypeOf<typeof GlobalConfigT
 }
 
 /**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudTrailConfig} / ({@link AccountCloudTrailConfig}) / {@link CloudTrailSettingsConfig}*
+ *
  * AWS CloudTrail Settings configuration
+ *
+ * @example
+ * ```
+ * multiRegionTrail: true
+ * globalServiceEvents: true
+ * managementEvents: true
+ * s3DataEvents: true
+ * lambdaDataEvents: true
+ * sendToCloudWatchLogs: true
+ * apiErrorRateInsight: false
+ * apiCallRateInsight: false
+ * ```
  */
 export class CloudTrailSettingsConfig implements t.TypeOf<typeof GlobalConfigTypes.cloudTrailSettingsConfig> {
   /**
@@ -244,6 +274,30 @@ export class CloudTrailSettingsConfig implements t.TypeOf<typeof GlobalConfigTyp
   readonly apiCallRateInsight = false;
 }
 
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudTrailConfig} / {@link AccountCloudTrailConfig}*
+ *
+ * Account CloudTrail config
+ *
+ * @example
+ * ```
+ * - name: AWSAccelerator-Account-CloudTrail
+ *   regions:
+ *     - us-east-1
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   settings:
+ *     multiRegionTrail: true
+ *     globalServiceEvents: true
+ *     managementEvents: true
+ *     s3DataEvents: true
+ *     lambdaDataEvents: true
+ *     sendToCloudWatchLogs: true
+ *     apiErrorRateInsight: false
+ *     apiCallRateInsight: false
+ * ```
+ */
 export class AccountCloudTrailConfig implements t.TypeOf<typeof GlobalConfigTypes.accountCloudTrailConfig> {
   /**
    * Name that will be used to create the CloudTrail.
@@ -264,7 +318,27 @@ export class AccountCloudTrailConfig implements t.TypeOf<typeof GlobalConfigType
 }
 
 /**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudTrailConfig} / {@link AccountCloudTrailConfig}*
+ *
  * AWS Cloudtrail configuration
+ *
+ * @example
+ * ```
+ * cloudtrail:
+ *   enable: true
+ *   organizationTrail: true
+ *   organizationTrailSettings:
+ *     multiRegionTrail: true
+ *     globalServiceEvents: true
+ *     managementEvents: true
+ *     s3DataEvents: true
+ *     lambdaDataEvents: true
+ *     sendToCloudWatchLogs: true
+ *     apiErrorRateInsight: false
+ *     apiCallRateInsight: false
+ *   accountTrails: []
+ *   lifecycleRules: []
+ * ```
  */
 export class CloudTrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloudTrailConfig> {
   /**
@@ -299,7 +373,19 @@ export class CloudTrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloud
 }
 
 /**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link SessionManagerConfig}*
+ *
  * AWS SessionManager configuration
+ *
+ * @example
+ * ```
+ * sessionManager:
+ *   sendToCloudWatchLogs: true
+ *   sendToS3: true
+ *   excludeRegions: []
+ *   excludeAccounts: []
+ *   lifecycleRules: []
+ * ```
  */
 export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.sessionManagerConfig> {
   /**
@@ -327,7 +413,27 @@ export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.s
 }
 
 /**
- * Accelerator global logging configuration
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link AccessLogBucketConfig}*
+ *
+ * Accelerator global S3 access logging configuration
+ *
+ * @example
+ * ```
+ * accessLogBucket:
+ *   lifecycleRules:
+ *     - enabled: true
+ *       id: AccessLifecycle
+ *       abortIncompleteMultipartUpload: 15
+ *       expiration: 3563
+ *       expiredObjectDeleteMarker: true
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ * ```
  */
 export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.accessLogBucketConfig> {
   /**
@@ -335,6 +441,30 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
    */
   readonly lifecycleRules: t.LifeCycleRule[] = [];
 }
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CentralLogBucketConfig}*
+ *
+ * Accelerator global S3 central logging configuration
+ *
+ * @example
+ * ```
+ * centralLogBucket:
+ *   lifecycleRules:
+ *     - enabled: true
+ *       id: CentralLifecycle
+ *       abortIncompleteMultipartUpload: 14
+ *       expiration: 3563
+ *       expiredObjectDeleteMarker: true
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ * ```
+ */
 export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.centralLogBucketConfig> {
   /**
    * Declaration of (S3 Bucket) Lifecycle rules.
@@ -343,7 +473,15 @@ export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes
 }
 
 /**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}*
+ *
  * Accelerator global CloudWatch Logs logging configuration
+ *
+ * @example
+ * ```
+ * cloudwatchLogs:
+ *   dynamicPartitioning: path/to/filter.json
+ * ```
  */
 export class CloudWatchLogsConfig implements t.TypeOf<typeof GlobalConfigTypes.cloudwatchLogsConfig> {
   /**
@@ -352,6 +490,24 @@ export class CloudWatchLogsConfig implements t.TypeOf<typeof GlobalConfigTypes.c
   readonly dynamicPartitioning: string = '';
 }
 
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig}*
+ *
+ * Global logging configuration
+ *
+ * @example
+ * ```
+ * logging:
+ *   account: LogArchive
+ *   centralizedLoggingRegion: us-east-1
+ *   cloudtrail:
+ *     enable: false
+ *     organizationTrail: false
+ *   sessionManager:
+ *     sendToCloudWatchLogs: false
+ *     sendToS3: true
+ * ```
+ */
 export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingConfig> {
   /**
    * Accelerator logging account name.
@@ -388,7 +544,29 @@ export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingC
 }
 
 /**
+ * *{@link GlobalConfig} / {@link ReportConfig} / {@link CostAndUsageReportConfig}*
+ *
  * CostAndUsageReport configuration
+ *
+ * @example
+ * ```
+ * costAndUsageReport:
+ *     compression: Parquet
+ *     format: Parquet
+ *     reportName: accelerator-cur
+ *     s3Prefix: cur
+ *     timeUnit: DAILY
+ *     refreshClosedReports: true
+ *     reportVersioning: CREATE_NEW_REPORT
+ *     lifecycleRules:
+ *       storageClass: DEEP_ARCHIVE
+ *       enabled: true
+ *       multiPart: 1
+ *       expiration: 1825
+ *       deleteMarker: false
+ *       nonCurrentExpiration: 366
+ *       transitionAfter: 365
+ * ```
  */
 export class CostAndUsageReportConfig implements t.TypeOf<typeof GlobalConfigTypes.costAndUsageReportConfig> {
   /**
@@ -434,7 +612,37 @@ export class CostAndUsageReportConfig implements t.TypeOf<typeof GlobalConfigTyp
 }
 
 /**
+ * *{@link GlobalConfig} / {@link ReportConfig} / {@link BudgetReportConfig}*
+ *
  * BudgetReport configuration
+ *
+ * @example
+ * ```
+ * budgets:
+ *     - name: accel-budget
+ *       timeUnit: MONTHLY
+ *       type: COST
+ *       amount: 2000
+ *       includeUpfront: true
+ *       includeTax: true
+ *       includeSupport: true
+ *       includeSubscription: true
+ *       includeRecurring: true
+ *       includeOtherSubscription: true
+ *       includeDiscount: true
+ *       includeCredit: false
+ *       includeRefund: false
+ *       useBlended: false
+ *       useAmortized: false
+ *       unit: USD
+ *       notification:
+ *       - type: ACTUAL
+ *         thresholdType: PERCENTAGE
+ *         threshold: 90
+ *         comparisonOperator: GREATER_THAN
+ *         subscriptionType: EMAIL
+ *         address: myemail+pa-budg@example.com
+ * ```
  */
 export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.budgetConfig> {
   /**
@@ -557,6 +765,8 @@ export class BudgetReportConfig implements t.TypeOf<typeof GlobalConfigTypes.bud
 }
 
 /**
+ * {@link GlobalConfig} / {@link ReportConfig}
+ *
  * Accelerator report configuration
  */
 export class ReportConfig implements t.TypeOf<typeof GlobalConfigTypes.reportConfig> {
@@ -622,6 +832,19 @@ export class ReportConfig implements t.TypeOf<typeof GlobalConfigTypes.reportCon
   readonly budgets: BudgetReportConfig[] = [];
 }
 
+/**
+ * *{@link GlobalConfig} / {@link BackupConfig} / {@link VaultConfig}*
+ *
+ * Backup vault configuration
+ *
+ * @example
+ * ```
+ * - name: BackupVault
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *      - Root
+ * ```
+ */
 export class VaultConfig implements t.TypeOf<typeof GlobalConfigTypes.vaultConfig> {
   /**
    * Name that will be used to create the vault.
@@ -634,6 +857,21 @@ export class VaultConfig implements t.TypeOf<typeof GlobalConfigTypes.vaultConfi
   readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
 }
 
+/**
+ * *{@link GlobalConfig} / {@link BackupConfig}*
+ *
+ * AWS Backup configuration
+ *
+ * @example
+ * ```
+ * backup:
+ *   vaults:
+ *     - name: BackupVault
+ *       deploymentTargets:
+ *         organizationalUnits:
+ *           - Root
+ * ```
+ */
 export class BackupConfig implements t.TypeOf<typeof GlobalConfigTypes.backupConfig> {
   /**
    * List of AWS Backup Vaults

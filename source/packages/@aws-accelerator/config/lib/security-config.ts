@@ -15,10 +15,9 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import * as t from './common-types';
-
-import { OrganizationConfig } from './organization-config';
 import { AccountsConfig } from './accounts-config';
+import * as t from './common-types';
+import { OrganizationConfig } from './organization-config';
 
 /**
  * AWS Accelerator SecurityConfig Types
@@ -473,7 +472,16 @@ export class SecurityConfigTypes {
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link S3PublicAccessBlockConfig}*
+ *
  * AWS S3 block public access configuration
+ *
+ * @example
+ * ```
+ * s3PublicAccessBlock:
+ *     enable: true
+ *     excludeAccounts: []
+ * ```
  */
 export class S3PublicAccessBlockConfig implements t.TypeOf<typeof SecurityConfigTypes.s3PublicAccessBlockConfig> {
   /**
@@ -487,7 +495,23 @@ export class S3PublicAccessBlockConfig implements t.TypeOf<typeof SecurityConfig
 }
 
 /**
+ * *{@link SecurityConfig} / {@link KeyManagementServiceConfig} / {@link KeyConfig}*
+ *
  * AWS KMS Key configuration
+ *
+ * @example
+ * ```
+ * - name: ExampleKey
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   alias: alias/example/key
+ *   policy: path/to/policy.json
+ *   description: Example KMS key
+ *   enabled: true
+ *   enableKeyRotation: true
+ *   removalPolicy: retain
+ * ```
  */
 export class KeyConfig implements t.TypeOf<typeof SecurityConfigTypes.keyConfig> {
   /**
@@ -538,14 +562,42 @@ export class KeyConfig implements t.TypeOf<typeof SecurityConfigTypes.keyConfig>
 }
 
 /**
+ * *{@link SecurityConfig} / {@link KeyManagementServiceConfig}*
+ *
  *  KMS key management service configuration
+ *
+ * @example
+ * ```
+ * keySets:
+ *   - name: ExampleKey
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Root
+ *     alias: alias/example/key
+ *     policy: path/to/policy.json
+ *     description: Example KMS key
+ *     enabled: true
+ *     enableKeyRotation: true
+ *     removalPolicy: retain
+ * ```
  */
 export class KeyManagementServiceConfig implements t.TypeOf<typeof SecurityConfigTypes.keyManagementServiceConfig> {
   readonly keySets: KeyConfig[] = [];
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link MacieConfig}*
+ *
  * Amazon Macie Configuration
+ *
+ * @example
+ * ```
+ * macie:
+ *     enable: true
+ *     excludeRegions: []
+ *     policyFindingsPublishingFrequency: FIFTEEN_MINUTES
+ *     publishSensitiveDataFindings: true
+ * ```
  */
 export class MacieConfig implements t.TypeOf<typeof SecurityConfigTypes.macieConfig> {
   /**
@@ -573,7 +625,15 @@ export class MacieConfig implements t.TypeOf<typeof SecurityConfigTypes.macieCon
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig} / {@link GuardDutyS3ProtectionConfig}*
+ *
  * AWS GuardDuty S3 Protection configuration.
+ *
+ * @example
+ * ```
+ * enable: true
+ * excludeRegions: []
+ * ```
  */
 export class GuardDutyS3ProtectionConfig implements t.TypeOf<typeof SecurityConfigTypes.guardDutyS3ProtectionConfig> {
   /**
@@ -587,7 +647,17 @@ export class GuardDutyS3ProtectionConfig implements t.TypeOf<typeof SecurityConf
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig} / {@link GuardDutyExportFindingsConfig}*
+ *
  * AWS GuardDuty Export Findings configuration.
+ *
+ * @example
+ * ```
+ * enable: true
+ * overrideExisting: true
+ * destinationType: S3
+ * exportFrequency: FIFTEEN_MINUTES
+ * ```
  */
 export class GuardDutyExportFindingsConfig
   implements t.TypeOf<typeof SecurityConfigTypes.guardDutyExportFindingsConfig>
@@ -612,7 +682,25 @@ export class GuardDutyExportFindingsConfig
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig}*
+ *
  * AWS GuardDuty configuration
+ *
+ * @example
+ * ```
+ * guardduty:
+ *   enable: true
+ *   excludeRegions: []
+ *   s3Protection:
+ *     enable: true
+ *     excludeRegions: []
+ *   exportConfiguration:
+ *     enable: true
+ *     overrideExisting: true
+ *     destinationType: S3
+ *     exportFrequency: FIFTEEN_MINUTES
+ *   lifecycleRules: []
+ * ```
  */
 export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guardDutyConfig> {
   /**
@@ -640,7 +728,15 @@ export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guar
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link AuditManagerConfig} / {@link AuditManagerDefaultReportsDestinationConfig}*
+ *
  * AWS Audit Manager Default Reports Destination configuration.
+ *
+ * @example
+ * ```
+ * enable: true
+ * destinationType: S3
+ * ```
  */
 export class AuditManagerDefaultReportsDestinationConfig
   implements t.TypeOf<typeof SecurityConfigTypes.auditManagerDefaultReportsDestinationConfig>
@@ -656,7 +752,20 @@ export class AuditManagerDefaultReportsDestinationConfig
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link AuditManagerConfig}*
+ *
  * AWS Audit Manager configuration
+ *
+ * @example
+ * ```
+ * auditManager:
+ *   enable: true
+ *   excludeRegions: []
+ *   defaultReportsConfiguration:
+ *     enable: true
+ *     destinationType: S3
+ *   lifecycleRules: []
+ * ```
  */
 export class AuditManagerConfig implements t.TypeOf<typeof SecurityConfigTypes.auditManagerConfig> {
   /**
@@ -680,7 +789,16 @@ export class AuditManagerConfig implements t.TypeOf<typeof SecurityConfigTypes.a
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link DetectiveConfig}*
+ *
  * Amazon Detective configuration
+ *
+ * @example
+ * ```
+ * detective:
+ *   enable: true
+ *   excludeRegions: []
+ * ```
  */
 export class DetectiveConfig implements t.TypeOf<typeof SecurityConfigTypes.detectiveConfig> {
   /**
@@ -694,7 +812,16 @@ export class DetectiveConfig implements t.TypeOf<typeof SecurityConfigTypes.dete
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig} / {@link SecurityHubStandardConfig}*
+ *
  * AWS SecurityHub standards configuration
+ *
+ * @example
+ * ```
+ * - name: PCI DSS v3.2.1
+ *   enable: true
+ *   controlsToDisable: []
+ * ```
  */
 export class SecurityHubStandardConfig implements t.TypeOf<typeof SecurityConfigTypes.securityHubStandardConfig> {
   /**
@@ -713,7 +840,23 @@ export class SecurityHubStandardConfig implements t.TypeOf<typeof SecurityConfig
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SecurityHubConfig}*
+ *
  * AWS SecurityHub configuration
+ *
+ * @example
+ * ```
+ * securityHub:
+ *     enable: true
+ *     regionAggregation: true
+ *     excludeRegions: []
+ *     standards:
+ *       - name: AWS Foundational Security Best Practices v1.0.0
+ *         enable: true
+ *         controlsToDisable:
+ *           - IAM.1
+ *           - EC2.10
+ * ```
  */
 export class SecurityHubConfig implements t.TypeOf<typeof SecurityConfigTypes.securityHubConfig> {
   /**
@@ -735,7 +878,20 @@ export class SecurityHubConfig implements t.TypeOf<typeof SecurityConfigTypes.se
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SnsSubscriptionConfig}*
+ *
  * AWS SNS Notification subscription configuration
+ *
+ * @example
+ * ```
+ * snsSubscriptions:
+ *     - level: High
+ *       email: <notify-high>@example.com
+ *     - level: Medium
+ *       email: <notify-medium>@example.com
+ *     - level: Low
+ *       email: <notify-low>@example.com
+ * ```
  */
 export class SnsSubscriptionConfig implements t.TypeOf<typeof SecurityConfigTypes.snsSubscriptionConfig> {
   /**
@@ -749,7 +905,17 @@ export class SnsSubscriptionConfig implements t.TypeOf<typeof SecurityConfigType
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link EbsDefaultVolumeEncryptionConfig}*
+ *
  * AWS EBS default encryption configuration
+ *
+ * @example
+ * ```
+ * ebsDefaultVolumeEncryption:
+ *     enable: true
+ *     kmsKey: ExampleKey
+ *     excludeRegions: []
+ * ```
  */
 export class EbsDefaultVolumeEncryptionConfig
   implements t.TypeOf<typeof SecurityConfigTypes.ebsDefaultVolumeEncryptionConfig>
@@ -769,7 +935,15 @@ export class EbsDefaultVolumeEncryptionConfig
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SsmAutomationConfig} / {@link DocumentSetConfig} / {@link DocumentConfig}*
+ *
  * AWS Systems Manager document configuration
+ *
+ * @example
+ * ```
+ * - name: SSM-ELB-Enable-Logging
+ *   template: path/to/document.yaml
+ * ```
  */
 export class DocumentConfig implements t.TypeOf<typeof SecurityConfigTypes.documentConfig> {
   /**
@@ -783,7 +957,19 @@ export class DocumentConfig implements t.TypeOf<typeof SecurityConfigTypes.docum
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SsmAutomationConfig} / {@link DocumentSetConfig}*
+ *
  * AWS Systems Manager document sharing configuration
+ *
+ * @example
+ * ```
+ * - shareTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   documents:
+ *     - name: SSM-ELB-Enable-Logging
+ *       template: path/to/document.yaml
+ * ```
  */
 export class DocumentSetConfig implements t.TypeOf<typeof SecurityConfigTypes.documentSetConfig> {
   /**
@@ -798,7 +984,22 @@ export class DocumentSetConfig implements t.TypeOf<typeof SecurityConfigTypes.do
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SsmAutomationConfig}*
+ *
  * AWS Systems Manager automation configuration
+ *
+ * @example
+ * ```
+ * ssmAutomation:
+ *     excludeRegions: []
+ *     documentSets:
+ *       - shareTargets:
+ *           organizationalUnits:
+ *             - Root
+ *         documents:
+ *           - name: SSM-ELB-Enable-Logging
+ *             template: path/to/document.yaml
+ * ```
  */
 export class SsmAutomationConfig implements t.TypeOf<typeof SecurityConfigTypes.ssmAutomationConfig> {
   /**
@@ -812,7 +1013,48 @@ export class SsmAutomationConfig implements t.TypeOf<typeof SecurityConfigTypes.
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig}*
+ *
  * AWS Accelerator central security services configuration
+ *
+ * @example
+ * ```
+ * centralSecurityServices:
+ *   delegatedAdminAccount: Audit
+ *   ebsDefaultVolumeEncryption:
+ *     enable: true
+ *     excludeRegions: []
+ *   s3PublicAccessBlock:
+ *     enable: true
+ *     excludeAccounts: []
+ *   guardduty:
+ *     enable: true
+ *     excludeRegions: []
+ *     s3Protection:
+ *       enable: true
+ *       excludeRegions: []
+ *     exportConfiguration:
+ *       enable: true
+ *       overrideExisting: true
+ *       destinationType: S3
+ *       exportFrequency: FIFTEEN_MINUTES
+ *   macie:
+ *     enable: true
+ *     excludeRegions: []
+ *     policyFindingsPublishingFrequency: FIFTEEN_MINUTES
+ *     publishSensitiveDataFindings: true
+ *   snsSubscriptions: []
+ *   securityHub:
+ *     enable: true
+ *     regionAggregation: true
+ *     excludeRegions: []
+ *     standards:
+ *       - name: AWS Foundational Security Best Practices v1.0.0
+ *         enable: true
+ *         controlsToDisable: []
+ *   ssmAutomation:
+ *     documentSets: []
+ *```
  */
 export class CentralSecurityServicesConfig
   implements t.TypeOf<typeof SecurityConfigTypes.centralSecurityServicesConfig>
@@ -969,7 +1211,15 @@ export class CentralSecurityServicesConfig
 }
 
 /**
+ * *{@link SecurityConfig} / {@link AccessAnalyzerConfig}*
+ *
  * AWS AccessAnalyzer configuration
+ *
+ * @example
+ * ```
+ * accessAnalyzer:
+ *   enable: true
+ * ```
  */
 export class AccessAnalyzerConfig implements t.TypeOf<typeof SecurityConfigTypes.accessAnalyzerConfig> {
   /**
@@ -981,7 +1231,23 @@ export class AccessAnalyzerConfig implements t.TypeOf<typeof SecurityConfigTypes
 }
 
 /**
+ * *{@link SecurityConfig} / {@link IamPasswordPolicyConfig}*
+ *
  * IAM password policy configuration
+ *
+ * @example
+ * ```
+ * iamPasswordPolicy:
+ *   allowUsersToChangePassword: true
+ *   hardExpiry: false
+ *   requireUppercaseCharacters: true
+ *   requireLowercaseCharacters: true
+ *   requireSymbols: true
+ *   requireNumbers: true
+ *   minimumPasswordLength: 14
+ *   passwordReusePrevention: 24
+ *   maxPasswordAge: 90
+ * ```
  */
 export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTypes.iamPasswordPolicyConfig> {
   /**
@@ -1059,7 +1325,59 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
 }
 
 /**
+ * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet} / {@link ConfigRule}*
+ *
  * AWS ConfigRule configuration
+ *
+ * @example
+ * Managed Config rule:
+ * ```
+ * - name: accelerator-iam-user-group-membership-check
+ *   complianceResourceTypes:
+ *     - AWS::IAM::User
+ *   identifier: IAM_USER_GROUP_MEMBERSHIP_CHECK
+ * ```
+ * Custom Config rule:
+ * ```
+ * - name: accelerator-attach-ec2-instance-profile
+ *   type: Custom
+ *   description: Custom rule for checking EC2 instance IAM profile attachment
+ *   inputParameters:
+ *     customRule:
+ *       lambda:
+ *         sourceFilePath: path/to/function.zip
+ *         handler: index.handler
+ *         runtime: nodejs14.x
+ *         rolePolicyFile: path/to/policy.json
+ *       periodic: true
+ *       maximumExecutionFrequency: Six_Hours
+ *       configurationChanges: true
+ *       triggeringResources:
+ *         lookupType: ResourceTypes
+ *         lookupKey: ResourceTypes
+ *         lookupValue:
+ *           - AWS::EC2::Instance
+ * ```
+ * Managed Config rule with remediation:
+ * ```
+ * - name: accelerator-s3-bucket-server-side-encryption-enabled
+ *   identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
+ *   complianceResourceTypes:
+ *     - AWS::S3::Bucket
+ *   remediation:
+ *     rolePolicyFile: path/to/policy.json
+ *     automatic: true
+ *     targetId: Put-S3-Encryption
+ *     retryAttemptSeconds: 60
+ *     maximumAutomaticAttempts: 5
+ *     parameters:
+ *       - name: BucketName
+ *         value: RESOURCE_ID
+ *         type: String
+ *       - name: KMSMasterKey
+ *         value: ${ACCEL_LOOKUP::KMS}
+ *         type: StringList
+ * ```
  */
 export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRule> {
   /**
@@ -1240,7 +1558,21 @@ export class ConfigRule implements t.TypeOf<typeof SecurityConfigTypes.configRul
 }
 
 /**
+ * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet}*
+ *
  * List of AWS Config rules
+ *
+ * @example
+ * ```
+ * - deploymentTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   rules:
+ *     - name: accelerator-iam-user-group-membership-check
+ *       complianceResourceTypes:
+ *         - AWS::IAM::User
+ *       identifier: IAM_USER_GROUP_MEMBERSHIP_CHECK
+ * ```
  */
 export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.awsConfigRuleSet> {
   /**
@@ -1294,7 +1626,25 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
 }
 
 /**
+ * *{@link SecurityConfig} / {@link AwsConfig}*
+ *
  * AWS Config rule
+ *
+ * @example
+ * ```
+ * awsConfig:
+ *   enableConfigurationRecorder: true
+ *   enableDeliveryChannel: true
+ *   ruleSets:
+ *     - deploymentTargets:
+ *         organizationalUnits:
+ *           - Root
+ *       rules:
+ *         - name: accelerator-iam-user-group-membership-check
+ *           complianceResourceTypes:
+ *             - AWS::IAM::User
+ *           identifier: IAM_USER_GROUP_MEMBERSHIP_CHECK
+ * ```
  */
 export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig> {
   /**
@@ -1318,7 +1668,20 @@ export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig>
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CloudWatchConfig} / {@link MetricSetConfig} / {@link MetricConfig}*
+ *
  * AWS CloudWatch Metric configuration
+ *
+ * @example
+ * ```
+ * - filterName: MetricFilter
+ *   logGroupName: aws-controltower/CloudTrailLogs
+ *   filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
+ *   metricNamespace: LogMetrics
+ *   metricName: RootAccountUsage
+ *   metricValue: "1"
+ *   treatMissingData: notBreaching
+ * ```
  */
 export class MetricConfig implements t.TypeOf<typeof SecurityConfigTypes.metricConfig> {
   /**
@@ -1358,7 +1721,26 @@ export class MetricConfig implements t.TypeOf<typeof SecurityConfigTypes.metricC
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CloudWatchConfig} / {@link MetricSetConfig}*
+ *
  * AWS CloudWatch Metric set configuration
+ *
+ * @example
+ * ```
+ * - regions:
+ *     - us-east-1
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   metrics:
+ *     - filterName: MetricFilter
+ *       logGroupName: aws-controltower/CloudTrailLogs
+ *       filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
+ *       metricNamespace: LogMetrics
+ *       metricName: RootAccountUsage
+ *       metricValue: "1"
+ *       treatMissingData: notBreaching
+ * ```
  */
 export class MetricSetConfig implements t.TypeOf<typeof SecurityConfigTypes.metricSetConfig> {
   /**
@@ -1390,7 +1772,24 @@ export class MetricSetConfig implements t.TypeOf<typeof SecurityConfigTypes.metr
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CloudWatchConfig} / {@link AlarmSetConfig} / {@link AlarmConfig}*
+ *
  * AWS CloudWatch Alarm configuration
+ *
+ * @example
+ * ```
+ * - alarmName: CIS-1.1-RootAccountUsage
+ *   alarmDescription: Alarm for usage of "root" account
+ *   snsAlertLevel: Low
+ *   metricName: RootAccountUsage
+ *   namespace: LogMetrics
+ *   comparisonOperator: GreaterThanOrEqualToThreshold
+ *   evaluationPeriods: 1
+ *   period: 300
+ *   statistic: Sum
+ *   threshold: 1
+ *   treatMissingData: notBreaching
+ * ```
  */
 export class AlarmConfig implements t.TypeOf<typeof SecurityConfigTypes.alarmConfig> {
   /**
@@ -1448,7 +1847,30 @@ export class AlarmConfig implements t.TypeOf<typeof SecurityConfigTypes.alarmCon
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CloudWatchConfig} / {@link AlarmSetConfig}}*
+ *
  * AWS CloudWatch Alarm sets
+ *
+ * @example
+ * ```
+ * - regions:
+ *     - us-east-1
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   alarms:
+ *     - alarmName: CIS-1.1-RootAccountUsage
+ *       alarmDescription: Alarm for usage of "root" account
+ *       snsAlertLevel: Low
+ *       metricName: RootAccountUsage
+ *       namespace: LogMetrics
+ *       comparisonOperator: GreaterThanOrEqualToThreshold
+ *       evaluationPeriods: 1
+ *       period: 300
+ *       statistic: Sum
+ *       threshold: 1
+ *       treatMissingData: notBreaching
+ * ```
  */
 export class AlarmSetConfig implements t.TypeOf<typeof SecurityConfigTypes.alarmSetConfig> {
   /**
@@ -1485,7 +1907,46 @@ export class AlarmSetConfig implements t.TypeOf<typeof SecurityConfigTypes.alarm
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CloudWatchConfig}*
+ *
  * AWS CloudWatch configuration
+ *
+ * @example
+ * ```
+ * cloudWatch:
+ *   metricSets:
+ *     - regions:
+ *         - us-east-1
+ *       deploymentTargets:
+ *         organizationalUnits:
+ *           - Root
+ *       metrics:
+ *         - filterName: MetricFilter
+ *           logGroupName: aws-controltower/CloudTrailLogs
+ *           filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
+ *           metricNamespace: LogMetrics
+ *           metricName: RootAccountUsage
+ *           metricValue: "1"
+ *           treatMissingData: notBreaching
+ *   alarmSets:
+ *     - regions:
+ *         - us-east-1
+ *       deploymentTargets:
+ *         organizationalUnits:
+ *           - Root
+ *       alarms:
+ *         - alarmName: CIS-1.1-RootAccountUsage
+ *           alarmDescription: Alarm for usage of "root" account
+ *           snsAlertLevel: Low
+ *           metricName: RootAccountUsage
+ *           namespace: LogMetrics
+ *           comparisonOperator: GreaterThanOrEqualToThreshold
+ *           evaluationPeriods: 1
+ *           period: 300
+ *           statistic: Sum
+ *           threshold: 1
+ *           treatMissingData: notBreaching
+ * ```
  */
 export class CloudWatchConfig implements t.TypeOf<typeof SecurityConfigTypes.cloudWatchConfig> {
   /**
