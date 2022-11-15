@@ -397,6 +397,10 @@ vpcs:
             destinationPrefixList: accelerator-prefix-list
             type: transitGateway
             target: Network-Main
+          - name: VpcPeer
+            destination: 10.4.0.0/16
+            type: vpcPeering
+            target: CrossAccount
       - name: Network-Endpoints-B
         routes:
           - name: TgwRoute
@@ -413,6 +417,10 @@ vpcs:
             destinationPrefixList: accelerator-prefix-list
             type: transitGateway
             target: Network-Main
+          - name: VpcPeer
+            destination: 10.4.0.0/16
+            type: vpcPeering
+            target: CrossAccount
     subnets:
       - name: Network-Endpoints-A
         availabilityZone: a
@@ -784,6 +792,10 @@ vpcs:
           - name: DynamoDBGateway
             type: gatewayEndpoint
             target: dynamodb
+          - name: VpcPeer
+            destination: 10.0.0.0/24
+            type: vpcPeering
+            target: CrossAccount
       - name: SharedServices-App-B
         routes:
           - name: TgwRoute
@@ -796,6 +808,10 @@ vpcs:
           - name: DynamoDBGateway
             type: gatewayEndpoint
             target: dynamodb
+          - name: VpcPeer
+            destination: 10.0.0.0/24
+            type: vpcPeering
+            target: CrossAccount
     subnets:
       - name: SharedServices-App-A
         availabilityZone: a
@@ -906,6 +922,10 @@ vpcPeering:
     vpcs:
       - Network-Endpoints
       - Network-Inspection
+  - name: CrossAccount
+    vpcs:
+      - Network-Endpoints
+      - SharedServices-Main
 
 customerGateways:
   - name: accelerator-cgw

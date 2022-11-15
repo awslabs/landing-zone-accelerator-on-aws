@@ -1,0 +1,294 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CrossAccountRoute Construct(CrossAccountRoute):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CF9390BA": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "FrameworkCrossAccountRouteProviderframeworkonEvent1A959FA7",
+            "Arn",
+          ],
+        },
+        "region": "us-east-1",
+        "roleArn": "arn:aws:iam::TestAccount:role/TestRole",
+        "routeDefinition": Object {
+          "DestinationCidrBlock": "10.0.0.0/16",
+          "RouteTableId": "rtb-test123",
+          "VpcPeeringConnectionId": "pcx-test123",
+        },
+      },
+      "Type": "Custom::CrossAccountRoute",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FrameworkCrossAccountRouteFunction7BE199E2": Object {
+      "DependsOn": Array [
+        "FrameworkCrossAccountRouteFunctionServiceRoleDefaultPolicyEFFA4FAA",
+        "FrameworkCrossAccountRouteFunctionServiceRoleD3FBE736",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Cross account EC2 route OnEvent handler",
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "FrameworkCrossAccountRouteFunctionServiceRoleD3FBE736",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 15,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "FrameworkCrossAccountRouteFunctionLogGroup9B330ABE": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "Key961B73FD",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "FrameworkCrossAccountRouteFunction7BE199E2",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FrameworkCrossAccountRouteFunctionServiceRoleD3FBE736": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "FrameworkCrossAccountRouteFunctionServiceRoleDefaultPolicyEFFA4FAA": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":iam::*:role/AWSAccelerator*",
+                  ],
+                ],
+              },
+              "Sid": "StsAssumeRole",
+            },
+            Object {
+              "Action": Array [
+                "ec2:CreateRoute",
+                "ec2:DeleteRoute",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "EC2RouteCreateDelete",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "FrameworkCrossAccountRouteFunctionServiceRoleDefaultPolicyEFFA4FAA",
+        "Roles": Array [
+          Object {
+            "Ref": "FrameworkCrossAccountRouteFunctionServiceRoleD3FBE736",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "FrameworkCrossAccountRouteProviderframeworkonEvent1A959FA7": Object {
+      "DependsOn": Array [
+        "FrameworkCrossAccountRouteProviderframeworkonEventServiceRoleDefaultPolicyAF7F5043",
+        "FrameworkCrossAccountRouteProviderframeworkonEventServiceRole274CC003",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/Framework/CrossAccountRouteProvider)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "FrameworkCrossAccountRouteFunction7BE199E2",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "FrameworkCrossAccountRouteProviderframeworkonEventServiceRole274CC003",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "FrameworkCrossAccountRouteProviderframeworkonEventServiceRole274CC003": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "FrameworkCrossAccountRouteProviderframeworkonEventServiceRoleDefaultPolicyAF7F5043": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "FrameworkCrossAccountRouteFunction7BE199E2",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "FrameworkCrossAccountRouteFunction7BE199E2",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "FrameworkCrossAccountRouteProviderframeworkonEventServiceRoleDefaultPolicyAF7F5043",
+        "Roles": Array [
+          Object {
+            "Ref": "FrameworkCrossAccountRouteProviderframeworkonEventServiceRole274CC003",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "Key961B73FD": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
+}
+`;

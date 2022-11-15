@@ -190,6 +190,7 @@ export class NetworkConfigTypes {
       'gatewayLoadBalancerEndpoint',
       'networkInterface',
       'networkFirewall',
+      'vpcPeering',
     ],
     'Value should be a route table target type',
   );
@@ -1579,6 +1580,60 @@ export class IpamConfig implements t.TypeOf<typeof NetworkConfigTypes.ipamConfig
 /**
  * VPC route table entry configuration.
  * Used to define static route entries in a VPC route table.
+ *
+ * @example
+ * Transit Gateway Attachment
+ * ```
+ * - name: TgwRoute
+ *   destination: 0.0.0.0/0
+ *   type: transitGateway
+ *   target: Network-Main
+ * ```
+ *
+ * @example
+ * NAT Gateway
+ * ```
+ * - name: NatRoute
+ *   destination: 0.0.0.0/0
+ *   type: natGateway
+ *   target: Nat-A
+ * ```
+ *
+ * @example
+ * Internet Gateway
+ * ```
+ * - name: IgwRoute
+ *   destination: 0.0.0.0/0
+ *   type: internetGateway
+ * ```
+ *
+ * @example
+ * VPC Peering
+ * ```
+ * - name: PeerRoute
+ *   destination: 10.0.0.0/16
+ *   type: vpcPeering
+ *   target: Peering
+ * ```
+ *
+ * @example
+ * Network Firewall
+ * ```
+ * - name: NfwRoute
+ *   destination: 0.0.0.0/0
+ *   type: networkFirewall
+ *   target: accelerator-firewall
+ *   targetAvailabilityZone: a
+ * ```
+ *
+ * @example
+ * Gateway Load Balancer Endpoint
+ * ```
+ * - name: GwlbRoute
+ *   destination: 0.0.0.0/0
+ *   type: gatewayLoadBalancerEndpoint
+ *   target: Endpoint-A
+ * ```
  */
 export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes.routeTableEntryConfig> {
   /**
@@ -1592,9 +1647,9 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    * Use CIDR notation, i.e. 10.0.0.0/16
    *
    * Either `destination` or `destinationPrefixList` must be specified for the following route entry types:
-   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`.
+   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`, `vpcPeering`.
    *
-   * `destination` MUST be specified for route entry type `networkFirewall`.
+   * `destination` MUST be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`.
    *
    * Leave undefined for route entry type `gatewayEndpoint`.
    */
@@ -1604,9 +1659,9 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    *
    * @remarks
    * Either `destination` or `destinationPrefixList` must be specified for the following route entry types:
-   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`.
+   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`, `vpcPeering`.
    *
-   * Cannot be specified for route entry type `networkFirewall`. Use `destination` instead.
+   * Cannot be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`. Use `destination` instead.
    *
    * Leave undefined for route entry type `gatewayEndpoint`.
    */
@@ -4047,6 +4102,15 @@ export class CentralNetworkServicesConfig implements t.TypeOf<typeof NetworkConf
 /**
  * VPC peering configuration.
  * Used to define VPC peering connections.
+ *
+ * @example
+ * ```
+ * vpcPeering:
+ *   - name: acccelerator-peer
+ *     vpcs:
+ *       - VPC-A
+ *       - VPC-B
+ * ```
  */
 export class VpcPeeringConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcPeeringConfig> {
   /**

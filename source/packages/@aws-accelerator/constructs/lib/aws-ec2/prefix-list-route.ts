@@ -100,7 +100,7 @@ export class PrefixListRoute extends cdk.Resource {
         {
           Sid: 'AllowModifyRoutes',
           Effect: 'Allow',
-          Action: ['ec2:CreateRoute', 'ec2:ReplaceRoute', 'ec2:DeleteRoute'],
+          Action: ['ec2:CreateRoute', 'ec2:DeleteRoute'],
           Resource: '*',
         },
       ],

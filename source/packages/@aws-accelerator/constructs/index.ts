@@ -23,6 +23,7 @@ export * from './lib/aws-detective/detective-organization-admin-account';
 export * from './lib/aws-directconnect/direct-connect-gateway';
 export * from './lib/aws-directconnect/gateway-association';
 export * from './lib/aws-directconnect/virtual-interface';
+export * from './lib/aws-ec2/cross-account-route';
 export * from './lib/aws-ec2/customer-gateway';
 export * from './lib/aws-ec2/delete-default-vpc';
 export * from './lib/aws-ec2/dhcp-options';

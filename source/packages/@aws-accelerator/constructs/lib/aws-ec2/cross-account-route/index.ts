@@ -12,7 +12,7 @@
  */
 
 /**
- * aws-ec2-prefix-list-route - lambda handler
+ * aws-ec2-cross-account-route - lambda handler
  *
  * @param event
  * @returns
@@ -30,9 +30,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   | undefined
 > {
   interface RouteProps {
-    readonly DestinationPrefixListId: string;
     readonly RouteTableId: string;
     readonly CarrierGatewayId?: string;
+    readonly DestinationCidrBlock?: string;
+    readonly DestinationPrefixListId?: string;
     readonly EgressOnlyInternetGatewayId?: string;
     readonly GatewayId?: string;
     readonly InstanceId?: string;
@@ -44,9 +45,36 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     readonly VpcPeeringConnectionId?: string;
   }
 
-  const ec2 = new AWS.EC2({ customUserAgent: process.env['SOLUTION_ID'] });
+  let ec2: AWS.EC2;
   const props: RouteProps = event.ResourceProperties['routeDefinition'];
-  const resourceId = `${props.DestinationPrefixListId}${props.RouteTableId}`;
+  const region: string = event.ResourceProperties['region'];
+  const resourceId = props.DestinationCidrBlock
+    ? `${props.DestinationCidrBlock}${props.RouteTableId}`
+    : `${props.DestinationPrefixListId}${props.RouteTableId}`;
+  const roleArn: string | undefined = event.ResourceProperties['roleArn'];
+
+  if (roleArn) {
+    const stsClient = new AWS.STS({ region });
+    const assumeRoleCredential = await throttlingBackOff(() =>
+      stsClient
+        .assumeRole({
+          RoleArn: event.ResourceProperties['roleArn'],
+          RoleSessionName: 'acceleratorAssumeRoleSession',
+        })
+        .promise(),
+    );
+    ec2 = new AWS.EC2({
+      region,
+      credentials: {
+        accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId,
+        secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey,
+        sessionToken: assumeRoleCredential.Credentials!.SessionToken,
+        expireTime: assumeRoleCredential.Credentials!.Expiration,
+      },
+    });
+  } else {
+    ec2 = new AWS.EC2({ region });
+  }
 
   switch (event.RequestType) {
     case 'Create':
@@ -61,7 +89,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Delete':
       await throttlingBackOff(() =>
         ec2
-          .deleteRoute({ DestinationPrefixListId: props.DestinationPrefixListId, RouteTableId: props.RouteTableId })
+          .deleteRoute({
+            DestinationCidrBlock: props.DestinationCidrBlock,
+            DestinationPrefixListId: props.DestinationPrefixListId,
+            RouteTableId: props.RouteTableId,
+          })
           .promise(),
       );
 

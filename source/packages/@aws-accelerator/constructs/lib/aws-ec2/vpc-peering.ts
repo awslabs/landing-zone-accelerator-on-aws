@@ -14,6 +14,9 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
+import { CrossAccountRoute } from './cross-account-route';
+import { PrefixListRoute } from './prefix-list-route';
+
 export interface IVpcPeering extends cdk.IResource {
   /**
    * The name of the peering connection.
@@ -90,5 +93,65 @@ export class VpcPeering extends cdk.Resource implements IVpcPeering {
     });
 
     this.peeringId = resource.ref;
+  }
+
+  public addPeeringRoute(
+    id: string,
+    routeTableId: string,
+    destination?: string,
+    destinationPrefixListId?: string,
+    logGroupKmsKey?: cdk.aws_kms.Key,
+    logRetentionInDays?: number,
+  ): void {
+    if (destinationPrefixListId) {
+      if (!logGroupKmsKey) {
+        throw new Error('Attempting to add prefix list route without specifying log group KMS key');
+      }
+      if (!logRetentionInDays) {
+        throw new Error('Attempting to add prefix list route without specifying log group retention period');
+      }
+
+      new PrefixListRoute(this, id, {
+        routeTableId,
+        destinationPrefixListId,
+        logGroupKmsKey,
+        logRetentionInDays,
+        vpcPeeringConnectionId: this.peeringId,
+      });
+    } else {
+      if (!destination) {
+        throw new Error('Attempting to add CIDR route without specifying destination');
+      }
+
+      new cdk.aws_ec2.CfnRoute(this, id, {
+        routeTableId: routeTableId,
+        destinationCidrBlock: destination,
+        vpcPeeringConnectionId: this.peeringId,
+      });
+    }
+  }
+
+  public addCrossAcctPeeringRoute(
+    id: string,
+    ownerAccount: string,
+    ownerRegion: string,
+    partition: string,
+    provider: cdk.custom_resources.Provider,
+    roleName: string,
+    routeTableId: string,
+    destination?: string,
+    destinationPrefixListId?: string,
+  ): void {
+    new CrossAccountRoute(this, id, {
+      ownerAccount,
+      ownerRegion,
+      partition,
+      provider,
+      roleName,
+      routeTableId,
+      destination,
+      destinationPrefixListId,
+      vpcPeeringConnectionId: this.peeringId,
+    });
   }
 }
