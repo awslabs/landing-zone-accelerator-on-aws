@@ -43,7 +43,7 @@ export class NetworkConfigValidator {
     new Route53ResolverValidator(values, configDir, errors);
     new VpcValidator(values, ouIdNames, accountNames, errors);
     new GatewayLoadBalancersValidator(values, accountNames, errors);
-    new CustomerGatewaysValidator(values, accountNames, errors);
+    new CustomerGatewaysValidator(values, configDir, accountNames, errors);
     new DirectConnectGatewaysValidator(values, errors);
 
     if (errors.length) {
@@ -71,6 +71,70 @@ export class NetworkConfigValidator {
     ]) {
       accountNames.push(accountItem.name);
     }
+  }
+}
+
+/**
+ * Class for helper functions
+ */
+class NetworkValidatorFunctions {
+  private getAccountNamesFromDeploymentTarget(
+    configDir: string,
+    deploymentTargets: t.TypeOf<typeof t.deploymentTargets>,
+  ): string[] {
+    const accountNames: string[] = [];
+    const accounts = [
+      ...AccountsConfig.load(configDir).mandatoryAccounts,
+      ...AccountsConfig.load(configDir).workloadAccounts,
+    ];
+
+    for (const ou of deploymentTargets.organizationalUnits ?? []) {
+      if (ou === 'Root') {
+        for (const account of accounts) {
+          accountNames.push(account.name);
+        }
+      } else {
+        for (const account of accounts) {
+          if (ou === account.organizationalUnit) {
+            accountNames.push(account.name);
+          }
+        }
+      }
+    }
+
+    for (const account of deploymentTargets.accounts ?? []) {
+      accountNames.push(account);
+    }
+
+    return [...new Set(accountNames)];
+  }
+
+  private getExcludedAccountNames(deploymentTargets: t.TypeOf<typeof t.deploymentTargets>): string[] {
+    const accountIds: string[] = [];
+
+    if (deploymentTargets.excludedAccounts) {
+      deploymentTargets.excludedAccounts.forEach(account => accountIds.push(account));
+    }
+
+    return accountIds;
+  }
+
+  public getVpcAccountNames(
+    configDir: string,
+    vpcItem: t.TypeOf<typeof NetworkConfigTypes.vpcConfig> | t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig>,
+  ): string[] {
+    let vpcAccountNames: string[];
+
+    if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
+      vpcAccountNames = [vpcItem.account];
+    } else {
+      const excludedAccountNames = this.getExcludedAccountNames(vpcItem.deploymentTargets);
+      vpcAccountNames = this.getAccountNamesFromDeploymentTarget(configDir, vpcItem.deploymentTargets).filter(
+        item => !excludedAccountNames.includes(item),
+      );
+    }
+
+    return vpcAccountNames;
   }
 }
 
@@ -771,6 +835,25 @@ class VpcValidator {
   }
 
   /**
+   * Validate VGW routes are associated with a VPC with an Virtual Private Gateway attached
+   * @param routeTableEntryItem
+   * @param routeTableName
+   * @param vpcItem
+   */
+  private validateVgwRouteEntry(
+    routeTableEntryItem: t.TypeOf<typeof NetworkConfigTypes.routeTableEntryConfig>,
+    routeTableName: string,
+    vpcItem: t.TypeOf<typeof NetworkConfigTypes.vpcConfig> | t.TypeOf<typeof NetworkConfigTypes.vpcTemplatesConfig>,
+    errors: string[],
+  ) {
+    if (!vpcItem.virtualPrivateGateway) {
+      errors.push(
+        `[Route table ${routeTableName} for VPC ${vpcItem.name}]: route entry ${routeTableEntryItem.name} is targeting an VGW, but now VGW is attached to the VPC`,
+      );
+    }
+  }
+
+  /**
    * Validate route table entries have a valid target configured
    * @param routeTableEntryItem
    * @param routeTableName
@@ -873,6 +956,11 @@ class VpcValidator {
         this.validateIgwRouteEntry(routeTableEntryItem, routeTableItem.name, vpcItem, errors);
       }
 
+      // Validate VGW route
+      if (routeTableEntryItem.type && routeTableEntryItem.type === 'virtualPrivateGateway') {
+        this.validateVgwRouteEntry(routeTableEntryItem, routeTableItem.name, vpcItem, errors);
+      }
+
       // Validate target exists
       if (
         routeTableEntryItem.type &&
@@ -936,6 +1024,12 @@ class VpcValidator {
             `[Route table ${routeTableItem.name} for VPC ${vpcItem.name}]: attempting to configure a gateway association with no IGW attached to the VPC!`,
           );
         }
+        if (routeTableItem.gatewayAssociation === 'virtualPrivateGateway' && !vpcItem.virtualPrivateGateway) {
+          errors.push(
+            `[Route table ${routeTableItem.name} for VPC ${vpcItem.name}]: attempting to configure a gateway association with no VGW attached to the VPC!`,
+          );
+        }
+
         // Validate route entries
         this.validateRouteTableEntries(routeTableItem, vpcItem, values, errors);
       }
@@ -1070,7 +1164,9 @@ class GatewayLoadBalancersValidator {
  * Class to validate Customer Gateways
  */
 class CustomerGatewaysValidator {
-  constructor(values: NetworkConfig, accountNames: string[], errors: string[]) {
+  private configDir: string;
+  constructor(values: NetworkConfig, configDir: string, accountNames: string[], errors: string[]) {
+    this.configDir = configDir;
     //
     // Validate gateway load balancers deployment account names
     //
@@ -1121,18 +1217,17 @@ class CustomerGatewaysValidator {
     errors: string[],
   ) {
     for (const vpn of cgw.vpnConnections ?? []) {
-      // Validate target TGW exists
-      const tgw = values.transitGateways.find(tgw => tgw.name === vpn.transitGateway);
-      if (!tgw) {
+      // Validate if VPC termination and Transit Gateway is provided in the same VPN Config
+      if (vpn.vpc && vpn.transitGateway) {
         errors.push(
-          `[Customer Gateway ${cgw.name} VPN connection ${vpn.name}]: Transit Gateway ${vpn.transitGateway} does not exist`,
+          `[Customer Gateway ${cgw.name} VPN connection ${vpn.name}]: Both TGW and VPC provided in the same VPN Configuration`,
         );
       }
 
-      // Validate TGW account matches
-      if (tgw && tgw.account !== cgw.account) {
+      // Validate that either a VPC or Transit Gateway is provided in the VPN Config
+      if (!vpn.vpc && !vpn.transitGateway) {
         errors.push(
-          `[Customer Gateway ${cgw.name} VPN connection ${vpn.name}]: VPN connection must reside in the same account as Transit Gateway ${tgw.name}`,
+          `[Customer Gateway ${cgw.name} VPN connection ${vpn.name}]: Neither a valid TGW or VPC provided in the config`,
         );
       }
 
@@ -1145,23 +1240,110 @@ class CustomerGatewaysValidator {
         }
       }
 
-      // Validate associations/propagations
-      if (tgw) {
-        const routeTableArray: string[] = [];
-        if (vpn.routeTableAssociations) {
-          routeTableArray.push(...vpn.routeTableAssociations);
-        }
-        if (vpn.routeTablePropagations) {
-          routeTableArray.push(...vpn.routeTablePropagations);
-        }
-        const tgwRouteTableSet = new Set(routeTableArray);
+      // Handle TGW and VGW Logic respectively
+      if (vpn.vpc) {
+        this.validateVirtualPrivateGatewayVpnConfiguration(cgw, vpn, values, errors);
+      } else if (vpn.transitGateway) {
+        this.validateTransitGatewayVpnConfiguration(cgw, vpn, values, errors);
+      }
+    }
+  }
 
-        for (const routeTable of tgwRouteTableSet ?? []) {
-          if (!tgw.routeTables.find(item => item.name === routeTable)) {
-            errors.push(
-              `[Customer Gateway ${cgw.name} VPN connection ${vpn.name}]: route table ${routeTable} does not exist on Transit Gateway ${tgw.name}`,
-            );
-          }
+  /**
+   * Validate site-to-site VPN connections for Virtual Private Gateways
+   * @param cgw
+   * @param vpn
+   * @param values
+   * @param errors
+   */
+  private validateVirtualPrivateGatewayVpnConfiguration(
+    cgw: t.TypeOf<typeof NetworkConfigTypes.customerGatewayConfig>,
+    vpn: t.TypeOf<typeof NetworkConfigTypes.vpnConnectionConfig>,
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    errors: string[],
+  ) {
+    const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
+    const vpc = vpcs.find(item => item.name === vpn.vpc);
+    // Validate that the VPC referenced in the VPN Connection exists.
+    if (!vpc) {
+      errors.push(`[Customer Gateway ${cgw.name} VPN Connection ${vpn.name}]: VPC ${vpn.vpc} referenced doesn't exist`);
+    }
+
+    // Validate that the VPC referenced has a VGW attached
+    if (vpc && !vpc.virtualPrivateGateway) {
+      errors.push(
+        `[Customer Gateway ${cgw.name} VPN Connection ${vpn.name}]: VPC ${vpn.vpc} referenced doesn't have an attached Virtual Private Gateway`,
+      );
+    }
+
+    // Validate VPC account and CGW account match
+    if (vpc && NetworkConfigTypes.vpcConfig.is(vpc) && vpc.account !== cgw.account) {
+      errors.push(
+        `[Customer Gateway ${cgw.name} VPN Connection ${vpn.name}]: VPC ${vpn.vpc} referenced does not reside in the same account as the CGW`,
+      );
+    }
+    if (
+      vpc &&
+      NetworkConfigTypes.vpcTemplatesConfig.is(vpc) &&
+      !new NetworkValidatorFunctions().getVpcAccountNames(this.configDir, vpc).includes(cgw.account)
+    ) {
+      errors.push(
+        `[Customer Gateway ${cgw.name} VPN Connection ${vpn.name}]: VPC ${vpn.vpc} referenced does not reside in the same account as the CGW`,
+      );
+    }
+
+    // Validate that TGW route table propagations or associations aren't configured for a VPN Connection terminating at a VPC
+    if (vpn.routeTableAssociations || vpn.routeTablePropagations) {
+      errors.push(
+        `[Customer Gateway ${cgw.name} VPN Connection ${vpn.name}]: VPC ${vpn.vpc} does not support Transit Gateway Route Table Associations or Propagations`,
+      );
+    }
+  }
+
+  /**
+   * Validate site-to-site VPN connections for Transit Gateways
+   * @param cgw
+   * @param vpn
+   * @param values
+   * @param errors
+   */
+  private validateTransitGatewayVpnConfiguration(
+    cgw: t.TypeOf<typeof NetworkConfigTypes.customerGatewayConfig>,
+    vpn: t.TypeOf<typeof NetworkConfigTypes.vpnConnectionConfig>,
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    errors: string[],
+  ) {
+    const tgw = values.transitGateways.find(item => item.name === vpn.transitGateway);
+
+    if (!tgw) {
+      errors.push(
+        `[Customer Gateway ${cgw.name} VPN connection ${vpn.name}]: Transit Gateway ${vpn.transitGateway} does not exist`,
+      );
+    }
+
+    // Validate TGW account matches
+    if (tgw && tgw.account !== cgw.account) {
+      errors.push(
+        `[Customer Gateway ${cgw.name} VPN connection ${vpn.name}]: VPN connection must reside in the same account as Transit Gateway ${tgw.name}`,
+      );
+    }
+
+    // Validate associations/propagations
+    if (tgw) {
+      const routeTableArray: string[] = [];
+      if (vpn.routeTableAssociations) {
+        routeTableArray.push(...vpn.routeTableAssociations);
+      }
+      if (vpn.routeTablePropagations) {
+        routeTableArray.push(...vpn.routeTablePropagations);
+      }
+      const tgwRouteTableSet = new Set(routeTableArray);
+
+      for (const routeTable of tgwRouteTableSet ?? []) {
+        if (!tgw.routeTables.find(item => item.name === routeTable)) {
+          errors.push(
+            `[Customer Gateway ${cgw.name} VPN connection ${vpn.name}]: route table ${routeTable} does not exist on Transit Gateway ${tgw.name}`,
+          );
         }
       }
     }

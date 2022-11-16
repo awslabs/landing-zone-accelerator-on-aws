@@ -762,7 +762,7 @@ vpcs:
 
 ##############################################################
 # Global configuration for VPC flow logs                     #
-# Where there is no flow log configuration defined with VPC  # 
+# Where there is no flow log configuration defined with VPC  #
 # this configuration will be used for flow log configuration #
 ##############################################################
 vpcFlowLogs:
@@ -802,7 +802,6 @@ vpcFlowLogs:
     - pkt-dst-aws-service
     - flow-direction
     - traffic-path
-
 ###########################################
 # Customer Gateways-- use this object to  #
 # deploy customer gateways and S2S VPN    #
@@ -815,13 +814,18 @@ vpcFlowLogs:
 #     ipAddress: 1.1.1.1
 #     asn: 65500
 #     vpnConnections:
-#       - name: accelerator-vpn
+#       - name: TGW-VPNConnection
 #         transitGateway: Network-Main
 #         staticRoutesOnly: false
+#         tunnelSpecifications:
+#           - tunnelInsideCidr: 169.254.50.0/30
+#             preSharedKey: Thisismysecret-Abc123
+#           - tunnelInsideCidr: 169.254.60.0/30
+#             preSharedKey: Thisismysecret-Abc123
 
 #####################################
 # Direct Connect Gateways-- use this #
-# object to deploy DX Gateways,      #      
+# object to deploy DX Gateways,      #
 # virtual interfaces, and            #
 # associations to transit gateways   #
 #####################################
@@ -841,7 +845,7 @@ vpcFlowLogs:
 #         vlan: 575
 #         enableSiteLink: true
 #         jumboFrames: true
-#     transitGatewayAssociations: 
+#     transitGatewayAssociations:
 #       - name: Network-Main
 #         account: Network
 #         allowedPrefixes:

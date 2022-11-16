@@ -286,7 +286,10 @@ export class NetworkPrepStack extends AcceleratorStack {
         });
 
         for (const vpnConnectItem of cgwItem.vpnConnections ?? []) {
-          this.createVpnConnection(cgw, cgwItem, vpnConnectItem);
+          // Make sure that VPN Connections are created for TGWs in this stack only.
+          if (vpnConnectItem.transitGateway) {
+            this.createVpnConnection(cgw, cgwItem, vpnConnectItem);
+          }
         }
       }
     }
@@ -304,7 +307,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     vpnConnectItem: VpnConnectionConfig,
   ) {
     // Get the Transit Gateway ID
-    const transitGatewayId = this.transitGatewayMap.get(vpnConnectItem.transitGateway);
+    const transitGatewayId = this.transitGatewayMap.get(vpnConnectItem.transitGateway!);
     if (!transitGatewayId) {
       throw new Error(`Transit Gateway ${vpnConnectItem.transitGateway} not found`);
     }

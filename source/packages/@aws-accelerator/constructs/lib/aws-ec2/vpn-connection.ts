@@ -100,7 +100,6 @@ export class VpnConnection extends cdk.Resource implements ICfnVpnConnection {
         tunnelInsideCidr: tunnelItem.tunnelInsideCidr,
       });
     }
-
     const resource = new cdk.aws_ec2.CfnVPNConnection(this, 'VpnConnection', {
       customerGatewayId: props.customerGatewayId,
       type: 'ipsec.1',
@@ -112,7 +111,7 @@ export class VpnConnection extends cdk.Resource implements ICfnVpnConnection {
     });
     cdk.Tags.of(this).add('Name', props.name);
 
-    this.vpnConnectionId = resource.ref;
+    this.vpnConnectionId = resource.attrVpnConnectionId;
     this.vpnConnectionName = props.name;
   }
 }
