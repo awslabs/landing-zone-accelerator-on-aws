@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
-import { IpamAllocationConfig, OutpostsConfig } from '@aws-accelerator/config';
+import { IpamAllocationConfig, OutpostsConfig, VirtualPrivateGatewayConfig } from '@aws-accelerator/config';
 
 import { IpamSubnet } from './ipam-subnet';
 import { IPrefixList } from './prefix-list';
@@ -202,7 +202,6 @@ export class NatGateway extends cdk.Resource implements INatGateway {
     this.natGatewayId = resource.ref;
   }
 }
-
 export interface ISecurityGroup extends cdk.IResource {
   /**
    * ID for the current security group
@@ -484,20 +483,25 @@ export interface VpcProps {
   readonly ipv4IpamPoolId?: string;
   readonly ipv4NetmaskLength?: number;
   readonly tags?: cdk.CfnTag[];
+  readonly virtualPrivateGateway?: VirtualPrivateGatewayConfig;
 }
 
 /**
  * Defines a  VPC object
  */
 export class Vpc extends cdk.Resource implements IVpc {
+  public readonly name: string;
   public readonly vpcId: string;
   public readonly cidrs: cdk.aws_ec2.CfnVPCCidrBlock[];
   public readonly internetGateway: cdk.aws_ec2.CfnInternetGateway | undefined;
   public readonly internetGatewayAttachment: cdk.aws_ec2.CfnVPCGatewayAttachment | undefined;
   public readonly dhcpOptionsAssociation: cdk.aws_ec2.CfnVPCDHCPOptionsAssociation | undefined;
+  public readonly virtualPrivateGateway: cdk.aws_ec2.VpnGateway | undefined;
+  public readonly virtualPrivateGatewayAttachment: cdk.aws_ec2.CfnVPCGatewayAttachment | undefined;
 
   constructor(scope: Construct, id: string, props: VpcProps) {
     super(scope, id);
+    this.name = props.name;
 
     const resource = new cdk.aws_ec2.CfnVPC(this, 'Resource', {
       cidrBlock: props.ipv4CidrBlock,
@@ -520,6 +524,22 @@ export class Vpc extends cdk.Resource implements IVpc {
         internetGatewayId: this.internetGateway.ref,
         vpcId: this.vpcId,
       });
+    }
+
+    if (props.virtualPrivateGateway) {
+      this.virtualPrivateGateway = new cdk.aws_ec2.VpnGateway(this, `VirtualPrivateGateway`, {
+        amazonSideAsn: props.virtualPrivateGateway.asn,
+        type: 'ipsec.1',
+      });
+
+      this.virtualPrivateGatewayAttachment = new cdk.aws_ec2.CfnVPCGatewayAttachment(
+        this,
+        `VirtualPrivateGatewayAttachment`,
+        {
+          vpnGatewayId: this.virtualPrivateGateway.gatewayId,
+          vpcId: this.vpcId,
+        },
+      );
     }
 
     if (props.dhcpOptions) {

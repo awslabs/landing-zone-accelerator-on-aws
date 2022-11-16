@@ -7,6 +7,10 @@ Object {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkcustomerGatewaysacceleratorcgwidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/customerGateways/accelerator-cgw/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkipampoolshomeregionprodpoolidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
       "Default": "/accelerator/network/ipam/pools/home-region-prod-pool/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -1383,6 +1387,30 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
+    "NetworkEndpointsVpcVirtualPrivateGateway2CE2FFC3": Object {
+      "Properties": Object {
+        "AmazonSideAsn": 65200,
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Network-Endpoints",
+          },
+        ],
+        "Type": "ipsec.1",
+      },
+      "Type": "AWS::EC2::VPNGateway",
+    },
+    "NetworkEndpointsVpcVirtualPrivateGatewayAttachment01185FBA": Object {
+      "Properties": Object {
+        "VpcId": Object {
+          "Ref": "NetworkEndpointsVpc619A1F01",
+        },
+        "VpnGatewayId": Object {
+          "Ref": "NetworkEndpointsVpcVirtualPrivateGateway2CE2FFC3",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
     "NetworkEndpointsVpcVpcCidrBlockC483B99B": Object {
       "Properties": Object {
         "Ipv4IpamPoolId": Object {
@@ -1394,6 +1422,33 @@ Object {
         },
       },
       "Type": "AWS::EC2::VPCCidrBlock",
+    },
+    "NetworkInspectionVgwVpnConnectionCC9DB36D": Object {
+      "Properties": Object {
+        "CustomerGatewayId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkcustomerGatewaysacceleratorcgwidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "StaticRoutesOnly": false,
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "VpcInspectionVpnConnection",
+          },
+        ],
+        "Type": "ipsec.1",
+        "VpnGatewayId": Object {
+          "Ref": "NetworkInspectionVpcVirtualPrivateGatewayB665C776",
+        },
+        "VpnTunnelOptionsSpecifications": Array [
+          Object {
+            "TunnelInsideCidr": "169.254.100.0/30",
+          },
+          Object {
+            "TunnelInsideCidr": "169.254.100.100/30",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPNConnection",
     },
     "NetworkInspectionVpc302E00C0": Object {
       "Properties": Object {
@@ -1888,6 +1943,38 @@ Object {
         },
       },
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
+    },
+    "NetworkInspectionVpcVirtualPrivateGatewayAttachment8507FAB6": Object {
+      "Properties": Object {
+        "VpcId": Object {
+          "Ref": "NetworkInspectionVpc302E00C0",
+        },
+        "VpnGatewayId": Object {
+          "Ref": "NetworkInspectionVpcVirtualPrivateGatewayB665C776",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+    "NetworkInspectionVpcVirtualPrivateGatewayB665C776": Object {
+      "Properties": Object {
+        "AmazonSideAsn": 65000,
+        "Tags": Array [
+          Object {
+            "Key": "accelerator:central-endpoints-account-id",
+            "Value": "555555555555",
+          },
+          Object {
+            "Key": "accelerator:use-central-endpoints",
+            "Value": "true",
+          },
+          Object {
+            "Key": "Name",
+            "Value": "Network-Inspection",
+          },
+        ],
+        "Type": "ipsec.1",
+      },
+      "Type": "AWS::EC2::VPNGateway",
     },
     "NetworkInspectionVpcVpcCidrBlock343B2A17": Object {
       "Properties": Object {

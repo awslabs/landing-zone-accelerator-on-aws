@@ -190,6 +190,7 @@ export class NetworkConfigTypes {
       'gatewayLoadBalancerEndpoint',
       'networkInterface',
       'networkFirewall',
+      'virtualPrivateGateway',
       'vpcPeering',
     ],
     'Value should be a route table target type',
@@ -197,7 +198,7 @@ export class NetworkConfigTypes {
 
   static readonly gatewayRouteTableTypeEnum = t.enums(
     'GatewayType',
-    ['internetGateway', 'virtualGateway'],
+    ['internetGateway', 'virtualPrivateGateway'],
     'Value should be a route table gateway type.',
   );
 
@@ -453,10 +454,11 @@ export class NetworkConfigTypes {
 
   static readonly vpnConnectionConfig = t.interface({
     name: t.nonEmptyString,
-    transitGateway: t.nonEmptyString,
+    transitGateway: t.optional(t.nonEmptyString),
     routeTableAssociations: t.optional(t.array(t.nonEmptyString)),
     routeTablePropagations: t.optional(t.array(t.nonEmptyString)),
     staticRoutesOnly: t.optional(t.boolean),
+    vpc: t.optional(t.nonEmptyString),
     tunnelSpecifications: t.optional(t.array(this.vpnTunnelOptionsSpecificationsConfig)),
     tags: t.optional(t.array(t.tag)),
   });
@@ -469,6 +471,10 @@ export class NetworkConfigTypes {
     asn: t.number,
     tags: t.optional(t.array(t.tag)),
     vpnConnections: t.optional(t.array(this.vpnConnectionConfig)),
+  });
+
+  static readonly virtualPrivateGatewayConfig = t.interface({
+    asn: t.optional(t.number),
   });
 
   static readonly vpcConfig = t.interface({
@@ -497,6 +503,7 @@ export class NetworkConfigTypes {
     transitGatewayAttachments: t.optional(t.array(this.transitGatewayAttachmentConfig)),
     tags: t.optional(t.array(t.tag)),
     outposts: t.optional(t.array(this.outpostsConfig)),
+    virtualPrivateGateway: t.optional(this.virtualPrivateGatewayConfig),
     vpcFlowLogs: t.optional(t.vpcFlowLogsConfig),
   });
 
@@ -524,6 +531,7 @@ export class NetworkConfigTypes {
     routeTables: t.optional(t.array(this.routeTableConfig)),
     subnets: t.optional(t.array(this.subnetConfig)),
     transitGatewayAttachments: t.optional(t.array(this.transitGatewayAttachmentConfig)),
+    virtualPrivateGateway: t.optional(this.virtualPrivateGatewayConfig),
     tags: t.optional(t.array(t.tag)),
     vpcFlowLogs: t.optional(t.vpcFlowLogsConfig),
   });
@@ -1838,7 +1846,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    * Use CIDR notation, i.e. 10.0.0.0/16
    *
    * Either `destination` or `destinationPrefixList` must be specified for the following route entry types:
-   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`, `vpcPeering`.
+   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`, `vpcPeering`, `virtualPrivateGateway`.
    *
    * `destination` MUST be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`.
    *
@@ -1850,7 +1858,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    *
    * @remarks
    * Either `destination` or `destinationPrefixList` must be specified for the following route entry types:
-   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`, `vpcPeering`.
+   * `transitGateway`, `natGateway`, `internetGateway`, `networkInterface`, `vpcPeering`, `virtualPrivateGateway`.
    *
    * Cannot be specified for route entry type `networkFirewall` or `gatewayLoadBalancerEndpoint`. Use `destination` instead.
    *
@@ -1869,7 +1877,7 @@ export class RouteTableEntryConfig implements t.TypeOf<typeof NetworkConfigTypes
    * @remarks
    * Use `s3` or `dynamodb` as the string when specifying a route entry type of `gatewayEndpoint`.
    *
-   * Leave undefined for route entry type `internetGateway`.
+   * Leave undefined for route entry type `internetGateway` or `virtualPrivateGateway`.
    */
   readonly target: string | undefined = undefined;
   /**
@@ -2971,7 +2979,7 @@ export class VpnConnectionConfig implements t.TypeOf<typeof NetworkConfigTypes.v
    * The value of this property will be utilized as the logical id for this
    * resource. Any references to this object should specify this value.
    */
-  readonly name: string = '';
+  readonly name = '';
 
   /**
    * The logical name of the Transit Gateway that the customer Gateway is attached to
@@ -2980,7 +2988,15 @@ export class VpnConnectionConfig implements t.TypeOf<typeof NetworkConfigTypes.v
    * Must specify either the Transit Gateway name or the Virtual Private Gateway, not
    * both.
    */
-  readonly transitGateway = '';
+  readonly transitGateway: string | undefined = undefined;
+
+  /**
+   * The logical name of the Virtual Private Cloud that a Virtual Private Gateway is attached to.
+   * @remarks
+   * Must specify either the Transit Gateway name or the Virtual Private Gateway, not
+   * both.
+   */
+  readonly vpc: string | undefined = undefined;
 
   /**
    * (OPTIONAL) An array of Transit Gateway route table names to associate the VPN attachment to
@@ -3093,6 +3109,28 @@ export class CustomerGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes
    * @see {@link VpnConnectionConfig}
    */
   readonly vpnConnections: VpnConnectionConfig[] | undefined = undefined;
+}
+
+/**
+ * *{@link NetworkConfig} / {@link VpcConfig} / {@link VirtualPrivateGatewayConfig}*
+ *
+ * Virtual Private Gateway Configuration
+ * Used to define Virtual Private Gateways that are attached to a VPC.
+ *
+ * @example
+ * ```
+ * virtualPrivateGateway:
+ *  asn: 65500
+ * ```
+ */
+export class VirtualPrivateGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.virtualPrivateGatewayConfig> {
+  /**
+   * Define the ASN (Amazon Side) used for the Virtual Private Gateway
+   *
+   * @remarks
+   * The private ASN range is 64512 to 65534. The default is 65000.
+   */
+  readonly asn = 65000;
 }
 
 /**
@@ -3283,6 +3321,13 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
    *
    */
   readonly tags: t.Tag[] | undefined = undefined;
+
+  /**
+   * Virtual Private Gateway configuration
+   *
+   * @default undefined
+   */
+  readonly virtualPrivateGateway: VirtualPrivateGatewayConfig | undefined = undefined;
 
   /**
    * VPC flog log configuration
@@ -3483,6 +3528,13 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
    *
    */
   readonly tags: t.Tag[] | undefined = undefined;
+
+  /**
+   * Virtual Private Gateway configuration
+   *
+   * @default undefined
+   */
+  readonly virtualPrivateGateway: VirtualPrivateGatewayConfig | undefined = undefined;
 
   /**
    * VPC flog log configuration

@@ -47,6 +47,7 @@ import {
   TransitGatewayAttachment,
   TransitGatewayPeering,
   Vpc,
+  VpnConnection,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
@@ -382,7 +383,6 @@ export class NetworkVpcStack extends AcceleratorStack {
     //
     // Evaluate VPC entries
     //
-
     for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
       // Get account IDs
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
@@ -415,6 +415,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         // Create the VPC
         //
+        //Set the VGW ID to the VPC ID
         const vpc = new Vpc(this, pascalCase(`${vpcItem.name}Vpc`), {
           name: vpcItem.name,
           ipv4CidrBlock: cidr,
@@ -426,6 +427,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           ipv4IpamPoolId: poolId,
           ipv4NetmaskLength: poolNetmask,
           tags: vpcItem.tags,
+          virtualPrivateGateway: vpcItem.virtualPrivateGateway,
         });
         new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${pascalCase(vpcItem.name)}VpcId`), {
           parameterName: `/accelerator/network/vpc/${vpcItem.name}/id`,
@@ -453,6 +455,10 @@ export class NetworkVpcStack extends AcceleratorStack {
           }
         }
 
+        // Set the virtual private gateway map
+        if (vpc.virtualPrivateGateway) {
+          this.createVpnConnection(vpc);
+        }
         //
         // Tag the VPC if central endpoints are enabled. These tags are used to
         // identify which VPCs in a target account to create private hosted zone
@@ -723,7 +729,7 @@ export class NetworkVpcStack extends AcceleratorStack {
               pascalCase(`${vpcItem.name}Vpc`) +
               pascalCase(`${routeTableItem.name}RouteTable`) +
               pascalCase(routeTableEntryItem.name);
-            const entryTypes = ['transitGateway', 'internetGateway', 'natGateway'];
+            const entryTypes = ['transitGateway', 'internetGateway', 'natGateway', 'virtualPrivateGateway'];
 
             // Check if using a prefix list or CIDR as the destination
             if (routeTableEntryItem.type && entryTypes.includes(routeTableEntryItem.type)) {
@@ -792,6 +798,20 @@ export class NetworkVpcStack extends AcceleratorStack {
                   `[network-vpc-stack] Adding Internet Gateway Route Table Entry ${routeTableEntryItem.name}`,
                 );
                 routeTable.addInternetGatewayRoute(
+                  routeId,
+                  destination,
+                  destinationPrefixListId,
+                  this.cloudwatchKey,
+                  this.logRetention,
+                );
+              }
+
+              // Route: Virtual Private Gateway
+              if (routeTableEntryItem.type === 'virtualPrivateGateway') {
+                Logger.info(
+                  `[network-vpc-stack] Adding Virtual Private Gateway Route Table Entry ${routeTableEntryItem.name}`,
+                );
+                routeTable.addVirtualPrivateGatewayRoute(
                   routeId,
                   destination,
                   destinationPrefixListId,
@@ -1525,6 +1545,31 @@ export class NetworkVpcStack extends AcceleratorStack {
     });
   }
 
+  // Create Vpn Connections for Virtual Private Gateways
+  private createVpnConnection(vpc: Vpc) {
+    for (const cgw of this.props.networkConfig.customerGateways ?? []) {
+      for (const vpnConnection of cgw.vpnConnections ?? []) {
+        if (vpnConnection.vpc === vpc.name) {
+          const customerGatewayId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            `/accelerator/network/customerGateways/${cgw.name}/id`,
+          );
+          const virtualPrivateGatewayId = vpc.virtualPrivateGateway!.gatewayId;
+          Logger.info(
+            `[network-vpc-stack] Creating Vpn Connection with Customer Gateway ${cgw.name} to the VPC ${vpnConnection.vpc}`,
+          );
+          new VpnConnection(this, pascalCase(`${vpnConnection.vpc}-VgwVpnConnection`), {
+            name: vpnConnection.name,
+            customerGatewayId: customerGatewayId,
+            staticRoutesOnly: vpnConnection.staticRoutesOnly,
+            tags: vpnConnection.tags,
+            virtualPrivateGateway: virtualPrivateGatewayId,
+            vpnTunnelOptionsSpecifications: vpnConnection.tunnelSpecifications,
+          });
+        }
+      }
+    }
+  }
   /**
    * Set IPAM pool map
    * @param props
