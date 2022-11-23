@@ -129,6 +129,20 @@ export class SecurityConfigTypes {
   });
 
   /**
+   * AWS GuardDuty S3 Protection configuration.
+   */
+  static readonly guardDutyEksProtectionConfig = t.interface({
+    /**
+     * Indicates whether AWS GuardDuty EKS Protection enabled.
+     */
+    enable: t.boolean,
+    /**
+     * List of AWS Region names to be excluded from configuring Amazon GuardDuty EKS Protection
+     */
+    excludeRegions: t.optional(t.array(t.region)),
+  });
+
+  /**
    * AWS GuardDuty Export Findings configuration.
    */
   static readonly guardDutyExportFindingsConfig = t.interface({
@@ -164,9 +178,13 @@ export class SecurityConfigTypes {
      */
     excludeRegions: t.optional(t.array(t.region)),
     /**
-     * AWS GuardDuty Export Findings configuration.
+     * AWS GuardDuty S3 Protection
      */
     s3Protection: this.guardDutyS3ProtectionConfig,
+    /**
+     * AWS EKS Protection
+     */
+    eksProtection: t.optional(this.guardDutyEksProtectionConfig),
     /**
      * AWS GuardDuty Export Findings configuration.
      */
@@ -653,6 +671,28 @@ export class GuardDutyS3ProtectionConfig implements t.TypeOf<typeof SecurityConf
 }
 
 /**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig} / {@link GuardDutyEksProtectionConfig}*
+ *
+ * AWS GuardDuty EKS Protection configuration.
+ *
+ * @example
+ * ```
+ * enable: true
+ * excludeRegions: []
+ * ```
+ */
+export class GuardDutyEksProtectionConfig implements t.TypeOf<typeof SecurityConfigTypes.guardDutyEksProtectionConfig> {
+  /**
+   * Indicates whether AWS GuardDuty EKS Protection enabled.
+   */
+  readonly enable = false;
+  /**
+   * List of AWS Region names to be excluded from configuring Amazon GuardDuty EKS Protection
+   */
+  readonly excludeRegions: t.Region[] = [];
+}
+
+/**
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link GuardDutyConfig} / {@link GuardDutyExportFindingsConfig}*
  *
  * AWS GuardDuty Export Findings configuration.
@@ -700,6 +740,9 @@ export class GuardDutyExportFindingsConfig
  *   s3Protection:
  *     enable: true
  *     excludeRegions: []
+ *   eksProtection:
+ *     enable: true
+ *     excludedRegions: []
  *   exportConfiguration:
  *     enable: true
  *     overrideExisting: true
@@ -722,6 +765,11 @@ export class GuardDutyConfig implements t.TypeOf<typeof SecurityConfigTypes.guar
    * @type object
    */
   readonly s3Protection: GuardDutyS3ProtectionConfig = new GuardDutyS3ProtectionConfig();
+  /**
+   * AWS GuardDuty EKS Protection configuration.
+   * @type object
+   */
+  readonly eksProtection: GuardDutyEksProtectionConfig | undefined = undefined;
   /**
    * AWS GuardDuty Export Findings configuration.
    * @type object
@@ -1052,6 +1100,9 @@ export class SsmAutomationConfig implements t.TypeOf<typeof SecurityConfigTypes.
  *     enable: true
  *     excludeRegions: []
  *     s3Protection:
+ *       enable: true
+ *       excludeRegions: []
+ *     eksProtection:
  *       enable: true
  *       excludeRegions: []
  *     exportConfiguration:

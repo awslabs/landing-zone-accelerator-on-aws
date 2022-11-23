@@ -190,6 +190,8 @@ export class SecurityAuditStack extends AcceleratorStack {
 
         const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
           enableS3Protection: this.props.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
+          enableEksProtection:
+            this.props.securityConfig.centralSecurityServices.guardduty.eksProtection?.enable ?? false,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
         });
@@ -204,6 +206,8 @@ export class SecurityAuditStack extends AcceleratorStack {
               this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.exportFrequency ??
               'FIFTEEN_MINUTES',
             enableS3Protection: this.props.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
+            enableEksProtection:
+              this.props.securityConfig.centralSecurityServices.guardduty.eksProtection?.enable ?? false,
             kmsKey: this.cloudwatchKey,
             logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           }).node.addDependency(guardDutyMembers);

@@ -142,6 +142,7 @@ Object {
             "Arn",
           ],
         },
+        "enableEksProtection": true,
         "enableS3Protection": true,
         "exportFrequency": "FIFTEEN_MINUTES",
         "region": Object {
