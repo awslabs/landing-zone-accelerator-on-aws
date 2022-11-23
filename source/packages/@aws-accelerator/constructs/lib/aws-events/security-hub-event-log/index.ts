@@ -18,6 +18,7 @@ import * as uuid from 'uuid';
 AWS.config.logger = console;
 const solutionId = process.env['SOLUTION_ID'];
 const logsClient = new AWS.CloudWatchLogs({ customUserAgent: solutionId });
+const snsClient = new AWS.SNS({ customUserAgent: solutionId });
 
 export async function handler(event: AWSLambda.ScheduledEvent) {
   // Make sure event comes from Security Hub if not do not process
@@ -28,6 +29,8 @@ export async function handler(event: AWSLambda.ScheduledEvent) {
   // Check the account for log group /AWSAccelerator-SecurityHub
   // Create log group if none is found
   await checkLogGroup();
+
+  await publishEventToSns(event);
 
   // Send event to CloudWatchLogs
   await publishEventToLogs(event);
@@ -46,6 +49,61 @@ export async function publishEventToLogs(input: AWSLambda.ScheduledEvent) {
       })
       .promise(),
   );
+}
+
+export async function publishEventToSns(input: AWSLambda.ScheduledEvent) {
+  const snsTopicArn = process.env['SNS_TOPIC_ARN'];
+  const notificationLevel = process.env['NOTIFICATION_LEVEL'];
+
+  if (!snsTopicArn || !notificationLevel) {
+    console.log('Either no snsTopic or notificationLevel provided, skipping notification');
+    return;
+  }
+  try {
+    const severity = input.detail['findings'][0]['Severity']['Label'];
+
+    console.log(`***Severity: ${severity}***`);
+    console.log(`***NotificationLevel: ${notificationLevel}***`);
+    let sendNotification = false;
+    switch (notificationLevel) {
+      case 'CRITICAL':
+        if (severity === 'CRITICAL') {
+          sendNotification = true;
+        }
+        break;
+      case 'HIGH':
+        if (severity === 'HIGH' || severity === 'CRITICAL') {
+          sendNotification = true;
+        }
+        break;
+      case 'MEDIUM':
+        if (severity === 'MEDIUM' || severity === 'HIGH' || severity === 'CRITICAL') {
+          sendNotification = true;
+        }
+        break;
+      case 'LOW':
+        if (severity === 'LOW' || severity === 'MEDIUM' || severity === 'HIGH' || severity === 'CRITICAL') {
+          sendNotification = true;
+        }
+        break;
+      default:
+        sendNotification = true;
+    }
+    if (sendNotification) {
+      await throttlingBackOff(() =>
+        snsClient
+          .publish({
+            TopicArn: snsTopicArn,
+            Subject: `SecurityHub ${severity} Notification`,
+            Message: JSON.stringify(input.detail['findings'][0], null, 2),
+          })
+          .promise(),
+      );
+    }
+  } catch (e) {
+    console.error(`***Failed SNS notification processing***`);
+    console.error(e);
+  }
 }
 
 export async function checkLogGroup() {
@@ -69,7 +127,7 @@ export async function checkLogGroup() {
       // checked all log groups. They might be similar prefix but they do not have exact name.
       // Or there is no log group with this specific prefix
       // Create one with exact name
-      console.log(`Creating log group: ${securityHubLogGroupName}`);
+      //console.log(`Creating log group: ${securityHubLogGroupName}`);
       await throttlingBackOff(() => logsClient.createLogGroup({ logGroupName: securityHubLogGroupName }).promise());
     }
   } while (nextToken);

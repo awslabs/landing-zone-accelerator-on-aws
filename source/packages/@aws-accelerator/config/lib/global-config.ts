@@ -154,6 +154,16 @@ export abstract class GlobalConfigTypes {
     vaults: t.array(this.vaultConfig),
   });
 
+  static readonly snsTopicConfig = t.interface({
+    name: t.nonEmptyString,
+    emailAddresses: t.array(t.nonEmptyString),
+  });
+
+  static readonly snsConfig = t.interface({
+    deploymentTargets: t.optional(t.deploymentTargets),
+    topics: t.optional(t.array(this.snsTopicConfig)),
+  });
+
   static readonly globalConfig = t.interface({
     homeRegion: t.nonEmptyString,
     enabledRegions: t.array(t.region),
@@ -165,6 +175,7 @@ export abstract class GlobalConfigTypes {
     logging: GlobalConfigTypes.loggingConfig,
     reports: t.optional(GlobalConfigTypes.reportConfig),
     backup: t.optional(GlobalConfigTypes.backupConfig),
+    snsTopics: t.optional(GlobalConfigTypes.snsConfig),
   });
 }
 
@@ -880,6 +891,75 @@ export class BackupConfig implements t.TypeOf<typeof GlobalConfigTypes.backupCon
 }
 
 /**
+ *
+ * *{@link GlobalConfig} / {@link SnsConfig} / {@link SnsTopicConfig}*
+ *
+ * SNS Topics Configuration
+ *
+ * To send CloudWatch Alarms and SecurityHub notifications
+ * you will need to configure at least one SNS Topic
+ * For SecurityHub notification you will need
+ * to set the deployment target to Root in order
+ * to receive notifications from all accounts
+ *
+ * @example
+ * ```
+ * snsTopics:
+ *   depoymentTargets:
+ *     organizationalUnits:
+ *       - Root
+ *     topics:
+ *       - name: Security
+ *         emailAddresses:
+ *           - SecurityNotifications@example.com
+ * ```
+ */
+export class SnsTopicConfig implements t.TypeOf<typeof GlobalConfigTypes.snsTopicConfig> {
+  /**
+   * *{@link GlobalConfig} / {@link SnsTopicConfig} / {@link TopicConfig}*
+   *
+   * SNS Topic Config
+   *
+   * @example
+   * ```
+   * - name: Security
+   *   emailAddresses:
+   *     - SecurityNotifications@example.com
+   * ```
+   */
+  /**
+   * List of SNS Topics definition
+   */
+
+  /**
+   * SNS Topic Name
+   */
+  readonly name = 'Security';
+
+  /**
+   * List of email address for notification
+   */
+  readonly emailAddresses = [];
+}
+
+/**
+ * *{@link globalConfig} / {@link SnsConfig}*
+ */
+export class SnsConfig implements t.TypeOf<typeof GlobalConfigTypes.snsConfig> {
+  /**
+   * Deployment targets for SNS topics
+   * SNS Topics will always be deployed to the Log Archive account
+   * email subscriptions will be in the Log Archive account
+   * All other accounts and regions will forward to the Logging account
+   */
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+  /**
+   * List of SNS Topics
+   */
+  readonly topics: SnsTopicConfig[] = [];
+}
+
+/**
  * Accelerator global configuration
  */
 export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalConfig> {
@@ -1045,6 +1125,29 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   readonly backup: BackupConfig | undefined = undefined;
 
   /**
+   * SNS Topics Configuration
+   *
+   * To send CloudWatch Alarms and SecurityHub notifications
+   * you will need to configure at least one SNS Topic
+   * For SecurityHub notification you will need
+   * to set the deployment target to Root in order
+   * to receive notifications from all accounts
+   *
+   * @example
+   * ```
+   * snsTopics:
+   *   depoymentTargets:
+   *     organizationalUnits:
+   *       - Root
+   *     topics:
+   *       - name: Security
+   *         emailAddresses:
+   *           - SecurityNotifications@example.com
+   * ```
+   */
+  readonly snsTopics: SnsConfig | undefined = undefined;
+
+  /**
    *
    * @param props
    * @param values
@@ -1103,6 +1206,8 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         // cloudtrail settings validation
         //
         this.validateCloudTrailSettings(values, errors);
+        // snsTopics settings validation
+        this.validateSnsTopics(values, errors);
       }
     } else {
       this.homeRegion = props.homeRegion;
@@ -1260,6 +1365,17 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     }
   }
 
+  private validateSnsTopics(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>, errors: string[]) {
+    if (values.snsTopics) {
+      for (const snsTopic of values.snsTopics.topics ?? []) {
+        console.log(`email count: ${snsTopic.emailAddresses.length}`);
+        if (snsTopic.emailAddresses.length < 1) {
+          errors.push(`Must be at least one email address for the snsTopic named ${snsTopic.name}`);
+        }
+      }
+    }
+  }
+
   // Check if input is valid array and proceed to check schema
   private checkForArray(inputStr: string, errorMessage: string, errors: string[]) {
     if (Array.isArray(inputStr)) {
@@ -1305,6 +1421,10 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         );
       }
     }
+  }
+
+  public getSnsTopicNames(): string[] {
+    return this.snsTopics?.topics.flatMap(item => item.name) ?? [];
   }
 
   /**

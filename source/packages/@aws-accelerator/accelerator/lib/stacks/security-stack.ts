@@ -230,6 +230,30 @@ export class SecurityStack extends AcceleratorStack {
             conditions: { Bool: { 'kms:GrantIsForAWSResource': 'true' } },
           }),
         );
+        ebsEncryptionKey.addToResourcePolicy(
+          new iam.PolicyStatement({
+            sid: 'Account Access',
+            effect: cdk.aws_iam.Effect.ALLOW,
+            principals: [new cdk.aws_iam.AccountPrincipal(cdk.Stack.of(this).account)],
+            actions: ['kms:*'],
+            resources: ['*'],
+          }),
+        );
+        ebsEncryptionKey.addToResourcePolicy(
+          new iam.PolicyStatement({
+            sid: 'ec2',
+            effect: cdk.aws_iam.Effect.ALLOW,
+            principals: [new cdk.aws_iam.AnyPrincipal()],
+            actions: ['kms:*'],
+            resources: ['*'],
+            conditions: {
+              StringEquals: {
+                'kms:CallerAccount': cdk.Stack.of(this).account,
+                'kms:ViaService': `ec2.${cdk.Stack.of(this).account}.${cdk.Aws.URL_SUFFIX}`,
+              },
+            },
+          }),
+        );
       }
       new EbsDefaultEncryption(this, 'EbsDefaultVolumeEncryption', {
         ebsEncryptionKmsKey: ebsEncryptionKey,

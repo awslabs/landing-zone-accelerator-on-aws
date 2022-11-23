@@ -7,8 +7,16 @@ Object {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/lambda/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
       "Default": "/accelerator/kms/s3/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratorkmssnstopickeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/snstopic/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
@@ -1778,7 +1786,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -1807,7 +1815,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -1836,7 +1844,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -1865,7 +1873,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -1894,7 +1902,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -1923,7 +1931,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -1952,7 +1960,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -1981,7 +1989,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -2010,7 +2018,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -2039,7 +2047,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -2068,7 +2076,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -2097,7 +2105,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -2126,7 +2134,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -2155,7 +2163,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -2184,7 +2192,7 @@ Object {
                 Object {
                   "Ref": "AWS::Partition",
                 },
-                ":sns:us-east-1:222222222222:aws-accelerator-LowNotifications",
+                ":sns:us-east-1:111111111111:aws-accelerator-Security",
               ],
             ],
           },
@@ -2744,7 +2752,27 @@ Object {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": Object {
+          "Variables": Object {
+            "NOTIFICATION_LEVEL": "HIGH",
+            "SNS_TOPIC_ARN": Object {
+              "Fn::Join": Array [
+                "",
+                Array [
+                  "arn:",
+                  Object {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":sns:us-east-1:111111111111:aws-accelerator-Security",
+                ],
+              ],
+            },
+          },
+        },
         "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Ref": "SsmParameterValueacceleratorkmslambdakeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
         "MemorySize": 256,
         "Role": Object {
           "Fn::GetAtt": Array [
@@ -2753,7 +2781,7 @@ Object {
           ],
         },
         "Runtime": "nodejs14.x",
-        "Timeout": 600,
+        "Timeout": 120,
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -2862,6 +2890,34 @@ Object {
                   ],
                 ],
               },
+            },
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":sns:us-east-1:111111111111:aws-accelerator-Security",
+                  ],
+                ],
+              },
+              "Sid": "sns",
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:GenerateDataKey",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Ref": "SsmParameterValueacceleratorkmssnstopickeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+              "Sid": "kms",
             },
           ],
           "Version": "2012-10-17",

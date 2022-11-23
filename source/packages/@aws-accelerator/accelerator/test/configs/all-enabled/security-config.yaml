@@ -21,13 +21,6 @@ centralSecurityServices:
   s3PublicAccessBlock:
     enable: true
     excludeAccounts: []
-  snsSubscriptions:
-    - level: High
-      email: <notify-high>@example.com <----- UPDATE EMAIL ADDRESS
-    - level: Medium
-      email: <notify-medium>@example.com <----- UPDATE EMAIL ADDRESS
-    - level: Low
-      email: <notify-low>@example.com <----- UPDATE EMAIL ADDRESS
   macie:
     enable: true
     excludeRegions: []
@@ -56,6 +49,8 @@ centralSecurityServices:
   securityHub:
     enable: true
     regionAggregation: true
+    snsTopicName: Security
+    notificationLevel: HIGH
     excludeRegions: []
     standards:
       - name: AWS Foundational Security Best Practices v1.0.0
@@ -501,7 +496,7 @@ cloudWatch:
         # CIS 1.1 – Avoid the use of the "root" account
         - alarmName: CIS-1.1-RootAccountUsage
           alarmDescription: Alarm for usage of "root" account
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: RootAccountUsage
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -513,7 +508,7 @@ cloudWatch:
         # CIS 3.1 – Ensure a log metric filter and alarm exist for unauthorized API calls
         - alarmName: CIS-3.1-UnauthorizedAPICalls
           alarmDescription: Alarm for unauthorized API calls
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: UnauthorizedAPICalls
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -525,7 +520,7 @@ cloudWatch:
         # CIS 3.2 – Ensure a log metric filter and alarm exist for AWS Management Console sign-in without MFA
         - alarmName: CIS-3.2-ConsoleSigninWithoutMFA
           alarmDescription: Alarm for AWS Management Console sign-in without MFA
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: ConsoleSigninWithoutMFA
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -537,7 +532,7 @@ cloudWatch:
         # CIS 3.3 – Ensure a log metric filter and alarm exist for usage of "root" account
         - alarmName: CIS-3.3-RootAccountUsage
           alarmDescription: Alarm for usage of "root" account
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: RootAccountUsage
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -549,7 +544,7 @@ cloudWatch:
         # CIS 3.4 – Ensure a log metric filter and alarm exist for IAM policy changes
         - alarmName: CIS-3.4-IAMPolicyChanges
           alarmDescription: Alarm for IAM policy changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: IAMPolicyChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -561,7 +556,7 @@ cloudWatch:
         # CIS 3.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
         - alarmName: CIS-3.5-CloudTrailChanges
           alarmDescription: Alarm for CloudTrail configuration changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: CloudTrailChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -573,7 +568,7 @@ cloudWatch:
         # CIS 3.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
         - alarmName: CIS-3.6-ConsoleAuthenticationFailure
           alarmDescription: Alarm exist for AWS Management Console authentication failures
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: ConsoleAuthenticationFailure
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -585,7 +580,7 @@ cloudWatch:
         # CIS 3.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
         - alarmName: CIS-3.7-DisableOrDeleteCMK
           alarmDescription: Alarm for disabling or scheduled deletion of customer created CMKs
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: DisableOrDeleteCMK
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -597,7 +592,7 @@ cloudWatch:
         # CIS 3.8 – Ensure a log metric filter and alarm exist for S3 bucket policy changes
         - alarmName: CIS-3.8-S3BucketPolicyChanges.
           alarmDescription: Alarm for S3 bucket policy changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: S3BucketPolicyChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -609,7 +604,7 @@ cloudWatch:
         # CIS 3.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
         - alarmName: CIS-3.9-AWSConfigChanges
           alarmDescription: Alarm for AWS Config configuration changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: AWSConfigChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -621,7 +616,7 @@ cloudWatch:
         # CIS 3.10 – Ensure a log metric filter and alarm exist for security group changes
         - alarmName: CIS-3.10-SecurityGroupChanges
           alarmDescription: Alarm for security group changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: SecurityGroupChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -633,7 +628,7 @@ cloudWatch:
         # CIS 3.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
         - alarmName: CIS-3.11-NetworkACLChanges
           alarmDescription: Alarm for changes to Network Access Control Lists (NACL)
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: NetworkACLChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -645,7 +640,7 @@ cloudWatch:
         # CIS 3.12 – Ensure a log metric filter and alarm exist for changes to network gateways
         - alarmName: CIS-3.12-NetworkGatewayChanges
           alarmDescription: Alarm for changes to network gateways
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: NetworkGatewayChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -657,7 +652,7 @@ cloudWatch:
         # CIS 3.13 – Ensure a log metric filter and alarm exist for route table changes
         - alarmName: CIS-3.13-RouteTableChanges
           alarmDescription: Alarm for route table changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: RouteTableChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -669,7 +664,7 @@ cloudWatch:
         # CIS 3.14 – Ensure a log metric filter and alarm exist for VPC changes
         - alarmName: CIS-3.14-VPCChanges
           alarmDescription: Alarm for VPC changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: VPCChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold

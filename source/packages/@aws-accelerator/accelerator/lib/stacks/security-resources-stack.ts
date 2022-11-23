@@ -62,6 +62,8 @@ type CustomConfigRuleType = config.ManagedRule | config.CustomRule | undefined;
 export class SecurityResourcesStack extends AcceleratorStack {
   readonly centralLogS3Key: cdk.aws_kms.IKey;
   readonly cloudwatchKey: cdk.aws_kms.IKey;
+  readonly snsKey: cdk.aws_kms.IKey | undefined;
+  readonly lambdaKey: cdk.aws_kms.IKey;
   readonly auditAccountId: string;
   readonly logArchiveAccountId: string;
   readonly stackProperties: AcceleratorStackProps;
@@ -98,6 +100,32 @@ export class SecurityResourcesStack extends AcceleratorStack {
         AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
       ),
     );
+
+    this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
+      this,
+      'AcceleratorGetLambdaKey',
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
+      ),
+    );
+
+    // if sns topics defined and this is the log archive account or
+    // sns topics defined and this is a deployment target for sns topics
+    // get sns key
+    if (
+      (props.globalConfig.snsTopics && cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) ||
+      (props.globalConfig.snsTopics && this.isIncluded(props.globalConfig.snsTopics.deploymentTargets))
+    ) {
+      this.snsKey = cdk.aws_kms.Key.fromKeyArn(
+        this,
+        'AcceleratorGetSnsKey',
+        cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          AcceleratorStack.ACCELERATOR_SNS_TOPIC_KEY_ARN_PARAMETER_NAME,
+        ),
+      );
+    }
 
     // AWS Config - Set up recorder and delivery channel, only if Control Tower
     // is not being used. Else the Control Tower SCP will block these calls from
@@ -205,21 +233,39 @@ export class SecurityResourcesStack extends AcceleratorStack {
           treatMissingData: this.getTreatMissingData(alarmItem.treatMissingData),
         });
 
-        alarm.addAlarmAction(
-          new cdk.aws_cloudwatch_actions.SnsAction(
-            cdk.aws_sns.Topic.fromTopicArn(
-              this,
-              `${pascalCase(alarmItem.alarmName)}Topic`,
-              cdk.Stack.of(this).formatArn({
-                service: 'sns',
-                region: cdk.Stack.of(this).region,
-                account: this.props.accountsConfig.getAuditAccountId(),
-                resource: `aws-accelerator-${alarmItem.snsAlertLevel}Notifications`,
-                arnFormat: cdk.ArnFormat.NO_RESOURCE_NAME,
-              }),
+        if (this.props.globalConfig.snsTopics) {
+          alarm.addAlarmAction(
+            new cdk.aws_cloudwatch_actions.SnsAction(
+              cdk.aws_sns.Topic.fromTopicArn(
+                this,
+                `${pascalCase(alarmItem.alarmName)}Topic`,
+                cdk.Stack.of(this).formatArn({
+                  service: 'sns',
+                  region: cdk.Stack.of(this).region,
+                  account: cdk.Stack.of(this).account,
+                  resource: `aws-accelerator-${alarmItem.snsTopicName}`,
+                  arnFormat: cdk.ArnFormat.NO_RESOURCE_NAME,
+                }),
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          alarm.addAlarmAction(
+            new cdk.aws_cloudwatch_actions.SnsAction(
+              cdk.aws_sns.Topic.fromTopicArn(
+                this,
+                `${pascalCase(alarmItem.alarmName)}Topic`,
+                cdk.Stack.of(this).formatArn({
+                  service: 'sns',
+                  region: cdk.Stack.of(this).region,
+                  account: this.props.accountsConfig.getAuditAccountId(),
+                  resource: `aws-accelerator-${alarmItem.snsAlertLevel}Notifications`,
+                  arnFormat: cdk.ArnFormat.NO_RESOURCE_NAME,
+                }),
+              ),
+            ),
+          );
+        }
       }
     }
   }
@@ -977,7 +1023,14 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
   private securityHubEventForwardToLogs() {
     if (this.props.securityConfig.centralSecurityServices.securityHub.enable) {
-      new SecurityHubEventsLog(this, 'SecurityHubEventsLog');
+      new SecurityHubEventsLog(this, 'SecurityHubEventsLog', {
+        snsTopicArn: `arn:${cdk.Stack.of(this).partition}:sns:${cdk.Stack.of(this).region}:${
+          cdk.Stack.of(this).account
+        }:aws-accelerator-${this.props.securityConfig.centralSecurityServices.securityHub.snsTopicName}`,
+        snsKmsKey: this.snsKey,
+        notificationLevel: this.props.securityConfig.centralSecurityServices.securityHub.notificationLevel,
+        lambdaKey: this.lambdaKey,
+      });
       Logger.debug(`Stack: ${this.stackName}`);
       NagSuppressions.addResourceSuppressionsByPath(
         this,

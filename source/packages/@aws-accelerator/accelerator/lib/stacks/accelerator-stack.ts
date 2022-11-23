@@ -214,13 +214,19 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * SecurityAudit stack creates this key to encrypt AWS SNS topics
    */
   protected static readonly ACCELERATOR_SNS_KEY_ALIAS = 'alias/accelerator/kms/sns/key';
-
+  protected static readonly ACCELERATOR_SNS_TOPIC_KEY_ALIAS = 'alias/accelerator/kms/snstopic/key';
   /**
    * Accelerator SNS encryption key description
    * SecurityAudit stack creates this key to encrypt AWS SNS topics
    */
   protected static readonly ACCELERATOR_SNS_KEY_DESCRIPTION = 'AWS Accelerator SNS Kms Key';
-
+  protected static readonly ACCELERATOR_SNS_TOPIC_KEY_DESCRIPTION = 'AWS Accelerator SNS Topic Kms Key';
+  /**
+   * Accelerator Central SNS Topic key arn
+   */
+  protected static readonly ACCELERATOR_SNS_TOPIC_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/snstopic/key-arn';
+  protected static readonly ACCELERATOR_SSM_SNS_TOPIC_PARAMETER_ACCESS_ROLE_NAME =
+    'AWSAccelerator-SnsTopic-KeyArnParam-Role';
   /**
    * Accelerator Lambda Log encryption key alias
    * Accounts stack creates this key to encrypt lambda environment variables

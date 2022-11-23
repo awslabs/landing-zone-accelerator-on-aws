@@ -1,7 +1,7 @@
 {
-  "name": "@aws-accelerator/load-config-table",
+  "name": "@aws-accelerator/lambdas-sns-topic-forwarder",
   "version": "0.0.0",
-  "description": "Accelerator Lambda",
+  "description": "Accelerator Lambda SNS Topic Forwarder",
   "license": "Apache-2.0",
   "author": {
     "name": "Amazon Web Services",
@@ -42,11 +42,6 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "@aws-accelerator/config": "^0.0.0",
-    "@aws-sdk/client-dynamodb": "3.92.0",
-    "@aws-sdk/lib-dynamodb": "3.92.0",
-    "@aws-sdk/client-cloudformation": "3.92.0",
-    "@aws-sdk/client-s3": "3.92.0",
-    "js-yaml": "4.1.0"
+    "@aws-sdk/client-sns": "3.87.0"
   }
 }
