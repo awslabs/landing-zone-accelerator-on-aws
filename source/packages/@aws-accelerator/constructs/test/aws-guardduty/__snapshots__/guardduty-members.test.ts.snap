@@ -171,6 +171,7 @@ Object {
             "Arn",
           ],
         },
+        "enableEksProtection": true,
         "enableS3Protection": true,
         "partition": Object {
           "Ref": "AWS::Partition",

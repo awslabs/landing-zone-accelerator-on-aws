@@ -22,6 +22,7 @@ const stack = new cdk.Stack();
 
 new GuardDutyMembers(stack, 'GuardDutyMembers', {
   enableS3Protection: true,
+  enableEksProtection: true,
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
 });

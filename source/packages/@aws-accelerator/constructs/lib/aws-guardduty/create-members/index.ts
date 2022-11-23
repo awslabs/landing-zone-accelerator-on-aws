@@ -13,6 +13,7 @@
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as AWS from 'aws-sdk';
+import { GuardDuty } from 'aws-sdk';
 AWS.config.logger = console;
 
 /**
@@ -31,6 +32,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const region = event.ResourceProperties['region'];
   const partition = event.ResourceProperties['partition'];
   const enableS3Protection: boolean = event.ResourceProperties['enableS3Protection'] === 'true';
+  const enableEksProtection: boolean = event.ResourceProperties['enableEksProtection'] === 'true';
   const solutionId = process.env['SOLUTION_ID'];
 
   let organizationsClient: AWS.Organizations;
@@ -47,6 +49,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const detectorId = await getDetectorId(guardDutyClient);
 
   let nextToken: string | undefined = undefined;
+
+  console.log(`EnableS3Protection: ${enableS3Protection}`);
+  console.log(`EnableEksProtection: ${enableEksProtection}`);
 
   switch (event.RequestType) {
     case 'Create':
@@ -68,12 +73,17 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         guardDutyClient.createMembers({ DetectorId: detectorId!, AccountDetails: allAccounts }).promise(),
       );
 
+      const dataSources: GuardDuty.OrganizationDataSourceConfigurations = {};
+      dataSources.S3Logs = { AutoEnable: enableS3Protection };
+      dataSources.Kubernetes = { AuditLogs: { AutoEnable: enableEksProtection } };
+
+      console.log('starting - UpdateOrganizationConfiguration');
       await throttlingBackOff(() =>
         guardDutyClient
           .updateOrganizationConfiguration({
             AutoEnable: true,
             DetectorId: detectorId!,
-            DataSources: { S3Logs: { AutoEnable: enableS3Protection } },
+            DataSources: dataSources,
           })
           .promise(),
       );
@@ -88,7 +98,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
           guardDutyClient.listMembers({ DetectorId: detectorId!, NextToken: nextToken }).promise(),
         );
         for (const member of page.Members ?? []) {
-          console.log(member);
           existingMemberAccountIds.push(member.AccountId!);
         }
         nextToken = page.NextToken;

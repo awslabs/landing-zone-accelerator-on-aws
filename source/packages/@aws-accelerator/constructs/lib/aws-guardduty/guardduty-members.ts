@@ -25,6 +25,10 @@ export interface GuardDutyMembersProps {
    */
   readonly enableS3Protection: boolean;
   /**
+   * EKS Protection enable flag
+   */
+  readonly enableEksProtection: boolean;
+  /**
    * Custom resource lambda log group encryption key
    */
   readonly kmsKey: cdk.aws_kms.IKey;
@@ -92,6 +96,7 @@ export class GuardDutyMembers extends Construct {
         region: cdk.Stack.of(this).region,
         partition: cdk.Aws.PARTITION,
         enableS3Protection: props.enableS3Protection,
+        enableEksProtection: props.enableEksProtection,
       },
     });
 

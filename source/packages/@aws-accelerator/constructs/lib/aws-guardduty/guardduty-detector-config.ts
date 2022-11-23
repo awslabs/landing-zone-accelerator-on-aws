@@ -36,6 +36,10 @@ export interface GuardDutyDetectorConfigProps {
    */
   readonly enableS3Protection: boolean;
   /**
+   * EKS Protection
+   */
+  readonly enableEksProtection: boolean;
+  /**
    * Custom resource lambda log group encryption key
    */
   readonly kmsKey: cdk.aws_kms.IKey;
@@ -82,6 +86,7 @@ export class GuardDutyDetectorConfig extends Construct {
         region: cdk.Stack.of(this).region,
         exportFrequency: props.exportFrequency,
         enableS3Protection: props.enableS3Protection,
+        enableEksProtection: props.enableEksProtection,
       },
     });
 
