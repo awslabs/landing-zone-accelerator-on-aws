@@ -20,7 +20,12 @@ const testNamePrefix = 'Construct(SecurityHubEventsLog): ';
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new SecurityHubEventsLog(stack, 'SecurityHubEventsLog');
+new SecurityHubEventsLog(stack, 'SecurityHubEventsLog', {
+  snsTopicArn: 'arn:aws:us-east-1:999999999999:aws-accelerator-test',
+  snsKmsKey: new cdk.aws_kms.Key(stack, 'CustomSnsKey', {}),
+  lambdaKey: new cdk.aws_kms.Key(stack, 'CustomLambdaKey', {}),
+  notificationLevel: 'INFORMATIONAL',
+});
 
 /**
  * SecurityHubEventsLog construct test

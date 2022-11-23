@@ -421,6 +421,10 @@ async function getOrganizationAccounts(
 ): Promise<AWS.Organizations.Account[]> {
   const organizationAccounts: AWS.Organizations.Account[] = [];
   for (const ouKey of organizationalUnitKeys) {
+    if (!ouKey.awsKey) {
+      validationErrors.push(`Organizational Unit "${ouKey.acceleratorKey}" not found.`);
+      continue;
+    }
     let nextToken: string | undefined = undefined;
     do {
       const page = await throttlingBackOff(() =>

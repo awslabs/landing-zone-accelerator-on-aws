@@ -124,6 +124,19 @@ Object {
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
+    "AcceleratorCentralSnsKmsArnParameter4E5BD663": Object {
+      "Properties": Object {
+        "Name": "/accelerator/kms/snstopic/key-arn",
+        "Type": "String",
+        "Value": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorSnsTopicKey4E909F1D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "AcceleratorCloudWatchKeyAlias6842582C": Object {
       "Properties": Object {
         "AliasName": "alias/accelerator/kms/cloudwatch/key",
@@ -360,6 +373,153 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "AcceleratorSnsTopicKey4E909F1D": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "Description": "AWS Accelerator SNS Topic Kms Key",
+        "EnableKeyRotation": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:GenerateDataKey",
+                "kms:Decrypt",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgId": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "sns.",
+                      Object {
+                        "Ref": "AWS::URLSuffix",
+                      },
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+              "Sid": "sns",
+            },
+            Object {
+              "Action": Array [
+                "kms:GenerateDataKey",
+                "kms:Decrypt",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:SourceAccount": "333333333333",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "cloudwatch.",
+                      Object {
+                        "Ref": "AWS::URLSuffix",
+                      },
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+              "Sid": "cloudwatch",
+            },
+            Object {
+              "Action": Array [
+                "kms:GenerateDataKey",
+                "kms:Decrypt",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:SourceAccount": "333333333333",
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "events.",
+                      Object {
+                        "Ref": "AWS::URLSuffix",
+                      },
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+              "Sid": "events",
+            },
+            Object {
+              "Action": Array [
+                "kms:GenerateDataKey",
+                "kms:Decrypt",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgId": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "crossaccount",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AcceleratorSnsTopicKeyAliasCCEBAF56": Object {
+      "Properties": Object {
+        "AliasName": "alias/accelerator/kms/snstopic/key",
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorSnsTopicKey4E909F1D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
     "AccessLogsBucketFA218D2A": Object {
       "DeletionPolicy": "Retain",
       "Metadata": Object {
@@ -484,6 +644,121 @@ Object {
         "Description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
       },
       "Type": "AWS::IAM::ServiceLinkedRole",
+    },
+    "CrossAccountCentralSnsTopicKMSArnSsmParamAccessRoleFA0EB249": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific role arns.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "ssm:GetParameters",
+                    "ssm:GetParameter",
+                  ],
+                  "Condition": Object {
+                    "ArnLike": Object {
+                      "aws:PrincipalARN": Array [
+                        Object {
+                          "Fn::Join": Array [
+                            "",
+                            Array [
+                              "arn:",
+                              Object {
+                                "Ref": "AWS::Partition",
+                              },
+                              ":iam::*:role/AWSAccelerator-*",
+                            ],
+                          ],
+                        },
+                      ],
+                    },
+                    "StringEquals": Object {
+                      "aws:PrincipalOrgID": Object {
+                        "Ref": "Organization29A5FC3F",
+                      },
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":ssm:*:*:parameter/accelerator/kms/snstopic/key-arn",
+                      ],
+                    ],
+                  },
+                },
+                Object {
+                  "Action": "ssm:DescribeParameters",
+                  "Condition": Object {
+                    "ArnLike": Object {
+                      "aws:PrincipalARN": Array [
+                        Object {
+                          "Fn::Join": Array [
+                            "",
+                            Array [
+                              "arn:",
+                              Object {
+                                "Ref": "AWS::Partition",
+                              },
+                              ":iam::*:role/AWSAccelerator-*",
+                            ],
+                          ],
+                        },
+                      ],
+                    },
+                    "StringEquals": Object {
+                      "aws:PrincipalOrgID": Object {
+                        "Ref": "Organization29A5FC3F",
+                      },
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "default",
+          },
+        ],
+        "RoleName": "AWSAccelerator-SnsTopic-KeyArnParam-Role",
+      },
+      "Type": "AWS::IAM::Role",
     },
     "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1": Object {
       "DependsOn": Array [
@@ -2373,6 +2648,104 @@ Object {
       },
       "Type": "Custom::PutPublicAccessBlock",
       "UpdateReplacePolicy": "Delete",
+    },
+    "SecuritySNSTopicE3C1354E": Object {
+      "Properties": Object {
+        "DisplayName": "AWS Accelerator - Security",
+        "KmsMasterKeyId": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorSnsTopicKey4E909F1D",
+            "Arn",
+          ],
+        },
+        "TopicName": "aws-accelerator-Security",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "SecuritySNSTopicPolicyFA391E1F": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "cloudwatch.",
+                      Object {
+                        "Ref": "AWS::URLSuffix",
+                      },
+                    ],
+                  ],
+                },
+              },
+              "Resource": Object {
+                "Ref": "SecuritySNSTopicE3C1354E",
+              },
+              "Sid": "0",
+            },
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "lambda.",
+                      Object {
+                        "Ref": "AWS::URLSuffix",
+                      },
+                    ],
+                  ],
+                },
+              },
+              "Resource": Object {
+                "Ref": "SecuritySNSTopicE3C1354E",
+              },
+              "Sid": "1",
+            },
+            Object {
+              "Action": "sns:Publish",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Object {
+                "Ref": "SecuritySNSTopicE3C1354E",
+              },
+              "Sid": "2",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": Array [
+          Object {
+            "Ref": "SecuritySNSTopicE3C1354E",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
+    },
+    "SecuritySNSTopicnotifysecurityexamplecomUPDATEEMAILADDRESS3E2951A5": Object {
+      "Properties": Object {
+        "Endpoint": "<notify-security>@example.com <----- UPDATE EMAIL ADDRESS",
+        "Protocol": "email",
+        "TopicArn": Object {
+          "Ref": "SecuritySNSTopicE3C1354E",
+        },
+      },
+      "Type": "AWS::SNS::Subscription",
     },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {

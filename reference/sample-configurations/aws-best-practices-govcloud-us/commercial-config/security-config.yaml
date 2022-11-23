@@ -6,7 +6,6 @@ centralSecurityServices:
   s3PublicAccessBlock:
     enable: true
     excludeAccounts: []
-  snsSubscriptions: []
   macie:
     enable: false
     excludeRegions: []

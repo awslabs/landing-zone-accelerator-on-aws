@@ -3,6 +3,76 @@
 exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`] = `
 Object {
   "Resources": Object {
+    "CustomLambdaKey2287F5A9": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomSnsKey2E607E8C": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
     "SecurityHubEventsLogSecurityHubEventsFunction9EF04515": Object {
       "DependsOn": Array [
         "SecurityHubEventsLogSecurityHubEventsFunctionServiceRoleDefaultPolicy519456B0",
@@ -15,7 +85,19 @@ Object {
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
+        "Environment": Object {
+          "Variables": Object {
+            "NOTIFICATION_LEVEL": "INFORMATIONAL",
+            "SNS_TOPIC_ARN": "arn:aws:us-east-1:999999999999:aws-accelerator-test",
+          },
+        },
         "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "CustomLambdaKey2287F5A9",
+            "Arn",
+          ],
+        },
         "MemorySize": 256,
         "Role": Object {
           "Fn::GetAtt": Array [
@@ -24,7 +106,7 @@ Object {
           ],
         },
         "Runtime": "nodejs14.x",
-        "Timeout": 600,
+        "Timeout": 120,
       },
       "Type": "AWS::Lambda::Function",
     },
@@ -137,6 +219,26 @@ Object {
                   ],
                 ],
               },
+            },
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": "arn:aws:us-east-1:999999999999:aws-accelerator-test",
+              "Sid": "sns",
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:GenerateDataKey",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "CustomSnsKey2E607E8C",
+                  "Arn",
+                ],
+              },
+              "Sid": "kms",
             },
           ],
           "Version": "2012-10-17",

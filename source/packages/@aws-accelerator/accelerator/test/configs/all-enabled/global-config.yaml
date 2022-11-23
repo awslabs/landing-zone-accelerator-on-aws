@@ -4,6 +4,14 @@ enabledRegions:
   - us-west-2
 managementAccountAccessRole: AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 3653
+snsTopics:
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+  topics:
+    - name: Security
+      emailAddresses:
+        - <notify-security>@example.com <----- UPDATE EMAIL ADDRESS
 terminationProtection: true
 controlTower:
   enable: true
