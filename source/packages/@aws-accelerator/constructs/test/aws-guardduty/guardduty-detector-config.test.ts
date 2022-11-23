@@ -23,6 +23,7 @@ const stack = new cdk.Stack();
 new GuardDutyDetectorConfig(stack, 'GuardDutyDetectorConfig', {
   exportFrequency: 'FIFTEEN_MINUTES',
   enableS3Protection: true,
+  enableEksProtection: true,
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
 });

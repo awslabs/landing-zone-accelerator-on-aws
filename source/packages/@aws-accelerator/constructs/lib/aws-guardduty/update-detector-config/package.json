@@ -13,7 +13,7 @@
   "scripts": {
     "cleanup": "tsc --build ./ --clean && rm -rf node_modules && rm -rf yarn.lock && rm -rf dist && rm -rf cdk.out",
     "cleanup:tsc": "tsc --build ./ --clean",
-    "build": "esbuild --minify --bundle --outfile=./dist/index.js --platform=node --target=node14 --external:aws-sdk index.ts",
+    "build": "esbuild --minify --bundle --outfile=./dist/index.js --platform=node --target=node14 index.ts",
     "test": "",
     "lint": "eslint --fix  --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" ",
     "precommit": "eslint --max-warnings 0 -c ../../../../../../.eslintrc.json '**/*.{ts,tsx}' --ignore-pattern \"*.d.ts\" "
@@ -41,6 +41,6 @@
   },
   "dependencies": {
     "@aws-accelerator/utils": "^0.0.0",
-    "aws-sdk": "2.1152.0"
+    "aws-sdk": "2.1258.0"
   }
 }
