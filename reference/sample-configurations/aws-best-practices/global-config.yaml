@@ -6,6 +6,14 @@ cloudwatchLogRetentionInDays: 3653
 terminationProtection: true
 centralizeCdkBuckets:
   enable: true
+snsTopics:
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+  topics:
+    - name: Security
+      emailAddresses:
+        - <security-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
 controlTower:
   enable: true
 logging:

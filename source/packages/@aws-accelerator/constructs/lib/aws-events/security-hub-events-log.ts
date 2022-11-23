@@ -14,11 +14,34 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
+export interface SecurityHubEventsLogProps {
+  /**
+   *
+   * SNS Topic Arn that notification will be delivered to
+   */
+  snsTopicArn?: string;
+  /**
+   *
+   * SNS KMS Key
+   */
+  snsKmsKey?: cdk.aws_kms.IKey;
+  /**
+   *
+   * Alert level
+   */
+  notificationLevel?: string;
+  /**
+   *
+   * Account Lambda key for environment encryption
+   */
+  lambdaKey?: cdk.aws_kms.IKey;
+}
+
 /**
  * Send all Security Hub events to CloudWatch Logs
  */
 export class SecurityHubEventsLog extends Construct {
-  constructor(scope: Construct, id: string) {
+  constructor(scope: Construct, id: string, props: SecurityHubEventsLogProps) {
     super(scope, id);
 
     const securityHubEventsRule = new cdk.aws_events.Rule(this, 'SecurityHubEventsRule', {
@@ -34,7 +57,9 @@ export class SecurityHubEventsLog extends Construct {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'security-hub-event-log/dist')),
       handler: 'index.handler',
       memorySize: 256,
-      timeout: cdk.Duration.minutes(10),
+      timeout: cdk.Duration.minutes(2),
+      environmentEncryption: props.lambdaKey,
+      environment: { SNS_TOPIC_ARN: props.snsTopicArn ?? '', NOTIFICATION_LEVEL: props.notificationLevel ?? '' },
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({
           actions: ['logs:CreateLogGroup', 'logs:CreateLogStream'],
@@ -63,6 +88,26 @@ export class SecurityHubEventsLog extends Construct {
         }),
       ],
     });
+
+    if (props.snsTopicArn) {
+      securityHubEventsFunction.addToRolePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'sns',
+          actions: ['sns:Publish'],
+          resources: [props.snsTopicArn!],
+        }),
+      );
+    }
+
+    if (props.snsKmsKey) {
+      securityHubEventsFunction.addToRolePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'kms',
+          actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
+          resources: [props.snsKmsKey!.keyArn],
+        }),
+      );
+    }
 
     // set basic trigger with 5 retries
     securityHubEventsRule.addTarget(

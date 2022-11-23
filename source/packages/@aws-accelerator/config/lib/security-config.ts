@@ -18,6 +18,7 @@ import * as path from 'path';
 import { AccountsConfig } from './accounts-config';
 import * as t from './common-types';
 import { OrganizationConfig } from './organization-config';
+import { GlobalConfig } from './global-config';
 
 /**
  * AWS Accelerator SecurityConfig Types
@@ -25,6 +26,8 @@ import { OrganizationConfig } from './organization-config';
 export class SecurityConfigTypes {
   /**
    * SNS notification subscription configuration.
+   * ***Deprecated***
+   * Replaced by snsTopics in global config
    */
   static readonly snsSubscriptionConfig = t.interface({
     level: t.nonEmptyString,
@@ -250,6 +253,8 @@ export class SecurityConfigTypes {
   static readonly securityHubConfig = t.interface({
     enable: t.boolean,
     regionAggregation: t.optional(t.boolean),
+    snsTopicName: t.optional(t.string),
+    notificationLevel: t.optional(t.string),
     excludeRegions: t.optional(t.array(t.region)),
     standards: t.array(this.securityHubStandardConfig),
   });
@@ -439,7 +444,8 @@ export class SecurityConfigTypes {
   static readonly alarmConfig = t.interface({
     alarmName: t.nonEmptyString,
     alarmDescription: t.nonEmptyString,
-    snsAlertLevel: t.nonEmptyString,
+    snsAlertLevel: t.optional(t.nonEmptyString), // Deprecated
+    snsTopicName: t.optional(t.nonEmptyString),
     metricName: t.nonEmptyString,
     namespace: t.nonEmptyString,
     comparisonOperator: t.nonEmptyString,
@@ -868,6 +874,19 @@ export class SecurityHubConfig implements t.TypeOf<typeof SecurityConfigTypes.se
    */
   readonly regionAggregation = false;
   /**
+   * SNS Topic for Security Hub notifications
+   * Topic must exist in the global config
+   */
+  readonly snsTopicName = undefined;
+  /**
+   * SecurityHub notification level
+   * Values accepted CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL
+   * Notifications will be sent for events at the Level provided and above
+   * Example, if you specifiy the HIGH level notifications will
+   * be sent for HIGH and CRITICAL
+   */
+  readonly notificationLevel = undefined;
+  /**
    * List of AWS Region names to be excluded from configuring SecurityHub
    */
   readonly excludeRegions: t.Region[] = [];
@@ -881,6 +900,8 @@ export class SecurityHubConfig implements t.TypeOf<typeof SecurityConfigTypes.se
  * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link SnsSubscriptionConfig}*
  *
  * AWS SNS Notification subscription configuration
+ * ***Deprecated***
+ * Replaced by snsTopics in global config
  *
  * @example
  * ```
@@ -1047,6 +1068,8 @@ export class SsmAutomationConfig implements t.TypeOf<typeof SecurityConfigTypes.
  *   securityHub:
  *     enable: true
  *     regionAggregation: true
+ *     snsTopicName: Security
+ *     notificationLevel: HIGH
  *     excludeRegions: []
  *     standards:
  *       - name: AWS Foundational Security Best Practices v1.0.0
@@ -1110,6 +1133,11 @@ export class CentralSecurityServicesConfig
   readonly s3PublicAccessBlock: S3PublicAccessBlockConfig = new S3PublicAccessBlockConfig();
   /**
    * AWS SNS subscription configuration
+   * Deprecated
+   *
+   * NOTICE: The configuration of SNS topics is being moved
+   * to the Global Config. This block is deprecated and
+   * will be removed in a future release
    *
    * Accelerator use this parameter to define AWS SNS notification configuration.
    *
@@ -1171,6 +1199,8 @@ export class CentralSecurityServicesConfig
    * securityHub:
    *     enable: true
    *     regionAggregation: true
+   *     snsTopicName: Security
+   *     notificationLevel: HIGH
    *     excludeRegions: []
    *     standards:
    *       - name: AWS Foundational Security Best Practices v1.0.0
@@ -1802,8 +1832,14 @@ export class AlarmConfig implements t.TypeOf<typeof SecurityConfigTypes.alarmCon
   readonly alarmDescription: string = '';
   /**
    * Alert SNS notification level
+   * Deprecated
    */
   readonly snsAlertLevel: string = '';
+  /**
+   * SNS Topic Name
+   * SNS Topic Name from global config
+   */
+  readonly snsTopicName: string = '';
   /**
    * Name of the metric.
    */
@@ -1892,7 +1928,8 @@ export class AlarmSetConfig implements t.TypeOf<typeof SecurityConfigTypes.alarm
    *         # CIS 1.1 – Avoid the use of the "root" account
    *         - alarmName: CIS-1.1-RootAccountUsage
    *           alarmDescription: Alarm for usage of "root" account
-   *           snsAlertLevel: Low
+   *           snsAlertLevel: Low (Deprecated)
+   *           snsTopicName: Alarms
    *           metricName: RootAccountUsage
    *           namespace: LogMetrics
    *           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -1978,7 +2015,8 @@ export class CloudWatchConfig implements t.TypeOf<typeof SecurityConfigTypes.clo
    *         # CIS 1.1 – Avoid the use of the "root" account
    *         - alarmName: CIS-1.1-RootAccountUsage
    *           alarmDescription: Alarm for usage of "root" account
-   *           snsAlertLevel: Low
+   *           snsAlertLevel: Low (Deprecated)
+   *           snsTopicName: Alarms
    *           metricName: RootAccountUsage
    *           namespace: LogMetrics
    *           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2072,6 +2110,20 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
           this.validateConfigRuleRemediationAssumeRoleFile(configDir, ruleSet, errors);
           this.validateConfigRuleRemediationTargetAssets(configDir, ruleSet, ssmDocuments, errors);
         }
+
+        //
+        // Validate SNS Topics for CloudWatch Alarms
+        const snsTopicNames = this.getSnsTopicNames(configDir);
+        for (const alarm of values.cloudWatch.alarmSets ?? []) {
+          this.validateSnsTopics(configDir, alarm, snsTopicNames, errors);
+        }
+
+        this.validateSecurityHubNotifications(
+          snsTopicNames,
+          this.centralSecurityServices.securityHub.snsTopicName ?? undefined,
+          this.centralSecurityServices.securityHub.notificationLevel ?? undefined,
+          errors,
+        );
       }
 
       if (errors.length) {
@@ -2101,6 +2153,15 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
     ]) {
       accountNames.push(accountItem.name);
     }
+  }
+
+  /**
+   * Prepare list of SNS Topic names from the global config file
+   * @param configDir
+   */
+  private getSnsTopicNames(configDir: string) {
+    const globalConfig = GlobalConfig.load(configDir);
+    return globalConfig.getSnsTopicNames();
   }
 
   /**
@@ -2475,6 +2536,74 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
     }
   }
 
+  /**
+   * Function to validate that sns topic references are correct
+   * @param alarmSet
+   * @param snsTopicNames
+   * @param errors
+   */
+  private validateSnsTopics(
+    configDir: string,
+    alarmSet: t.TypeOf<typeof SecurityConfigTypes.alarmSetConfig>,
+    snsTopicNames: string[],
+    errors: string[],
+  ) {
+    const globalConfig = GlobalConfig.load(configDir);
+    for (const alarm of alarmSet.alarms) {
+      if (alarm.snsTopicName && alarm.snsAlertLevel) {
+        errors.push(`Alarm: ${alarm.alarmName} is configured for both snsAlertLevel (Deprecated) and snsTopicName`);
+      }
+
+      if (globalConfig.snsTopics && !alarm.snsTopicName) {
+        errors.push(
+          `Alarm: ${alarm.alarmName} does not have the property snsTopicName set and global config has snsTopics configured.`,
+        );
+      }
+      if (alarm.snsTopicName && !snsTopicNames.find(item => item === alarm.snsTopicName)) {
+        errors.push(
+          `Alarm: ${alarm.alarmName} is configured to use snsTopicName ${alarm.snsTopicName} and the topic is not configured in the global config.`,
+        );
+      }
+    }
+  }
+
+  private validateSecurityHubNotifications(
+    snsTopicNames: string[],
+    snsTopicName: string | undefined,
+    notificationLevel: string | undefined,
+    errors: string[],
+  ) {
+    if (snsTopicName && !notificationLevel) {
+      errors.push(`SecurityHub is configured with a snsTopicName and does not have a notificationLevel`);
+    }
+    if (!snsTopicName && notificationLevel) {
+      errors.push(`SecurityHub is configured with a notificationLevel and does not have a snsTopicName`);
+    }
+    if (notificationLevel) {
+      switch (notificationLevel) {
+        case 'CRITICAL':
+          break;
+        case 'HIGH':
+          break;
+        case 'MEDIUM':
+          break;
+        case 'LOW':
+          break;
+        case 'INFORMATIONAL':
+          break;
+        default:
+          errors.push(
+            `SecurityHub has been configured with a notificationLevel of ${notificationLevel}. This is not a valid value.`,
+          );
+      }
+    }
+    // validate topic exists in global config
+    if (snsTopicName && !snsTopicNames.find(item => item === snsTopicName)) {
+      errors.push(
+        `SecurityHub is configured to use snsTopicName ${snsTopicName} and the topic is not configured in the global config.`,
+      );
+    }
+  }
   /**
    * Return delegated-admin-account name
    */

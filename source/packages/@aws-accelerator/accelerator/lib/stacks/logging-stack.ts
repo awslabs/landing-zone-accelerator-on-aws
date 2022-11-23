@@ -19,7 +19,8 @@ import * as fs from 'fs';
 import { pascalCase } from 'pascal-case';
 import path from 'path';
 
-import { VpcFlowLogsConfig } from '@aws-accelerator/config';
+import { SnsTopicConfig, VpcFlowLogsConfig } from '@aws-accelerator/config';
+import * as t from '@aws-accelerator/config/lib/common-types/types';
 import {
   Bucket,
   BucketAccessType,
@@ -33,6 +34,7 @@ import {
   NewCloudWatchLogEvent,
   Organization,
   S3PublicAccessBlock,
+  SsmParameterLookup,
 } from '@aws-accelerator/constructs';
 
 import { AcceleratorElbRootAccounts } from '../accelerator';
@@ -46,6 +48,8 @@ export class LoggingStack extends AcceleratorStack {
   private centralLogsBucketName: string;
   private centralLogsBucket: CentralLogsBucket | undefined;
   private centralLogBucketKey: cdk.aws_kms.IKey | undefined;
+  private centralSnsKey: cdk.aws_kms.IKey | undefined;
+  private snsForwarderFunction: cdk.aws_lambda.IFunction | undefined;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -132,6 +136,30 @@ export class LoggingStack extends AcceleratorStack {
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
         });
+      }
+    }
+
+    // SNS Topics creation
+    if (
+      this.props.globalConfig.snsTopics &&
+      cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId() &&
+      !this.isRegionExcluded(this.props.globalConfig.snsTopics.deploymentTargets.excludedRegions ?? [])
+    ) {
+      this.createCentralSnsKey();
+
+      for (const snsTopic of this.props.globalConfig.snsTopics?.topics ?? []) {
+        this.createLoggingAccountSnsTopic(snsTopic, this.centralSnsKey!);
+      }
+    }
+
+    if (
+      this.isIncluded(this.props.globalConfig.snsTopics?.deploymentTargets ?? new t.DeploymentTargets()) &&
+      cdk.Stack.of(this).account !== this.props.accountsConfig.getLogArchiveAccountId()
+    ) {
+      const snsKey = this.createSnsKey();
+      this.createSnsForwarderFunction();
+      for (const snsTopic of this.props.globalConfig.snsTopics?.topics ?? []) {
+        this.createSnsTopic(snsTopic, snsKey);
       }
     }
 
@@ -971,5 +999,336 @@ export class LoggingStack extends AcceleratorStack {
         ],
       );
     }
+  }
+
+  private createLoggingAccountSnsTopic(snsTopic: SnsTopicConfig, snsKey: cdk.aws_kms.IKey) {
+    Logger.info('[logging-stack] Creating SNS topic in log archive account home region.');
+
+    const topic = new cdk.aws_sns.Topic(this, `${pascalCase(snsTopic.name)}SNSTopic`, {
+      displayName: `AWS Accelerator - ${snsTopic.name}`,
+      topicName: `aws-accelerator-${snsTopic.name}`,
+      masterKey: snsKey,
+    });
+    for (const email of snsTopic.emailAddresses) {
+      topic.addSubscription(new cdk.aws_sns_subscriptions.EmailSubscription(email));
+    }
+
+    topic.grantPublish({
+      grantPrincipal: new cdk.aws_iam.ServicePrincipal(`cloudwatch.${cdk.Stack.of(this).urlSuffix}`),
+    });
+
+    topic.grantPublish({
+      grantPrincipal: new cdk.aws_iam.ServicePrincipal(`lambda.${cdk.Stack.of(this).urlSuffix}`),
+    });
+
+    topic.grantPublish({
+      grantPrincipal: this.getOrgPrincipals(this.organizationId),
+    });
+  }
+
+  private createSnsForwarderFunction() {
+    const centralSnsKeyArn = new SsmParameterLookup(this, 'LookupCentralSnsKeyArnParameter', {
+      name: AcceleratorStack.ACCELERATOR_SNS_TOPIC_KEY_ARN_PARAMETER_NAME,
+      accountId: this.props.accountsConfig.getLogArchiveAccountId(),
+      parameterRegion: cdk.Stack.of(this).region,
+      roleName: AcceleratorStack.ACCELERATOR_SSM_SNS_TOPIC_PARAMETER_ACCESS_ROLE_NAME,
+      kmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+    }).value;
+
+    this.snsForwarderFunction = new cdk.aws_lambda.Function(this, 'SnsTopicForwarderFunction', {
+      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/sns-topic-forwarder/dist')),
+      runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+      handler: 'index.handler',
+      description: 'Lambda function to forward Accelerator SNS Topics to log archive account',
+      timeout: cdk.Duration.minutes(2),
+      environmentEncryption: this.lambdaKey,
+      environment: {
+        SNS_CENTRAL_ACCOUNT: this.props.accountsConfig.getLogArchiveAccountId(),
+        PARTITION: `${cdk.Stack.of(this).partition}`,
+      },
+    });
+
+    new cdk.aws_logs.LogGroup(this, 'SnsForwarderFunctionLogGroup', {
+      logGroupName: `/aws/lambda/${this.snsForwarderFunction!.functionName}`,
+      retention: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      encryptionKey: this.cloudwatchKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    this.snsForwarderFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'sns',
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['sns:Publish'],
+        resources: [
+          `arn:${cdk.Stack.of(this).partition}:sns:${
+            cdk.Stack.of(this).region
+          }:${this.props.accountsConfig.getLogArchiveAccountId()}:aws-accelerator-*`,
+        ],
+      }),
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/SnsTopicForwarderFunction/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'Lambda function managed policy',
+        },
+      ],
+    );
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/SnsTopicForwarderFunction/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Allows only specific topics.',
+        },
+      ],
+    );
+
+    this.snsForwarderFunction.addToRolePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'kms',
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
+        resources: [centralSnsKeyArn],
+      }),
+    );
+  }
+
+  private createSnsTopic(snsTopic: SnsTopicConfig, snsKey: cdk.aws_kms.IKey) {
+    Logger.info('[logging-stack] Creating SNS topic in ${}');
+
+    const topic = new cdk.aws_sns.Topic(this, `${pascalCase(snsTopic.name)}SNSTopic`, {
+      displayName: `AWS Accelerator - ${snsTopic.name}`,
+      topicName: `aws-accelerator-${snsTopic.name}`,
+      masterKey: snsKey,
+    });
+
+    topic.grantPublish({
+      grantPrincipal: new cdk.aws_iam.ServicePrincipal(`cloudwatch.${cdk.Stack.of(this).urlSuffix}`),
+    });
+
+    topic.addSubscription(new cdk.aws_sns_subscriptions.LambdaSubscription(this.snsForwarderFunction!));
+  }
+
+  private createCentralSnsKey() {
+    this.centralSnsKey = new cdk.aws_kms.Key(this, 'AcceleratorSnsTopicKey', {
+      alias: AcceleratorStack.ACCELERATOR_SNS_TOPIC_KEY_ALIAS,
+      description: AcceleratorStack.ACCELERATOR_SNS_TOPIC_KEY_DESCRIPTION,
+      enableKeyRotation: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    this.centralSnsKey.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'sns',
+        principals: [new cdk.aws_iam.ServicePrincipal(`sns.${cdk.Stack.of(this).urlSuffix}`)],
+        actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'aws:PrincipalOrgId': this.organizationId,
+          },
+        },
+      }),
+    );
+
+    this.centralSnsKey.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'cloudwatch',
+        principals: [new cdk.aws_iam.ServicePrincipal(`cloudwatch.${cdk.Stack.of(this).urlSuffix}`)],
+        actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'aws:SourceAccount': cdk.Stack.of(this).account,
+          },
+        },
+      }),
+    );
+
+    this.centralSnsKey.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'events',
+        principals: [new cdk.aws_iam.ServicePrincipal(`events.${cdk.Stack.of(this).urlSuffix}`)],
+        actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'aws:SourceAccount': cdk.Stack.of(this).account,
+          },
+        },
+      }),
+    );
+
+    this.centralSnsKey.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'crossaccount',
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+        actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'aws:PrincipalOrgId': this.organizationId,
+          },
+        },
+      }),
+    );
+
+    const keyArnParameter = new cdk.aws_ssm.StringParameter(this, 'AcceleratorCentralSnsKmsArnParameter', {
+      parameterName: AcceleratorStack.ACCELERATOR_SNS_TOPIC_KEY_ARN_PARAMETER_NAME,
+      stringValue: this.centralSnsKey.keyArn,
+    });
+
+    if (cdk.Stack.of(this).region === this.props.globalConfig.homeRegion) {
+      // SSM parameter access IAM Role for central sns topic key
+      if (this.props.organizationConfig.enable) {
+        new cdk.aws_iam.Role(this, 'CrossAccountCentralSnsTopicKMSArnSsmParamAccessRole', {
+          roleName: AcceleratorStack.ACCELERATOR_SSM_SNS_TOPIC_PARAMETER_ACCESS_ROLE_NAME,
+          assumedBy: this.getOrgPrincipals(this.organizationId),
+          inlinePolicies: {
+            default: new cdk.aws_iam.PolicyDocument({
+              statements: [
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                  resources: [
+                    `arn:${cdk.Stack.of(this).partition}:ssm:*:*:parameter${
+                      AcceleratorStack.ACCELERATOR_SNS_TOPIC_KEY_ARN_PARAMETER_NAME
+                    }`,
+                  ],
+                  conditions: {
+                    StringEquals: {
+                      ...this.getPrincipalOrgIdCondition(this.organizationId),
+                    },
+                    ArnLike: {
+                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                    },
+                  },
+                }),
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:DescribeParameters'],
+                  resources: ['*'],
+                  conditions: {
+                    StringEquals: {
+                      ...this.getPrincipalOrgIdCondition(this.organizationId),
+                    },
+                    ArnLike: {
+                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                    },
+                  },
+                }),
+              ],
+            }),
+          },
+        });
+      } else {
+        const principals: cdk.aws_iam.PrincipalBase[] = [];
+        const accountIds = this.props.accountsConfig.getAccountIds();
+        accountIds.forEach(accountId => {
+          principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
+        });
+        new cdk.aws_iam.Role(this, 'CrossAccountCentralSnsTopicKMSArnSsmParamAccessRole', {
+          roleName: AcceleratorStack.ACCELERATOR_SSM_SNS_TOPIC_PARAMETER_ACCESS_ROLE_NAME,
+          assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
+          inlinePolicies: {
+            default: new cdk.aws_iam.PolicyDocument({
+              statements: [
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                  resources: [keyArnParameter.parameterArn],
+                  conditions: {
+                    StringEquals: {
+                      'aws:PrincipalAccount': [...accountIds],
+                    },
+                    ArnLike: {
+                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                    },
+                  },
+                }),
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:DescribeParameters'],
+                  resources: ['*'],
+                  conditions: {
+                    StringEquals: {
+                      'aws:PrincipalAccount': [...accountIds],
+                    },
+                    ArnLike: {
+                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                    },
+                  },
+                }),
+              ],
+            }),
+          },
+        });
+      }
+    }
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/CrossAccountCentralSnsTopicKMSArnSsmParamAccessRole`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Allows only specific role arns.',
+        },
+      ],
+    );
+  }
+
+  private createSnsKey() {
+    const snsKey = new cdk.aws_kms.Key(this, 'AcceleratorSnsTopicKey', {
+      alias: AcceleratorStack.ACCELERATOR_SNS_TOPIC_KEY_ALIAS,
+      description: AcceleratorStack.ACCELERATOR_SNS_TOPIC_KEY_DESCRIPTION,
+      enableKeyRotation: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    snsKey.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'sns',
+        principals: [new cdk.aws_iam.ServicePrincipal(`sns.${cdk.Stack.of(this).urlSuffix}`)],
+        actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'aws:SourceAccount': cdk.Stack.of(this).account,
+          },
+        },
+      }),
+    );
+
+    snsKey.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'cloudwatch',
+        principals: [
+          new cdk.aws_iam.ServicePrincipal(`cloudwatch.${cdk.Stack.of(this).urlSuffix}`),
+          new cdk.aws_iam.ServicePrincipal(`events.${cdk.Stack.of(this).urlSuffix}`),
+        ],
+        actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'aws:SourceAccount': cdk.Stack.of(this).account,
+          },
+        },
+      }),
+    );
+    new cdk.aws_ssm.StringParameter(this, 'AcceleratorCentralSnsKmsArnParameter', {
+      parameterName: AcceleratorStack.ACCELERATOR_SNS_TOPIC_KEY_ARN_PARAMETER_NAME,
+      stringValue: snsKey.keyArn,
+    });
+
+    return snsKey;
   }
 }
