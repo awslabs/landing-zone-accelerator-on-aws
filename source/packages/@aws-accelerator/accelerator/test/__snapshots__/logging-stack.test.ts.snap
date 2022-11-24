@@ -413,17 +413,7 @@ Object {
               },
               "Effect": "Allow",
               "Principal": Object {
-                "Service": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "sns.",
-                      Object {
-                        "Ref": "AWS::URLSuffix",
-                      },
-                    ],
-                  ],
-                },
+                "Service": "sns.amazonaws.com",
               },
               "Resource": "*",
               "Sid": "sns",
@@ -440,17 +430,7 @@ Object {
               },
               "Effect": "Allow",
               "Principal": Object {
-                "Service": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "cloudwatch.",
-                      Object {
-                        "Ref": "AWS::URLSuffix",
-                      },
-                    ],
-                  ],
-                },
+                "Service": "cloudwatch.amazonaws.com",
               },
               "Resource": "*",
               "Sid": "cloudwatch",
@@ -467,17 +447,7 @@ Object {
               },
               "Effect": "Allow",
               "Principal": Object {
-                "Service": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "events.",
-                      Object {
-                        "Ref": "AWS::URLSuffix",
-                      },
-                    ],
-                  ],
-                },
+                "Service": "events.amazonaws.com",
               },
               "Resource": "*",
               "Sid": "events",
@@ -2670,17 +2640,7 @@ Object {
               "Action": "sns:Publish",
               "Effect": "Allow",
               "Principal": Object {
-                "Service": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "cloudwatch.",
-                      Object {
-                        "Ref": "AWS::URLSuffix",
-                      },
-                    ],
-                  ],
-                },
+                "Service": "cloudwatch.amazonaws.com",
               },
               "Resource": Object {
                 "Ref": "SecuritySNSTopicE3C1354E",
@@ -2691,17 +2651,7 @@ Object {
               "Action": "sns:Publish",
               "Effect": "Allow",
               "Principal": Object {
-                "Service": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "lambda.",
-                      Object {
-                        "Ref": "AWS::URLSuffix",
-                      },
-                    ],
-                  ],
-                },
+                "Service": "lambda.amazonaws.com",
               },
               "Resource": Object {
                 "Ref": "SecuritySNSTopicE3C1354E",
