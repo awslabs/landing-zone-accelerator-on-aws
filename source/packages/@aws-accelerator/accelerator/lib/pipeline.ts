@@ -207,6 +207,10 @@ export class AcceleratorPipeline extends Construct {
             commands: [
               'env',
               'cd source',
+              `if [ "${cdk.Stack.of(this).partition}" = "aws-cn" ]; then
+                  sed -i "s#registry.yarnpkg.com#registry.npmmirror.com#g" yarn.lock;
+                  yarn config set registry https://registry.npmmirror.com
+               fi`,
               'yarn install',
               'yarn lerna link',
               'yarn build',
