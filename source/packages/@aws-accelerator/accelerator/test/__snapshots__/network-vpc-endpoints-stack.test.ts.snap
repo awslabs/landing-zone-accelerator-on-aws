@@ -161,6 +161,7 @@ Object {
             },
           },
         ],
+        "Name": "accelerator-inbound",
         "SecurityGroupIds": Array [
           Object {
             "Ref": "AcceleratorInboundEpSecurityGroup562F5EAB",
@@ -221,6 +222,7 @@ Object {
             },
           },
         ],
+        "Name": "accelerator-outbound",
         "SecurityGroupIds": Array [
           Object {
             "Ref": "AcceleratorOutboundEpSecurityGroup37D346D3",
