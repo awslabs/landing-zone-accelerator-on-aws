@@ -164,6 +164,11 @@ export abstract class GlobalConfigTypes {
     topics: t.optional(t.array(this.snsTopicConfig)),
   });
 
+  static readonly ssmInventoryConfig = t.interface({
+    enable: t.boolean,
+    deploymentTargets: t.deploymentTargets,
+  });
+
   static readonly globalConfig = t.interface({
     homeRegion: t.nonEmptyString,
     enabledRegions: t.array(t.region),
@@ -176,6 +181,7 @@ export abstract class GlobalConfigTypes {
     reports: t.optional(GlobalConfigTypes.reportConfig),
     backup: t.optional(GlobalConfigTypes.backupConfig),
     snsTopics: t.optional(GlobalConfigTypes.snsConfig),
+    ssmInventory: t.optional(GlobalConfigTypes.ssmInventoryConfig),
   });
 }
 
@@ -960,6 +966,31 @@ export class SnsConfig implements t.TypeOf<typeof GlobalConfigTypes.snsConfig> {
 }
 
 /**
+ * *{@link globalConfig} / {@link SsmInventoryConfig}*
+ *
+ * @example
+ * ```
+ * ssmInventoryConfig:
+ *   enable: true
+ *   deploymentTargets:
+ *     organizationalUnits:
+ *       - Infrastructure
+ * ```
+ *
+ */
+
+export class SsmInventoryConfig implements t.TypeOf<typeof GlobalConfigTypes.ssmInventoryConfig> {
+  /**
+   * Enable SSM Inventory
+   */
+  readonly enable = false;
+  /**
+   * Configure the Deployment Targets
+   */
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
+/**
  * Accelerator global configuration
  */
 export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalConfig> {
@@ -1148,6 +1179,24 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   readonly snsTopics: SnsConfig | undefined = undefined;
 
   /**
+   * SSM Inventory Configuration
+   *
+   * [EC2 prerequisites](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-walk.html)
+   * [Connectivity prerequisites](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-prereqs.html)
+   *
+   * @example
+   * ```
+   * ssmInventoryConfig:
+   *   enable: true
+   *   deploymentTargets:
+   *     organizationalUnits:
+   *       - Infrastructure
+   * ```
+   *
+   */
+  readonly ssmInventory: SsmInventoryConfig | undefined = undefined;
+
+  /**
    *
    * @param props
    * @param values
@@ -1207,6 +1256,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         //
         this.validateCloudTrailSettings(values, errors);
         // snsTopics settings validation
+        //
         this.validateSnsTopics(values, errors);
       }
     } else {

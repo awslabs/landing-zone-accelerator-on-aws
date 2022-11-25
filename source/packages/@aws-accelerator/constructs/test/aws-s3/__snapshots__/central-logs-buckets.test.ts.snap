@@ -422,6 +422,17 @@ Object {
                   "config.amazonaws.com",
                   "cloudtrail.amazonaws.com",
                   "delivery.logs.amazonaws.com",
+                  Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "ssm.",
+                        Object {
+                          "Ref": "AWS::URLSuffix",
+                        },
+                      ],
+                    ],
+                  },
                 ],
               },
               "Resource": "*",
@@ -617,6 +628,17 @@ Object {
                   "cloudtrail.amazonaws.com",
                   "config.amazonaws.com",
                   "delivery.logs.amazonaws.com",
+                  Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "ssm.",
+                        Object {
+                          "Ref": "AWS::URLSuffix",
+                        },
+                      ],
+                    ],
+                  },
                 ],
               },
               "Resource": Object {

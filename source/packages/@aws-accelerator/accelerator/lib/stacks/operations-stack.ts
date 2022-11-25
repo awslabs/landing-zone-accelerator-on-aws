@@ -18,7 +18,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 
 import { RoleConfig } from '@aws-accelerator/config';
-import { BudgetDefinition } from '@aws-accelerator/constructs';
+import { BudgetDefinition, Inventory } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
@@ -77,6 +77,13 @@ export class OperationsStack extends AcceleratorStack {
     // Backup Vaults
     //
     this.addBackupVaults();
+
+    if (
+      this.props.globalConfig.ssmInventory?.enable &&
+      this.isIncluded(this.props.globalConfig.ssmInventory.deploymentTargets)
+    ) {
+      this.enableInventory();
+    }
 
     Logger.info('[operations-stack] Completed stack synthesis');
   }
@@ -420,5 +427,18 @@ export class OperationsStack extends AcceleratorStack {
         });
       }
     }
+  }
+
+  private enableInventory() {
+    Logger.info('[operations-stack] Enabling SSM Inventory');
+
+    new Inventory(this, 'AcceleratorSsmInventory', {
+      bucketName: `${
+        AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+      }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
+      bucketRegion: this.props.centralizedLoggingRegion,
+      accountId: cdk.Stack.of(this).account,
+      prefix: 'aws-accelerator',
+    });
   }
 }

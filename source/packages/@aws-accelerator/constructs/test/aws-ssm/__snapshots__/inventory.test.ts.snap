@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Inventory ../snapshot-test Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "InventoryGatherInventory21DB8F8C": Object {
+      "Properties": Object {
+        "AssociationName": "test99999999999-InventoryCollection",
+        "Name": "AWS-GatherSoftwareInventory",
+        "ScheduleExpression": "rate(12 hours)",
+        "Targets": Array [
+          Object {
+            "Key": "InstanceIds",
+            "Values": Array [
+              "*",
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::SSM::Association",
+    },
+    "InventoryResourceDataSync837B1722": Object {
+      "Properties": Object {
+        "BucketName": "central-log-bucket",
+        "BucketPrefix": "ssm-inventory",
+        "BucketRegion": "us-east-1",
+        "SyncFormat": "JsonSerDe",
+        "SyncName": "test99999999999-Inventory",
+        "SyncType": "SyncToDestination",
+      },
+      "Type": "AWS::SSM::ResourceDataSync",
+    },
+  },
+}
+`;
