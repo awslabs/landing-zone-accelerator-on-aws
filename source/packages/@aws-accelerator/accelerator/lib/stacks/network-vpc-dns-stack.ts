@@ -148,6 +148,11 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
       }
     }
 
+    //
+    // Create SSM Parameters
+    //
+    this.createSsmParameters();
+
     Logger.info('[network-vpc-dns-stack] Completed stack synthesis');
   }
 
@@ -179,14 +184,11 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
           vpcId,
         },
       );
-      new cdk.aws_ssm.StringParameter(
-        this,
-        `SsmParam${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpHostedZone`,
-        {
-          parameterName: `/accelerator/network/vpc/${vpcItem.name}/route53/hostedZone/${endpointItem.service}/id`,
-          stringValue: hostedZone.hostedZoneId,
-        },
-      );
+      this.ssmParameters.push({
+        logicalId: `SsmParam${pascalCase(vpcItem.name)}Vpc${pascalCase(endpointItem.service)}EpHostedZone`,
+        parameterName: `/accelerator/network/vpc/${vpcItem.name}/route53/hostedZone/${endpointItem.service}/id`,
+        stringValue: hostedZone.hostedZoneId,
+      });
 
       // Create the record set
       let recordSetName = hostedZoneName;
@@ -274,7 +276,8 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
       });
-      new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${ruleItem.name}ResolverRule`), {
+      this.ssmParameters.push({
+        logicalId: pascalCase(`SsmParam${ruleItem.name}ResolverRule`),
         parameterName: `/accelerator/network/route53Resolver/rules/${ruleItem.name}/id`,
         stringValue: rule.ruleId,
       });
@@ -303,7 +306,8 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
           ruleType: ruleItem.ruleType ?? 'SYSTEM',
           tags: ruleItem.tags,
         });
-        new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${ruleItem.name}ResolverRule`), {
+        this.ssmParameters.push({
+          logicalId: pascalCase(`SsmParam${ruleItem.name}ResolverRule`),
           parameterName: `/accelerator/network/route53Resolver/rules/${ruleItem.name}/id`,
           stringValue: rule.ruleId,
         });

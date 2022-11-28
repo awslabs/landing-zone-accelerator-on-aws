@@ -121,10 +121,36 @@ export class AwsSolutionAspect implements cdk.IAspect {
   }
 }
 
+// This function is required rather than using an Aspect class for two reasons:
+// 1. Some resources do not support tag updates
+// 2. Using Aspects for stacks that use the fs.writeFileSync() operation
+// causes the application to quit during stack synthesis
+function addAcceleratorTags(node: IConstruct): void {
+  // Current accelerator prefix is static
+  const acceleratorPrefix = 'AWSAccelerator';
+
+  // Resource types that do not support tag updates
+  const excludeResourceTypes = [
+    'AWS::EC2::TransitGatewayRouteTable',
+    'AWS::Route53Resolver::FirewallDomainList',
+    'AWS::Route53Resolver::ResolverEndpoint',
+    'AWS::Route53Resolver::ResolverRule',
+  ];
+
+  for (const resource of node.node.findAll()) {
+    if (resource instanceof cdk.CfnResource && !excludeResourceTypes.includes(resource.cfnResourceType)) {
+      new cdk.Tag('Accel-P', acceleratorPrefix).visit(resource);
+      new cdk.Tag('Accelerator', acceleratorPrefix).visit(resource);
+    }
+  }
+}
+
 async function main() {
   Logger.info('[app] Begin Accelerator CDK App');
   const app = new cdk.App();
+  // Add AWS Solutions checks
   cdk.Aspects.of(app).add(new AwsSolutionsChecks());
+
   try {
     //
     // Read in context inputs
@@ -287,7 +313,7 @@ async function main() {
       // PREPARE Stack
       //
       if (includeStage({ stage: AcceleratorStage.PREPARE, account: managementAccountId, region: homeRegion })) {
-        new PrepareStack(
+        const prepareStack = new PrepareStack(
           app,
           `${AcceleratorStackNames[AcceleratorStage.PREPARE]}-${managementAccountId}-${homeRegion}`,
           {
@@ -307,13 +333,14 @@ async function main() {
             ...props,
           },
         );
+        addAcceleratorTags(prepareStack);
       }
 
       //
       // FINALIZE Stack
       //
       if (includeStage({ stage: AcceleratorStage.FINALIZE, account: managementAccountId, region: globalRegion })) {
-        new FinalizeStack(
+        const finalizeStack = new FinalizeStack(
           app,
           `${AcceleratorStackNames[AcceleratorStage.FINALIZE]}-${managementAccountId}-${globalRegion}`,
           {
@@ -333,13 +360,14 @@ async function main() {
             ...props,
           },
         );
+        addAcceleratorTags(finalizeStack);
       }
 
       //
       // ACCOUNTS Stack
       //
       if (includeStage({ stage: AcceleratorStage.ACCOUNTS, account: managementAccountId, region: globalRegion })) {
-        new AccountsStack(
+        const accountsStack = new AccountsStack(
           app,
           `${AcceleratorStackNames[AcceleratorStage.ACCOUNTS]}-${managementAccountId}-${globalRegion}`,
           {
@@ -359,6 +387,7 @@ async function main() {
             ...props,
           },
         );
+        addAcceleratorTags(accountsStack);
       }
 
       //
@@ -368,7 +397,7 @@ async function main() {
         if (
           includeStage({ stage: AcceleratorStage.ORGANIZATIONS, account: managementAccountId, region: enabledRegion })
         ) {
-          new OrganizationsStack(
+          const organizationStack = new OrganizationsStack(
             app,
             `${AcceleratorStackNames[AcceleratorStage.ORGANIZATIONS]}-${managementAccountId}-${enabledRegion}`,
             {
@@ -388,6 +417,7 @@ async function main() {
               ...props,
             },
           );
+          addAcceleratorTags(organizationStack);
         }
       }
 
@@ -396,26 +426,31 @@ async function main() {
       //
       for (const enabledRegion of props.globalConfig.enabledRegions) {
         if (includeStage({ stage: AcceleratorStage.KEY, account: auditAccountId, region: enabledRegion })) {
-          new KeyStack(app, `${AcceleratorStackNames[AcceleratorStage.KEY]}-${auditAccountId}-${enabledRegion}`, {
-            env: {
-              account: auditAccountId,
-              region: enabledRegion,
+          const keyStack = new KeyStack(
+            app,
+            `${AcceleratorStackNames[AcceleratorStage.KEY]}-${auditAccountId}-${enabledRegion}`,
+            {
+              env: {
+                account: auditAccountId,
+                region: enabledRegion,
+              },
+              description: `(SO0199-key) Landing Zone Accelerator on AWS. Version ${version}.`,
+              synthesizer: new cdk.DefaultStackSynthesizer({
+                generateBootstrapVersionRule: false,
+                bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${auditAccountId}/` : undefined,
+                fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
+                  ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
+                  : undefined,
+              }),
+              terminationProtection: props.globalConfig.terminationProtection ?? true,
+              ...props,
             },
-            description: `(SO0199-key) Landing Zone Accelerator on AWS. Version ${version}.`,
-            synthesizer: new cdk.DefaultStackSynthesizer({
-              generateBootstrapVersionRule: false,
-              bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${auditAccountId}/` : undefined,
-              fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
-                ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
-                : undefined,
-            }),
-            terminationProtection: props.globalConfig.terminationProtection ?? true,
-            ...props,
-          });
+          );
+          addAcceleratorTags(keyStack);
         }
 
         if (includeStage({ stage: AcceleratorStage.SECURITY_AUDIT, account: auditAccountId, region: enabledRegion })) {
-          new SecurityAuditStack(
+          const auditStack = new SecurityAuditStack(
             app,
             `${AcceleratorStackNames[AcceleratorStage.SECURITY_AUDIT]}-${auditAccountId}-${enabledRegion}`,
             {
@@ -435,6 +470,7 @@ async function main() {
               ...props,
             },
           );
+          addAcceleratorTags(auditStack);
         }
       }
 
@@ -464,7 +500,7 @@ async function main() {
           // BOOTSTRAP Stack
           //
           if (includeStage({ stage: AcceleratorStage.BOOTSTRAP, account: accountId, region: enabledRegion })) {
-            new BootstrapStack(
+            const bootstrapStack = new BootstrapStack(
               app,
               `${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${accountId}-${enabledRegion}`,
               {
@@ -475,26 +511,32 @@ async function main() {
                 ...props,
               },
             );
+            addAcceleratorTags(bootstrapStack);
           }
 
           //
           // LOGGING Stack
           //
           if (includeStage({ stage: AcceleratorStage.LOGGING, account: accountId, region: enabledRegion })) {
-            new LoggingStack(app, `${AcceleratorStackNames[AcceleratorStage.LOGGING]}-${accountId}-${enabledRegion}`, {
-              env,
-              description: `(SO0199-logging) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-              terminationProtection: props.globalConfig.terminationProtection ?? true,
-              ...props,
-            });
+            const loggingStack = new LoggingStack(
+              app,
+              `${AcceleratorStackNames[AcceleratorStage.LOGGING]}-${accountId}-${enabledRegion}`,
+              {
+                env,
+                description: `(SO0199-logging) Landing Zone Accelerator on AWS. Version ${version}.`,
+                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                terminationProtection: props.globalConfig.terminationProtection ?? true,
+                ...props,
+              },
+            );
+            addAcceleratorTags(loggingStack);
           }
 
           //
           // SECURITY Stack
           //
           if (includeStage({ stage: AcceleratorStage.SECURITY, account: accountId, region: enabledRegion })) {
-            new SecurityStack(
+            const securityStack = new SecurityStack(
               app,
               `${AcceleratorStackNames[AcceleratorStage.SECURITY]}-${accountId}-${enabledRegion}`,
               {
@@ -505,13 +547,14 @@ async function main() {
                 ...props,
               },
             );
+            addAcceleratorTags(securityStack);
           }
 
           //
           // OPERATIONS Stack
           //
           if (includeStage({ stage: AcceleratorStage.OPERATIONS, account: accountId, region: enabledRegion })) {
-            new OperationsStack(
+            const operationsStack = new OperationsStack(
               app,
               `${AcceleratorStackNames[AcceleratorStage.OPERATIONS]}-${accountId}-${enabledRegion}`,
               {
@@ -522,13 +565,14 @@ async function main() {
                 ...props,
               },
             );
+            addAcceleratorTags(operationsStack);
           }
 
           //
           // NETWORK PREP Stack
           //
           if (includeStage({ stage: AcceleratorStage.NETWORK_PREP, account: accountId, region: enabledRegion })) {
-            new NetworkPrepStack(
+            const networkPrepStack = new NetworkPrepStack(
               app,
               `${AcceleratorStackNames[AcceleratorStage.NETWORK_PREP]}-${accountId}-${enabledRegion}`,
               {
@@ -539,13 +583,14 @@ async function main() {
                 ...props,
               },
             );
+            addAcceleratorTags(networkPrepStack);
           }
 
           //
           // SECURITY_RESOURCES Stack
           //
           if (includeStage({ stage: AcceleratorStage.SECURITY_RESOURCES, account: accountId, region: enabledRegion })) {
-            new SecurityResourcesStack(
+            const securityResourcesStack = new SecurityResourcesStack(
               app,
               `${AcceleratorStackNames[AcceleratorStage.SECURITY_RESOURCES]}-${accountId}-${enabledRegion}`,
               {
@@ -556,6 +601,7 @@ async function main() {
                 ...props,
               },
             );
+            addAcceleratorTags(securityResourcesStack);
           }
 
           //
@@ -573,6 +619,7 @@ async function main() {
                 ...props,
               },
             );
+            addAcceleratorTags(vpcStack);
 
             const endpointsStack = new NetworkVpcEndpointsStack(
               app,
@@ -585,6 +632,7 @@ async function main() {
                 ...props,
               },
             );
+            addAcceleratorTags(endpointsStack);
             endpointsStack.addDependency(vpcStack);
 
             const dnsStack = new NetworkVpcDnsStack(
@@ -598,6 +646,7 @@ async function main() {
                 ...props,
               },
             );
+            addAcceleratorTags(dnsStack);
             dnsStack.addDependency(endpointsStack);
           }
 
@@ -607,7 +656,7 @@ async function main() {
           if (
             includeStage({ stage: AcceleratorStage.NETWORK_ASSOCIATIONS, account: accountId, region: enabledRegion })
           ) {
-            new NetworkAssociationsStack(
+            const networkAssociationsStack = new NetworkAssociationsStack(
               app,
               `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]}-${accountId}-${enabledRegion}`,
               {
@@ -618,8 +667,9 @@ async function main() {
                 ...props,
               },
             );
+            addAcceleratorTags(networkAssociationsStack);
 
-            new NetworkAssociationsGwlbStack(
+            const networkGwlbStack = new NetworkAssociationsGwlbStack(
               app,
               `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]}-${accountId}-${enabledRegion}`,
               {
@@ -630,6 +680,7 @@ async function main() {
                 ...props,
               },
             );
+            addAcceleratorTags(networkGwlbStack);
           }
         }
       }

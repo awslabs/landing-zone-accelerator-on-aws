@@ -93,6 +93,11 @@ export class SecurityStack extends AcceleratorStack {
     //
     this.updateIamPasswordPolicy();
 
+    //
+    // Create SSM Parameters
+    //
+    this.createSsmParameters();
+
     Logger.info('[security-stack] Completed stack synthesis');
   }
 
@@ -261,7 +266,8 @@ export class SecurityStack extends AcceleratorStack {
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       });
 
-      new cdk.aws_ssm.StringParameter(this, 'EbsDefaultVolumeEncryptionParameter', {
+      this.ssmParameters.push({
+        logicalId: 'EbsDefaultVolumeEncryptionParameter',
         parameterName: `/accelerator/security-stack/ebsDefaultVolumeEncryptionKeyArn`,
         stringValue: ebsEncryptionKey.keyArn,
       });

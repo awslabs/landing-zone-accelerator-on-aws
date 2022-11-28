@@ -254,6 +254,11 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       }
     }
 
+    //
+    // Create SSM parameters
+    //
+    this.createSsmParameters();
+
     Logger.info('[network-vpc-endpoints-stack] Completed stack synthesis');
   }
 
@@ -294,14 +299,11 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       tags: firewallItem.tags ?? [],
     });
     // Create SSM parameters
-    new cdk.aws_ssm.StringParameter(
-      this,
-      pascalCase(`SsmParam${pascalCase(firewallItem.vpc) + pascalCase(firewallItem.name)}FirewallArn`),
-      {
-        parameterName: `/accelerator/network/vpc/${firewallItem.vpc}/networkFirewall/${firewallItem.name}/arn`,
-        stringValue: nfw.firewallArn,
-      },
-    );
+    this.ssmParameters.push({
+      logicalId: pascalCase(`SsmParam${pascalCase(firewallItem.vpc) + pascalCase(firewallItem.name)}FirewallArn`),
+      parameterName: `/accelerator/network/vpc/${firewallItem.vpc}/networkFirewall/${firewallItem.name}/arn`,
+      stringValue: nfw.firewallArn,
+    });
 
     // Add logging configurations
     const destinationConfigs: cdk.aws_networkfirewall.CfnLoggingConfiguration.LogDestinationConfigProperty[] = [];
@@ -540,11 +542,13 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         privateDnsEnabled: privateDnsValue,
         policyDocument: this.createVpcEndpointPolicy(vpcItem, endpointItem),
       });
-      new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${vpcItem.name}${endpointItem.service}Dns`), {
+      this.ssmParameters.push({
+        logicalId: pascalCase(`SsmParam${vpcItem.name}${endpointItem.service}Dns`),
         parameterName: `/accelerator/network/vpc/${vpcItem.name}/endpoints/${endpointItem.service}/dns`,
         stringValue: endpoint.dnsName!,
       });
-      new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${vpcItem.name}${endpointItem.service}Phz`), {
+      this.ssmParameters.push({
+        logicalId: pascalCase(`SsmParam${vpcItem.name}${endpointItem.service}Phz`),
         parameterName: `/accelerator/network/vpc/${vpcItem.name}/endpoints/${endpointItem.service}/hostedZoneId`,
         stringValue: endpoint.hostedZoneId!,
       });
@@ -673,7 +677,8 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       securityGroupIds: [securityGroup.securityGroupId],
       tags: endpointItem.tags ?? [],
     });
-    new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${endpointItem.name}ResolverEndpoint`), {
+    this.ssmParameters.push({
+      logicalId: pascalCase(`SsmParam${endpointItem.name}ResolverEndpoint`),
       parameterName: `/accelerator/network/route53Resolver/endpoints/${endpointItem.name}/id`,
       stringValue: endpoint.endpointId,
     });

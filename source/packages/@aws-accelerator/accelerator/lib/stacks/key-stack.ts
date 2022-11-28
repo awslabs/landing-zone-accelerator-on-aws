@@ -124,7 +124,8 @@ export class KeyStack extends AcceleratorStack {
       );
     });
 
-    new cdk.aws_ssm.StringParameter(this, 'AcceleratorKmsArnParameter', {
+    this.ssmParameters.push({
+      logicalId: 'AcceleratorKmsArnParameter',
       parameterName: '/accelerator/kms/key-arn',
       stringValue: key.keyArn,
     });
@@ -240,5 +241,10 @@ export class KeyStack extends AcceleratorStack {
         ],
       );
     }
+
+    //
+    // Create SSM Parameters
+    //
+    this.createSsmParameters();
   }
 }

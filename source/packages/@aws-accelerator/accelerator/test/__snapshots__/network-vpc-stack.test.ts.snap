@@ -2017,6 +2017,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Management/id",
         "Type": "String",
@@ -2037,6 +2040,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsASubnetIdF53EDCC9": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
         "Type": "String",
@@ -2047,6 +2053,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsBRouteTableId03F05790": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-B/id",
         "Type": "String",
@@ -2057,6 +2066,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsBSubnetId62D810E8": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/id",
         "Type": "String",
@@ -2077,6 +2089,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-A/id",
         "Type": "String",
@@ -2107,6 +2122,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTransitGatewayAttachmentId2EBCB846": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/transitGatewayAttachment/Network-Endpoints/id",
         "Type": "String",
@@ -2117,6 +2135,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsTestNaclNaclED9584AC": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/networkAcl/TestNACL/id",
         "Type": "String",
@@ -2157,6 +2178,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionBRouteTableIdAC1C6F68": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionARouteTableIdAA9E21C5",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-B/id",
         "Type": "String",
@@ -2167,6 +2191,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionBSubnetId08F48703": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-B/id",
         "Type": "String",
@@ -2177,6 +2204,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionGatewayRouteTableId9C85DF52": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionARouteTableIdAA9E21C5",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Gateway/id",
         "Type": "String",
@@ -2187,6 +2217,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwARouteTableId838420AE": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionARouteTableIdAA9E21C5",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-A/id",
         "Type": "String",
@@ -2197,6 +2230,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwAttachASubnetId90B86E86": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-A/id",
         "Type": "String",
@@ -2207,6 +2243,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-B/id",
         "Type": "String",
@@ -2217,6 +2256,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionARouteTableIdAA9E21C5",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-B/id",
         "Type": "String",
@@ -2227,6 +2269,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTransitGatewayAttachmentId80B7A8EF": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/transitGatewayAttachment/Network-Inspection/id",
         "Type": "String",
@@ -2237,6 +2282,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionVpcIdFD2142E1": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/id",
         "Type": "String",
