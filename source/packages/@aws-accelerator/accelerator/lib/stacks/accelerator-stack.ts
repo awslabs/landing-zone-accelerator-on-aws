@@ -274,9 +274,16 @@ export abstract class AcceleratorStack extends cdk.Stack {
    */
   protected static readonly ACCELERATOR_MANAGEMENT_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
 
+  /**
+   * Accelerator SSM parameters
+   * This array is used to store SSM parameters that are created per-stack.
+   */
+  protected ssmParameters: { logicalId: string; parameterName: string; stringValue: string }[];
+
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
     this.props = props;
+    this.ssmParameters = [];
 
     new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
       parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
@@ -287,6 +294,38 @@ export abstract class AcceleratorStack extends cdk.Stack {
       parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/version`,
       stringValue: version,
     });
+  }
+
+  /**
+   * This method creates SSM parameters stored in the `AcceleratorStack.ssmParameters` array.
+   * If more than five parameters are defined, the method adds a `dependsOn` statement
+   * to remaining parameters in order to avoid API throttling issues.
+   */
+  protected createSsmParameters(): void {
+    let index = 1;
+    const parameterMap = new Map<number, cdk.aws_ssm.StringParameter>();
+
+    for (const parameterItem of this.ssmParameters) {
+      // Create parameter
+      const parameter = new cdk.aws_ssm.StringParameter(this, parameterItem.logicalId, {
+        parameterName: parameterItem.parameterName,
+        stringValue: parameterItem.stringValue,
+      });
+      parameterMap.set(index, parameter);
+
+      // Add a dependency for every 5 parameters
+      if (index > 5) {
+        const dependsOnParam = parameterMap.get(index - (index % 5));
+        if (!dependsOnParam) {
+          throw new Error(
+            `[accelerator-stack] Error creating SSM parameter ${parameterItem.parameterName}: previous SSM parameter undefined`,
+          );
+        }
+        parameter.node.addDependency(dependsOnParam);
+      }
+      // Increment index
+      index += 1;
+    }
   }
 
   protected isIncluded(deploymentTargets: DeploymentTargets): boolean {
@@ -659,14 +698,24 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected generatePolicyReplacements(policyPath: string, returnTempPath: boolean): string {
     // Transform policy document
     let policyContent: string = JSON.stringify(require(policyPath));
+    const acceleratorPrefix = 'AWSAccelerator';
+    const acceleratorPrefixNoDash = acceleratorPrefix.endsWith('-')
+      ? acceleratorPrefix.slice(0, -1)
+      : acceleratorPrefix;
+
     policyContent = policyReplacements({
       content: policyContent,
-      acceleratorPrefix: 'AWSAccelerator',
+      acceleratorPrefix,
       managementAccountAccessRole: this.props.globalConfig.managementAccountAccessRole,
       partition: this.props.partition,
       additionalReplacements: {
+        '\\${ACCELERATOR_DEFAULT_PREFIX_SHORTHAND}':
+          acceleratorPrefix === 'AWSAccelerator' ? 'AWSA' : acceleratorPrefix,
+        '\\${ACCELERATOR_PREFIX_ND}': acceleratorPrefixNoDash,
+        '\\${ACCELERATOR_PREFIX_LND}': acceleratorPrefixNoDash.toLowerCase(),
         '\\${ACCOUNT_ID}': cdk.Stack.of(this).account,
         '\\${AUDIT_ACCOUNT_ID}': this.props.accountsConfig.getAuditAccountId(),
+        '\\${HOME_REGION}': this.props.globalConfig.homeRegion,
         '\\${LOGARCHIVE_ACCOUNT_ID}': this.props.accountsConfig.getLogArchiveAccountId(),
         '\\${MANAGEMENT_ACCOUNT_ID}': this.props.accountsConfig.getManagementAccountId(),
         '\\${REGION}': cdk.Stack.of(this).region,

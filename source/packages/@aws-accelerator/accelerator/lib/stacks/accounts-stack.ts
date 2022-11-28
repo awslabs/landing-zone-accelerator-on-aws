@@ -74,7 +74,8 @@ export class AccountsStack extends AcceleratorStack {
         }),
       );
 
-      new cdk.aws_ssm.StringParameter(this, 'AcceleratorCloudWatchKmsArnParameter', {
+      this.ssmParameters.push({
+        logicalId: 'AcceleratorCloudWatchKmsArnParameter',
         parameterName: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
         stringValue: this.cloudwatchKey.keyArn,
       });
@@ -100,7 +101,8 @@ export class AccountsStack extends AcceleratorStack {
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
 
-      new cdk.aws_ssm.StringParameter(this, 'AcceleratorLambdaKmsArnParameter', {
+      this.ssmParameters.push({
+        logicalId: 'AcceleratorLambdaKmsArnParameter',
         parameterName: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
         stringValue: this.lambdaKey.keyArn,
       });
@@ -139,7 +141,8 @@ export class AccountsStack extends AcceleratorStack {
               serviceControlPolicy.name == props.organizationConfig.quarantineNewAccounts?.scpPolicyName &&
               props.partition == 'aws'
             ) {
-              new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${scp.name}ScpPolicyId`), {
+              this.ssmParameters.push({
+                logicalId: pascalCase(`SsmParam${scp.name}ScpPolicyId`),
                 parameterName: `/accelerator/organizations/scp/${scp.name}/id`,
                 stringValue: scp.id,
               });
@@ -317,6 +320,12 @@ export class AccountsStack extends AcceleratorStack {
         }
       }
     }
+
+    //
+    // Create SSM parameters
+    //
+    this.createSsmParameters();
+
     Logger.info('[accounts-stack] Completed stack synthesis');
   }
 }

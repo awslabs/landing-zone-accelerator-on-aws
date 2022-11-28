@@ -157,6 +157,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     //
     this.shareSubnetTags();
 
+    //
+    // Create SSM parameters
+    //
+    this.createSsmParameters();
+
     Logger.info('[network-associations-stack] Completed stack synthesis');
   }
 
@@ -1075,7 +1080,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         vpcId: requesterVpcId,
         tags: peering.tags ?? [],
       });
-      new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${pascalCase(peering.name)}VpcPeering`), {
+      this.ssmParameters.push({
+        logicalId: pascalCase(`SsmParam${pascalCase(peering.name)}VpcPeering`),
         parameterName: `/accelerator/network/vpcPeering/${peering.name}/id`,
         stringValue: vpcPeering.peeringId,
       });

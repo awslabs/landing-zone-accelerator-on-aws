@@ -39,7 +39,8 @@ export class PrepareStack extends AcceleratorStack {
       cdk.Stack.of(this).account === props.accountsConfig.getManagementAccountId()
     ) {
       Logger.debug(`[prepare-stack] homeRegion: ${props.globalConfig.homeRegion}`);
-      new cdk.aws_ssm.StringParameter(this, 'Parameter', {
+      this.ssmParameters.push({
+        logicalId: 'Parameter',
         parameterName: `/accelerator/prepare-stack/validate`,
         stringValue: 'value',
       });
@@ -107,7 +108,8 @@ export class PrepareStack extends AcceleratorStack {
         }),
       );
 
-      new cdk.aws_ssm.StringParameter(this, 'AcceleratorManagementKmsArnParameter', {
+      this.ssmParameters.push({
+        logicalId: 'AcceleratorManagementKmsArnParameter',
         parameterName: '/accelerator/management/kms/key-arn',
         stringValue: key.keyArn,
       });
@@ -139,7 +141,8 @@ export class PrepareStack extends AcceleratorStack {
         }),
       );
 
-      new cdk.aws_ssm.StringParameter(this, 'AcceleratorCloudWatchKmsArnParameter', {
+      this.ssmParameters.push({
+        logicalId: 'AcceleratorCloudWatchKmsArnParameter',
         parameterName: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
         stringValue: cloudwatchKey.keyArn,
       });
@@ -152,7 +155,8 @@ export class PrepareStack extends AcceleratorStack {
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
 
-      new cdk.aws_ssm.StringParameter(this, 'AcceleratorLambdaKmsArnParameter', {
+      this.ssmParameters.push({
+        logicalId: 'AcceleratorLambdaKmsArnParameter',
         parameterName: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
         stringValue: lambdaKey.keyArn,
       });
@@ -288,7 +292,8 @@ export class PrepareStack extends AcceleratorStack {
             },
           ]);
 
-          new cdk.aws_ssm.StringParameter(this, 'NewCTAccountsTableNameParameter', {
+          this.ssmParameters.push({
+            logicalId: 'NewCTAccountsTableNameParameter',
             parameterName: `/accelerator/prepare-stack/NewCTAccountsTableName`,
             stringValue: newCTAccountsTable.tableName,
           });
@@ -303,13 +308,15 @@ export class PrepareStack extends AcceleratorStack {
               pointInTimeRecovery: true,
             });
 
-            new cdk.aws_ssm.StringParameter(this, 'GovCloudAccountMappingTableNameParameter', {
+            this.ssmParameters.push({
+              logicalId: 'GovCloudAccountMappingTableNameParameter',
               parameterName: `/accelerator/prepare-stack/govCloudAccountMappingTableName`,
               stringValue: govCloudAccountMappingTable.tableName,
             });
           }
 
-          new cdk.aws_ssm.StringParameter(this, 'NewOrgAccountsTableNameParameter', {
+          this.ssmParameters.push({
+            logicalId: 'NewOrgAccountsTableNameParameter',
             parameterName: `/accelerator/prepare-stack/NewOrgAccountsTableName`,
             stringValue: newOrgAccountsTable.tableName,
           });
@@ -585,6 +592,11 @@ export class PrepareStack extends AcceleratorStack {
         }
       }
     }
+
+    //
+    // Create SSM Parameters
+    //
+    this.createSsmParameters();
 
     Logger.info('[prepare-stack] Completed stack synthesis');
   }

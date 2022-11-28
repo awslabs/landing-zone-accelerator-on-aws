@@ -373,7 +373,8 @@ export class NetworkVpcStack extends AcceleratorStack {
 
         prefixListMap.set(prefixListItem.name, prefixList);
 
-        new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${pascalCase(prefixListItem.name)}PrefixList`), {
+        this.ssmParameters.push({
+          logicalId: pascalCase(`SsmParam${pascalCase(prefixListItem.name)}PrefixList`),
           parameterName: `/accelerator/network/prefixList/${prefixListItem.name}/id`,
           stringValue: prefixList.prefixListId,
         });
@@ -429,7 +430,8 @@ export class NetworkVpcStack extends AcceleratorStack {
           tags: vpcItem.tags,
           virtualPrivateGateway: vpcItem.virtualPrivateGateway,
         });
-        new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${pascalCase(vpcItem.name)}VpcId`), {
+        this.ssmParameters.push({
+          logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name)}VpcId`),
           parameterName: `/accelerator/network/vpc/${vpcItem.name}/id`,
           stringValue: vpc.vpcId,
         });
@@ -514,14 +516,11 @@ export class NetworkVpcStack extends AcceleratorStack {
         // Create Route Table SSM Parameters
         //
         for (const [routeTableName, routeTableInfo] of routeTableMap) {
-          new cdk.aws_ssm.StringParameter(
-            this,
-            pascalCase(`SsmParam${pascalCase(vpcItem.name)}${pascalCase(routeTableName)}RouteTableId`),
-            {
-              parameterName: `/accelerator/network/vpc/${vpcItem.name}/routeTable/${routeTableName}/id`,
-              stringValue: routeTableInfo.routeTableId,
-            },
-          );
+          this.ssmParameters.push({
+            logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name)}${pascalCase(routeTableName)}RouteTableId`),
+            parameterName: `/accelerator/network/vpc/${vpcItem.name}/routeTable/${routeTableName}/id`,
+            stringValue: routeTableInfo.routeTableId,
+          });
         }
 
         //
@@ -595,14 +594,11 @@ export class NetworkVpcStack extends AcceleratorStack {
           });
 
           subnetMap.set(subnetItem.name, subnet);
-          new cdk.aws_ssm.StringParameter(
-            this,
-            pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(subnetItem.name)}SubnetId`),
-            {
-              parameterName: `/accelerator/network/vpc/${vpcItem.name}/subnet/${subnetItem.name}/id`,
-              stringValue: subnet.subnetId,
-            },
-          );
+          this.ssmParameters.push({
+            logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(subnetItem.name)}SubnetId`),
+            parameterName: `/accelerator/network/vpc/${vpcItem.name}/subnet/${subnetItem.name}/id`,
+            stringValue: subnet.subnetId,
+          });
 
           // If the VPC has additional CIDR blocks, depend on those CIDRs to be associated
           for (const cidr of vpc.cidrs ?? []) {
@@ -655,14 +651,11 @@ export class NetworkVpcStack extends AcceleratorStack {
             },
           );
           natGatewayMap.set(natGatewayItem.name, natGateway);
-          new cdk.aws_ssm.StringParameter(
-            this,
-            pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(natGatewayItem.name)}NatGatewayId`),
-            {
-              parameterName: `/accelerator/network/vpc/${vpcItem.name}/natGateway/${natGatewayItem.name}/id`,
-              stringValue: natGateway.natGatewayId,
-            },
-          );
+          this.ssmParameters.push({
+            logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(natGatewayItem.name)}NatGatewayId`),
+            parameterName: `/accelerator/network/vpc/${vpcItem.name}/natGateway/${natGatewayItem.name}/id`,
+            stringValue: natGateway.natGatewayId,
+          });
         }
 
         //
@@ -702,16 +695,13 @@ export class NetworkVpcStack extends AcceleratorStack {
             },
           );
           transitGatewayAttachments.set(tgwAttachmentItem.transitGateway.name, attachment);
-          new cdk.aws_ssm.StringParameter(
-            this,
-            pascalCase(
+          this.ssmParameters.push({
+            logicalId: pascalCase(
               `SsmParam${pascalCase(vpcItem.name) + pascalCase(tgwAttachmentItem.name)}TransitGatewayAttachmentId`,
             ),
-            {
-              parameterName: `/accelerator/network/vpc/${vpcItem.name}/transitGatewayAttachment/${tgwAttachmentItem.name}/id`,
-              stringValue: attachment.transitGatewayAttachmentId,
-            },
-          );
+            parameterName: `/accelerator/network/vpc/${vpcItem.name}/transitGatewayAttachment/${tgwAttachmentItem.name}/id`,
+            stringValue: attachment.transitGatewayAttachmentId,
+          });
         }
 
         //
@@ -899,14 +889,13 @@ export class NetworkVpcStack extends AcceleratorStack {
           );
           securityGroupMap.set(securityGroupItem.name, securityGroup);
 
-          new cdk.aws_ssm.StringParameter(
-            this,
-            pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`),
-            {
-              parameterName: `/accelerator/network/vpc/${vpcItem.name}/securityGroup/${securityGroupItem.name}/id`,
-              stringValue: securityGroup.securityGroupId,
-            },
-          );
+          this.ssmParameters.push({
+            logicalId: pascalCase(
+              `SsmParam${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`,
+            ),
+            parameterName: `/accelerator/network/vpc/${vpcItem.name}/securityGroup/${securityGroupItem.name}/id`,
+            stringValue: securityGroup.securityGroupId,
+          });
         }
 
         // Add security group references
@@ -997,14 +986,11 @@ export class NetworkVpcStack extends AcceleratorStack {
             true,
           );
 
-          new cdk.aws_ssm.StringParameter(
-            this,
-            pascalCase(`SsmParam${pascalCase(vpcItem.name)}${pascalCase(naclItem.name)}Nacl`),
-            {
-              parameterName: `/accelerator/network/vpc/${vpcItem.name}/networkAcl/${naclItem.name}/id`,
-              stringValue: networkAcl.networkAclId,
-            },
-          );
+          this.ssmParameters.push({
+            logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name)}${pascalCase(naclItem.name)}Nacl`),
+            parameterName: `/accelerator/network/vpc/${vpcItem.name}/networkAcl/${naclItem.name}/id`,
+            stringValue: networkAcl.networkAclId,
+          });
 
           for (const subnetItem of naclItem.subnetAssociations) {
             Logger.info(`[network-vpc-stack] Associate ${naclItem.name} to subnet ${subnetItem}`);
@@ -1102,6 +1088,12 @@ export class NetworkVpcStack extends AcceleratorStack {
         }
       }
     }
+
+    //
+    // Create SSM Parameters
+    //
+    this.createSsmParameters();
+
     Logger.info('[network-vpc-stack] Completed stack synthesis');
   }
 
@@ -1430,7 +1422,8 @@ export class NetworkVpcStack extends AcceleratorStack {
       deletionProtection: loadBalancerItem.deletionProtection,
       tags: loadBalancerItem.tags,
     });
-    new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${pascalCase(loadBalancerItem.name)}GwlbServiceId`), {
+    this.ssmParameters.push({
+      logicalId: pascalCase(`SsmParam${pascalCase(loadBalancerItem.name)}GwlbServiceId`),
       parameterName: `/accelerator/network/gwlb/${loadBalancerItem.name}/endpointService/id`,
       stringValue: loadBalancer.endpointServiceId,
     });
@@ -1690,16 +1683,13 @@ export class NetworkVpcStack extends AcceleratorStack {
         ).peeringAttachmentId;
 
         // Create SSM parameter for peering attachment ID
-        new cdk.aws_ssm.StringParameter(
-          this,
-          pascalCase(
+        this.ssmParameters.push({
+          logicalId: pascalCase(
             `SsmParam${transitGatewayPeeringItem.requester.transitGatewayName}${transitGatewayPeeringItem.name}PeeringAttachmentId`,
           ),
-          {
-            parameterName: `/accelerator/network/transitGateways/${transitGatewayPeeringItem.requester.transitGatewayName}/peering/${transitGatewayPeeringItem.name}/id`,
-            stringValue: peeringAttachmentId,
-          },
-        );
+          parameterName: `/accelerator/network/transitGateways/${transitGatewayPeeringItem.requester.transitGatewayName}/peering/${transitGatewayPeeringItem.name}/id`,
+          stringValue: peeringAttachmentId,
+        });
 
         Logger.info(
           `[network-associations-stack] Completed transit gateway peering for tgw ${transitGatewayPeeringItem.requester.transitGatewayName} with accepter tgw ${transitGatewayPeeringItem.accepter.transitGatewayName}`,

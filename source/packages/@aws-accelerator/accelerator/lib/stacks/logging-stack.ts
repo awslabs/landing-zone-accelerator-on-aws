@@ -110,7 +110,8 @@ export class LoggingStack extends AcceleratorStack {
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
-      new cdk.aws_ssm.StringParameter(this, 'AcceleratorLambdaKmsArnParameter', {
+      this.ssmParameters.push({
+        logicalId: 'AcceleratorLambdaKmsArnParameter',
         parameterName: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
         stringValue: this.lambdaKey.keyArn,
       });
@@ -387,6 +388,11 @@ export class LoggingStack extends AcceleratorStack {
       }
     }
 
+    //
+    // Create SSM Parameters
+    //
+    this.createSsmParameters();
+
     Logger.debug(`[logging-stack] Stack synthesis complete`);
   }
 
@@ -445,7 +451,8 @@ export class LoggingStack extends AcceleratorStack {
         }),
       );
 
-      new cdk.aws_ssm.StringParameter(this, 'AcceleratorS3KmsArnParameter', {
+      this.ssmParameters.push({
+        logicalId: 'AcceleratorS3KmsArnParameter',
         parameterName: AcceleratorStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
         stringValue: s3Key.keyArn,
       });
@@ -531,7 +538,8 @@ export class LoggingStack extends AcceleratorStack {
       );
     });
 
-    new cdk.aws_ssm.StringParameter(this, 'AcceleratorS3KmsArnParameter', {
+    this.ssmParameters.push({
+      logicalId: 'AcceleratorS3KmsArnParameter',
       parameterName: AcceleratorStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
       stringValue: s3Key.keyArn,
     });
@@ -621,7 +629,8 @@ export class LoggingStack extends AcceleratorStack {
         ],
       );
 
-      new cdk.aws_ssm.StringParameter(this, 'AcceleratorVpcFlowLogsBucketArnParameter', {
+      this.ssmParameters.push({
+        logicalId: 'AcceleratorVpcFlowLogsBucketArnParameter',
         parameterName: AcceleratorStack.ACCELERATOR_VPC_FLOW_LOGS_DESTINATION_S3_BUCKET_ARN_PARAMETER_NAME,
         stringValue: vpcFlowLogsBucket.getS3Bucket().bucketArn,
       });
@@ -867,7 +876,8 @@ export class LoggingStack extends AcceleratorStack {
       }),
     );
 
-    new cdk.aws_ssm.StringParameter(this, 'AcceleratorCloudWatchKmsArnParameter', {
+    this.ssmParameters.push({
+      logicalId: 'AcceleratorCloudWatchKmsArnParameter',
       parameterName: '/accelerator/kms/cloudwatch/key-arn',
       stringValue: cloudwatchKey.keyArn,
     });
@@ -913,7 +923,8 @@ export class LoggingStack extends AcceleratorStack {
       }
 
       // Create SSM parameter
-      new cdk.aws_ssm.StringParameter(this, 'AcceleratorKmsArnParameter-' + pascalCase(keyItem.name), {
+      this.ssmParameters.push({
+        logicalId: 'AcceleratorKmsArnParameter-' + pascalCase(keyItem.name),
         parameterName: `/accelerator/kms/${keyItem.name}/key-arn`,
         stringValue: key.keyArn,
       });
