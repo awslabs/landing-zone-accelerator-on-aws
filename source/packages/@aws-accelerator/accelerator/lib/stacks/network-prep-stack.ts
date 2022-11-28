@@ -119,6 +119,11 @@ export class NetworkPrepStack extends AcceleratorStack {
     //
     this.createCentralNetworkResources(props);
 
+    //
+    // Create SSM Parameters
+    //
+    this.createSsmParameters();
+
     Logger.info('[network-prep-stack] Completed stack synthesis');
   }
 
@@ -358,7 +363,8 @@ export class NetworkPrepStack extends AcceleratorStack {
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
       });
-      new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${dxgwItem.name}DirectConnectGateway`), {
+      this.ssmParameters.push({
+        logicalId: pascalCase(`SsmParam${dxgwItem.name}DirectConnectGateway`),
         parameterName: `/accelerator/network/directConnectGateways/${dxgwItem.name}/id`,
         stringValue: dxGateway.directConnectGatewayId,
       });
@@ -467,7 +473,8 @@ export class NetworkPrepStack extends AcceleratorStack {
       throw new Error(`Create virtual interfaces: unable to process properties for virtual interface ${vifName}`);
     }
     const virtualInterface = new VirtualInterface(this, vifLogicalId, vifProps);
-    new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmParam${dxgwName}${vifName}VirtualInterface`), {
+    this.ssmParameters.push({
+      logicalId: pascalCase(`SsmParam${dxgwName}${vifName}VirtualInterface`),
       parameterName: `/accelerator/network/directConnectGateways/${dxgwName}/virtualInterfaces/${vifName}/id`,
       stringValue: virtualInterface.virtualInterfaceId,
     });

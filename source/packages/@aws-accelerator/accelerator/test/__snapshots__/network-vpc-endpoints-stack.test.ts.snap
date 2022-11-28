@@ -970,6 +970,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointskmsDns52AB3E63": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsssmDnsADE5D35A",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/kms/dns",
         "Type": "String",
@@ -1026,6 +1029,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointslogsDns987F0AF9": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointskmsPhz4C558915",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/logs/dns",
         "Type": "String",
@@ -1054,6 +1060,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointslogsPhzDC71A382": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointskmsPhz4C558915",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/logs/hostedZoneId",
         "Type": "String",
@@ -1110,6 +1119,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsssmPhzF2C37E80": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsssmDnsADE5D35A",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/ssm/hostedZoneId",
         "Type": "String",
@@ -1138,6 +1150,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsssmmessagesDns075A6D34": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsssmDnsADE5D35A",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/ssmmessages/dns",
         "Type": "String",
@@ -1166,6 +1181,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsssmmessagesPhzE73CA844": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsssmDnsADE5D35A",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/endpoints/ssmmessages/hostedZoneId",
         "Type": "String",
@@ -1214,6 +1232,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorInboundResolverEndpoint80E88844": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointskmsPhz4C558915",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound/id",
         "Type": "String",
@@ -1227,6 +1248,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorOutboundResolverEndpoint9F3A81CE": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointskmsPhz4C558915",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/route53Resolver/endpoints/accelerator-outbound/id",
         "Type": "String",

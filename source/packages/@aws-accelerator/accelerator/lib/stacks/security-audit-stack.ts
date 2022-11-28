@@ -140,6 +140,11 @@ export class SecurityAuditStack extends AcceleratorStack {
     //
     this.configureControlTowerNotification();
 
+    //
+    // Create SSM Parameters
+    //
+    this.createSsmParameters();
+
     Logger.info('[security-audit-stack] Completed stack synthesis');
   }
 
@@ -267,7 +272,8 @@ export class SecurityAuditStack extends AcceleratorStack {
         ],
       );
 
-      new cdk.aws_ssm.StringParameter(this, 'SsmParamOrganizationAuditManagerPublishingDestinationBucketArn', {
+      this.ssmParameters.push({
+        logicalId: 'SsmParamOrganizationAuditManagerPublishingDestinationBucketArn',
         parameterName: '/accelerator/organization/security/auditManager/publishing-destination/bucket-arn',
         stringValue: bucket.getS3Bucket().bucketArn,
       });
