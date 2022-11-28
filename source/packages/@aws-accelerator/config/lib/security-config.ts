@@ -251,11 +251,15 @@ export class SecurityConfigTypes {
   static readonly securityHubStandardConfig = t.interface({
     /**
      * An enum value that specifies one of three security standards supported by SecurityHub
-     * Possible values are 'AWS Foundational Security Best Practices v1.0.0', 'CIS AWS Foundations Benchmark v1.2.0' and 'PCI DSS v3.2.1'
+     * Possible values are 'AWS Foundational Security Best Practices v1.0.0',
+     * 'CIS AWS Foundations Benchmark v1.2.0',
+     * 'CIS AWS Foundations Benchmark v1.4.0',
+     * and 'PCI DSS v3.2.1'
      */
     name: t.enums('ExportFrequencyType', [
       'AWS Foundational Security Best Practices v1.0.0',
       'CIS AWS Foundations Benchmark v1.2.0',
+      'CIS AWS Foundations Benchmark v1.4.0',
       'PCI DSS v3.2.1',
     ]),
     /**
@@ -880,7 +884,10 @@ export class DetectiveConfig implements t.TypeOf<typeof SecurityConfigTypes.dete
 export class SecurityHubStandardConfig implements t.TypeOf<typeof SecurityConfigTypes.securityHubStandardConfig> {
   /**
    * An enum value that specifies one of three security standards supported by SecurityHub
-   * Possible values are 'AWS Foundational Security Best Practices v1.0.0', 'CIS AWS Foundations Benchmark v1.2.0' and 'PCI DSS v3.2.1'
+   * Possible values are 'AWS Foundational Security Best Practices v1.0.0',
+   * 'CIS AWS Foundations Benchmark v1.2.0',
+   * 'CIS AWS Foundations Benchmark v1.4.0'
+   * and 'PCI DSS v3.2.1'
    */
   readonly name = '';
   /**
