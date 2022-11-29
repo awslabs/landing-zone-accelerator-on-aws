@@ -1300,7 +1300,9 @@ export class LoggingStack extends AcceleratorStack {
         resources: ['*'],
         conditions: {
           ArnLike: {
-            'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+            'aws:PrincipalARN': [
+              `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/AWSAccelerator-*`,
+            ],
           },
         },
       }),
