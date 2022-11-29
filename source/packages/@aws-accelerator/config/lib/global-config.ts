@@ -64,6 +64,7 @@ export abstract class GlobalConfigTypes {
     excludeRegions: t.optional(t.array(t.region)),
     excludeAccounts: t.optional(t.array(t.string)),
     lifecycleRules: t.optional(t.array(t.lifecycleRuleConfig)),
+    attachPolicyToIamRoles: t.optional(t.array(t.string)),
   });
 
   static readonly accessLogBucketConfig = t.interface({
@@ -402,6 +403,8 @@ export class CloudTrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloud
  *   excludeRegions: []
  *   excludeAccounts: []
  *   lifecycleRules: []
+ *   attachPolicyToIamRoles:
+ *     - EC2-Default-SSM-AD-Role
  * ```
  */
 export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.sessionManagerConfig> {
@@ -427,6 +430,11 @@ export class SessionManagerConfig implements t.TypeOf<typeof GlobalConfigTypes.s
    * S3 Lifecycle rule for log storage
    */
   readonly lifecycleRules: t.LifeCycleRule[] = [];
+  /**
+   * List of IAM EC2 roles that the Session Manager
+   * access policy should be attached to
+   */
+  readonly attachPolicyToIamRoles = [];
 }
 
 /**
