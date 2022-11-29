@@ -178,22 +178,22 @@ export class OrganizationsStack extends AcceleratorStack {
       });
 
       for (const backupPolicies of this.stackProperties.organizationConfig.backupPolicies ?? []) {
+        const policy = new Policy(this, backupPolicies.name, {
+          description: backupPolicies.description,
+          name: backupPolicies.name,
+          partition: this.props.partition,
+          path: this.generatePolicyReplacements(
+            path.join(this.stackProperties.configDirPath, backupPolicies.policy),
+            true,
+          ),
+          type: PolicyType.BACKUP_POLICY,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.logRetention,
+        });
+
+        policy.node.addDependency(enablePolicyTypeBackup);
+
         for (const orgUnit of backupPolicies.deploymentTargets.organizationalUnits) {
-          const policy = new Policy(this, backupPolicies.name, {
-            description: backupPolicies.description,
-            name: backupPolicies.name,
-            partition: this.props.partition,
-            path: this.generatePolicyReplacements(
-              path.join(this.stackProperties.configDirPath, backupPolicies.policy),
-              true,
-            ),
-            type: PolicyType.BACKUP_POLICY,
-            kmsKey: this.cloudwatchKey,
-            logRetentionInDays: this.logRetention,
-          });
-
-          policy.node.addDependency(enablePolicyTypeBackup);
-
           new PolicyAttachment(this, pascalCase(`Attach_${backupPolicies.name}_${orgUnit}`), {
             policyId: policy.id,
             targetId: this.stackProperties.organizationConfig.getOrganizationalUnitId(orgUnit),
@@ -512,22 +512,20 @@ export class OrganizationsStack extends AcceleratorStack {
         logRetentionInDays: this.logRetention,
       });
       for (const taggingPolicy of this.stackProperties.organizationConfig.taggingPolicies ?? []) {
-        for (const orgUnit of taggingPolicy.deploymentTargets.organizationalUnits) {
-          const policy = new Policy(this, taggingPolicy.name, {
-            description: taggingPolicy.description,
-            name: taggingPolicy.name,
-            partition: this.props.partition,
-            path: this.generatePolicyReplacements(
-              path.join(this.stackProperties.configDirPath, taggingPolicy.policy),
-              true,
-            ),
-            type: PolicyType.TAG_POLICY,
-            kmsKey: this.cloudwatchKey,
-            logRetentionInDays: this.logRetention,
-          });
-
-          policy.node.addDependency(enablePolicyTypeTag);
-
+        const policy = new Policy(this, `${taggingPolicy.name}`, {
+          description: taggingPolicy.description,
+          name: `${taggingPolicy.name}`,
+          partition: this.props.partition,
+          path: this.generatePolicyReplacements(
+            path.join(this.stackProperties.configDirPath, taggingPolicy.policy),
+            true,
+          ),
+          type: PolicyType.TAG_POLICY,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.logRetention,
+        });
+        policy.node.addDependency(enablePolicyTypeTag);
+        for (const orgUnit of taggingPolicy.deploymentTargets.organizationalUnits ?? []) {
           new PolicyAttachment(this, pascalCase(`Attach_${taggingPolicy.name}_${orgUnit}`), {
             policyId: policy.id,
             targetId: this.stackProperties.organizationConfig.getOrganizationalUnitId(orgUnit),
