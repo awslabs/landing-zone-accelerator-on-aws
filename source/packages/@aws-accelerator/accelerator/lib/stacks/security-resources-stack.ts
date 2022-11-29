@@ -986,6 +986,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
           cloudWatchEncryptionEnabled:
             this.props.partition !== 'aws-us-gov' &&
             this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
+          attachPolicyToIamRoles: this.props.globalConfig.logging.sessionManager.attachPolicyToIamRoles,
           cloudWatchEncryptionKey: this.cloudwatchKey,
           constructLoggingKmsKey: this.cloudwatchKey,
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
