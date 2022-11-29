@@ -1,0 +1,16 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:Describe*",
+        "ec2:Get*",
+        "ec2:ListSnapshotsInRecycleBin",
+        "ec2:SearchLocalGatewayRoutes",
+        "ec2:SearchTransitGatewayRoutes"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

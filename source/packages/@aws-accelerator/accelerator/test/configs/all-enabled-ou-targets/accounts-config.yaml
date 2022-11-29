@@ -1,0 +1,33 @@
+mandatoryAccounts:
+  - name: Management
+    description: The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: management-account@somewhere.com
+    organizationalUnit: Root
+  - name: LogArchive
+    description: The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: logarchive-account@somewhere.com
+    organizationalUnit: Security
+  - name: Audit
+    description: The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: audit-account@somewhere.com
+    organizationalUnit: Security
+workloadAccounts:
+  - name: SharedServices
+    description: The SharedServices account
+    email: shared-services@somewhere.com
+    organizationalUnit: Infrastructure
+  - name: Network
+    description: The Network account
+    email: network@somewhere.com
+    organizationalUnit: Infrastructure
+accountIds:
+  - email: management-account@somewhere.com
+    accountId: "111111111111"
+  - email: audit-account@somewhere.com
+    accountId: "222222222222"
+  - email: logarchive-account@somewhere.com
+    accountId: "333333333333"
+  - email: shared-services@somewhere.com
+    accountId: "444444444444"
+  - email: network@somewhere.com
+    accountId: "555555555555"
