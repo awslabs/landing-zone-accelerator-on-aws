@@ -432,15 +432,11 @@ export class AcceleratorPipeline extends Construct {
    */
   private addReviewStage() {
     if (this.props.enableApprovalStage) {
-      let notificationTopic: cdk.aws_sns.Topic | undefined;
-
-      if (this.props.partition === 'aws') {
-        notificationTopic = new cdk.aws_sns.Topic(this, 'ManualApprovalActionTopic', {
-          topicName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
-          displayName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
-          masterKey: this.installerKey,
-        });
-      }
+      const notificationTopic = new cdk.aws_sns.Topic(this, 'ManualApprovalActionTopic', {
+        topicName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
+        displayName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
+        masterKey: this.installerKey,
+      });
 
       let notifyEmails: string[] | undefined = undefined;
 
