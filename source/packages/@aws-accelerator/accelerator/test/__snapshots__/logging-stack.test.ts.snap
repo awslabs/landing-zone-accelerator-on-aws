@@ -406,7 +406,7 @@ Object {
               ],
               "Condition": Object {
                 "StringEquals": Object {
-                  "aws:PrincipalOrgId": Object {
+                  "aws:PrincipalOrgID": Object {
                     "Ref": "Organization29A5FC3F",
                   },
                 },
@@ -489,7 +489,7 @@ Object {
               ],
               "Condition": Object {
                 "StringEquals": Object {
-                  "aws:PrincipalOrgId": Object {
+                  "aws:PrincipalOrgID": Object {
                     "Ref": "Organization29A5FC3F",
                   },
                 },

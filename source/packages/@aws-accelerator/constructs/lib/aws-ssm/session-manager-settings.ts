@@ -26,6 +26,7 @@ export interface SsmSessionManagerSettingsProps {
   readonly sendToS3: boolean;
   readonly sendToCloudWatchLogs: boolean;
   readonly cloudWatchEncryptionEnabled: boolean;
+  readonly attachPolicyToIamRoles?: string[];
   readonly cloudWatchEncryptionKey: cdk.aws_kms.IKey;
   /**
    * Custom resource lambda log group encryption key
@@ -141,6 +142,12 @@ export class SsmSessionManagerSettings extends Construct {
       document: sessionManagerEC2PolicyDocument,
       managedPolicyName: `AWSAccelerator-SessionManagerLogging-${cdk.Stack.of(this).region}`,
     });
+
+    // Attach policy to configured roles
+    for (const iamRoleName of props.attachPolicyToIamRoles ?? []) {
+      const role = cdk.aws_iam.Role.fromRoleName(this, `AcceleratorSessionManager-${iamRoleName}`, iamRoleName);
+      role.addManagedPolicy(sessionManagerEC2Policy);
+    }
 
     //Create an EC2 role that can be used for Session Manager
     const sessionManagerEC2Role = new cdk.aws_iam.Role(this, 'SessionManagerEC2Role', {
