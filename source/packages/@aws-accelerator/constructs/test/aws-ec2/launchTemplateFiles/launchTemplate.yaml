@@ -1,0 +1,160 @@
+blockDeviceMappings:
+  - deviceName: deviceName
+    ebs:
+      deleteOnTermination: false
+      encrypted: false
+      iops: 123
+      kmsKeyId: ${ACCEL_LOOKUP::KMS:abc}
+      snapshotId: snapshotId
+      throughput: 123
+      volumeSize: 123
+      volumeType: volumeType
+    noDevice: noDevice
+    virtualName: virtualName
+capacityReservationSpecification:
+  capacityReservationPreference: capacityReservationPreference
+  capacityReservationTarget:
+    capacityReservationId: capacityReservationId
+    capacityReservationResourceGroupArn: capacityReservationResourceGroupArn
+cpuOptions:
+  coreCount: 123
+  threadsPerCore: 123
+creditSpecification:
+  cpuCredits: cpuCredits
+disableApiStop: false
+disableApiTermination: false
+ebsOptimized: false
+elasticGpuSpecifications:
+  - type: type
+elasticInferenceAccelerators:
+  - count: 123
+    type: type
+enclaveOptions:
+  enabled: false
+hibernationOptions:
+  configured: false
+iamInstanceProfile:
+  arn: ${ACCEL_LOOKUP::InstanceProfile:profile-name}
+  name: name
+imageId: ${ACCEL_LOOKUP::AmiId:/path/to/ssm/parameter/store}
+instanceInitiatedShutdownBehavior: instanceInitiatedShutdownBehavior
+instanceMarketOptions:
+  marketType: marketType
+  spotOptions:
+    blockDurationMinutes: 123
+    instanceInterruptionBehavior: instanceInterruptionBehavior
+    maxPrice: maxPrice
+    spotInstanceType: spotInstanceType
+    validUntil: validUntil
+instanceRequirements:
+  acceleratorCount:
+    max: 123
+    min: 123
+  acceleratorManufacturers:
+    - acceleratorManufacturers
+  acceleratorNames:
+    - acceleratorNames
+  acceleratorTotalMemoryMiB:
+    max: 123
+    min: 123
+  acceleratorTypes:
+    - acceleratorTypes
+  bareMetal: bareMetal
+  baselineEbsBandwidthMbps:
+    max: 123
+    min: 123
+  burstablePerformance: burstablePerformance
+  cpuManufacturers:
+    - cpuManufacturers
+  excludedInstanceTypes:
+    - excludedInstanceTypes
+  instanceGenerations:
+    - instanceGenerations
+  localStorage: localStorage
+  localStorageTypes:
+    - localStorageTypes
+  memoryGiBPerVCpu:
+    max: 123
+    min: 123
+  memoryMiB:
+    max: 123
+    min: 123
+  networkInterfaceCount:
+    max: 123
+    min: 123
+  onDemandMaxPricePercentageOverLowestPrice: 123
+  requireHibernateSupport: false
+  spotMaxPricePercentageOverLowestPrice: 123
+  totalLocalStorageGb:
+    max: 123
+    min: 123
+  vCpuCount:
+    max: 123
+    min: 123
+instanceType: instanceType
+kernelId: kernelId
+keyName: keyName
+licenseSpecifications:
+  - licenseConfigurationArn: licenseConfigurationArn
+maintenanceOptions:
+  autoRecovery: autoRecovery
+metadataOptions:
+  httpEndpoint: httpEndpoint
+  httpProtocolIpv6: httpProtocolIpv6
+  httpPutResponseHopLimit: 123
+  httpTokens: httpTokens
+  instanceMetadataTags: instanceMetadataTags
+monitoring:
+  enabled: false
+networkInterfaces:
+  - associateCarrierIpAddress: false
+    associatePublicIpAddress: false
+    deleteOnTermination: false
+    description: description
+    deviceIndex: 123
+    groups:
+      - ${ACCEL_LOOKUP::SecurityGroupId:Sg1}
+      - ${ACCEL_LOOKUP::SecurityGroupId:Sg2}
+    interfaceType: interfaceType
+    ipv4PrefixCount: 123
+    ipv4Prefixes:
+      - ipv4Prefix: ipv4Prefix
+    ipv6AddressCount: 123
+    ipv6Addresses:
+      - ipv6Address: ipv6Address
+    ipv6PrefixCount: 123
+    ipv6Prefixes:
+      - ipv6Prefix: ipv6Prefix
+    networkCardIndex: 123
+    networkInterfaceId: networkInterfaceId
+    privateIpAddress: privateIpAddress
+    privateIpAddresses:
+      - primary: false
+        privateIpAddress: privateIpAddress
+    secondaryPrivateIpAddressCount: 123
+    subnetId: ${ACCEL_LOOKUP::SubnetId:Sg1}
+placement:
+  affinity: affinity
+  availabilityZone: availabilityZone
+  groupName: groupName
+  hostId: hostId
+  hostResourceGroupArn: hostResourceGroupArn
+  partitionNumber: 123
+  spreadDomain: spreadDomain
+  tenancy: tenancy
+privateDnsNameOptions:
+  enableResourceNameDnsAaaaRecord: false
+  enableResourceNameDnsARecord: false
+  hostnameType: hostnameType
+ramDiskId: ramDiskId
+securityGroupIds:
+  - ${ACCEL_LOOKUP::SecurityGroupId:Sg1}
+  - ${ACCEL_LOOKUP::SecurityGroupId:Sg2}
+securityGroups:
+  - securityGroups
+tagSpecifications:
+  - resourceType: resourceType
+    tags:
+      - key: key
+        value: value
+userData: userData

@@ -21,6 +21,7 @@ import { throttlingBackOff } from '@aws-accelerator/utils';
 
 import * as t from './common-types';
 import { OrganizationConfig } from './organization-config';
+import { DeploymentTargets } from './common-types';
 
 /**
  * Accounts configuration items.
@@ -375,6 +376,13 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     }
   }
 
+  // Helper function to add an account id to the list
+  private _addAccountId(ids: string[], accountId: string) {
+    if (!ids.includes(accountId)) {
+      ids.push(accountId);
+    }
+  }
+
   /**
    *
    * @param dir
@@ -474,6 +482,34 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     }
 
     return false;
+  }
+
+  public getAccountIdsFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
+    const accountIds: string[] = [];
+
+    for (const ou of deploymentTargets.organizationalUnits ?? []) {
+      // debug: processing ou
+      if (ou === 'Root') {
+        for (const account of this.accountIds ?? []) {
+          // debug: accountId
+          this._addAccountId(accountIds, account.accountId);
+        }
+      } else {
+        for (const account of [...this.mandatoryAccounts, ...this.workloadAccounts]) {
+          if (ou === account.organizationalUnit) {
+            const accountId = this.getAccountId(account.name);
+            this._addAccountId(accountIds, accountId);
+          }
+        }
+      }
+    }
+
+    for (const account of deploymentTargets.accounts ?? []) {
+      const accountId = this.getAccountId(account);
+      this._addAccountId(accountIds, accountId);
+    }
+
+    return accountIds;
   }
 
   public getManagementAccount(): AccountConfig {

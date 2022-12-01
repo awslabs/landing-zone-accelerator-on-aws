@@ -11,13 +11,16 @@
  *  and limitations under the License.
  */
 
-export * from './lib/accounts-config';
-export * from './lib/common-types';
-export * from './lib/customizations-config';
-export * from './lib/global-config';
-export * from './lib/iam-config';
-export * from './lib/network-config';
-export * from './lib/organization-config';
-export * from './lib/security-config';
-export * from './validator/customizations-config-validator';
-export * from './validator/network-config-validator';
+import { AcceleratorStage } from '../lib/accelerator-stage';
+import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
+import { describe } from '@jest/globals';
+import { snapShotTest } from './snapshot-test';
+
+const testNamePrefix = 'Construct(CustomizationsStack): ';
+
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.CUSTOMIZATIONS, 'all-enabled', 'aws');
+const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
+
+describe('CustomizationsStack', () => {
+  snapShotTest(testNamePrefix, stack);
+});

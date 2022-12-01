@@ -18,9 +18,12 @@ import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { AwsSolutionsChecks, NagSuppressions } from 'cdk-nag';
 import { IConstruct } from 'constructs';
+import * as fs from 'fs';
+import * as path from 'path';
 
 import {
   AccountsConfig,
+  CustomizationsConfig,
   GlobalConfig,
   IamConfig,
   NetworkConfig,
@@ -51,6 +54,9 @@ import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
+import { CustomStack, generateCustomStackMappings } from '../lib/stacks/custom-stack';
+import { CustomizationsStack } from '../lib/stacks/customizations-stack';
+import { ApplicationsStack } from '../lib/stacks/applications-stack';
 
 process.on(
   'unhandledRejection',
@@ -148,8 +154,6 @@ function addAcceleratorTags(node: IConstruct): void {
 async function main() {
   Logger.info('[app] Begin Accelerator CDK App');
   const app = new cdk.App();
-  // Add AWS Solutions checks
-  cdk.Aspects.of(app).add(new AwsSolutionsChecks());
 
   try {
     //
@@ -243,6 +247,8 @@ async function main() {
         },
       );
 
+      cdk.Aspects.of(pipelineStack).add(new AwsSolutionsChecks());
+
       NagSuppressions.addStackSuppressions(pipelineStack, [
         { id: 'AwsSolutions-IAM5', reason: 'IAM role requires wildcard permissions.' },
       ]);
@@ -253,7 +259,7 @@ async function main() {
     //
     if (includeStage({ stage: AcceleratorStage.TESTER_PIPELINE, account, region })) {
       if (process.env['ACCELERATOR_REPOSITORY_NAME'] && process.env['ACCELERATOR_REPOSITORY_BRANCH_NAME']) {
-        new TesterPipelineStack(
+        const testerPipelineStack = new TesterPipelineStack(
           app,
           process.env['ACCELERATOR_QUALIFIER']
             ? `${process.env['ACCELERATOR_QUALIFIER']}-${AcceleratorStage.TESTER_PIPELINE}-stack-${account}-${region}`
@@ -270,18 +276,28 @@ async function main() {
             terminationProtection: true,
           },
         );
+        cdk.Aspects.of(testerPipelineStack).add(new AwsSolutionsChecks());
       }
     }
 
     if (configDirPath) {
       const globalConfig = GlobalConfig.load(configDirPath);
+      let customizationsConfig: CustomizationsConfig;
+
+      // Create empty customizationsConfig if optional configuration file does not exist
+      if (fs.existsSync(path.join(configDirPath, 'customizations-config.yaml'))) {
+        customizationsConfig = CustomizationsConfig.load(configDirPath);
+      } else {
+        customizationsConfig = new CustomizationsConfig();
+      }
       //
       // Create properties to be used by AcceleratorStack types
       //
       const props = {
         configDirPath,
         accountsConfig: AccountsConfig.load(configDirPath),
-        globalConfig,
+        customizationsConfig: customizationsConfig,
+        globalConfig: GlobalConfig.load(configDirPath),
         iamConfig: IamConfig.load(configDirPath),
         networkConfig: NetworkConfig.load(configDirPath),
         organizationConfig: OrganizationConfig.load(configDirPath),
@@ -334,6 +350,7 @@ async function main() {
           },
         );
         addAcceleratorTags(prepareStack);
+        cdk.Aspects.of(prepareStack).add(new AwsSolutionsChecks());
       }
 
       //
@@ -361,6 +378,7 @@ async function main() {
           },
         );
         addAcceleratorTags(finalizeStack);
+        cdk.Aspects.of(finalizeStack).add(new AwsSolutionsChecks());
       }
 
       //
@@ -388,6 +406,7 @@ async function main() {
           },
         );
         addAcceleratorTags(accountsStack);
+        cdk.Aspects.of(accountsStack).add(new AwsSolutionsChecks());
       }
 
       //
@@ -418,6 +437,7 @@ async function main() {
             },
           );
           addAcceleratorTags(organizationStack);
+          cdk.Aspects.of(organizationStack).add(new AwsSolutionsChecks());
         }
       }
 
@@ -447,6 +467,7 @@ async function main() {
             },
           );
           addAcceleratorTags(keyStack);
+          cdk.Aspects.of(keyStack).add(new AwsSolutionsChecks());
         }
 
         if (includeStage({ stage: AcceleratorStage.SECURITY_AUDIT, account: auditAccountId, region: enabledRegion })) {
@@ -471,6 +492,7 @@ async function main() {
             },
           );
           addAcceleratorTags(auditStack);
+          cdk.Aspects.of(auditStack).add(new AwsSolutionsChecks());
         }
       }
 
@@ -512,6 +534,7 @@ async function main() {
               },
             );
             addAcceleratorTags(bootstrapStack);
+            cdk.Aspects.of(bootstrapStack).add(new AwsSolutionsChecks());
           }
 
           //
@@ -530,6 +553,7 @@ async function main() {
               },
             );
             addAcceleratorTags(loggingStack);
+            cdk.Aspects.of(loggingStack).add(new AwsSolutionsChecks());
           }
 
           //
@@ -548,6 +572,7 @@ async function main() {
               },
             );
             addAcceleratorTags(securityStack);
+            cdk.Aspects.of(securityStack).add(new AwsSolutionsChecks());
           }
 
           //
@@ -566,6 +591,7 @@ async function main() {
               },
             );
             addAcceleratorTags(operationsStack);
+            cdk.Aspects.of(operationsStack).add(new AwsSolutionsChecks());
           }
 
           //
@@ -584,6 +610,7 @@ async function main() {
               },
             );
             addAcceleratorTags(networkPrepStack);
+            cdk.Aspects.of(networkPrepStack).add(new AwsSolutionsChecks());
           }
 
           //
@@ -602,6 +629,83 @@ async function main() {
               },
             );
             addAcceleratorTags(securityResourcesStack);
+            cdk.Aspects.of(securityResourcesStack).add(new AwsSolutionsChecks());
+          }
+
+          //
+          // CUSTOMIZATIONS Stack
+          //
+          if (includeStage({ stage: AcceleratorStage.CUSTOMIZATIONS, account: accountId, region: enabledRegion })) {
+            const customizationsStack = new CustomizationsStack(
+              app,
+              `${AcceleratorStackNames[AcceleratorStage.CUSTOMIZATIONS]}-${accountId}-${enabledRegion}`,
+              {
+                env,
+                description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
+                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                terminationProtection: props.globalConfig.terminationProtection ?? true,
+                ...props,
+              },
+            );
+            cdk.Aspects.of(customizationsStack).add(new AwsSolutionsChecks());
+
+            if (customizationsConfig?.customizations?.cloudFormationStacks) {
+              const customStackList = generateCustomStackMappings(
+                props.accountsConfig,
+                props.organizationConfig,
+                customizationsConfig,
+                accountId,
+                enabledRegion,
+              );
+
+              for (const stack of customStackList ?? []) {
+                Logger.info(`[custom-stack] New stack ${stack.stackConfig.name}`);
+                stack.stackObj = new CustomStack(app, `${stack.stackConfig.name}-${accountId}-${enabledRegion}`, {
+                  env,
+                  description: stack.stackConfig.description,
+                  runOrder: stack.stackConfig.runOrder,
+                  stackName: stack.stackConfig.name,
+                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  templateFile: stack.stackConfig.template,
+                  terminationProtection: stack.stackConfig.terminationProtection,
+                  ...props,
+                });
+
+                if (stack.dependsOn) {
+                  for (const stackName of stack.dependsOn) {
+                    const previousStack = customStackList.find(a => a.stackConfig.name == stackName)?.stackObj;
+                    if (previousStack) {
+                      stack.stackObj.addDependency(previousStack);
+                    }
+                  }
+                }
+              }
+            }
+            if (customizationsConfig?.applications) {
+              for (const application of customizationsConfig.applications) {
+                for (const targetEnvironmentItem of application.targetEnvironments) {
+                  const targetAccountId = props.accountsConfig.getAccountId(targetEnvironmentItem.account);
+                  for (const regionItem of targetEnvironmentItem.region) {
+                    if (enabledRegion === regionItem && accountId === targetAccountId) {
+                      const applicationStackName = `AWSAccelerator-App-${application.name}-${targetAccountId}-${regionItem}`;
+                      const env = {
+                        account: targetAccountId,
+                        region: regionItem,
+                      };
+                      const applicationStack = new ApplicationsStack(app, applicationStackName, {
+                        env,
+                        description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
+                        synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                        terminationProtection: props.globalConfig.terminationProtection ?? true,
+                        ...props,
+                        appConfigItem: application,
+                      });
+                      cdk.Aspects.of(applicationStack).add(new AwsSolutionsChecks());
+                    }
+                  }
+                }
+              }
+            }
           }
 
           //
@@ -620,6 +724,7 @@ async function main() {
               },
             );
             addAcceleratorTags(vpcStack);
+            cdk.Aspects.of(vpcStack).add(new AwsSolutionsChecks());
 
             const endpointsStack = new NetworkVpcEndpointsStack(
               app,
@@ -634,6 +739,7 @@ async function main() {
             );
             addAcceleratorTags(endpointsStack);
             endpointsStack.addDependency(vpcStack);
+            cdk.Aspects.of(endpointsStack).add(new AwsSolutionsChecks());
 
             const dnsStack = new NetworkVpcDnsStack(
               app,
@@ -648,6 +754,7 @@ async function main() {
             );
             addAcceleratorTags(dnsStack);
             dnsStack.addDependency(endpointsStack);
+            cdk.Aspects.of(dnsStack).add(new AwsSolutionsChecks());
           }
 
           //
@@ -668,6 +775,7 @@ async function main() {
               },
             );
             addAcceleratorTags(networkAssociationsStack);
+            cdk.Aspects.of(networkAssociationsStack).add(new AwsSolutionsChecks());
 
             const networkGwlbStack = new NetworkAssociationsGwlbStack(
               app,
@@ -681,6 +789,7 @@ async function main() {
               },
             );
             addAcceleratorTags(networkGwlbStack);
+            cdk.Aspects.of(networkGwlbStack).add(new AwsSolutionsChecks());
           }
         }
       }
@@ -688,7 +797,7 @@ async function main() {
 
     Logger.info('[app] End Accelerator CDK App');
   } catch (err) {
-    console.log(err);
+    Logger.error(err);
     throw err;
   }
 }

@@ -855,6 +855,23 @@ vpcs:
     virtualPrivateGateway:
       asn: 65002
     useCentralEndpoints: true
+    securityGroups:
+      - name: SharedServices-Main-Rsyslog-sg
+        description: Security Group for AWS Accelerator rsyslog
+        inboundRules:
+          - description: allow inbound traffic
+            udpPorts:
+              - 514
+            tcpPorts:
+              - 514
+            sources:
+              - 10.0.0.0/8
+        outboundRules:
+          - description: All Outbound
+            type:
+              - ALL
+            sources:
+              - 0.0.0.0/0
     vpcFlowLogs:
       trafficType: ALL
       maxAggregationInterval: 60
