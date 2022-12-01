@@ -81,6 +81,7 @@ export const AcceleratorStackNames: Record<string, string> = {
   [AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]: 'AWSAccelerator-NetworkAssociationsGwlbStack',
   [AcceleratorStage.FINALIZE]: 'AWSAccelerator-FinalizeStack',
   [AcceleratorStage.SECURITY_AUDIT]: 'AWSAccelerator-SecurityAuditStack',
+  [AcceleratorStage.CUSTOMIZATIONS]: 'AWSAccelerator-CustomizationsStack',
 };
 
 /**
@@ -431,7 +432,8 @@ export abstract class Accelerator {
       props.stage === AcceleratorStage.OPERATIONS ||
       props.stage === AcceleratorStage.NETWORK_PREP ||
       props.stage === AcceleratorStage.NETWORK_VPC ||
-      props.stage === AcceleratorStage.NETWORK_ASSOCIATIONS
+      props.stage === AcceleratorStage.NETWORK_ASSOCIATIONS ||
+      props.stage === AcceleratorStage.CUSTOMIZATIONS
     ) {
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {

@@ -28,6 +28,7 @@ export enum AcceleratorStage {
    */
   ACCOUNTS = 'accounts',
   BOOTSTRAP = 'bootstrap',
+  CUSTOMIZATIONS = 'customizations',
   DEPENDENCIES = 'dependencies',
   SECURITY = 'security',
   SECURITY_RESOURCES = 'security-resources',

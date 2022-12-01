@@ -20,6 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {
   AccountsConfig,
+  CustomizationsConfig,
   DeploymentTargets,
   DnsFirewallRuleGroupConfig,
   DnsQueryLogsConfig,
@@ -70,6 +71,7 @@ export interface AcceleratorStackProps extends cdk.StackProps {
   readonly networkConfig: NetworkConfig;
   readonly organizationConfig: OrganizationConfig;
   readonly securityConfig: SecurityConfig;
+  readonly customizationsConfig: CustomizationsConfig;
   readonly partition: string;
   readonly qualifier?: string;
   readonly configCommitId?: string;

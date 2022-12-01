@@ -1,0 +1,90 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "AwsAcceleratorCustomCustomS3Stackset": Object {
+      "Properties": Object {
+        "Capabilities": Array [
+          "CAPABILITY_IAM",
+        ],
+        "Description": "Sample stackset description",
+        "OperationPreferences": Object {
+          "FailureTolerancePercentage": 25,
+          "MaxConcurrentPercentage": 35,
+          "RegionConcurrencyType": "PARALLEL",
+        },
+        "PermissionModel": "SELF_MANAGED",
+        "StackInstancesGroup": Array [
+          Object {
+            "DeploymentTargets": Object {
+              "Accounts": Array [
+                "444444444444",
+                "555555555555",
+              ],
+            },
+            "Regions": Array [
+              "us-east-1",
+            ],
+          },
+        ],
+        "StackSetName": "Custom-S3-Stackset",
+        "TemplateBody": "AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  LZACustomizationsBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: false
+            ServerSideEncryptionByDefault:
+              SSEAlgorithm: \\"aws:kms\\"
+              KMSMasterKeyID: \\"aws/s3\\"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  LZACustomizationsSampleBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref LZACustomizationsBucket
+      PolicyDocument:
+        Version: \\"2012-10-17\\"
+        Statement:
+          - Principal:
+              AWS: \\"*\\"
+            Action:
+              - \\"s3:*\\"
+            Resource:
+              - !Sub \\"arn:aws:s3:::\${LZACustomizationsBucket}/*\\"
+              - !Sub \\"arn:aws:s3:::\${LZACustomizationsBucket}\\"
+            Effect: \\"Deny\\"
+            Condition:
+              Bool:
+                aws:SecureTransport: \\"false\\"",
+      },
+      "Type": "AWS::CloudFormation::StackSet",
+    },
+    "SsmParamAcceleratorVersionFF83282D": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-CustomizationsStack-111111111111-us-east-1/version",
+        "Type": "String",
+        "Value": "1.2.1",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-CustomizationsStack-111111111111-us-east-1/stack-id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;

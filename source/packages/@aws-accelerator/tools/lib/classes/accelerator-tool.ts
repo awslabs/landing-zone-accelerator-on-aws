@@ -193,7 +193,8 @@ export class AcceleratorTool {
       stage: 'Deploy',
       order: 7,
       actions: [
-        { order: 6, name: 'Finalize', stackPrefix: 'AWSAccelerator-FinalizeStack' },
+        { order: 7, name: 'Finalize', stackPrefix: 'AWSAccelerator-FinalizeStack' },
+        { order: 6, name: 'Customizations', stackPrefix: 'AWSAccelerator-CustomizationsStack' },
         { order: 5, name: 'Network_Associations', stackPrefix: 'AWSAccelerator-NetworkAssociationsStack' },
         { order: 5, name: 'Network_Associations', stackPrefix: 'AWSAccelerator-NetworkAssociationsGwlbStack' },
         { order: 2, name: 'Security_Resources', stackPrefix: 'AWSAccelerator-SecurityResourcesStack' },

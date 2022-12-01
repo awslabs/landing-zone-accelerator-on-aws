@@ -415,10 +415,16 @@ export class AcceleratorPipeline extends Construct {
           runOrder: 3,
         }),
         this.createToolkitStage({
+          actionName: 'Customizations',
+          command: 'deploy',
+          stage: AcceleratorStage.CUSTOMIZATIONS,
+          runOrder: 4,
+        }),
+        this.createToolkitStage({
           actionName: 'Finalize',
           command: 'deploy',
           stage: AcceleratorStage.FINALIZE,
-          runOrder: 4,
+          runOrder: 5,
         }),
       ],
     });

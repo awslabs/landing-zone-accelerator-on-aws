@@ -1,0 +1,183 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ApplicationLoadBalancer Construct(ApplicationLoadBalancer):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "Test7BFAF513": Object {
+      "Properties": Object {
+        "LoadBalancerAttributes": Array [
+          Object {
+            "Key": "access_logs.s3.enabled",
+            "Value": "true",
+          },
+          Object {
+            "Key": "access_logs.s3.bucket",
+            "Value": "test-bucket",
+          },
+          Object {
+            "Key": "access_logs.s3.prefix",
+            "Value": Object {
+              "Fn::Join": Array [
+                "",
+                Array [
+                  Object {
+                    "Ref": "AWS::AccountId",
+                  },
+                  "/",
+                  Object {
+                    "Ref": "AWS::Region",
+                  },
+                  "/Test",
+                ],
+              ],
+            },
+          },
+          Object {
+            "Key": "deletion_protection.enabled",
+            "Value": "true",
+          },
+          Object {
+            "Key": "idle_timeout.timeout_seconds",
+            "Value": "60",
+          },
+          Object {
+            "Key": "routing.http.drop_invalid_header_fields.enabled",
+            "Value": "true",
+          },
+          Object {
+            "Key": "routing.http.x_amzn_tls_version_and_cipher_suite.enabled",
+            "Value": "true",
+          },
+          Object {
+            "Key": "routing.http.xff_client_port.enabled",
+            "Value": "true",
+          },
+          Object {
+            "Key": "routing.http.xff_header_processing.mode",
+            "Value": "append",
+          },
+          Object {
+            "Key": "routing.http2.enabled",
+            "Value": "true",
+          },
+          Object {
+            "Key": "waf.fail_open.enabled",
+            "Value": "true",
+          },
+        ],
+        "Name": "Test",
+        "Scheme": "internal",
+        "SecurityGroups": Array [
+          "sg-test123",
+          "sg-test456",
+        ],
+        "Subnets": Array [
+          "subnet-test123",
+          "subnet-test456",
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Test",
+          },
+        ],
+        "Type": "application",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    },
+    "TestListenerstring15C484455": Object {
+      "Properties": Object {
+        "Certificates": Array [
+          Object {
+            "CertificateArn": "fully-qualified-arn-acm",
+          },
+        ],
+        "DefaultActions": Array [
+          Object {
+            "FixedResponseConfig": Object {
+              "ContentType": "contentType",
+              "MessageBody": "messageBody",
+              "StatusCode": "statusCode",
+            },
+            "Order": 2,
+            "TargetGroupArn": "target-group-test1",
+            "Type": "fixed-response",
+          },
+        ],
+        "LoadBalancerArn": Object {
+          "Ref": "Test7BFAF513",
+        },
+        "Port": 81,
+        "Protocol": "HTTP",
+        "SslPolicy": "ELBSecurityPolicy-2016-08",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
+    "TestListenerstring20A24AB7B": Object {
+      "Properties": Object {
+        "Certificates": Array [
+          Object {
+            "CertificateArn": "fully-qualified-arn-acm",
+          },
+        ],
+        "DefaultActions": Array [
+          Object {
+            "Order": 3,
+            "RedirectConfig": Object {
+              "Host": "host",
+              "Path": "path",
+              "Port": "82",
+              "Protocol": "protocol",
+              "Query": "query",
+              "StatusCode": "statusCode",
+            },
+            "TargetGroupArn": "target-group-test2",
+            "Type": "redirect",
+          },
+        ],
+        "LoadBalancerArn": Object {
+          "Ref": "Test7BFAF513",
+        },
+        "Port": 82,
+        "Protocol": "HTTP",
+        "SslPolicy": "ELBSecurityPolicy-2016-08",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
+    "TestListenerstring7A65A381": Object {
+      "Properties": Object {
+        "Certificates": Array [
+          Object {
+            "CertificateArn": "fully-qualified-arn-acm",
+          },
+        ],
+        "DefaultActions": Array [
+          Object {
+            "ForwardConfig": Object {
+              "TargetGroupStickinessConfig": Object {
+                "DurationSeconds": 1000,
+                "Enabled": true,
+              },
+              "TargetGroups": Array [
+                Object {
+                  "TargetGroupArn": "\${ACCEL_LOOKUP::TargetGroup:target-group-test}",
+                },
+              ],
+            },
+            "Order": 1,
+            "TargetGroupArn": "\${ACCEL_LOOKUP::TargetGroup:target-group-test}",
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": Object {
+          "Ref": "Test7BFAF513",
+        },
+        "Port": 80,
+        "Protocol": "HTTP",
+        "SslPolicy": "ELBSecurityPolicy-2016-08",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
+  },
+}
+`;

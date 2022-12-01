@@ -13,10 +13,13 @@
 
 import * as cdk from 'aws-cdk-lib';
 import * as path from 'path';
+import * as fs from 'fs';
 
 import {
   AccountConfig,
   AccountsConfig,
+  AppConfigItem,
+  CustomizationsConfig,
   GlobalConfig,
   IamConfig,
   NetworkConfig,
@@ -29,6 +32,7 @@ import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorStack, AcceleratorStackProps } from '../lib/stacks/accelerator-stack';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
 import { BootstrapStack } from '../lib/stacks/bootstrap-stack';
+import { CustomizationsStack } from '../lib/stacks/customizations-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
 import { NetworkAssociationsGwlbStack } from '../lib/stacks/network-associations-gwlb-stack';
@@ -42,6 +46,7 @@ import { OrganizationsStack } from '../lib/stacks/organizations-stack';
 import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
+import { ApplicationsStack } from '../lib/stacks/applications-stack';
 
 export class AcceleratorSynthStacks {
   private readonly configFolderName: string;
@@ -70,11 +75,24 @@ export class AcceleratorSynthStacks {
     });
     this.configDirPath = this.app.node.tryGetContext('config-dir');
 
+    console.log(`Using config directory ${this.configDirPath}`);
     const globalConfig = GlobalConfig.load(this.configDirPath);
+
+    let customizationsConfig: CustomizationsConfig;
+    // console.log(`Using config directory ${this.configDirPath}`);
+    // Create empty customizationsConfig if optional configuration file does not exist
+    if (fs.existsSync(path.join(this.configDirPath, 'customizations-config.yaml'))) {
+      customizationsConfig = CustomizationsConfig.load(this.configDirPath);
+      console.log(`Using customizations-config.yaml`);
+    } else {
+      customizationsConfig = new CustomizationsConfig();
+    }
 
     this.props = {
       configDirPath: this.configDirPath,
       accountsConfig: AccountsConfig.load(this.configDirPath),
+      // customizationsConfig: CustomizationsConfig.load(this.configDirPath),
+      customizationsConfig,
       globalConfig,
       iamConfig: IamConfig.load(this.configDirPath),
       networkConfig: NetworkConfig.load(this.configDirPath),
@@ -108,6 +126,10 @@ export class AcceleratorSynthStacks {
         break;
       case AcceleratorStage.LOGGING:
         this.synthLoggingStacks();
+        break;
+      case AcceleratorStage.CUSTOMIZATIONS:
+        this.synthCustomizationsStacks();
+        this.synthApplicationsStacks();
         break;
       case AcceleratorStage.NETWORK_ASSOCIATIONS:
         this.synthNetworkAssociationStacks();
@@ -209,6 +231,62 @@ export class AcceleratorSynthStacks {
             ...this.props,
           }),
         );
+      }
+    }
+  }
+  /**
+   * synth Customizations stacks
+   */
+  private synthCustomizationsStacks() {
+    for (const region of this.props.globalConfig.enabledRegions) {
+      for (const account of [
+        ...this.props.accountsConfig.mandatoryAccounts,
+        ...this.props.accountsConfig.workloadAccounts,
+      ]) {
+        const accountId = this.props.accountsConfig.getAccountId(account.name);
+        this.stacks.set(
+          `${account.name}-${region}`,
+          new CustomizationsStack(
+            this.app,
+            `${AcceleratorStackNames[AcceleratorStage.CUSTOMIZATIONS]}-${accountId}-${region}`,
+            {
+              env: {
+                account: accountId,
+                region: region,
+              },
+              ...this.props,
+            },
+          ),
+        );
+      }
+    }
+  }
+  /**
+   * synth Customizations stacks
+   */
+  private synthApplicationsStacks() {
+    for (const application of this.props.customizationsConfig.applications ?? []) {
+      this.synthProcessEachApplicationStack(application);
+    }
+  }
+
+  private synthProcessEachApplicationStack(application: AppConfigItem) {
+    for (const targetEnvironmentItem of application.targetEnvironments) {
+      const accountId = this.props.accountsConfig.getAccountId(targetEnvironmentItem.account);
+      for (const regionItem of targetEnvironmentItem.region) {
+        if (this.homeRegion === regionItem && accountId === '444444444444') {
+          const applicationStackName = `AWSAccelerator-App-${application.name}-${accountId}-${regionItem}`;
+          const env = {
+            account: accountId,
+            region: regionItem,
+          };
+
+          new ApplicationsStack(this.app, applicationStackName, {
+            env,
+            ...this.props,
+            appConfigItem: application,
+          });
+        }
       }
     }
   }
