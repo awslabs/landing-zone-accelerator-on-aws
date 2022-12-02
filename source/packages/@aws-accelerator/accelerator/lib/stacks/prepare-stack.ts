@@ -22,6 +22,7 @@ import {
   CreateControlTowerAccounts,
   CreateOrganizationAccounts,
   GetPortfolioId,
+  MoveAccounts,
   OrganizationalUnits,
   ValidateScpCount,
 } from '@aws-accelerator/constructs';
@@ -210,6 +211,42 @@ export class PrepareStack extends AcceleratorStack {
           },
         ]);
 
+        new cdk.aws_ssm.StringParameter(this, 'ConfigTableArnParameter', {
+          parameterName: `/accelerator/prepare-stack/configTable/arn`,
+          stringValue: configTable.tableArn,
+        });
+
+        new cdk.aws_ssm.StringParameter(this, 'ConfigTableNameParameter', {
+          parameterName: `/accelerator/prepare-stack/configTable/name`,
+          stringValue: configTable.tableName,
+        });
+
+        new cdk.aws_iam.Role(this, 'AcceleratorMoveAccountRole', {
+          roleName: AcceleratorStack.ACCELERATOR_ACCOUNT_CONFIG_TABLE_PARAMETER_ACCESS_ROLE_NAME,
+          assumedBy: new cdk.aws_iam.AccountPrincipal(cdk.Stack.of(this).account),
+          inlinePolicies: {
+            default: new cdk.aws_iam.PolicyDocument({
+              statements: [
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                  resources: [
+                    `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/prepare-stack/configTable/*`,
+                  ],
+                }),
+              ],
+            }),
+          },
+        });
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+        NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/AcceleratorMoveAccountRole/Resource`, [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'CDK generated role',
+          },
+        ]);
+
         Logger.info(`[prepare-stack] Load Config Table`);
         const configRepoName = props.qualifier ? `${props.qualifier}-config` : 'aws-accelerator-config';
         const loadAcceleratorConfigTable = new LoadAcceleratorConfigTable(this, 'LoadAcceleratorConfigTable', {
@@ -240,7 +277,6 @@ export class PrepareStack extends AcceleratorStack {
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
 
-        createOrganizationalUnits.node.addDependency(configTable);
         createOrganizationalUnits.node.addDependency(loadAcceleratorConfigTable);
 
         // Invite Accounts to Organization (GovCloud)
@@ -251,8 +287,67 @@ export class PrepareStack extends AcceleratorStack {
           kmsKey: cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
-        inviteAccountsToOu.node.addDependency(loadAcceleratorConfigTable);
         inviteAccountsToOu.node.addDependency(createOrganizationalUnits);
+
+        // Move accounts to OU based on config
+        const moveAccounts = new MoveAccounts(this, 'MoveAccounts', {
+          globalRegion: props.globalRegion ?? props.globalConfig.homeRegion,
+          configTable: configTable,
+          commitId: props.configCommitId || '',
+          managementAccountId: props.accountsConfig.getManagementAccountId(),
+          lambdaKmsKey: lambdaKey,
+          cloudWatchLogsKmsKey: cloudwatchKey,
+          cloudWatchLogRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+        });
+        moveAccounts.node.addDependency(inviteAccountsToOu);
+
+        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/MoveAccounts/MoveAccountsFunction/ServiceRole/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM4',
+              reason: 'Custom resource lambda require access to other services',
+            },
+          ],
+        );
+
+        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/MoveAccounts/MoveAccountsProvider/framework-onEvent/ServiceRole/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM4',
+              reason: 'Custom resource lambda require access to other services',
+            },
+          ],
+        );
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/MoveAccounts/MoveAccountsFunction/ServiceRole/DefaultPolicy/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason: 'Custom resource lambda require access to other services',
+            },
+          ],
+        );
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/MoveAccounts/MoveAccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason: 'Custom resource lambda require access to other services',
+            },
+          ],
+        );
 
         if (props.partition == 'aws' || props.partition == 'aws-cn') {
           let govCloudAccountMappingTable: cdk.aws_dynamodb.ITable | undefined;
@@ -339,9 +434,7 @@ export class PrepareStack extends AcceleratorStack {
             driftDetectionMessageParameter: driftMessageParameter,
           });
 
-          validation.node.addDependency(loadAcceleratorConfigTable);
-          validation.node.addDependency(createOrganizationalUnits);
-          validation.node.addDependency(inviteAccountsToOu);
+          validation.node.addDependency(moveAccounts);
 
           const scpValidateInput = this.validateScp();
           // cannot add 5 scps from console or cli externally.

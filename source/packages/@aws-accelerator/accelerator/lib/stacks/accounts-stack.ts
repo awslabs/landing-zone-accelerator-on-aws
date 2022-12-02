@@ -17,6 +17,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
+import { MoveAccountRule } from '@aws-accelerator/constructs';
 
 import { EnablePolicyType, Policy, PolicyAttachment, PolicyType, PolicyTypeEnum } from '@aws-accelerator/constructs';
 
@@ -112,6 +113,53 @@ export class AccountsStack extends AcceleratorStack {
     // Global Organizations actions
     //
     if (props.globalRegion === cdk.Stack.of(this).region) {
+      if (props.organizationConfig.enable && !props.globalConfig.controlTower.enable) {
+        new MoveAccountRule(this, 'MoveAccountRule', {
+          globalRegion: props.globalRegion,
+          homeRegion: props.globalConfig.homeRegion,
+          moveAccountRoleName: AcceleratorStack.ACCELERATOR_ACCOUNT_CONFIG_TABLE_PARAMETER_ACCESS_ROLE_NAME,
+          commitId: props.configCommitId ?? '',
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+        });
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/MoveAccountRule/MoveAccountRole/Policy/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason: 'AWS Custom resource provider role created by cdk.',
+            },
+          ],
+        );
+
+        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/MoveAccountRule/MoveAccountTargetFunction/ServiceRole/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM4',
+              reason: 'AWS Custom resource provider role created by cdk.',
+            },
+          ],
+        );
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions.
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/MoveAccountRule/MoveAccountTargetFunction/ServiceRole/DefaultPolicy/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason: 'AWS Custom resource provider role created by cdk.',
+            },
+          ],
+        );
+      }
+
       if (props.organizationConfig.enable) {
         let quarantineScpId = '';
         // SCP is not supported in China Region.
