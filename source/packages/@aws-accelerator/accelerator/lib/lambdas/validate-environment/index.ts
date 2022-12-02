@@ -177,35 +177,42 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       console.log(`controlTowerEnabled value: ${controlTowerEnabled}`);
       if (controlTowerEnabled === 'false' && mandatoryAccounts) {
         for (const mandatoryAccount of mandatoryAccounts) {
-          const mandatoryOrganizationAccount = organizationAccounts.find(
-            item => item.Email == mandatoryAccount['acceleratorKey'],
-          );
-          if (mandatoryOrganizationAccount) {
-            if (mandatoryOrganizationAccount.Status !== 'ACTIVE') {
-              validationErrors.push(
-                `Mandatory account ${mandatoryAccount['acceleratorKey']} is in ${mandatoryOrganizationAccount.Status}`,
-              );
+          const awsOuKey = configAllOuKeys.find(ouKeyItem => ouKeyItem.acceleratorKey === mandatoryAccount['ouName']);
+          if (awsOuKey?.ignore === false) {
+            const mandatoryOrganizationAccount = organizationAccounts.find(
+              item => item.Email == mandatoryAccount['acceleratorKey'],
+            );
+            if (mandatoryOrganizationAccount) {
+              if (mandatoryOrganizationAccount.Status !== 'ACTIVE') {
+                validationErrors.push(
+                  `Mandatory account ${mandatoryAccount['acceleratorKey']} is in ${mandatoryOrganizationAccount.Status}`,
+                );
+              }
+            } else {
+              orgAccountsToAdd.push(mandatoryAccount);
             }
-          } else {
-            orgAccountsToAdd.push(mandatoryAccount);
           }
         }
       }
       if (workloadAccounts) {
         for (const workloadAccount of workloadAccounts) {
-          const organizationAccount = organizationAccounts.find(
-            item => item.Email == workloadAccount['acceleratorKey'],
-          );
-          if (organizationAccount) {
-            if (organizationAccount.Status !== 'ACTIVE') {
-              validationErrors.push(
-                `Workload account ${workloadAccount['acceleratorKey']} is in ${organizationAccount.Status}`,
-              );
-            }
-          } else {
-            const accountConfig = JSON.parse(workloadAccount['dataBag']);
-            if (controlTowerEnabled === 'false' || accountConfig['enableGovCloud']) {
-              orgAccountsToAdd.push(workloadAccount);
+          const awsOuKey = configAllOuKeys.find(ouKeyItem => ouKeyItem.acceleratorKey === workloadAccount['ouName']);
+          if (awsOuKey?.ignore === false) {
+            const organizationAccount = organizationAccounts.find(
+              item => item.Email == workloadAccount['acceleratorKey'],
+            );
+            if (organizationAccount) {
+              if (organizationAccount.Status !== 'ACTIVE') {
+                validationErrors.push(
+                  `Workload account ${workloadAccount['acceleratorKey']} is in ${organizationAccount.Status}`,
+                );
+              }
+            } else {
+              const accountConfig = JSON.parse(workloadAccount['dataBag']);
+              if (controlTowerEnabled === 'false' || accountConfig['enableGovCloud']) {
+                // check against ignored
+                orgAccountsToAdd.push(workloadAccount);
+              }
             }
           }
         }

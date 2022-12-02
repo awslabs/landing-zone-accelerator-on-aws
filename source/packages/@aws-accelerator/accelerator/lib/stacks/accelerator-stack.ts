@@ -135,6 +135,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
    */
   public static readonly ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME = 'AWSAccelerator-CrossAccount-SsmParameter-Role';
   /**
+   * Accelerator role to access account config table parameters
+   */
+  public static readonly ACCELERATOR_ACCOUNT_CONFIG_TABLE_PARAMETER_ACCESS_ROLE_NAME =
+    'AWSAccelerator-MoveAccountConfigRule-Role';
+  /**
    * Transit Gateway peering role name, which gives permission on TGW related ssm parameters to configure tgw peering
    */
   public static readonly ACCELERATOR_TGW_PEERING_ROLE_NAME = 'AWSAccelerator-TgwPeering-Role';
