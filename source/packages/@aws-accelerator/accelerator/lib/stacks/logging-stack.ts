@@ -1025,11 +1025,11 @@ export class LoggingStack extends AcceleratorStack {
     }
 
     topic.grantPublish({
-      grantPrincipal: new cdk.aws_iam.ServicePrincipal(`cloudwatch.${cdk.Stack.of(this).urlSuffix}`),
+      grantPrincipal: new cdk.aws_iam.ServicePrincipal('cloudwatch.amazonaws.com'),
     });
 
     topic.grantPublish({
-      grantPrincipal: new cdk.aws_iam.ServicePrincipal(`lambda.${cdk.Stack.of(this).urlSuffix}`),
+      grantPrincipal: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
 
     topic.grantPublish({
@@ -1122,7 +1122,7 @@ export class LoggingStack extends AcceleratorStack {
     });
 
     topic.grantPublish({
-      grantPrincipal: new cdk.aws_iam.ServicePrincipal(`cloudwatch.${cdk.Stack.of(this).urlSuffix}`),
+      grantPrincipal: new cdk.aws_iam.ServicePrincipal('cloudwatch.amazonaws.com'),
     });
 
     topic.addSubscription(new cdk.aws_sns_subscriptions.LambdaSubscription(this.snsForwarderFunction!));
@@ -1139,7 +1139,7 @@ export class LoggingStack extends AcceleratorStack {
     this.centralSnsKey.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: 'sns',
-        principals: [new cdk.aws_iam.ServicePrincipal(`sns.${cdk.Stack.of(this).urlSuffix}`)],
+        principals: [new cdk.aws_iam.ServicePrincipal('sns.amazonaws.com')],
         actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
         resources: ['*'],
         conditions: {
@@ -1153,7 +1153,7 @@ export class LoggingStack extends AcceleratorStack {
     this.centralSnsKey.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: 'cloudwatch',
-        principals: [new cdk.aws_iam.ServicePrincipal(`cloudwatch.${cdk.Stack.of(this).urlSuffix}`)],
+        principals: [new cdk.aws_iam.ServicePrincipal('cloudwatch.amazonaws.com')],
         actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
         resources: ['*'],
         conditions: {
@@ -1167,7 +1167,7 @@ export class LoggingStack extends AcceleratorStack {
     this.centralSnsKey.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: 'events',
-        principals: [new cdk.aws_iam.ServicePrincipal(`events.${cdk.Stack.of(this).urlSuffix}`)],
+        principals: [new cdk.aws_iam.ServicePrincipal('events.amazonaws.com')],
         actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
         resources: ['*'],
         conditions: {
@@ -1264,7 +1264,7 @@ export class LoggingStack extends AcceleratorStack {
     snsKey.addToResourcePolicy(
       new cdk.aws_iam.PolicyStatement({
         sid: 'sns',
-        principals: [new cdk.aws_iam.ServicePrincipal(`sns.${cdk.Stack.of(this).urlSuffix}`)],
+        principals: [new cdk.aws_iam.ServicePrincipal('sns.amazonaws.com')],
         actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
         resources: ['*'],
         conditions: {
@@ -1279,8 +1279,8 @@ export class LoggingStack extends AcceleratorStack {
       new cdk.aws_iam.PolicyStatement({
         sid: 'cloudwatch',
         principals: [
-          new cdk.aws_iam.ServicePrincipal(`cloudwatch.${cdk.Stack.of(this).urlSuffix}`),
-          new cdk.aws_iam.ServicePrincipal(`events.${cdk.Stack.of(this).urlSuffix}`),
+          new cdk.aws_iam.ServicePrincipal('cloudwatch.amazonaws.com'),
+          new cdk.aws_iam.ServicePrincipal('events.amazonaws.com'),
         ],
         actions: ['kms:GenerateDataKey', 'kms:Decrypt'],
         resources: ['*'],
