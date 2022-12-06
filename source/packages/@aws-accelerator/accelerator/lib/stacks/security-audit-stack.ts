@@ -455,6 +455,24 @@ export class SecurityAuditStack extends AcceleratorStack {
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
+      if (this.props.organizationConfig.enable) {
+        snsKey.addToResourcePolicy(
+          new cdk.aws_iam.PolicyStatement({
+            sid: `Allow Accelerator Role to use the encryption key`,
+            principals: [new cdk.aws_iam.AnyPrincipal()],
+            actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*', 'kms:DescribeKey'],
+            resources: ['*'],
+            conditions: {
+              StringEquals: {
+                ...this.getPrincipalOrgIdCondition(this.organizationId),
+              },
+              ArnLike: {
+                'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+              },
+            },
+          }),
+        );
+      }
     }
 
     // Loop through all the subscription entries

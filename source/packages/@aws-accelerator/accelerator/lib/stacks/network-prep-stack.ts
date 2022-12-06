@@ -36,6 +36,7 @@ import {
   CustomerGateway,
   DirectConnectGateway,
   FirewallPolicyProperty,
+  FMSNotificationChannel,
   Ipam,
   IpamPool,
   IpamScope,
@@ -124,6 +125,9 @@ export class NetworkPrepStack extends AcceleratorStack {
     //
     this.createSsmParameters();
 
+    // FMS Notification Channel
+    //
+    this.createFMSNotificationChannels();
     Logger.info('[network-prep-stack] Completed stack synthesis');
   }
 
@@ -579,6 +583,56 @@ export class NetworkPrepStack extends AcceleratorStack {
       //
       for (const policyItem of centralConfig.networkFirewall?.policies ?? []) {
         this.createNfwPolicy(delegatedAdminAccountId, policyItem);
+      }
+    }
+  }
+
+  /**
+   * Creates FMS Notification Channels
+   */
+  private createFMSNotificationChannels() {
+    const fmsConfiguration = this.props.networkConfig.firewallManagerService;
+    // Exit if Notification channels don't exist.
+    if (!fmsConfiguration?.notificationChannels || fmsConfiguration.notificationChannels.length === 0) {
+      return;
+    }
+    const accountId = this.accountsConfig.getAccountId(fmsConfiguration.delegatedAdminAccount);
+    const auditAccountId = this.props.accountsConfig.getAuditAccountId();
+    const roleArn = `arn:${cdk.Stack.of(this).partition}:iam::${
+      cdk.Stack.of(this).account
+    }:role/AWSAccelerator-FMS-Notifications`;
+
+    for (const notificationChannel of fmsConfiguration.notificationChannels) {
+      const snsTopicName = notificationChannel.snsTopic;
+      if (accountId === cdk.Stack.of(this).account && notificationChannel.region === cdk.Stack.of(this).region) {
+        const snsTopicsSecurity =
+          this.props.securityConfig.centralSecurityServices.snsSubscriptions.map(
+            snsSubscription => snsSubscription.level,
+          ) || [];
+        const snsTopicsGlobal = this.props.globalConfig.snsTopics?.topics.map(snsTopic => snsTopic.name) || [];
+        const snsTopics = [...snsTopicsSecurity, ...snsTopicsGlobal];
+        if (!snsTopics.includes(snsTopicName)) {
+          throw new Error(`SNS Topic level ${snsTopicName} does not exist in the security config SNS Topics`);
+        }
+        let snsTopicArn = `arn:${cdk.Stack.of(this).partition}:sns:${cdk.Stack.of(this).region}:${
+          cdk.Stack.of(this).account
+        }:aws-accelerator-${snsTopicName}`;
+
+        if (snsTopicsSecurity.includes(snsTopicName)) {
+          snsTopicArn = `arn:${cdk.Stack.of(this).partition}:sns:${
+            cdk.Stack.of(this).region
+          }:${auditAccountId}:aws-accelerator-${snsTopicName}Notifications`;
+        }
+        Logger.info(
+          `[network-prep-stack] Adding FMS notification channel for ${fmsConfiguration.delegatedAdminAccount} in region ${notificationChannel.region} to topic ${snsTopicArn}`,
+        );
+
+        new FMSNotificationChannel(this, `fmsNotification-${this.account}-${this.region}`, {
+          snsTopicArn,
+          snsRoleArn: roleArn,
+        });
+
+        Logger.info(`[network-prep-stack] Created FMS notification Channel`);
       }
     }
   }
