@@ -960,7 +960,11 @@ Object {
           ],
         },
         "Source": Object {
-          "BuildSpec": "{
+          "BuildSpec": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "{
   \\"version\\": \\"0.2\\",
   \\"phases\\": {
     \\"install\\": {
@@ -972,6 +976,11 @@ Object {
       \\"commands\\": [
         \\"env\\",
         \\"cd source\\",
+        \\"if [ \\\\\\"",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                "\\\\\\" = \\\\\\"aws-cn\\\\\\" ]; then\\\\n                  sed -i \\\\\\"s#registry.yarnpkg.com#registry.npmmirror.com#g\\\\\\" yarn.lock;\\\\n                  yarn config set registry https://registry.npmmirror.com\\\\n               fi\\",
         \\"yarn install\\",
         \\"yarn lerna link\\",
         \\"yarn build\\",
@@ -986,6 +995,9 @@ Object {
     \\"enable-symlinks\\": \\"yes\\"
   }
 }",
+              ],
+            ],
+          },
           "Type": "CODEPIPELINE",
         },
       },
