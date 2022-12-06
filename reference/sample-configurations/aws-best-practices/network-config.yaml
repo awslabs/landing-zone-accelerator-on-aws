@@ -865,3 +865,15 @@ vpcFlowLogs:
 #     vpcs:
 #       - VPC-A
 #       - VPC-B
+
+#####################################
+# FMS-- use this object to enable   #
+# fms on the specified account      #
+#####################################
+# firewallManagerService:
+#   delegatedAdminAccount: SharedNetwork
+#   notificationChannels:
+#     - snsTopic: Low
+#       region: us-west-2
+#     - snsTopic: Low
+#       region: us-east-2

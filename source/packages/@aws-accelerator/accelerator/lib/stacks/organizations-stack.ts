@@ -28,6 +28,7 @@ import {
   EnableAwsServiceAccess,
   EnablePolicyType,
   EnableSharingWithAwsOrganization,
+  FMSOrganizationAdminAccount,
   GuardDutyOrganizationAdminAccount,
   IpamOrganizationAdminAccount,
   KeyLookup,
@@ -130,6 +131,11 @@ export class OrganizationsStack extends AcceleratorStack {
       // Enable IPAM delegated administrator
       //
       this.enableIpamDelegatedAdminAccount();
+
+      //
+      // Enable FMS Delegated Admin Account
+      //
+      this.enableFMSDelegatedAdminAccount();
     }
 
     // Security Services delegated admin account configuration
@@ -324,6 +330,23 @@ export class OrganizationsStack extends AcceleratorStack {
           logRetentionInDays: this.logRetention,
         });
       }
+    }
+  }
+
+  /**
+   * Function to enable FMS delegated admin account
+   */
+  private enableFMSDelegatedAdminAccount() {
+    const fmsConfig = this.stackProperties.networkConfig.firewallManagerService;
+    if (fmsConfig && cdk.Stack.of(this).region === this.stackProperties.globalConfig.homeRegion) {
+      const adminAccountName = fmsConfig.delegatedAdminAccount;
+      const adminAccountId = this.stackProperties.accountsConfig.getAccountId(adminAccountName);
+      new FMSOrganizationAdminAccount(this, 'FMSOrganizationAdminAccount', {
+        adminAccountId,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.logRetention,
+        assumeRole: this.stackProperties.globalConfig.managementAccountAccessRole,
+      });
     }
   }
 

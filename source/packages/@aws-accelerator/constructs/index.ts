@@ -58,6 +58,8 @@ export * from './lib/aws-detective/detective-organization-admin-account';
 export * from './lib/aws-detective/detective-graph-config';
 export * from './lib/aws-iam/password-policy';
 export * from './lib/aws-firehose/cloudwatch-to-s3-firehose';
+export * from './lib/aws-fms/fms-notification-channel';
+export * from './lib/aws-fms/fms-organization-admin-account';
 export * from './lib/aws-kms/key-lookup';
 export * from './lib/aws-macie/macie-export-config-classification';
 export * from './lib/aws-macie/macie-members';

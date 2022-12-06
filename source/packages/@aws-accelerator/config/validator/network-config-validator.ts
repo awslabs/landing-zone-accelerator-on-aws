@@ -3,6 +3,7 @@ import * as path from 'path';
 
 import { AccountsConfig } from '../lib/accounts-config';
 import * as t from '../lib/common-types';
+import { GlobalConfig } from '../lib/global-config';
 import {
   NetworkConfig,
   NetworkConfigTypes,
@@ -11,6 +12,7 @@ import {
   TransitGatewayRouteTableVpnEntryConfig,
 } from '../lib/network-config';
 import { OrganizationConfig } from '../lib/organization-config';
+import { SecurityConfig } from '../lib/security-config';
 
 /**
  * Network Configuration validator.
@@ -21,6 +23,7 @@ export class NetworkConfigValidator {
     const values = NetworkConfig.load(configDir);
     const ouIdNames: string[] = ['Root'];
     const accountNames: string[] = [];
+    const snsTopicNames: string[] = [];
 
     const errors: string[] = [];
 
@@ -35,6 +38,10 @@ export class NetworkConfigValidator {
     this.getAccountNames(configDir, accountNames);
 
     //
+    // Get the list of sns topic names from global and security config files
+    this.getSnsTopicNames(configDir, snsTopicNames);
+
+    //
     // Start Validation
     new NetworkFirewallValidator(values, configDir, errors);
     new TransitGatewayValidator(values, ouIdNames, accountNames, errors);
@@ -45,6 +52,7 @@ export class NetworkConfigValidator {
     new GatewayLoadBalancersValidator(values, accountNames, errors);
     new CustomerGatewaysValidator(values, configDir, accountNames, errors);
     new DirectConnectGatewaysValidator(values, errors);
+    new FirewallManagerValidator(values, snsTopicNames, accountNames, errors);
 
     if (errors.length) {
       throw new Error(`${NetworkConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
@@ -71,6 +79,20 @@ export class NetworkConfigValidator {
     ]) {
       accountNames.push(accountItem.name);
     }
+  }
+  /**
+   * Prepare list of SNS Topic names from global and security config files
+   * @param configDir
+   */
+  private getSnsTopicNames(configDir: string, snsTopicNames: string[]) {
+    const securityConfig = SecurityConfig.load(configDir);
+    const globalConfig = GlobalConfig.load(configDir);
+    const securtiySnsSubscriptions = securityConfig.centralSecurityServices.snsSubscriptions.map(
+      snsSubscription => snsSubscription.level,
+    );
+    const globalSnsSubscriptions = globalConfig.snsTopics?.topics.map(topic => topic.name) ?? [];
+    snsTopicNames.push(...securtiySnsSubscriptions);
+    snsTopicNames.push(...globalSnsSubscriptions);
   }
 }
 
@@ -1468,6 +1490,42 @@ class DirectConnectGatewaysValidator {
       this.validateDxVirtualInterfaces(dxgw, errors);
       // Validate transit gateway attachments
       this.validateDxTransitGatewayAssociations(values, dxgw, errors);
+    }
+  }
+}
+
+class FirewallManagerValidator {
+  constructor(values: NetworkConfig, snsTopicNames: string[], accountNames: string[], errors: string[]) {
+    //
+    // Validate DX gateway configurations
+    //
+    this.validateFmsConfig(values, snsTopicNames, accountNames, errors);
+  }
+
+  /**
+   * Function to validate the FMS configuration.
+   * @param values
+   */
+  private validateFmsConfig(values: NetworkConfig, snsTopicNames: string[], accountNames: string[], errors: string[]) {
+    const fmsConfiguration = values.firewallManagerService;
+
+    if (!accountNames.includes(fmsConfiguration?.delegatedAdminAccount || '')) {
+      errors.push(
+        `Delegated Admin Account ${fmsConfiguration?.delegatedAdminAccount} name does not exist in Accounts configuration`,
+      );
+    }
+    for (const channel of fmsConfiguration?.notificationChannels || []) {
+      this.validatFmsNotificationChannels(channel, snsTopicNames, errors);
+    }
+  }
+
+  private validatFmsNotificationChannels(
+    notificationChannel: t.TypeOf<typeof NetworkConfigTypes.firewallManagerNotificationChannelConfig>,
+    snsTopicNames: string[],
+    errors: string[],
+  ) {
+    if (!snsTopicNames.includes(notificationChannel.snsTopic)) {
+      errors.push(`The SNS Topic name ${notificationChannel.snsTopic} for the notification channel does not exist.`);
     }
   }
 }

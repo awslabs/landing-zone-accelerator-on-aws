@@ -853,6 +853,16 @@ export class NetworkConfigTypes {
     accountId: t.nonEmptyString,
   });
 
+  static readonly firewallManagerNotificationChannelConfig = t.interface({
+    snsTopic: t.nonEmptyString,
+    region: t.nonEmptyString,
+  });
+
+  static readonly firewallManagerServiceConfig = t.interface({
+    delegatedAdminAccount: t.nonEmptyString,
+    notificationChannels: t.optional(t.array(this.firewallManagerNotificationChannelConfig)),
+  });
+
   static readonly networkConfig = t.interface({
     defaultVpc: this.defaultVpcsConfig,
     endpointPolicies: t.array(this.endpointPolicyConfig),
@@ -868,6 +878,7 @@ export class NetworkConfigTypes {
     vpcPeering: t.optional(t.array(this.vpcPeeringConfig)),
     vpcTemplates: t.optional(t.array(this.vpcTemplatesConfig)),
     elbAccountIds: t.optional(t.array(this.elbAccountIdsConfig)),
+    firewallManagerService: t.optional(this.firewallManagerServiceConfig),
   });
 }
 
@@ -5266,6 +5277,38 @@ export class ElbAccountIdsConfig implements t.TypeOf<typeof NetworkConfigTypes.e
   readonly region: string = '';
   readonly accountId: string = '';
 }
+
+/**
+ * *{@link NetworkConfig} / {@link FirewallManagerConfig} / {@link FirewallManagerNotificationChannelConfig}*
+ * An optional Firewall Manager Service Config
+ */
+export class FirewallManagerNotificationChannelConfig
+  implements t.TypeOf<typeof NetworkConfigTypes.firewallManagerNotificationChannelConfig>
+{
+  /**
+   * Enables the FMS notification channel. Defaults to enabled.
+   */
+  readonly region: string = '';
+  /**
+   * The SNS Topic Name to publish to.
+   */
+  readonly snsTopic: string = '';
+}
+
+/**
+ * *{@link NetworkConfig} / {@link FirewallManagerConfig}*
+ * An optional Firewall Manager Service Config
+ */
+export class FirewallManagerConfig implements t.TypeOf<typeof NetworkConfigTypes.firewallManagerServiceConfig> {
+  /**
+   * The friendly account name to deploy the FMS configuration
+   */
+  readonly delegatedAdminAccount: string = '';
+  /**
+   * The FMS Notification Channel Configuration
+   */
+  readonly notificationChannels: FirewallManagerNotificationChannelConfig[] | undefined = undefined;
+}
 /**
  * Network Configuration.
  * Used to define a network configuration for the accelerator.
@@ -5380,6 +5423,10 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    */
   readonly elbAccountIds: ElbAccountIdsConfig[] | undefined = undefined;
 
+  /**
+   * Firewall manager service configuration
+   */
+  readonly firewallManagerService: FirewallManagerConfig | undefined = undefined;
   /**
    *
    * @param values
