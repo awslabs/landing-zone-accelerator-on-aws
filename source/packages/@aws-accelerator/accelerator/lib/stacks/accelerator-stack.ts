@@ -700,9 +700,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * to the transformed document
    * @param policyPath
    * @param returnTempPath
+   * @param organizationId
    * @returns
    */
-  protected generatePolicyReplacements(policyPath: string, returnTempPath: boolean): string {
+  protected generatePolicyReplacements(policyPath: string, returnTempPath: boolean, organizationId?: string): string {
     // Transform policy document
     let policyContent: string = JSON.stringify(require(policyPath));
     const acceleratorPrefix = 'AWSAccelerator';
@@ -710,23 +711,28 @@ export abstract class AcceleratorStack extends cdk.Stack {
       ? acceleratorPrefix.slice(0, -1)
       : acceleratorPrefix;
 
+    const additionalReplacements: { [key: string]: string | string[] } = {
+      '\\${ACCELERATOR_DEFAULT_PREFIX_SHORTHAND}': acceleratorPrefix === 'AWSAccelerator' ? 'AWSA' : acceleratorPrefix,
+      '\\${ACCELERATOR_PREFIX_ND}': acceleratorPrefixNoDash,
+      '\\${ACCELERATOR_PREFIX_LND}': acceleratorPrefixNoDash.toLowerCase(),
+      '\\${ACCOUNT_ID}': cdk.Stack.of(this).account,
+      '\\${AUDIT_ACCOUNT_ID}': this.props.accountsConfig.getAuditAccountId(),
+      '\\${HOME_REGION}': this.props.globalConfig.homeRegion,
+      '\\${LOGARCHIVE_ACCOUNT_ID}': this.props.accountsConfig.getLogArchiveAccountId(),
+      '\\${MANAGEMENT_ACCOUNT_ID}': this.props.accountsConfig.getManagementAccountId(),
+      '\\${REGION}': cdk.Stack.of(this).region,
+    };
+
+    if (organizationId) {
+      additionalReplacements['\\${ORG_ID}'] = organizationId;
+    }
+
     policyContent = policyReplacements({
       content: policyContent,
       acceleratorPrefix,
       managementAccountAccessRole: this.props.globalConfig.managementAccountAccessRole,
       partition: this.props.partition,
-      additionalReplacements: {
-        '\\${ACCELERATOR_DEFAULT_PREFIX_SHORTHAND}':
-          acceleratorPrefix === 'AWSAccelerator' ? 'AWSA' : acceleratorPrefix,
-        '\\${ACCELERATOR_PREFIX_ND}': acceleratorPrefixNoDash,
-        '\\${ACCELERATOR_PREFIX_LND}': acceleratorPrefixNoDash.toLowerCase(),
-        '\\${ACCOUNT_ID}': cdk.Stack.of(this).account,
-        '\\${AUDIT_ACCOUNT_ID}': this.props.accountsConfig.getAuditAccountId(),
-        '\\${HOME_REGION}': this.props.globalConfig.homeRegion,
-        '\\${LOGARCHIVE_ACCOUNT_ID}': this.props.accountsConfig.getLogArchiveAccountId(),
-        '\\${MANAGEMENT_ACCOUNT_ID}': this.props.accountsConfig.getManagementAccountId(),
-        '\\${REGION}': cdk.Stack.of(this).region,
-      },
+      additionalReplacements,
     });
 
     if (returnTempPath) {
