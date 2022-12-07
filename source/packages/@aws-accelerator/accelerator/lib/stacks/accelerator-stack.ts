@@ -168,6 +168,16 @@ export abstract class AcceleratorStack extends cdk.Stack {
    */
   protected static readonly ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/s3/key-arn';
   /**
+   * Accelerator Secret manager encryption key alias, Secret CMK use to encrypt secrets
+   * This key is created in logging stack
+   */
+  protected static readonly ACCELERATOR_SECRET_MANAGER_KEY_ALIAS = 'alias/accelerator/kms/secret-manager/key';
+  /**
+   * Accelerator Secret manager encryption key description, Secret manager CMK use to encrypt secrets
+   * This key is created in logging stack
+   */
+  protected static readonly ACCELERATOR_SECRET_MANAGER_KEY_DESCRIPTION = 'AWS Accelerator Secret manager Kms Key';
+  /**
    * Accelerator S3 encryption key alias, S3 CMK use to encrypt buckets
    * This key is created in logging stack
    */
