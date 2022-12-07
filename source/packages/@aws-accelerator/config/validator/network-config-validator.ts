@@ -1508,7 +1508,9 @@ class FirewallManagerValidator {
    */
   private validateFmsConfig(values: NetworkConfig, snsTopicNames: string[], accountNames: string[], errors: string[]) {
     const fmsConfiguration = values.firewallManagerService;
-
+    if (!fmsConfiguration) {
+      return;
+    }
     if (!accountNames.includes(fmsConfiguration?.delegatedAdminAccount || '')) {
       errors.push(
         `Delegated Admin Account ${fmsConfiguration?.delegatedAdminAccount} name does not exist in Accounts configuration`,
