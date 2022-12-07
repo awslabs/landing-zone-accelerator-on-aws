@@ -166,6 +166,14 @@ async function moveAccounts(
   }[] = [];
 
   for (const account of allAccountsFromConfigTable) {
+    // This is for new account yet to be created, in this case awsKey will not be present in config table
+    if (!account['awsKey']) {
+      console.warn(
+        `Found account with email ${account['acceleratorKey']} without account id, account yet to be created !!!, ignoring the account for move accounts `,
+      );
+      continue;
+    }
+
     const awsOuKey = allAwsOuKeys.find(ouKeyItem => ouKeyItem.acceleratorKey === account['ouName']);
     const awsAccountOuKey = allAccountsFromOrganization.find(
       accountOuKeyItem => accountOuKeyItem.accountId === account['awsKey'],
