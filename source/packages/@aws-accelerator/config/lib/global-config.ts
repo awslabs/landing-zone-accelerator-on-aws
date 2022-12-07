@@ -73,6 +73,13 @@ export abstract class GlobalConfigTypes {
 
   static readonly centralLogBucketConfig = t.interface({
     lifecycleRules: t.array(t.lifecycleRuleConfig),
+    s3ResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
+    kmsResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
+  });
+
+  static readonly elbLogBucketConfig = t.interface({
+    lifecycleRules: t.array(t.lifecycleRuleConfig),
+    s3ResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
   });
 
   static readonly cloudwatchLogsConfig = t.interface({
@@ -86,6 +93,7 @@ export abstract class GlobalConfigTypes {
     sessionManager: GlobalConfigTypes.sessionManagerConfig,
     accessLogBucket: t.optional(GlobalConfigTypes.accessLogBucketConfig),
     centralLogBucket: t.optional(GlobalConfigTypes.centralLogBucketConfig),
+    elbLogBucket: t.optional(GlobalConfigTypes.elbLogBucketConfig),
     cloudwatchLogs: t.optional(GlobalConfigTypes.cloudwatchLogsConfig),
   });
 
@@ -488,13 +496,54 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
  *       transitions:
  *         - storageClass: GLACIER
  *           transitionAfter: 365
+ *   s3ResourcePolicyAttachments:
+ *     - policy: s3-policies/policy1.json
+ *   s3KmsPolicyAttachments:
+ *     - policy: kms-policies/policy1.json
  * ```
  */
 export class CentralLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.centralLogBucketConfig> {
   /**
    * Declaration of (S3 Bucket) Lifecycle rules.
+   * Configure additional resource policy attachments
    */
   readonly lifecycleRules: t.LifeCycleRule[] = [];
+  readonly s3ResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
+  readonly kmsResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
+}
+
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link ElbLogBucketConfig}*
+ *
+ * Accelerator global S3 elb logging configuration
+ *
+ * @example
+ * ```
+ * elbLogBucket:
+ *   lifecycleRules:
+ *     - enabled: true
+ *       id: ElbLifecycle
+ *       abortIncompleteMultipartUpload: 14
+ *       expiration: 3563
+ *       expiredObjectDeleteMarker: true
+ *       noncurrentVersionExpiration: 3653
+ *       noncurrentVersionTransitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *       transitions:
+ *         - storageClass: GLACIER
+ *           transitionAfter: 365
+ *   s3ResourcePolicyAttachments:
+ *     - policy: s3-policies/policy1.json
+ * ```
+ */
+export class ElbLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.elbLogBucketConfig> {
+  /**
+   * Declaration of (S3 Bucket) Lifecycle rules.
+   * Configure additional resource policy attachments
+   */
+  readonly lifecycleRules: t.LifeCycleRule[] = [];
+  readonly s3ResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
 }
 
 /**
@@ -562,6 +611,10 @@ export class LoggingConfig implements t.TypeOf<typeof GlobalConfigTypes.loggingC
    * Declaration of a (S3 Bucket) Lifecycle rule configuration.
    */
   readonly centralLogBucket: CentralLogBucketConfig | undefined = undefined;
+  /**
+   * Declaration of a (S3 Bucket) Lifecycle rule configuration.
+   */
+  readonly elbLogBucket: ElbLogBucketConfig | undefined = undefined;
   /**
    * CloudWatch Logging configuration.
    */
@@ -1255,7 +1308,9 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         //
         // lifecycle rule expiration validation
         //
-        this.validateLifecycleRuleExpiration(values, errors);
+        this.validateLifecycleRuleExpirationForCentralLogBucket(values, errors);
+        this.validateLifecycleRuleExpirationForAccessLogBucket(values, errors);
+        this.validateLifecycleRuleExpirationForReports(values, errors);
         //
         // validate cloudwatch logging
         //
@@ -1266,6 +1321,9 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         // snsTopics settings validation
         //
         this.validateSnsTopics(values, errors);
+        // central log bucket resource policy attachment validation
+        this.validateCentralLogsS3ResourcePolicyFileExists(configDir, values, errors);
+        this.validateCentralLogsKmsResourcePolicyFileExists(configDir, values, errors);
       }
     } else {
       this.homeRegion = props.homeRegion;
@@ -1380,13 +1438,60 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   }
 
   /**
-   * Function to validate S3 lifecycle expiration to be smaller than noncurrentVersionExpiration
+   * Function to validate S3 lifecycle rules for Cost Reporting
    * @param values
    */
-  private validateLifecycleRuleExpiration(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>, errors: string[]) {
+  private validateLifecycleRuleExpirationForReports(
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    errors: string[],
+  ) {
     for (const lifecycleRule of values.reports?.costAndUsageReport?.lifecycleRules ?? []) {
-      if (lifecycleRule.noncurrentVersionExpiration! <= lifecycleRule.expiration!) {
-        errors.push('The nonCurrentVersionExpiration value must be greater than that of the expiration value.');
+      if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
+        errors.push('You must supply a value for noncurrentVersionExpiration. Cost Reporting');
+      }
+      if (!lifecycleRule.abortIncompleteMultipartUpload) {
+        errors.push('You must supply a value for abortIncompleteMultipartUpload. Cost Reporting');
+      }
+      if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
+        errors.push('You may not configure expiredObjectDeleteMarker with expiration. Cost Reporting');
+      }
+    }
+  }
+
+  /**
+   * Function to validate S3 lifecycle rules Central Log Bucket
+   * @param values
+   */
+  private validateLifecycleRuleExpirationForCentralLogBucket(
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    errors: string[],
+  ) {
+    for (const lifecycleRule of values.logging.centralLogBucket?.lifecycleRules ?? []) {
+      if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
+        errors.push('You must supply a value for noncurrentVersionExpiration. Central Log Bucket');
+      }
+      if (!lifecycleRule.abortIncompleteMultipartUpload) {
+        errors.push('You must supply a value for abortIncompleteMultipartUpload. Central Log Bucket');
+      }
+      if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
+        errors.push('You may not configure expiredObjectDeleteMarker with expiration. Central Log Bucket');
+      }
+    }
+  }
+
+  private validateLifecycleRuleExpirationForAccessLogBucket(
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    errors: string[],
+  ) {
+    for (const lifecycleRule of values.logging.centralLogBucket?.lifecycleRules ?? []) {
+      if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
+        errors.push('You must supply a value for noncurrentVersionExpiration. S3 Access Log Bucket');
+      }
+      if (!lifecycleRule.abortIncompleteMultipartUpload) {
+        errors.push('You must supply a value for abortIncompleteMultipartUpload. S3 Access Log Bucket');
+      }
+      if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
+        errors.push('You may not configure expiredObjectDeleteMarker with expiration. S3 Access Log Bucket');
       }
     }
   }
@@ -1430,6 +1535,42 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         if (snsTopic.emailAddresses.length < 1) {
           errors.push(`Must be at least one email address for the snsTopic named ${snsTopic.name}`);
         }
+      }
+    }
+  }
+
+  /**
+   * Validate s3 resource policy file existence
+   * @param configDir
+   * @param values
+   * @returns
+   */
+  private validateCentralLogsS3ResourcePolicyFileExists(
+    configDir: string,
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    errors: string[],
+  ) {
+    for (const policy of values.logging.centralLogBucket?.s3ResourcePolicyAttachments ?? []) {
+      if (!fs.existsSync(path.join(configDir, policy.policy))) {
+        errors.push(`Policy definition file ${policy.policy} not found !!!`);
+      }
+    }
+  }
+
+  /**
+   * Validate s3 resource policy file existence
+   * @param configDir
+   * @param values
+   * @returns
+   */
+  private validateCentralLogsKmsResourcePolicyFileExists(
+    configDir: string,
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    errors: string[],
+  ) {
+    for (const policy of values.logging.centralLogBucket?.kmsResourcePolicyAttachments ?? []) {
+      if (!fs.existsSync(path.join(configDir, policy.policy))) {
+        errors.push(`Policy definition file ${policy.policy} not found !!!`);
       }
     }
   }
