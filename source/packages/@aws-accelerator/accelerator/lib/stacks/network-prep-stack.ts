@@ -606,7 +606,7 @@ export class NetworkPrepStack extends AcceleratorStack {
       const snsTopicName = notificationChannel.snsTopic;
       if (accountId === cdk.Stack.of(this).account && notificationChannel.region === cdk.Stack.of(this).region) {
         const snsTopicsSecurity =
-          this.props.securityConfig.centralSecurityServices.snsSubscriptions.map(
+          this.props.securityConfig.centralSecurityServices.snsSubscriptions?.map(
             snsSubscription => snsSubscription.level,
           ) || [];
         const snsTopicsGlobal = this.props.globalConfig.snsTopics?.topics.map(snsTopic => snsTopic.name) || [];

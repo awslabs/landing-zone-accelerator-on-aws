@@ -87,9 +87,8 @@ export class NetworkConfigValidator {
   private getSnsTopicNames(configDir: string, snsTopicNames: string[]) {
     const securityConfig = SecurityConfig.load(configDir);
     const globalConfig = GlobalConfig.load(configDir);
-    const securtiySnsSubscriptions = securityConfig.centralSecurityServices.snsSubscriptions.map(
-      snsSubscription => snsSubscription.level,
-    );
+    const securtiySnsSubscriptions =
+      securityConfig.centralSecurityServices.snsSubscriptions?.map(snsSubscription => snsSubscription.level) ?? [];
     const globalSnsSubscriptions = globalConfig.snsTopics?.topics.map(topic => topic.name) ?? [];
     snsTopicNames.push(...securtiySnsSubscriptions);
     snsTopicNames.push(...globalSnsSubscriptions);
@@ -1014,8 +1013,7 @@ class VpcValidator {
         !vpcItem.ipamAllocations?.find(alloc => alloc.ipamPoolName === subnet.ipamAllocation!.ipamPoolName)
       ) {
         errors.push(
-          `[VPC ${vpcItem.name} subnet ${subnet.name}]: target IPAM pool ${
-            subnet.ipamAllocation!.ipamPoolName
+          `[VPC ${vpcItem.name} subnet ${subnet.name}]: target IPAM pool ${subnet.ipamAllocation!.ipamPoolName
           } is not a source pool of the VPC`,
         );
       }
@@ -1025,8 +1023,7 @@ class VpcValidator {
         !ipams?.find(ipam => ipam.pools?.find(pool => pool.name === subnet.ipamAllocation!.ipamPoolName))
       ) {
         errors.push(
-          `[VPC ${vpcItem.name} subnet ${subnet.name}]: target IPAM pool ${
-            subnet.ipamAllocation!.ipamPoolName
+          `[VPC ${vpcItem.name} subnet ${subnet.name}]: target IPAM pool ${subnet.ipamAllocation!.ipamPoolName
           } is not defined`,
         );
       }
