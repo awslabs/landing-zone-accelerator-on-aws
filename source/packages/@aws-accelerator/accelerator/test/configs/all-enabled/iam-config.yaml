@@ -49,3 +49,103 @@ userSets:
       - username: breakGlassUser02
         group: Administrators
         boundaryPolicy: Default-Boundary-Policy
+secretSets: 
+  - deploymentTargets:
+      accounts:
+        - SharedServices
+    secrets:
+      - name: managedActiveDirectoryAdminUserSecret
+        description: Managed AD admin user secret
+        # kmsKeyName: Key1
+        userName: Admin    
+        passwordPolicy:
+          excludeUppercase: false
+          excludeLowercase: false
+          excludeNumbers: false
+          requireEachIncludedType: true
+          includeSpace: false
+          passwordLength: 32
+          excludePunctuation: false
+          excludeCharacters: "@#"
+managedActiveDirectories:
+  - name: AcceleratorManagedActiveDirectory
+    type: AWS Managed Microsoft AD
+    account: SharedServices
+    region: us-east-1
+    dnsName: example.com
+    netBiosDomainName: example
+    description: Example managed AD
+    edition: Standard
+    vpcSettings:
+      vpcName: SharedServices-Main
+      subnets:
+        - SharedServices-App-A
+        - SharedServices-App-B
+    resolverRuleName: example-com-rule
+    adminSecretName: admin-secret-managed-directory
+    logs:
+      groupName: /aws/directoryservice/AcceleratorManagedActiveDirectory
+      retentionInDays: 30
+    activeDirectoryConfigurationInstance:
+      instanceType: t3.large
+      vpcName: SharedServices-Main
+      subnetName: SharedServices-App-A
+      imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
+      securityGroupName: ActiveDirectoryConfigInstanceSG
+      userDataScripts:
+        - scriptName: JoinDomain
+          scriptFilePath: ad-config-scripts/Join-Domain.ps1
+        - scriptName: AWSQuickStart
+          scriptFilePath: ad-config-scripts/AWSQuickStart.psm1
+        - scriptName: ADGroupSetup
+          scriptFilePath: ad-config-scripts/AD-group-setup.ps1
+        - scriptName: ADUserSetup
+          scriptFilePath: ad-config-scripts/AD-user-setup.ps1           
+        - scriptName: ADUserGroupSetup
+          scriptFilePath: ad-config-scripts/AD-user-group-setup.ps1
+        - scriptName: ADGroupGrantPermissionsSetup
+          scriptFilePath: ad-config-scripts/AD-group-grant-permissions-setup.ps1
+        - scriptName: ADConnectorPermissionsSetup
+          scriptFilePath: ad-config-scripts/AD-connector-permissions-setup.ps1
+        - scriptName: ConfigurePasswordPolicy
+          scriptFilePath: ad-config-scripts/Configure-password-policy.ps1
+      adGroups:
+        - aws-Provisioning
+        - aws-Billing
+      adPerAccountGroups:
+        - "*-Admin"
+        - "*-PowerUser"
+        - "*-View"
+      adConnectorGroup: ADConnector-grp
+      sharedAccounts:
+        - Management
+        - Audit
+        - LogArchive
+      adPasswordPolicy:
+        history: 24
+        maximumAge: 90
+        minimumAge: 1
+        minimumLength: 14
+        complexity: true
+        reversible: false
+        failedAttempts: 6
+        lockoutDuration: 30
+        lockoutAttemptsReset: 30
+      adUsers:
+        - name: adconnector-usr
+          email: example-adconnector-usr@example.com
+          groups:
+            - ADConnector-grp
+        - name: user1
+          email: example-user1@example.com
+          groups:
+            - aws-Provisioning
+            - "*-View"
+            - "*-Admin"
+            - "*-PowerUser"
+            - AWS Delegated Administrators
+        - name: user2
+          email: example-user2@example.com
+          groups:
+            - aws-Provisioning-1
+            - "*-View"

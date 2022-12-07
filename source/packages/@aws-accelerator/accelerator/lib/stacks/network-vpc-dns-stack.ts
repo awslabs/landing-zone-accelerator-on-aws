@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
+import { NagSuppressions } from 'cdk-nag';
 
 import {
   AccountsConfig,
@@ -282,9 +283,75 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
         stringValue: rule.ruleId,
       });
 
+      // create role to be assumed by MAD account to update resolver rule
+      this.createManagedADResolverRuleUpdateRole(ruleItem.name, rule.ruleArn);
+
       if (ruleItem.shareTargets) {
         Logger.info(`[network-vpc-dns-stack] Share Route 53 Resolver FORWARD rule ${ruleItem.name}`);
         this.addResourceShare(ruleItem, `${ruleItem.name}_ResolverRule`, [rule.ruleArn]);
+      }
+    }
+  }
+
+  /**
+   * Create IAM role to be assumed by MAD account to update resolver rule in central account
+   * @param ruleName
+   * @param ruleArn
+   * @returns
+   */
+  private createManagedADResolverRuleUpdateRole(ruleName: string, ruleArn: string) {
+    for (const managedActiveDirectory of this.props.iamConfig.managedActiveDirectories ?? []) {
+      const madAccountId = this.accountsConfig.getAccountId(managedActiveDirectory.account);
+      const delegatedAdminAccountId = this.accountsConfig.getAccountId(
+        this.props.networkConfig.centralNetworkServices!.delegatedAdminAccount,
+      );
+
+      if (madAccountId === delegatedAdminAccountId) {
+        Logger.info(
+          `[network-vpc-stack] Managed AD account is same as delegated admin account, skipping role creation for ${managedActiveDirectory.name} active directory}`,
+        );
+        return;
+      }
+      if (
+        delegatedAdminAccountId === cdk.Stack.of(this).account &&
+        cdk.Stack.of(this).region === this.props.globalConfig.homeRegion &&
+        ruleName === managedActiveDirectory.resolverRuleName
+      ) {
+        Logger.info(
+          `[network-vpc-stack] Create Managed AD resolver rule update role for ${managedActiveDirectory.name} active directory`,
+        );
+        new cdk.aws_iam.Role(this, pascalCase(`AWSAccelerator-MAD-${ruleName}`), {
+          roleName: `AWSAccelerator-MAD-${ruleName}`,
+          assumedBy: new cdk.aws_iam.AccountPrincipal(madAccountId),
+          inlinePolicies: {
+            default: new cdk.aws_iam.PolicyDocument({
+              statements: [
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['route53resolver:ListResolverRules'],
+                  resources: ['*'],
+                }),
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['route53resolver:UpdateResolverRule'],
+                  resources: [ruleArn],
+                }),
+              ],
+            }),
+          },
+        });
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/` + pascalCase(`AWSAccelerator-MAD-${ruleName}`) + '/Resource',
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason: 'Role needs access to list resolver rules and update',
+            },
+          ],
+        );
       }
     }
   }

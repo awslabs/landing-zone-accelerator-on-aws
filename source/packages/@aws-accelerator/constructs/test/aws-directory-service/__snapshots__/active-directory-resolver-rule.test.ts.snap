@@ -1,0 +1,330 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ActiveDirectoryResolverRule Construct(ActiveDirectoryResolverRule):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "ActiveDirectoryResolverRule420E8011": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "ActiveDirectoryResolverRuleUpdateResolverRuleProviderframeworkonEvent8A9C3C72",
+            "Arn",
+          ],
+        },
+        "executingAccountId": Object {
+          "Ref": "AWS::AccountId",
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "roleName": "AWSAccelerator-MAD-example-com-rule",
+        "route53ResolverRuleName": "example-com-rule",
+        "targetIps": Array [
+          "10.10.10.10",
+          "20.20.20.20",
+        ],
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::UpdateResolverRule",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ActiveDirectoryResolverRuleUpdateResolverRuleFunction94452B23": Object {
+      "DependsOn": Array [
+        "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRoleDefaultPolicyBD9D1C7C",
+        "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRole99253C93",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Update resolver group rule target ips",
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "CustomLambdaKey2287F5A9",
+            "Arn",
+          ],
+        },
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRole99253C93",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionLogGroupDA0FD002": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomCWLKey7119CF89",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "ActiveDirectoryResolverRuleUpdateResolverRuleFunction94452B23",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 30,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRole99253C93": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRoleDefaultPolicyBD9D1C7C": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "route53resolver:UpdateResolverRule",
+                "route53resolver:ListResolverRules",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "Route53resolver",
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "StsAssumeRole",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRoleDefaultPolicyBD9D1C7C",
+        "Roles": Array [
+          Object {
+            "Ref": "ActiveDirectoryResolverRuleUpdateResolverRuleFunctionServiceRole99253C93",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ActiveDirectoryResolverRuleUpdateResolverRuleProviderframeworkonEvent8A9C3C72": Object {
+      "DependsOn": Array [
+        "ActiveDirectoryResolverRuleUpdateResolverRuleProviderframeworkonEventServiceRoleDefaultPolicy5DEC28B4",
+        "ActiveDirectoryResolverRuleUpdateResolverRuleProviderframeworkonEventServiceRole2EC1A40E",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/ActiveDirectoryResolverRule/UpdateResolverRuleProvider)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "ActiveDirectoryResolverRuleUpdateResolverRuleFunction94452B23",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "ActiveDirectoryResolverRuleUpdateResolverRuleProviderframeworkonEventServiceRole2EC1A40E",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ActiveDirectoryResolverRuleUpdateResolverRuleProviderframeworkonEventServiceRole2EC1A40E": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ActiveDirectoryResolverRuleUpdateResolverRuleProviderframeworkonEventServiceRoleDefaultPolicy5DEC28B4": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "ActiveDirectoryResolverRuleUpdateResolverRuleFunction94452B23",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "ActiveDirectoryResolverRuleUpdateResolverRuleFunction94452B23",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ActiveDirectoryResolverRuleUpdateResolverRuleProviderframeworkonEventServiceRoleDefaultPolicy5DEC28B4",
+        "Roles": Array [
+          Object {
+            "Ref": "ActiveDirectoryResolverRuleUpdateResolverRuleProviderframeworkonEventServiceRole2EC1A40E",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CustomCWLKey7119CF89": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLambdaKey2287F5A9": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
+}
+`;

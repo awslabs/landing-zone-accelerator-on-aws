@@ -13,11 +13,11 @@
 import {
   AccountsConfig,
   GlobalConfig,
-  IamConfig,
   OrganizationConfig,
   SecurityConfig,
   CustomizationsConfigValidator,
   NetworkConfigValidator,
+  IamConfigValidator,
 } from '@aws-accelerator/config';
 import { Logger } from './logger';
 import * as fs from 'fs';
@@ -42,7 +42,7 @@ if (configDirPath) {
   }
 
   try {
-    IamConfig.load(configDirPath, true);
+    new IamConfigValidator(configDirPath);
   } catch (e) {
     errors.push({ file: 'iam-config.yaml', message: e });
   }
