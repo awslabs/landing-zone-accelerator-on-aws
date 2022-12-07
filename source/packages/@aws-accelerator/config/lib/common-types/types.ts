@@ -289,6 +289,12 @@ export const lifecycleRuleConfig = t.interface({
   transitions: optional(t.array(transition)),
 });
 
+export const resourcePolicyStatement = t.interface({
+  policy: t.string,
+});
+
+export type ResourcePolicyStatement = t.TypeOf<typeof resourcePolicyStatement>;
+
 export class LifeCycleRule implements t.TypeOf<typeof lifecycleRuleConfig> {
   readonly abortIncompleteMultipartUpload: number = 1;
   readonly enabled: boolean = true;

@@ -257,6 +257,7 @@ export class LoggingStack extends AcceleratorStack {
           cdk.Stack.of(this).region
         }`,
         replicationProps,
+        s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.elbLogBucket?.lifecycleRules),
       });
       let elbAccountId = undefined;
       if (AcceleratorElbRootAccounts[cdk.Stack.of(this).region]) {
@@ -353,6 +354,8 @@ export class LoggingStack extends AcceleratorStack {
           reason: 'ElbAccessLogsBucket has server access logs disabled till the task for access logging completed.',
         },
       ]);
+
+      this.elbLogBucketAddResourcePolicies(elbAccessLogsBucket.getS3Bucket());
     }
 
     if (this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable) {
@@ -1009,6 +1012,8 @@ export class LoggingStack extends AcceleratorStack {
           },
         ],
       );
+
+      this.centralLogBucketAddResourcePolicies();
     }
   }
 
@@ -1362,6 +1367,41 @@ export class LoggingStack extends AcceleratorStack {
     return snsKey;
   }
 
+  private centralLogBucketAddResourcePolicies() {
+    Logger.info(`[logging-stack] Adding central log bucket resource policies to KMS`);
+
+    for (const attachment of this.props.globalConfig.logging.centralLogBucket?.kmsResourcePolicyAttachments ?? []) {
+      const policyDocument = JSON.parse(
+        this.generatePolicyReplacements(path.join(this.props.configDirPath, attachment.policy), false),
+      );
+
+      // Create a statements list using the PolicyStatement factory
+      const statements: cdk.aws_iam.PolicyStatement[] = [];
+      for (const statement of policyDocument.Statement) {
+        statements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+        for (const statement of statements) {
+          this.centralLogBucketKey?.addToResourcePolicy(statement);
+        }
+      }
+
+      Logger.info(`[logging-stack] Adding central log bucket resource policies to S3`);
+      const realCentralLogBucket = this.centralLogsBucket?.getS3Bucket().getS3Bucket();
+      for (const attachment of this.props.globalConfig.logging.centralLogBucket?.s3ResourcePolicyAttachments ?? []) {
+        const policyDocument = JSON.parse(
+          this.generatePolicyReplacements(path.join(this.props.configDirPath, attachment.policy), false),
+        );
+        // Create a statements list using the PolicyStatement factory
+        const statements: cdk.aws_iam.PolicyStatement[] = [];
+        for (const statement of policyDocument.Statement) {
+          statements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+        }
+        for (const statement of statements) {
+          realCentralLogBucket?.addToResourcePolicy(statement);
+        }
+      }
+    }
+  }
+
   private createFMSNotificationRole() {
     const fmsConfiguration = this.props.networkConfig.firewallManagerService;
 
@@ -1370,10 +1410,9 @@ export class LoggingStack extends AcceleratorStack {
       return;
     }
     const roleName = `AWSAccelerator-FMS-Notifications`;
-    const auditAccountId = this.props.accountsConfig.getAuditAccountId();
+    const auditAccountId = this.props.accountsConfig.getAuditAccountId(); 
 
     //Create Role for SNS Topic access from security config and global config
-
     Logger.info('[logging-stack] Creating FMS Notification Channel Role AWSAccelerator - FMS');
     const fmsRole = new cdk.aws_iam.Role(this, `aws-accelerator-fms`, {
       roleName,
@@ -1402,5 +1441,23 @@ export class LoggingStack extends AcceleratorStack {
     NagSuppressions.addResourceSuppressions(fmsRole, [
       { id: 'AwsSolutions-IAM5', reason: 'Allow cross-account resources to encrypt KMS under this path.' },
     ]);
+  }
+
+  private elbLogBucketAddResourcePolicies(elbLogBucket: cdk.aws_s3.IBucket) {
+    Logger.info(`[security-resources-stack] Adding elb log bucket resource policies to S3`);
+    for (const attachment of this.props.globalConfig.logging.elbLogBucket?.s3ResourcePolicyAttachments ?? []) {
+      const policyDocument = JSON.parse(
+        this.generatePolicyReplacements(path.join(this.props.configDirPath, attachment.policy), false),
+      );
+      // Create a statements list using the PolicyStatement factory
+      const statements: cdk.aws_iam.PolicyStatement[] = [];
+      for (const statement of policyDocument.Statement) {
+        statements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+      }
+
+      for (const statement of statements) {
+        elbLogBucket.addToResourcePolicy(statement);
+      }
+    }
   }
 }

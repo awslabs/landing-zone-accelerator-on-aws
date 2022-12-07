@@ -2227,8 +2227,14 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    */
   private macieLifecycleRules(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>, errors: string[]) {
     for (const lifecycleRule of values.centralSecurityServices?.macie?.lifecycleRules ?? []) {
-      if (lifecycleRule.noncurrentVersionExpiration! <= lifecycleRule.expiration!) {
-        errors.push('The nonCurrentVersionExpiration value must be greater than that of the expiration value.');
+      if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
+        errors.push('You must supply a value for noncurrentVersionExpiration. Macie.');
+      }
+      if (!lifecycleRule.abortIncompleteMultipartUpload) {
+        errors.push('You must supply a value for abortIncompleteMultipartUpload. Macie');
+      }
+      if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
+        errors.push('You may not configure expiredObjectDeleteMarker with expiration. Macie');
       }
     }
   }
@@ -2238,8 +2244,14 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
    */
   private guarddutyLifecycleRules(values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>, errors: string[]) {
     for (const lifecycleRule of values.centralSecurityServices?.guardduty?.lifecycleRules ?? []) {
-      if (lifecycleRule.noncurrentVersionExpiration! <= lifecycleRule.expiration!) {
-        errors.push('The nonCurrentVersionExpiration value must be greater than that of the expiration value.');
+      if (lifecycleRule.expiration && !lifecycleRule.noncurrentVersionExpiration) {
+        errors.push('You must supply a value for noncurrentVersionExpiration. GuardDuty');
+      }
+      if (!lifecycleRule.abortIncompleteMultipartUpload) {
+        errors.push('You must supply a value for abortIncompleteMultipartUpload. GuardDuty');
+      }
+      if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
+        errors.push('You may not configure expiredObjectDeleteMarker with expiration. GuardDuty');
       }
     }
   }
