@@ -121,7 +121,7 @@ export class AwsSolutionAspect implements cdk.IAspect {
   visit(node: IConstruct): void {
     if (node instanceof cdk.CfnResource) {
       if (node.cfnResourceType === 'AWS::Lambda::Function') {
-        node.addPropertyOverride('Environment.Variables.solutionId', `AwsSolution/SO0199/${version}`);
+        node.addPropertyOverride('Environment.Variables.SOLUTION_ID', `AwsSolution/SO0199/${version}`);
       }
     }
   }

@@ -22,7 +22,7 @@ import { throttlingBackOff } from '@aws-accelerator/utils';
 import { v4 as uuidv4 } from 'uuid';
 
 const tableName = process.env['NewAccountsTableName'] ?? '';
-const solutionId = process.env['SolutionId'] ?? '';
+const solutionId = process.env['SOLUTION_ID'] ?? '';
 
 const documentClient = new AWS.DynamoDB.DocumentClient({ customUserAgent: solutionId });
 const serviceCatalogClient = new AWS.ServiceCatalog({ customUserAgent: solutionId });
