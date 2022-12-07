@@ -73,10 +73,7 @@ export async function handler(event: any): Promise<any> {
     const destinationParentId: string = event.detail.requestParameters.destinationParentId;
     const username: string = event.detail.userIdentity.sessionContext.sessionIssuer.userName;
 
-    if (
-      !username.includes('AWSAccelerator-PrepareSta-CustomMoveAccountsCustom-') &&
-      !username.includes('AWSAccelerator-AccountsSt-MoveAccountRuleMoveAccou-')
-    ) {
+    if (!username.includes('AWSAccelerator-AccountsSt-') && !username.includes('AWSAccelerator-PrepareSta-')) {
       const organizationsClient = new AWS.Organizations({ region: globalRegion, customUserAgent: solutionId });
 
       // Get all Ou details
@@ -97,44 +94,46 @@ export async function handler(event: any): Promise<any> {
         throw new Error(`Event's destination parent id ${destinationParentId} not found in organization !!!`);
       }
 
-      if (destSuspended) {
-        console.log(
-          `Account id ${accountID} with email ${configTableSourceParent.email} was moved by non LZA user named ${username}, from source ou named ${configTableSourceParent.ouName} to a SUSPENDED(ignored) destination ou named ${eventDestParent.acceleratorKey}, event time was ${event.detail.eventTime}, assumed principal was ${event.detail.userIdentity.principalId}, change will NOT perform rollback !!!!`,
-        );
-        return;
-      }
+      if (configTableSourceParent.ouId !== destinationParentId) {
+        if (destSuspended) {
+          console.log(
+            `Account id ${accountID} with email ${configTableSourceParent.email} was moved by non LZA user named ${username}, from source ou named ${configTableSourceParent.ouName} to a SUSPENDED(ignored) destination ou named ${eventDestParent.acceleratorKey}, event time was ${event.detail.eventTime}, assumed principal was ${event.detail.userIdentity.principalId}, change will NOT perform rollback !!!!`,
+          );
+          return;
+        }
 
-      console.warn(
-        `Account id ${accountID} with email ${configTableSourceParent.email} was moved by non LZA user named ${username}, from ${configTableSourceParent.ouName} ou to ${eventDestParent.acceleratorKey} ou, event time was ${event.detail.eventTime}, assumed principal was ${event.detail.userIdentity.principalId}, change will be rollback !!!!`,
-      );
+        console.warn(
+          `Account id ${accountID} with email ${configTableSourceParent.email} was moved by non LZA user named ${username}, from ${configTableSourceParent.ouName} ou to ${eventDestParent.acceleratorKey} ou, event time was ${event.detail.eventTime}, assumed principal was ${event.detail.userIdentity.principalId}, change will be rollback !!!!`,
+        );
 
-      console.log(
-        `Start: moving account id ${accountID} with email ${configTableSourceParent.email} from ${eventDestParent.acceleratorKey} ou to ${configTableSourceParent.ouName} ou`,
-      );
-      try {
-        await throttlingBackOff(() =>
-          organizationsClient
-            .moveAccount({
-              AccountId: accountID,
-              DestinationParentId: configTableSourceParent.ouId,
-              SourceParentId: destinationParentId,
-            })
-            .promise(),
-        );
         console.log(
-          `End: Account id ${accountID} with email ${configTableSourceParent.email} successfully moved from ${eventDestParent.acceleratorKey} ou to ${configTableSourceParent.ouName} ou`,
+          `Start: moving account id ${accountID} with email ${configTableSourceParent.email} from ${eventDestParent.acceleratorKey} ou to ${configTableSourceParent.ouName} ou`,
         );
-      } catch (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        e: any
-      ) {
-        if (
-          // SDKv2 Error Structure
-          e.code === 'DuplicateAccountException' ||
-          // SDKv3 Error Structure
-          e.name === 'DuplicateAccountException'
+        try {
+          await throttlingBackOff(() =>
+            organizationsClient
+              .moveAccount({
+                AccountId: accountID,
+                DestinationParentId: configTableSourceParent.ouId,
+                SourceParentId: destinationParentId,
+              })
+              .promise(),
+          );
+          console.log(
+            `End: Account id ${accountID} with email ${configTableSourceParent.email} successfully moved from ${eventDestParent.acceleratorKey} ou to ${configTableSourceParent.ouName} ou`,
+          );
+        } catch (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          e: any
         ) {
-          console.warn(e.name + ': ' + e.message);
+          if (
+            // SDKv2 Error Structure
+            e.code === 'DuplicateAccountException' ||
+            // SDKv3 Error Structure
+            e.name === 'DuplicateAccountException'
+          ) {
+            console.warn(e.name + ': ' + e.message);
+          }
         }
       }
     }
