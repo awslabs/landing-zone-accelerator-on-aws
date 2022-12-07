@@ -25,7 +25,7 @@ const documentClient = new AWS.DynamoDB.DocumentClient();
 const newOrgAccountsTableName = process.env['NewOrgAccountsTableName'] ?? '';
 const govCloudAccountMappingTableName = process.env['GovCloudAccountMappingTableName'] ?? '';
 const accountRoleName = process.env['AccountRoleName'];
-const solutionId = process.env['SolutionId'] ?? '';
+const solutionId = process.env['SOLUTION_ID'] ?? '';
 
 interface AccountConfig {
   name: string;
