@@ -22,6 +22,7 @@ import {
   CustomerGatewayConfig,
   DxGatewayConfig,
   DxTransitGatewayAssociationConfig,
+  ManagedActiveDirectoryConfig,
   NetworkConfigTypes,
   ShareTargets,
   TransitGatewayConfig,
@@ -32,6 +33,9 @@ import {
   VpnConnectionConfig,
 } from '@aws-accelerator/config';
 import {
+  ActiveDirectory,
+  ActiveDirectoryResolverRule,
+  ActiveDirectoryConfiguration,
   AssociateHostedZones,
   CrossAccountRouteFramework,
   DirectConnectGatewayAssociation,
@@ -49,10 +53,12 @@ import {
   TransitGatewayRouteTablePropagation,
   TransitGatewayStaticRoute,
   VpcPeering,
+  UserDataScriptsType,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import path from 'path';
 
 interface Peering {
   name: string;
@@ -64,6 +70,7 @@ interface Peering {
 export class NetworkAssociationsStack extends AcceleratorStack {
   private accountsConfig: AccountsConfig;
   private cloudwatchKey: cdk.aws_kms.Key;
+  private lambdaKey: cdk.aws_kms.IKey;
   private logRetention: number;
   private dnsFirewallMap: Map<string, string>;
   private dxGatewayMap: Map<string, string>;
@@ -99,6 +106,15 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
       ),
     ) as cdk.aws_kms.Key;
+
+    this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
+      this,
+      'AcceleratorGetLambdaKey',
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
+      ),
+    );
 
     //
     // Build VPC peering list
@@ -161,6 +177,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     // Create SSM parameters
     //
     this.createSsmParameters();
+    // Create managed active directories
+    //
+    this.createManagedActiveDirectories();
 
     Logger.info('[network-associations-stack] Completed stack synthesis');
   }
@@ -1859,6 +1878,362 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             }
           }
         }
+      }
+    }
+  }
+
+  /**
+   * Create Managed active directories
+   */
+  private createManagedActiveDirectories() {
+    for (const managedActiveDirectory of this.props.iamConfig.managedActiveDirectories ?? []) {
+      const madAccountId = this.props.accountsConfig.getAccountId(managedActiveDirectory.account);
+
+      if (madAccountId === cdk.Stack.of(this).account && managedActiveDirectory.region === cdk.Stack.of(this).region) {
+        Logger.info(`[network-associations-stack] Creating Managed active directory ${managedActiveDirectory.name}`);
+        const madVpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          `/accelerator/network/vpc/${managedActiveDirectory.vpcSettings.vpcName}/id`,
+        );
+
+        const madSubnetIds: string[] = [];
+        for (const madSubnet of managedActiveDirectory.vpcSettings.subnets ?? []) {
+          const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            `/accelerator/network/vpc/${managedActiveDirectory.vpcSettings.vpcName}/subnet/${madSubnet}/id`,
+          );
+          madSubnetIds.push(subnetId);
+        }
+
+        let logGroupName = `/aws/directoryservice/${managedActiveDirectory.name}`;
+
+        if (managedActiveDirectory.logs) {
+          logGroupName = managedActiveDirectory.logs.groupName;
+        }
+
+        const activeDirectory = new ActiveDirectory(this, `${pascalCase(managedActiveDirectory.name)}Ad`, {
+          directoryName: managedActiveDirectory.name,
+          dnsName: managedActiveDirectory.dnsName,
+          vpcId: madVpcId,
+          madSubnetIds: madSubnetIds,
+          adminSecretName: managedActiveDirectory.adminSecretName ?? 'admin-secret',
+          edition: managedActiveDirectory.edition,
+          netBiosDomainName: managedActiveDirectory.netBiosDomainName,
+          logGroupName: logGroupName,
+          logRetentionInDays:
+            managedActiveDirectory.logs?.retentionInDays ?? this.props.globalConfig.cloudwatchLogRetentionInDays,
+          lambdaKey: this.lambdaKey,
+          cloudwatchKey: this.cloudwatchKey,
+          cloudwatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        });
+
+        // AwsSolutions-SMG4: The secret does not have automatic rotation scheduled
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/${pascalCase(
+            managedActiveDirectory.name,
+          )}Ad/AcceleratorManagedActiveDirectoryAdminSecret/Resource`,
+          [
+            {
+              id: 'AwsSolutions-SMG4',
+              reason: 'Managed AD secret.',
+            },
+          ],
+        );
+
+        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/${pascalCase(
+            managedActiveDirectory.name,
+          )}Ad/AcceleratorManagedActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionFunction/ServiceRole/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM4',
+              reason: 'CDK created IAM user, role, or group.',
+            },
+          ],
+        );
+
+        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/${pascalCase(
+            managedActiveDirectory.name,
+          )}Ad/AcceleratorManagedActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionProvider/framework-onEvent/ServiceRole/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM4',
+              reason: 'CDK created IAM user, role, or group.',
+            },
+          ],
+        );
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/${pascalCase(
+            managedActiveDirectory.name,
+          )}Ad/AcceleratorManagedActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionFunction/ServiceRole/DefaultPolicy/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason: 'CDK created IAM service role entity.',
+            },
+          ],
+        );
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/${pascalCase(
+            managedActiveDirectory.name,
+          )}Ad/AcceleratorManagedActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason: 'CDK created IAM service role entity.',
+            },
+          ],
+        );
+
+        // Update resolver group rule with mad dns ips
+        this.updateActiveDirectoryResolverGroupRule(
+          managedActiveDirectory.name,
+          managedActiveDirectory.resolverRuleName,
+          activeDirectory.dnsIpAddresses,
+        );
+
+        // Configure managed active directory using provisioned EC2 instance user data
+        this.configureManagedActiveDirectory(managedActiveDirectory, activeDirectory);
+      }
+    }
+  }
+
+  /**
+   * Function to update resolver rule with MAD dns ips
+   * @param directoryName
+   * @param resolverRuleName
+   * @param dnsIpAddresses
+   */
+  private updateActiveDirectoryResolverGroupRule(
+    directoryName: string,
+    resolverRuleName: string,
+    dnsIpAddresses: string[],
+  ) {
+    new ActiveDirectoryResolverRule(this, `${pascalCase(directoryName)}ResolverRule`, {
+      route53ResolverRuleName: resolverRuleName,
+      targetIps: dnsIpAddresses,
+      roleName: `AWSAccelerator-MAD-${resolverRuleName}`,
+      lambdaKmsKey: this.lambdaKey,
+      cloudWatchLogsKmsKey: this.cloudwatchKey,
+      cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+    });
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${pascalCase(directoryName)}ResolverRule/UpdateResolverRuleFunction/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'CDK created IAM user, role, or group.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${pascalCase(
+        directoryName,
+      )}ResolverRule/UpdateResolverRuleProvider/framework-onEvent/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'CDK created IAM user, role, or group.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${pascalCase(
+        directoryName,
+      )}ResolverRule/UpdateResolverRuleFunction/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'CDK created IAM service role entity.',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${pascalCase(
+        directoryName,
+      )}ResolverRule/UpdateResolverRuleProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'CDK created IAM service role entity.',
+        },
+      ],
+    );
+  }
+
+  /**
+   * Function to configure MAD
+   * @param managedActiveDirectory
+   */
+  private configureManagedActiveDirectory(
+    managedActiveDirectory: ManagedActiveDirectoryConfig,
+    activeDirectory: ActiveDirectory,
+  ) {
+    if (managedActiveDirectory.activeDirectoryConfigurationInstance) {
+      const adInstanceConfig = managedActiveDirectory.activeDirectoryConfigurationInstance;
+      const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        `/accelerator/network/vpc/${adInstanceConfig.vpcName}/subnet/${adInstanceConfig.subnetName}/id`,
+      );
+      const securityGroupId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        `/accelerator/network/vpc/${adInstanceConfig.vpcName}/securityGroup/${adInstanceConfig.securityGroupName}/id`,
+      );
+
+      const userDataScripts: UserDataScriptsType[] = [];
+      if (adInstanceConfig.userDataScripts.length > 0) {
+        for (const userDataScript of adInstanceConfig.userDataScripts) {
+          userDataScripts.push({
+            name: userDataScript.scriptName,
+            path: path.join(this.props.configDirPath, userDataScript.scriptFilePath),
+          });
+        }
+      }
+
+      const activeDirectoryConfiguration = new ActiveDirectoryConfiguration(
+        this,
+        `${pascalCase(managedActiveDirectory.name)}ConfigInstance`,
+        {
+          instanceType: adInstanceConfig.instanceType,
+          imagePath: adInstanceConfig.imagePath,
+          managedActiveDirectoryName: managedActiveDirectory.name,
+          dnsName: managedActiveDirectory.dnsName,
+          netBiosDomainName: managedActiveDirectory.netBiosDomainName,
+          adminPwdSecretArn: activeDirectory.adminPwdSecretArn,
+          subnetId,
+          securityGroupId,
+          userDataScripts,
+          adGroups: adInstanceConfig.adGroups,
+          adPerAccountGroups: adInstanceConfig.adPerAccountGroups,
+          adConnectorGroup: adInstanceConfig.adConnectorGroup,
+          adUsers: adInstanceConfig.adUsers,
+          adPasswordPolicy: adInstanceConfig.adPasswordPolicy,
+          accountNames: adInstanceConfig.sharedAccounts,
+        },
+      );
+
+      activeDirectoryConfiguration.node.addDependency(activeDirectory);
+
+      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/` +
+          pascalCase(managedActiveDirectory.name) +
+          'ConfigInstance/' +
+          pascalCase(managedActiveDirectory.name) +
+          'InstanceRole/Resource',
+        [
+          {
+            id: 'AwsSolutions-IAM4',
+            reason: 'AD config instance needs to access user data bucket and bucket encryption key.',
+          },
+        ],
+      );
+
+      // AwsSolutions-EC28: The EC2 instance/AutoScaling launch configuration does not have detailed monitoring enabled
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/` +
+          pascalCase(managedActiveDirectory.name) +
+          'ConfigInstance/' +
+          pascalCase(managedActiveDirectory.name) +
+          'InstanceRole/Instance',
+        [
+          {
+            id: 'AwsSolutions-EC28',
+            reason: 'AD config instance just used to configure MAD through user data.',
+          },
+        ],
+      );
+
+      // AwsSolutions-EC29: The EC2 instance is not part of an ASG and has Termination Protection disabled
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/` +
+          pascalCase(managedActiveDirectory.name) +
+          'ConfigInstance/' +
+          pascalCase(managedActiveDirectory.name) +
+          'InstanceRole/Instance',
+        [
+          {
+            id: 'AwsSolutions-EC29',
+            reason: 'AD config instance just used to configure MAD through user data.',
+          },
+        ],
+      );
+
+      // AwsSolutions-EC28: The EC2 instance/AutoScaling launch configuration does not have detailed monitoring enabled
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/` +
+          pascalCase(managedActiveDirectory.name) +
+          'ConfigInstance/' +
+          pascalCase(managedActiveDirectory.name) +
+          'Instance',
+        [
+          {
+            id: 'AwsSolutions-EC28',
+            reason: 'AD config instance just used to configure MAD through user data.',
+          },
+        ],
+      );
+
+      // AwsSolutions-EC29: The EC2 instance is not part of an ASG and has Termination Protection disabled.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/` +
+          pascalCase(managedActiveDirectory.name) +
+          'ConfigInstance/' +
+          pascalCase(managedActiveDirectory.name) +
+          'Instance',
+        [
+          {
+            id: 'AwsSolutions-EC29',
+            reason: 'AD config instance just used to configure MAD through user data.',
+          },
+        ],
+      );
+
+      for (const adUser of adInstanceConfig.adUsers ?? []) {
+        // AwsSolutions-SMG4: The secret does not have automatic rotation scheduled
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/` +
+            pascalCase(managedActiveDirectory.name) +
+            'ConfigInstance/' +
+            pascalCase(adUser.name) +
+            'Secret/Resource',
+          [
+            {
+              id: 'AwsSolutions-SMG4',
+              reason: 'AD user secret.',
+            },
+          ],
+        );
       }
     }
   }

@@ -1,0 +1,393 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ActiveDirectory Construct(ActiveDirectory):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "ActiveDirectoryAcceleratorManagedActiveDirectoryActiveDirectory4AAFE9A0": Object {
+      "Properties": Object {
+        "Edition": "Enterprise",
+        "Name": "example.com",
+        "Password": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "{{resolve:secretsmanager:",
+              Object {
+                "Ref": "ActiveDirectoryAcceleratorManagedActiveDirectoryAdminSecret712D80F9",
+              },
+              ":SecretString:::}}",
+            ],
+          ],
+        },
+        "ShortName": "example",
+        "VpcSettings": Object {
+          "SubnetIds": Array [
+            "subnet01",
+            "subnet02",
+          ],
+          "VpcId": "vpcId",
+        },
+      },
+      "Type": "AWS::DirectoryService::MicrosoftAD",
+    },
+    "ActiveDirectoryAcceleratorManagedActiveDirectoryAdminSecret712D80F9": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "GenerateSecretString": Object {
+          "PasswordLength": 16,
+          "RequireEachIncludedType": true,
+        },
+        "Name": "/accelerator/ad-user/AcceleratorManagedActiveDirectory/admin-secret",
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscription31CCD066": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionProviderframeworkonEventD1664733",
+            "Arn",
+          ],
+        },
+        "directoryId": Object {
+          "Ref": "ActiveDirectoryAcceleratorManagedActiveDirectoryActiveDirectory4AAFE9A0",
+        },
+        "logGroupName": Object {
+          "Ref": "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionexamplecomLogGroup262F5889",
+        },
+      },
+      "Type": "Custom::ActiveDirectoryLogSubscription",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunction68D4A3D7": Object {
+      "DependsOn": Array [
+        "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionServiceRoleDefaultPolicy5A76EC10",
+        "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionServiceRole2EF3FD57",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Manage active directory log subscription handler",
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "CustomLambdaKey2287F5A9",
+            "Arn",
+          ],
+        },
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionServiceRole2EF3FD57",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 30,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionLogGroupCCE84E08": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomCWLKey7119CF89",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunction68D4A3D7",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 30,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionServiceRole2EF3FD57": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionServiceRoleDefaultPolicy5A76EC10": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "ds:ListLogSubscriptions",
+                "ds:CreateLogSubscription",
+                "ds:DeleteLogSubscription",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "LogSubscription",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "toryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionServiceRoleDefaultPolicy5A76EC10",
+        "Roles": Array [
+          Object {
+            "Ref": "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunctionServiceRole2EF3FD57",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionProviderframeworkonEventD1664733": Object {
+      "DependsOn": Array [
+        "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionProviderframeworkonEventServiceRoleDefaultPolicy6B887A7A",
+        "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionProviderframeworkonEventServiceRoleC0C4010A",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/ActiveDirectory/AcceleratorManagedActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionProvider)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunction68D4A3D7",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionProviderframeworkonEventServiceRoleC0C4010A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionProviderframeworkonEventServiceRoleC0C4010A": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionProviderframeworkonEventServiceRoleDefaultPolicy6B887A7A": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunction68D4A3D7",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionFunction68D4A3D7",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "anagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionProviderframeworkonEventServiceRoleDefaultPolicy6B887A7A",
+        "Roles": Array [
+          Object {
+            "Ref": "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionManageActiveDirectoryLogSubscriptionProviderframeworkonEventServiceRoleC0C4010A",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionexamplecomLogGroup262F5889": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomCWLKey7119CF89",
+            "Arn",
+          ],
+        },
+        "LogGroupName": "/aws/directoryservice/AcceleratorManagedActiveDirectory",
+        "RetentionInDays": 30,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionexamplecomLogGroupPolicyResourcePolicy475C321A": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "{\\"Statement\\":[{\\"Action\\":[\\"logs:CreateLogStream\\",\\"logs:PutLogEvents\\"],\\"Effect\\":\\"Allow\\",\\"Principal\\":{\\"Service\\":\\"ds.amazonaws.com\\"},\\"Resource\\":\\"",
+              Object {
+                "Fn::GetAtt": Array [
+                  "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionexamplecomLogGroup262F5889",
+                  "Arn",
+                ],
+              },
+              "\\"}],\\"Version\\":\\"2012-10-17\\"}",
+            ],
+          ],
+        },
+        "PolicyName": "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscriptionexamplecomLogGroupPolicy7EF88DF6",
+      },
+      "Type": "AWS::Logs::ResourcePolicy",
+    },
+    "CustomCWLKey7119CF89": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLambdaKey2287F5A9": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
+}
+`;

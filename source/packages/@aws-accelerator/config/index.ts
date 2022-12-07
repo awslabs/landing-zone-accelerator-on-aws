@@ -20,4 +20,5 @@ export * from './lib/network-config';
 export * from './lib/organization-config';
 export * from './lib/security-config';
 export * from './validator/customizations-config-validator';
+export * from './validator/iam-config-validator';
 export * from './validator/network-config-validator';
