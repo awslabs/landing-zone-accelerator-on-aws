@@ -19,7 +19,14 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 import { MoveAccountRule } from '@aws-accelerator/constructs';
 
-import { EnablePolicyType, Policy, PolicyAttachment, PolicyType, PolicyTypeEnum } from '@aws-accelerator/constructs';
+import {
+  EnablePolicyType,
+  Policy,
+  PolicyAttachment,
+  PolicyType,
+  PolicyTypeEnum,
+  RevertScpChanges,
+} from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
@@ -253,7 +260,23 @@ export class AccountsStack extends AcceleratorStack {
           });
         }
 
-        if (props.organizationConfig.quarantineNewAccounts?.enable === true && props.partition == 'aws') {
+        if (props.securityConfig.centralSecurityServices?.scpRevertChangesConfig?.enable) {
+          Logger.info(`[accounts-stack] Creating resources to revert modifications to scps`);
+          new RevertScpChanges(this, 'RevertScpChanges', {
+            auditAccountId: props.accountsConfig.getAuditAccountId(),
+            logArchiveAccountId: props.accountsConfig.getLogArchiveAccountId(),
+            managementAccountId: props.accountsConfig.getManagementAccountId(),
+            configDirPath: props.configDirPath,
+            kmsKeyCloudWatch: this.cloudwatchKey,
+            kmsKeyLambda: this.lambdaKey,
+            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+            managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
+            snsTopicName: props.securityConfig.centralSecurityServices.scpRevertChangesConfig.snsTopicName,
+            scpFilePaths: props.organizationConfig.serviceControlPolicies?.map(a => a.policy) ?? [],
+          });
+        }
+
+        if (props.organizationConfig.quarantineNewAccounts?.enable === true && props.partition === 'aws') {
           // Create resources to attach quarantine scp to
           // new accounts created in organizations
           Logger.info(`[accounts-stack] Creating resources to quarantine new accounts`);
