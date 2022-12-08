@@ -93,6 +93,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
   public static readonly ACCELERATOR_COST_USAGE_REPORT_BUCKET_PREFIX = 'aws-accelerator-cur';
 
   /**
+   * Accelerator configuration repository name
+   */
+  public static readonly ACCELERATOR_CONFIGURATION_REPOSITORY_NAME = 'aws-accelerator-config';
+
+  /**
    * Accelerator S3 access logs bucket name prefix
    */
   public static readonly ACCELERATOR_S3_ACCESS_LOGS_BUCKET_NAME_PREFIX = 'aws-accelerator-s3-access-logs';

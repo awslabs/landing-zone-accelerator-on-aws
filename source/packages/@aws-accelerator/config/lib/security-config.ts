@@ -49,6 +49,20 @@ export class SecurityConfigTypes {
   });
 
   /**
+   * Revert Manual Service Control Policy (SCP) Changes configuration
+   */
+  static readonly scpRevertChangesConfig = t.interface({
+    /**
+     * Determines if manual changes to service control policies are automatically reverted
+     */
+    enable: t.boolean,
+    /**
+     * The name of the SNS Topic to send alerts to when scps are changed manually
+     */
+    snsTopicName: t.optional(t.nonEmptyString),
+  });
+
+  /**
    * AWS KMS Key configuration
    */
   static readonly keyConfig = t.interface({
@@ -308,6 +322,7 @@ export class SecurityConfigTypes {
     delegatedAdminAccount: t.nonEmptyString,
     ebsDefaultVolumeEncryption: SecurityConfigTypes.ebsDefaultVolumeEncryptionConfig,
     s3PublicAccessBlock: SecurityConfigTypes.s3PublicAccessBlockConfig,
+    scpRevertChangesConfig: t.optional(SecurityConfigTypes.scpRevertChangesConfig),
     macie: SecurityConfigTypes.macieConfig,
     guardduty: SecurityConfigTypes.guardDutyConfig,
     auditManager: t.optional(SecurityConfigTypes.auditManagerConfig),
@@ -520,6 +535,29 @@ export class S3PublicAccessBlockConfig implements t.TypeOf<typeof SecurityConfig
    * List of AWS Region names to be excluded from configuring block S3 public access
    */
   readonly excludeAccounts: string[] = [];
+}
+
+/**
+ * *{@link SecurityConfig} / {@link CentralSecurityServicesConfig} / {@link ScpRevertChangesConfig}*
+ *
+ * AWS Service Control Policies Revert Manual Changes configuration
+ *
+ * @example
+ * ```
+ * scpRevertChangesConfig:
+ *     enable: true
+ *     snsTopicName: Security
+ * ```
+ */
+export class ScpRevertChangesConfig implements t.TypeOf<typeof SecurityConfigTypes.scpRevertChangesConfig> {
+  /**
+   * Indicates whether manual changes to Service Control Policies are automatically reverted.
+   */
+  readonly enable = false;
+  /**
+   * The name of the SNS Topic to send alerts to when scps are changed manually
+   */
+  readonly snsTopicName = '';
 }
 
 /**
@@ -1189,6 +1227,17 @@ export class CentralSecurityServicesConfig
    * ```
    */
   readonly s3PublicAccessBlock: S3PublicAccessBlockConfig = new S3PublicAccessBlockConfig();
+  /**
+   * AWS Service Control Policies Revert Manual Changes configuration
+   *
+   * @example
+   * ```
+   * scpRevertChangesConfig:
+   *     enable: true
+   *     snsTopicName: Security
+   * ```
+   */
+  readonly scpRevertChangesConfig: ScpRevertChangesConfig = new ScpRevertChangesConfig();
   /**
    * AWS SNS subscription configuration
    * Deprecated

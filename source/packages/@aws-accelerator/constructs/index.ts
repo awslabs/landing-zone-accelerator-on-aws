@@ -46,6 +46,7 @@ export * from './lib/aws-ec2/vpc-peering';
 export * from './lib/aws-ec2/vpn-connection';
 export * from './lib/aws-events/move-account-rule';
 export * from './lib/aws-events/new-cloudwatch-log-event-rule';
+export * from './lib/aws-events/revert-scp-changes';
 export * from './lib/aws-elasticloadbalancingv2/gateway-load-balancer';
 export * from './lib/aws-guardduty/guardduty-detector-config';
 export * from './lib/aws-guardduty/guardduty-members';
