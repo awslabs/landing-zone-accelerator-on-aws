@@ -367,6 +367,16 @@ export class LoggingStack extends AcceleratorStack {
           'Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling',
       });
     }
+    if (
+      this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
+      props.partition === 'aws'
+    ) {
+      new iam.CfnServiceLinkedRole(this, 'AWSServiceRoleForAWSCloud9', {
+        awsServiceName: 'cloud9.amazonaws.com',
+        description:
+          'Default Service-Linked Role enables access to AWS Services and Resources used or managed by Cloud9',
+      });
+    }
     // CloudWatchLogs to S3 replication
 
     // First, logs receiving account will setup Kinesis DataStream and Firehose
@@ -1410,7 +1420,7 @@ export class LoggingStack extends AcceleratorStack {
       return;
     }
     const roleName = `AWSAccelerator-FMS-Notifications`;
-    const auditAccountId = this.props.accountsConfig.getAuditAccountId(); 
+    const auditAccountId = this.props.accountsConfig.getAuditAccountId();
 
     //Create Role for SNS Topic access from security config and global config
     Logger.info('[logging-stack] Creating FMS Notification Channel Role AWSAccelerator - FMS');

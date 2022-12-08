@@ -259,7 +259,7 @@ export class SecurityStack extends AcceleratorStack {
             },
           }),
         );
-        if (this.props.partition === 'aws'){
+        if (this.props.partition === 'aws') {
           ebsEncryptionKey.addToResourcePolicy(
             new iam.PolicyStatement({
               sid: 'Allow cloud9 service-linked role use',

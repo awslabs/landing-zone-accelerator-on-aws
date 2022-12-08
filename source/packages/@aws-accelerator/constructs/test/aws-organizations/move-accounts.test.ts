@@ -30,6 +30,7 @@ new MoveAccounts(stack, 'MoveAccounts', {
   lambdaKmsKey: new cdk.aws_kms.Key(stack, 'CustomLambdaKey', {}),
   cloudWatchLogsKmsKey: new cdk.aws_kms.Key(stack, 'CustomCWLKey', {}),
   cloudWatchLogRetentionInDays: 365,
+  controlTower: false,
 });
 /**
  * MoveAccounts construct test
