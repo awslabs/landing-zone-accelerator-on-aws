@@ -298,6 +298,7 @@ export class PrepareStack extends AcceleratorStack {
           lambdaKmsKey: lambdaKey,
           cloudWatchLogsKmsKey: cloudwatchKey,
           cloudWatchLogRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          controlTower: props.globalConfig.controlTower.enable,
         });
         moveAccounts.node.addDependency(inviteAccountsToOu);
 
@@ -737,10 +738,21 @@ export class PrepareStack extends AcceleratorStack {
           if (index > -1) {
             validateScpCountForOrg[index].appliedScpName.push(scpItem.name);
           } else {
+            let orgUnitId = '';
+            try {
+              orgUnitId = this.props.organizationConfig.getOrganizationalUnitId(orgUnitScp);
+            } catch (error) {
+              let message;
+              if (error instanceof Error) message = error.message;
+              else message = String(error);
+
+              if (message.startsWith('Organizations not enabled or')) continue;
+              else throw error;
+            }
             validateScpCountForOrg.push({
               orgEntity: orgUnitScp,
               orgEntityType: 'OU',
-              orgEntityId: this.props.organizationConfig.getOrganizationalUnitId(orgUnitScp),
+              orgEntityId: orgUnitId,
               appliedScpName: [scpItem.name],
             });
           }

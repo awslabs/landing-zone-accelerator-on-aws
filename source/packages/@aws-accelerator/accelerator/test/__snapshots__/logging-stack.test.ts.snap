@@ -3,6 +3,13 @@
 exports[`LoggingStack Construct(LoggingStack):  Snapshot Test 1`] = `
 Object {
   "Resources": Object {
+    "AWSServiceRoleForAWSCloud9": Object {
+      "Properties": Object {
+        "AWSServiceName": "cloud9.amazonaws.com",
+        "Description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Cloud9",
+      },
+      "Type": "AWS::IAM::ServiceLinkedRole",
+    },
     "Accelerator3KeyAliasA5E4BDCB": Object {
       "Properties": Object {
         "AliasName": "alias/accelerator/kms/s3/key",

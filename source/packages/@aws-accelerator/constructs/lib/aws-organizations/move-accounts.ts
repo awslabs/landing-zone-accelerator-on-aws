@@ -46,6 +46,10 @@ export interface MoveAccountsProps {
    * Custom resource lambda log retention in days
    */
   readonly cloudWatchLogRetentionInDays: number;
+  /**
+   * Control Tower enabled flag
+   */
+  readonly controlTower: boolean;
 }
 
 /**
@@ -56,6 +60,11 @@ export class MoveAccounts extends Construct {
 
   public constructor(scope: Construct, id: string, props: MoveAccountsProps) {
     super(scope, id);
+
+    if (props.controlTower) {
+      this.id = 'NoOpMoveAccountsFunction';
+      return;
+    }
 
     const providerLambda = new cdk.aws_lambda.Function(this, 'MoveAccountsFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'move-account/dist')),
