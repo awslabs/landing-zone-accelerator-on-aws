@@ -34,6 +34,15 @@ export class FinalizeStack extends AcceleratorStack {
         ),
       ) as cdk.aws_kms.Key;
 
+      if (process.env['CONFIG_COMMIT_ID']) {
+        Logger.debug(`[finalize-stack] Storing configuration commit id in SSM`);
+        new cdk.aws_ssm.StringParameter(this, 'AcceleratorCommitIdParameter', {
+          parameterName: '/accelerator/configuration/configCommitId',
+          stringValue: process.env['CONFIG_COMMIT_ID'],
+          description: `The commit hash of the latest ${AcceleratorStack.ACCELERATOR_CONFIGURATION_REPOSITORY_NAME} commit to deploy successfully`,
+        });
+      }
+
       if (props.organizationConfig.quarantineNewAccounts?.enable && props.partition == 'aws') {
         Logger.debug(`[finalize-stack] Creating resources to detach quarantine scp`);
         const policyId = cdk.aws_ssm.StringParameter.valueForStringParameter(

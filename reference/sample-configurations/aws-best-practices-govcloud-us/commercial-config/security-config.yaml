@@ -6,6 +6,9 @@ centralSecurityServices:
   s3PublicAccessBlock:
     enable: true
     excludeAccounts: []
+  scpRevertChangesConfig:
+    enable: true
+    snsTopicName: Security
   macie:
     enable: false
     excludeRegions: []
