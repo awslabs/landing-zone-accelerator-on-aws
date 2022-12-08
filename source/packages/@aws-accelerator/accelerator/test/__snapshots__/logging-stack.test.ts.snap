@@ -6,7 +6,7 @@ Object {
     "AWSServiceRoleForAWSCloud9": Object {
       "Properties": Object {
         "AWSServiceName": "cloud9.amazonaws.com",
-        "Description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Cloud9",
+        "Description": "Service linked role for AWS Cloud9",
       },
       "Type": "AWS::IAM::ServiceLinkedRole",
     },
