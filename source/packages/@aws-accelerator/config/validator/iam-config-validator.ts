@@ -33,6 +33,7 @@ type VpcSubnetListsType = {
 export class IamConfigValidator {
   constructor(configDir: string) {
     const values = IamConfig.load(configDir);
+    const securityConfig = SecurityConfig.load(configDir);
     const ouIdNames: string[] = ['Root'];
     const accountNames: string[] = [];
     const keyNames: string[] = [];
@@ -40,7 +41,7 @@ export class IamConfigValidator {
 
     const errors: string[] = [];
 
-    console.log(`[network-config-validator.ts]: ${IamConfig.FILENAME} file validation started`);
+    console.log(`[iam-config-validator.ts]: ${IamConfig.FILENAME} file validation started`);
 
     //
     // Get list of OU ID names from organization config file
@@ -52,7 +53,7 @@ export class IamConfigValidator {
 
     //
     // Get list of Kms key names from security config file
-    this.getKmsKeyNames(configDir, keyNames);
+    this.getKmsKeyNames(keyNames, securityConfig);
 
     //
     // Get Vpc and subnet lists
@@ -108,8 +109,12 @@ export class IamConfigValidator {
    * Prepare list of kms key names from security config file
    * @param configDir
    */
-  private getKmsKeyNames(configDir: string, keyNames: string[]) {
-    for (const keySet of SecurityConfig.load(configDir).keyManagementService.keySets) {
+  private getKmsKeyNames(keyNames: string[], securityConfig: SecurityConfig) {
+    const keySets = securityConfig.keyManagementService?.keySets;
+    if (!keySets) {
+      return;
+    }
+    for (const keySet of keySets) {
       keyNames.push(keySet.name);
     }
   }
