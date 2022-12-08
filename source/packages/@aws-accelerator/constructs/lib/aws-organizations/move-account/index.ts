@@ -357,12 +357,14 @@ async function getConfigOuKeys(configTableName: string, commitId: string): Promi
       const ouConfig = JSON.parse(item['dataBag']);
       const ignored = ouConfig['ignore'] ?? false;
 
-      ouKeys.push({
-        acceleratorKey: item['acceleratorKey'],
-        awsKey: item['awsKey'],
-        registered: item['registered'] ?? undefined,
-        ignore: ignored,
-      });
+      if (item['awsKey']) {
+        ouKeys.push({
+          acceleratorKey: item['acceleratorKey'],
+          awsKey: item['awsKey'],
+          registered: item['registered'] ?? undefined,
+          ignore: ignored,
+        });
+      }
     }
   }
   //get root ou key
