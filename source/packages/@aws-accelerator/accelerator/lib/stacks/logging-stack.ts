@@ -923,7 +923,13 @@ export class LoggingStack extends AcceleratorStack {
 
       if (keyItem.policy) {
         // Read in the policy document which should be properly formatted json
-        const policyDocument = require(path.join(this.props.configDirPath, keyItem.policy));
+        const policyDocument = JSON.parse(
+          this.generatePolicyReplacements(
+            path.join(this.props.configDirPath, keyItem.policy),
+            false,
+            this.organizationId,
+          ),
+        );
 
         // Create a statements list using the PolicyStatement factory
         const statements: cdk.aws_iam.PolicyStatement[] = [];
