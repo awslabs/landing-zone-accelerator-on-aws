@@ -264,21 +264,18 @@ export class ActiveDirectoryConfiguration extends Construct {
     const adGroups = this.prepareGroups(configGroups, accountNames);
 
     // Mapping Users to Groups command
-    const adUserGroups: { user: string; groups: string[] }[] = [];
-    props.adUsers.map(a => {
+    const adUserGroups: { user: string; groups: string[] }[] = props.adUsers.map(a => {
       const groups = this.prepareGroups(a.groups, accountNames);
-      adUserGroups.push({ user: a.name, groups });
+      return { user: a.name, groups };
     });
 
-    const adUserGroupsCommand: string[] = [];
-    adUserGroups.map(userGroup =>
-      adUserGroupsCommand.push(
+    const adUserGroupsCommand: string[] = adUserGroups.map(
+      userGroup =>
         `C:\\cfn\\scripts\\${adUserGroupSetupScriptName} -GroupNames '${userGroup.groups.join(',')}' -UserName ${
           userGroup.user
         } -DomainAdminUser ${props.netBiosDomainName}\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId ${
           props.adminPwdSecretArn
         }).SecretString)`,
-      ),
     );
 
     instance.addOverride('Metadata.AWS::CloudFormation::Init', {
@@ -382,9 +379,9 @@ export class ActiveDirectoryConfiguration extends Construct {
 
   private prepareGroups(configGroups: string[], accounts: string[]): string[] {
     const groups: string[] = [];
-    configGroups.map(a => {
+    configGroups.forEach(a => {
       if (a.startsWith('*')) {
-        Object.values(accounts).map(b => groups.push(`aws-${b}${a.substring(1)}`));
+        Object.values(accounts).forEach(b => groups.push(`aws-${b}${a.substring(1)}`));
       } else {
         groups.push(a);
       }
