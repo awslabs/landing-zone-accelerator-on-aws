@@ -288,6 +288,11 @@ async function publishErrorToSns(errorMessage: string): Promise<void> {
     Subject: 'Service Control Policy Remediation Failure',
     TopicArn: snsTopicArn,
   };
+  if (!snsTopicArn) {
+    console.log('SNS Topic not configured, publishing error message to logs');
+    console.log(errorMessage);
+    return;
+  }
   try {
     await throttlingBackOff(() => snsClient.publish(publishParams).promise());
   } catch (e) {
@@ -302,6 +307,11 @@ async function publishSuccessToSns(successMessage: string): Promise<void> {
     Subject: 'Service Control Policy Remediation Success',
     TopicArn: snsTopicArn,
   };
+  if (!snsTopicArn) {
+    console.log('SNS Topic not configured, publishing success message to logs');
+    console.log(successMessage);
+    return;
+  }
   try {
     await throttlingBackOff(() => snsClient.publish(publishParams).promise());
   } catch (e) {
