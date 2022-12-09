@@ -61,7 +61,7 @@ export interface RevertScpChangesProps {
   /**
    * SNS Topic Name to publish notifiactions to
    */
-  readonly snsTopicName: string;
+  readonly snsTopicName: string | undefined;
   /**
    * SCP File Paths
    */
@@ -76,9 +76,7 @@ export class RevertScpChanges extends Construct {
     this.copyConfigsToDeploymentPackage(['accounts-config.yaml', 'organization-config.yaml'], props.configDirPath);
 
     const LAMBDA_TIMEOUT_IN_MINUTES = 1;
-    const snsTopicArn = `arn:${cdk.Stack.of(this).partition}:sns:${cdk.Stack.of(this).region}:${
-      cdk.Stack.of(this).account
-    }:aws-accelerator-${props.snsTopicName}`;
+    let snsTopicArn = '';
 
     const kmsEncryptMessage = new cdk.aws_iam.PolicyStatement({
       sid: 'kmsEncryptMessage',
@@ -102,12 +100,21 @@ export class RevertScpChanges extends Construct {
       resources: ['*'],
     });
 
-    const snsPublishMessage = new cdk.aws_iam.PolicyStatement({
-      sid: 'snsPublishMessage',
-      effect: cdk.aws_iam.Effect.ALLOW,
-      actions: ['sns:Publish'],
-      resources: [snsTopicArn],
-    });
+    const revertScpChangesPolicyList = [kmsEncryptMessage, orgPolicyUpdate];
+
+    if (props.snsTopicName) {
+      snsTopicArn = `arn:${cdk.Stack.of(this).partition}:sns:${cdk.Stack.of(this).region}:${
+        cdk.Stack.of(this).account
+      }:aws-accelerator-${props.snsTopicName}`;
+      revertScpChangesPolicyList.push(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'snsPublishMessage',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['sns:Publish'],
+          resources: [snsTopicArn],
+        }),
+      );
+    }
 
     const revertScpChangesFunction = new cdk.aws_lambda.Function(this, 'RevertScpChangesFunction', {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'revert-scp-changes/dist')),
@@ -117,14 +124,14 @@ export class RevertScpChanges extends Construct {
       timeout: cdk.Duration.minutes(LAMBDA_TIMEOUT_IN_MINUTES),
       environment: {
         AWS_PARTITION: cdk.Aws.PARTITION,
-        SNS_TOPIC_ARN: snsTopicArn,
+        SNS_TOPIC_ARN: snsTopicArn ?? '',
         MANAGEMENT_ACCOUNT_ID: props.managementAccountId,
         LOG_ARCHIVE_ACCOUNT_ID: props.logArchiveAccountId,
         AUDIT_ACCOUNT_ID: props.auditAccountId,
         MANAGEMENT_ACCOUNT_ACCESS_ROLE: props.managementAccountAccessRole,
       },
       environmentEncryption: props.kmsKeyLambda,
-      initialPolicy: [kmsEncryptMessage, orgPolicyUpdate, snsPublishMessage],
+      initialPolicy: revertScpChangesPolicyList,
     });
 
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies

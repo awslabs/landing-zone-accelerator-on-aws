@@ -557,7 +557,7 @@ export class ScpRevertChangesConfig implements t.TypeOf<typeof SecurityConfigTyp
   /**
    * The name of the SNS Topic to send alerts to when scps are changed manually
    */
-  readonly snsTopicName = '';
+  readonly snsTopicName = undefined;
 }
 
 /**
@@ -1141,6 +1141,9 @@ export class SsmAutomationConfig implements t.TypeOf<typeof SecurityConfigTypes.
  *   s3PublicAccessBlock:
  *     enable: true
  *     excludeAccounts: []
+ *   scpRevertChangesConfig:
+ *     enable: true
+ *     snsTopicName: Security
  *   guardduty:
  *     enable: true
  *     excludeRegions: []
