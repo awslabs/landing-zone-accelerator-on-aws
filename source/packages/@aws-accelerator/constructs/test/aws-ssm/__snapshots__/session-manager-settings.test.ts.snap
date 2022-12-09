@@ -206,17 +206,7 @@ Object {
     },
     "SsmSessionManagerSettingsSessionManagerEC2InstanceProfile36B87210": Object {
       "Properties": Object {
-        "InstanceProfileName": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "AWSAccelerator-SessionManagerEc2Role-",
-              Object {
-                "Ref": "AWS::Region",
-              },
-            ],
-          ],
-        },
+        "InstanceProfileName": "AWSAccelerator-SessionManagerEc2Role-us-east-1",
         "Roles": Array [
           Object {
             "Ref": "SsmSessionManagerSettingsSessionManagerEC2Role83702F06",
@@ -228,17 +218,7 @@ Object {
     "SsmSessionManagerSettingsSessionManagerEC2Policy8ED295CA": Object {
       "Properties": Object {
         "Description": "",
-        "ManagedPolicyName": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "AWSAccelerator-SessionManagerLogging-",
-              Object {
-                "Ref": "AWS::Region",
-              },
-            ],
-          ],
-        },
+        "ManagedPolicyName": "AWSAccelerator-SessionManagerLogging-us-east-1",
         "Path": "/",
         "PolicyDocument": Object {
           "Statement": Array [
@@ -264,11 +244,7 @@ Object {
                     Object {
                       "Ref": "AWS::Partition",
                     },
-                    ":logs:",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
+                    ":logs:us-east-1:",
                     Object {
                       "Ref": "AWS::AccountId",
                     },
@@ -276,6 +252,7 @@ Object {
                   ],
                 ],
               },
+              "Sid": "CloudWatchDescribe",
             },
             Object {
               "Action": Array [
@@ -293,11 +270,7 @@ Object {
                     Object {
                       "Ref": "AWS::Partition",
                     },
-                    ":logs:",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
+                    ":logs:us-east-1:",
                     Object {
                       "Ref": "AWS::AccountId",
                     },
@@ -305,6 +278,7 @@ Object {
                   ],
                 ],
               },
+              "Sid": "CloudWatchLogs",
             },
             Object {
               "Action": Array [
@@ -324,6 +298,7 @@ Object {
                   ],
                 ],
               },
+              "Sid": "S3CentralLogs",
             },
             Object {
               "Action": "s3:GetEncryptionConfiguration",
@@ -340,6 +315,7 @@ Object {
                   ],
                 ],
               },
+              "Sid": "S3CentralLogsEncryptionConfig",
             },
             Object {
               "Action": Array [
@@ -348,6 +324,7 @@ Object {
               ],
               "Effect": "Allow",
               "Resource": "arn",
+              "Sid": "S3CentralLogsEncryption",
             },
             Object {
               "Action": "kms:Decrypt",
@@ -395,17 +372,7 @@ Object {
             "Ref": "SsmSessionManagerSettingsSessionManagerEC2Policy8ED295CA",
           },
         ],
-        "RoleName": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "AWSAccelerator-SessionManagerEC2Role-",
-              Object {
-                "Ref": "AWS::Region",
-              },
-            ],
-          ],
-        },
+        "RoleName": "AWSAccelerator-SessionManagerEC2Role-us-east-1",
       },
       "Type": "AWS::IAM::Role",
     },
@@ -461,17 +428,7 @@ Object {
     "SsmSessionManagerSettingsSessionManagerUserKMSPolicyFB96BB42": Object {
       "Properties": Object {
         "Description": "",
-        "ManagedPolicyName": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "AWSAccelerator-SessionManagerUserKMS-",
-              Object {
-                "Ref": "AWS::Region",
-              },
-            ],
-          ],
-        },
+        "ManagedPolicyName": "AWSAccelerator-SessionManagerUserKMS-us-east-1",
         "Path": "/",
         "PolicyDocument": Object {
           "Statement": Array [

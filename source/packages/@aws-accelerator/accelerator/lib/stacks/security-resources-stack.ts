@@ -192,7 +192,23 @@ export class SecurityResourcesStack extends AcceleratorStack {
     //
     // SessionManager Configuration
     //
-    this.setupSessionManager();
+    if (
+      !this.isAccountExcluded(props.globalConfig.logging.sessionManager.excludeAccounts) &&
+      !this.isRegionExcluded(props.globalConfig.logging.sessionManager.excludeRegions)
+    ) {
+      this.setupSessionManager();
+    }
+
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `/${this.stackName}/SsmSessionManagerSettings/SessionPolicy${cdk.Stack.of(this).region}/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Allows only specific log group',
+        },
+      ],
+    );
 
     // SecurityHub Log event to CloudWatch
     this.securityHubEventForwardToLogs();
@@ -970,55 +986,52 @@ export class SecurityResourcesStack extends AcceleratorStack {
       this.props.globalConfig.logging.sessionManager.sendToS3
     ) {
       Logger.info(`[security-resources-stack] Creating Session Manager Logging Resources`);
+      Logger.info(
+        `[security-resources-stack] IAM Roles adding session manager policies ${this.props.globalConfig.logging.sessionManager.attachPolicyToIamRoles}`,
+      );
       // Set up Session Manager Logging
-      if (
-        !this.isAccountExcluded(this.props.globalConfig.logging.sessionManager.excludeAccounts ?? []) ||
-        !this.isRegionExcluded(this.props.globalConfig.logging.sessionManager.excludeRegions ?? [])
-      ) {
-        new SsmSessionManagerSettings(this, 'SsmSessionManagerSettings', {
-          s3BucketName: `${
-            AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
-          }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
-          s3KeyPrefix: `session/${cdk.Aws.ACCOUNT_ID}/${cdk.Stack.of(this).region}`,
-          s3BucketKeyArn: this.centralLogS3Key.keyArn,
-          sendToCloudWatchLogs: this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
-          sendToS3: this.props.globalConfig.logging.sessionManager.sendToS3,
-          cloudWatchEncryptionEnabled:
-            this.props.partition !== 'aws-us-gov' &&
-            this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
-          attachPolicyToIamRoles: this.props.globalConfig.logging.sessionManager.attachPolicyToIamRoles,
-          cloudWatchEncryptionKey: this.cloudwatchKey,
-          constructLoggingKmsKey: this.cloudwatchKey,
-          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-        });
+      new SsmSessionManagerSettings(this, 'SsmSessionManagerSettings', {
+        s3BucketName: `${
+          AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+        }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
+        s3KeyPrefix: `session/${cdk.Aws.ACCOUNT_ID}/${cdk.Stack.of(this).region}`,
+        s3BucketKeyArn: this.centralLogS3Key.keyArn,
+        sendToCloudWatchLogs: this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
+        sendToS3: this.props.globalConfig.logging.sessionManager.sendToS3,
+        cloudWatchEncryptionEnabled:
+          this.props.partition !== 'aws-us-gov' && this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs,
+        attachPolicyToIamRoles: this.props.globalConfig.logging.sessionManager.attachPolicyToIamRoles,
+        cloudWatchEncryptionKey: this.cloudwatchKey,
+        constructLoggingKmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        region: cdk.Stack.of(this).region,
+      });
 
-        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
-        // rule suppression with evidence for this permission.
-        NagSuppressions.addResourceSuppressionsByPath(
-          this,
-          `${this.stackName}/SsmSessionManagerSettings/SessionManagerEC2Policy/Resource`,
-          [
-            {
-              id: 'AwsSolutions-IAM5',
-              reason:
-                'Policy needed access to all S3 objects for the account to put objects into the access log bucket',
-            },
-          ],
-        );
+      // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+      // rule suppression with evidence for this permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/SsmSessionManagerSettings/SessionManagerEC2Policy/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'Policy needed access to all S3 objects for the account to put objects into the access log bucket',
+          },
+        ],
+      );
 
-        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
-        // rule suppression with evidence for this permission.
-        NagSuppressions.addResourceSuppressionsByPath(
-          this,
-          `${this.stackName}/SsmSessionManagerSettings/SessionManagerEC2Role/Resource`,
-          [
-            {
-              id: 'AwsSolutions-IAM4',
-              reason: 'Create an IAM managed Policy for users to be able to use Session Manager with KMS encryption',
-            },
-          ],
-        );
-      }
+      // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
+      // rule suppression with evidence for this permission.
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/SsmSessionManagerSettings/SessionManagerEC2Role/Resource`,
+        [
+          {
+            id: 'AwsSolutions-IAM4',
+            reason: 'Create an IAM managed Policy for users to be able to use Session Manager with KMS encryption',
+          },
+        ],
+      );
     }
   }
 

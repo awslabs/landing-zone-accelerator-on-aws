@@ -19,6 +19,7 @@ import * as path from 'path';
 import { AccountsConfig } from './accounts-config';
 import * as t from './common-types';
 import { OrganizationConfig } from './organization-config';
+import { IamConfig } from './iam-config';
 
 /**
  * Global configuration items.
@@ -1324,6 +1325,9 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         // central log bucket resource policy attachment validation
         this.validateCentralLogsS3ResourcePolicyFileExists(configDir, values, errors);
         this.validateCentralLogsKmsResourcePolicyFileExists(configDir, values, errors);
+        // sessionManager settings validation
+        //
+        this.validateSessionManager(values, configDir, errors);
       }
     } else {
       this.homeRegion = props.homeRegion;
@@ -1535,6 +1539,27 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         if (snsTopic.emailAddresses.length < 1) {
           errors.push(`Must be at least one email address for the snsTopic named ${snsTopic.name}`);
         }
+      }
+    }
+  }
+
+  private validateSessionManager(
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    configDir: string,
+    errors: string[],
+  ) {
+    const iamConfig = IamConfig.load(configDir);
+    const iamRoleNames: string[] = [];
+    for (const roleSet of iamConfig.roleSets) {
+      for (const role of roleSet.roles) {
+        iamRoleNames.push(role.name);
+      }
+    }
+    for (const iamRoleName of values.logging.sessionManager.attachPolicyToIamRoles ?? []) {
+      if (!iamRoleNames.find(item => item === iamRoleName)) {
+        errors.push(
+          `Could not find the role named ${iamRoleName} in the IAM config file. Role was used in the Session Manager configuration.`,
+        );
       }
     }
   }
