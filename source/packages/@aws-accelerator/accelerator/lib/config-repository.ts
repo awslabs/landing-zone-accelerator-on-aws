@@ -36,6 +36,7 @@ export interface ConfigRepositoryProps {
   readonly managementAccountEmail: string;
   readonly logArchiveAccountEmail: string;
   readonly auditAccountEmail: string;
+  readonly controlTowerEnabled: string;
 }
 
 /**
@@ -52,6 +53,13 @@ export class ConfigRepository extends Construct {
     //
     const tempDirPath = fs.mkdtempSync(path.join(os.tmpdir(), 'config-assets-'));
 
+    let controlTowerEnabledValue = true;
+    let managementAccountAccessRole = 'AWSControlTowerExecution';
+    if (props.controlTowerEnabled.toLowerCase() === 'no') {
+      controlTowerEnabledValue = false;
+      managementAccountAccessRole = 'OrganizationAccountAccessRole';
+    }
+
     fs.writeFileSync(
       path.join(tempDirPath, AccountsConfig.FILENAME),
       yaml.dump(
@@ -65,7 +73,13 @@ export class ConfigRepository extends Construct {
     );
     fs.writeFileSync(
       path.join(tempDirPath, GlobalConfig.FILENAME),
-      yaml.dump(new GlobalConfig({ homeRegion: cdk.Stack.of(this).region as Region })),
+      yaml.dump(
+        new GlobalConfig({
+          homeRegion: cdk.Stack.of(this).region as Region,
+          controlTower: { enable: controlTowerEnabledValue },
+          managementAccountAccessRole: managementAccountAccessRole,
+        }),
+      ),
       'utf8',
     );
     fs.writeFileSync(path.join(tempDirPath, IamConfig.FILENAME), yaml.dump(new IamConfig()), 'utf8');

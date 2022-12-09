@@ -41,6 +41,7 @@ export interface AcceleratorPipelineProps {
   readonly managementAccountEmail: string;
   readonly logArchiveAccountEmail: string;
   readonly auditAccountEmail: string;
+  readonly controlTowerEnabled: string;
   /**
    * List of email addresses to be notified when pipeline is waiting for manual approval stage.
    * If pipeline do not have approval stage enabled, this value will have no impact.
@@ -127,6 +128,7 @@ export class AcceleratorPipeline extends Construct {
       managementAccountEmail: this.props.managementAccountEmail,
       logArchiveAccountEmail: this.props.logArchiveAccountEmail,
       auditAccountEmail: this.props.auditAccountEmail,
+      controlTowerEnabled: this.props.controlTowerEnabled,
     });
 
     /**

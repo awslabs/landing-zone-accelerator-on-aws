@@ -35,6 +35,7 @@ const stack = new PipelineStack(app, 'PipelineStack', {
   managementAccountEmail: 'accelerator-root@mydomain.com',
   logArchiveAccountEmail: 'accelerator-log-archive@mydomain.com',
   auditAccountEmail: 'accelerator-audit@mydomain.com',
+  controlTowerEnabled: 'Yes',
   partition: 'aws',
 });
 
