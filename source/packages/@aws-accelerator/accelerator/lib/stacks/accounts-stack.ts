@@ -271,7 +271,7 @@ export class AccountsStack extends AcceleratorStack {
             kmsKeyLambda: this.lambdaKey,
             logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
-            snsTopicName: props.securityConfig.centralSecurityServices.scpRevertChangesConfig.snsTopicName,
+            snsTopicName: props.securityConfig.centralSecurityServices.scpRevertChangesConfig?.snsTopicName,
             scpFilePaths: props.organizationConfig.serviceControlPolicies?.map(a => a.policy) ?? [],
           });
         }
