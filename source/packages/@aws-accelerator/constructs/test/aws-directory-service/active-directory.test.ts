@@ -25,7 +25,7 @@ new ActiveDirectory(stack, 'ActiveDirectory', {
   dnsName: 'example.com',
   vpcId: 'vpcId',
   madSubnetIds: ['subnet01', 'subnet02'],
-  adminSecretName: 'admin-secret',
+  adminSecretValue: cdk.SecretValue.secretsManager('adminSecretArn'),
   edition: 'Enterprise',
   netBiosDomainName: 'example',
   logGroupName: '/aws/directoryservice/AcceleratorManagedActiveDirectory',

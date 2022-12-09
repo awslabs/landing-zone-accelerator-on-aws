@@ -139,6 +139,15 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * This role is created in Key stack
    */
   public static readonly ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME = 'AWSAccelerator-CrossAccount-SsmParameter-Role';
+
+  /**
+   * Cross account IAM ROLE to read SSM parameter related to secrets manager kms arn
+   * IAM role to access SSM parameter from different region
+   * This role is created in logging stack where secrets manager kms keys were created
+   * Managed AD needs access to secrets in different account, so this role is used to access secret's kms key arn
+   */
+  public static readonly ACCELERATOR_CROSS_ACCOUNT_SECRETS_KMS_ARN_PARAMETER_ROLE_NAME =
+    'AWSAccelerator-CrossAccount-SecretsKms-Role';
   /**
    * Accelerator role to access account config table parameters
    */
@@ -182,6 +191,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * This key is created in logging stack
    */
   protected static readonly ACCELERATOR_SECRET_MANAGER_KEY_DESCRIPTION = 'AWS Accelerator Secret manager Kms Key';
+
+  /**
+   * Accelerator secrets manager encryption key arn SSM parameter name
+   */
+  protected static readonly ACCELERATOR_SECRET_MANAGER_KEY_ARN_PARAMETER_NAME =
+    '/accelerator/kms/secret-manager/key-arn';
   /**
    * Accelerator S3 encryption key alias, S3 CMK use to encrypt buckets
    * This key is created in logging stack
@@ -243,6 +258,16 @@ export abstract class AcceleratorStack extends cdk.Stack {
    */
   protected static readonly ACCELERATOR_SNS_KEY_DESCRIPTION = 'AWS Accelerator SNS Kms Key';
   protected static readonly ACCELERATOR_SNS_TOPIC_KEY_DESCRIPTION = 'AWS Accelerator SNS Topic Kms Key';
+
+  /**
+   * Accelerator Secrets manager encryption key alias
+   */
+  protected static readonly ACCELERATOR_SECRETS_MANAGER_KEY_ALIAS = '/accelerator/kms/secrets-manager/key';
+  /**
+   * Accelerator Secrets manager encryption key description
+   */
+  protected static readonly ACCELERATOR_SECRETS_MANAGER_KEY_DESCRIPTION = 'AWS Accelerator Secrets Manager Kms Key';
+
   /**
    * Accelerator Central SNS Topic key arn
    */
