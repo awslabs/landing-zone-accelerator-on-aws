@@ -464,9 +464,9 @@ export abstract class AcceleratorStack extends cdk.Stack {
     }
 
     const excludedAccountIds = this.getExcludedAccountIds(deploymentTargets);
-    accountIds.filter(item => !excludedAccountIds.includes(item));
+    const filteredAccountIds = accountIds.filter(item => !excludedAccountIds.includes(item));
 
-    return accountIds;
+    return filteredAccountIds;
   }
 
   protected getExcludedAccountIds(deploymentTargets: DeploymentTargets): string[] {
