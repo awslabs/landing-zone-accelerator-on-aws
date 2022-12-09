@@ -105,6 +105,13 @@ export class InstallerStack extends cdk.Stack {
     constraintDescription: 'Must be a valid email address matching "[^\\s@]+@[^\\s@]+\\.[^\\s@]+"',
   });
 
+  private readonly controlTowerEnabled = new cdk.CfnParameter(this, 'ControlTowerEnabled', {
+    type: 'String',
+    description: 'Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations',
+    allowedValues: ['Yes', 'No'],
+    default: 'Yes',
+  });
+
   /**
    * Management Account ID Parameter
    * @private
@@ -172,6 +179,10 @@ export class InstallerStack extends cdk.Stack {
           this.auditAccountEmail.logicalId,
         ],
       },
+      {
+        Label: { default: 'Environment Configuration' },
+        Parameters: [this.controlTowerEnabled.logicalId],
+      },
     ];
 
     const repositoryParameterLabels: { [p: string]: { default: string } } = {
@@ -184,6 +195,7 @@ export class InstallerStack extends cdk.Stack {
       [this.managementAccountEmail.logicalId]: { default: 'Management Account Email' },
       [this.logArchiveAccountEmail.logicalId]: { default: 'Log Archive Account Email' },
       [this.auditAccountEmail.logicalId]: { default: 'Audit Account Email' },
+      [this.controlTowerEnabled.logicalId]: { default: 'Control Tower Environment' },
     };
 
     let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
@@ -584,6 +596,10 @@ export class InstallerStack extends cdk.Stack {
           AUDIT_ACCOUNT_EMAIL: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.auditAccountEmail.valueAsString,
+          },
+          CONTROL_TOWER_ENABLED: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.controlTowerEnabled.valueAsString,
           },
           ...targetAcceleratorEnvVariables,
           ...targetAcceleratorTestEnvVariables,

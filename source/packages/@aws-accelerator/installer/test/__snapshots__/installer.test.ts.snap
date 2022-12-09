@@ -97,6 +97,14 @@ Object {
             "AuditAccountEmail",
           ],
         },
+        Object {
+          "Label": Object {
+            "default": "Environment Configuration",
+          },
+          "Parameters": Array [
+            "ControlTowerEnabled",
+          ],
+        },
       ],
       "ParameterLabels": Object {
         "ApprovalStageNotifyEmailList": Object {
@@ -104,6 +112,9 @@ Object {
         },
         "AuditAccountEmail": Object {
           "default": "Audit Account Email",
+        },
+        "ControlTowerEnabled": Object {
+          "default": "Control Tower Environment",
         },
         "EnableApprovalStage": Object {
           "default": "Enable Approval Stage",
@@ -138,6 +149,15 @@ Object {
       "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ControlTowerEnabled": Object {
+      "AllowedValues": Array [
+        "Yes",
+        "No",
+      ],
+      "Default": "Yes",
+      "Description": "Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations",
       "Type": "String",
     },
     "EnableApprovalStage": Object {
@@ -1450,6 +1470,13 @@ Object {
               "Type": "PLAINTEXT",
               "Value": Object {
                 "Ref": "AuditAccountEmail",
+              },
+            },
+            Object {
+              "Name": "CONTROL_TOWER_ENABLED",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "ControlTowerEnabled",
               },
             },
             Object {
@@ -2587,6 +2614,14 @@ Object {
             "AuditAccountEmail",
           ],
         },
+        Object {
+          "Label": Object {
+            "default": "Environment Configuration",
+          },
+          "Parameters": Array [
+            "ControlTowerEnabled",
+          ],
+        },
       ],
       "ParameterLabels": Object {
         "ApprovalStageNotifyEmailList": Object {
@@ -2594,6 +2629,9 @@ Object {
         },
         "AuditAccountEmail": Object {
           "default": "Audit Account Email",
+        },
+        "ControlTowerEnabled": Object {
+          "default": "Control Tower Environment",
         },
         "EnableApprovalStage": Object {
           "default": "Enable Approval Stage",
@@ -2628,6 +2666,15 @@ Object {
       "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ControlTowerEnabled": Object {
+      "AllowedValues": Array [
+        "Yes",
+        "No",
+      ],
+      "Default": "Yes",
+      "Description": "Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations",
       "Type": "String",
     },
     "EnableApprovalStage": Object {
@@ -3942,6 +3989,13 @@ Object {
                 "Ref": "AuditAccountEmail",
               },
             },
+            Object {
+              "Name": "CONTROL_TOWER_ENABLED",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "ControlTowerEnabled",
+              },
+            },
           ],
           "Image": "aws/codebuild/standard:5.0",
           "ImagePullCredentialsType": "CODEBUILD",
@@ -5069,6 +5123,14 @@ Object {
         },
         Object {
           "Label": Object {
+            "default": "Environment Configuration",
+          },
+          "Parameters": Array [
+            "ControlTowerEnabled",
+          ],
+        },
+        Object {
+          "Label": Object {
             "default": "Target Environment Configuration",
           },
           "Parameters": Array [
@@ -5087,6 +5149,9 @@ Object {
         },
         "AuditAccountEmail": Object {
           "default": "Audit Account Email",
+        },
+        "ControlTowerEnabled": Object {
+          "default": "Control Tower Environment",
         },
         "EnableApprovalStage": Object {
           "default": "Enable Approval Stage",
@@ -5132,6 +5197,15 @@ Object {
       "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ControlTowerEnabled": Object {
+      "AllowedValues": Array [
+        "Yes",
+        "No",
+      ],
+      "Default": "Yes",
+      "Description": "Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations",
       "Type": "String",
     },
     "EnableApprovalStage": Object {
@@ -6516,6 +6590,13 @@ Object {
               "Type": "PLAINTEXT",
               "Value": Object {
                 "Ref": "AuditAccountEmail",
+              },
+            },
+            Object {
+              "Name": "CONTROL_TOWER_ENABLED",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "ControlTowerEnabled",
               },
             },
             Object {
@@ -7758,6 +7839,14 @@ Object {
         },
         Object {
           "Label": Object {
+            "default": "Environment Configuration",
+          },
+          "Parameters": Array [
+            "ControlTowerEnabled",
+          ],
+        },
+        Object {
+          "Label": Object {
             "default": "Target Environment Configuration",
           },
           "Parameters": Array [
@@ -7776,6 +7865,9 @@ Object {
         },
         "AuditAccountEmail": Object {
           "default": "Audit Account Email",
+        },
+        "ControlTowerEnabled": Object {
+          "default": "Control Tower Environment",
         },
         "EnableApprovalStage": Object {
           "default": "Enable Approval Stage",
@@ -7821,6 +7913,15 @@ Object {
       "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ControlTowerEnabled": Object {
+      "AllowedValues": Array [
+        "Yes",
+        "No",
+      ],
+      "Default": "Yes",
+      "Description": "Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations",
       "Type": "String",
     },
     "EnableApprovalStage": Object {
@@ -9205,6 +9306,13 @@ Object {
               "Type": "PLAINTEXT",
               "Value": Object {
                 "Ref": "AuditAccountEmail",
+              },
+            },
+            Object {
+              "Name": "CONTROL_TOWER_ENABLED",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "ControlTowerEnabled",
               },
             },
             Object {

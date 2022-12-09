@@ -242,6 +242,7 @@ async function main() {
           managementAccountEmail: process.env['MANAGEMENT_ACCOUNT_EMAIL']!,
           logArchiveAccountEmail: process.env['LOG_ARCHIVE_ACCOUNT_EMAIL']!,
           auditAccountEmail: process.env['AUDIT_ACCOUNT_EMAIL']!,
+          controlTowerEnabled: process.env['CONTROL_TOWER_ENABLED']!,
           approvalStageNotifyEmailList: process.env['APPROVAL_STAGE_NOTIFY_EMAIL_LIST'],
           partition,
         },
@@ -323,7 +324,6 @@ async function main() {
 
       const homeRegion = props.globalConfig.homeRegion;
       const managementAccountId = props.accountsConfig.getManagementAccountId();
-      const auditAccountId = props.accountsConfig.getAuditAccountId();
 
       //
       // PREPARE Stack
@@ -441,355 +441,372 @@ async function main() {
         }
       }
 
-      //
-      // KEY and SECURITY AUDIT Stack
-      //
-      for (const enabledRegion of props.globalConfig.enabledRegions) {
-        if (includeStage({ stage: AcceleratorStage.KEY, account: auditAccountId, region: enabledRegion })) {
-          const keyStack = new KeyStack(
-            app,
-            `${AcceleratorStackNames[AcceleratorStage.KEY]}-${auditAccountId}-${enabledRegion}`,
-            {
-              env: {
-                account: auditAccountId,
-                region: enabledRegion,
-              },
-              description: `(SO0199-key) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer({
-                generateBootstrapVersionRule: false,
-                bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${auditAccountId}/` : undefined,
-                fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
-                  ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
-                  : undefined,
-              }),
-              terminationProtection: props.globalConfig.terminationProtection ?? true,
-              ...props,
-            },
-          );
-          addAcceleratorTags(keyStack);
-          cdk.Aspects.of(keyStack).add(new AwsSolutionsChecks());
-        }
-
-        if (includeStage({ stage: AcceleratorStage.SECURITY_AUDIT, account: auditAccountId, region: enabledRegion })) {
-          const auditStack = new SecurityAuditStack(
-            app,
-            `${AcceleratorStackNames[AcceleratorStage.SECURITY_AUDIT]}-${auditAccountId}-${enabledRegion}`,
-            {
-              env: {
-                account: auditAccountId,
-                region: enabledRegion,
-              },
-              description: `(SO0199-securityaudit) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer({
-                generateBootstrapVersionRule: false,
-                bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${auditAccountId}/` : undefined,
-                fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
-                  ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
-                  : undefined,
-              }),
-              terminationProtection: props.globalConfig.terminationProtection ?? true,
-              ...props,
-            },
-          );
-          addAcceleratorTags(auditStack);
-          cdk.Aspects.of(auditStack).add(new AwsSolutionsChecks());
-        }
+      let auditAccountId: string | undefined;
+      try {
+        auditAccountId = props.accountsConfig.getAuditAccountId();
+      } catch (error) {
+        auditAccountId = undefined;
       }
 
-      for (const enabledRegion of props.globalConfig.enabledRegions) {
-        let accountId = '';
-        for (const accountItem of [
-          ...props.accountsConfig.mandatoryAccounts,
-          ...props.accountsConfig.workloadAccounts,
-        ]) {
-          try {
-            accountId = props.accountsConfig.getAccountId(accountItem.name);
-          } catch (error) {
-            continue;
-          }
-          const env = {
-            account: accountId,
-            region: enabledRegion,
-          };
-          const stackSynthesizerProps = {
-            generateBootstrapVersionRule: false,
-            bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${accountId}/` : undefined,
-            fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
-              ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
-              : undefined,
-          };
-          //
-          // BOOTSTRAP Stack
-          //
-          if (includeStage({ stage: AcceleratorStage.BOOTSTRAP, account: accountId, region: enabledRegion })) {
-            const bootstrapStack = new BootstrapStack(
+      // If audit account doesn't exist cannot run the
+      // other stacks
+      Logger.info(`[app] Audit AccountId ${auditAccountId}`);
+
+      if (auditAccountId) {
+        //
+        // KEY and SECURITY AUDIT Stack
+        //
+        for (const enabledRegion of props.globalConfig.enabledRegions) {
+          if (includeStage({ stage: AcceleratorStage.KEY, account: auditAccountId, region: enabledRegion })) {
+            const keyStack = new KeyStack(
               app,
-              `${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${accountId}-${enabledRegion}`,
+              `${AcceleratorStackNames[AcceleratorStage.KEY]}-${auditAccountId}-${enabledRegion}`,
               {
-                env,
-                description: `(SO0199-bootstrap) Landing Zone Accelerator on AWS. Version ${version}.`,
-                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                env: {
+                  account: auditAccountId,
+                  region: enabledRegion,
+                },
+                description: `(SO0199-key) Landing Zone Accelerator on AWS. Version ${version}.`,
+                synthesizer: new cdk.DefaultStackSynthesizer({
+                  generateBootstrapVersionRule: false,
+                  bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${auditAccountId}/` : undefined,
+                  fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
+                    ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
+                    : undefined,
+                }),
                 terminationProtection: props.globalConfig.terminationProtection ?? true,
                 ...props,
               },
             );
-            addAcceleratorTags(bootstrapStack);
-            cdk.Aspects.of(bootstrapStack).add(new AwsSolutionsChecks());
+            addAcceleratorTags(keyStack);
+            cdk.Aspects.of(keyStack).add(new AwsSolutionsChecks());
           }
 
-          //
-          // LOGGING Stack
-          //
-          if (includeStage({ stage: AcceleratorStage.LOGGING, account: accountId, region: enabledRegion })) {
-            const loggingStack = new LoggingStack(
-              app,
-              `${AcceleratorStackNames[AcceleratorStage.LOGGING]}-${accountId}-${enabledRegion}`,
-              {
-                env,
-                description: `(SO0199-logging) Landing Zone Accelerator on AWS. Version ${version}.`,
-                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-                terminationProtection: props.globalConfig.terminationProtection ?? true,
-                ...props,
-              },
-            );
-            addAcceleratorTags(loggingStack);
-            cdk.Aspects.of(loggingStack).add(new AwsSolutionsChecks());
-          }
-
-          //
-          // SECURITY Stack
-          //
-          if (includeStage({ stage: AcceleratorStage.SECURITY, account: accountId, region: enabledRegion })) {
-            const securityStack = new SecurityStack(
-              app,
-              `${AcceleratorStackNames[AcceleratorStage.SECURITY]}-${accountId}-${enabledRegion}`,
-              {
-                env,
-                description: `(SO0199-security) Landing Zone Accelerator on AWS. Version ${version}.`,
-                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-                terminationProtection: props.globalConfig.terminationProtection ?? true,
-                ...props,
-              },
-            );
-            addAcceleratorTags(securityStack);
-            cdk.Aspects.of(securityStack).add(new AwsSolutionsChecks());
-          }
-
-          //
-          // OPERATIONS Stack
-          //
-          if (includeStage({ stage: AcceleratorStage.OPERATIONS, account: accountId, region: enabledRegion })) {
-            const operationsStack = new OperationsStack(
-              app,
-              `${AcceleratorStackNames[AcceleratorStage.OPERATIONS]}-${accountId}-${enabledRegion}`,
-              {
-                env,
-                description: `(SO0199-operations) Landing Zone Accelerator on AWS. Version ${version}.`,
-                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-                terminationProtection: props.globalConfig.terminationProtection ?? true,
-                ...props,
-              },
-            );
-            addAcceleratorTags(operationsStack);
-            cdk.Aspects.of(operationsStack).add(new AwsSolutionsChecks());
-          }
-
-          //
-          // NETWORK PREP Stack
-          //
-          if (includeStage({ stage: AcceleratorStage.NETWORK_PREP, account: accountId, region: enabledRegion })) {
-            const networkPrepStack = new NetworkPrepStack(
-              app,
-              `${AcceleratorStackNames[AcceleratorStage.NETWORK_PREP]}-${accountId}-${enabledRegion}`,
-              {
-                env,
-                description: `(SO0199-networkprep) Landing Zone Accelerator on AWS. Version ${version}.`,
-                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-                terminationProtection: props.globalConfig.terminationProtection ?? true,
-                ...props,
-              },
-            );
-            addAcceleratorTags(networkPrepStack);
-            cdk.Aspects.of(networkPrepStack).add(new AwsSolutionsChecks());
-          }
-
-          //
-          // SECURITY_RESOURCES Stack
-          //
-          if (includeStage({ stage: AcceleratorStage.SECURITY_RESOURCES, account: accountId, region: enabledRegion })) {
-            const securityResourcesStack = new SecurityResourcesStack(
-              app,
-              `${AcceleratorStackNames[AcceleratorStage.SECURITY_RESOURCES]}-${accountId}-${enabledRegion}`,
-              {
-                env,
-                description: `(SO0199-securityresources) Landing Zone Accelerator on AWS. Version ${version}.`,
-                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-                terminationProtection: props.globalConfig.terminationProtection ?? true,
-                ...props,
-              },
-            );
-            addAcceleratorTags(securityResourcesStack);
-            cdk.Aspects.of(securityResourcesStack).add(new AwsSolutionsChecks());
-          }
-
-          //
-          // CUSTOMIZATIONS Stack
-          //
-          if (includeStage({ stage: AcceleratorStage.CUSTOMIZATIONS, account: accountId, region: enabledRegion })) {
-            const customizationsStack = new CustomizationsStack(
-              app,
-              `${AcceleratorStackNames[AcceleratorStage.CUSTOMIZATIONS]}-${accountId}-${enabledRegion}`,
-              {
-                env,
-                description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
-                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-                terminationProtection: props.globalConfig.terminationProtection ?? true,
-                ...props,
-              },
-            );
-            cdk.Aspects.of(customizationsStack).add(new AwsSolutionsChecks());
-
-            if (customizationsConfig?.customizations?.cloudFormationStacks) {
-              const customStackList = generateCustomStackMappings(
-                props.accountsConfig,
-                props.organizationConfig,
-                customizationsConfig,
-                accountId,
-                enabledRegion,
-              );
-
-              for (const stack of customStackList ?? []) {
-                Logger.info(`[custom-stack] New stack ${stack.stackConfig.name}`);
-                stack.stackObj = new CustomStack(app, `${stack.stackConfig.name}-${accountId}-${enabledRegion}`, {
-                  env,
-                  description: stack.stackConfig.description,
-                  runOrder: stack.stackConfig.runOrder,
-                  stackName: stack.stackConfig.name,
-                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-                  templateFile: stack.stackConfig.template,
-                  terminationProtection: stack.stackConfig.terminationProtection,
-                  ...props,
-                });
-
-                if (stack.dependsOn) {
-                  for (const stackName of stack.dependsOn) {
-                    const previousStack = customStackList.find(a => a.stackConfig.name == stackName)?.stackObj;
-                    if (previousStack) {
-                      stack.stackObj.addDependency(previousStack);
-                    }
-                  }
-                }
-              }
-            }
-            if (customizationsConfig?.applications) {
-              for (const application of customizationsConfig.applications) {
-                for (const targetEnvironmentItem of application.targetEnvironments) {
-                  const targetAccountId = props.accountsConfig.getAccountId(targetEnvironmentItem.account);
-                  for (const regionItem of targetEnvironmentItem.region) {
-                    if (enabledRegion === regionItem && accountId === targetAccountId) {
-                      const applicationStackName = `AWSAccelerator-App-${application.name}-${targetAccountId}-${regionItem}`;
-                      const env = {
-                        account: targetAccountId,
-                        region: regionItem,
-                      };
-                      const applicationStack = new ApplicationsStack(app, applicationStackName, {
-                        env,
-                        description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
-                        synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-                        terminationProtection: props.globalConfig.terminationProtection ?? true,
-                        ...props,
-                        appConfigItem: application,
-                      });
-                      cdk.Aspects.of(applicationStack).add(new AwsSolutionsChecks());
-                    }
-                  }
-                }
-              }
-            }
-          }
-
-          //
-          // NETWORK VPC Stack
-          //
-          if (includeStage({ stage: AcceleratorStage.NETWORK_VPC, account: accountId, region: enabledRegion })) {
-            const vpcStack = new NetworkVpcStack(
-              app,
-              `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC]}-${accountId}-${enabledRegion}`,
-              {
-                env,
-                description: `(SO0199-networkvpc) Landing Zone Accelerator on AWS. Version ${version}.`,
-                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-                terminationProtection: props.globalConfig.terminationProtection ?? true,
-                ...props,
-              },
-            );
-            addAcceleratorTags(vpcStack);
-            cdk.Aspects.of(vpcStack).add(new AwsSolutionsChecks());
-
-            const endpointsStack = new NetworkVpcEndpointsStack(
-              app,
-              `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_ENDPOINTS]}-${accountId}-${enabledRegion}`,
-              {
-                env,
-                description: `(SO0199-networkendpoints) Landing Zone Accelerator on AWS. Version ${version}.`,
-                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-                terminationProtection: props.globalConfig.terminationProtection ?? true,
-                ...props,
-              },
-            );
-            addAcceleratorTags(endpointsStack);
-            endpointsStack.addDependency(vpcStack);
-            cdk.Aspects.of(endpointsStack).add(new AwsSolutionsChecks());
-
-            const dnsStack = new NetworkVpcDnsStack(
-              app,
-              `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]}-${accountId}-${enabledRegion}`,
-              {
-                env,
-                description: `(SO0199-networkdns) Landing Zone Accelerator on AWS. Version ${version}.`,
-                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-                terminationProtection: props.globalConfig.terminationProtection ?? true,
-                ...props,
-              },
-            );
-            addAcceleratorTags(dnsStack);
-            dnsStack.addDependency(endpointsStack);
-            cdk.Aspects.of(dnsStack).add(new AwsSolutionsChecks());
-          }
-
-          //
-          // NETWORK ASSOCIATIONS Stack
-          //
           if (
-            includeStage({ stage: AcceleratorStage.NETWORK_ASSOCIATIONS, account: accountId, region: enabledRegion })
+            includeStage({ stage: AcceleratorStage.SECURITY_AUDIT, account: auditAccountId, region: enabledRegion })
           ) {
-            const networkAssociationsStack = new NetworkAssociationsStack(
+            const auditStack = new SecurityAuditStack(
               app,
-              `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]}-${accountId}-${enabledRegion}`,
+              `${AcceleratorStackNames[AcceleratorStage.SECURITY_AUDIT]}-${auditAccountId}-${enabledRegion}`,
               {
-                env,
-                description: `(SO0199-networkassociations) Landing Zone Accelerator on AWS. Version ${version}.`,
-                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                env: {
+                  account: auditAccountId,
+                  region: enabledRegion,
+                },
+                description: `(SO0199-securityaudit) Landing Zone Accelerator on AWS. Version ${version}.`,
+                synthesizer: new cdk.DefaultStackSynthesizer({
+                  generateBootstrapVersionRule: false,
+                  bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${auditAccountId}/` : undefined,
+                  fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
+                    ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
+                    : undefined,
+                }),
                 terminationProtection: props.globalConfig.terminationProtection ?? true,
                 ...props,
               },
             );
-            addAcceleratorTags(networkAssociationsStack);
-            cdk.Aspects.of(networkAssociationsStack).add(new AwsSolutionsChecks());
+            addAcceleratorTags(auditStack);
+            cdk.Aspects.of(auditStack).add(new AwsSolutionsChecks());
+          }
+        }
 
-            const networkGwlbStack = new NetworkAssociationsGwlbStack(
-              app,
-              `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]}-${accountId}-${enabledRegion}`,
-              {
-                env,
-                description: `(SO0199-networkgwlb) Landing Zone Accelerator on AWS. Version ${version}.`,
-                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-                terminationProtection: props.globalConfig.terminationProtection ?? true,
-                ...props,
-              },
-            );
-            addAcceleratorTags(networkGwlbStack);
-            cdk.Aspects.of(networkGwlbStack).add(new AwsSolutionsChecks());
+        for (const enabledRegion of props.globalConfig.enabledRegions) {
+          let accountId = '';
+          for (const accountItem of [
+            ...props.accountsConfig.mandatoryAccounts,
+            ...props.accountsConfig.workloadAccounts,
+          ]) {
+            try {
+              accountId = props.accountsConfig.getAccountId(accountItem.name);
+            } catch (error) {
+              continue;
+            }
+            const env = {
+              account: accountId,
+              region: enabledRegion,
+            };
+            const stackSynthesizerProps = {
+              generateBootstrapVersionRule: false,
+              bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${accountId}/` : undefined,
+              fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
+                ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
+                : undefined,
+            };
+            //
+            // BOOTSTRAP Stack
+            //
+            if (includeStage({ stage: AcceleratorStage.BOOTSTRAP, account: accountId, region: enabledRegion })) {
+              const bootstrapStack = new BootstrapStack(
+                app,
+                `${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${accountId}-${enabledRegion}`,
+                {
+                  env,
+                  description: `(SO0199-bootstrap) Landing Zone Accelerator on AWS. Version ${version}.`,
+                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  terminationProtection: props.globalConfig.terminationProtection ?? true,
+                  ...props,
+                },
+              );
+              addAcceleratorTags(bootstrapStack);
+              cdk.Aspects.of(bootstrapStack).add(new AwsSolutionsChecks());
+            }
+
+            //
+            // LOGGING Stack
+            //
+            if (includeStage({ stage: AcceleratorStage.LOGGING, account: accountId, region: enabledRegion })) {
+              const loggingStack = new LoggingStack(
+                app,
+                `${AcceleratorStackNames[AcceleratorStage.LOGGING]}-${accountId}-${enabledRegion}`,
+                {
+                  env,
+                  description: `(SO0199-logging) Landing Zone Accelerator on AWS. Version ${version}.`,
+                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  terminationProtection: props.globalConfig.terminationProtection ?? true,
+                  ...props,
+                },
+              );
+              addAcceleratorTags(loggingStack);
+              cdk.Aspects.of(loggingStack).add(new AwsSolutionsChecks());
+            }
+
+            //
+            // SECURITY Stack
+            //
+            if (includeStage({ stage: AcceleratorStage.SECURITY, account: accountId, region: enabledRegion })) {
+              const securityStack = new SecurityStack(
+                app,
+                `${AcceleratorStackNames[AcceleratorStage.SECURITY]}-${accountId}-${enabledRegion}`,
+                {
+                  env,
+                  description: `(SO0199-security) Landing Zone Accelerator on AWS. Version ${version}.`,
+                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  terminationProtection: props.globalConfig.terminationProtection ?? true,
+                  ...props,
+                },
+              );
+              addAcceleratorTags(securityStack);
+              cdk.Aspects.of(securityStack).add(new AwsSolutionsChecks());
+            }
+
+            //
+            // OPERATIONS Stack
+            //
+            if (includeStage({ stage: AcceleratorStage.OPERATIONS, account: accountId, region: enabledRegion })) {
+              const operationsStack = new OperationsStack(
+                app,
+                `${AcceleratorStackNames[AcceleratorStage.OPERATIONS]}-${accountId}-${enabledRegion}`,
+                {
+                  env,
+                  description: `(SO0199-operations) Landing Zone Accelerator on AWS. Version ${version}.`,
+                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  terminationProtection: props.globalConfig.terminationProtection ?? true,
+                  ...props,
+                },
+              );
+              addAcceleratorTags(operationsStack);
+              cdk.Aspects.of(operationsStack).add(new AwsSolutionsChecks());
+            }
+
+            //
+            // NETWORK PREP Stack
+            //
+            if (includeStage({ stage: AcceleratorStage.NETWORK_PREP, account: accountId, region: enabledRegion })) {
+              const networkPrepStack = new NetworkPrepStack(
+                app,
+                `${AcceleratorStackNames[AcceleratorStage.NETWORK_PREP]}-${accountId}-${enabledRegion}`,
+                {
+                  env,
+                  description: `(SO0199-networkprep) Landing Zone Accelerator on AWS. Version ${version}.`,
+                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  terminationProtection: props.globalConfig.terminationProtection ?? true,
+                  ...props,
+                },
+              );
+              addAcceleratorTags(networkPrepStack);
+              cdk.Aspects.of(networkPrepStack).add(new AwsSolutionsChecks());
+            }
+
+            //
+            // SECURITY_RESOURCES Stack
+            //
+            if (
+              includeStage({ stage: AcceleratorStage.SECURITY_RESOURCES, account: accountId, region: enabledRegion })
+            ) {
+              const securityResourcesStack = new SecurityResourcesStack(
+                app,
+                `${AcceleratorStackNames[AcceleratorStage.SECURITY_RESOURCES]}-${accountId}-${enabledRegion}`,
+                {
+                  env,
+                  description: `(SO0199-securityresources) Landing Zone Accelerator on AWS. Version ${version}.`,
+                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  terminationProtection: props.globalConfig.terminationProtection ?? true,
+                  ...props,
+                },
+              );
+              addAcceleratorTags(securityResourcesStack);
+              cdk.Aspects.of(securityResourcesStack).add(new AwsSolutionsChecks());
+            }
+
+            //
+            // CUSTOMIZATIONS Stack
+            //
+            if (includeStage({ stage: AcceleratorStage.CUSTOMIZATIONS, account: accountId, region: enabledRegion })) {
+              const customizationsStack = new CustomizationsStack(
+                app,
+                `${AcceleratorStackNames[AcceleratorStage.CUSTOMIZATIONS]}-${accountId}-${enabledRegion}`,
+                {
+                  env,
+                  description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
+                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  terminationProtection: props.globalConfig.terminationProtection ?? true,
+                  ...props,
+                },
+              );
+              cdk.Aspects.of(customizationsStack).add(new AwsSolutionsChecks());
+
+              if (customizationsConfig?.customizations?.cloudFormationStacks) {
+                const customStackList = generateCustomStackMappings(
+                  props.accountsConfig,
+                  props.organizationConfig,
+                  customizationsConfig,
+                  accountId,
+                  enabledRegion,
+                );
+
+                for (const stack of customStackList ?? []) {
+                  Logger.info(`[custom-stack] New stack ${stack.stackConfig.name}`);
+                  stack.stackObj = new CustomStack(app, `${stack.stackConfig.name}-${accountId}-${enabledRegion}`, {
+                    env,
+                    description: stack.stackConfig.description,
+                    runOrder: stack.stackConfig.runOrder,
+                    stackName: stack.stackConfig.name,
+                    synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                    templateFile: stack.stackConfig.template,
+                    terminationProtection: stack.stackConfig.terminationProtection,
+                    ...props,
+                  });
+
+                  if (stack.dependsOn) {
+                    for (const stackName of stack.dependsOn) {
+                      const previousStack = customStackList.find(a => a.stackConfig.name == stackName)?.stackObj;
+                      if (previousStack) {
+                        stack.stackObj.addDependency(previousStack);
+                      }
+                    }
+                  }
+                }
+              }
+              if (customizationsConfig?.applications) {
+                for (const application of customizationsConfig.applications) {
+                  for (const targetEnvironmentItem of application.targetEnvironments) {
+                    const targetAccountId = props.accountsConfig.getAccountId(targetEnvironmentItem.account);
+                    for (const regionItem of targetEnvironmentItem.region) {
+                      if (enabledRegion === regionItem && accountId === targetAccountId) {
+                        const applicationStackName = `AWSAccelerator-App-${application.name}-${targetAccountId}-${regionItem}`;
+                        const env = {
+                          account: targetAccountId,
+                          region: regionItem,
+                        };
+                        const applicationStack = new ApplicationsStack(app, applicationStackName, {
+                          env,
+                          description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
+                          synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                          terminationProtection: props.globalConfig.terminationProtection ?? true,
+                          ...props,
+                          appConfigItem: application,
+                        });
+                        cdk.Aspects.of(applicationStack).add(new AwsSolutionsChecks());
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            //
+            // NETWORK VPC Stack
+            //
+            if (includeStage({ stage: AcceleratorStage.NETWORK_VPC, account: accountId, region: enabledRegion })) {
+              const vpcStack = new NetworkVpcStack(
+                app,
+                `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC]}-${accountId}-${enabledRegion}`,
+                {
+                  env,
+                  description: `(SO0199-networkvpc) Landing Zone Accelerator on AWS. Version ${version}.`,
+                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  terminationProtection: props.globalConfig.terminationProtection ?? true,
+                  ...props,
+                },
+              );
+              addAcceleratorTags(vpcStack);
+              cdk.Aspects.of(vpcStack).add(new AwsSolutionsChecks());
+
+              const endpointsStack = new NetworkVpcEndpointsStack(
+                app,
+                `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_ENDPOINTS]}-${accountId}-${enabledRegion}`,
+                {
+                  env,
+                  description: `(SO0199-networkendpoints) Landing Zone Accelerator on AWS. Version ${version}.`,
+                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  terminationProtection: props.globalConfig.terminationProtection ?? true,
+                  ...props,
+                },
+              );
+              addAcceleratorTags(endpointsStack);
+              endpointsStack.addDependency(vpcStack);
+              cdk.Aspects.of(endpointsStack).add(new AwsSolutionsChecks());
+
+              const dnsStack = new NetworkVpcDnsStack(
+                app,
+                `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]}-${accountId}-${enabledRegion}`,
+                {
+                  env,
+                  description: `(SO0199-networkdns) Landing Zone Accelerator on AWS. Version ${version}.`,
+                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  terminationProtection: props.globalConfig.terminationProtection ?? true,
+                  ...props,
+                },
+              );
+              addAcceleratorTags(dnsStack);
+              dnsStack.addDependency(endpointsStack);
+              cdk.Aspects.of(dnsStack).add(new AwsSolutionsChecks());
+            }
+
+            //
+            // NETWORK ASSOCIATIONS Stack
+            //
+            if (
+              includeStage({ stage: AcceleratorStage.NETWORK_ASSOCIATIONS, account: accountId, region: enabledRegion })
+            ) {
+              const networkAssociationsStack = new NetworkAssociationsStack(
+                app,
+                `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]}-${accountId}-${enabledRegion}`,
+                {
+                  env,
+                  description: `(SO0199-networkassociations) Landing Zone Accelerator on AWS. Version ${version}.`,
+                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  terminationProtection: props.globalConfig.terminationProtection ?? true,
+                  ...props,
+                },
+              );
+              addAcceleratorTags(networkAssociationsStack);
+              cdk.Aspects.of(networkAssociationsStack).add(new AwsSolutionsChecks());
+
+              const networkGwlbStack = new NetworkAssociationsGwlbStack(
+                app,
+                `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS_GWLB]}-${accountId}-${enabledRegion}`,
+                {
+                  env,
+                  description: `(SO0199-networkgwlb) Landing Zone Accelerator on AWS. Version ${version}.`,
+                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  terminationProtection: props.globalConfig.terminationProtection ?? true,
+                  ...props,
+                },
+              );
+              addAcceleratorTags(networkGwlbStack);
+              cdk.Aspects.of(networkGwlbStack).add(new AwsSolutionsChecks());
+            }
           }
         }
       }
