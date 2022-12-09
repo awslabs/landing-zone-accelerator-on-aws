@@ -27,6 +27,7 @@ export class CustomizationsConfigTypes {
     'TCP_UDP',
     'HTTP',
     'HTTPS',
+    'GENEVE',
   ]);
   static readonly targetGroupProtocolVersionType = t.enums('TargetGroupProtocolTypes', ['GRPC', 'HTTP1', 'HTTP2']);
   static readonly targetGroupType = t.enums('TargetGroupProtocolTypes', ['instance', 'ip', 'alb']);
@@ -34,12 +35,18 @@ export class CustomizationsConfigTypes {
     'lb_cookie',
     'app_cookie',
     'source_ip',
+    'source_ip_dest_ip',
+    'source_ip_dest_ip_proto',
   ]);
   static readonly targetGroupAttributeAlgorithm = t.enums('TargetGroupAttributeAlgorithms', [
     'round_robin',
     'least_outstanding_requests',
   ]);
   static readonly targetGroupHealthCheckProtocolType = t.enums('TargetGroupHealthCheckProtocolTypes', ['HTTP', 'TCP']);
+  static readonly targetGroupTargetFailoverType = t.enums('TargetGroupTargetFailoverType', [
+    'no_rebalance',
+    'rebalance',
+  ]);
   static readonly targetGroupHealthCheckType = t.interface({
     interval: t.optional(t.number),
     path: t.optional(t.nonEmptyString),
@@ -70,6 +77,7 @@ export class CustomizationsConfigTypes {
     connectionTermination: t.optional(t.boolean),
     preserveClientIp: t.optional(t.boolean),
     proxyProtocolV2: t.optional(t.boolean),
+    targetFailover: t.optional(this.targetGroupTargetFailoverType),
   });
 
   static readonly targetGroupItem = t.interface({
@@ -80,6 +88,7 @@ export class CustomizationsConfigTypes {
     type: this.targetGroupType,
     attributes: t.optional(this.targetGroupAttributeTypes),
     healthCheck: t.optional(this.targetGroupHealthCheckType),
+    targets: t.optional(t.array(t.nonEmptyString)),
     threshold: t.optional(this.targetGroupThresholdType),
     matcher: t.optional(this.targetGroupMatcherType),
   });
@@ -157,6 +166,7 @@ export class CustomizationsConfigTypes {
 
   static readonly networkInterfaceItem = t.interface({
     associateCarrierIpAddress: t.optional(t.boolean),
+    associateElasticIp: t.optional(t.boolean),
     associatePublicIpAddress: t.optional(t.boolean),
     deleteOnTermination: t.optional(t.boolean),
     description: t.optional(t.nonEmptyString),
@@ -168,6 +178,7 @@ export class CustomizationsConfigTypes {
     privateIpAddress: t.optional(t.nonEmptyString),
     privateIpAddresses: t.optional(t.array(this.privateIpAddressItem)),
     secondaryPrivateIpAddressCount: t.optional(t.number),
+    sourceDestCheck: t.optional(t.boolean),
     subnetId: t.optional(t.nonEmptyString),
   });
 
@@ -338,10 +349,308 @@ export class CustomizationsConfigTypes {
     cloudFormationStackSets: t.optional(t.array(this.cloudFormationStackSet)),
   });
 
+  static readonly ec2FirewallInstanceConfig = t.interface({
+    name: t.nonEmptyString,
+    launchTemplate: this.launchTemplateConfig,
+    vpc: t.nonEmptyString,
+    detailedMonitoring: t.optional(t.boolean),
+    terminationProtection: t.optional(t.boolean),
+    tags: t.optional(t.array(t.tag)),
+  });
+
+  static readonly ec2FirewallAutoScalingGroupConfig = t.interface({
+    name: t.nonEmptyString,
+    autoscaling: this.autoscalingConfig,
+    launchTemplate: this.launchTemplateConfig,
+    vpc: t.nonEmptyString,
+    tags: t.optional(t.array(t.tag)),
+  });
+
+  static readonly ec2FirewallConfig = t.interface({
+    autoscalingGroups: t.optional(t.array(this.ec2FirewallAutoScalingGroupConfig)),
+    instances: t.optional(t.array(this.ec2FirewallInstanceConfig)),
+    managerInstances: t.optional(t.array(this.ec2FirewallInstanceConfig)),
+    targetGroups: t.optional(t.array(this.targetGroupItem)),
+  });
+
   static readonly customizationsConfig = t.interface({
     customizations: t.optional(this.customizationConfig),
     applications: t.optional(t.array(this.appConfigItem)),
+    firewalls: t.optional(this.ec2FirewallConfig),
   });
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link Ec2FirewallConfig} / {@link Ec2FirewallInstanceConfig}*
+ *
+ * EC2 firewall instance configuration.
+ * Use to define an array of standalone firewall instances
+ *
+ * @example
+ * ```
+ * - name: accelerator-firewall
+ *   launchTemplate:
+ *     name: firewall-lt
+ *     blockDeviceMappings:
+ *       - deviceName: /dev/xvda
+ *         ebs:
+ *           deleteOnTermination: true
+ *           encrypted: true
+ *           volumeSize: 20
+ *     enforceImdsv2: true
+ *     iamInstanceProfile: firewall-profile
+ *     imageId: ami-123xyz
+ *     instanceType: c6i.xlarge
+ *     networkInterfaces:
+ *       - deleteOnTermination: true
+ *         description: Primary interface
+ *         deviceIndex: 0
+ *         groups:
+ *           - firewall-data-sg
+ *         subnetId: firewall-data-subnet-a
+ *       - deleteOnTermination: true
+ *         description: Management interface
+ *         deviceIndex: 1
+ *         groups:
+ *           - firewall-mgmt-sg
+ *         subnetId: firewall-mgmt-subnet-a
+ *     userData: path/to/userdata.txt
+ *   vpc: Network-Inspection
+ *   tags: []
+ * ```
+ *
+ */
+export class Ec2FirewallInstanceConfig implements t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig> {
+  /**
+   * The friendly name of the firewall instance
+   */
+  readonly name: string = '';
+  /**
+   * The launch template for the firewall instance
+   */
+  readonly launchTemplate: LaunchTemplateConfig = new LaunchTemplateConfig();
+  /**
+   * The friendly name of the VPC to deploy the firwall instance to
+   *
+   * @remarks
+   * This VPC must contain the subnet(s) defined for the network interfaces under the `launchTemplate` property
+   */
+  readonly vpc: string = '';
+  /**
+   * Specify true to enable detailed monitoring. Otherwise, basic monitoring is enabled.
+   */
+  readonly detailedMonitoring: boolean | undefined = undefined;
+  /**
+   * If you set this parameter to true , you can't terminate the instance using the Amazon EC2 console, CLI, or API.
+   * To change this attribute after launch, use ModifyInstanceAttribute . Alternatively, if you set
+   * InstanceInitiatedShutdownBehavior to terminate , you can terminate the instance by running the shutdown command from the instance.
+   */
+  readonly terminationProtection: boolean | undefined = undefined;
+  /**
+   * An optional array of tags
+   */
+  readonly tags: t.Tag[] | undefined = undefined;
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link Ec2FirewallConfig} / {@link Ec2FirewallAutoScalingGroupConfig}*
+ *
+ * EC2 firewall autoscaling group configuration.
+ * Used to define EC2-based firewall instances to be deployed in an autoscaling group.
+ *
+ * ```
+ * - name: accelerator-firewall-asg
+ *   autoscaling:
+ *     name: firewall-asg
+ *     maxSize: 4
+ *     minSize: 1
+ *     desiredSize: 2
+ *     launchTemplate: firewall-lt
+ *     healthCheckGracePeriod: 300
+ *     healthCheckType: ELB
+ *     targetGroups:
+ *       - firewall-gwlb-tg
+ *     subnets:
+ *       - firewall-subnet-a
+ *       - firewall-subnet-b
+ *   launchTemplate:
+ *     name: firewall-lt
+ *     blockDeviceMappings:
+ *       - deviceName: /dev/xvda
+ *         ebs:
+ *           deleteOnTermination: true
+ *           encrypted: true
+ *           volumeSize: 20
+ *     enforceImdsv2: true
+ *     iamInstanceProfile: firewall-profile
+ *     imageId: ami-123xyz
+ *     instanceType: c6i.xlarge
+ *     networkInterfaces:
+ *       - deleteOnTermination: true
+ *         description: Primary interface
+ *         deviceIndex: 0
+ *         groups:
+ *           - firewall-data-sg
+ *       - deleteOnTermination: true
+ *         description: Management interface
+ *         deviceIndex: 1
+ *         groups:
+ *           - firewall-mgmt-sg
+ *     userData: path/to/userdata.txt
+ *   vpc: Network-Inspection
+ *   tags: []
+ * ```
+ */
+export class Ec2FirewallAutoScalingGroupConfig
+  implements t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>
+{
+  /**
+   * The friendly name of the firewall instance
+   */
+  readonly name: string = '';
+  /**
+   * An AutoScaling Group configuration
+   */
+  readonly autoscaling = new AutoScalingConfig();
+  /**
+   * The launch template for the firewall instance
+   */
+  readonly launchTemplate = new LaunchTemplateConfig();
+  /**
+   * The friendly name of the VPC to deploy the firwall instance to
+   *
+   * @remarks
+   * This VPC must contain the subnet(s) defined for the network interfaces under the `launchTemplate` property
+   */
+  readonly vpc: string = '';
+  /**
+   * An optional array of tags
+   */
+  readonly tags: t.Tag[] | undefined = undefined;
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link Ec2FirewallConfig}*
+ *
+ * EC2 firewall configuration.
+ * Used to define EC2-based firewall and management appliances
+ *
+ * @example
+ * Standalone instances:
+ * ```
+ * instances:
+ *   - name: accelerator-firewall
+ *     launchTemplate:
+ *       name: firewall-lt
+ *       blockDeviceMappings:
+ *         - deviceName: /dev/xvda
+ *           ebs:
+ *             deleteOnTermination: true
+ *             encrypted: true
+ *             volumeSize: 20
+ *       enforceImdsv2: true
+ *       iamInstanceProfile: firewall-profile
+ *       imageId: ami-123xyz
+ *       instanceType: c6i.xlarge
+ *       networkInterfaces:
+ *         - deleteOnTermination: true
+ *           description: Primary interface
+ *           deviceIndex: 0
+ *           groups:
+ *             - firewall-data-sg
+ *           subnetId: firewall-data-subnet-a
+ *         - deleteOnTermination: true
+ *           description: Management interface
+ *           deviceIndex: 1
+ *           groups:
+ *             - firewall-mgmt-sg
+ *           subnetId: firewall-mgmt-subnet-a
+ *       userData: path/to/userdata.txt
+ *     vpc: Network-Inspection
+ * targetGroups:
+ *   - name: firewall-gwlb-tg
+ *     port: 6081
+ *     protocol: GENEVE
+ *     type: instance
+ *     healthCheck:
+ *       enabled: true
+ *       port: 80
+ *       protocol: TCP
+ *     targets:
+ *       - accelerator-firewall
+ * ```
+ *
+ * Autoscaling group:
+ * ```
+ * autoscalingGroups:
+ *   - name: accelerator-firewall-asg
+ *     autoscaling:
+ *       name: firewall-asg
+ *       maxSize: 4
+ *       minSize: 1
+ *       desiredSize: 2
+ *       launchTemplate: firewall-lt
+ *       healthCheckGracePeriod: 300
+ *       healthCheckType: ELB
+ *       targetGroups:
+ *        - firewall-gwlb-tg
+ *       subnets:
+ *         - firewall-subnet-a
+ *         - firewall-subnet-b
+ *     launchTemplate:
+ *       name: firewall-lt
+ *       blockDeviceMappings:
+ *         - deviceName: /dev/xvda
+ *           ebs:
+ *             deleteOnTermination: true
+ *             encrypted: true
+ *             volumeSize: 20
+ *       enforceImdsv2: true
+ *       iamInstanceProfile: firewall-profile
+ *       imageId: ami-123xyz
+ *       instanceType: c6i.xlarge
+ *       networkInterfaces:
+ *         - deleteOnTermination: true
+ *           description: Primary interface
+ *           deviceIndex: 0
+ *           groups:
+ *             - firewall-data-sg
+ *         - deleteOnTermination: true
+ *           description: Management interface
+ *           deviceIndex: 1
+ *           groups:
+ *             - firewall-mgmt-sg
+ *       userData: path/to/userdata.txt
+ *     vpc: Network-Inspection
+ *   targetGroups:
+ *   - name: firewall-gwlb-tg
+ *     port: 6081
+ *     protocol: GENEVE
+ *     type: instance
+ *     healthCheck:
+ *       enabled: true
+ *       port: 80
+ *       protocol: TCP
+ * ```
+ *
+ */
+export class Ec2FirewallConfig implements t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallConfig> {
+  /**
+   * Define EC2-based firewall instances in autoscaling groups
+   */
+  readonly autoscalingGroups: Ec2FirewallAutoScalingGroupConfig[] | undefined = undefined;
+  /**
+   * Define EC2-based firewall standalone instances
+   */
+  readonly instances: Ec2FirewallInstanceConfig[] | undefined = undefined;
+  /**
+   * Define EC2-based firewall management instances
+   */
+  readonly managerInstances: Ec2FirewallInstanceConfig[] | undefined = undefined;
+  /**
+   * Define target groups for EC2-based firewalls
+   */
+  readonly targetGroups: TargetGroupItemConfig[] | undefined = undefined;
 }
 
 /**
@@ -471,7 +780,7 @@ export class CloudFormationStackSetConfig implements t.TypeOf<typeof Customizati
 }
 
 /**
- * *{@link AppConfigItem} / {@link ApplicationLoadBalancerConfig} / {@link ApplicationLoadBalancerListenerConfig} / {@link AlbListenerFixedResponseConfig}*
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} / {@link ApplicationLoadBalancerConfig} / {@link ApplicationLoadBalancerListenerConfig} / {@link AlbListenerFixedResponseConfig}*
  *
  * Application load balancer listener fixed response config
  * It returns a custom HTTP response.
@@ -507,7 +816,7 @@ export class AlbListenerFixedResponseConfig
 }
 
 /**
- * *{@link AppConfigItem} / {@link ApplicationLoadBalancerConfig} / {@link ApplicationLoadBalancerListenerConfig} / {@link AlbListenerForwardConfig}/ {@link AlbListenerForwardConfigTargetGroupStickinessConfig}*
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} / {@link ApplicationLoadBalancerConfig} / {@link ApplicationLoadBalancerListenerConfig} / {@link AlbListenerForwardConfig}/ {@link AlbListenerForwardConfigTargetGroupStickinessConfig}*
  *
  * Application Load balancer listener forward config target group stickiness config
  * Applicable only when `type` under {@link ApplicationLoadBalancerListenerConfig | listener} is `forward`.
@@ -534,7 +843,7 @@ export class AlbListenerForwardConfigTargetGroupStickinessConfig
 }
 
 /**
- * *{@link AppConfigItem} / {@link ApplicationLoadBalancerConfig} / {@link ApplicationLoadBalancerListenerConfig} / {@link AlbListenerForwardConfig}
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} / {@link ApplicationLoadBalancerConfig} / {@link ApplicationLoadBalancerListenerConfig} / {@link AlbListenerForwardConfig}
  *
  * Application Load balancer listener forward config. Used to define forward action.
  * Applicable only when `type` under {@link ApplicationLoadBalancerListenerConfig | listener} is `forward`.
@@ -554,7 +863,7 @@ export class AlbListenerForwardConfig implements t.TypeOf<typeof CustomizationsC
 }
 
 /**
- * *{@link AppConfigItem} / {@link ApplicationLoadBalancerConfig} / {@link ApplicationLoadBalancerListenerConfig} / {@link AlbListenerRedirectConfig}
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} / {@link ApplicationLoadBalancerConfig} / {@link ApplicationLoadBalancerListenerConfig} / {@link AlbListenerRedirectConfig}*
  *
  * Application Load balancer listener redirect config. Used to define redirect action.
  * Applicable only when `type` under {@link ApplicationLoadBalancerListenerConfig | listener} is `redirect`.
@@ -581,7 +890,7 @@ export class AlbListenerRedirectConfig implements t.TypeOf<typeof Customizations
   readonly query: string | undefined = undefined;
 }
 /**
- * *{@link AppConfigItem} / {@link ApplicationLoadBalancerConfig} / {@link ApplicationLoadBalancerListenerConfig}
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} / {@link ApplicationLoadBalancerConfig} / {@link ApplicationLoadBalancerListenerConfig}*
  *
  * Application Load Balancer listener config. Currently only action type of `forward`,  `redirect` and `fixed-response` is allowed.
  *
@@ -683,7 +992,7 @@ export class ApplicationLoadBalancerListenerConfig
 }
 
 /**
- * *{@link AppConfigItem} / {@link ApplicationLoadBalancerConfig} / {@link ApplicationLoadBalancerAttributesConfig}
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} / {@link ApplicationLoadBalancerConfig} / {@link ApplicationLoadBalancerAttributesConfig}*
  *
  * Application Load Balancer attributes config.
  *
@@ -748,7 +1057,7 @@ export class ApplicationLoadBalancerAttributesConfig
   readonly wafFailOpen: boolean | undefined = undefined;
 }
 /**
- * *{@link AppConfigItem} / {@link ApplicationLoadBalancerConfig}
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} / {@link ApplicationLoadBalancerConfig}*
  *
  * Used to define Application Load Balancer configurations for the accelerator.
  *
@@ -802,7 +1111,8 @@ export class ApplicationLoadBalancerConfig
 }
 
 /**
- * *{@link AppConfigItem} / {@link TargetGroupItemConfig} / {@link TargetGroupAttributeConfig}
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} | {@link Ec2FirewallConfig} / {@link TargetGroupItemConfig} / {@link TargetGroupAttributeConfig}*
+ *
  * Set attributes for target group.
  *
  * @see {@link https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_TargetGroupAttribute.html}
@@ -823,6 +1133,9 @@ export class ApplicationLoadBalancerConfig
  *  connectionTermination: true
  *  preserveClientIp: true
  *  proxyProtocolV2: true
+ * # applies to Gateway Load Balancer
+ * targetFailover: rebalance
+ * ```
  */
 export class TargetGroupAttributeConfig
   implements t.TypeOf<typeof CustomizationsConfigTypes.targetGroupAttributeTypes>
@@ -839,6 +1152,7 @@ export class TargetGroupAttributeConfig
    * Indicates the type of stickiness. The possible values are:
    *  - lb_cookie and app_cookie for Application Load Balancers.
    *  - source_ip for Network Load Balancers.
+   *  - source_ip_dest_ip and source_ip_dest_ip_proto for Gateway Load Balancers
    */
   readonly stickinessType: t.TypeOf<typeof CustomizationsConfigTypes.targetGroupAttributeStickinessType> | undefined =
     undefined;
@@ -882,10 +1196,17 @@ export class TargetGroupAttributeConfig
    * The following attribute is supported only by Network Load Balancers.
    */
   readonly proxyProtocolV2: boolean | undefined = undefined;
+  /**
+   * Indicates how the Gateway Load Balancer handles existing flows when a target is deregistered or becomes unhealthy.
+   * The possible values are rebalance and no_rebalance. The default is no_rebalance
+   */
+  readonly targetFailover: t.TypeOf<typeof CustomizationsConfigTypes.targetGroupTargetFailoverType> | undefined =
+    undefined;
 }
 
 /**
- * *{@link AppConfigItem} / {@link TargetGroupItemConfig} / {@link TargetGroupHealthCheckConfig}
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} | {@link Ec2FirewallConfig} / {@link TargetGroupItemConfig} / {@link TargetGroupHealthCheckConfig}*
+ *
  * Configure health check for target group.
  *
  * @see {@link https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html}
@@ -904,7 +1225,9 @@ export class TargetGroupHealthCheckConfig
   implements t.TypeOf<typeof CustomizationsConfigTypes.targetGroupHealthCheckType>
 {
   /**
-   * The approximate amount of time, in seconds, between health checks of an individual target. The range is 5-300. If the target group protocol is TCP, TLS, UDP, TCP_UDP, HTTP or HTTPS, the default is 30 seconds.
+   * The approximate amount of time, in seconds, between health checks of an individual target. The range is 5-300.
+   * If the target group protocol is TCP, TLS, UDP, TCP_UDP, HTTP or HTTPS, the default is 30 seconds.
+   * If the target group protocol is GENEVE, the default is 10 seconds.
    */
   readonly interval: number | undefined = undefined;
   /**
@@ -918,13 +1241,14 @@ export class TargetGroupHealthCheckConfig
    * For Application Load Balancers, the default is HTTP.
    * For Network Load Balancers and Gateway Load Balancers, the default is TCP.
    * The TCP protocol is not supported for health checks if the protocol of the target group is HTTP or HTTPS.
-   * TLS, UDP, and TCP_UDP protocols are not supported for health checks.
+   * GENEVE, TLS, UDP, and TCP_UDP protocols are not supported for health checks.
    */
   readonly protocol: t.TypeOf<typeof CustomizationsConfigTypes.targetGroupHealthCheckProtocolType> | undefined =
     undefined;
   /**
    * The port the load balancer uses when performing health checks on targets.
    * If the protocol is HTTP, HTTPS, TCP, TLS, UDP, or TCP_UDP, the default is `traffic-port`, which is the port on which each target receives traffic from the load balancer.
+   * If the protocol is GENEVE, the default is port 80.
    */
   readonly port: number | undefined = undefined;
   /**
@@ -932,12 +1256,13 @@ export class TargetGroupHealthCheckConfig
    * The range is 2–120 seconds.
    * For target groups with a protocol of HTTP, the default is 6 seconds.
    * For target groups with a protocol of TCP, TLS or HTTPS, the default is 10 seconds.
+   * For target groups with a protocol of GENEVE, the default is 5 seconds.
    */
   readonly timeout: number | undefined = undefined;
 }
 
 /**
- * *{@link AppConfigItem} / {@link TargetGroupItemConfig} / {@link TargetGroupThresholdConfig}
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} | {@link Ec2FirewallConfig} / {@link TargetGroupItemConfig} / {@link TargetGroupThresholdConfig}*
  * Configure health check threshold for target group.
  *
  * @see {@link https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html}
@@ -951,16 +1276,20 @@ export class TargetGroupHealthCheckConfig
  */
 export class TargetGroupThresholdConfig implements t.TypeOf<typeof CustomizationsConfigTypes.targetGroupThresholdType> {
   /**
-   * The number of consecutive health check successes required before considering a target healthy. The range is 2-10. If the target group protocol is TCP, TCP_UDP, UDP, TLS, HTTP or HTTPS, the default is 5.
+   * The number of consecutive health check successes required before considering a target healthy. The range is 2-10.
+   * If the target group protocol is TCP, TCP_UDP, UDP, TLS, HTTP or HTTPS, the default is 5.
+   * For target groups with a protocol of GENEVE, the default is 3.
    */
   readonly healthy: number | undefined = undefined;
   /**
-   * The number of consecutive health check failures required before considering a target unhealthy. The range is 2-10. If the target group protocol is TCP, TCP_UDP, UDP, TLS, HTTP or HTTPS, the default is 2.
+   * The number of consecutive health check failures required before considering a target unhealthy. The range is 2-10.
+   * If the target group protocol is TCP, TCP_UDP, UDP, TLS, HTTP or HTTPS, the default is 2.
+   * For target groups with a protocol of GENEVE, the default is 3.
    */
   readonly unhealthy: number | undefined = undefined;
 }
 /**
- * *{@link AppConfigItem} / {@link TargetGroupItemConfig} / {@link TargetGroupMatcherConfig}
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} | {@link Ec2FirewallConfig} / {@link TargetGroupItemConfig} / {@link TargetGroupMatcherConfig}*
  * The codes to use when checking for a successful response from a target. If the protocol version is gRPC, these are gRPC codes. Otherwise, these are HTTP codes.
  *
  * @see {@link https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_Matcher.html}
@@ -986,7 +1315,8 @@ export class TargetGroupMatcherConfig implements t.TypeOf<typeof CustomizationsC
 }
 
 /**
- * *{@link AppConfigItem} / {@link TargetGroupItemConfig}*
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} | {@link Ec2FirewallConfig} / {@link TargetGroupItemConfig}*
+ *
  * Target Group Configuration
  *
  * @see {@link https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html}
@@ -1028,10 +1358,11 @@ export class TargetGroupItemConfig implements t.TypeOf<typeof CustomizationsConf
    */
   readonly port: number = 80;
   /**
-   * Target group protocol version. Should be one of HTTP, HTTPS, TCP, UDP, TCP_UDP or TLS
+   * Target group protocol version. Should be one of HTTP, HTTPS, GENEVE, TCP, UDP, TCP_UDP or TLS
    * The protocol to use for routing traffic to the targets.
    * For Application Load Balancers, the supported protocols are HTTP and HTTPS.
    * For Network Load Balancers, the supported protocols are TCP, TLS, UDP, or TCP_UDP. A TCP_UDP listener must be associated with a TCP_UDP target group.
+   * For Gateway Load Balancers, the supported protocol is GENEVE.
    * @see {@link CustomizationsConfigTypes.targetGroupProtocolType}
    */
   readonly protocol: t.TypeOf<typeof CustomizationsConfigTypes.targetGroupProtocolType> = 'TCP';
@@ -1062,6 +1393,14 @@ export class TargetGroupItemConfig implements t.TypeOf<typeof CustomizationsConf
    */
   readonly healthCheck: TargetGroupHealthCheckConfig | undefined = undefined;
   /**
+   * Target group targets. These targets should be the friendly names assigned to firewall instances.
+   *
+   * @remarks
+   * This property should only be defined if also defining EC2-based firewall instances.
+   * It should be left undefined for application configurations.
+   */
+  readonly targets: string[] | undefined = undefined;
+  /**
    * Target Group Threshold.
    * @see {@link CustomizationsConfigTypes.targetGroupThresholdType}
    */
@@ -1074,7 +1413,7 @@ export class TargetGroupItemConfig implements t.TypeOf<typeof CustomizationsConf
 }
 
 /**
- * *{@link AppConfigItem} / {@link NetworkLoadBalancerConfig} / {@link NetworkLoadBalancerListenerConfig}
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} / {@link NetworkLoadBalancerConfig} / {@link NetworkLoadBalancerListenerConfig}*
  *
  * Application Load Balancer listener config. Currently only action type of `forward`,  `redirect` and `fixed-response` is allowed.
  *
@@ -1123,7 +1462,8 @@ export class NetworkLoadBalancerListenerConfig implements t.TypeOf<typeof Custom
 }
 
 /**
- * *{@link AppConfigItem} / {@link NetworkLoadBalancerConfig}
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} / {@link NetworkLoadBalancerConfig}*
+ *
  * Network Load Balancer configuration.
  *
  * @example
@@ -1172,7 +1512,8 @@ export class NetworkLoadBalancerConfig implements t.TypeOf<typeof Customizations
 }
 
 /**
- * *{@link AppConfigItem} / {@link LaunchTemplateConfig} / {@link BlockDeviceMappingItem}/ {@link EbsItemConfig}
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} | {@link Ec2FirewallConfig} / {@link LaunchTemplateConfig} / {@link BlockDeviceMappingItem}/ {@link EbsItemConfig}*
+ *
  * The parameters for a block device for an EBS volume.
  *
  * @see {@link https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateEbsBlockDeviceRequest.html}
@@ -1184,6 +1525,7 @@ export class NetworkLoadBalancerConfig implements t.TypeOf<typeof Customizations
  *    deleteOnTermination: true
  *    encrypted: true
  *    kmsKeyId: key1
+ * ```
  */
 export class EbsItemConfig implements t.TypeOf<typeof CustomizationsConfigTypes.ebsItem> {
   /**
@@ -1228,7 +1570,8 @@ export class EbsItemConfig implements t.TypeOf<typeof CustomizationsConfigTypes.
   readonly volumeType: string | undefined = undefined;
 }
 /**
- * *{@link AppConfigItem} / {@link LaunchTemplateConfig} / {@link BlockDeviceMappingItem}*
+ * *{@link CustomizationsConfig} / {@link AppConfigItem}  | {@link Ec2FirewallConfig} / {@link LaunchTemplateConfig} / {@link BlockDeviceMappingItem}*
+ *
  * The parameters for a block device mapping in launch template.
  *
  * @see {@link https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateBlockDeviceMappingRequest.html}
@@ -1262,7 +1605,7 @@ export class BlockDeviceMappingItem implements t.TypeOf<typeof CustomizationsCon
 }
 
 /**
- * *{@link AppConfigItem} / {@link LaunchTemplateConfig} / {@link NetworkInterfaceItemConfig}/ {@link PrivateIpAddressConfig}*
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} | {@link Ec2FirewallConfig} / {@link LaunchTemplateConfig} / {@link NetworkInterfaceItemConfig}/ {@link PrivateIpAddressConfig}*
  *
  * Configure a secondary private IPv4 address for a network interface.
  * @see {@link https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_PrivateIpAddressSpecification.html}
@@ -1287,7 +1630,8 @@ export class PrivateIpAddressConfig implements t.TypeOf<typeof CustomizationsCon
 }
 
 /**
- * *{@link AppConfigItem} / {@link LaunchTemplateConfig} / {@link NetworkInterfaceItemConfig}*
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} | {@link Ec2FirewallConfig} / {@link LaunchTemplateConfig} / {@link NetworkInterfaceItemConfig}*
+ *
  * The parameters for a network interface.
  *
  * @see {@link https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_LaunchTemplateInstanceNetworkInterfaceSpecificationRequest.html}
@@ -1303,6 +1647,7 @@ export class PrivateIpAddressConfig implements t.TypeOf<typeof CustomizationsCon
  *      - SharedServices-Main-sg
  *    # subnet is from network-config.yaml under the same vpc
  *    subnetId: SharedServices-App-A
+ * ```
  */
 export class NetworkInterfaceItemConfig implements t.TypeOf<typeof CustomizationsConfigTypes.networkInterfaceItem> {
   /**
@@ -1310,6 +1655,13 @@ export class NetworkInterfaceItemConfig implements t.TypeOf<typeof Customization
    * Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface.
    */
   readonly associateCarrierIpAddress: boolean | undefined = undefined;
+  /**
+   * Associate an elastic IP with the interface
+   *
+   * @remarks
+   * This property only applies to EC2-based firewall instances.
+   */
+  readonly associateElasticIp: boolean | undefined = undefined;
   /**
    * Associates a public IPv4 address with eth0 for a new network interface.
    */
@@ -1353,6 +1705,14 @@ export class NetworkInterfaceItemConfig implements t.TypeOf<typeof Customization
    */
   readonly secondaryPrivateIpAddressCount: number | undefined = undefined;
   /**
+   * If the value is true , source/destination checks are enabled; otherwise, they are disabled. The default value is true.
+   * You must disable source/destination checks if the instance runs services such as network address translation, routing, or firewalls.
+   *
+   * @remarks
+   * This property only applies to EC2-based firewall instances.
+   */
+  readonly sourceDestCheck: boolean | undefined = undefined;
+  /**
    * Valid subnet name from network-config.yaml under the same vpc
    */
   readonly subnetId: string | undefined = undefined;
@@ -1363,7 +1723,8 @@ export class NetworkInterfaceItemConfig implements t.TypeOf<typeof Customization
 }
 
 /**
- * *{@link AppConfigItem} / {@link LaunchTemplateConfig} / {@link NetworkInterfaceItemConfig}*
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} | {@link Ec2FirewallConfig} / {@link LaunchTemplateConfig} / {@link NetworkInterfaceItemConfig}*
+ *
  * Configure a launch template for the application.
  *
  * @see {@link https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestLaunchTemplateData.html}
@@ -1404,7 +1765,7 @@ export class NetworkInterfaceItemConfig implements t.TypeOf<typeof Customization
  *   # this path is relative to the config repository and the content should be in regular text.
  *   # Its encoded in base64 before passing in to launch Template
  *   userData: appConfigs/appA/launchTemplate/userData.sh
- *
+ * ```
  */
 export class LaunchTemplateConfig implements t.TypeOf<typeof CustomizationsConfigTypes.launchTemplateConfig> {
   /*
@@ -1457,7 +1818,7 @@ export class LaunchTemplateConfig implements t.TypeOf<typeof CustomizationsConfi
 
 /**
  *
- * *{@link AppConfigItem} / {@link AutoScalingConfig}*
+ * *{@link CustomizationsConfig} / {@link AppConfigItem}  | {@link Ec2FirewallAutoScalingGroupConfig} / {@link AutoScalingConfig}*
  *
  * Autoscaling group configuration for the application.
  *
@@ -1526,7 +1887,7 @@ export class AutoScalingConfig implements t.TypeOf<typeof CustomizationsConfigTy
 
 /**
  *
- * *{@link AppConfigItem} / {@link TargetEnvironmentConfig}*
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} / {@link TargetEnvironmentConfig}*
  *
  * Application targets configuration
  *
@@ -1551,7 +1912,7 @@ export class TargetEnvironmentConfig implements t.TypeOf<typeof CustomizationsCo
 }
 
 /**
- * *{@link AppConfigItem}*
+ * *{@link CustomizationsConfig} / {@link AppConfigItem}*
  *
  * Application configuration.
  * Used to define two tier application configurations for the accelerator.
@@ -1651,10 +2012,6 @@ export class TargetEnvironmentConfig implements t.TypeOf<typeof CustomizationsCo
  *       userData: appConfigs/appA/launchTemplate/userData.sh
  * ```
  */
-
-/**
- * Application configuration
- */
 export class AppConfigItem implements t.TypeOf<typeof CustomizationsConfigTypes.appConfigItem> {
   /**
    * The name of the application. This should be unique per application.
@@ -1729,6 +2086,7 @@ export class CustomizationsConfig implements t.TypeOf<typeof CustomizationsConfi
 
   readonly customizations: CustomizationConfig = new CustomizationConfig();
   readonly applications: AppConfigItem[] = [];
+  readonly firewalls: Ec2FirewallConfig | undefined = undefined;
 
   /**
    *

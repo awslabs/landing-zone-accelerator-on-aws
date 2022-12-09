@@ -1422,11 +1422,18 @@ export class NetworkVpcStack extends AcceleratorStack {
       deletionProtection: loadBalancerItem.deletionProtection,
       tags: loadBalancerItem.tags,
     });
-    this.ssmParameters.push({
-      logicalId: pascalCase(`SsmParam${pascalCase(loadBalancerItem.name)}GwlbServiceId`),
-      parameterName: `/accelerator/network/gwlb/${loadBalancerItem.name}/endpointService/id`,
-      stringValue: loadBalancer.endpointServiceId,
-    });
+    this.ssmParameters.push(
+      {
+        logicalId: pascalCase(`SsmParam${pascalCase(loadBalancerItem.name)}GwlbServiceId`),
+        parameterName: `/accelerator/network/gwlb/${loadBalancerItem.name}/endpointService/id`,
+        stringValue: loadBalancer.endpointServiceId,
+      },
+      {
+        logicalId: pascalCase(`SsmParam${pascalCase(loadBalancerItem.name)}GwlbArn`),
+        parameterName: `/accelerator/network/gwlb/${loadBalancerItem.name}/arn`,
+        stringValue: loadBalancer.loadBalancerArn,
+      },
+    );
 
     // AwsSolutions-ELB2: The ELB does not have access logs enabled.
     NagSuppressions.addResourceSuppressions(loadBalancer, [

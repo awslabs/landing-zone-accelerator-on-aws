@@ -134,3 +134,113 @@ applications:
           protocol: HTTP
           targetGroup: appA-alb-tg-1
           type: forward
+
+firewalls:
+  instances:
+    - name: accelerator-firewall
+      launchTemplate:
+        name: firewall-lt
+        blockDeviceMappings:
+          - deviceName: /dev/xvda
+            ebs:
+              encrypted: true
+              volumeSize: 20
+          - deviceName: /dev/xvdb
+            ebs:
+              encrypted: true
+              volumeSize: 10
+        imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+        instanceType: t3.large
+        networkInterfaces:
+          - deviceIndex: 0
+            description: Primary interface
+            groups: 
+              - Data
+            subnetId: Network-Inspection-A
+          - deviceIndex: 1
+            description: Secondary
+            groups:
+              - Data
+            subnetId: Network-Inspection-A
+        securityGroups: []
+      vpc: Network-Inspection
+  autoscalingGroups:
+    - name: test-asg
+      autoscaling:
+        name: firewall-asg
+        minSize: 1
+        maxSize: 4
+        desiredSize: 2
+        launchTemplate: test-asg
+        healthCheckGracePeriod: 300
+        healthCheckType: EC2
+        targetGroups:
+          - asg-target
+        subnets:
+          - Network-Inspection-A
+          - Network-Inspection-B
+      launchTemplate:
+        name: asg
+        blockDeviceMappings:
+          - deviceName: /dev/xvda
+            ebs:
+              encrypted: true
+              volumeSize: 20
+          - deviceName: /dev/xvdb
+            ebs:
+              encrypted: true
+              volumeSize: 10
+        imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+        instanceType: t3.large
+        networkInterfaces:
+          - deviceIndex: 0
+            description: Primary interface
+            groups: 
+              - Data
+          - deviceIndex: 1
+            description: Secondary
+            groups:
+              - Data
+        securityGroups: []
+      vpc: Network-Inspection
+  managerInstances:
+    - name: accelerator-manager
+      launchTemplate:
+        name: manager-lt
+        blockDeviceMappings:
+          - deviceName: /dev/xvda
+            ebs:
+              encrypted: true
+              volumeSize: 20
+          - deviceName: /dev/xvdb
+            ebs:
+              encrypted: true
+              volumeSize: 10
+        imageId: ${ACCEL_LOOKUP::ImageId:/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2}
+        instanceType: t3.large
+        networkInterfaces:
+          - deviceIndex: 0
+            description: Primary interface
+            groups: 
+              - Data
+            subnetId: Network-Inspection-A
+          - deviceIndex: 1
+            description: Secondary
+            groups:
+              - Data
+            subnetId: Network-Inspection-A
+        securityGroups: []
+      vpc: Network-Inspection
+  targetGroups:
+    - name: instance-target
+      port: 6081
+      protocol: GENEVE
+      type: instance
+      targets:
+        - accelerator-firewall
+      attributes:
+        targetFailover: rebalance
+    - name: asg-target
+      port: 6081
+      protocol: GENEVE
+      type: instance

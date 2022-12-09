@@ -1511,6 +1511,38 @@ Object {
       },
       "Type": "AWS::EC2::FlowLog",
     },
+    "NetworkInspectionVpcDataSg936B8E8C": Object {
+      "Properties": Object {
+        "GroupDescription": "Firewall data",
+        "GroupName": "Data",
+        "SecurityGroupEgress": Array [
+          Object {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "All outbound",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": Array [
+          Object {
+            "CidrIp": "10.2.0.0/22",
+            "Description": "GENEVE",
+            "FromPort": 6081,
+            "IpProtocol": "udp",
+            "ToPort": 6081,
+          },
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Data",
+          },
+        ],
+        "VpcId": Object {
+          "Ref": "NetworkInspectionVpc302E00C0",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
     "NetworkInspectionVpcFlowLogsGroupAF8DE105": Object {
       "DeletionPolicy": "Retain",
       "Properties": Object {
@@ -1985,7 +2017,23 @@ Object {
       },
       "Type": "AWS::EC2::VPCCidrBlock",
     },
+    "SsmParamAcceleratorGwlbGwlbArn7CF5F889": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+      ],
+      "Properties": Object {
+        "Name": "/accelerator/network/gwlb/Accelerator-GWLB/arn",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "AcceleratorGwlbGatewayLoadBalancerEBD97F3E",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
         "Type": "String",
@@ -2153,6 +2201,16 @@ Object {
         "Type": "String",
         "Value": Object {
           "Ref": "NetworkEndpointsVpc619A1F01",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkInspectionDataSecurityGroup1FD45226": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/vpc/Network-Inspection/securityGroup/Data/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "NetworkInspectionVpcDataSg936B8E8C",
         },
       },
       "Type": "AWS::SSM::Parameter",

@@ -68,19 +68,6 @@ Object {
       },
       "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
     },
-    "Test1SsmTgtestApptestVpcTestArnE86D3009": Object {
-      "Properties": Object {
-        "Name": "/accelerator/application/targetGroup/testApp/testVpc/Test/arn",
-        "Tags": Object {
-          "Name": "Test",
-        },
-        "Type": "String",
-        "Value": Object {
-          "Ref": "Test19A2804E9",
-        },
-      },
-      "Type": "AWS::SSM::Parameter",
-    },
   },
 }
 `;

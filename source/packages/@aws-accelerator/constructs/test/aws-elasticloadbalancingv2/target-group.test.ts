@@ -23,8 +23,6 @@ const stack = new cdk.Stack();
 
 new TargetGroup(stack, 'Test1', {
   name: 'Test',
-  vpcName: 'testVpc',
-  appName: 'testApp',
   port: 80,
   protocol: 'HTTP',
   protocolVersion: 'HTTP1',

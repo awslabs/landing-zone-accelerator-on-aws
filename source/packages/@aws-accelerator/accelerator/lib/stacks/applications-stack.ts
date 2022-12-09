@@ -33,6 +33,7 @@ export type PrivateIpAddressConfig = {
 };
 export type NetworkInterfaceItemConfig = {
   associateCarrierIpAddress: boolean | undefined;
+  associateElasticIp: boolean | undefined;
   associatePublicIpAddress: boolean | undefined;
   deleteOnTermination: boolean | undefined;
   description: string | undefined;
@@ -43,6 +44,7 @@ export type NetworkInterfaceItemConfig = {
   networkInterfaceId: string | undefined;
   privateIpAddress: string | undefined;
   secondaryPrivateIpAddressCount: number | undefined;
+  sourceDestCheck: boolean | undefined;
   subnetId: string | undefined;
   privateIpAddresses: PrivateIpAddressConfig[] | undefined;
 };
@@ -112,6 +114,9 @@ export class ApplicationsStack extends AcceleratorStack {
 
     //Create application config resources
     this.createApplicationConfigResources(props, props.appConfigItem);
+
+    // Create SSM parameters
+    this.createSsmParameters();
 
     Logger.debug(`[customizations-application-stack] Region: ${cdk.Stack.of(this).region}`);
     Logger.info('[customizations-application-stack] Completed stack synthesis');
@@ -286,7 +291,7 @@ export class ApplicationsStack extends AcceleratorStack {
           name: appConfigItem.launchTemplate.name,
           appName: appConfigItem.name,
           vpc: appConfigItem.vpc,
-          blockDeviceMappings: this.replaceKmsKey(
+          blockDeviceMappings: this.processBlockDeviceReplacements(
             appConfigItem.launchTemplate.blockDeviceMappings ?? [],
             appConfigItem.name,
           ),
@@ -327,73 +332,6 @@ export class ApplicationsStack extends AcceleratorStack {
       return undefined;
     } else {
       return networkInterfaces;
-    }
-  }
-  private replaceKmsKey(blockDeviceMappings: BlockDeviceMappingItem[], appName: string) {
-    return blockDeviceMappings.map(item => {
-      let output: BlockDeviceMappingItem | undefined = undefined;
-      if (item.ebs!.kmsKeyId) {
-        output = this.replaceKmsKeyIdProvided(item, appName);
-      } else if (
-        item.ebs!.encrypted &&
-        this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable
-      ) {
-        output = this.replaceKmsKeyDefaultEncryption(item, appName);
-      }
-      if (output) {
-        return output;
-      } else {
-        return item;
-      }
-    });
-  }
-
-  private replaceKmsKeyDefaultEncryption(item: BlockDeviceMappingItem, appName: string) {
-    let ebsEncryptionKey: cdk.aws_kms.Key;
-    // user set encryption as true and has default ebs encryption enabled
-    // user defined kms key is provided
-    if (this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey) {
-      ebsEncryptionKey = cdk.aws_kms.Key.fromKeyArn(
-        this,
-        pascalCase(this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey) +
-          `AcceleratorGetKey-${appName}` +
-          `-KmsKey`,
-        cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          `/accelerator/kms/${this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey}/key-arn`,
-        ),
-      ) as cdk.aws_kms.Key;
-    } else {
-      // user set encryption as true and has default ebs encryption enabled
-      // no kms key is provided
-      ebsEncryptionKey = cdk.aws_kms.Key.fromKeyArn(
-        this,
-        `AcceleratorGetKey-${appName}-${item.ebs!.kmsKeyId}`,
-        cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          `/accelerator/security-stack/ebsDefaultVolumeEncryptionKeyArn`,
-        ),
-      ) as cdk.aws_kms.Key;
-    }
-    item.ebs!.kmsKeyId = ebsEncryptionKey.keyId;
-    return item;
-  }
-  private replaceKmsKeyIdProvided(item: BlockDeviceMappingItem, appName: string) {
-    const kmsKeyEntity = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      `AcceleratorGetKey-${appName}-${item.ebs!.kmsKeyId}`,
-      cdk.aws_ssm.StringParameter.valueForStringParameter(this, `/accelerator/kms/${item.ebs!.kmsKeyId}/key-arn`),
-    ) as cdk.aws_kms.Key;
-    item.ebs!.kmsKeyId = kmsKeyEntity.keyId;
-    return item;
-  }
-
-  private replaceImageId(imageId: string) {
-    if (imageId.match('\\${ACCEL_LOOKUP::ImageId:(.*)}')) {
-      const imageIdMatch = imageId.match('\\${ACCEL_LOOKUP::ImageId:(.*)}');
-      return cdk.aws_ssm.StringParameter.valueForStringParameter(this, imageIdMatch![1]);
-    } else {
-      return imageId;
     }
   }
 
@@ -550,8 +488,6 @@ export class ApplicationsStack extends AcceleratorStack {
       for (const targetGroup of appConfigItem.targetGroups!) {
         const tg = new TargetGroup(this, pascalCase(`AppTargetGroup${appConfigItem.name}${targetGroup.name}`), {
           name: targetGroup.name,
-          vpcName: appConfigItem.vpc,
-          appName: appConfigItem.name,
           port: targetGroup.port,
           protocol: targetGroup.protocol,
           protocolVersion: targetGroup.protocolVersion! || undefined,
@@ -564,6 +500,12 @@ export class ApplicationsStack extends AcceleratorStack {
         });
         const outputItem = { name: targetGroup.name, targetGroup: tg };
         output.push(outputItem);
+
+        this.ssmParameters.push({
+          logicalId: pascalCase(`SsmTg${appConfigItem.name}${appConfigItem.vpc}${targetGroup.name}Arn`),
+          parameterName: `/accelerator/application/targetGroup/${appConfigItem.name}/${appConfigItem.vpc}/${targetGroup.name}/arn`,
+          stringValue: tg.targetGroupArn,
+        });
       }
     }
     if (output.length === 0) {

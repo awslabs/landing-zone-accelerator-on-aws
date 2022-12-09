@@ -15,6 +15,7 @@ import * as path from 'path';
 
 import { AccountsConfig } from '../lib/accounts-config';
 import * as t from '../lib/common-types';
+import { CustomizationsConfig, CustomizationsConfigTypes } from '../lib/customizations-config';
 import { GlobalConfig } from '../lib/global-config';
 import {
   NetworkConfig,
@@ -61,7 +62,7 @@ export class NetworkConfigValidator {
     new EndpointPoliciesValidator(values, configDir, errors);
     new Route53ResolverValidator(values, configDir, errors);
     new VpcValidator(values, ouIdNames, accountNames, errors);
-    new GatewayLoadBalancersValidator(values, accountNames, errors);
+    new GatewayLoadBalancersValidator(values, configDir, accountNames, errors);
     new CustomerGatewaysValidator(values, configDir, accountNames, errors);
     new DirectConnectGatewaysValidator(values, errors);
     new FirewallManagerValidator(values, snsTopicNames, accountNames, errors);
@@ -1025,7 +1026,8 @@ class VpcValidator {
         !vpcItem.ipamAllocations?.find(alloc => alloc.ipamPoolName === subnet.ipamAllocation!.ipamPoolName)
       ) {
         errors.push(
-          `[VPC ${vpcItem.name} subnet ${subnet.name}]: target IPAM pool ${subnet.ipamAllocation!.ipamPoolName
+          `[VPC ${vpcItem.name} subnet ${subnet.name}]: target IPAM pool ${
+            subnet.ipamAllocation!.ipamPoolName
           } is not a source pool of the VPC`,
         );
       }
@@ -1035,7 +1037,8 @@ class VpcValidator {
         !ipams?.find(ipam => ipam.pools?.find(pool => pool.name === subnet.ipamAllocation!.ipamPoolName))
       ) {
         errors.push(
-          `[VPC ${vpcItem.name} subnet ${subnet.name}]: target IPAM pool ${subnet.ipamAllocation!.ipamPoolName
+          `[VPC ${vpcItem.name} subnet ${subnet.name}]: target IPAM pool ${
+            subnet.ipamAllocation!.ipamPoolName
           } is not defined`,
         );
       }
@@ -1105,7 +1108,7 @@ class VpcValidator {
  * Class to validate Gateway LoadBalancers
  */
 class GatewayLoadBalancersValidator {
-  constructor(values: NetworkConfig, accountNames: string[], errors: string[]) {
+  constructor(values: NetworkConfig, configDir: string, accountNames: string[], errors: string[]) {
     //
     // Validate gateway load balancers deployment account names
     //
@@ -1114,7 +1117,7 @@ class GatewayLoadBalancersValidator {
     //
     // Validate GWLB configuration
     //
-    this.validateGwlbConfiguration(values, errors);
+    this.validateGwlbConfiguration(values, configDir, errors);
   }
 
   /**
@@ -1170,7 +1173,11 @@ class GatewayLoadBalancersValidator {
    * Validate Gateway Load Balancer configuration
    * @param values
    */
-  private validateGwlbConfiguration(values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>, errors: string[]) {
+  private validateGwlbConfiguration(
+    values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>,
+    configDir: string,
+    errors: string[],
+  ) {
     const vpcs = [...values.vpcs, ...(values.vpcTemplates ?? [])];
     for (const gwlb of values.centralNetworkServices?.gatewayLoadBalancers ?? []) {
       const vpc = vpcs.find(item => item.name === gwlb.vpc);
@@ -1187,6 +1194,138 @@ class GatewayLoadBalancersValidator {
 
       // Validate endpoints
       this.validateGwlbEndpoints(gwlb, values, errors);
+      // Validate target groups
+      if (gwlb.targetGroup) {
+        this.validateGwlbTargetGroup(gwlb, configDir, errors);
+      }
+    }
+  }
+
+  /**
+   * Validate Gateway Load Balancer target group
+   * @param gwlb
+   * @param configDir
+   * @param errors
+   */
+  private validateGwlbTargetGroup(
+    gwlb: t.TypeOf<typeof NetworkConfigTypes.gwlbConfig>,
+    configDir: string,
+    errors: string[],
+  ) {
+    // Pull values from customizations config
+    const customizationsConfig = CustomizationsConfig.load(configDir);
+    const firewallInstances = customizationsConfig.firewalls?.instances;
+    const autoscalingGroups = customizationsConfig.firewalls?.autoscalingGroups;
+    const targetGroups = customizationsConfig.firewalls?.targetGroups;
+
+    if (!targetGroups) {
+      errors.push(
+        `[Gateway Load Balancer ${gwlb.name}]: target group ${gwlb.targetGroup} not found in customizations-config.yaml`,
+      );
+    }
+
+    const targetGroup = targetGroups!.find(group => group.name === gwlb.targetGroup);
+
+    if (!targetGroup) {
+      errors.push(
+        `[Gateway Load Balancer ${gwlb.name}]: target group ${gwlb.targetGroup} not found in customizations-config.yaml`,
+      );
+    }
+
+    if (targetGroup) {
+      this.validateTargetGroupProps(gwlb, targetGroup, errors);
+    }
+
+    if (targetGroup && targetGroup.targets) {
+      this.validateTargetGroupTargets(gwlb, targetGroup, firewallInstances!, errors);
+    }
+
+    if (targetGroup && !targetGroup.targets) {
+      this.validateTargetGroupAsg(gwlb, targetGroup, autoscalingGroups!, errors);
+    }
+  }
+
+  /**
+   * Validate target group properties
+   * @param gwlb
+   * @param targetGroup
+   * @param errors
+   */
+  private validateTargetGroupProps(
+    gwlb: t.TypeOf<typeof NetworkConfigTypes.gwlbConfig>,
+    targetGroup: t.TypeOf<typeof CustomizationsConfigTypes.targetGroupItem>,
+    errors: string[],
+  ) {
+    if (targetGroup.port !== 6081) {
+      errors.push(
+        `[Gateway Load Balancer ${gwlb.name} target group ${targetGroup.name}]: only port 6081 is supported.`,
+      );
+    }
+    if (targetGroup.protocol !== 'GENEVE') {
+      errors.push(
+        `[Gateway Load Balancer ${gwlb.name} target group ${targetGroup.name}]: only GENEVE protocol is supported.`,
+      );
+    }
+  }
+
+  /**
+   * Validate firewall instances and GWLB reside in the same VPC
+   * @param gwlb
+   * @param targetGroup
+   * @param firewallInstances
+   * @param errors
+   */
+  private validateTargetGroupTargets(
+    gwlb: t.TypeOf<typeof NetworkConfigTypes.gwlbConfig>,
+    targetGroup: t.TypeOf<typeof CustomizationsConfigTypes.targetGroupItem>,
+    firewallInstances: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>[],
+    errors: string[],
+  ) {
+    // Instance VPCs are validated in customizations config. We just need to grab the first element
+    const firewall = firewallInstances.find(instance => instance.name === targetGroup.targets![0]);
+
+    if (!firewall) {
+      errors.push(
+        `[Gateway Load Balancer ${gwlb.name} target group ${targetGroup.name}]: firewall instance ${
+          targetGroup.targets![0]
+        } not found in customizations-config.yaml`,
+      );
+    }
+
+    if (firewall && firewall.vpc !== gwlb.vpc) {
+      errors.push(
+        `[Gateway Load Balancer ${gwlb.name} target group ${targetGroup.name}]: targets do not exist in the same VPC as the load balancer`,
+      );
+    }
+  }
+
+  /**
+   * Validate ASG and GWLB reside in the same VPC
+   * @param gwlb
+   * @param targetGroup
+   * @param autoscalingGroups
+   * @param errors
+   */
+  private validateTargetGroupAsg(
+    gwlb: t.TypeOf<typeof NetworkConfigTypes.gwlbConfig>,
+    targetGroup: t.TypeOf<typeof CustomizationsConfigTypes.targetGroupItem>,
+    autoscalingGroups: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>[],
+    errors: string[],
+  ) {
+    const asg = autoscalingGroups.find(
+      group => group.autoscaling.targetGroups && group.autoscaling.targetGroups[0] === targetGroup.name,
+    );
+
+    if (!asg) {
+      errors.push(
+        `[Gateway Load Balancer ${gwlb.name} target group ${targetGroup.name}]: firewall ASG for target group not found in customizations-config.yaml`,
+      );
+    }
+
+    if (asg && asg.vpc !== gwlb.vpc) {
+      errors.push(
+        `[Gateway Load Balancer ${gwlb.name} target group ${targetGroup.name}]: targets do not exist in the same VPC as the load balancer`,
+      );
     }
   }
 }

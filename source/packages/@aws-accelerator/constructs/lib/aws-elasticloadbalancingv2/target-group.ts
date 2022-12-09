@@ -12,7 +12,6 @@
  */
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { pascalCase } from 'change-case';
 
 export interface ITargetGroupResource extends cdk.IResource {
   /**
@@ -47,6 +46,10 @@ export interface TargetGroupProps {
    */
   readonly type: string;
   /**
+   * Target group VPC ID (required).
+   */
+  readonly vpc: string;
+  /**
    * Target group Attributes (optional).
    */
   readonly attributes?: TargetGroupAttributesType;
@@ -55,6 +58,10 @@ export interface TargetGroupProps {
    */
   readonly healthCheck?: TargetGroupHealthCheckType;
   /**
+   * Targets for the target group
+   */
+  readonly targets?: string[];
+  /**
    * Target group Attributes (optional).
    */
   readonly threshold?: TargetGroupThresholdType;
@@ -62,18 +69,6 @@ export interface TargetGroupProps {
    * Target group Attributes (optional).
    */
   readonly matcher?: TargetGroupMatcherType;
-  /**
-   * Target group VPC ID (required).
-   */
-  readonly vpc: string;
-  /**
-   * Target group VPC Name (required).
-   */
-  readonly vpcName: string;
-  /**
-   * Target group App Name (required).
-   */
-  readonly appName: string;
 }
 
 export type TargetGroupAttributesType = {
@@ -88,6 +83,7 @@ export type TargetGroupAttributesType = {
   connectionTermination?: boolean;
   preserveClientIp?: boolean;
   proxyProtocolV2?: boolean;
+  targetFailover?: string;
 };
 export type TargetGroupHealthCheckType = {
   enabled?: boolean;
@@ -129,6 +125,7 @@ export class TargetGroup extends cdk.Resource implements ITargetGroupResource {
       protocol: props.protocol,
       protocolVersion: props.protocolVersion ?? undefined,
       targetGroupAttributes: this.buildAttributes(props) ?? undefined,
+      targets: props.targets ? this.buildTargets(props.targets) : undefined,
       targetType: props.type,
       unhealthyThresholdCount: props.threshold ? props.threshold.healthy : undefined,
       vpcId: props.vpc,
@@ -139,11 +136,6 @@ export class TargetGroup extends cdk.Resource implements ITargetGroupResource {
     // Set initial properties
     this.targetGroupArn = resource.ref;
     this.targetGroupName = resource.attrTargetGroupName;
-
-    new cdk.aws_ssm.StringParameter(this, pascalCase(`SsmTg${props.appName}${props.vpcName}${props.name}Arn`), {
-      parameterName: `/accelerator/application/targetGroup/${props.appName}/${props.vpcName}/${props.name}/arn`,
-      stringValue: resource.ref,
-    });
   }
 
   private buildAttributes(props: TargetGroupProps) {
@@ -218,6 +210,16 @@ export class TargetGroup extends cdk.Resource implements ITargetGroupResource {
           value: props.attributes.proxyProtocolV2.toString(),
         });
       }
+      if (props.attributes.targetFailover) {
+        targetGroupAttributesProperties.push({
+          key: 'target_failover.on_deregistration',
+          value: props.attributes.targetFailover,
+        });
+        targetGroupAttributesProperties.push({
+          key: 'target_failover.on_unhealthy',
+          value: props.attributes.targetFailover,
+        });
+      }
 
       if (targetGroupAttributesProperties.length > 0) {
         return targetGroupAttributesProperties;
@@ -227,5 +229,11 @@ export class TargetGroup extends cdk.Resource implements ITargetGroupResource {
     } else {
       return undefined;
     }
+  }
+
+  private buildTargets(targets: string[]): cdk.aws_elasticloadbalancingv2.CfnTargetGroup.TargetDescriptionProperty[] {
+    return targets.map(target => {
+      return { id: target };
+    });
   }
 }
