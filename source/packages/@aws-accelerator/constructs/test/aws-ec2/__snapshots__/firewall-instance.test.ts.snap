@@ -1,0 +1,97 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LaunchTemplate Construct(FirewallInstance):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestFirewallE26FCA5C": Object {
+      "Properties": Object {
+        "LaunchTemplate": Object {
+          "LaunchTemplateId": Object {
+            "Ref": "TestFirewallLaunchTemplateFF1988AF",
+          },
+          "Version": Object {
+            "Fn::GetAtt": Array [
+              "TestFirewallLaunchTemplateFF1988AF",
+              "LatestVersionNumber",
+            ],
+          },
+        },
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Test",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::Instance",
+    },
+    "TestFirewallEipAssociation049F6348D": Object {
+      "Properties": Object {
+        "AllocationId": Object {
+          "Fn::GetAtt": Array [
+            "TestFirewallElasticIp0A7A4BF57",
+            "AllocationId",
+          ],
+        },
+        "NetworkInterfaceId": Object {
+          "Fn::GetAtt": Array [
+            "TestFirewallNetworkInterface045307B6A",
+            "Id",
+          ],
+        },
+      },
+      "Type": "AWS::EC2::EIPAssociation",
+    },
+    "TestFirewallElasticIp0A7A4BF57": Object {
+      "Properties": Object {
+        "Domain": "vpc",
+      },
+      "Type": "AWS::EC2::EIP",
+    },
+    "TestFirewallLaunchTemplateFF1988AF": Object {
+      "Properties": Object {
+        "LaunchTemplateData": Object {
+          "BlockDeviceMappings": Array [
+            Object {
+              "DeviceName": "dev/xvda",
+              "Ebs": Object {
+                "Encrypted": true,
+              },
+            },
+          ],
+          "IamInstanceProfile": Object {},
+          "ImageId": "ami-123xyz",
+          "InstanceType": "t3.large",
+          "MetadataOptions": Object {
+            "HttpTokens": "required",
+          },
+          "NetworkInterfaces": Array [
+            Object {
+              "DeviceIndex": 0,
+              "NetworkInterfaceId": Object {
+                "Fn::GetAtt": Array [
+                  "TestFirewallNetworkInterface045307B6A",
+                  "Id",
+                ],
+              },
+            },
+          ],
+          "SecurityGroupIds": Array [],
+        },
+        "LaunchTemplateName": "test-firewall",
+      },
+      "Type": "AWS::EC2::LaunchTemplate",
+    },
+    "TestFirewallNetworkInterface045307B6A": Object {
+      "Properties": Object {
+        "GroupSet": Array [
+          "Test",
+        ],
+        "SourceDestCheck": false,
+        "SubnetId": "subnet-123xyz",
+      },
+      "Type": "AWS::EC2::NetworkInterface",
+    },
+  },
+}
+`;

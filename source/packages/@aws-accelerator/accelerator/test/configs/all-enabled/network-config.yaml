@@ -157,6 +157,7 @@ centralNetworkServices:
         - Network-Inspection-B
       vpc: Network-Inspection
       deletionProtection: true
+      targetGroup: instance-target
       endpoints:
         - name: Endpoint-A
           account: Network
@@ -750,6 +751,21 @@ vpcs:
         availabilityZone: b
         routeTable: Network-Inspection-Tgw-B
         ipv4CidrBlock: 10.2.3.224/28
+    securityGroups:
+      - name: Data
+        description: Firewall data
+        inboundRules:
+          - description: GENEVE
+            sources:
+              - 10.2.0.0/22
+            udpPorts:
+              - 6081
+        outboundRules:
+          - description: All outbound
+            types:
+              - ALL
+            sources:
+              - 0.0.0.0/0
     transitGatewayAttachments:
       - name: Network-Inspection
         transitGateway:

@@ -20,10 +20,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {
   AccountsConfig,
+  BlockDeviceMappingItem,
   CustomizationsConfig,
   DeploymentTargets,
   DnsFirewallRuleGroupConfig,
   DnsQueryLogsConfig,
+  EbsItemConfig,
   GlobalConfig,
   IamConfig,
   IpamPoolConfig,
@@ -817,5 +819,103 @@ export abstract class AcceleratorStack extends cdk.Stack {
     fs.writeFileSync(tempPath, policyContent, 'utf-8');
 
     return tempPath;
+  }
+
+  protected processBlockDeviceReplacements(blockDeviceMappings: BlockDeviceMappingItem[], appName: string) {
+    const mappings: BlockDeviceMappingItem[] = [];
+    blockDeviceMappings.forEach(device =>
+      mappings.push({
+        deviceName: device.deviceName,
+        ebs: device.ebs ? this.processKmsKeyReplacements(device, appName) : undefined,
+      }),
+    );
+
+    return mappings;
+  }
+
+  protected processKmsKeyReplacements(device: BlockDeviceMappingItem, appName: string): EbsItemConfig {
+    if (device.ebs!.kmsKeyId) {
+      return this.replaceKmsKeyIdProvided(device, appName);
+    }
+    if (device.ebs!.encrypted && this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable) {
+      return this.replaceKmsKeyDefaultEncryption(device, appName);
+    }
+
+    return {
+      deleteOnTermination: device.ebs!.deleteOnTermination,
+      encrypted: device.ebs!.encrypted,
+      iops: device.ebs!.iops,
+      kmsKeyId: device.ebs!.kmsKeyId,
+      snapshotId: device.ebs!.snapshotId,
+      throughput: device.ebs!.throughput,
+      volumeSize: device.ebs!.volumeSize,
+      volumeType: device.ebs!.volumeType,
+    };
+  }
+
+  protected replaceKmsKeyDefaultEncryption(device: BlockDeviceMappingItem, appName: string): EbsItemConfig {
+    let ebsEncryptionKey: cdk.aws_kms.Key;
+    // user set encryption as true and has default ebs encryption enabled
+    // user defined kms key is provided
+    if (this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey) {
+      ebsEncryptionKey = cdk.aws_kms.Key.fromKeyArn(
+        this,
+        pascalCase(this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey) +
+          pascalCase(`AcceleratorGetKey-${appName}-${device.deviceName}`) +
+          `-KmsKey`,
+        cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          `/accelerator/kms/${this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey}/key-arn`,
+        ),
+      ) as cdk.aws_kms.Key;
+    } else {
+      // user set encryption as true and has default ebs encryption enabled
+      // no kms key is provided
+      ebsEncryptionKey = cdk.aws_kms.Key.fromKeyArn(
+        this,
+        pascalCase(`AcceleratorGetKey-${appName}-${device.deviceName}-${device.ebs!.kmsKeyId}`),
+        cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          `/accelerator/security-stack/ebsDefaultVolumeEncryptionKeyArn`,
+        ),
+      ) as cdk.aws_kms.Key;
+    }
+    return {
+      deleteOnTermination: device.ebs!.deleteOnTermination,
+      encrypted: device.ebs!.encrypted,
+      iops: device.ebs!.iops,
+      kmsKeyId: ebsEncryptionKey.keyId,
+      snapshotId: device.ebs!.snapshotId,
+      throughput: device.ebs!.throughput,
+      volumeSize: device.ebs!.volumeSize,
+      volumeType: device.ebs!.volumeType,
+    };
+  }
+
+  protected replaceKmsKeyIdProvided(device: BlockDeviceMappingItem, appName: string): EbsItemConfig {
+    const kmsKeyEntity = cdk.aws_kms.Key.fromKeyArn(
+      this,
+      pascalCase(`AcceleratorGetKey-${appName}-${device.deviceName}-${device.ebs!.kmsKeyId}`),
+      cdk.aws_ssm.StringParameter.valueForStringParameter(this, `/accelerator/kms/${device.ebs!.kmsKeyId}/key-arn`),
+    ) as cdk.aws_kms.Key;
+    return {
+      deleteOnTermination: device.ebs!.deleteOnTermination,
+      encrypted: device.ebs!.encrypted,
+      iops: device.ebs!.iops,
+      kmsKeyId: kmsKeyEntity.keyId,
+      snapshotId: device.ebs!.snapshotId,
+      throughput: device.ebs!.throughput,
+      volumeSize: device.ebs!.volumeSize,
+      volumeType: device.ebs!.volumeType,
+    };
+  }
+
+  protected replaceImageId(imageId: string) {
+    if (imageId.match('\\${ACCEL_LOOKUP::ImageId:(.*)}')) {
+      const imageIdMatch = imageId.match('\\${ACCEL_LOOKUP::ImageId:(.*)}');
+      return cdk.aws_ssm.StringParameter.valueForStringParameter(this, imageIdMatch![1]);
+    } else {
+      return imageId;
+    }
   }
 }

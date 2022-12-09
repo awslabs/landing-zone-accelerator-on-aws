@@ -32,6 +32,7 @@ export interface AutoscalingGroupProps {
   readonly healthCheckType?: string;
   readonly targetGroups?: string[];
   readonly subnets: string[];
+  readonly tags?: cdk.CfnTag[];
 }
 
 export class AutoscalingGroup extends cdk.Resource implements IAutoscalingGroupResource {
@@ -57,10 +58,21 @@ export class AutoscalingGroup extends cdk.Resource implements IAutoscalingGroupR
       },
       healthCheckType: props.healthCheckType!,
       healthCheckGracePeriod: props.healthCheckGracePeriod,
-      targetGroupArns: props.targetGroups!,
+      targetGroupArns: props.targetGroups,
       vpcZoneIdentifier: props.subnets!,
+      tags: props.tags ? this.processTags(props.tags) : undefined,
       // autoScalingGroupName: props.name,
     });
     this.autoscalingGroupName = resource.ref;
+  }
+
+  private processTags(tags: cdk.CfnTag[]): cdk.aws_autoscaling.CfnAutoScalingGroup.TagPropertyProperty[] {
+    return tags.map(tag => {
+      return {
+        key: tag.key,
+        value: tag.value,
+        propagateAtLaunch: true,
+      };
+    });
   }
 }

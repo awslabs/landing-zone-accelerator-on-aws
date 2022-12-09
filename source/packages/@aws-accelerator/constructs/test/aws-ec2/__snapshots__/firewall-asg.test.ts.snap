@@ -1,0 +1,80 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestFirewallAutoScalingServiceLinkedRoleD2FFF275": Object {
+      "Properties": Object {
+        "AWSServiceName": "autoscaling.amazonaws.com",
+        "Description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
+      },
+      "Type": "AWS::IAM::ServiceLinkedRole",
+    },
+    "TestFirewallF12A004C": Object {
+      "Properties": Object {
+        "DesiredCapacity": "2",
+        "HealthCheckGracePeriod": 300,
+        "HealthCheckType": "ELB",
+        "LaunchTemplate": Object {
+          "LaunchTemplateId": Object {
+            "Ref": "TestFirewallLaunchTemplateFF1988AF",
+          },
+          "Version": Object {
+            "Fn::GetAtt": Array [
+              "TestFirewallLaunchTemplateFF1988AF",
+              "LatestVersionNumber",
+            ],
+          },
+        },
+        "MaxSize": "4",
+        "MinSize": "1",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "PropagateAtLaunch": true,
+            "Value": "Test",
+          },
+        ],
+        "TargetGroupARNs": Array [],
+        "VPCZoneIdentifier": Array [
+          "subnet-123xyz",
+          "subnet-456abc",
+        ],
+      },
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+    },
+    "TestFirewallLaunchTemplateFF1988AF": Object {
+      "Properties": Object {
+        "LaunchTemplateData": Object {
+          "BlockDeviceMappings": Array [
+            Object {
+              "DeviceName": "dev/xvda",
+              "Ebs": Object {
+                "Encrypted": true,
+              },
+            },
+          ],
+          "IamInstanceProfile": Object {},
+          "ImageId": "ami-123xyz",
+          "InstanceType": "t3.large",
+          "MetadataOptions": Object {
+            "HttpTokens": "required",
+          },
+          "NetworkInterfaces": Array [
+            Object {
+              "DeviceIndex": 0,
+              "Groups": Array [
+                "Test",
+              ],
+              "SubnetId": "subnet-123xyz",
+            },
+          ],
+          "SecurityGroupIds": Array [],
+        },
+        "LaunchTemplateName": "test-firewall",
+      },
+      "Type": "AWS::EC2::LaunchTemplate",
+    },
+  },
+}
+`;
