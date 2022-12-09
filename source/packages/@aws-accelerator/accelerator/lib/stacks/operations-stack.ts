@@ -275,8 +275,65 @@ export class OperationsStack extends AcceleratorStack {
           });
         }
 
+        this.grantManagedActiveDirectorySecretAccess(roleItem.name, role);
+
         // Add to roles list
         this.roles[roleItem.name] = role;
+      }
+    }
+  }
+
+  /**
+   * Function to grant managed active directory secret access to instance role if the role is used in managed ad instance
+   * @param role
+   */
+  private grantManagedActiveDirectorySecretAccess(roleName: string, role: cdk.aws_iam.Role) {
+    for (const managedActiveDirectory of this.props.iamConfig.managedActiveDirectories ?? []) {
+      const madAccountId = this.props.accountsConfig.getAccountId(managedActiveDirectory.account);
+      if (managedActiveDirectory.activeDirectoryConfigurationInstance) {
+        if (
+          managedActiveDirectory.activeDirectoryConfigurationInstance.instanceRole === roleName &&
+          madAccountId === cdk.Stack.of(this).account &&
+          managedActiveDirectory.region === cdk.Stack.of(this).region
+        ) {
+          const madAdminSecretAccountId = this.props.accountsConfig.getAccountId(
+            this.props.iamConfig.getManageActiveDirectorySecretAccountName(managedActiveDirectory.name),
+          );
+          const madAdminSecretRegion = this.props.iamConfig.getManageActiveDirectorySecretRegion(
+            managedActiveDirectory.name,
+          );
+
+          const secretArn = `arn:aws:secretsmanager:${madAdminSecretRegion}:${madAdminSecretAccountId}:secret:/accelerator/ad-user/${managedActiveDirectory.name}/*`;
+          // Attach MAD instance role access to MAD secrets
+          Logger.info(`[operations-stack] Granting mad secret access to ${roleName}`);
+          role.attachInlinePolicy(
+            new cdk.aws_iam.Policy(
+              this,
+              `${pascalCase(managedActiveDirectory.name)}${pascalCase(roleName)}SecretsAccess`,
+              {
+                statements: [
+                  new cdk.aws_iam.PolicyStatement({
+                    effect: cdk.aws_iam.Effect.ALLOW,
+                    actions: ['secretsmanager:GetSecretValue'],
+                    resources: [secretArn],
+                  }),
+                ],
+              },
+            ),
+          );
+
+          // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(managedActiveDirectory.name)}${pascalCase(roleName)}SecretsAccess/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM5',
+                reason: 'MAD instance role need access to more than one mad user secrets',
+              },
+            ],
+          );
+        }
       }
     }
   }

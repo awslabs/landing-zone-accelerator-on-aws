@@ -9,27 +9,6 @@ Object {
     },
   },
   "Resources": Object {
-    "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryAdminSecretPolicyF5A0D2AC": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "secretsmanager:GetSecretValue",
-              "Effect": "Allow",
-              "Resource": "adminPwdSecretArn",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryAdminSecretPolicyF5A0D2AC",
-        "Roles": Array [
-          Object {
-            "Ref": "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceRole9A161D60",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
     "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceCDCB7E02": Object {
       "CreationPolicy": Object {
         "ResourceSignal": Object {
@@ -39,7 +18,6 @@ Object {
       },
       "DependsOn": Array [
         "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceKeyPairE9E46E76",
-        "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceProfileC46AA11F",
       ],
       "Metadata": Object {
         "AWS::CloudFormation::Init": Object {
@@ -64,22 +42,7 @@ Object {
           "createADConnectorUser": Object {
             "commands": Object {
               "a-create-ad-users": Object {
-                "command": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "powershell.exe -ExecutionPolicy RemoteSigned C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName user1 -Password ((Get-SECSecretValue -SecretId ",
-                      Object {
-                        "Ref": "ActiveDirectoryConfigurationUser1Secret2E9BCFF8",
-                      },
-                      ").SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes -UserEmailAddress example-user1@example.com; C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName user2 -Password ((Get-SECSecretValue -SecretId ",
-                      Object {
-                        "Ref": "ActiveDirectoryConfigurationUser2Secret3B715EE7",
-                      },
-                      ").SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes -UserEmailAddress example-user2@example.com; C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName admin -Password ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes",
-                    ],
-                  ],
-                },
+                "command": "powershell.exe -ExecutionPolicy RemoteSigned C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName user1 -Password ((Get-SECSecretValue -SecretId arn:aws:secretsmanager:us-east-1:111111111111:secret:/accelerator/ad-user/AcceleratorManagedActiveDirectory/user1).SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes -UserEmailAddress example-user1@example.com; C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName user2 -Password ((Get-SECSecretValue -SecretId arn:aws:secretsmanager:us-east-1:111111111111:secret:/accelerator/ad-user/AcceleratorManagedActiveDirectory/user2).SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes -UserEmailAddress example-user2@example.com; C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName admin -Password ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes",
                 "waitAfterCompletion": "0",
               },
               "b-create-ad-groups": Object {
@@ -624,9 +587,7 @@ catch {
           },
         ],
         "DisableApiTermination": true,
-        "IamInstanceProfile": Object {
-          "Ref": "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceRole9A161D60",
-        },
+        "IamInstanceProfile": "instanceRoleName",
         "ImageId": Object {
           "Ref": "SsmParameterValueawsserviceamiwindowslatestWindowsServer2016EnglishFullBaseC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
@@ -678,156 +639,24 @@ catch {
       },
       "Type": "AWS::EC2::KeyPair",
     },
-    "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceProfileC46AA11F": Object {
-      "Properties": Object {
-        "InstanceProfileName": Object {
-          "Ref": "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceRole9A161D60",
-        },
-        "Roles": Array [
-          Object {
-            "Ref": "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceRole9A161D60",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::InstanceProfile",
-    },
-    "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceRole9A161D60": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": Object {
-                "Service": Object {
-                  "Fn::Join": Array [
-                    "",
-                    Array [
-                      "ec2.",
-                      Object {
-                        "Ref": "AWS::URLSuffix",
-                      },
-                    ],
-                  ],
-                },
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Description": "Managed active directory AcceleratorManagedActiveDirectory configuration ec2 instance profile role",
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
-              "",
-              Array [
-                "arn:",
-                Object {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/AmazonSSMManagedInstanceCore",
-              ],
-            ],
-          },
-          Object {
-            "Fn::Join": Array [
-              "",
-              Array [
-                "arn:",
-                Object {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/AmazonSSMDirectoryServiceAccess",
-              ],
-            ],
-          },
-          Object {
-            "Fn::Join": Array [
-              "",
-              Array [
-                "arn:",
-                Object {
-                  "Ref": "AWS::Partition",
-                },
-                ":iam::aws:policy/CloudWatchAgentServerPolicy",
-              ],
-            ],
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "ActiveDirectoryConfigurationActiveDirectoryUseruser1SecretPolicy341F37A4": Object {
+    "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryKmsPolicy4922950D": Object {
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
             Object {
-              "Action": "secretsmanager:GetSecretValue",
+              "Action": "kms:Decrypt",
               "Effect": "Allow",
-              "Resource": Object {
-                "Ref": "ActiveDirectoryConfigurationUser1Secret2E9BCFF8",
-              },
+              "Resource": "secretKeyArn",
             },
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ActiveDirectoryConfigurationActiveDirectoryUseruser1SecretPolicy341F37A4",
+        "PolicyName": "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryKmsPolicy4922950D",
         "Roles": Array [
-          Object {
-            "Ref": "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceRole9A161D60",
-          },
+          "instanceRoleName",
         ],
       },
       "Type": "AWS::IAM::Policy",
-    },
-    "ActiveDirectoryConfigurationActiveDirectoryUseruser2SecretPolicyA444C259": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "secretsmanager:GetSecretValue",
-              "Effect": "Allow",
-              "Resource": Object {
-                "Ref": "ActiveDirectoryConfigurationUser2Secret3B715EE7",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "PolicyName": "ActiveDirectoryConfigurationActiveDirectoryUseruser2SecretPolicyA444C259",
-        "Roles": Array [
-          Object {
-            "Ref": "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceRole9A161D60",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Policy",
-    },
-    "ActiveDirectoryConfigurationUser1Secret2E9BCFF8": Object {
-      "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "Description": "Password for Managed Active Directory user user1",
-        "GenerateSecretString": Object {
-          "PasswordLength": 16,
-          "RequireEachIncludedType": true,
-        },
-        "Name": "/accelerator/ad-user/AcceleratorManagedActiveDirectory/user1-secret",
-      },
-      "Type": "AWS::SecretsManager::Secret",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "ActiveDirectoryConfigurationUser2Secret3B715EE7": Object {
-      "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "Description": "Password for Managed Active Directory user user2",
-        "GenerateSecretString": Object {
-          "PasswordLength": 16,
-          "RequireEachIncludedType": true,
-        },
-        "Name": "/accelerator/ad-user/AcceleratorManagedActiveDirectory/user2-secret",
-      },
-      "Type": "AWS::SecretsManager::Secret",
-      "UpdateReplacePolicy": "Delete",
     },
   },
 }

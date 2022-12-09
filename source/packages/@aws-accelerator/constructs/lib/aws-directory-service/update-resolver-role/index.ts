@@ -28,8 +28,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
-  console.log(event);
-  console.log('-------------');
   const executingAccountId = event.ResourceProperties['executingAccountId'];
   const partition = event.ResourceProperties['partition'];
   const roleName = event.ResourceProperties['roleName'];
@@ -67,11 +65,6 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
   // const resolverRuleId = await getResolverId(route53ResolverClient, route53ResolverRuleName);
   const resolverRuleDetails = await getResolverRuleDetails(route53ResolverClient, route53ResolverRuleName);
-
-  console.log(resolverRuleDetails);
-  console.log(targetIps);
-  console.log('**************');
-
   if (!resolverRuleDetails.ruleId) {
     throw new Error(`Resolver rule ${route53ResolverRuleName} not found !!!`);
   }

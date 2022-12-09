@@ -38,9 +38,9 @@ export interface ActiveDirectoryProps {
    */
   readonly madSubnetIds: string[];
   /**
-   * Managed active directory admin password secret name
+   * Managed active directory admin password secret
    */
-  readonly adminSecretName: string;
+  readonly adminSecretValue: cdk.SecretValue;
   /**
    * Managed active directory edition, possible values are Standard or Enterprise
    */
@@ -77,28 +77,16 @@ export interface ActiveDirectoryProps {
 export class ActiveDirectory extends Construct {
   public readonly id: string;
   public readonly dnsIpAddresses: string[];
-  public readonly adminPwdSecretArn: string;
 
   constructor(scope: Construct, id: string, props: ActiveDirectoryProps) {
     super(scope, id);
-
-    const adminSecret = new cdk.aws_secretsmanager.Secret(this, pascalCase(`${props.directoryName}AdminSecret`), {
-      generateSecretString: {
-        passwordLength: 16,
-        requireEachIncludedType: true,
-      },
-      secretName: `/accelerator/ad-user/${props.directoryName}/${props.adminSecretName}`,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
-
-    this.adminPwdSecretArn = adminSecret.secretArn;
 
     const activeDirectory = new cdk.aws_directoryservice.CfnMicrosoftAD(
       this,
       pascalCase(`${props.directoryName}ActiveDirectory`),
       {
         name: props.dnsName,
-        password: adminSecret.secretValue.toString(),
+        password: props.adminSecretValue.toString(),
         vpcSettings: { vpcId: props.vpcId, subnetIds: props.madSubnetIds },
         edition: props.edition,
         shortName: props.netBiosDomainName,

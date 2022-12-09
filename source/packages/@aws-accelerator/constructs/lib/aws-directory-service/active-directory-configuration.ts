@@ -50,6 +50,14 @@ export interface ActiveDirectoryConfigurationProps {
    */
   readonly managedActiveDirectoryName: string;
   /**
+   * Managed active directory secret account id
+   */
+  readonly managedActiveDirectorySecretAccountId: string;
+  /**
+   * Managed active directory secret region
+   */
+  readonly managedActiveDirectorySecretRegion: string;
+  /**
    * Managed active directory dns name
    */
   readonly dnsName: string;
@@ -62,6 +70,11 @@ export interface ActiveDirectoryConfigurationProps {
    */
   readonly adminPwdSecretArn: string;
   /**
+   * Managed active directory secret ksm key arn
+   */
+  readonly secretKeyArn: string;
+
+  /**
    * AD configuration EC2 instance subnet id
    */
   readonly subnetId: string;
@@ -69,6 +82,10 @@ export interface ActiveDirectoryConfigurationProps {
    * AD configuration EC2 instance security group id
    */
   readonly securityGroupId: string;
+  /**
+   * AD configuration EC2 instance role name
+   */
+  readonly instanceRoleName: string;
   /**
    * AD configuration EC2 instance user data scripts
    */
@@ -126,39 +143,26 @@ export class ActiveDirectoryConfiguration extends Construct {
       keyName: pascalCase(`${props.managedActiveDirectoryName}InstanceKeyPair`),
     });
 
-    const role = new cdk.aws_iam.Role(this, pascalCase(`${props.managedActiveDirectoryName}InstanceRole`), {
-      description: `Managed active directory ${props.managedActiveDirectoryName} configuration ec2 instance profile role`,
-      assumedBy: new cdk.aws_iam.ServicePrincipal('ec2.amazonaws.com'),
-      managedPolicies: [
-        cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'),
-        cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMDirectoryServiceAccess'),
-        cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('CloudWatchAgentServerPolicy'),
-      ],
-    });
+    const role = cdk.aws_iam.Role.fromRoleName(
+      this,
+      pascalCase(`${props.managedActiveDirectoryName}InstanceRole`),
+      props.instanceRoleName,
+    );
 
     role.attachInlinePolicy(
-      new cdk.aws_iam.Policy(this, pascalCase(`${props.managedActiveDirectoryName}AdminSecretPolicy`), {
+      new cdk.aws_iam.Policy(this, pascalCase(`${props.managedActiveDirectoryName}KmsPolicy`), {
         statements: [
           new cdk.aws_iam.PolicyStatement({
-            actions: ['secretsmanager:GetSecretValue'],
-            resources: [props.adminPwdSecretArn],
+            actions: ['kms:Decrypt'],
+            resources: [props.secretKeyArn],
           }),
         ],
       }),
     );
 
-    const instanceProfile = new cdk.aws_iam.CfnInstanceProfile(
-      this,
-      pascalCase(`${props.managedActiveDirectoryName}InstanceProfile`),
-      {
-        instanceProfileName: role.roleName,
-        roles: [role.roleName],
-      },
-    );
-
     const instance = new cdk.aws_ec2.CfnInstance(this, pascalCase(`${props.managedActiveDirectoryName}Instance`), {
       instanceType: props.instanceType,
-      iamInstanceProfile: instanceProfile.instanceProfileName,
+      iamInstanceProfile: role.roleName,
       imageId: cdk.aws_ssm.StringParameter.valueForStringParameter(this, props.imagePath),
       keyName: keyPair.keyName,
       subnetId: props.subnetId,
@@ -178,7 +182,6 @@ export class ActiveDirectoryConfiguration extends Construct {
     });
 
     instance.node.addDependency(keyPair);
-    instance.node.addDependency(instanceProfile);
 
     instance.cfnOptions.creationPolicy = { resourceSignal: { count: 1, timeout: 'PT30M' } };
 
@@ -249,8 +252,8 @@ export class ActiveDirectoryConfiguration extends Construct {
       }
     }
 
-    // Creating AD Users command
-    const adUsersCommands = this.getAdUsersCommand(role, adUserSetupScriptName);
+    // Creating AD Users scripts
+    const adUsersScripts = this.getAdUsersScripts(adUserSetupScriptName);
 
     // const accountNames = ['Management', 'Audit'];
 
@@ -325,7 +328,7 @@ export class ActiveDirectoryConfiguration extends Construct {
       createADConnectorUser: {
         commands: {
           'a-create-ad-users': {
-            command: `powershell.exe -ExecutionPolicy RemoteSigned ${adUsersCommands.join('; ')}`,
+            command: `powershell.exe -ExecutionPolicy RemoteSigned ${adUsersScripts.join('; ')}`,
             waitAfterCompletion: '0',
           },
           'b-create-ad-groups': {
@@ -390,34 +393,16 @@ export class ActiveDirectoryConfiguration extends Construct {
   }
 
   /**
-   * Function to get Ad user creation command
+   * Function to get Ad user creation scripts
    */
-  private getAdUsersCommand(instanceRole: cdk.aws_iam.Role, adUserSetupScriptName: string): string[] {
+  private getAdUsersScripts(adUserSetupScriptName: string): string[] {
     const adUsersCommand: string[] = [];
     for (const adUser of this.activeDirectoryConfigurationProps.adUsers ?? []) {
-      const secret = new cdk.aws_secretsmanager.Secret(this, pascalCase(`${adUser.name}Secret`), {
-        description: `Password for Managed Active Directory user ${adUser.name}`,
-        generateSecretString: {
-          passwordLength: 16,
-          requireEachIncludedType: true,
-        },
-        secretName: `/accelerator/ad-user/${this.activeDirectoryConfigurationProps.managedActiveDirectoryName}/${adUser.name}-secret`,
-        removalPolicy: cdk.RemovalPolicy.DESTROY, // Will change to RETAIN for final code
-      });
-
-      instanceRole.attachInlinePolicy(
-        new cdk.aws_iam.Policy(this, pascalCase(`ActiveDirectoryUser${adUser.name}SecretPolicy`), {
-          statements: [
-            new cdk.aws_iam.PolicyStatement({
-              actions: ['secretsmanager:GetSecretValue'],
-              resources: [secret.secretArn],
-            }),
-          ],
-        }),
-      );
+      const secretName = `/accelerator/ad-user/${this.activeDirectoryConfigurationProps.managedActiveDirectoryName}/${adUser.name}`;
+      const secretArn = `arn:aws:secretsmanager:${this.activeDirectoryConfigurationProps.managedActiveDirectorySecretRegion}:${this.activeDirectoryConfigurationProps.managedActiveDirectorySecretAccountId}:secret:${secretName}`;
 
       adUsersCommand.push(
-        `C:\\cfn\\scripts\\${adUserSetupScriptName} -UserName ${adUser.name} -Password ((Get-SECSecretValue -SecretId ${secret.secretArn}).SecretString) -DomainAdminUser ${this.activeDirectoryConfigurationProps.netBiosDomainName}\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId ${this.activeDirectoryConfigurationProps.adminPwdSecretArn}).SecretString) -PasswordNeverExpires Yes -UserEmailAddress ${adUser.email}`,
+        `C:\\cfn\\scripts\\${adUserSetupScriptName} -UserName ${adUser.name} -Password ((Get-SECSecretValue -SecretId ${secretArn}).SecretString) -DomainAdminUser ${this.activeDirectoryConfigurationProps.netBiosDomainName}\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId ${this.activeDirectoryConfigurationProps.adminPwdSecretArn}).SecretString) -PasswordNeverExpires Yes -UserEmailAddress ${adUser.email}`,
       );
     }
 

@@ -24,11 +24,15 @@ new ActiveDirectoryConfiguration(stack, 'ActiveDirectoryConfiguration', {
   instanceType: 't3.large',
   imagePath: '/aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base',
   managedActiveDirectoryName: 'AcceleratorManagedActiveDirectory',
+  managedActiveDirectorySecretAccountId: '111111111111',
+  managedActiveDirectorySecretRegion: 'us-east-1',
   dnsName: 'example.com',
   netBiosDomainName: 'example',
   adminPwdSecretArn: 'adminPwdSecretArn',
+  secretKeyArn: 'secretKeyArn',
   subnetId: 'subnetId',
   securityGroupId: 'securityGroupId',
+  instanceRoleName: 'instanceRoleName',
   userDataScripts: [
     {
       name: 'JoinDomain',

@@ -54,6 +54,7 @@ import {
   TransitGatewayStaticRoute,
   VpcPeering,
   UserDataScriptsType,
+  KeyLookup,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
@@ -1911,12 +1912,26 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           logGroupName = managedActiveDirectory.logs.groupName;
         }
 
-        const activeDirectory = new ActiveDirectory(this, `${pascalCase(managedActiveDirectory.name)}Ad`, {
+        const secretName = `/accelerator/ad-user/${
+          managedActiveDirectory.name
+        }/${this.props.iamConfig.getManageActiveDirectoryAdminSecretName(managedActiveDirectory.name)}`;
+        const madAdminSecretAccountId = this.props.accountsConfig.getAccountId(
+          this.props.iamConfig.getManageActiveDirectorySecretAccountName(managedActiveDirectory.name),
+        );
+        const madAdminSecretRegion = this.props.iamConfig.getManageActiveDirectorySecretRegion(
+          managedActiveDirectory.name,
+        );
+
+        const adminSecretArn = `arn:aws:secretsmanager:${madAdminSecretRegion}:${madAdminSecretAccountId}:secret:${secretName}`;
+
+        const adminSecretValue = cdk.SecretValue.secretsManager(adminSecretArn);
+
+        const activeDirectory = new ActiveDirectory(this, `${pascalCase(managedActiveDirectory.name)}ActiveDirectory`, {
           directoryName: managedActiveDirectory.name,
           dnsName: managedActiveDirectory.dnsName,
           vpcId: madVpcId,
           madSubnetIds: madSubnetIds,
-          adminSecretName: managedActiveDirectory.adminSecretName ?? 'admin-secret',
+          adminSecretValue,
           edition: managedActiveDirectory.edition,
           netBiosDomainName: managedActiveDirectory.netBiosDomainName,
           logGroupName: logGroupName,
@@ -1927,26 +1942,12 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           cloudwatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
         });
 
-        // AwsSolutions-SMG4: The secret does not have automatic rotation scheduled
-        NagSuppressions.addResourceSuppressionsByPath(
-          this,
-          `${this.stackName}/${pascalCase(
-            managedActiveDirectory.name,
-          )}Ad/AcceleratorManagedActiveDirectoryAdminSecret/Resource`,
-          [
-            {
-              id: 'AwsSolutions-SMG4',
-              reason: 'Managed AD secret.',
-            },
-          ],
-        );
-
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
         NagSuppressions.addResourceSuppressionsByPath(
           this,
-          `${this.stackName}/${pascalCase(
+          `${this.stackName}/${pascalCase(managedActiveDirectory.name)}ActiveDirectory/${pascalCase(
             managedActiveDirectory.name,
-          )}Ad/AcceleratorManagedActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionFunction/ServiceRole/Resource`,
+          )}LogSubscription/ManageActiveDirectoryLogSubscriptionFunction/ServiceRole/Resource`,
           [
             {
               id: 'AwsSolutions-IAM4',
@@ -1958,9 +1959,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
         NagSuppressions.addResourceSuppressionsByPath(
           this,
-          `${this.stackName}/${pascalCase(
+          `${this.stackName}/${pascalCase(managedActiveDirectory.name)}ActiveDirectory/${pascalCase(
             managedActiveDirectory.name,
-          )}Ad/AcceleratorManagedActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionProvider/framework-onEvent/ServiceRole/Resource`,
+          )}LogSubscription/ManageActiveDirectoryLogSubscriptionProvider/framework-onEvent/ServiceRole/Resource`,
           [
             {
               id: 'AwsSolutions-IAM4',
@@ -1972,9 +1973,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
         NagSuppressions.addResourceSuppressionsByPath(
           this,
-          `${this.stackName}/${pascalCase(
+          `${this.stackName}/${pascalCase(managedActiveDirectory.name)}ActiveDirectory/${pascalCase(
             managedActiveDirectory.name,
-          )}Ad/AcceleratorManagedActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionFunction/ServiceRole/DefaultPolicy/Resource`,
+          )}LogSubscription/ManageActiveDirectoryLogSubscriptionFunction/ServiceRole/DefaultPolicy/Resource`,
           [
             {
               id: 'AwsSolutions-IAM5',
@@ -1986,9 +1987,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
         NagSuppressions.addResourceSuppressionsByPath(
           this,
-          `${this.stackName}/${pascalCase(
+          `${this.stackName}/${pascalCase(managedActiveDirectory.name)}ActiveDirectory/${pascalCase(
             managedActiveDirectory.name,
-          )}Ad/AcceleratorManagedActiveDirectoryLogSubscription/ManageActiveDirectoryLogSubscriptionProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+          )}LogSubscription/ManageActiveDirectoryLogSubscriptionProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
           [
             {
               id: 'AwsSolutions-IAM5',
@@ -2005,7 +2006,13 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         );
 
         // Configure managed active directory using provisioned EC2 instance user data
-        this.configureManagedActiveDirectory(managedActiveDirectory, activeDirectory);
+        this.configureManagedActiveDirectory(
+          managedActiveDirectory,
+          activeDirectory,
+          adminSecretArn,
+          madAdminSecretAccountId,
+          madAdminSecretRegion,
+        );
       }
     }
   }
@@ -2092,6 +2099,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
   private configureManagedActiveDirectory(
     managedActiveDirectory: ManagedActiveDirectoryConfig,
     activeDirectory: ActiveDirectory,
+    adminSecretArn: string,
+    adSecretAccountId: string,
+    adSecretRegion: string,
   ) {
     if (managedActiveDirectory.activeDirectoryConfigurationInstance) {
       const adInstanceConfig = managedActiveDirectory.activeDirectoryConfigurationInstance;
@@ -2114,6 +2124,14 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         }
       }
 
+      const secretKey = new KeyLookup(this, 'SecretsKmsKeyLookup', {
+        accountId: adSecretAccountId,
+        keyRegion: adSecretRegion,
+        roleName: AcceleratorStack.ACCELERATOR_CROSS_ACCOUNT_SECRETS_KMS_ARN_PARAMETER_ROLE_NAME,
+        keyArnParameterName: AcceleratorStack.ACCELERATOR_SECRET_MANAGER_KEY_ARN_PARAMETER_NAME,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      }).getKey();
+
       const activeDirectoryConfiguration = new ActiveDirectoryConfiguration(
         this,
         `${pascalCase(managedActiveDirectory.name)}ConfigInstance`,
@@ -2121,11 +2139,15 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           instanceType: adInstanceConfig.instanceType,
           imagePath: adInstanceConfig.imagePath,
           managedActiveDirectoryName: managedActiveDirectory.name,
+          managedActiveDirectorySecretAccountId: adSecretAccountId,
+          managedActiveDirectorySecretRegion: adSecretRegion,
           dnsName: managedActiveDirectory.dnsName,
           netBiosDomainName: managedActiveDirectory.netBiosDomainName,
-          adminPwdSecretArn: activeDirectory.adminPwdSecretArn,
+          adminPwdSecretArn: adminSecretArn,
+          secretKeyArn: secretKey.keyArn,
           subnetId,
           securityGroupId,
+          instanceRoleName: adInstanceConfig.instanceRole,
           userDataScripts,
           adGroups: adInstanceConfig.adGroups,
           adPerAccountGroups: adInstanceConfig.adPerAccountGroups,

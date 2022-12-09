@@ -7,18 +7,7 @@ Object {
       "Properties": Object {
         "Edition": "Enterprise",
         "Name": "example.com",
-        "Password": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "{{resolve:secretsmanager:",
-              Object {
-                "Ref": "ActiveDirectoryAcceleratorManagedActiveDirectoryAdminSecret712D80F9",
-              },
-              ":SecretString:::}}",
-            ],
-          ],
-        },
+        "Password": "{{resolve:secretsmanager:adminSecretArn:SecretString:::}}",
         "ShortName": "example",
         "VpcSettings": Object {
           "SubnetIds": Array [
@@ -29,18 +18,6 @@ Object {
         },
       },
       "Type": "AWS::DirectoryService::MicrosoftAD",
-    },
-    "ActiveDirectoryAcceleratorManagedActiveDirectoryAdminSecret712D80F9": Object {
-      "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "GenerateSecretString": Object {
-          "PasswordLength": 16,
-          "RequireEachIncludedType": true,
-        },
-        "Name": "/accelerator/ad-user/AcceleratorManagedActiveDirectory/admin-secret",
-      },
-      "Type": "AWS::SecretsManager::Secret",
-      "UpdateReplacePolicy": "Retain",
     },
     "ActiveDirectoryAcceleratorManagedActiveDirectoryLogSubscription31CCD066": Object {
       "DeletionPolicy": "Delete",

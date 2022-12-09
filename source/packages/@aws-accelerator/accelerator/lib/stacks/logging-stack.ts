@@ -71,6 +71,11 @@ export class LoggingStack extends AcceleratorStack {
     const s3Key = this.createS3Key();
 
     //
+    // Create Managed active directory admin user secrets key
+    //
+    this.createManagedDirectoryAdminSecretsManagerKey();
+
+    //
     // Create KMS keys defined in config
     this.createKeys();
 
@@ -896,6 +901,104 @@ export class LoggingStack extends AcceleratorStack {
     });
 
     return cloudwatchKey;
+  }
+
+  /**
+   * Function to Create Managed active directory admin user secrets key
+   */
+  private createManagedDirectoryAdminSecretsManagerKey() {
+    for (const managedActiveDirectory of this.props.iamConfig.managedActiveDirectories ?? []) {
+      const madAccountId = this.props.accountsConfig.getAccountId(managedActiveDirectory.account);
+      const madAdminSecretAccountId = this.props.accountsConfig.getAccountId(
+        this.props.iamConfig.getManageActiveDirectorySecretAccountName(managedActiveDirectory.name),
+      );
+      const madAdminSecretRegion = this.props.iamConfig.getManageActiveDirectorySecretRegion(
+        managedActiveDirectory.name,
+      );
+
+      if (cdk.Stack.of(this).account == madAdminSecretAccountId && cdk.Stack.of(this).region == madAdminSecretRegion) {
+        const key = new cdk.aws_kms.Key(this, 'AcceleratorSecretsManagerKmsKey', {
+          alias: AcceleratorStack.ACCELERATOR_SECRETS_MANAGER_KEY_ALIAS,
+          description: AcceleratorStack.ACCELERATOR_SECRETS_MANAGER_KEY_DESCRIPTION,
+          enableKeyRotation: true,
+          removalPolicy: cdk.RemovalPolicy.RETAIN,
+        });
+
+        key.addToResourcePolicy(
+          new cdk.aws_iam.PolicyStatement({
+            sid: `Allow MAD instance role to access the key`,
+            principals: [new cdk.aws_iam.AccountPrincipal(madAccountId)],
+            actions: ['kms:Decrypt'],
+            resources: ['*'],
+            conditions: {
+              StringEquals: {
+                'kms:ViaService': `secretsmanager.${cdk.Stack.of(this).region}.amazonaws.com`,
+                ...this.getPrincipalOrgIdCondition(this.organizationId),
+              },
+              StringLike: {
+                'kms:EncryptionContext:SecretARN': `arn:${cdk.Stack.of(this).partition}:secretsmanager:${
+                  cdk.Stack.of(this).region
+                }:${madAdminSecretAccountId}:secret:/accelerator/ad-user/*`,
+              },
+            },
+          }),
+        );
+
+        const secretsManagerKmsKeyArnParameter = new cdk.aws_ssm.StringParameter(
+          this,
+          'AcceleratorSecretsManagerKmsKeyArnParameter',
+          {
+            parameterName: AcceleratorStack.ACCELERATOR_SECRET_MANAGER_KEY_ARN_PARAMETER_NAME,
+            stringValue: key.keyArn,
+          },
+        );
+
+        // Create role to give access to Secret manager KSM arn parameter, this will be used by MAD account to give access to this KMS for MAD instance
+        new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSecretsKmsArnSsmParamAccessRole', {
+          roleName: AcceleratorStack.ACCELERATOR_CROSS_ACCOUNT_SECRETS_KMS_ARN_PARAMETER_ROLE_NAME,
+          assumedBy: this.getOrgPrincipals(this.organizationId),
+          inlinePolicies: {
+            default: new cdk.aws_iam.PolicyDocument({
+              statements: [
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                  resources: [secretsManagerKmsKeyArnParameter.parameterArn],
+                  conditions: {
+                    ArnLike: {
+                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                    },
+                  },
+                }),
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ssm:DescribeParameters'],
+                  resources: ['*'],
+                  conditions: {
+                    ArnLike: {
+                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                    },
+                  },
+                }),
+              ],
+            }),
+          },
+        });
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/CrossAccountAcceleratorSecretsKmsArnSsmParamAccessRole/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason: 'Cross account role needs access ssm parameters',
+            },
+          ],
+        );
+        return; // Create only one kms key even if there are multiple AD
+      }
+    }
   }
 
   /**
