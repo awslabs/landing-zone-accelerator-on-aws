@@ -157,6 +157,7 @@ centralNetworkServices:
         - Network-Inspection-B
       vpc: Network-Inspection
       deletionProtection: true
+      targetGroup: instance-target
       endpoints:
         - name: Endpoint-A
           account: Network

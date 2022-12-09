@@ -378,8 +378,7 @@ export class LoggingStack extends AcceleratorStack {
     ) {
       new iam.CfnServiceLinkedRole(this, 'AWSServiceRoleForAWSCloud9', {
         awsServiceName: 'cloud9.amazonaws.com',
-        description:
-          'Service linked role for AWS Cloud9',
+        description: 'Service linked role for AWS Cloud9',
       });
     }
     // CloudWatchLogs to S3 replication

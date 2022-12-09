@@ -831,6 +831,7 @@ export class NetworkConfigTypes {
     vpc: t.nonEmptyString,
     crossZoneLoadBalancing: t.optional(t.boolean),
     deletionProtection: t.optional(t.boolean),
+    targetGroup: t.optional(t.nonEmptyString),
     tags: t.optional(t.array(t.tag)),
   });
 
@@ -5186,6 +5187,14 @@ export class GwlbConfig implements t.TypeOf<typeof NetworkConfigTypes.gwlbConfig
    * Whether to enable deletion protection.
    */
   readonly deletionProtection: boolean | undefined = undefined;
+  /**
+   * The friendly name of a target group to forward traffic to
+   *
+   * @remarks
+   * This target group must be defined in `Ec2FirewallConfig`
+   * in the `customizations-config.yaml` configuration file
+   */
+  readonly targetGroup: string | undefined = undefined;
   /**
    * An optional array of CloudFormation tag objects.
    */

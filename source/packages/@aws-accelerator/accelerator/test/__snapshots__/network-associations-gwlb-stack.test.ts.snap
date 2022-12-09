@@ -7,6 +7,14 @@ Object {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/key1/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/gwlb/Accelerator-GWLB/arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
       "Default": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -29,6 +37,10 @@ Object {
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsTgwBidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
       "Default": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-B/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointssecurityGroupManagementidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Management/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
@@ -71,6 +83,10 @@ Object {
       "Default": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-B/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Inspection/securityGroup/Data/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
       "Default": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-A/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -87,8 +103,28 @@ Object {
       "Default": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-B/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amihvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": Object {
+    "NetworkInspectionAcceleratorGwlbListener": Object {
+      "Properties": Object {
+        "DefaultActions": Array [
+          Object {
+            "TargetGroupArn": Object {
+              "Ref": "NetworkInspectioninstancetargetFirewallTargetGroupBF1E619D",
+            },
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": Object {
+          "Ref": "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
     "NetworkInspectionVpcEndpointAGwlbEpB5238F8C": Object {
       "Properties": Object {
         "ServiceName": Object {
@@ -162,6 +198,502 @@ Object {
         },
       },
       "Type": "AWS::EC2::Route",
+    },
+    "NetworkInspectionacceleratorFirewallFirewall23AAB613": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-EC28",
+              "reason": "Detailed monitoring not enabled by configuration.",
+            },
+            Object {
+              "id": "AwsSolutions-EC29",
+              "reason": "Termination protection not enabled by configuration.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "LaunchTemplate": Object {
+          "LaunchTemplateId": Object {
+            "Ref": "NetworkInspectionacceleratorFirewallFirewallLaunchTemplate74BB830F",
+          },
+          "Version": Object {
+            "Fn::GetAtt": Array [
+              "NetworkInspectionacceleratorFirewallFirewallLaunchTemplate74BB830F",
+              "LatestVersionNumber",
+            ],
+          },
+        },
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "accelerator-firewall",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::Instance",
+    },
+    "NetworkInspectionacceleratorFirewallFirewallLaunchTemplate74BB830F": Object {
+      "Properties": Object {
+        "LaunchTemplateData": Object {
+          "BlockDeviceMappings": Array [
+            Object {
+              "DeviceName": "/dev/xvda",
+              "Ebs": Object {
+                "Encrypted": true,
+                "KmsKeyId": Object {
+                  "Fn::Select": Array [
+                    1,
+                    Object {
+                      "Fn::Split": Array [
+                        "/",
+                        Object {
+                          "Fn::Select": Array [
+                            5,
+                            Object {
+                              "Fn::Split": Array [
+                                ":",
+                                Object {
+                                  "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                "VolumeSize": 20,
+              },
+            },
+            Object {
+              "DeviceName": "/dev/xvdb",
+              "Ebs": Object {
+                "Encrypted": true,
+                "KmsKeyId": Object {
+                  "Fn::Select": Array [
+                    1,
+                    Object {
+                      "Fn::Split": Array [
+                        "/",
+                        Object {
+                          "Fn::Select": Array [
+                            5,
+                            Object {
+                              "Fn::Split": Array [
+                                ":",
+                                Object {
+                                  "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                "VolumeSize": 10,
+              },
+            },
+          ],
+          "IamInstanceProfile": Object {},
+          "ImageId": Object {
+            "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amihvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          "InstanceType": "t3.large",
+          "MetadataOptions": Object {
+            "HttpTokens": "required",
+          },
+          "NetworkInterfaces": Array [
+            Object {
+              "Description": "Primary interface",
+              "DeviceIndex": 0,
+              "Groups": Array [
+                Object {
+                  "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
+                },
+              ],
+              "SubnetId": Object {
+                "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            },
+            Object {
+              "Description": "Secondary",
+              "DeviceIndex": 1,
+              "Groups": Array [
+                Object {
+                  "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
+                },
+              ],
+              "SubnetId": Object {
+                "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            },
+          ],
+          "SecurityGroupIds": Array [],
+        },
+        "LaunchTemplateName": "firewall-lt",
+      },
+      "Type": "AWS::EC2::LaunchTemplate",
+    },
+    "NetworkInspectionacceleratorManagerFirewallB809D98F": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-EC28",
+              "reason": "Detailed monitoring not enabled by configuration.",
+            },
+            Object {
+              "id": "AwsSolutions-EC29",
+              "reason": "Termination protection not enabled by configuration.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "LaunchTemplate": Object {
+          "LaunchTemplateId": Object {
+            "Ref": "NetworkInspectionacceleratorManagerFirewallLaunchTemplate2623D086",
+          },
+          "Version": Object {
+            "Fn::GetAtt": Array [
+              "NetworkInspectionacceleratorManagerFirewallLaunchTemplate2623D086",
+              "LatestVersionNumber",
+            ],
+          },
+        },
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "accelerator-manager",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::Instance",
+    },
+    "NetworkInspectionacceleratorManagerFirewallLaunchTemplate2623D086": Object {
+      "Properties": Object {
+        "LaunchTemplateData": Object {
+          "BlockDeviceMappings": Array [
+            Object {
+              "DeviceName": "/dev/xvda",
+              "Ebs": Object {
+                "Encrypted": true,
+                "KmsKeyId": Object {
+                  "Fn::Select": Array [
+                    1,
+                    Object {
+                      "Fn::Split": Array [
+                        "/",
+                        Object {
+                          "Fn::Select": Array [
+                            5,
+                            Object {
+                              "Fn::Split": Array [
+                                ":",
+                                Object {
+                                  "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                "VolumeSize": 20,
+              },
+            },
+            Object {
+              "DeviceName": "/dev/xvdb",
+              "Ebs": Object {
+                "Encrypted": true,
+                "KmsKeyId": Object {
+                  "Fn::Select": Array [
+                    1,
+                    Object {
+                      "Fn::Split": Array [
+                        "/",
+                        Object {
+                          "Fn::Select": Array [
+                            5,
+                            Object {
+                              "Fn::Split": Array [
+                                ":",
+                                Object {
+                                  "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                "VolumeSize": 10,
+              },
+            },
+          ],
+          "IamInstanceProfile": Object {},
+          "ImageId": Object {
+            "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amihvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          "InstanceType": "t3.large",
+          "MetadataOptions": Object {
+            "HttpTokens": "required",
+          },
+          "NetworkInterfaces": Array [
+            Object {
+              "Description": "Primary interface",
+              "DeviceIndex": 0,
+              "Groups": Array [
+                Object {
+                  "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
+                },
+              ],
+              "SubnetId": Object {
+                "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            },
+            Object {
+              "Description": "Secondary",
+              "DeviceIndex": 1,
+              "Groups": Array [
+                Object {
+                  "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
+                },
+              ],
+              "SubnetId": Object {
+                "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            },
+          ],
+          "SecurityGroupIds": Array [],
+        },
+        "LaunchTemplateName": "manager-lt",
+      },
+      "Type": "AWS::EC2::LaunchTemplate",
+    },
+    "NetworkInspectionasgtargetFirewallTargetGroupC774988D": Object {
+      "Properties": Object {
+        "HealthCheckEnabled": true,
+        "Matcher": Object {},
+        "Name": "asg-target",
+        "Port": 6081,
+        "Protocol": "GENEVE",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "asg-target",
+          },
+        ],
+        "TargetType": "instance",
+        "VpcId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
+    "NetworkInspectioninstancetargetFirewallTargetGroupBF1E619D": Object {
+      "Properties": Object {
+        "HealthCheckEnabled": true,
+        "Matcher": Object {},
+        "Name": "instance-target",
+        "Port": 6081,
+        "Protocol": "GENEVE",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "instance-target",
+          },
+        ],
+        "TargetGroupAttributes": Array [
+          Object {
+            "Key": "target_failover.on_deregistration",
+            "Value": "rebalance",
+          },
+          Object {
+            "Key": "target_failover.on_unhealthy",
+            "Value": "rebalance",
+          },
+        ],
+        "TargetType": "instance",
+        "Targets": Array [
+          Object {
+            "Id": Object {
+              "Ref": "NetworkInspectionacceleratorFirewallFirewall23AAB613",
+            },
+          },
+        ],
+        "VpcId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
+    "NetworkInspectiontestAsgFirewallAsg1343090A": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-AS3",
+              "reason": "Scaling policies are not offered as a part of this solution.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "DesiredCapacity": "2",
+        "HealthCheckGracePeriod": 300,
+        "HealthCheckType": "EC2",
+        "LaunchTemplate": Object {
+          "LaunchTemplateId": Object {
+            "Ref": "NetworkInspectiontestAsgFirewallAsgLaunchTemplate333DF543",
+          },
+          "Version": Object {
+            "Fn::GetAtt": Array [
+              "NetworkInspectiontestAsgFirewallAsgLaunchTemplate333DF543",
+              "LatestVersionNumber",
+            ],
+          },
+        },
+        "MaxSize": "4",
+        "MinSize": "1",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "PropagateAtLaunch": true,
+            "Value": "test-asg",
+          },
+        ],
+        "TargetGroupARNs": Array [
+          Object {
+            "Ref": "NetworkInspectionasgtargetFirewallTargetGroupC774988D",
+          },
+        ],
+        "VPCZoneIdentifier": Array [
+          Object {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          Object {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionBidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        ],
+      },
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+    },
+    "NetworkInspectiontestAsgFirewallAsgAutoScalingServiceLinkedRole826FF3B8": Object {
+      "Properties": Object {
+        "AWSServiceName": "autoscaling.amazonaws.com",
+        "Description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
+      },
+      "Type": "AWS::IAM::ServiceLinkedRole",
+    },
+    "NetworkInspectiontestAsgFirewallAsgLaunchTemplate333DF543": Object {
+      "Properties": Object {
+        "LaunchTemplateData": Object {
+          "BlockDeviceMappings": Array [
+            Object {
+              "DeviceName": "/dev/xvda",
+              "Ebs": Object {
+                "Encrypted": true,
+                "KmsKeyId": Object {
+                  "Fn::Select": Array [
+                    1,
+                    Object {
+                      "Fn::Split": Array [
+                        "/",
+                        Object {
+                          "Fn::Select": Array [
+                            5,
+                            Object {
+                              "Fn::Split": Array [
+                                ":",
+                                Object {
+                                  "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                "VolumeSize": 20,
+              },
+            },
+            Object {
+              "DeviceName": "/dev/xvdb",
+              "Ebs": Object {
+                "Encrypted": true,
+                "KmsKeyId": Object {
+                  "Fn::Select": Array [
+                    1,
+                    Object {
+                      "Fn::Split": Array [
+                        "/",
+                        Object {
+                          "Fn::Select": Array [
+                            5,
+                            Object {
+                              "Fn::Split": Array [
+                                ":",
+                                Object {
+                                  "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                "VolumeSize": 10,
+              },
+            },
+          ],
+          "IamInstanceProfile": Object {},
+          "ImageId": Object {
+            "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amihvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          "InstanceType": "t3.large",
+          "MetadataOptions": Object {
+            "HttpTokens": "required",
+          },
+          "NetworkInterfaces": Array [
+            Object {
+              "Description": "Primary interface",
+              "DeviceIndex": 0,
+              "Groups": Array [
+                Object {
+                  "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
+                },
+              ],
+            },
+            Object {
+              "Description": "Secondary",
+              "DeviceIndex": 1,
+              "Groups": Array [
+                Object {
+                  "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
+                },
+              ],
+            },
+          ],
+          "SecurityGroupIds": Array [],
+        },
+        "LaunchTemplateName": "asg",
+      },
+      "Type": "AWS::EC2::LaunchTemplate",
     },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {

@@ -12,7 +12,7 @@ import {
 import { OrganizationConfig } from '../lib/organization-config';
 import { NetworkConfig, NetworkConfigTypes, VpcConfig, VpcTemplatesConfig } from '../lib/network-config';
 import console from 'console';
-import { SecurityConfig, SecurityConfigTypes } from '../lib/security-config';
+import { SecurityConfig } from '../lib/security-config';
 
 /**
  * Customizations Configuration validator.
@@ -40,6 +40,9 @@ export class CustomizationsConfigValidator {
     // Start Validation
     // Validate customizations
     new CustomizationValidator(values, ouIdNames, configDir, accountNames, errors);
+
+    // Validate firewalls
+    new FirewallValidator(values, configDir, errors);
 
     if (errors.length) {
       throw new Error(`${CustomizationsConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
@@ -220,6 +223,7 @@ class CustomizationValidator {
   ) {
     const loadNetworkConfig = NetworkConfig.load(configDir);
     const loadSecurityConfig = SecurityConfig.load(configDir);
+    const helpers = new CustomizationHelperMethods();
     const appNames: string[] = [];
     for (const app of values.applications ?? []) {
       appNames.push(app.name);
@@ -227,7 +231,7 @@ class CustomizationValidator {
       //check if appName with prefixes is over 128 characters
       this.checkAppName(app, errors);
       // check if vpc actually exists
-      const vpcCheck = this.checkVpcInConfig(app.vpc, loadNetworkConfig);
+      const vpcCheck = helpers.checkVpcInConfig(app.vpc, loadNetworkConfig);
       if (!vpcCheck) {
         errors.push(`[Application ${app.name}: VPC ${app.vpc} does not exist in file network-config.yaml]`);
       }
@@ -242,10 +246,10 @@ class CustomizationValidator {
       }
 
       if (vpcCheck) {
-        this.checkAlb(app, vpcCheck, errors);
-        this.checkNlb(app, vpcCheck, errors);
-        this.checkLaunchTemplate(app, vpcCheck, loadSecurityConfig, errors);
-        this.checkAutoScaling(app, vpcCheck, errors);
+        this.checkAlb(app, vpcCheck, helpers, errors);
+        this.checkNlb(app, vpcCheck, helpers, errors);
+        this.checkLaunchTemplate(app, vpcCheck, helpers, loadSecurityConfig, errors);
+        this.checkAutoScaling(app, vpcCheck, helpers, errors);
       }
 
       // Validate file
@@ -281,7 +285,8 @@ class CustomizationValidator {
   private checkLaunchTemplate(
     app: AppConfigItem,
     vpcCheck: VpcConfig | VpcTemplatesConfig,
-    loadSecurityConfig: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    helpers: CustomizationHelperMethods,
+    loadSecurityConfig: SecurityConfig,
     errors: string[],
   ) {
     if (app.launchTemplate) {
@@ -292,7 +297,7 @@ class CustomizationValidator {
           }. At least one security group is required`,
         );
       }
-      const ltSgCheck = this.checkSecurityGroupInConfig(app.launchTemplate!.securityGroups, vpcCheck);
+      const ltSgCheck = helpers.checkSecurityGroupInConfig(app.launchTemplate!.securityGroups, vpcCheck);
       if (ltSgCheck === false) {
         errors.push(
           `Launch Template ${
@@ -301,43 +306,26 @@ class CustomizationValidator {
         );
       }
       if (app.launchTemplate.blockDeviceMappings) {
-        for (const blockDeviceMapping of app.launchTemplate.blockDeviceMappings) {
-          if (
-            blockDeviceMapping.ebs &&
-            blockDeviceMapping.ebs.encrypted &&
-            blockDeviceMapping.ebs.kmsKeyId === undefined
-          ) {
-            if (loadSecurityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable === false) {
-              errors.push(
-                `EBS volume ${blockDeviceMapping.deviceName} in launch template ${app.launchTemplate.name} is encrypted and no kmsKey is specified. Central Security ebs is disabled so no KMS key can be used.`,
-              );
-            }
-          }
-          if (blockDeviceMapping.ebs && blockDeviceMapping.ebs.encrypted && blockDeviceMapping.ebs.kmsKeyId) {
-            const allKeys = loadSecurityConfig.keyManagementService?.keySets.map(obj => obj.name);
-            const filterKey = allKeys?.find(obj => {
-              return obj === blockDeviceMapping.ebs!.kmsKeyId;
-            });
-            if (!filterKey) {
-              errors.push(
-                `EBS volume ${blockDeviceMapping.deviceName} in launch template ${
-                  app.launchTemplate.name
-                } is encrypted and kmsKey ${
-                  blockDeviceMapping.ebs.kmsKeyId
-                } specified does not exist. All keys: ${allKeys?.join(',')}.`,
-              );
-            }
-          }
-        }
+        helpers.checkBlockDeviceMappings(
+          app.launchTemplate.blockDeviceMappings,
+          loadSecurityConfig,
+          app.launchTemplate.name,
+          errors,
+        );
       }
     }
   }
 
-  private checkAutoScaling(app: AppConfigItem, vpcCheck: VpcConfig | VpcTemplatesConfig, errors: string[]) {
+  private checkAutoScaling(
+    app: AppConfigItem,
+    vpcCheck: VpcConfig | VpcTemplatesConfig,
+    helpers: CustomizationHelperMethods,
+    errors: string[],
+  ) {
     if (app.autoscaling) {
       const allTargetGroupNames = app.targetGroups!.map(tg => tg.name);
       const asgTargetGroupNames = app.autoscaling.targetGroups ?? [];
-      const compareTargetGroupNames = this.compareArrays(asgTargetGroupNames, allTargetGroupNames ?? []);
+      const compareTargetGroupNames = helpers.compareArrays(asgTargetGroupNames, allTargetGroupNames ?? []);
       if (compareTargetGroupNames.length > 0) {
         errors.push(
           `Autoscaling group ${
@@ -357,7 +345,7 @@ class CustomizationValidator {
           }. Subnets: ${app.autoscaling!.subnets.join(',')}`,
         );
       }
-      const asgSubnetsCheck = this.checkSubnetsInConfig(app.autoscaling!.subnets, vpcCheck);
+      const asgSubnetsCheck = helpers.checkSubnetsInConfig(app.autoscaling!.subnets, vpcCheck);
       if (asgSubnetsCheck === false) {
         errors.push(
           `Autoscaling group ${app.autoscaling!.name} does not have subnets ${app.autoscaling!.subnets.join(
@@ -368,7 +356,12 @@ class CustomizationValidator {
     }
   }
 
-  private checkNlb(app: AppConfigItem, vpcCheck: VpcConfig | VpcTemplatesConfig, errors: string[]) {
+  private checkNlb(
+    app: AppConfigItem,
+    vpcCheck: VpcConfig | VpcTemplatesConfig,
+    helpers: CustomizationHelperMethods,
+    errors: string[],
+  ) {
     if (app.networkLoadBalancer) {
       if (app.networkLoadBalancer!.subnets.length < 1) {
         errors.push(
@@ -389,7 +382,7 @@ class CustomizationValidator {
           }. Subnets: ${app.networkLoadBalancer!.subnets.join(',')}`,
         );
       }
-      const nlbSubnetsCheck = this.checkSubnetsInConfig(app.networkLoadBalancer!.subnets, vpcCheck);
+      const nlbSubnetsCheck = helpers.checkSubnetsInConfig(app.networkLoadBalancer!.subnets, vpcCheck);
       if (nlbSubnetsCheck === false) {
         errors.push(
           `Network Load Balancer ${
@@ -399,7 +392,7 @@ class CustomizationValidator {
       }
       const allTargetGroupNames = app.targetGroups!.map(tg => tg.name);
       const nlbTargetGroupNames = app.networkLoadBalancer!.listeners!.map(tg => tg.targetGroup);
-      const compareTargetGroupNames = this.compareArrays(nlbTargetGroupNames ?? [], allTargetGroupNames ?? []);
+      const compareTargetGroupNames = helpers.compareArrays(nlbTargetGroupNames ?? [], allTargetGroupNames ?? []);
       if (compareTargetGroupNames.length > 0) {
         errors.push(
           `Network Load Balancer ${
@@ -411,7 +404,12 @@ class CustomizationValidator {
       }
     }
   }
-  private checkAlb(app: AppConfigItem, vpcCheck: VpcConfig | VpcTemplatesConfig, errors: string[]) {
+  private checkAlb(
+    app: AppConfigItem,
+    vpcCheck: VpcConfig | VpcTemplatesConfig,
+    helpers: CustomizationHelperMethods,
+    errors: string[],
+  ) {
     if (app.applicationLoadBalancer) {
       if (app.applicationLoadBalancer!.securityGroups.length === 0) {
         errors.push(
@@ -420,7 +418,7 @@ class CustomizationValidator {
           }. At least one security group is required`,
         );
       }
-      const albSgCheck = this.checkSecurityGroupInConfig(app.applicationLoadBalancer!.securityGroups, vpcCheck);
+      const albSgCheck = helpers.checkSecurityGroupInConfig(app.applicationLoadBalancer!.securityGroups, vpcCheck);
       if (albSgCheck === false) {
         errors.push(
           `Application Load Balancer ${app.applicationLoadBalancer!.name} does not have security groups in VPC ${
@@ -448,7 +446,7 @@ class CustomizationValidator {
           }. Subnets: ${app.applicationLoadBalancer!.subnets.join(',')}`,
         );
       }
-      const albSubnetsCheck = this.checkSubnetsInConfig(app.applicationLoadBalancer!.subnets, vpcCheck);
+      const albSubnetsCheck = helpers.checkSubnetsInConfig(app.applicationLoadBalancer!.subnets, vpcCheck);
       if (albSubnetsCheck === false) {
         errors.push(
           `Application Load Balancer ${
@@ -459,7 +457,7 @@ class CustomizationValidator {
 
       const allTargetGroupNames = app.targetGroups!.map(tg => tg.name);
       const albTargetGroupNames = app.applicationLoadBalancer!.listeners!.map(tg => tg.targetGroup);
-      const compareTargetGroupNames = this.compareArrays(albTargetGroupNames ?? [], allTargetGroupNames ?? []);
+      const compareTargetGroupNames = helpers.compareArrays(albTargetGroupNames ?? [], allTargetGroupNames ?? []);
       if (compareTargetGroupNames.length > 0) {
         errors.push(
           `Application Load Balancer ${
@@ -471,11 +469,14 @@ class CustomizationValidator {
       }
     }
   }
+}
+
+class CustomizationHelperMethods {
   /**
    * Validate if VPC name is in config file
    * @param string
    */
-  private checkVpcInConfig(vpcName: string, values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
+  public checkVpcInConfig(vpcName: string, values: t.TypeOf<typeof NetworkConfigTypes.networkConfig>) {
     for (const vpcItem of values.vpcs ?? []) {
       if (vpcName === vpcItem.name) {
         // vpc name exists in network config. Return to function
@@ -495,12 +496,16 @@ class CustomizationValidator {
    * Validate if Security Group is in config file and if that security group is in the right vpc
    * @param string
    */
-  private checkSecurityGroupInConfig(securityGroupNames: string[], vpcItem: VpcConfig | VpcTemplatesConfig) {
+  public checkSecurityGroupInConfig(securityGroupNames: string[], vpcItem: VpcConfig | VpcTemplatesConfig) {
     // vpc name exists in network config.
     // Check within vpc to see if security group exists
 
+    if (!vpcItem.securityGroups) {
+      return false;
+    }
+
     // Get all security group names
-    const vpcSgs = vpcItem?.securityGroups!.map(obj => {
+    const vpcSgs = vpcItem.securityGroups!.map(obj => {
       return obj.name;
     });
 
@@ -511,12 +516,12 @@ class CustomizationValidator {
       return false;
     }
   }
-  private compareArrays(array1: string[], array2: string[]) {
+  public compareArrays(array1: string[], array2: string[]) {
     return array1.filter(element => {
       return !array2.includes(element);
     });
   }
-  private checkSubnetsInConfig(subnets: string[], vpcItem: VpcConfig | VpcTemplatesConfig) {
+  public checkSubnetsInConfig(subnets: string[], vpcItem: VpcConfig | VpcTemplatesConfig) {
     // get all subnets within the vpc
     const vpcSubnets = vpcItem.subnets?.map(obj => {
       return obj.name;
@@ -527,6 +532,467 @@ class CustomizationValidator {
       return true;
     } else {
       return false;
+    }
+  }
+
+  public checkBlockDeviceMappings(
+    blockDeviceMappings: t.TypeOf<typeof CustomizationsConfigTypes.blockDeviceMappingItem>[],
+    securityConfig: SecurityConfig,
+    launchTemplateName: string,
+    errors: string[],
+  ) {
+    for (const blockDeviceMapping of blockDeviceMappings) {
+      if (blockDeviceMapping.ebs && blockDeviceMapping.ebs.encrypted && blockDeviceMapping.ebs.kmsKeyId === undefined) {
+        if (securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable === false) {
+          errors.push(
+            `EBS volume ${blockDeviceMapping.deviceName} in launch template ${launchTemplateName} is encrypted and no kmsKey is specified. Central Security ebs is disabled so no KMS key can be used.`,
+          );
+        }
+      }
+      if (blockDeviceMapping.ebs && blockDeviceMapping.ebs.encrypted && blockDeviceMapping.ebs.kmsKeyId) {
+        const allKeys = securityConfig.keyManagementService?.keySets.map(obj => obj.name);
+        const filterKey = allKeys?.find(obj => {
+          return obj === blockDeviceMapping.ebs!.kmsKeyId;
+        });
+        if (!filterKey) {
+          errors.push(
+            `EBS volume ${
+              blockDeviceMapping.deviceName
+            } in launch template ${launchTemplateName} is encrypted and kmsKey ${
+              blockDeviceMapping.ebs.kmsKeyId
+            } specified does not exist. All keys: ${allKeys?.join(',')}.`,
+          );
+        }
+      }
+    }
+  }
+}
+
+class FirewallValidator {
+  constructor(values: CustomizationsConfig, configDir: string, errors: string[]) {
+    // Validate firewall instances
+    this.validateFirewalls(values, configDir, errors);
+  }
+
+  private validateFirewalls(values: CustomizationsConfig, configDir: string, errors: string[]) {
+    // Load configs and helper methods
+    const networkConfig = NetworkConfig.load(configDir);
+    const securityConfig = SecurityConfig.load(configDir);
+    const helpers = new CustomizationHelperMethods();
+
+    // Validate firewall instance configs
+    this.validateFirewallInstances(values, helpers, configDir, networkConfig, securityConfig, errors);
+    // Validate firewall ASG configs
+    this.validateFirewallAsgs(values, helpers, configDir, networkConfig, securityConfig, errors);
+    // Validate firewall target groups
+    this.validateFirewallTargetGroups(values, helpers, errors);
+  }
+
+  /**
+   * Validate firewall instances
+   * @param values
+   * @param helpers
+   * @param configDir
+   * @param networkConfig
+   * @param securityConfig
+   * @param errors
+   */
+  private validateFirewallInstances(
+    values: CustomizationsConfig,
+    helpers: CustomizationHelperMethods,
+    configDir: string,
+    networkConfig: NetworkConfig,
+    securityConfig: SecurityConfig,
+    errors: string[],
+  ) {
+    const firewallInstances = [...(values.firewalls?.instances ?? []), ...(values.firewalls?.managerInstances ?? [])];
+    for (const firewall of firewallInstances) {
+      // Validate VPC
+      const vpc = helpers.checkVpcInConfig(firewall.vpc, networkConfig);
+      if (!vpc) {
+        errors.push(`[Firewall instance ${firewall.name}]: VPC ${firewall.vpc} does not exist in network-config.yaml`);
+      }
+      if (vpc && NetworkConfigTypes.vpcTemplatesConfig.is(vpc)) {
+        errors.push(`[Firewall instance ${firewall.name}]: VPC templates are not supported`);
+      }
+
+      // Firewall instance launch templates must have network interface definitions
+      if (!firewall.launchTemplate.networkInterfaces) {
+        errors.push(
+          `[Firewall instance ${firewall.name}]: launch template must include at least one network interface configuration`,
+        );
+      }
+
+      // Validate launch template
+      if (NetworkConfigTypes.vpcConfig.is(vpc) && firewall.launchTemplate.networkInterfaces) {
+        this.validateLaunchTemplate(vpc, firewall, configDir, securityConfig, helpers, errors);
+      }
+    }
+  }
+
+  private validateFirewallAsgs(
+    values: CustomizationsConfig,
+    helpers: CustomizationHelperMethods,
+    configDir: string,
+    networkConfig: NetworkConfig,
+    securityConfig: SecurityConfig,
+    errors: string[],
+  ) {
+    for (const group of values.firewalls?.autoscalingGroups ?? []) {
+      // Validate VPC
+      const vpc = helpers.checkVpcInConfig(group.vpc, networkConfig);
+      if (!vpc) {
+        errors.push(`[Firewall ASG ${group.name}]: VPC ${group.vpc} does not exist in network-config.yaml`);
+      }
+      if (vpc && NetworkConfigTypes.vpcTemplatesConfig.is(vpc)) {
+        errors.push(`[Firewall ASG ${group.name}]: VPC templates are not supported`);
+      }
+
+      // Validate EIP and source/dest check is not assigned to any interface
+      if (group.launchTemplate.networkInterfaces) {
+        if (group.launchTemplate.networkInterfaces.find(item => item.associateElasticIp)) {
+          errors.push(
+            `[Firewall ASG ${group.name}]: cannot define associateElasticIp property for ASG network interfaces`,
+          );
+        }
+        if (group.launchTemplate.networkInterfaces.find(item => item.sourceDestCheck === false)) {
+          errors.push(
+            `[Firewall ASG ${group.name}]: cannot define sourceDestCheck property for ASG network interfaces`,
+          );
+        }
+      }
+
+      // Validate launch template
+      if (NetworkConfigTypes.vpcConfig.is(vpc)) {
+        this.validateLaunchTemplate(vpc, group, configDir, securityConfig, helpers, errors);
+        this.validateAsgTargetGroups(values, group, errors);
+      }
+    }
+  }
+
+  private validateFirewallTargetGroups(
+    values: CustomizationsConfig,
+    helpers: CustomizationHelperMethods,
+    errors: string[],
+  ) {
+    for (const group of values.firewalls?.targetGroups ?? []) {
+      if (group.type !== 'instance') {
+        errors.push(`[Firewall target group ${group.name}]: target group must be instance type`);
+      }
+      if (group.type === 'instance' && group.targets) {
+        const instancesExist = this.checkTargetsInConfig(helpers, group.targets, values.firewalls?.instances ?? []);
+        if (!instancesExist) {
+          errors.push(
+            `[Firewall target group ${group.name}]: target group references firewall instance that does not exist`,
+          );
+        }
+
+        if (instancesExist) {
+          this.checkInstanceVpcs(group, values.firewalls!.instances!, errors);
+        }
+      }
+    }
+  }
+
+  private checkTargetsInConfig(
+    helpers: CustomizationHelperMethods,
+    targets: string[],
+    config: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>[],
+  ): boolean {
+    // Retrieve target groups
+    const targetInstances = config.map(instance => {
+      return instance.name;
+    });
+
+    // Compare arrays
+    if (helpers.compareArrays(targets, targetInstances).length === 0) {
+      return true;
+    }
+    return false;
+  }
+
+  private checkInstanceVpcs(
+    group: t.TypeOf<typeof CustomizationsConfigTypes.targetGroupItem>,
+    config: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>[],
+    errors: string[],
+  ) {
+    // Retrieve instance configs
+    const instances: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>[] = [];
+    group.targets!.forEach(target => instances.push(config.find(item => item.name === target)!));
+
+    // Map VPCs
+    const vpcs = instances.map(item => {
+      return item.vpc;
+    });
+
+    if (vpcs.some(vpc => vpc !== vpcs[0])) {
+      errors.push(`[Firewall target group ${group.name}]: targeted instances are in separate VPCs`);
+    }
+  }
+
+  /**
+   * Validate a firewall launch template
+   * @param vpc
+   * @param firewall
+   * @param configDir
+   * @param securityConfig
+   * @param helpers
+   * @param errors
+   */
+  private validateLaunchTemplate(
+    vpc: VpcConfig,
+    firewall:
+      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>
+      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
+    configDir: string,
+    securityConfig: SecurityConfig,
+    helpers: CustomizationHelperMethods,
+    errors: string[],
+  ) {
+    // Validate security groups
+    this.validateLaunchTemplateSecurityGroups(vpc, firewall, helpers, errors);
+    // Validate subnets
+    this.validateLaunchTemplateSubnets(vpc, firewall, helpers, errors);
+    // Validate block devices
+    if (firewall.launchTemplate.blockDeviceMappings) {
+      helpers.checkBlockDeviceMappings(
+        firewall.launchTemplate.blockDeviceMappings,
+        securityConfig,
+        firewall.launchTemplate.name,
+        errors,
+      );
+    }
+    // Validate user data file exists
+    if (firewall.launchTemplate.userData) {
+      if (!fs.existsSync(path.join(configDir, firewall.launchTemplate.userData))) {
+        errors.push(`[Firewall ${firewall.name}]: launch template user data file not found`);
+      }
+    }
+  }
+
+  /**
+   * Validates that security groups are appropriately attached
+   * to a launch template and that they exist in the target VPC
+   * @param vpc
+   * @param firewall
+   * @param helpers
+   * @param errors
+   */
+  private validateLaunchTemplateSecurityGroups(
+    vpc: VpcConfig,
+    firewall:
+      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>
+      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
+    helpers: CustomizationHelperMethods,
+    errors: string[],
+  ) {
+    const interfaces = firewall.launchTemplate.networkInterfaces;
+    if (firewall.launchTemplate.securityGroups.length === 0) {
+      // Validate network interfaces are configured
+      if (!interfaces) {
+        errors.push(
+          `[Firewall ${firewall.name}]: network interfaces must be configured if launch template securityGroups property is empty`,
+        );
+      }
+      // Validate network interfaces have at least one group assigned
+      if (interfaces && !this.includesInterfaceGroups(interfaces)) {
+        errors.push(
+          `[Firewall ${firewall.name}]: security groups must be attached per network interface if launch template securityGroups property is empty`,
+        );
+      }
+    }
+
+    // Validate security groups
+    if (!helpers.checkSecurityGroupInConfig(firewall.launchTemplate.securityGroups, vpc)) {
+      errors.push(
+        `[Firewall ${firewall.name}]: launch template references security groups that do not exist in VPC ${vpc.name}`,
+      );
+    }
+    for (const interfaceItem of interfaces ?? []) {
+      if (interfaceItem.groups) {
+        if (!helpers.checkSecurityGroupInConfig(interfaceItem.groups, vpc)) {
+          errors.push(
+            `[Firewall ${firewall.name}]: launch template network interface references security group that does not exist in VPC ${vpc.name}`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Validates that there is at least one security group attached
+   * to each network interface defined in a launch template
+   * @param interfaces
+   * @returns
+   */
+  private includesInterfaceGroups(
+    interfaces: t.TypeOf<typeof CustomizationsConfigTypes.networkInterfaceItem>[],
+  ): boolean {
+    for (const interfaceItem of interfaces) {
+      if (!interfaceItem.groups || interfaceItem.groups.length === 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Validate subnets in the firewall configuration
+   * @param vpc
+   * @param firewall
+   * @param helpers
+   * @param errors
+   */
+  private validateLaunchTemplateSubnets(
+    vpc: VpcConfig,
+    firewall:
+      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>
+      | t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
+    helpers: CustomizationHelperMethods,
+    errors: string[],
+  ) {
+    if (CustomizationsConfigTypes.ec2FirewallInstanceConfig.is(firewall)) {
+      this.validateInstanceLaunchTemplateSubnets(vpc, firewall, helpers, errors);
+    }
+    if (CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig.is(firewall)) {
+      this.validateAsgLaunchTemplateSubnets(vpc, firewall, helpers, errors);
+    }
+  }
+
+  /**
+   * Validate subnets for firewall instances
+   * @param vpc
+   * @param firewall
+   * @param helpers
+   * @param errors
+   */
+  private validateInstanceLaunchTemplateSubnets(
+    vpc: VpcConfig,
+    firewall: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>,
+    helpers: CustomizationHelperMethods,
+    errors: string[],
+  ) {
+    // Validate a subnet is associated with each network interface
+    if (!this.includesSubnet(firewall.launchTemplate.networkInterfaces!)) {
+      errors.push(
+        `[Firewall instance ${firewall.name}]: launch template network interface configurations must include subnet attachments`,
+      );
+    }
+    // Validate subnets are in the VPC
+    const interfaceSubnets = firewall.launchTemplate.networkInterfaces!.map(interfaceItem => {
+      return interfaceItem.subnetId!;
+    });
+    const subnetsExist = helpers.checkSubnetsInConfig(interfaceSubnets, vpc);
+    if (!subnetsExist) {
+      errors.push(
+        `[Firewall instance ${firewall.name}]: launch template network interface references subnet that does not exist in VPC ${vpc.name}`,
+      );
+    }
+    // Validate subnet AZs
+    if (subnetsExist) {
+      // Retrieve subnet configs
+      const subnets: t.TypeOf<typeof NetworkConfigTypes.subnetConfig>[] = [];
+      interfaceSubnets.forEach(subnet => subnets.push(vpc.subnets!.find(item => item.name === subnet)!));
+
+      // Map AZs
+      const subnetAzs = subnets.map(subnetItem => {
+        return subnetItem.availabilityZone;
+      });
+
+      if (subnetAzs.some(az => az !== subnetAzs[0])) {
+        errors.push(
+          `[Firewall instance ${firewall.name}]: launch template network interfaces reference subnets that reside in different AZs in VPC ${vpc.name}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Validate subnets for firewall ASGs
+   * @param vpc
+   * @param firewall
+   * @param helpers
+   * @param errors
+   */
+  private validateAsgLaunchTemplateSubnets(
+    vpc: VpcConfig,
+    firewall: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
+    helpers: CustomizationHelperMethods,
+    errors: string[],
+  ) {
+    // Validate subnets are not defined in network interfaces
+    if (firewall.launchTemplate.networkInterfaces) {
+      if (this.includesSubnet(firewall.launchTemplate.networkInterfaces)) {
+        errors.push(
+          `[Firewall ASG ${firewall.name}]: launch template network interface configurations cannot include subnet attachments. Define subnets under the autoscaling property instead`,
+        );
+      }
+    }
+    // Validate subnets are in the VPC
+    if (!helpers.checkSubnetsInConfig(firewall.autoscaling.subnets, vpc)) {
+      errors.push(
+        `[Firewall ASG ${firewall.name}]: autoscaling configuration references subnet that does not exist in VPC ${vpc.name}`,
+      );
+    }
+    // Check for duplicate subnets
+    const duplicateAsgSubnets = firewall.autoscaling.subnets.some(element => {
+      return firewall.autoscaling!.subnets.indexOf(element) !== firewall.autoscaling!.subnets.lastIndexOf(element);
+    });
+    if (duplicateAsgSubnets) {
+      errors.push(
+        `There are duplicate subnets in Autoscaling group ${firewall.autoscaling.name} subnets in ${
+          firewall.name
+        }. Subnets: ${firewall.autoscaling!.subnets.join(',')}`,
+      );
+    }
+  }
+
+  private includesSubnet(interfaces: t.TypeOf<typeof CustomizationsConfigTypes.networkInterfaceItem>[]) {
+    for (const interfaceItem of interfaces) {
+      if (!interfaceItem.subnetId) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private validateAsgTargetGroups(
+    values: CustomizationsConfig,
+    group: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallAutoScalingGroupConfig>,
+    errors: string[],
+  ) {
+    if (group.autoscaling.targetGroups) {
+      // Validate target groups are defined
+      if (!values.firewalls?.targetGroups) {
+        errors.push(
+          `[Firewall ASG ${group.name}]: targetGroups property references a target group that does not exist`,
+        );
+      }
+      // Validate length of array
+      if (group.autoscaling.targetGroups.length > 1) {
+        errors.push(
+          `[Firewall ASG ${group.name}]: targetGroups property may only contain a single target group reference`,
+        );
+      }
+      // Validate target group exists
+      const targetGroup = values.firewalls?.targetGroups?.find(
+        item => item.name === group.autoscaling.targetGroups![0],
+      );
+      if (group.autoscaling.targetGroups.length === 1 && !targetGroup) {
+        errors.push(
+          `[Firewall ASG ${group.name}]: targetGroups property references a target group that does not exist`,
+        );
+      }
+      // Validate target group does not have instance targets
+      if (targetGroup && targetGroup.targets) {
+        errors.push(
+          `[Firewall ASG ${group.name}]: targetGroups property references a target group with instance targets`,
+        );
+      }
+      // Validatre target group type
+      if (targetGroup && targetGroup.type !== 'instance') {
+        errors.push(`[Firewall ASG ${group.name}]: targetGroups property must reference an instance type target group`);
+      }
     }
   }
 }

@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as fs from 'fs';
+import { NetworkInterfaceItemConfig } from '@aws-accelerator/config';
 
 export interface ILaunchTemplateResource extends cdk.IResource {
   /**
@@ -29,25 +30,7 @@ export interface ILaunchTemplateResource extends cdk.IResource {
    */
   readonly launchTemplateName: string;
 }
-export type PrivateIpAddressConfig = {
-  primary: boolean | undefined;
-  privateIpAddress: string | undefined;
-};
-export type NetworkInterfaceItemConfig = {
-  associateCarrierIpAddress: boolean | undefined;
-  associatePublicIpAddress: boolean | undefined;
-  deleteOnTermination: boolean | undefined;
-  description: string | undefined;
-  deviceIndex: number | undefined;
-  groups: string[] | undefined;
-  interfaceType: string | undefined;
-  networkCardIndex: number | undefined;
-  networkInterfaceId: string | undefined;
-  privateIpAddress: string | undefined;
-  secondaryPrivateIpAddressCount: number | undefined;
-  subnetId: string | undefined;
-  privateIpAddresses: PrivateIpAddressConfig[] | undefined;
-};
+
 export type EbsProperty = {
   deleteOnTermination?: boolean;
   encrypted?: boolean;
@@ -107,16 +90,21 @@ export class LaunchTemplate extends cdk.Resource implements ILaunchTemplateResou
       metadataOptions = { httpTokens: 'required' };
     }
 
+    let networkInterfaceProps: cdk.aws_ec2.CfnLaunchTemplate.NetworkInterfaceProperty[] | undefined = undefined;
+    if (props.networkInterfaces) {
+      networkInterfaceProps = this.setNetworkInterfaceProps(props.networkInterfaces);
+    }
+
     const launchTemplate = new cdk.aws_ec2.CfnLaunchTemplate(this, 'LaunchTemplate', {
       launchTemplateData: {
         blockDeviceMappings: props.blockDeviceMappings ?? undefined,
         securityGroupIds: props.securityGroups ?? undefined,
-        networkInterfaces: props.networkInterfaces ?? undefined,
+        networkInterfaces: networkInterfaceProps ?? undefined,
         instanceType: props.instanceType,
         keyName: props.keyPair ?? undefined,
         imageId: props.imageId,
         iamInstanceProfile: { name: props.iamInstanceProfile ?? undefined },
-        userData: cdk.Fn.base64(fs.readFileSync(props.userData!, 'utf8')) ?? undefined,
+        userData: props.userData ? cdk.Fn.base64(fs.readFileSync(props.userData, 'utf8')) : undefined,
         metadataOptions,
       },
       launchTemplateName: props.name,
@@ -125,5 +113,29 @@ export class LaunchTemplate extends cdk.Resource implements ILaunchTemplateResou
     this.launchTemplateId = launchTemplate.ref;
     this.launchTemplateName = launchTemplate.launchTemplateName!;
     this.version = launchTemplate.attrLatestVersionNumber;
+  }
+
+  private setNetworkInterfaceProps(
+    interfaces: NetworkInterfaceItemConfig[],
+  ): cdk.aws_ec2.CfnLaunchTemplate.NetworkInterfaceProperty[] {
+    const networkInterfaceProps: cdk.aws_ec2.CfnLaunchTemplate.NetworkInterfaceProperty[] = [];
+    for (const networkInterface of interfaces) {
+      networkInterfaceProps.push({
+        associateCarrierIpAddress: networkInterface.associateCarrierIpAddress,
+        associatePublicIpAddress: networkInterface.associatePublicIpAddress,
+        deleteOnTermination: networkInterface.deleteOnTermination,
+        description: networkInterface.description,
+        deviceIndex: networkInterface.deviceIndex,
+        groups: networkInterface.groups,
+        interfaceType: networkInterface.interfaceType,
+        networkCardIndex: networkInterface.networkCardIndex,
+        networkInterfaceId: networkInterface.networkInterfaceId,
+        privateIpAddress: networkInterface.privateIpAddress,
+        privateIpAddresses: networkInterface.privateIpAddresses,
+        secondaryPrivateIpAddressCount: networkInterface.secondaryPrivateIpAddressCount,
+        subnetId: networkInterface.subnetId,
+      });
+    }
+    return networkInterfaceProps;
   }
 }
