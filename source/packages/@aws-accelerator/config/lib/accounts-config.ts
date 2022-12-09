@@ -509,6 +509,19 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
       this._addAccountId(accountIds, accountId);
     }
 
+    const excludedAccountIds = this.getExcludedAccountIds(deploymentTargets);
+    accountIds.filter(item => !excludedAccountIds.includes(item));
+
+    return accountIds;
+  }
+
+  public getExcludedAccountIds(deploymentTargets: DeploymentTargets): string[] {
+    const accountIds: string[] = [];
+
+    if (deploymentTargets.excludedAccounts) {
+      deploymentTargets.excludedAccounts.forEach(account => this._addAccountId(accountIds, this.getAccountId(account)));
+    }
+
     return accountIds;
   }
 
