@@ -1248,7 +1248,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *
    * @example
    * ```
-   * ssmInventoryConfig:
+   * ssmInventory:
    *   enable: true
    *   deploymentTargets:
    *     organizationalUnits:
