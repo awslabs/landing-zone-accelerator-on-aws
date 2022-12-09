@@ -213,7 +213,156 @@ export class SecurityResourcesStack extends AcceleratorStack {
     // SecurityHub Log event to CloudWatch
     this.securityHubEventForwardToLogs();
 
+    //
+    // Create Managed Active Directory secrets
+    //
+    this.createManagedActiveDirectorySecrets();
+
     Logger.info('[security-resources-stack] Completed stack synthesis');
+  }
+
+  /**
+   * Function to create Managed active directory secrets for admin user and ad users
+   */
+  private createManagedActiveDirectorySecrets() {
+    for (const managedActiveDirectory of this.props.iamConfig.managedActiveDirectories ?? []) {
+      const madAccountId = this.props.accountsConfig.getAccountId(managedActiveDirectory.account);
+      const madRegion = managedActiveDirectory.region;
+
+      const secretName = `/accelerator/ad-user/${
+        managedActiveDirectory.name
+      }/${this.props.iamConfig.getManageActiveDirectoryAdminSecretName(managedActiveDirectory.name)}`;
+      const madAdminSecretAccountId = this.props.accountsConfig.getAccountId(
+        this.props.iamConfig.getManageActiveDirectorySecretAccountName(managedActiveDirectory.name),
+      );
+      const madAdminSecretRegion = this.props.iamConfig.getManageActiveDirectorySecretRegion(
+        managedActiveDirectory.name,
+      );
+
+      if (cdk.Stack.of(this).account == madAdminSecretAccountId && cdk.Stack.of(this).region == madAdminSecretRegion) {
+        const key = cdk.aws_kms.Key.fromKeyArn(
+          this,
+          pascalCase(`${managedActiveDirectory.name}AdminSecretKeyLookup`),
+          cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            AcceleratorStack.ACCELERATOR_SECRET_MANAGER_KEY_ARN_PARAMETER_NAME,
+          ),
+        );
+        const adminSecret = new cdk.aws_secretsmanager.Secret(
+          this,
+          pascalCase(`${managedActiveDirectory.name}AdminSecret`),
+          {
+            generateSecretString: {
+              passwordLength: 16,
+              requireEachIncludedType: true,
+            },
+            secretName,
+            encryptionKey: key,
+            removalPolicy: cdk.RemovalPolicy.RETAIN,
+          },
+        );
+
+        // AwsSolutions-SMG4: The secret does not have automatic rotation scheduled
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/${pascalCase(managedActiveDirectory.name)}AdminSecret/Resource`,
+          [
+            {
+              id: 'AwsSolutions-SMG4',
+              reason: 'Managed AD secret.',
+            },
+          ],
+        );
+
+        new cdk.aws_ssm.StringParameter(this, pascalCase(`${managedActiveDirectory.name}AdminSecretArnParameter`), {
+          parameterName: `/accelerator/secrets-manager/${managedActiveDirectory.name}/admin-secret/secret-arn`,
+          stringValue: adminSecret.secretArn,
+        });
+
+        // Attach MAD creation stack role to have access to the secret
+        adminSecret.addToResourcePolicy(
+          new cdk.aws_iam.PolicyStatement({
+            effect: cdk.aws_iam.Effect.ALLOW,
+            principals: [
+              new cdk.aws_iam.ArnPrincipal(
+                `arn:${
+                  cdk.Stack.of(this).partition
+                }:iam::${madAccountId}:role/cdk-accel-cfn-exec-role-${madAccountId}-${madRegion}`,
+              ),
+            ],
+            actions: ['secretsmanager:GetSecretValue'],
+            resources: ['*'],
+          }),
+        );
+
+        if (managedActiveDirectory.activeDirectoryConfigurationInstance) {
+          const activeDirectoryInstance = managedActiveDirectory.activeDirectoryConfigurationInstance;
+
+          const instanceRole = cdk.aws_iam.Role.fromRoleArn(
+            this,
+            pascalCase(managedActiveDirectory.name) + pascalCase(activeDirectoryInstance.instanceRole),
+            `arn:${cdk.Stack.of(this).partition}:iam::${madAccountId}:role/${activeDirectoryInstance.instanceRole}`,
+          );
+
+          // Attach MAD instance role access to secrets resource policy
+          adminSecret.addToResourcePolicy(
+            new cdk.aws_iam.PolicyStatement({
+              effect: cdk.aws_iam.Effect.ALLOW,
+              principals: [new cdk.aws_iam.ArnPrincipal(instanceRole.roleArn)],
+              actions: ['secretsmanager:GetSecretValue'],
+              resources: ['*'],
+            }),
+          );
+
+          // Create ad user secrets for instance user data script
+          for (const adUser of activeDirectoryInstance.adUsers ?? []) {
+            const secret = new cdk.aws_secretsmanager.Secret(this, pascalCase(`${adUser.name}Secret`), {
+              description: `Password for Managed Active Directory user ${adUser.name}`,
+              generateSecretString: {
+                passwordLength: 16,
+                requireEachIncludedType: true,
+              },
+              secretName: `/accelerator/ad-user/${managedActiveDirectory.name}/${adUser.name}`,
+              encryptionKey: key,
+              removalPolicy: cdk.RemovalPolicy.RETAIN,
+            });
+
+            // AwsSolutions-SMG4: The secret does not have automatic rotation scheduled
+            NagSuppressions.addResourceSuppressionsByPath(
+              this,
+              `${this.stackName}/${pascalCase(adUser.name)}Secret/Resource`,
+              [
+                {
+                  id: 'AwsSolutions-SMG4',
+                  reason: 'Managed AD secret.',
+                },
+              ],
+            );
+
+            new cdk.aws_ssm.StringParameter(
+              this,
+              pascalCase(`${managedActiveDirectory.name}${pascalCase(adUser.name)}SecretArnParameter`),
+              {
+                parameterName: `/accelerator/secrets-manager/${managedActiveDirectory.name}/${pascalCase(
+                  adUser.name,
+                )}-secret/secret-arn`,
+                stringValue: adminSecret.secretArn,
+              },
+            );
+
+            // Attach MAD instance role access to secret resource policy
+            secret.addToResourcePolicy(
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                principals: [new cdk.aws_iam.ArnPrincipal(instanceRole.roleArn)],
+                actions: ['secretsmanager:GetSecretValue'],
+                resources: ['*'],
+              }),
+            );
+          }
+        }
+      }
+    }
   }
 
   /**

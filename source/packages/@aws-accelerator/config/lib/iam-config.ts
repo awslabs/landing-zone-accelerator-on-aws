@@ -194,6 +194,7 @@ export class IamConfigTypes {
     vpcName: t.nonEmptyString,
     imagePath: t.nonEmptyString,
     securityGroupName: t.nonEmptyString,
+    instanceRole: t.nonEmptyString,
     subnetName: t.nonEmptyString,
     userDataScripts: t.array(this.activeDirectoryConfigurationInstanceUserDataConfig),
     adGroups: t.array(t.nonEmptyString),
@@ -217,6 +218,12 @@ export class IamConfigTypes {
     retentionInDays: t.optional(t.number),
   });
 
+  static readonly managedActiveDirectorySecretConfig = t.interface({
+    account: t.optional(t.nonEmptyString),
+    region: t.optional(t.region),
+    adminSecretName: t.optional(t.nonEmptyString),
+  });
+
   /**
    * Managed active directory config
    */
@@ -230,7 +237,7 @@ export class IamConfigTypes {
     edition: t.enums('DirectorySize', ['Standard', 'Enterprise']),
     vpcSettings: IamConfigTypes.managedActiveDirectoryVpcSettingsConfig,
     resolverRuleName: t.nonEmptyString,
-    adminSecretName: t.optional(t.nonEmptyString),
+    secretConfig: t.optional(this.managedActiveDirectorySecretConfig),
     logs: t.optional(IamConfigTypes.managedActiveDirectoryLogConfig),
     activeDirectoryConfigurationInstance: t.optional(this.activeDirectoryConfigurationInstanceConfig),
   });
@@ -246,6 +253,39 @@ export class IamConfigTypes {
     userSets: t.optional(t.array(this.userSetConfig)),
     managedActiveDirectories: t.optional(t.array(this.managedActiveDirectoryConfig)),
   });
+}
+
+/**
+ * Active directory admin user secret configuration.
+ *
+ * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectorySecretConfig}*
+ *
+ * @example
+ *
+ * ```
+ * secretConfig:
+ *  account: Audit
+ *  region: us-east-1
+ *  adminSecretName: admin
+ * ```
+ */
+export class ManagedActiveDirectorySecretConfig
+  implements t.TypeOf<typeof IamConfigTypes.managedActiveDirectorySecretConfig>
+{
+  /**
+   * Active directory admin user secret name. LZA will prefix /accelerator/ad-user/<DirectoryName>/ for the secret name
+   * For example when secret name value was given as admin-secret and directory name is AcceleratorManagedActiveDirectory
+   * LZA will create secret name as /accelerator/ad-user/AcceleratorManagedActiveDirectory/admin-secret
+   */
+  readonly adminSecretName: string | undefined = undefined;
+  /**
+   * Active directory admin user secret account name. When no account name provided LZA will create the secret into the account MAD exists
+   */
+  readonly account: string | undefined = undefined;
+  /**
+   * Active directory admin user secret region name. When no region name provided LZA will create the secret into the region MAD exists
+   */
+  readonly region: t.Region = 'us-east-1';
 }
 
 /**
@@ -345,6 +385,7 @@ export class ActiveDirectoryUserConfig implements t.TypeOf<typeof IamConfigTypes
  *      subnetName: subnet
  *      imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
  *      securityGroupName: ActiveDirectoryConfigInstanceSG
+ *      instanceRole: EC2-Default-SSM-AD-Role
  *      userDataScripts:
  *        - scriptName: JoinDomain
  *          scriptFilePath: ad-config-scripts/Join-Domain.ps1
@@ -425,6 +466,10 @@ export class ActiveDirectoryConfigurationInstanceConfig
    * Ec2 security group name
    */
   readonly securityGroupName = '';
+  /**
+   * Ec2 instance role name
+   */
+  readonly instanceRole = '';
   /**
    * Ec2 instance subnet name
    */
@@ -527,7 +572,10 @@ export class ManagedActiveDirectoryVpcSettingsConfig
  *    netBiosDomainName: example
  *    description: Example managed active directory
  *    edition: Enterprise
- *    adminSecretName: admin-secret
+ *    secretConfig:
+ *      account: Audit
+ *      region: us-east-1
+ *      adminSecretName: admin
  *    resolverRuleName: example-com-rule
  *    vpcSettings:
  *      vpcName: MyVpc
@@ -587,11 +635,11 @@ export class ManagedActiveDirectoryConfig implements t.TypeOf<typeof IamConfigTy
    */
   readonly resolverRuleName = '';
   /**
-   * Active directory admin user secret name. LZA will prefix /accelerator/ad-user/<DirectoryName>/ for the secret name
-   * For example when adminSecretName value was given as admin-secret and directory name is AcceleratorManagedActiveDirectory
-   * LZA will create secret name as /accelerator/ad-user/AcceleratorManagedActiveDirectory/admin-secret
+   * Active directory admin user secret configuration.
+   *
+   * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectorySecretConfig}
    */
-  readonly adminSecretName: string | undefined = undefined;
+  readonly secretConfig: ManagedActiveDirectorySecretConfig | undefined = undefined;
   /**
    * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectoryLogConfig}
    *
@@ -1058,7 +1106,10 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *    netBiosDomainName: example
    *    description: Example managed active directory
    *    edition: Enterprise
-   *    adminSecretName: admin-secret
+   *    adminSecret:
+   *      name: admin-secret
+   *      account: Audit
+   *      region: us-east-1
    *    resolverRuleName: example-com-rule
    *    vpcSettings:
    *      vpcName: MyVpc
@@ -1074,6 +1125,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *      subnetName: subnet
    *      imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
    *      securityGroupName: ActiveDirectoryConfigInstanceSG
+   *      instanceRole: EC2-Default-SSM-AD-Role
    *      userDataScripts:
    *        - scriptName: JoinDomain
    *          scriptFilePath: ad-config-scripts/Join-Domain.ps1
@@ -1135,7 +1187,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *            - "*-View"
    * ```
    */
-  readonly managedActiveDirectories: ManagedActiveDirectoryConfig[] = [];
+  readonly managedActiveDirectories: ManagedActiveDirectoryConfig[] | undefined = undefined;
 
   /**
    *
@@ -1169,5 +1221,74 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
       console.log(`${e}`);
       return undefined;
     }
+  }
+
+  public getManageActiveDirectoryAdminSecretName(directoryName: string): string {
+    let directoryFound = false;
+    for (const managedActiveDirectory of this.managedActiveDirectories ?? []) {
+      if (managedActiveDirectory.name === directoryName) {
+        directoryFound = true;
+        if (managedActiveDirectory.secretConfig) {
+          if (managedActiveDirectory.secretConfig.adminSecretName) {
+            return managedActiveDirectory.secretConfig.adminSecretName;
+          }
+        }
+      }
+    }
+    if (directoryFound) {
+      return 'admin';
+    }
+    throw new Error(
+      `[iam-config][getManageActiveDirectoryAdminSecretName] - Directory ${directoryName} not found in iam-config file`,
+    );
+  }
+
+  public getManageActiveDirectorySecretAccountName(directoryName: string): string {
+    let directoryFound = false;
+    let directoryAccount = '';
+    for (const managedActiveDirectory of this.managedActiveDirectories ?? []) {
+      if (managedActiveDirectory.name === directoryName) {
+        directoryFound = true;
+        directoryAccount = managedActiveDirectory.account;
+        if (managedActiveDirectory.secretConfig) {
+          if (managedActiveDirectory.secretConfig.account) {
+            return managedActiveDirectory.secretConfig.account;
+          } else {
+            managedActiveDirectory.account;
+          }
+        }
+      }
+    }
+    if (directoryFound) {
+      return directoryAccount;
+    }
+    throw new Error(
+      `[iam-config][getManageActiveDirectoryAdminSecretName] - Directory ${directoryName} not found in iam-config file`,
+    );
+  }
+
+  public getManageActiveDirectorySecretRegion(directoryName: string): string {
+    let directoryFound = false;
+    let directoryRegion = '';
+    for (const managedActiveDirectory of this.managedActiveDirectories ?? []) {
+      if (managedActiveDirectory.name === directoryName) {
+        directoryFound = true;
+        directoryRegion = managedActiveDirectory.account;
+        if (managedActiveDirectory.secretConfig) {
+          if (managedActiveDirectory.secretConfig.region) {
+            return managedActiveDirectory.secretConfig.region;
+          } else {
+            managedActiveDirectory.region;
+          }
+        }
+      }
+    }
+
+    if (directoryFound) {
+      return directoryRegion;
+    }
+    throw new Error(
+      `[iam-config][getManageActiveDirectoryAdminSecretName] - Directory ${directoryName} not found in iam-config file`,
+    );
   }
 }

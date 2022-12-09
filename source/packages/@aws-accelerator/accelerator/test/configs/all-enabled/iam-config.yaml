@@ -82,7 +82,10 @@ managedActiveDirectories:
         - SharedServices-App-A
         - SharedServices-App-B
     resolverRuleName: example-com-rule
-    adminSecretName: admin-secret-managed-directory
+    secretConfig:
+      account: Audit
+      region: us-east-1
+      adminSecretName: my-admin-001
     logs:
       groupName: /aws/directoryservice/AcceleratorManagedActiveDirectory
       retentionInDays: 30
@@ -92,6 +95,7 @@ managedActiveDirectories:
       subnetName: SharedServices-App-A
       imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
       securityGroupName: ActiveDirectoryConfigInstanceSG
+      instanceRole: EC2-Default-SSM-AD-Role
       userDataScripts:
         - scriptName: JoinDomain
           scriptFilePath: ad-config-scripts/Join-Domain.ps1
@@ -132,11 +136,11 @@ managedActiveDirectories:
         lockoutDuration: 30
         lockoutAttemptsReset: 30
       adUsers:
-        - name: adconnector-usr
-          email: example-adconnector-usr@example.com
+        - name: adconnector-user
+          email: example-adconnector-user@example.com
           groups:
             - ADConnector-grp
-        - name: user1
+        - name: user001
           email: example-user1@example.com
           groups:
             - aws-Provisioning
@@ -144,8 +148,8 @@ managedActiveDirectories:
             - "*-Admin"
             - "*-PowerUser"
             - AWS Delegated Administrators
-        - name: user2
+        - name: user002
           email: example-user2@example.com
           groups:
-            - aws-Provisioning-1
+            - aws-Provisioning
             - "*-View"
