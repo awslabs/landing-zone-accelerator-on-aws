@@ -214,7 +214,7 @@ export class ControlTowerConfig implements t.TypeOf<typeof GlobalConfigTypes.con
    * In AWS Control Tower, three shared accounts in your landing zone are provisioned automatically during setup: the management account,
    * the log archive account, and the audit account.
    */
-  readonly enable = true;
+  readonly enable: boolean = true;
 }
 
 /**
@@ -1097,7 +1097,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * - AWSControlTowerExecution
    * - OrganizationAccountAccessRole
    */
-  readonly managementAccountAccessRole = 'AWSControlTowerExecution';
+  readonly managementAccountAccessRole: string = '';
 
   /**
    * CloudWatchLogs retention in days, accelerator's custom resource lambda function logs retention period is configured based on this value.
@@ -1268,6 +1268,8 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   constructor(
     props: {
       homeRegion: string;
+      controlTower: { enable: boolean };
+      managementAccountAccessRole: string;
     },
     values?: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
     configDir?: string,
@@ -1332,6 +1334,8 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     } else {
       this.homeRegion = props.homeRegion;
       this.enabledRegions = [props.homeRegion as t.Region];
+      this.controlTower = props.controlTower;
+      this.managementAccountAccessRole = props.managementAccountAccessRole;
     }
 
     if (errors.length) {
@@ -1662,10 +1666,14 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     const values = t.parse(GlobalConfigTypes.globalConfig, yaml.load(buffer));
 
     const homeRegion = values.homeRegion;
+    const controlTower = values.controlTower;
+    const managementAccountAccessRole = values.managementAccountAccessRole;
 
     return new GlobalConfig(
       {
         homeRegion,
+        controlTower,
+        managementAccountAccessRole,
       },
       values,
       dir,
