@@ -50,6 +50,8 @@ logging:
   sessionManager:
     sendToCloudWatchLogs: false
     sendToS3: true
+    attachPolicyToIamRoles:
+      - EC2-Default-SSM-AD-Role
   cloudwatchLogs:
     dynamicPartitioning: dynamic-partitioning/log-filters.json
 reports:
