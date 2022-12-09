@@ -57,11 +57,11 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:56
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:57
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:455
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:485
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:505
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:506
 
-source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:58
+source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:57
 
-source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:57
+source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:56
 
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:25
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:25
@@ -125,7 +125,7 @@ source/packages/@aws-accelerator/constructs/test/aws-cloudwatch-logs/put-destina
 source/packages/@aws-accelerator/config/test/accounts-config.test.ts
 
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:507
-source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts:70
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts:69
 
 source/packages/@aws-accelerator/config/lib/customizations-config.ts:631
 
