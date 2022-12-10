@@ -937,7 +937,7 @@ export class AlbListenerRedirectConfig implements t.TypeOf<typeof Customizations
  *    targetGroup: appA-alb-tg-3
  *    order: 3
  *    type: forward
- *    certificate: 'arn:aws:acm:some-valid-region:012345678912:certificate/valid-certificate-hash'
+ *    certificate: 'arn:aws:acm:some-valid-region:111111111111:certificate/valid-certificate-hash'
  *    sslPolicy: ELBSecurityPolicy-2016-08
  * ```
  */
