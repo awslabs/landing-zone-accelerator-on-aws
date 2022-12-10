@@ -1,0 +1,259 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LimitsStandards Construct(LimitsDefinition):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CustomKey1E6D0D07": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomServiceQuotaLimitsCustomResourceProviderHandler81BAABBF": Object {
+      "DependsOn": Array [
+        "CustomServiceQuotaLimitsCustomResourceProviderRole024C3C88",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomServiceQuotaLimitsCustomResourceProviderRole024C3C88",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomServiceQuotaLimitsCustomResourceProviderLogGroupBC81BDCC": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomServiceQuotaLimitsCustomResourceProviderHandler81BAABBF",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 35,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomServiceQuotaLimitsCustomResourceProviderRole024C3C88": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:DescribeAccount",
+                    "organizations:DescribeOrganization",
+                    "organizations:ListAWSServiceAccessForOrganization",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "OrganizationListActions",
+                },
+                Object {
+                  "Action": Array [
+                    "autoscaling:DescribeAccountLimits",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AutoScalingLimitsAction",
+                },
+                Object {
+                  "Action": Array [
+                    "dynamodb:DescribeLimits",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "DynamoDBLimitsAction",
+                },
+                Object {
+                  "Action": Array [
+                    "kinesis:DescribeLimits",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "KinesisLimitsAction",
+                },
+                Object {
+                  "Action": Array [
+                    "iam:GetAccountSummary",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    "*",
+                  ],
+                  "Sid": "IAMAccountSummaryAction",
+                },
+                Object {
+                  "Action": Array [
+                    "cloudformation:DescribeAccountLimits",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    "*",
+                  ],
+                  "Sid": "CloudFormationAccountLimitsAction",
+                },
+                Object {
+                  "Action": Array [
+                    "cloudformation:DescribeAccountLimits",
+                    "cloudwatch:DescribeAlarmsForMetric",
+                    "cloudwatch:DescribeAlarms",
+                    "cloudwatch:GetMetricData",
+                    "cloudwatch:GetMetricStatistics",
+                    "cloudwatch:PutMetricAlarm",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "CloudWatchLimitsActions",
+                },
+                Object {
+                  "Action": Array [
+                    "elasticloadbalancing:DescribeAccountLimits",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "ElasticLoadBalancingLimitsAction",
+                },
+                Object {
+                  "Action": Array [
+                    "route53:GetAccountLimit",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "Route53LimitsAction",
+                },
+                Object {
+                  "Action": Array [
+                    "rds:DescribeAccountAttributes",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "RDSLimitsAction",
+                },
+                Object {
+                  "Action": Array [
+                    "servicequotas:*",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "ServiceQuotaLimitsAction",
+                },
+                Object {
+                  "Action": Array [
+                    "tag:GetTagKeys",
+                    "tag:GetTagValues",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "TaggingLimitsActions",
+                },
+                Object {
+                  "Action": Array [
+                    "iam:CreateServiceLinkedRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "CreateServiceLinkedRole",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "LimitsDefinition14BCE9E9": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomServiceQuotaLimitsCustomResourceProviderLogGroupBC81BDCC",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomServiceQuotaLimitsCustomResourceProviderHandler81BAABBF",
+            "Arn",
+          ],
+        },
+        "desiredValue": 1000,
+        "quotaCode": "L-B99A9384",
+        "serviceCode": "lambda",
+      },
+      "Type": "Custom::ServiceQuotaLimits",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;

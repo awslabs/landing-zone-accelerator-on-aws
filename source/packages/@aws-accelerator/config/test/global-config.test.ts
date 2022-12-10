@@ -17,6 +17,7 @@ import {
   CentralLogBucketConfig,
   CostAndUsageReportConfig,
   BudgetReportConfig,
+  ServiceQuotaLimitsConfig,
 } from '../lib/global-config';
 import { describe, it, expect } from '@jest/globals';
 import * as path from 'path';
@@ -94,6 +95,19 @@ describe('GlobalConfig', () => {
       expect(brConfig.includeCredit).toBe(false);
       expect(brConfig.useAmortized).toBe(false);
       expect(brConfig.useBlended).toBe(false);
+    });
+
+    it('tests ServiceQuotaLimitsConfig', () => {
+      const serviceQuotaLimitsConfig = new ServiceQuotaLimitsConfig();
+      expect(serviceQuotaLimitsConfig.serviceCode).toEqual('');
+      expect(serviceQuotaLimitsConfig.quotaCode).toEqual('');
+      expect(serviceQuotaLimitsConfig.desiredValue).toEqual(2000);
+      expect(serviceQuotaLimitsConfig.deploymentTargets).toEqual({
+        accounts: [],
+        excludedAccounts: [],
+        excludedRegions: [],
+        organizationalUnits: [],
+      });
     });
   });
 });

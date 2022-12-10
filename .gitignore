@@ -9,6 +9,7 @@ node_modules
 dist
 !source/.typescript/lambda/**/*.js
 !source/lambda/**/*.js
+source/packages/@aws-accelerator/accelerator/lib/logger.js.map
 
 ### log files
 *.log

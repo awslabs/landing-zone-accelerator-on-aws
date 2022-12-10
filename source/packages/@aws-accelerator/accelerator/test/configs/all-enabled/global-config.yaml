@@ -28,6 +28,13 @@ logging:
     sendToS3: true
   cloudwatchLogs:
     dynamicPartitioning: dynamic-partitioning/log-filters.json
+limits:
+  - serviceCode: lambda
+    quotaCode: L-B99A9384
+    desiredValue: 1000
+    deploymentTargets:
+      organizationalUnits:
+        - Root
 reports:
   costAndUsageReport:
     compression: Parquet

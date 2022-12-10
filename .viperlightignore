@@ -151,3 +151,8 @@ source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml:28
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml:30
 source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml:32
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts
+source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:506
+source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts
+source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts

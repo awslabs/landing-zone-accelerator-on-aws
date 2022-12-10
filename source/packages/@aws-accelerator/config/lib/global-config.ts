@@ -150,6 +150,13 @@ export abstract class GlobalConfigTypes {
     deploymentTargets: t.optional(t.deploymentTargets),
   });
 
+  static readonly serviceQuotaLimitsConfig = t.interface({
+    serviceCode: t.string,
+    quotaCode: t.string,
+    desiredValue: t.number,
+    deploymentTargets: t.deploymentTargets,
+  });
+
   static readonly reportConfig = t.interface({
     costAndUsageReport: t.optional(this.costAndUsageReportConfig),
     budgets: t.optional(t.array(this.budgetConfig)),
@@ -192,6 +199,7 @@ export abstract class GlobalConfigTypes {
     backup: t.optional(GlobalConfigTypes.backupConfig),
     snsTopics: t.optional(GlobalConfigTypes.snsConfig),
     ssmInventory: t.optional(GlobalConfigTypes.ssmInventoryConfig),
+    limits: t.optional(t.array(this.serviceQuotaLimitsConfig)),
   });
 }
 
@@ -402,6 +410,29 @@ export class CloudTrailConfig implements t.TypeOf<typeof GlobalConfigTypes.cloud
 /**
  * *{@link GlobalConfig} / {@link LoggingConfig} / {@link SessionManagerConfig}*
  *
+ * AWS Service Quotas configuration
+ */
+export class ServiceQuotaLimitsConfig implements t.TypeOf<typeof GlobalConfigTypes.serviceQuotaLimitsConfig> {
+  /**
+   * Indicates which service Service Quota is changing the limit for.
+   */
+  readonly serviceCode = '';
+  /**
+   * Indicates the code for the service as these are tied to the account.
+   *
+   */
+  readonly quotaCode = '';
+  /**
+   * Value associated with the limit change.
+   */
+  readonly desiredValue = 2000;
+  /**
+   * List of AWS Account names to be included in the Service Quota changes
+   */
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
+/**
  * AWS SessionManager configuration
  *
  * @example
@@ -1199,6 +1230,23 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * ```
    */
   readonly reports: ReportConfig | undefined = undefined;
+
+  /**
+   * AWS Service Quota - Limit configuration
+   *
+   * To enable limits within service quota, you need to provide below value for this parameter.
+   *
+   * @example
+   * ```
+   * limits:
+   *     - serviceCode: lambda
+   *       quotaCode: L-2ACBD22F
+   *       value: 2000
+   *       deploymentTargets:
+   *           - organizationalUnits: root
+   *             accounts:
+   */
+  readonly limits: ServiceQuotaLimitsConfig[] = [];
 
   /**
    * Backup Vaults Configuration
