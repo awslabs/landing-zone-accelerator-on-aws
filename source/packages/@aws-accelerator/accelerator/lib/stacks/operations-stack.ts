@@ -18,7 +18,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 
 import { RoleConfig } from '@aws-accelerator/config';
-import { BudgetDefinition, Inventory } from '@aws-accelerator/constructs';
+import { BudgetDefinition, Inventory, LimitsDefinition } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
@@ -47,6 +47,7 @@ export class OperationsStack extends AcceleratorStack {
    * List of all the defined IAM Groups
    */
   private groups: { [name: string]: cdk.aws_iam.Group } = {};
+  readonly cloudwatchKey!: cdk.aws_kms.Key;
 
   /**
    * Constructor for OperationsStack
@@ -72,6 +73,10 @@ export class OperationsStack extends AcceleratorStack {
       // Budgets
       //
       this.enableBudgetReports();
+      //
+      // Service Quota Limits
+      //
+      this.increaseLimits();
     }
 
     //
@@ -87,6 +92,24 @@ export class OperationsStack extends AcceleratorStack {
     }
 
     Logger.info('[operations-stack] Completed stack synthesis');
+  }
+
+  /* Enable AWS Service Quota Limits
+   *
+   */
+  private increaseLimits() {
+    for (const limit of this.props.globalConfig.limits ?? []) {
+      if (this.isIncluded(limit.deploymentTargets ?? [])) {
+        Logger.info(`[operations-stack] Updating limits for provided services.`);
+        new LimitsDefinition(this, `ServiceQuotaUpdates${limit.quotaCode}` + `${limit.desiredValue}`, {
+          serviceCode: limit.serviceCode,
+          quotaCode: limit.quotaCode,
+          desiredValue: limit.desiredValue,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        });
+      }
+    }
   }
 
   /**

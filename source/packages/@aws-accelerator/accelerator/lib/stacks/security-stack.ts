@@ -259,39 +259,37 @@ export class SecurityStack extends AcceleratorStack {
             },
           }),
         );
-        if (this.props.partition === 'aws') {
-          ebsEncryptionKey.addToResourcePolicy(
-            new iam.PolicyStatement({
-              sid: 'Allow cloud9 service-linked role use',
-              effect: cdk.aws_iam.Effect.ALLOW,
-              actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:GenerateDataKey*', 'kms:ReEncrypt*'],
-              principals: [
-                new cdk.aws_iam.ArnPrincipal(
-                  `arn:${cdk.Stack.of(this).partition}:iam::${
-                    cdk.Stack.of(this).account
-                  }:role/aws-service-role/cloud9.amazonaws.com/AWSServiceRoleForAWSCloud9`,
-                ),
-              ],
-              resources: ['*'],
-            }),
-          );
-          ebsEncryptionKey.addToResourcePolicy(
-            new iam.PolicyStatement({
-              sid: 'Allow cloud9 attachment of persistent resources',
-              effect: cdk.aws_iam.Effect.ALLOW,
-              actions: ['kms:CreateGrant', 'kms:ListGrants', 'kms:RevokeGrant'],
-              principals: [
-                new cdk.aws_iam.ArnPrincipal(
-                  `arn:${cdk.Stack.of(this).partition}:iam::${
-                    cdk.Stack.of(this).account
-                  }:role/aws-service-role/cloud9.amazonaws.com/AWSServiceRoleForAWSCloud9`,
-                ),
-              ],
-              resources: ['*'],
-              conditions: { Bool: { 'kms:GrantIsForAWSResource': 'true' } },
-            }),
-          );
-        }
+        ebsEncryptionKey.addToResourcePolicy(
+          new iam.PolicyStatement({
+            sid: 'Allow cloud9 service-linked role use',
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:GenerateDataKey*', 'kms:ReEncrypt*'],
+            principals: [
+              new cdk.aws_iam.ArnPrincipal(
+                `arn:${cdk.Stack.of(this).partition}:iam::${
+                  cdk.Stack.of(this).account
+                }:role/aws-service-role/cloud9.amazonaws.com/AWSServiceRoleForAWSCloud9`,
+              ),
+            ],
+            resources: ['*'],
+          }),
+        );
+        ebsEncryptionKey.addToResourcePolicy(
+          new iam.PolicyStatement({
+            sid: 'Allow cloud9 attachment of persistent resources',
+            effect: cdk.aws_iam.Effect.ALLOW,
+            actions: ['kms:CreateGrant', 'kms:ListGrants', 'kms:RevokeGrant'],
+            principals: [
+              new cdk.aws_iam.ArnPrincipal(
+                `arn:${cdk.Stack.of(this).partition}:iam::${
+                  cdk.Stack.of(this).account
+                }:role/aws-service-role/cloud9.amazonaws.com/AWSServiceRoleForAWSCloud9`,
+              ),
+            ],
+            resources: ['*'],
+            conditions: { Bool: { 'kms:GrantIsForAWSResource': 'true' } },
+          }),
+        );
       }
       new EbsDefaultEncryption(this, 'EbsDefaultVolumeEncryption', {
         ebsEncryptionKmsKey: ebsEncryptionKey,
