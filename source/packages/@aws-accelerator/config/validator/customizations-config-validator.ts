@@ -90,7 +90,10 @@ class CustomizationValidator {
     this.validateDeploymentTargetOUs(values, ouIdNames, errors);
 
     // Validate stack name lengths
-    this.validateStackName(values, errors);
+    this.validateStackNameLength(values, errors);
+
+    // Validate stack names are unique
+    this.validateStackNameForUniqueness(values, errors);
 
     // Validate presence of template file
     this.validateTemplateFile(configDir, values, errors);
@@ -130,7 +133,10 @@ class CustomizationValidator {
    * @param configDir
    * @param values
    */
-  private validateStackName(values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>, errors: string[]) {
+  private validateStackNameLength(
+    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    errors: string[],
+  ) {
     for (const cloudFormationStack of values.customizations?.cloudFormationStacks ?? []) {
       if (cloudFormationStack.name.length > 128) {
         errors.push(
@@ -144,6 +150,26 @@ class CustomizationValidator {
           `Provided CloudFormation StackSet name ${cloudFormationStackSet.name} exceeds limit of 128 characters !!!`,
         );
       }
+    }
+  }
+
+  /**
+   * Function to validate stack and stackset names are unique
+   * @param values
+   */
+  private validateStackNameForUniqueness(
+    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    errors: string[],
+  ) {
+    const stackNames = [...(values.customizations?.cloudFormationStacks ?? [])].map(item => item.name);
+    const stackSetNames = [...(values.customizations?.cloudFormationStackSets ?? [])].map(item => item.name);
+
+    if (new Set(stackNames).size !== stackNames.length) {
+      errors.push(`Duplicate custom stack names defined [${stackNames}].`);
+    }
+
+    if (new Set(stackSetNames).size !== stackSetNames.length) {
+      errors.push(`Duplicate custom stackset names defined [${stackSetNames}].`);
     }
   }
 

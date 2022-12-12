@@ -658,6 +658,13 @@ export class Ec2FirewallConfig implements t.TypeOf<typeof CustomizationsConfigTy
  *
  * Defines a custom CloudFormation Stack to be deployed to the environment.
  *
+ * @remarks
+ *
+ * Please note that deployed custom CloudFormation Stacks are not deleted if they are removed from customizations-config.yaml.
+ * All custom stacks deployed by LZA must be deleted manually if they are no longer needed.
+ *
+ * @see [Related CDK Issue ](https://github.com/aws/aws-cdk/issues/13676)
+ *
  * @example
  * ```
  * customizations:
@@ -2069,6 +2076,9 @@ export class AppConfigItem implements t.TypeOf<typeof CustomizationsConfigTypes.
  * *{@link CustomizationsConfig} / {@link CustomizationConfig}*
  *
  * Defines CloudFormation Stacks and StackSets to be deployed to the environment.
+ * This feature supports the deployment of customer-provided CloudFormation templates to AWS
+ * accounts and/or organizational units. These deployments can leverage independent CloudFormation stacks
+ * or CloudFormation StackSets depending on the customer's deployment preference.
  *
  */
 export class CustomizationConfig implements t.TypeOf<typeof CustomizationsConfigTypes.customizationConfig> {
@@ -2079,7 +2089,8 @@ export class CustomizationConfig implements t.TypeOf<typeof CustomizationsConfig
 /**
  * *{@link CustomizationsConfig}*
  *
- * Defines custom CloudFormation and external application web and application tiers.
+ * Defines custom CloudFormation and external web and application tier resources. We recommend creating resources
+ * with native LZA features where possible.
  */
 export class CustomizationsConfig implements t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig> {
   static readonly FILENAME = 'customizations-config.yaml';
