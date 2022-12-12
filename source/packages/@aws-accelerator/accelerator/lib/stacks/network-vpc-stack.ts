@@ -30,6 +30,7 @@ import {
   VpcConfig,
   VpcFlowLogsConfig,
   VpcTemplatesConfig,
+  CertificateConfig,
 } from '@aws-accelerator/config';
 import {
   DeleteDefaultVpc,
@@ -48,6 +49,7 @@ import {
   TransitGatewayPeering,
   Vpc,
   VpnConnection,
+  CreateCertificate,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
@@ -1094,6 +1096,11 @@ export class NetworkVpcStack extends AcceleratorStack {
     //
     this.createSsmParameters();
 
+    /**
+     * Create ACM Certificates
+     */
+    this.createCertificates();
+
     Logger.info('[network-vpc-stack] Completed stack synthesis');
   }
 
@@ -1793,5 +1800,69 @@ export class NetworkVpcStack extends AcceleratorStack {
         },
       ]);
     }
+  }
+
+  /**
+   * Create ACM certificates - check whether ACM should be deployed
+   */
+  private createCertificates() {
+    Logger.info('[network-vpc-stack] Evaluating AWS Certificate Manager certificates.');
+    for (const certificate of this.props.networkConfig.certificates ?? []) {
+      if (!this.isIncluded(certificate.deploymentTargets)) {
+        Logger.info('[network-vpc-stack] Item excluded');
+        continue;
+      }
+      Logger.info(
+        `[network-vpc-stack] Account (${cdk.Stack.of(this).account}) should be included, deploying ACM certificates.`,
+      );
+      this.createAcmCertificates(certificate);
+    }
+  }
+  /**
+   * Create ACM certificates
+   */
+  private createAcmCertificates(certificate: CertificateConfig) {
+    const resourceName = pascalCase(`Certificate${certificate.name}`);
+
+    new CreateCertificate(this, resourceName, {
+      name: certificate.name,
+      type: certificate.type,
+      privKey: certificate.privKey,
+      cert: certificate.cert,
+      chain: certificate.chain,
+      validation: certificate.validation,
+      domain: certificate.domain,
+      san: certificate.san,
+      cloudWatchLogsKmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      homeRegion: this.props.globalConfig.homeRegion,
+      managementAccountId: this.props.accountsConfig.getManagementAccountId(),
+    });
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${resourceName}/AssetsRole/Policy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Policy permissions are part of managed role and rest is to get access from s3 bucket',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    // rule suppression with evidence for this permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${resourceName}/Function/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'IAM Role for lambda needs AWS managed policy',
+        },
+      ],
+    );
   }
 }

@@ -3,16 +3,13 @@ import * as path from 'path';
 
 import { AccountsConfig } from '../lib/accounts-config';
 import * as t from '../lib/common-types';
-import {
-  AppConfigItem,
-  CustomizationsConfig,
-  CustomizationsConfigTypes,
-  TargetEnvironmentConfig,
-} from '../lib/customizations-config';
+import { AppConfigItem, CustomizationsConfig, CustomizationsConfigTypes } from '../lib/customizations-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { NetworkConfig, NetworkConfigTypes, VpcConfig, VpcTemplatesConfig } from '../lib/network-config';
 import console from 'console';
 import { SecurityConfig } from '../lib/security-config';
+import { GlobalConfig } from '../lib/global-config';
+import { Region } from '../lib/common-types';
 
 /**
  * Customizations Configuration validator.
@@ -249,13 +246,15 @@ class CustomizationValidator {
   ) {
     const loadNetworkConfig = NetworkConfig.load(configDir);
     const loadSecurityConfig = SecurityConfig.load(configDir);
+    const loadGlobalConfig = GlobalConfig.load(configDir);
     const helpers = new CustomizationHelperMethods();
     const appNames: string[] = [];
     for (const app of values.applications ?? []) {
       appNames.push(app.name);
 
       //check if appName with prefixes is over 128 characters
-      this.checkAppName(app, errors);
+      // @ts-ignore
+      this.checkAppName(app, loadGlobalConfig, errors);
       // check if vpc actually exists
       const vpcCheck = helpers.checkVpcInConfig(app.vpc, loadNetworkConfig);
       if (!vpcCheck) {
@@ -272,9 +271,13 @@ class CustomizationValidator {
       }
 
       if (vpcCheck) {
+        // @ts-ignore
         this.checkAlb(app, vpcCheck, helpers, errors);
+        // @ts-ignore
         this.checkNlb(app, vpcCheck, helpers, errors);
+        // @ts-ignore
         this.checkLaunchTemplate(app, vpcCheck, helpers, loadSecurityConfig, errors);
+        // @ts-ignore
         this.checkAutoScaling(app, vpcCheck, helpers, errors);
       }
 
@@ -295,13 +298,21 @@ class CustomizationValidator {
       }
     }
   }
-  private checkAppName(app: AppConfigItem, errors: string[]) {
-    for (const targetRegion of app.targetEnvironments) {
-      this.checkAppNameLength(app.name, targetRegion, errors);
+  private checkAppName(app: AppConfigItem, globalConfig: GlobalConfig, errors: string[]) {
+    const allEnabledRegions = globalConfig.enabledRegions;
+    let filteredRegions: Region[];
+    if (app.deploymentTargets.excludedAccounts && app.deploymentTargets.excludedAccounts.length > 0) {
+      filteredRegions = allEnabledRegions.filter(obj => !app.deploymentTargets.excludedAccounts.includes(obj));
+    } else {
+      filteredRegions = allEnabledRegions;
     }
+    if (filteredRegions.length === 0) {
+      errors.push(`[Application ${app.name}]: Has no deployment targets. Please consider removing this item.`);
+    }
+    this.checkAppNameLength(app.name, filteredRegions, errors);
   }
-  private checkAppNameLength(appName: string, targetRegion: TargetEnvironmentConfig, errors: string[]) {
-    for (const regionItem of targetRegion.region) {
+  private checkAppNameLength(appName: string, targetRegion: string[], errors: string[]) {
+    for (const regionItem of targetRegion) {
       const stackName = `AWSAccelerator-App-${appName}-0123456789012-${regionItem}`;
       if (stackName.length > 128) {
         errors.push(`[Application ${appName}]: Application name ${stackName} is over 128 characters.`);

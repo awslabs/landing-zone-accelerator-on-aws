@@ -864,6 +864,21 @@ export class NetworkConfigTypes {
     notificationChannels: t.optional(t.array(this.firewallManagerNotificationChannelConfig)),
   });
 
+  static readonly certificateConfigTypeEnum = t.enums('CertificateTypeEnum', ['import', 'request']);
+
+  static readonly certificateValidationEnum = t.enums('CertificateRequestValidationEnum', ['EMAIL', 'DNS']);
+  static readonly certificateConfig = t.interface({
+    name: t.nonEmptyString,
+    type: this.certificateConfigTypeEnum,
+    privKey: t.optional(t.nonEmptyString),
+    cert: t.optional(t.nonEmptyString),
+    chain: t.optional(t.nonEmptyString),
+    validation: t.optional(this.certificateValidationEnum),
+    domain: t.optional(t.nonEmptyString),
+    san: t.optional(t.array(t.nonEmptyString)),
+    deploymentTargets: t.deploymentTargets,
+  });
+
   static readonly networkConfig = t.interface({
     defaultVpc: this.defaultVpcsConfig,
     endpointPolicies: t.array(this.endpointPolicyConfig),
@@ -880,6 +895,7 @@ export class NetworkConfigTypes {
     vpcTemplates: t.optional(t.array(this.vpcTemplatesConfig)),
     elbAccountIds: t.optional(t.array(this.elbAccountIdsConfig)),
     firewallManagerService: t.optional(this.firewallManagerServiceConfig),
+    certificates: t.optional(t.array(this.certificateConfig)),
   });
 }
 
@@ -5305,6 +5321,84 @@ export class FirewallManagerNotificationChannelConfig
 }
 
 /**
+ * *{@link NetworkConfig} / {@link CertificateConfig}*
+ *
+ * Amazon Certificate Manager (ACM) Configuration
+ *
+ * {@link https://docs.aws.amazon.com/acm/latest/userguide/import-certificate.html | Import certificate}  or {@link https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-request-public.html | Request certificate} from ACM
+ *
+ * @example
+ * ```
+ * - name: cert1
+ *   type: import
+ *   privKey: cert1/privKey.key
+ *   cert: cert1/cert.crt
+ *   chain: cert1/chain.csr
+ *   deploymentTargets:
+ *     accounts:
+ *       - WorkloadAccount1
+ *       - WorkloadAccount2
+ * - name: cert2
+ *   type: request
+ *   validation: DNS
+ *   domain: example.com
+ *   san:
+ *     - www.example.com
+ *     - www.example.net
+ *     - e.co
+ *   deploymentTargets:
+ *     OU:
+ *       - Infrastructure
+ * ```
+ */
+export class CertificateConfig implements t.TypeOf<typeof NetworkConfigTypes.certificateConfig> {
+  /**
+   * Name of the certificate. This should be unique in the certificates array. Duplicate names will fail the validation.
+   */
+  readonly name: string = '';
+  /**
+   * Type of ACM cert. Valid values are `import` or `request`
+   */
+  readonly type: t.TypeOf<typeof NetworkConfigTypes.certificateConfigTypeEnum> = 'import';
+  /**
+   * Path to the private key in S3 assets bucket. The bucket value is in the outputs of Pipeline stack in home region. Path should be given relative to the bucket.
+   * The private key that matches the public key in the certificate.
+   * This value should be provided when type is set to import or else validation fails.
+   */
+  readonly privKey: string | undefined = undefined;
+  /**
+   * Path to certificate in S3 assets bucket. The bucket value is in the outputs of Pipeline stack in home region. Path should be given relative to the bucket.
+   * The certificate to import.
+   * This value should be provided when type is set to import or else validation fails.
+   */
+  readonly cert: string | undefined = undefined;
+  /**
+   * Path to the PEM encoded certificate chain in S3 assets bucket. The bucket value is in the outputs of Pipeline stack in home region. Path should be given relative to the bucket.
+   * This value is optional when type is set to import.
+   */
+  readonly chain: string | undefined = undefined;
+  /**
+   * The method you want to use if you are requesting a public certificate to validate that you own or control domain. You can validate with DNS or validate with email.
+   * Valid values are 'DNS' or 'EMAIL'.
+   * This value should be provided when type is set to request or else validation fails.
+   */
+  readonly validation: t.TypeOf<typeof NetworkConfigTypes.certificateValidationEnum> = 'EMAIL';
+  /**
+   * Fully qualified domain name (FQDN), such as www.example.com, that you want to secure with an ACM certificate. Use an asterisk (*) to create a wildcard certificate that protects several sites in the same domain. For example, *.example.com protects www.example.com, site.example.com, and images.example.com.
+   * In compliance with RFC 5280, the length of the domain name (technically, the Common Name) that you provide cannot exceed 64 octets (characters), including periods. To add a longer domain name, specify it in the Subject Alternative Name field, which supports names up to 253 octets in length.
+   * This value should be provided when type is set to request or else validation fails.
+   */
+  readonly domain: string | undefined = undefined;
+  /**
+   * Additional FQDNs to be included in the Subject Alternative Name extension of the ACM certificate. For example, add the name www.example.net to a certificate for which the DomainName field is www.example.com if users can reach your site by using either name.
+   */
+  readonly san: string[] | undefined = undefined;
+  /**
+   * ACM deployment target. This should be provided to deploy ACM into OUs or account.
+   */
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+/**
  * *{@link NetworkConfig} / {@link FirewallManagerConfig}*
  * An optional Firewall Manager Service Config
  */
@@ -5436,6 +5530,10 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    * Firewall manager service configuration
    */
   readonly firewallManagerService: FirewallManagerConfig | undefined = undefined;
+  /**
+   * Certificate manager configuration
+   */
+  readonly certificates: CertificateConfig[] | undefined = undefined;
   /**
    *
    * @param values

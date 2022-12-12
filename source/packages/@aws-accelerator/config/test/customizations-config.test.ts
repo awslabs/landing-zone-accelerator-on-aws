@@ -32,7 +32,6 @@ import {
   LaunchTemplateConfig,
   AutoScalingConfig,
   AppConfigItem,
-  TargetEnvironmentConfig,
 } from '../lib/customizations-config';
 import { describe, expect, it } from '@jest/globals';
 import * as path from 'path';
@@ -101,9 +100,6 @@ describe('CustomizationsConfig', () => {
 
     const launchTemplateConfig = new LaunchTemplateConfig();
     expect(launchTemplateConfig.blockDeviceMappings).toEqual(undefined);
-
-    const targetEnvironmentConfig = new TargetEnvironmentConfig();
-    expect(targetEnvironmentConfig.account).toEqual('');
 
     const autoScalingConfig = new AutoScalingConfig();
     expect(autoScalingConfig.healthCheckGracePeriod).toEqual(undefined);
