@@ -91,6 +91,9 @@ export class OperationsStack extends AcceleratorStack {
       this.enableInventory();
     }
 
+    // Create Accelerator Access Role in every region
+    this.createAssetAccessRole();
+
     Logger.info('[operations-stack] Completed stack synthesis');
   }
 
@@ -581,6 +584,72 @@ export class OperationsStack extends AcceleratorStack {
       {
         id: 'AwsSolutions-IAM4',
         reason: 'IAM Role created as per accelerator iam-config needs AWS managed policy',
+      },
+    ]);
+  }
+
+  private createAssetAccessRole() {
+    const accessBucketArn = `arn:${
+      this.props.partition
+    }:s3:::aws-accelerator-assets-${this.props.accountsConfig.getManagementAccountId()}-${
+      this.props.globalConfig.homeRegion
+    }`;
+
+    const accountId = cdk.Stack.of(this).account;
+    const currentRegion = cdk.Stack.of(this).region;
+    const accessRoleResourceName = `AssetAccessRole${accountId}${currentRegion}`;
+    const assetsAccessRole = new cdk.aws_iam.Role(this, accessRoleResourceName, {
+      roleName: `AWSAccelerator-AssetsAccessRole-${currentRegion}`,
+      assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
+      description: 'AWS Accelerator assets access role in workload accounts deploy ACM imported certificates.',
+    });
+    assetsAccessRole.addManagedPolicy(
+      cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+    );
+    assetsAccessRole.addToPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        resources: [`${accessBucketArn}`, `${accessBucketArn}/*`],
+        actions: ['s3:GetObject*', 's3:ListBucket'],
+      }),
+    );
+    assetsAccessRole.addToPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        resources: [`arn:${this.props.partition}:acm:*:${accountId}:certificate/*`],
+        actions: ['acm:ImportCertificate'],
+      }),
+    );
+    assetsAccessRole.addToPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        resources: ['*'],
+        actions: ['acm:RequestCertificate', 'acm:DeleteCertificate'],
+      }),
+    );
+    assetsAccessRole.addToPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        resources: [`arn:${this.props.partition}:ssm:*:${accountId}:parameter/*`],
+        actions: ['ssm:PutParameter', 'ssm:DeleteParameter', 'ssm:GetParameter'],
+      }),
+    );
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${accessRoleResourceName}/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Policy permissions are part of managed role and rest is to get access from s3 bucket',
+        },
+      ],
+    );
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    // rule suppression with evidence for this permission.
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${accessRoleResourceName}/Resource`, [
+      {
+        id: 'AwsSolutions-IAM4',
+        reason: 'IAM Role for lambda needs AWS managed policy',
       },
     ]);
   }

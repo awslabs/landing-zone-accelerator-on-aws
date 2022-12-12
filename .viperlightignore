@@ -65,6 +65,9 @@ source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:56
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:57
 
+source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:56
+source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:57
+
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:25
 source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:25
 
@@ -156,3 +159,7 @@ source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:506
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts
+
+source/packages/@aws-accelerator/config/lib/customizations-config.ts:935
+source/packages/@aws-accelerator/config/dist/lib/customizations-config.d.ts:1829
+source/packages/@aws-accelerator/config/lib/customizations-config.ts:939

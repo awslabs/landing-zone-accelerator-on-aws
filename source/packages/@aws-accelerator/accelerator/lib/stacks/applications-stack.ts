@@ -441,7 +441,7 @@ export class ApplicationsStack extends AcceleratorStack {
             ],
             loadBalancerArn: nlb.networkLoadBalancerArn,
             alpnPolicy: [listener.alpnPolicy!],
-            certificates: [{ certificateArn: listener.certificate! }],
+            certificates: [{ certificateArn: this.getCertificate(listener.certificate) }],
             port: listener.port!,
             protocol: listener.protocol!,
             sslPolicy: listener.sslPolicy!,
@@ -451,6 +451,17 @@ export class ApplicationsStack extends AcceleratorStack {
     }
   }
 
+  private getCertificate(certificate: string | undefined) {
+    if (certificate) {
+      //check if user provided arn. If so do nothing, if not get it from ssm
+      if (certificate.match('\\arn:*')) {
+        return certificate;
+      } else {
+        return cdk.aws_ssm.StringParameter.valueForStringParameter(this, `/accelerator/acm/${certificate}/arn`);
+      }
+    }
+    return undefined;
+  }
   private getSubnets(subnets: string[], vpc: string) {
     const output: string[] = [];
     for (const subnet of subnets ?? []) {

@@ -118,3 +118,4 @@ export * from './lib/aws-autoscaling/create-autoscaling-group';
 export * from './lib/aws-elasticloadbalancingv2/target-group';
 export * from './lib/aws-elasticloadbalancingv2/network-load-balancer';
 export * from './lib/aws-elasticloadbalancingv2/application-load-balancer';
+export * from './lib/aws-certificate-manager/create-certificate';

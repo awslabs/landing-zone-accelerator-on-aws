@@ -410,6 +410,16 @@ export class LoggingStack extends AcceleratorStack {
     //
     this.createSsmParameters();
 
+    // Setup s3 bucket with CMK to only allow specific role access to the key.
+    // this bucket will be used to store private key material for the solution
+    // central assets bucket will only be created in the management account in home region
+    if (
+      cdk.Stack.of(this).account === this.props.accountsConfig.getManagementAccountId() &&
+      cdk.Stack.of(this).region === this.props.globalConfig.homeRegion
+    ) {
+      this.setupCertificateAssets(serverAccessLogsBucket.getS3Bucket().bucketName);
+    }
+
     Logger.debug(`[logging-stack] Stack synthesis complete`);
   }
 
@@ -1577,5 +1587,100 @@ export class LoggingStack extends AcceleratorStack {
         elbLogBucket.addToResourcePolicy(statement);
       }
     }
+  }
+  private setupCertificateAssets(serverAccessLogsBucket: string) {
+    const assetsKmsKey = new cdk.aws_kms.Key(this, 'AssetsKmsKey', {
+      alias: 'accelerator/assets/kms/key',
+      description: 'Key used to encrypt solution assets',
+      enableKeyRotation: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+    // Allow management account access
+    assetsKmsKey.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: 'Management Actions',
+        principals: [new cdk.aws_iam.AccountPrincipal(cdk.Stack.of(this).account)],
+        actions: [
+          'kms:Create*',
+          'kms:Describe*',
+          'kms:Enable*',
+          'kms:List*',
+          'kms:Put*',
+          'kms:Update*',
+          'kms:Revoke*',
+          'kms:Disable*',
+          'kms:Get*',
+          'kms:Delete*',
+          'kms:ScheduleKeyDeletion',
+          'kms:CancelKeyDeletion',
+          'kms:GenerateDataKey',
+        ],
+        resources: ['*'],
+      }),
+    );
+
+    //grant s3 service access
+    assetsKmsKey.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        sid: `Allow S3 to use the encryption key`,
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+        actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
+            ...this.getPrincipalOrgIdCondition(this.organizationId),
+          },
+        },
+      }),
+    );
+
+    const bucketRolePrefix = `arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-AssetsAccessRole`;
+    const bucketRoles: string[] = [];
+    for (const enabledRegion of this.props.globalConfig.enabledRegions) {
+      bucketRoles.push(`${bucketRolePrefix}-${enabledRegion}`);
+    }
+
+    //grant AWSAccelerator-AssetsAccessRole access to KMS
+    assetsKmsKey.addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+        actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'aws:PrincipalARN': bucketRoles,
+            ...this.getPrincipalOrgIdCondition(this.organizationId),
+          },
+        },
+      }),
+    );
+
+    //create assets bucket
+    const assetsBucket = new Bucket(this, 'CertificateAssetBucket', {
+      encryptionType: BucketEncryptionType.SSE_KMS,
+      s3BucketName: `aws-accelerator-assets-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
+      kmsKey: assetsKmsKey,
+      serverAccessLogsBucketName: serverAccessLogsBucket,
+    });
+    assetsBucket.getS3Bucket().addToResourcePolicy(
+      new cdk.aws_iam.PolicyStatement({
+        principals: [new cdk.aws_iam.AnyPrincipal()],
+        actions: ['s3:GetObject*', 's3:ListBucket'],
+        resources: [assetsBucket.getS3Bucket().bucketArn, `${assetsBucket.getS3Bucket().bucketArn}/*`],
+        conditions: {
+          StringEquals: {
+            ...this.getPrincipalOrgIdCondition(this.organizationId),
+          },
+          StringLike: {
+            'aws:PrincipalARN': bucketRoles,
+          },
+        },
+      }),
+    );
+    new cdk.CfnOutput(this, 'AWSAcceleratorAssetsBucket', {
+      value: assetsBucket.getS3Bucket().bucketName,
+      description: 'Name of the bucket which hosts solution assets ',
+    });
   }
 }

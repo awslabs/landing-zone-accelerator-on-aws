@@ -42,7 +42,11 @@ export class CustomizationsConfigTypes {
     'round_robin',
     'least_outstanding_requests',
   ]);
-  static readonly targetGroupHealthCheckProtocolType = t.enums('TargetGroupHealthCheckProtocolTypes', ['HTTP', 'TCP']);
+  static readonly targetGroupHealthCheckProtocolType = t.enums('TargetGroupHealthCheckProtocolTypes', [
+    'HTTP',
+    'HTTPS',
+    'TCP',
+  ]);
   static readonly targetGroupTargetFailoverType = t.enums('TargetGroupTargetFailoverType', [
     'no_rebalance',
     'rebalance',
@@ -303,15 +307,10 @@ export class CustomizationsConfigTypes {
     listeners: t.optional(t.array(this.albListenerConfig)),
   });
 
-  static readonly targetEnvironmentItem = t.interface({
-    account: t.nonEmptyString,
-    region: t.array(t.nonEmptyString),
-  });
-
   static readonly appConfigItem = t.interface({
     name: t.nonEmptyString,
     vpc: t.nonEmptyString,
-    targetEnvironments: t.array(this.targetEnvironmentItem),
+    deploymentTargets: t.deploymentTargets,
     targetGroups: t.optional(t.array(this.targetGroupItem)),
     networkLoadBalancer: t.optional(this.networkLoadBalancerConfig),
     launchTemplate: t.optional(this.launchTemplateConfig),
@@ -968,7 +967,7 @@ export class ApplicationLoadBalancerListenerConfig
    */
   readonly type: t.TypeOf<typeof CustomizationsConfigTypes.albListenerTypeEnum> = 'forward';
   /**
-   * Applies to HTTPS listeners. The default certificate for the listener. You must provide exactly one certificate arn.
+   * Applies to HTTPS listeners. The default certificate for the listener. You must provide exactly one certificate arn or a certificate name which was created by LZA
    */
   readonly certificate: string | undefined = undefined;
   /**
@@ -1893,32 +1892,6 @@ export class AutoScalingConfig implements t.TypeOf<typeof CustomizationsConfigTy
 }
 
 /**
- *
- * *{@link CustomizationsConfig} / {@link AppConfigItem} / {@link TargetEnvironmentConfig}*
- *
- * Application targets configuration
- *
- * @example
- * ```
- * - account: Management
- *   region:
- *    - eu-west-2
- *    - us-west-2
- * ```
- */
-
-export class TargetEnvironmentConfig implements t.TypeOf<typeof CustomizationsConfigTypes.targetEnvironmentItem> {
-  /**
-   * Valid account name. The name should be from the accounts-config.yaml under the same config repository.
-   */
-  readonly account: string = '';
-  /**
-   * Array of valid regions.
-   */
-  readonly region: string[] = [];
-}
-
-/**
  * *{@link CustomizationsConfig} / {@link AppConfigItem}*
  *
  * Application configuration.
@@ -1929,10 +1902,12 @@ export class TargetEnvironmentConfig implements t.TypeOf<typeof CustomizationsCo
  * applications:
  *   - name: appA
  *     vpc:  test1
- *     targetEnvironments:
- *       - account: Management
- *         region:
- *          - eu-west-2
+ *     deploymentTargets:
+ *       accounts:
+ *        - Management
+ *       excludedRegions:
+ *          - us-east-1
+ *          - us-west-2
  *     autoscaling:
  *       name: appA-asg-1
  *       maxSize: 4
@@ -2031,7 +2006,7 @@ export class AppConfigItem implements t.TypeOf<typeof CustomizationsConfigTypes.
   /**
    * The location where the application will be deployed.
    */
-  readonly targetEnvironments: TargetEnvironmentConfig[] = [];
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
   /**
    *
    * Target groups for the application

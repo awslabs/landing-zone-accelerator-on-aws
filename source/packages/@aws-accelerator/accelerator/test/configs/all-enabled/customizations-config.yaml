@@ -26,10 +26,11 @@ applications:
   - name: appA
     # vpc name is taken from network-config.yaml under vpcs
     vpc: SharedServices-Main
-    targetEnvironments: 
-      - account: SharedServices
-        region: 
-          - us-east-1
+    deploymentTargets: 
+      accounts: 
+        - SharedServices
+      excludedRegions: 
+        - us-west-2
     autoscaling:
       name: appA-asg
       maxSize: 4
@@ -85,7 +86,7 @@ applications:
       userData: appConfigs/appA/launchTemplate/userData.sh
 
     targetGroups:
-      - name: appA-nlb-tg
+      - name: appA-nlb-tg-1
         port: 80
         protocol: HTTP
         type: instance
@@ -118,7 +119,7 @@ applications:
           port: 80
           protocol: TCP
           # target group names should match the names from targetGroup section
-          targetGroup: appA-nlb-tg
+          targetGroup: appA-nlb-tg-1
 
     applicationLoadBalancer:
       name: appA-alb-01

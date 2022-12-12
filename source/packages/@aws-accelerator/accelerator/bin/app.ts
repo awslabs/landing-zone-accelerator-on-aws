@@ -54,7 +54,7 @@ import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
-import { CustomStack, generateCustomStackMappings } from '../lib/stacks/custom-stack';
+import { CustomStack, generateCustomStackMappings, isIncluded } from '../lib/stacks/custom-stack';
 import { CustomizationsStack } from '../lib/stacks/customizations-stack';
 import { ApplicationsStack } from '../lib/stacks/applications-stack';
 
@@ -699,26 +699,29 @@ async function main() {
               }
               if (customizationsConfig?.applications) {
                 for (const application of customizationsConfig.applications) {
-                  for (const targetEnvironmentItem of application.targetEnvironments) {
-                    const targetAccountId = props.accountsConfig.getAccountId(targetEnvironmentItem.account);
-                    for (const regionItem of targetEnvironmentItem.region) {
-                      if (enabledRegion === regionItem && accountId === targetAccountId) {
-                        const applicationStackName = `AWSAccelerator-App-${application.name}-${targetAccountId}-${regionItem}`;
-                        const env = {
-                          account: targetAccountId,
-                          region: regionItem,
-                        };
-                        const applicationStack = new ApplicationsStack(app, applicationStackName, {
-                          env,
-                          description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
-                          synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
-                          terminationProtection: props.globalConfig.terminationProtection ?? true,
-                          ...props,
-                          appConfigItem: application,
-                        });
-                        cdk.Aspects.of(applicationStack).add(new AwsSolutionsChecks());
-                      }
-                    }
+                  if (
+                    isIncluded(
+                      application.deploymentTargets,
+                      enabledRegion,
+                      accountId,
+                      props.accountsConfig,
+                      props.organizationConfig,
+                    )
+                  ) {
+                    const applicationStackName = `AWSAccelerator-App-${application.name}-${accountId}-${enabledRegion}`;
+                    const env = {
+                      account: accountId,
+                      region: enabledRegion,
+                    };
+                    const applicationStack = new ApplicationsStack(app, applicationStackName, {
+                      env,
+                      description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
+                      synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                      terminationProtection: props.globalConfig.terminationProtection ?? true,
+                      ...props,
+                      appConfigItem: application,
+                    });
+                    cdk.Aspects.of(applicationStack).add(new AwsSolutionsChecks());
                   }
                 }
               }

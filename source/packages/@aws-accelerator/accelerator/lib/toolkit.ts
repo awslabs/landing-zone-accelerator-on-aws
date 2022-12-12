@@ -26,8 +26,9 @@ import * as path from 'path';
 
 import { AcceleratorStackNames } from './accelerator';
 import { AcceleratorStage } from './accelerator-stage';
-import { AccountsConfig, CustomizationsConfig } from '@aws-accelerator/config';
+import { AccountsConfig, CustomizationsConfig, OrganizationConfig } from '@aws-accelerator/config';
 import { Logger } from './logger';
+import { isIncluded } from './stacks/custom-stack';
 
 /**
  *
@@ -250,15 +251,21 @@ export class AcceleratorToolkit {
               }
             }
             const appStacks = customizationsConfig.getAppStacks();
+            const organizationConfig = OrganizationConfig.load(options.configDirPath);
             for (const application of appStacks) {
-              for (const targetEnvironmentItem of application.targetEnvironments) {
-                const accountId = accountsConfig.getAccountId(targetEnvironmentItem.account);
-                for (const regionItem of targetEnvironmentItem.region) {
-                  if (options.region === regionItem && options.accountId === accountId) {
-                    const applicationStackName = `AWSAccelerator-App-${application.name}-${accountId}-${regionItem}`;
-                    stackName.push(applicationStackName);
-                  }
-                }
+              if (
+                isIncluded(
+                  application.deploymentTargets,
+                  options.region!,
+                  options.accountId!,
+                  accountsConfig,
+                  organizationConfig,
+                )
+              ) {
+                const applicationStackName = `AWSAccelerator-App-${
+                  application.name
+                }-${options.accountId!}-${options.region!}`;
+                stackName.push(applicationStackName);
               }
             }
           }

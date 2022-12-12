@@ -33,6 +33,108 @@ Object {
       },
       "Type": "AWS::IAM::Group",
     },
+    "AssetAccessRole111111111111useast1B29D082B": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "IAM Role for lambda needs AWS managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "AWS Accelerator assets access role in workload accounts deploy ACM imported certificates.",
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "RoleName": "AWSAccelerator-AssetsAccessRole-us-east-1",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AssetAccessRole111111111111useast1DefaultPolicy9C40CD23": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policy permissions are part of managed role and rest is to get access from s3 bucket",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:ListBucket",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                "arn:aws:s3:::aws-accelerator-assets-111111111111-us-east-1",
+                "arn:aws:s3:::aws-accelerator-assets-111111111111-us-east-1/*",
+              ],
+            },
+            Object {
+              "Action": "acm:ImportCertificate",
+              "Effect": "Allow",
+              "Resource": "arn:aws:acm:*:111111111111:certificate/*",
+            },
+            Object {
+              "Action": Array [
+                "acm:RequestCertificate",
+                "acm:DeleteCertificate",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "ssm:PutParameter",
+                "ssm:DeleteParameter",
+                "ssm:GetParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": "arn:aws:ssm:*:111111111111:parameter/*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AssetAccessRole111111111111useast1DefaultPolicy9C40CD23",
+        "Roles": Array [
+          Object {
+            "Ref": "AssetAccessRole111111111111useast1B29D082B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "BackupKey60B97760": Object {
       "DeletionPolicy": "Retain",
       "Properties": Object {
