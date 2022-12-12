@@ -532,9 +532,8 @@ export class OperationsStack extends AcceleratorStack {
       const managementAccountId = this.props.accountsConfig.getManagementAccountId();
       if (cdk.Stack.of(this).account == managementAccountId) {
         this.createStackSetAdminRole();
-      } else {
-        this.createStackSetExecutionRole(managementAccountId);
       }
+      this.createStackSetExecutionRole(managementAccountId);
     }
   }
 
