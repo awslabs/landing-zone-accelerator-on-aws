@@ -653,6 +653,60 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
+    "StackSetExecutionRole02DBF677": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "IAM Role created as per accelerator iam-config needs AWS managed policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "Used to deploy StackSets",
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AdministratorAccess",
+              ],
+            ],
+          },
+        ],
+        "RoleName": "AWSCloudFormationStackSetExecutionRole",
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "accelbudgetBudgetDefinitionaccelbudget73707CCE": Object {
       "Properties": Object {
         "Budget": Object {
