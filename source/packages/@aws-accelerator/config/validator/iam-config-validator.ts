@@ -74,6 +74,9 @@ export class IamConfigValidator {
     // Validate target account names
     this.validateDeploymentTargetAccountNames(values, accountNames, errors);
 
+    // Validate name uniqueness
+    this.validateIdentityCenterResourceNameForUniqueness(values, errors);
+
     // Validate Managed active directory
     new ManagedActiveDirectoryValidator(values, vpcSubnetLists, errors);
 
@@ -158,6 +161,69 @@ export class IamConfigValidator {
     for (const policy of policies) {
       if (!fs.existsSync(path.join(configDir, policy.policyFile))) {
         errors.push(`Policy definition file ${policy.policyFile} not found, for ${policy.name} !!!`);
+      }
+    }
+  }
+
+  /**
+   * Function to validate PermissionSet and Assignment names are unique
+   * @param values
+   */
+  private validateIdentityCenterResourceNameForUniqueness(
+    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    errors: string[],
+  ) {
+    const identityCenter = values.identityCenter;
+    const assignmentNames = [...(identityCenter?.identityCenterAssignments ?? [])].map(item => item.name);
+    const permissionSetNames = [...(identityCenter?.identityCenterPermissionSets ?? [])].map(item => item.name);
+
+    if (new Set(assignmentNames).size !== assignmentNames.length) {
+      errors.push(`Duplicate Identity Center Assignment names defined [${assignmentNames}].`);
+    }
+
+    if (new Set(permissionSetNames).size !== permissionSetNames.length) {
+      errors.push(`Duplicate Identity Center Permission Set names defined [${permissionSetNames}].`);
+    }
+  }
+
+  /**
+   * Function to validate existence of Assignment target account names
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateAssignmentAccountNames(
+    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    const identityCenter = values.identityCenter;
+    for (const assignment of identityCenter?.identityCenterAssignments ?? []) {
+      for (const account of assignment.deploymentTargets.accounts ?? []) {
+        if (accountNames.indexOf(account) === -1) {
+          errors.push(
+            `Deployment target account ${account} for user sets does not exists in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of Assignment deployment target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateAssignmentDeploymentTargetOUs(
+    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    ouIdNames: string[],
+    errors: string[],
+  ) {
+    const identityCenter = values.identityCenter;
+    for (const assignment of identityCenter?.identityCenterAssignments ?? []) {
+      for (const ou of assignment.deploymentTargets.organizationalUnits ?? []) {
+        if (ouIdNames.indexOf(ou) === -1) {
+          errors.push(`Deployment target OU ${ou} for assignment does not exist in organization-config.yaml file.`);
+        }
       }
     }
   }
@@ -274,6 +340,11 @@ export class IamConfigValidator {
     // Validate user sets account name
     //
     this.validateUserSetsAccountNames(values, accountNames, errors);
+
+    //
+    // Validate Identity Center assignments account name
+    //
+    this.validateAssignmentAccountNames(values, accountNames, errors);
   }
 
   /**
@@ -382,6 +453,8 @@ export class IamConfigValidator {
     // Validate user sets OU name
     //
     this.validateUserSetsDeploymentTargetOUs(values, ouIdNames, errors);
+
+    this.validateAssignmentDeploymentTargetOUs(values, ouIdNames, errors);
   }
 }
 
