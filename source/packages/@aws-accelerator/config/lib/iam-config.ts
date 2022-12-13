@@ -147,6 +147,42 @@ export class IamConfigTypes {
   });
 
   /**
+   * Identity Center Permission Set configuration
+   */
+  static readonly identityCenterPermissionSetConfig = t.interface({
+    name: t.nonEmptyString,
+    policies: t.optional(this.policiesConfig),
+    sessionDuration: t.optional(t.number),
+  });
+
+  /**
+   * An enum for assume by configuration
+   *
+   * Possible values user or group
+   */
+  static readonly principalTypeEnum = t.enums('PrincipalType', ['USER', 'GROUP']);
+
+  /**
+   * Identity Center Assignment configuration
+   */
+  static readonly identityCenterAssignmentConfig = t.interface({
+    permissionSetName: t.nonEmptyString,
+    principalId: t.nonEmptyString,
+    principalType: this.principalTypeEnum,
+    deploymentTargets: t.deploymentTargets,
+    name: t.nonEmptyString,
+  });
+
+  /**
+   * Identity Center configuration
+   */
+  static readonly identityCenterConfig = t.interface({
+    name: t.nonEmptyString,
+    identityCenterPermissionSets: t.optional(t.array(this.identityCenterPermissionSetConfig)),
+    identityCenterAssignments: t.optional(t.array(this.identityCenterAssignmentConfig)),
+  });
+
+  /**
    * IAM policy set configuration
    */
   static readonly policySetConfig = t.interface({
@@ -252,6 +288,7 @@ export class IamConfigTypes {
     groupSets: t.optional(t.array(this.groupSetConfig)),
     userSets: t.optional(t.array(this.userSetConfig)),
     managedActiveDirectories: t.optional(t.array(this.managedActiveDirectoryConfig)),
+    identityCenter: t.optional(this.identityCenterConfig),
   });
 }
 
@@ -894,6 +931,140 @@ export class RoleConfig implements t.TypeOf<typeof IamConfigTypes.roleConfig> {
 }
 
 /**
+ * *{@link IamConfig} / {@link IdentityCenterConfig}*
+ *
+ * Identity Center Configuration
+ *
+ * @example
+ * ```
+identityCenter:
+  name: identityCenter1
+  identityCenterPermissionSets:
+    - name: PermissionSet1
+      policies:
+        awsManaged:
+          - arn:aws:iam::aws:policy/AdministratorAccess
+        customerManaged:
+          - ResourceConfigurationCollectorPolicy
+      sessionDuration: 60
+
+  identityCenterAssignments:
+    - name: Assignment1
+      permissionSetName: PermissionSet1
+      principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
+      principalType: USER
+      deploymentTargets:
+        accounts:
+          - LogArchive
+ * ```
+ */
+
+export class IdentityCenterConfig implements t.TypeOf<typeof IamConfigTypes.identityCenterConfig> {
+  /**
+   * A name for the Identity Center Configuration
+   */
+  readonly name: string = '';
+
+  /**
+   * List of PermissionSets
+   */
+  readonly identityCenterPermissionSets: IdentityCenterPermissionSetConfig[] = [];
+
+  /**
+   * List of Assignments
+   */
+  readonly identityCenterAssignments: IdentityCenterAssignmentConfig[] = [];
+}
+
+/**
+ * *{@link IamConfig} / {@link IdentityCenterPermissionSetConfig}*
+ *
+ * Identity Center Permission Set Configuration
+ *
+ * @example
+ * ```
+name: identityCenter1
+identityCenterPermissionSets:
+  - name: PermissionSet1
+    policies:
+      awsManaged:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      customerManaged:
+        - ResourceConfigurationCollectorPolicy
+    sessionDuration: 60
+  * ```
+  */
+export class IdentityCenterPermissionSetConfig
+  implements t.TypeOf<typeof IamConfigTypes.identityCenterPermissionSetConfig>
+{
+  /**
+   * A name for the Identity Center Permission Set Configuration
+   */
+  readonly name: string = '';
+
+  /**
+   * Policy Configuration for Customer Managed Permissions and AWS Managed Permissions
+   */
+  readonly policies: PoliciesConfig | undefined = undefined;
+
+  /**
+   * A number value (in minutes) for length of SSO session Duration association with Permissions Set (Defaults to 60).
+   */
+  readonly sessionDuration: number = 60;
+}
+
+/**
+ * *{@link IamConfig} / {@link IdentityCenterAssignmentConfig}*
+ *
+ * Identity Center Assignment Configuration
+ *
+ * @example
+ * ```
+identityCenterAssignments:
+  - name: Assignment1
+    permissionSetName: PermissionSet1
+    principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
+    principalType: USER
+    deploymentTargets:
+      accounts:
+        - LogArchive
+  - name: Assignment2
+    permissionSetName: PermissionSet2
+    principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
+    principalType: GROUP
+    deploymentTargets:
+      organizationalUnits:
+        - Security
+  * ```
+  */
+export class IdentityCenterAssignmentConfig implements t.TypeOf<typeof IamConfigTypes.identityCenterAssignmentConfig> {
+  /**
+   * The Name for the Assignment
+   */
+  readonly name: string = '';
+
+  /**
+   * Arn of the Permission Set that will be used for the Assignment
+   */
+  readonly permissionSetName: string = '';
+
+  /**
+   * PrincipalId that will be used for the Assignment
+   */
+  readonly principalId: string = '';
+
+  /**
+   * PrinipalType that will be used for the Assignment
+   */
+  readonly principalType: t.TypeOf<typeof IamConfigTypes.principalTypeEnum> = 'USER';
+
+  /**
+   * Role set deployment targets
+   */
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
+/**
  * *{@link IamConfig} / {@link RoleSetConfig}*
  *
  * Role set configuration
@@ -1088,6 +1259,27 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *
    */
   readonly userSets: UserSetConfig[] = [];
+
+  /**
+   * Identity Center configuration
+   *
+   * To configure Identity Center, you need to provide following values for this parameter.
+   *
+   * @example
+   * ```
+   * idetityCenterPermissionSets:
+   *   - deploymentTargets:
+   *       organizationalUnits:
+   *         - Root
+   *     groups:
+   *       - name: Administrators
+   *         policies:
+   *           awsManaged:
+   *             - AdministratorAccess
+   * ```
+   */
+
+  readonly identityCenter: IdentityCenterConfig = new IdentityCenterConfig();
 
   /**
    * Managed active directory configuration

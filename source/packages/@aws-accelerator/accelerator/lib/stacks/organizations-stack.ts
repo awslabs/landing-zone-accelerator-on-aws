@@ -40,6 +40,7 @@ import {
   RegisterDelegatedAdministrator,
   ReportDefinition,
   SecurityHubOrganizationAdminAccount,
+  IdentityCenterOrganizationAdminAccount,
 } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
@@ -63,6 +64,11 @@ export class OrganizationsStack extends AcceleratorStack {
 
   constructor(scope: Construct, id: string, props: OrganizationsStackProps) {
     super(scope, id, props);
+
+    // Security Services delegated admin account configuration
+    // Global decoration for security services
+    const delegatedAdminAccount = props.securityConfig.centralSecurityServices.delegatedAdminAccount;
+    const securityAdminAccountId = props.accountsConfig.getAccountId(delegatedAdminAccount);
 
     Logger.debug(`[organizations-stack] homeRegion: ${props.globalConfig.homeRegion}`);
     // Set private properties
@@ -136,12 +142,10 @@ export class OrganizationsStack extends AcceleratorStack {
       // Enable FMS Delegated Admin Account
       //
       this.enableFMSDelegatedAdminAccount();
-    }
 
-    // Security Services delegated admin account configuration
-    // Global decoration for security services
-    const delegatedAdminAccount = props.securityConfig.centralSecurityServices.delegatedAdminAccount;
-    const securityAdminAccountId = props.accountsConfig.getAccountId(delegatedAdminAccount);
+      //IdentityCenter Config
+      this.enableIdentityCenterDelegatedAdminAccount(securityAdminAccountId);
+    }
 
     // Macie Configuration
     this.enableMacieDelegatedAdminAccount(securityAdminAccountId);
@@ -558,6 +562,21 @@ export class OrganizationsStack extends AcceleratorStack {
           });
         }
       }
+    }
+  }
+
+  /**
+   * Custom resource to check if Identity Center Delegated Administrator
+   * needs to be updated.
+   * @param adminAccountId
+   */
+  private enableIdentityCenterDelegatedAdminAccount(adminAccountId: string) {
+    const managementAccountId = this.props.accountsConfig.getManagementAccountId();
+    if (cdk.Stack.of(this).account === managementAccountId) {
+      new IdentityCenterOrganizationAdminAccount(this, `IdentityCenterAdmin`, {
+        adminAccountId: adminAccountId,
+      });
+      Logger.info(`[organizations-stack] Delegated Admin account for Identity Center is: ${adminAccountId}`);
     }
   }
 

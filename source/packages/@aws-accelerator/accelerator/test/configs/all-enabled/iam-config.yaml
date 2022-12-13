@@ -38,6 +38,31 @@ groupSets:
         policies:
           awsManaged:
             - AdministratorAccess
+identityCenter:
+  name: identityCenter1
+  identityCenterPermissionSets:
+    - name: PermissionSet1
+      policies:
+        awsManaged:
+          - arn:aws:iam::aws:policy/AdministratorAccess
+        customerManaged:
+          - ResourceConfigurationCollectorPolicy
+      sessionDuration: 60
+  identityCenterAssignments:
+    - name: Assignment1
+      permissionSetName: PermissionSet1
+      principalId: 'abcd1234-1001-70f0-9c12-56a6aa967ca4'
+      principalType: USER
+      deploymentTargets:
+        accounts:
+          - LogArchive
+    - name: Assignment2
+      permissionSetName: PermissionSet1
+      principalId: '1234abcd-1001-70f0-9c12-56a6aa967ca4'
+      principalType: GROUP
+      deploymentTargets:
+        organizationalUnits:
+          - Security
 userSets:
   - deploymentTargets:
       accounts:
@@ -49,7 +74,7 @@ userSets:
       - username: breakGlassUser02
         group: Administrators
         boundaryPolicy: Default-Boundary-Policy
-secretSets: 
+secretSets:
   - deploymentTargets:
       accounts:
         - SharedServices
@@ -57,7 +82,7 @@ secretSets:
       - name: managedActiveDirectoryAdminUserSecret
         description: Managed AD admin user secret
         # kmsKeyName: Key1
-        userName: Admin    
+        userName: Admin
         passwordPolicy:
           excludeUppercase: false
           excludeLowercase: false
@@ -66,7 +91,7 @@ secretSets:
           includeSpace: false
           passwordLength: 32
           excludePunctuation: false
-          excludeCharacters: "@#"
+          excludeCharacters: '@#'
 managedActiveDirectories:
   - name: AcceleratorManagedActiveDirectory
     type: AWS Managed Microsoft AD
@@ -104,7 +129,7 @@ managedActiveDirectories:
         - scriptName: ADGroupSetup
           scriptFilePath: ad-config-scripts/AD-group-setup.ps1
         - scriptName: ADUserSetup
-          scriptFilePath: ad-config-scripts/AD-user-setup.ps1           
+          scriptFilePath: ad-config-scripts/AD-user-setup.ps1
         - scriptName: ADUserGroupSetup
           scriptFilePath: ad-config-scripts/AD-user-group-setup.ps1
         - scriptName: ADGroupGrantPermissionsSetup
@@ -117,9 +142,9 @@ managedActiveDirectories:
         - aws-Provisioning
         - aws-Billing
       adPerAccountGroups:
-        - "*-Admin"
-        - "*-PowerUser"
-        - "*-View"
+        - '*-Admin'
+        - '*-PowerUser'
+        - '*-View'
       adConnectorGroup: ADConnector-grp
       sharedAccounts:
         - Management
@@ -144,12 +169,12 @@ managedActiveDirectories:
           email: example-user1@example.com
           groups:
             - aws-Provisioning
-            - "*-View"
-            - "*-Admin"
-            - "*-PowerUser"
+            - '*-View'
+            - '*-Admin'
+            - '*-PowerUser'
             - AWS Delegated Administrators
         - name: user002
           email: example-user2@example.com
           groups:
             - aws-Provisioning
-            - "*-View"
+            - '*-View'
