@@ -17,14 +17,24 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
-import { RoleConfig } from '@aws-accelerator/config';
-import { BudgetDefinition, Inventory, LimitsDefinition } from '@aws-accelerator/constructs';
+import { IdentityCenterAssignmentConfig, IdentityCenterPermissionSetConfig, RoleConfig } from '@aws-accelerator/config';
+import {
+  BudgetDefinition,
+  IdentityCenterGetInstanceId,
+  Inventory,
+  LimitsDefinition,
+} from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export interface OperationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
+}
+
+interface permissionSetMapping {
+  name: string;
+  arn: string;
 }
 
 export class OperationsStack extends AcceleratorStack {
@@ -59,6 +69,11 @@ export class OperationsStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: OperationsStackProps) {
     super(scope, id, props);
 
+    // Security Services delegated admin account configuration
+    // Global decoration for security services
+    const securityAdminAccount = props.securityConfig.centralSecurityServices.delegatedAdminAccount;
+    const securityAdminAccountId = props.accountsConfig.getAccountId(securityAdminAccount);
+
     //
     // Only deploy IAM and CUR resources into the home region
     //
@@ -69,6 +84,10 @@ export class OperationsStack extends AcceleratorStack {
       this.addGroups();
       this.addUsers();
       this.createStackSetRoles();
+      // Identity Center
+      //
+      this.addIdentityCenterResources(securityAdminAccountId);
+      //
       //
       // Budgets
       //
@@ -558,15 +577,157 @@ export class OperationsStack extends AcceleratorStack {
         }),
       },
     });
+  }
 
-    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
-    // rule suppression with evidence for this permission.
-    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/StackSetAdminRole/Resource`, [
-      {
-        id: 'AwsSolutions-IAM5',
-        reason: 'Policies definition are derived from accelerator iam-config boundary-policy file',
-      },
-    ]);
+  /**
+   * Custom resource to check if Identity Center Delegated Administrator
+   * needs to be updated.
+   */
+  private addIdentityCenterPermissionSets(securityAdminAccountId: string, identityCenterInstanceId: string) {
+    const permissionSetMap: permissionSetMapping[] = [];
+    if (cdk.Stack.of(this).account == securityAdminAccountId) {
+      const identityCenter = this.props.iamConfig.identityCenter;
+      if (identityCenter?.identityCenterPermissionSets) {
+        for (const identityCenterPermissionSet of identityCenter.identityCenterPermissionSets) {
+          const permissionSet = this.createPermissionsSet(identityCenterPermissionSet, identityCenterInstanceId);
+          permissionSetMap.push(permissionSet);
+        }
+      }
+    }
+    return permissionSetMap;
+  }
+
+  private createPermissionsSet(
+    identityCenterPermissionSet: IdentityCenterPermissionSetConfig,
+    identityCenterInstanceId: string,
+  ): permissionSetMapping {
+    let customerManagedPolicyReferencesList: cdk.aws_sso.CfnPermissionSet.CustomerManagedPolicyReferenceProperty[] = [];
+    const permissionSetPair: permissionSetMapping = {
+      name: '',
+      arn: '',
+    };
+    Logger.info(`[operations-stack] Adding Identity Center Permission Set ${identityCenterPermissionSet.name}`);
+    if (identityCenterPermissionSet.policies?.customerManaged) {
+      customerManagedPolicyReferencesList = this.generateManagedPolicyReferences(
+        identityCenterPermissionSet.policies?.customerManaged,
+      );
+    }
+
+    const convertedSessionDuration = this.convertMinutestoIso8601(identityCenterPermissionSet.sessionDuration);
+
+    try {
+      //if check for managedpolicy or customer managed
+      const permissionSet = new cdk.aws_sso.CfnPermissionSet(
+        this,
+        `${pascalCase(identityCenterPermissionSet.name)}IdentityCenterPermissionSet`,
+        {
+          name: identityCenterPermissionSet.name,
+          instanceArn: identityCenterInstanceId,
+          managedPolicies: identityCenterPermissionSet?.policies?.awsManaged,
+          customerManagedPolicyReferences: customerManagedPolicyReferencesList,
+          sessionDuration: convertedSessionDuration ?? undefined,
+        },
+      );
+
+      permissionSetPair.name = permissionSet.name;
+      permissionSetPair.arn = permissionSet.attrPermissionSetArn;
+    } catch (e) {
+      Logger.error(e);
+      throw e;
+    }
+
+    return permissionSetPair;
+  }
+
+  private addIdentityCenterAssignments(
+    securityAdminAccountId: string,
+    permissionSetMap: permissionSetMapping[],
+    identityCenterInstanceId: string,
+  ) {
+    if (cdk.Stack.of(this).account == securityAdminAccountId) {
+      const identityCenter = this.props.iamConfig.identityCenter;
+      if (identityCenter?.identityCenterAssignments) {
+        for (const assignment of identityCenter.identityCenterAssignments) {
+          this.createAssignment(assignment, permissionSetMap, identityCenterInstanceId);
+        }
+      }
+    }
+  }
+
+  /**
+   * Retrieve Identity Center Instance Id
+   */
+  private getIdentityCenterInstanceId(securityAdminAccountId: string) {
+    Logger.info(`[operations-stack] Retrieving Identity Center Instance Id`);
+    let identityCenterInstanceResponse;
+    let identityCenterInstanceId;
+    if (!securityAdminAccountId) {
+      securityAdminAccountId = this.props.accountsConfig.getManagementAccountId();
+    }
+    if (cdk.Stack.of(this).account == securityAdminAccountId) {
+      try {
+        identityCenterInstanceResponse = new IdentityCenterGetInstanceId(this, `IdentityCenterGetInstanceId`);
+        identityCenterInstanceId = identityCenterInstanceResponse.instanceId;
+      } catch (e) {
+        Logger.error(e);
+        throw e;
+      }
+    }
+    return identityCenterInstanceId;
+  }
+
+  private createAssignment(
+    assignment: IdentityCenterAssignmentConfig,
+    permissionSetMap: permissionSetMapping[],
+    identityCenterInstanceId: string,
+  ) {
+    let listOfTargets = [];
+    listOfTargets = this.getAccountIdsFromDeploymentTarget(assignment.deploymentTargets);
+    const permissionSetArnValue = this.getPermissionSetArn(permissionSetMap, assignment.permissionSetName);
+    for (const target of listOfTargets) {
+      Logger.info(`[operations-stack] Creating Identity Center Assignment ${assignment.name}-${target}`);
+      try {
+        new cdk.aws_sso.CfnAssignment(this, `${pascalCase(assignment.name)}-${target}`, {
+          instanceArn: identityCenterInstanceId,
+          permissionSetArn: permissionSetArnValue,
+          principalId: assignment.principalId,
+          principalType: assignment.principalType,
+          targetId: target,
+          targetType: 'AWS_ACCOUNT',
+        });
+      } catch (e) {
+        Logger.error(e);
+        throw e;
+      }
+    }
+  }
+
+  private getPermissionSetArn(permissionSetMap: permissionSetMapping[], name: string) {
+    let permissionSetArn = '';
+    for (const permissionSet of permissionSetMap) {
+      if (permissionSet.name == name && permissionSet.arn) {
+        permissionSetArn = permissionSet.arn;
+      }
+    }
+    return permissionSetArn;
+  }
+
+  private addIdentityCenterResources(securityAdminAccountId: string) {
+    if (this.props.iamConfig.identityCenter) {
+      if (cdk.Stack.of(this).account == securityAdminAccountId) {
+        const identityCenterInstanceId = this.getIdentityCenterInstanceId(securityAdminAccountId);
+        if (!identityCenterInstanceId) {
+          throw new Error(
+            `[operations-stack] No Identity Center instance found. Please ensure that the Identity Service is enabled, and rerun the Code Pipeline`,
+          );
+        }
+        const permissionSetList = this.addIdentityCenterPermissionSets(
+          securityAdminAccountId,
+          identityCenterInstanceId,
+        );
+        this.addIdentityCenterAssignments(securityAdminAccountId, permissionSetList, identityCenterInstanceId);
+      }
+    }
   }
 
   private createStackSetExecutionRole(managementAccountId: string) {
@@ -584,6 +745,15 @@ export class OperationsStack extends AcceleratorStack {
       {
         id: 'AwsSolutions-IAM4',
         reason: 'IAM Role created as per accelerator iam-config needs AWS managed policy',
+      },
+    ]);
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/StackSetAdminRole/Resource`, [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Policies definition are derived from accelerator iam-config boundary-policy file',
       },
     ]);
   }

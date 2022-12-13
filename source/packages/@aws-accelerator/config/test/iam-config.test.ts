@@ -24,6 +24,9 @@ import {
   UserSetConfig,
   AssumedByConfig,
   RoleConfig,
+  IdentityCenterAssignmentConfig,
+  IdentityCenterConfig,
+  IdentityCenterPermissionSetConfig,
 } from '../lib/iam-config';
 import { describe, it, expect } from '@jest/globals';
 import * as path from 'path';
@@ -71,6 +74,15 @@ describe('IamConfig', () => {
 
       const policySetConfig = new PolicySetConfig();
       expect(policySetConfig.policies).toEqual([]);
+
+      const identityCenterConfig = new IdentityCenterConfig();
+      expect(identityCenterConfig.name).toEqual('');
+
+      const identityCenterAssignmentConfig = new IdentityCenterAssignmentConfig();
+      expect(identityCenterAssignmentConfig.name).toEqual('');
+
+      const identityCenterPermissionSetConfig = new IdentityCenterPermissionSetConfig();
+      expect(identityCenterPermissionSetConfig.name).toEqual('');
     });
   });
 
