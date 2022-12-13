@@ -1,0 +1,94 @@
+policySets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Security
+        - Infrastructure
+        - Central
+        - Dev
+        - Test
+        - Prod
+        - UnClass
+        - Sandbox
+    policies:
+      - name: Default-Boundary-Policy
+        policy: iam-policies/boundary-policy.json
+  - deploymentTargets:
+      accounts:
+        - Operations
+    policies:
+      - name: AWSAccelerator-RDGW-Custom-Policy
+        policy: iam-policies/rdgw-custom-policy.json
+roleSets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+    roles:
+      - name: EC2-Default-SSM-AD-Role
+        instanceProfile: true
+        assumedBy:
+          - type: service
+            principal: ec2.amazonaws.com
+        policies:
+          awsManaged:
+            - AmazonSSMManagedInstanceCore
+            - AmazonSSMDirectoryServiceAccess
+            - CloudWatchAgentServerPolicy
+        boundaryPolicy: Default-Boundary-Policy
+  - deploymentTargets:
+      accounts:
+        - Operations
+    roles:
+      - name: AWSAccelerator-RDGW-Role
+        instanceProfile: true
+        assumedBy:
+          - type: service
+            principal: ec2.amazonaws.com
+        policies:
+          awsManaged:
+            - AmazonSSMManagedInstanceCore
+            - AmazonSSMDirectoryServiceAccess
+            - CloudWatchAgentServerPolicy
+          customerManaged:
+            - AWSAccelerator-RDGW-Custom-Policy  
+        boundaryPolicy: Default-Boundary-Policy
+      - name: AWSAccelerator-Rsyslog-Role
+        instanceProfile: true
+        assumedBy:
+          - type: service
+            principal: ec2.amazonaws.com
+        policies:
+          awsManaged:
+            - AmazonSSMManagedInstanceCore 
+            - CloudWatchAgentServerPolicy
+            - AmazonS3ReadOnlyAccess
+        boundaryPolicy: Default-Boundary-Policy
+groupSets:
+  - deploymentTargets:
+      accounts:
+        - Management
+    groups:
+      - name: BreakGlassAdmins
+        policies:
+          awsManaged:
+            - AdministratorAccess
+      - name: OpsAdmins
+        policies:
+          awsManaged:
+            - AdministratorAccess
+userSets:
+  - deploymentTargets:
+      accounts:
+        - Management
+    users:
+      - username: breakGlassUser01
+        group: BreakGlassAdmins
+        boundaryPolicy: Default-Boundary-Policy
+      - username: breakGlassUser02
+        group: BreakGlassAdmins
+        boundaryPolicy: Default-Boundary-Policy
+      - username: OpsUser1
+        group: OpsAdmins
+        boundaryPolicy: Default-Boundary-Policy
+      - username: OpsUser2
+        group: OpsAdmins
+        boundaryPolicy: Default-Boundary-Policy
