@@ -44,6 +44,7 @@ import {
   QueryLoggingConfigAssociation,
   ResolverFirewallRuleGroupAssociation,
   ResolverRuleAssociation,
+  ShareActiveDirectory,
   ShareSubnetTags,
   SsmParameterLookup,
   TransitGatewayAttachment,
@@ -1998,6 +1999,91 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           ],
         );
 
+        // Share active directory
+        const sharedAccountNames = this.props.iamConfig.getManageActiveDirectorySharedAccountNames(
+          managedActiveDirectory.name,
+          this.props.configDirPath,
+        );
+
+        const sharedAccountIds: string[] = [];
+        for (const account of sharedAccountNames) {
+          sharedAccountIds.push(this.props.accountsConfig.getAccountId(account));
+        }
+
+        if (sharedAccountIds.length > 0) {
+          Logger.info(`[network-associations-stack] Sharing Managed active directory ${managedActiveDirectory.name}`);
+          const shareActiveDirectory = new ShareActiveDirectory(
+            this,
+            `${pascalCase(managedActiveDirectory.name)}ShareDirectory`,
+            {
+              directoryId: activeDirectory.id,
+              sharedTargetAccountIds: sharedAccountIds,
+              accountAccessRoleName: AcceleratorStack.ACCELERATOR_MAD_SHARE_ACCEPT_ROLE_NAME,
+              lambdaKey: this.lambdaKey,
+              cloudwatchKey: this.cloudwatchKey,
+              cloudwatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            },
+          );
+
+          shareActiveDirectory.node.addDependency(activeDirectory);
+
+          // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(
+              managedActiveDirectory.name,
+            )}ShareDirectory/ShareManageActiveDirectoryFunction/ServiceRole/DefaultPolicy/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM5',
+                reason: 'Custom resource lambda needs to access to directory service.',
+              },
+            ],
+          );
+
+          // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(
+              managedActiveDirectory.name,
+            )}ShareDirectory/ShareManageActiveDirectoryFunction/ServiceRole/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM4',
+                reason: 'Custom resource lambda needs to access to directory service.',
+              },
+            ],
+          );
+
+          // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(
+              managedActiveDirectory.name,
+            )}ShareDirectory/ShareManageActiveDirectoryProvider/framework-onEvent/ServiceRole/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM4',
+                reason: 'Custom resource lambda needs to access to directory service.',
+              },
+            ],
+          );
+
+          // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(
+              managedActiveDirectory.name,
+            )}ShareDirectory/ShareManageActiveDirectoryProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM5',
+                reason: 'Custom resource lambda needs to access to directory service.',
+              },
+            ],
+          );
+        }
+
         // Update resolver group rule with mad dns ips
         this.updateActiveDirectoryResolverGroupRule(
           managedActiveDirectory.name,
@@ -2012,6 +2098,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           adminSecretArn,
           madAdminSecretAccountId,
           madAdminSecretRegion,
+          sharedAccountNames,
         );
       }
     }
@@ -2028,6 +2115,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     resolverRuleName: string,
     dnsIpAddresses: string[],
   ) {
+    Logger.info(`[network-associations-stack] Updating resolver group for directory ${directoryName}`);
     new ActiveDirectoryResolverRule(this, `${pascalCase(directoryName)}ResolverRule`, {
       route53ResolverRuleName: resolverRuleName,
       targetIps: dnsIpAddresses,
@@ -2102,6 +2190,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     adminSecretArn: string,
     adSecretAccountId: string,
     adSecretRegion: string,
+    sharedAccountNames: string[],
   ) {
     if (managedActiveDirectory.activeDirectoryConfigurationInstance) {
       const adInstanceConfig = managedActiveDirectory.activeDirectoryConfigurationInstance;
@@ -2154,7 +2243,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           adConnectorGroup: adInstanceConfig.adConnectorGroup,
           adUsers: adInstanceConfig.adUsers,
           adPasswordPolicy: adInstanceConfig.adPasswordPolicy,
-          accountNames: adInstanceConfig.sharedAccounts,
+          accountNames: sharedAccountNames,
         },
       );
 

@@ -111,6 +111,14 @@ managedActiveDirectories:
       account: Audit
       region: us-east-1
       adminSecretName: my-admin-001
+    sharedOrganizationalUnits:
+        organizationalUnits: 
+          - Root
+        excludedAccounts:
+          - Audit  
+    # sharedAccounts:
+    #   - Management
+    #   - LogArchive
     logs:
       groupName: /aws/directoryservice/AcceleratorManagedActiveDirectory
       retentionInDays: 30
@@ -129,7 +137,7 @@ managedActiveDirectories:
         - scriptName: ADGroupSetup
           scriptFilePath: ad-config-scripts/AD-group-setup.ps1
         - scriptName: ADUserSetup
-          scriptFilePath: ad-config-scripts/AD-user-setup.ps1
+          scriptFilePath: ad-config-scripts/AD-user-setup.ps1           
         - scriptName: ADUserGroupSetup
           scriptFilePath: ad-config-scripts/AD-user-group-setup.ps1
         - scriptName: ADGroupGrantPermissionsSetup
@@ -142,14 +150,10 @@ managedActiveDirectories:
         - aws-Provisioning
         - aws-Billing
       adPerAccountGroups:
-        - '*-Admin'
-        - '*-PowerUser'
-        - '*-View'
+        - "*-Admin"
+        - "*-PowerUser"
+        - "*-View"
       adConnectorGroup: ADConnector-grp
-      sharedAccounts:
-        - Management
-        - Audit
-        - LogArchive
       adPasswordPolicy:
         history: 24
         maximumAge: 90
@@ -169,12 +173,12 @@ managedActiveDirectories:
           email: example-user1@example.com
           groups:
             - aws-Provisioning
-            - '*-View'
-            - '*-Admin'
-            - '*-PowerUser'
+            - "*-View"
+            - "*-Admin"
+            - "*-PowerUser"
             - AWS Delegated Administrators
         - name: user002
           email: example-user2@example.com
           groups:
             - aws-Provisioning
-            - '*-View'
+            - "*-View"

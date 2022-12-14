@@ -106,6 +106,11 @@ export class NetworkPrepStack extends AcceleratorStack {
     this.createTransitGatewayPeeringRole();
 
     //
+    // Create Managed active directory accept share role
+    //
+    this.createManagedActiveDirectoryShareAcceptRole();
+
+    //
     // Create Site-to-Site VPN connections
     //
     this.createVpnConnectionResources(props);
@@ -266,6 +271,58 @@ export class NetworkPrepStack extends AcceleratorStack {
         ]);
 
         return; // So that same env (account & region) do not try to create duplicate role, if there is multiple tgw peering for same account
+      }
+    }
+  }
+
+  /**
+   * Function to create Managed active directory share accept role. This role is used to assume by MAD account to auto accept share reauest
+   * This role is created only if account is a shared target for MAD.
+   * This role gets created only in home region
+   * @returns
+   */
+  private createManagedActiveDirectoryShareAcceptRole() {
+    for (const managedActiveDirectory of this.props.iamConfig.managedActiveDirectories ?? []) {
+      const madAccountId = this.props.accountsConfig.getAccountId(managedActiveDirectory.account);
+      const sharedAccountNames = this.props.iamConfig.getManageActiveDirectorySharedAccountNames(
+        managedActiveDirectory.name,
+        this.props.configDirPath,
+      );
+
+      const sharedAccountIds: string[] = [];
+      for (const account of sharedAccountNames) {
+        sharedAccountIds.push(this.props.accountsConfig.getAccountId(account));
+      }
+
+      // Create role in shared account home region only
+      if (
+        sharedAccountIds.includes(cdk.Stack.of(this).account) &&
+        cdk.Stack.of(this).region === this.props.globalConfig.homeRegion
+      ) {
+        new cdk.aws_iam.Role(this, 'MadShareAcceptRole', {
+          roleName: AcceleratorStack.ACCELERATOR_MAD_SHARE_ACCEPT_ROLE_NAME,
+          assumedBy: new cdk.aws_iam.AccountPrincipal(madAccountId),
+          inlinePolicies: {
+            default: new cdk.aws_iam.PolicyDocument({
+              statements: [
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ds:AcceptSharedDirectory'],
+                  resources: ['*'],
+                }),
+              ],
+            }),
+          },
+        });
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+        // rule suppression with evidence for this permission.
+        NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/MadShareAcceptRole/Resource`, [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: 'MAD share accept role needs access to directory for acceptance ',
+          },
+        ]);
       }
     }
   }
