@@ -70,7 +70,7 @@ export class MoveAccounts extends Construct {
       code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'move-account/dist')),
       runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
       handler: 'index.handler',
-      timeout: cdk.Duration.seconds(30),
+      timeout: cdk.Duration.seconds(150),
       description: 'Moves accounts to conform account config',
       environmentEncryption: props.lambdaKmsKey,
     });
