@@ -14,6 +14,7 @@
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
+import { AccountsConfig } from './accounts-config';
 
 import * as t from './common-types';
 
@@ -238,7 +239,6 @@ export class IamConfigTypes {
     adConnectorGroup: t.nonEmptyString,
     adUsers: t.array(this.activeDirectoryUserConfig),
     adPasswordPolicy: this.activeDirectoryPasswordPolicyConfig,
-    sharedAccounts: t.array(t.nonEmptyString),
   });
 
   /**
@@ -260,6 +260,11 @@ export class IamConfigTypes {
     adminSecretName: t.optional(t.nonEmptyString),
   });
 
+  static readonly managedActiveDirectorySharedOuConfig = t.interface({
+    organizationalUnits: t.array(t.nonEmptyString),
+    excludedAccounts: t.optional(t.array(t.nonEmptyString)),
+  });
+
   /**
    * Managed active directory config
    */
@@ -274,6 +279,8 @@ export class IamConfigTypes {
     vpcSettings: IamConfigTypes.managedActiveDirectoryVpcSettingsConfig,
     resolverRuleName: t.nonEmptyString,
     secretConfig: t.optional(this.managedActiveDirectorySecretConfig),
+    sharedOrganizationalUnits: t.optional(this.managedActiveDirectorySharedOuConfig),
+    sharedAccounts: t.optional(t.array(t.nonEmptyString)),
     logs: t.optional(IamConfigTypes.managedActiveDirectoryLogConfig),
     activeDirectoryConfigurationInstance: t.optional(this.activeDirectoryConfigurationInstanceConfig),
   });
@@ -290,6 +297,28 @@ export class IamConfigTypes {
     managedActiveDirectories: t.optional(t.array(this.managedActiveDirectoryConfig)),
     identityCenter: t.optional(this.identityCenterConfig),
   });
+}
+
+/**
+ * Active directory shared ou configuration.
+ *
+ * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectorySharedOuConfig}*
+ *
+ * @example
+ *
+ * ```
+ * sharedOrganizationalUnits:
+ *  organizationalUnits:
+ *    - root
+ *  excludedAccounts:
+ *    - Audit
+ * ```
+ */
+export class ManagedActiveDirectorySharedOuConfig
+  implements t.TypeOf<typeof IamConfigTypes.managedActiveDirectorySharedOuConfig>
+{
+  readonly organizationalUnits: string[] = [];
+  readonly excludedAccounts: string[] | undefined = undefined;
 }
 
 /**
@@ -539,10 +568,6 @@ export class ActiveDirectoryConfigurationInstanceConfig
    * Active directory user password policy
    */
   readonly adPasswordPolicy: ActiveDirectoryPasswordPolicyConfig = new ActiveDirectoryPasswordPolicyConfig();
-  /**
-   * List of friendly account names for Ad group creation
-   */
-  readonly sharedAccounts: string[] = [];
 }
 
 /**
@@ -677,6 +702,16 @@ export class ManagedActiveDirectoryConfig implements t.TypeOf<typeof IamConfigTy
    * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectorySecretConfig}
    */
   readonly secretConfig: ManagedActiveDirectorySecretConfig | undefined = undefined;
+  /**
+   * Active directory shared ou configuration.
+   *
+   * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectorySharedOuConfig}
+   */
+  readonly sharedOrganizationalUnits: ManagedActiveDirectorySharedOuConfig | undefined = undefined;
+  /**
+   * Active directory shared account name list.
+   */
+  readonly sharedAccounts: string[] | undefined = undefined;
   /**
    * *{@link IamConfig} / {@link ManagedActiveDirectoryConfig} / {@link ManagedActiveDirectoryLogConfig}
    *
@@ -1481,6 +1516,51 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
     }
     throw new Error(
       `[iam-config][getManageActiveDirectoryAdminSecretName] - Directory ${directoryName} not found in iam-config file`,
+    );
+  }
+
+  public getManageActiveDirectorySharedAccountNames(directoryName: string, configDir: string): string[] {
+    const sharedAccounts: string[] = [];
+
+    let directoryFound = false;
+    for (const managedActiveDirectory of this.managedActiveDirectories ?? []) {
+      if (managedActiveDirectory.name === directoryName) {
+        directoryFound = true;
+
+        if (managedActiveDirectory.sharedOrganizationalUnits) {
+          const accountsConfig = AccountsConfig.load(configDir);
+          const allAccountItems = [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts];
+          const allAccounts: string[] = [];
+          for (const account of allAccountItems ?? []) {
+            allAccounts.push(account.name);
+          }
+          const excludedAccounts = managedActiveDirectory.sharedOrganizationalUnits.excludedAccounts ?? [];
+          const includedAccounts = allAccounts.filter(item => !excludedAccounts.includes(item));
+
+          for (const ou of managedActiveDirectory.sharedOrganizationalUnits.organizationalUnits) {
+            if (ou === 'Root') {
+              sharedAccounts.push(...includedAccounts);
+            } else {
+              for (const account of allAccountItems ?? []) {
+                if (ou === account.organizationalUnit && includedAccounts.includes(account.name)) {
+                  sharedAccounts.push(account.name);
+                }
+              }
+            }
+          }
+        }
+
+        if (managedActiveDirectory.sharedAccounts) {
+          sharedAccounts.push(...managedActiveDirectory.sharedAccounts);
+        }
+      }
+    }
+
+    if (directoryFound) {
+      return sharedAccounts;
+    }
+    throw new Error(
+      `[iam-config][getManageActiveDirectorySharedAccountNames] - Directory ${directoryName} not found in iam-config file`,
     );
   }
 }

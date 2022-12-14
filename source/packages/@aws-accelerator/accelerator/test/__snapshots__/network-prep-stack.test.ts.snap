@@ -898,6 +898,60 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:\\"example.com\
       },
       "Type": "AWS::EC2::IPAMPool",
     },
+    "MadShareAcceptRole0F055D0C": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "MAD share accept role needs access to directory for acceptance ",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::444444444444:root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": "ds:AcceptSharedDirectory",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "default",
+          },
+        ],
+        "RoleName": "AWSAccelerator-MadAccept-Role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "NetworkDxgwAccelratorVifVirtualInterface0F06099A": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [

@@ -78,7 +78,7 @@ export class IamConfigValidator {
     this.validateIdentityCenterResourceNameForUniqueness(values, errors);
 
     // Validate Managed active directory
-    new ManagedActiveDirectoryValidator(values, vpcSubnetLists, errors);
+    new ManagedActiveDirectoryValidator(values, vpcSubnetLists, ouIdNames, accountNames, errors);
 
     if (errors.length) {
       throw new Error(`${IamConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
@@ -472,7 +472,13 @@ class ManagedActiveDirectoryValidator {
     'ConfigurePasswordPolicy',
     'ADGroupGrantPermissionsSetup',
   ];
-  constructor(values: IamConfig, vpcSubnetLists: VpcSubnetListsType[], errors: string[]) {
+  constructor(
+    values: IamConfig,
+    vpcSubnetLists: VpcSubnetListsType[],
+    ouIdNames: string[],
+    accountNames: string[],
+    errors: string[],
+  ) {
     //
     // Validate mandatory user data scripts
     //
@@ -484,6 +490,10 @@ class ManagedActiveDirectoryValidator {
     this.validateAdUserGroups(values, errors);
 
     this.validateMadVpcSettings(values, vpcSubnetLists, errors);
+
+    //
+    // Validate MAD sharing configuration
+    this.validateMadSharingConfig(values, ouIdNames, accountNames, errors);
   }
 
   /**
@@ -607,6 +617,65 @@ class ManagedActiveDirectoryValidator {
             errors.push(
               `Managed active directory ${managedActiveDirectory.name} subnets must be from two different availability zone, subnets defined are from "${madSubnetAzs[0]}" availability zone`,
             );
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate managed active directory sharing configuration
+   * @param values
+   * @param ouIdNames
+   * @param accountNames
+   * @param errors
+   */
+  private validateMadSharingConfig(
+    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    ouIdNames: string[],
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const managedActiveDirectory of values.managedActiveDirectories ?? []) {
+      if (
+        managedActiveDirectory.sharedAccounts &&
+        managedActiveDirectory.sharedOrganizationalUnits?.organizationalUnits
+      ) {
+        errors.push(
+          `Managed active directory ${managedActiveDirectory.name} sharing can have only one option from sharedOrganizationalUnits and sharedAccounts, both can't be defined`,
+        );
+      }
+
+      if (!managedActiveDirectory.sharedAccounts && !managedActiveDirectory.sharedOrganizationalUnits) {
+        errors.push(
+          `Managed active directory ${managedActiveDirectory.name} missing sharing configuration, one option from sharedOrganizationalUnits and sharedAccounts must be provided`,
+        );
+      }
+
+      if (managedActiveDirectory.sharedOrganizationalUnits) {
+        if (managedActiveDirectory.sharedOrganizationalUnits.organizationalUnits.length === 0) {
+          errors.push(`No shared target OU listed for managed active directory ${managedActiveDirectory.name}.`);
+        } else {
+          for (const ou of managedActiveDirectory.sharedOrganizationalUnits.organizationalUnits) {
+            if (ouIdNames.indexOf(ou) === -1) {
+              errors.push(
+                `Shared target OU ${ou} for managed active directory ${managedActiveDirectory.name} does not exists in organization-config.yaml file.`,
+              );
+            }
+          }
+        }
+      }
+
+      if (managedActiveDirectory.sharedAccounts) {
+        if (managedActiveDirectory.sharedAccounts.length === 0) {
+          errors.push(`No shared target account listed for managed active directory ${managedActiveDirectory.name}.`);
+        } else {
+          for (const account of managedActiveDirectory.sharedAccounts) {
+            if (accountNames.indexOf(account) === -1) {
+              errors.push(
+                `Shared target account ${account} for managed active directory ${managedActiveDirectory.name} does not exists in accounts-config.yaml file.`,
+              );
+            }
           }
         }
       }
