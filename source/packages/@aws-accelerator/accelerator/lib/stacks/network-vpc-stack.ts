@@ -823,6 +823,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         for (const securityGroupItem of vpcItem.securityGroups ?? []) {
           const processedIngressRules: SecurityGroupIngressRuleProps[] = [];
           const processedEgressRules: SecurityGroupEgressRuleProps[] = [];
+          let allIngressRule = false;
 
           Logger.info(`[network-vpc-stack] Adding rules to ${securityGroupItem.name}`);
 
@@ -848,6 +849,9 @@ export class NetworkVpcStack extends AcceleratorStack {
                 });
               } else {
                 processedIngressRules.push({ ...ingressRule });
+                if (ingressRule.cidrIp && ingressRule.cidrIp === '0.0.0.0/0') {
+                  allIngressRule = true;
+                }
               }
             }
           }
@@ -898,6 +902,13 @@ export class NetworkVpcStack extends AcceleratorStack {
             parameterName: `/accelerator/network/vpc/${vpcItem.name}/securityGroup/${securityGroupItem.name}/id`,
             stringValue: securityGroup.securityGroupId,
           });
+
+          // AwsSolutions-EC23: The Security Group allows for 0.0.0.0/0 or ::/0 inbound access.
+          if (allIngressRule) {
+            NagSuppressions.addResourceSuppressions(securityGroup, [
+              { id: 'AwsSolutions-EC23', reason: 'User defined an all ingress rule in configuration.' },
+            ]);
+          }
         }
 
         // Add security group references
