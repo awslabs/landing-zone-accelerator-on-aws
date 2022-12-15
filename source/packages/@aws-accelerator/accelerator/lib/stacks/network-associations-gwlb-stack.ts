@@ -263,7 +263,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
       // Check for instance targets in group
       if (group.targets && this.includesTargets(group, instanceMap)) {
         const vpcName = this.getVpcNameFromTargets(group);
-        const targets = this.processFirewallInstanceReplacements(group.targets, instanceMap);
+        const targets = this.processFirewallInstanceReplacements(group.targets as string[], instanceMap);
         targetGroupMap.set(group.name, this.createTargetGroup(group, vpcName, targets));
       }
       // Check if any autoscaling groups reference the target group
@@ -315,7 +315,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
    * @returns
    */
   private includesTargets(group: TargetGroupItemConfig, instanceMap: Map<string, FirewallInstance>): boolean {
-    for (const target of group.targets ?? []) {
+    for (const target of (group.targets as string[]) ?? []) {
       if (!instanceMap.has(target)) {
         return false;
       }
@@ -473,7 +473,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
   }
 
   /**
-   * Process and return and arry of security group IDs
+   * Process and return and array of security group IDs
    * @param groups
    * @param vpc
    * @returns
@@ -560,7 +560,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
    * Create Gateway Load Balancer resources.
    */
   private createGwlbResources(): void {
-    // Create GWLB listners
+    // Create GWLB listeners
     this.createGwlbListeners();
     // Create GWLB endpoints
     this.createGwlbEndpointResources();
@@ -578,7 +578,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
   }
 
   /**
-   * Create a Gateway Load Balancer listner
+   * Create a Gateway Load Balancer listener
    * @param gwlbItem
    */
   private createGwlbListener(gwlbItem: GwlbConfig) {
