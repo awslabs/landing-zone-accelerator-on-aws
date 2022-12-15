@@ -852,7 +852,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     return customerManagedPolicyReferences;
   }
 
-  protected convertMinutestoIso8601(s: number) {
+  protected convertMinutesToIso8601(s: number) {
     const days = Math.floor(s / 1440);
     s = s - days * 1440;
     const hours = Math.floor(s / 60);

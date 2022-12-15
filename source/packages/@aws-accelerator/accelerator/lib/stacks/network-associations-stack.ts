@@ -19,12 +19,15 @@ import { Construct } from 'constructs';
 
 import {
   AccountsConfig,
+  ApplicationLoadBalancerListenerConfig,
   CustomerGatewayConfig,
   DxGatewayConfig,
   DxTransitGatewayAssociationConfig,
   ManagedActiveDirectoryConfig,
   NetworkConfigTypes,
+  NlbTargetTypeConfig,
   ShareTargets,
+  TargetGroupItemConfig,
   TransitGatewayConfig,
   TransitGatewayRouteEntryConfig,
   TransitGatewayRouteTableConfig,
@@ -40,6 +43,7 @@ import {
   CrossAccountRouteFramework,
   DirectConnectGatewayAssociation,
   DirectConnectGatewayAssociationProps,
+  NLBAddresses,
   PutSsmParameter,
   QueryLoggingConfigAssociation,
   ResolverFirewallRuleGroupAssociation,
@@ -48,6 +52,7 @@ import {
   ShareSubnetTags,
   SsmParameterLookup,
   SubnetIdLookup,
+  TargetGroup,
   TransitGatewayAttachment,
   TransitGatewayAttachmentType,
   TransitGatewayPrefixListReference,
@@ -58,6 +63,7 @@ import {
   VpcIdLookup,
   UserDataScriptsType,
   KeyLookup,
+  albListenerActionProperty,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
@@ -90,104 +96,450 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+    try {
+      // Set private properties
+      this.accountsConfig = props.accountsConfig;
+      this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
+      this.dnsFirewallMap = new Map<string, string>();
+      this.dxGatewayMap = new Map<string, string>();
+      this.queryLogMap = new Map<string, string>();
+      this.resolverRuleMap = new Map<string, string>();
+      this.transitGateways = new Map<string, string>();
+      this.transitGatewayAttachments = new Map<string, string>();
+      this.transitGatewayRouteTables = new Map<string, string>();
 
-    // Set private properties
-    this.accountsConfig = props.accountsConfig;
-    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
-    this.dnsFirewallMap = new Map<string, string>();
-    this.dxGatewayMap = new Map<string, string>();
-    this.queryLogMap = new Map<string, string>();
-    this.resolverRuleMap = new Map<string, string>();
-    this.transitGateways = new Map<string, string>();
-    this.transitGatewayAttachments = new Map<string, string>();
-    this.transitGatewayRouteTables = new Map<string, string>();
-
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
+      this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
         this,
-        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
-      ),
-    ) as cdk.aws_kms.Key;
+        'AcceleratorGetCloudWatchKey',
+        cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        ),
+      ) as cdk.aws_kms.Key;
 
-    this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetLambdaKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
+      this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
         this,
-        AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
-      ),
-    );
+        'AcceleratorGetLambdaKey',
+        cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
+        ),
+      );
 
-    //
-    // Build VPC peering list
-    //
-    this.peeringList = this.setPeeringList();
+      //
+      // Build VPC peering list
+      //
+      this.peeringList = this.setPeeringList();
 
-    //
-    // Create cross-account peering route provider, if required
-    //
-    this.crossAcctRouteProvider = this.createCrossAcctRouteProvider();
+      //
+      // Create cross-account peering route provider, if required
+      //
+      this.crossAcctRouteProvider = this.createCrossAcctRouteProvider();
 
-    //
-    // Build prefix list map
-    //
-    this.prefixListMap = this.setPrefixListMap(props);
+      //
+      // Build prefix list map
+      //
+      this.prefixListMap = this.setPrefixListMap(props);
 
-    //
-    // Build route table map
-    //
-    this.routeTableMap = this.setRouteTableMap(props);
+      //
+      // Build route table map
+      //
+      this.routeTableMap = this.setRouteTableMap(props);
 
-    //
-    // Create transit gateway route table associations, propagations,
-    // for VPC and VPN attachments
-    //
-    this.createTransitGatewayResources(props);
+      //
+      // Create transit gateway route table associations, propagations,
+      // for VPC and VPN attachments
+      //
+      this.createTransitGatewayResources(props);
 
-    //
-    // Create Route 53 private hosted zone associations
-    //
-    this.createHostedZoneAssociations();
+      //
+      // Create Route 53 private hosted zone associations
+      //
+      this.createHostedZoneAssociations();
 
-    //
-    // Create central network service VPC associations
-    //
-    this.createCentralNetworkAssociations(props);
+      //
+      // Create central network service VPC associations
+      //
+      this.createCentralNetworkAssociations(props);
 
-    //
-    // Create VPC peering connections
-    //
-    this.createVpcPeeringConnections();
+      //
+      // Create VPC peering connections
+      //
+      this.createVpcPeeringConnections();
 
-    //
-    // Create Direct Connect resources
-    //
-    this.createDirectConnectResources(props);
+      //
+      // Create Direct Connect resources
+      //
+      this.createDirectConnectResources(props);
 
-    //
-    // Create transit gateway static routes, blackhole
-    // routes, and prefix list references
-    //
-    this.createTransitGatewayStaticRoutes(props);
+      //
+      // Create transit gateway static routes, blackhole
+      // routes, and prefix list references
+      //
+      this.createTransitGatewayStaticRoutes(props);
 
-    //
-    // Apply tags to shared VPC/subnet resources
-    //
-    this.shareSubnetTags();
+      //
+      // Creates target groups for ALBs and NLBs
+      //
+      const targetGroupMap = this.createIpAndInstanceTargetGroups();
 
-    //
-    // Create SSM parameters
-    //
-    this.createSsmParameters();
-    // Create managed active directories
-    //
-    this.createManagedActiveDirectories();
+      //
+      // Creates ALB Listeners
+      //
+      const albListenerMap = this.createAlbListeners(targetGroupMap);
 
-    Logger.info('[network-associations-stack] Completed stack synthesis');
+      //
+      // Create ALB target Groups after ALB listeners have been created
+      //
+      const albTargetGroupMap = this.createAlbTargetGroups(albListenerMap);
+
+      //
+      // Create NLB Listeners
+      //
+      const allTargetGroupsMap = new Map([...targetGroupMap, ...albTargetGroupMap]);
+      this.createNlbListeners(allTargetGroupsMap);
+
+      //
+      // Apply tags to shared VPC/subnet resources
+      //
+      this.shareSubnetTags();
+
+      //
+      // Create SSM parameters
+      //
+      this.createSsmParameters();
+      // Create managed active directories
+      //
+      this.createManagedActiveDirectories();
+
+      Logger.info('[network-associations-stack] Completed stack synthesis');
+    } catch (err) {
+      Logger.error(`[network-associations-stack] ${err}`);
+      throw err;
+    }
   }
 
+  private createNlbListeners(targetGroupMap: Map<string, TargetGroup>) {
+    for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+        for (const nlbItem of vpcItem.loadBalancers?.networkLoadBalancers ?? []) {
+          const nlbId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            `/accelerator/network/vpc/${vpcItem.name}/nlb/${nlbItem.name}/id`,
+          );
+          for (const listener of nlbItem.listeners ?? []) {
+            const targetGroup = targetGroupMap.get(`${vpcItem.name}-${listener.targetGroup}`);
+            if (!targetGroup) {
+              throw new Error(
+                `The Listener ${listener.name} contains an invalid target group name ${listener.targetGroup} please ensure that the the target group name references a valid target group`,
+              );
+            }
+            new cdk.aws_elasticloadbalancingv2.CfnListener(
+              this,
+              pascalCase(`Listener${vpcItem.name}${nlbItem.name}${listener.name}`),
+              {
+                defaultActions: [
+                  {
+                    type: 'forward',
+                    forwardConfig: {
+                      targetGroups: [
+                        {
+                          targetGroupArn: targetGroup.targetGroupArn,
+                        },
+                      ],
+                    },
+                    targetGroupArn: targetGroup.targetGroupArn,
+                  },
+                ],
+                loadBalancerArn: nlbId,
+                alpnPolicy: [listener.alpnPolicy!],
+                certificates: [{ certificateArn: this.getCertificate(listener.certificate) }],
+                port: listener.port!,
+                protocol: listener.protocol!,
+                sslPolicy: listener.sslPolicy!,
+              },
+            );
+          }
+        }
+      }
+    }
+  }
+
+  private createAlbTargetGroups(albListenerMap: Map<string, cdk.aws_elasticloadbalancingv2.CfnListener>) {
+    const targetGroupMap = new Map<string, TargetGroup>();
+    for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+        const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          `/accelerator/network/vpc/${vpcItem.name}/id`,
+        );
+        const albTargetGroups = vpcItem.targetGroups?.filter(targetGroup => targetGroup.type === 'alb') ?? [];
+        const albNames = vpcItem.loadBalancers?.applicationLoadBalancers?.map(alb => alb.name) ?? [];
+        // alb listeners must be created before targeting an alb
+        for (const targetGroupItem of albTargetGroups) {
+          const updatedTargets = targetGroupItem.targets?.map(target => {
+            if (albNames.includes(target as string)) {
+              return cdk.aws_ssm.StringParameter.valueForStringParameter(
+                this,
+                `/accelerator/network/vpc/${vpcItem.name}/alb/${target}/id`,
+              );
+            }
+            return target;
+          }) as string[];
+
+          const targetGroup = new TargetGroup(this, pascalCase(`TargetGroup${targetGroupItem.name}`), {
+            name: targetGroupItem.name,
+            port: targetGroupItem.port,
+            protocol: targetGroupItem.protocol,
+            protocolVersion: targetGroupItem.protocolVersion! || undefined,
+            type: targetGroupItem.type,
+            attributes: targetGroupItem.attributes ?? undefined,
+            healthCheck: targetGroupItem.healthCheck ?? undefined,
+            threshold: targetGroupItem.threshold ?? undefined,
+            matcher: targetGroupItem.matcher ?? undefined,
+            targets: updatedTargets,
+            vpc: vpcId,
+          });
+          for (const [key, value] of albListenerMap.entries()) {
+            if (key.startsWith(vpcItem.name)) {
+              targetGroup.node.addDependency(value);
+            }
+          }
+          targetGroupMap.set(`${vpcItem.name}-${targetGroupItem.name}`, targetGroup);
+        }
+      }
+    }
+    return targetGroupMap;
+  }
+
+  private createAlbListeners(targetGroupMap: Map<string, TargetGroup>) {
+    try {
+      const listenerMap = new Map<string, cdk.aws_elasticloadbalancingv2.CfnListener>();
+      for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ??
+        []) {
+        const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+
+        if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+          for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
+            const albArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
+              this,
+              `/accelerator/network/vpc/${vpcItem.name}/alb/${albItem.name}/id`,
+            );
+            for (const listener of albItem.listeners ?? []) {
+              const targetGroup = targetGroupMap.get(`${vpcItem.name}-${listener.targetGroup}`);
+              if (!targetGroup) {
+                throw new Error(
+                  `The Listener ${listener.name} contains an invalid target group name ${listener.targetGroup} please ensure that the the target group name references a valid target group`,
+                );
+              }
+              const listenerAction: cdk.aws_elasticloadbalancingv2.CfnListener.ActionProperty = this.getListenerAction(
+                listener,
+                targetGroup.targetGroupArn,
+              );
+              const listenerResource = new cdk.aws_elasticloadbalancingv2.CfnListener(
+                this,
+                pascalCase(`Listener${vpcItem.name}${albItem.name}${listener.name}`),
+                {
+                  defaultActions: [listenerAction],
+                  loadBalancerArn: albArn,
+                  certificates: [{ certificateArn: this.getCertificate(listener.certificate) }],
+                  port: listener.port!,
+                  protocol: listener.protocol!,
+                  sslPolicy: listener.sslPolicy!,
+                },
+              );
+              listenerMap.set(`${vpcItem.name}-${albItem.name}-${listener.name}`, listenerResource);
+            }
+          }
+        }
+      }
+      return listenerMap;
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
+  }
+  private getCertificate(certificate: string | undefined) {
+    if (certificate) {
+      //check if user provided arn. If so do nothing, if not get it from ssm
+      if (certificate.match('\\arn:*')) {
+        return certificate;
+      } else {
+        return cdk.aws_ssm.StringParameter.valueForStringParameter(this, `/accelerator/acm/${certificate}/arn`);
+      }
+    }
+    return undefined;
+  }
+
+  private getListenerAction(
+    listener: ApplicationLoadBalancerListenerConfig,
+    targetGroupArn: string,
+  ): cdk.aws_elasticloadbalancingv2.CfnListener.ActionProperty {
+    const listenerTargetGroupArn = targetGroupArn;
+    const actionValues: albListenerActionProperty = {
+      type: listener.type,
+      order: listener.order,
+      targetGroupArn: listenerTargetGroupArn,
+    };
+    if (listener.type === 'forward') {
+      actionValues.forwardConfig = {
+        targetGroups: [{ targetGroupArn: targetGroupArn }],
+        targetGroupStickinessConfig: listener.forwardConfig?.targetGroupStickinessConfig ?? undefined,
+      };
+    } else if (listener.type === 'redirect') {
+      if (listener.redirectConfig) {
+        actionValues.redirectConfig = {
+          host: listener.redirectConfig.host ?? undefined,
+          path: listener.redirectConfig.path ?? undefined,
+          port: listener.redirectConfig.port?.toString() ?? undefined,
+          protocol: listener.redirectConfig.protocol ?? undefined,
+          query: listener.redirectConfig.query ?? undefined,
+          statusCode: listener.redirectConfig.statusCode ?? undefined,
+        };
+      } else {
+        throw new Error(`Listener ${listener.name} is set to redirect but redirectConfig is not defined`);
+      }
+    } else if (listener.type === 'fixed-response') {
+      if (listener.fixedResponseConfig) {
+        actionValues.fixedResponseConfig = {
+          contentType: listener.fixedResponseConfig.contentType ?? undefined,
+          messageBody: listener.fixedResponseConfig.messageBody ?? undefined,
+          statusCode: listener.fixedResponseConfig.statusCode ?? undefined,
+        };
+      } else {
+        throw new Error(`Listener ${listener.name} is set to fixed-response but fixedResponseConfig is not defined`);
+      }
+    } else {
+      throw new Error(`Listener ${listener.name} is not set to forward, fixed-response or redirect`);
+    }
+
+    return actionValues as cdk.aws_elasticloadbalancingv2.CfnListener.ActionProperty;
+  }
+  /**
+   * Create Ip based target group
+   */
+  private createIpTargetGroup(
+    targetGroupItem: TargetGroupItemConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    vpcId: string,
+  ) {
+    try {
+      //Get NLB Targets in Ip Targets for lookup
+      const nlbTargets = targetGroupItem.targets?.filter(target => {
+        return !(typeof target === 'string');
+      }) as NlbTargetTypeConfig[];
+      //Set AccountIds for lookup Custom Resource
+      const nlbTargetsWithAccountIds =
+        (nlbTargets.map(nlbTarget => {
+          const accountId = this.props.accountsConfig.getAccountId(nlbTarget.account);
+          return {
+            account: accountId,
+            region: nlbTarget.region,
+            nlbName: nlbTarget.nlbName,
+          };
+        }) as NlbTargetTypeConfig[]) ?? [];
+
+      //Get targets containing an IP Address only
+      const staticIpTargets: (NlbTargetTypeConfig | string)[] =
+        (targetGroupItem.targets?.filter(target => typeof target === 'string') as string[]) ?? [];
+      // If NLB targets exist, send both static ips and NLB targets to custom resource to create one entry for the target group
+      if (nlbTargetsWithAccountIds && nlbTargetsWithAccountIds.length > 0) {
+        const nlbAddresses = new NLBAddresses(this, `${targetGroupItem.name}-ipLookup`, {
+          targets: [...nlbTargetsWithAccountIds, ...staticIpTargets],
+          assumeRoleName: 'AWSAccelerator-GetNLBIPAddressLookup',
+          partition: cdk.Stack.of(this).partition,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.logRetention,
+        });
+        return new TargetGroup(this, `${vpcItem.name}-${targetGroupItem.name}`, {
+          name: targetGroupItem.name,
+          port: targetGroupItem.port,
+          protocol: targetGroupItem.protocol,
+          protocolVersion: targetGroupItem.protocolVersion,
+          type: targetGroupItem.type,
+          attributes: targetGroupItem.attributes,
+          healthCheck: targetGroupItem.healthCheck,
+          threshold: targetGroupItem.threshold,
+          matcher: targetGroupItem.matcher,
+          targets: nlbAddresses.ipAddresses,
+          vpc: vpcId,
+        });
+      } else {
+        // If only IP addresses exist, skip CR Lookup and make the target group directly
+        return new TargetGroup(this, `${vpcItem.name}-${targetGroupItem.name}`, {
+          name: targetGroupItem.name,
+          port: targetGroupItem.port,
+          protocol: targetGroupItem.protocol,
+          protocolVersion: targetGroupItem.protocolVersion,
+          type: targetGroupItem.type,
+          attributes: targetGroupItem.attributes,
+          healthCheck: targetGroupItem.healthCheck,
+          threshold: targetGroupItem.threshold,
+          matcher: targetGroupItem.matcher,
+          targets: staticIpTargets as string[],
+          vpc: vpcId,
+        });
+      }
+    } catch (err) {
+      Logger.error(`[network-associations-stack] - ${err}`);
+      throw new Error(
+        `[network-associations-stack] - Could not create target group for ${targetGroupItem.name} in vpc ${vpcItem.name}. Please review the target group configuration`,
+      );
+    }
+  }
+
+  private createInstanceTargetGroups(
+    targetGroupItem: TargetGroupItemConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    vpcId: string,
+  ) {
+    return new TargetGroup(this, `${vpcItem.name}-${targetGroupItem.name}`, {
+      name: targetGroupItem.name,
+      port: targetGroupItem.port,
+      protocol: targetGroupItem.protocol,
+      protocolVersion: targetGroupItem.protocolVersion,
+      type: targetGroupItem.type,
+      attributes: targetGroupItem.attributes,
+      healthCheck: targetGroupItem.healthCheck,
+      threshold: targetGroupItem.threshold,
+      matcher: targetGroupItem.matcher,
+      targets: targetGroupItem.targets as string[],
+      vpc: vpcId,
+    });
+  }
+
+  private createIpAndInstanceTargetGroups() {
+    try {
+      const targetGroupMap = new Map<string, TargetGroup>();
+      for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ??
+        []) {
+        const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+
+        if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+          const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            `/accelerator/network/vpc/${vpcItem.name}/id`,
+          );
+          for (const targetGroupItem of vpcItem.targetGroups ?? []) {
+            if (targetGroupItem.type === 'ip') {
+              const targetGroup = this.createIpTargetGroup(targetGroupItem, vpcItem, vpcId);
+              targetGroupMap.set(`${vpcItem.name}-${targetGroupItem.name}`, targetGroup);
+            }
+            if (targetGroupItem.type === 'instance') {
+              const targetGroup = this.createInstanceTargetGroups(targetGroupItem, vpcItem, vpcId);
+              targetGroupMap.set(`${vpcItem.name}-${targetGroupItem.name}`, targetGroup);
+            }
+          }
+        }
+      }
+      return targetGroupMap;
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
+  }
   /**
    * Create an array of peering connections
    */

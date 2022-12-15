@@ -16,6 +16,7 @@ import * as yaml from 'js-yaml';
 import * as path from 'path';
 
 import * as t from './common-types';
+import * as CustomizationsConfig from './customizations-config';
 
 /**
  * Network configuration items.
@@ -477,6 +478,13 @@ export class NetworkConfigTypes {
     asn: t.optional(t.number),
   });
 
+  static readonly loadBalancersConfig = t.interface({
+    applicationLoadBalancers: t.optional(
+      t.array(CustomizationsConfig.CustomizationsConfigTypes.applicationLoadBalancerConfig),
+    ),
+    networkLoadBalancers: t.optional(t.array(CustomizationsConfig.CustomizationsConfigTypes.networkLoadBalancerConfig)),
+  });
+
   static readonly vpcConfig = t.interface({
     name: t.nonEmptyString,
     account: t.nonEmptyString,
@@ -505,6 +513,8 @@ export class NetworkConfigTypes {
     outposts: t.optional(t.array(this.outpostsConfig)),
     virtualPrivateGateway: t.optional(this.virtualPrivateGatewayConfig),
     vpcFlowLogs: t.optional(t.vpcFlowLogsConfig),
+    loadBalancers: t.optional(this.loadBalancersConfig),
+    targetGroups: t.optional(t.array(CustomizationsConfig.CustomizationsConfigTypes.targetGroupItem)),
   });
 
   static readonly vpcTemplatesConfig = t.interface({
@@ -534,6 +544,8 @@ export class NetworkConfigTypes {
     virtualPrivateGateway: t.optional(this.virtualPrivateGatewayConfig),
     tags: t.optional(t.array(t.tag)),
     vpcFlowLogs: t.optional(t.vpcFlowLogsConfig),
+    loadBalancers: t.optional(this.loadBalancersConfig),
+    targetGroups: t.optional(t.array(CustomizationsConfig.CustomizationsConfigTypes.targetGroupItem)),
   });
 
   static readonly ruleTypeEnum = t.enums('ResolverRuleType', ['FORWARD', 'RECURSIVE', 'SYSTEM']);
@@ -3140,6 +3152,19 @@ export class CustomerGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes
 }
 
 /**
+ * *{@link NetworkConfig} / {@link VpcConfig} / {@link LoadBalancersConfig}*
+ *
+ * Load Balancers Configuration
+ * Used to define ALB or NLBs to be deployed in the specified subnets
+ *
+ */
+
+export class LoadBalancersConfig implements t.TypeOf<typeof NetworkConfigTypes.loadBalancersConfig> {
+  readonly applicationLoadBalancers: CustomizationsConfig.ApplicationLoadBalancerConfig[] | undefined = undefined;
+  readonly networkLoadBalancers: CustomizationsConfig.NetworkLoadBalancerConfig[] | undefined = undefined;
+}
+
+/**
  * *{@link NetworkConfig} / {@link VpcConfig} / {@link VirtualPrivateGatewayConfig}*
  *
  * Virtual Private Gateway Configuration
@@ -3361,6 +3386,8 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
    * VPC flog log configuration
    */
   readonly vpcFlowLogs: t.VpcFlowLogsConfig | undefined = undefined;
+  readonly loadBalancers: LoadBalancersConfig | undefined = undefined;
+  readonly targetGroups: CustomizationsConfig.TargetGroupItemConfig[] | undefined = undefined;
 }
 
 /**
@@ -3568,6 +3595,10 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
    * VPC flog log configuration
    */
   readonly vpcFlowLogs: t.VpcFlowLogsConfig | undefined = undefined;
+
+  readonly loadBalancers: LoadBalancersConfig | undefined = undefined;
+
+  readonly targetGroups: CustomizationsConfig.TargetGroupItemConfig[] | undefined = undefined;
 }
 
 /**

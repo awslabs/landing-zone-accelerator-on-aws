@@ -3,7 +3,12 @@ import * as path from 'path';
 
 import { AccountsConfig } from '../lib/accounts-config';
 import * as t from '../lib/common-types';
-import { AppConfigItem, CustomizationsConfig, CustomizationsConfigTypes } from '../lib/customizations-config';
+import {
+  AppConfigItem,
+  CustomizationsConfig,
+  CustomizationsConfigTypes,
+  NlbTargetTypeConfig,
+} from '../lib/customizations-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { NetworkConfig, NetworkConfigTypes, VpcConfig, VpcTemplatesConfig } from '../lib/network-config';
 import console from 'console';
@@ -546,7 +551,7 @@ class CustomizationHelperMethods {
       return obj.name;
     });
 
-    // compare input to securitygroups in vpcs
+    // compare input to security groups in vpcs
     if (this.compareArrays(securityGroupNames, vpcSgs ?? []).length === 0) {
       return true;
     } else {
@@ -733,7 +738,7 @@ class FirewallValidator {
 
   private checkTargetsInConfig(
     helpers: CustomizationHelperMethods,
-    targets: string[],
+    targets: (string | NlbTargetTypeConfig)[],
     config: t.TypeOf<typeof CustomizationsConfigTypes.ec2FirewallInstanceConfig>[],
   ): boolean {
     // Retrieve target groups
@@ -741,8 +746,10 @@ class FirewallValidator {
       return instance.name;
     });
 
+    const targetStrings = targets.filter(target => typeof target === 'string') as string[];
+
     // Compare arrays
-    if (helpers.compareArrays(targets, targetInstances).length === 0) {
+    if (helpers.compareArrays(targetStrings, targetInstances).length === 0) {
       return true;
     }
     return false;
@@ -1026,7 +1033,7 @@ class FirewallValidator {
           `[Firewall ASG ${group.name}]: targetGroups property references a target group with instance targets`,
         );
       }
-      // Validatre target group type
+      // Validate target group type
       if (targetGroup && targetGroup.type !== 'instance') {
         errors.push(`[Firewall ASG ${group.name}]: targetGroups property must reference an instance type target group`);
       }
