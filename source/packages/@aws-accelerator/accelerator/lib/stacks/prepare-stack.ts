@@ -514,19 +514,19 @@ export class PrepareStack extends AcceleratorStack {
 
             // cdk-nag suppressions
             const ctAccountsIam4SuppressionPaths = [
-              'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/Resource',
-              'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/Resource',
-              'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/Resource',
+              'CreateCTAccounts/CreateControlTowerAccountsProvider/framework-onTimeout/ServiceRole/Resource',
+              'CreateCTAccounts/CreateControlTowerAccountsProvider/framework-isComplete/ServiceRole/Resource',
+              'CreateCTAccounts/CreateControlTowerAccountsProvider/framework-onEvent/ServiceRole/Resource',
               'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/Resource',
               'CreateCTAccounts/CreateControlTowerAccount/ServiceRole/Resource',
             ];
 
             const ctAccountsIam5SuppressionPaths = [
               'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/DefaultPolicy/Resource',
-              'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
-              'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
-              'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
-              'CreateCTAccounts/CreateControlTowerAcccountsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
+              'CreateCTAccounts/CreateControlTowerAccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
+              'CreateCTAccounts/CreateControlTowerAccountsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
+              'CreateCTAccounts/CreateControlTowerAccountsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
+              'CreateCTAccounts/CreateControlTowerAccountsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
             ];
 
             // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies

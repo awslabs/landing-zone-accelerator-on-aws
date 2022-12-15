@@ -84,6 +84,12 @@ export class CustomizationsConfigTypes {
     targetFailover: t.optional(this.targetGroupTargetFailoverType),
   });
 
+  static readonly nlbTargetType = t.interface({
+    account: t.nonEmptyString,
+    region: t.nonEmptyString,
+    nlbName: t.nonEmptyString,
+  });
+
   static readonly targetGroupItem = t.interface({
     name: t.nonEmptyString,
     port: t.number,
@@ -92,7 +98,7 @@ export class CustomizationsConfigTypes {
     type: this.targetGroupType,
     attributes: t.optional(this.targetGroupAttributeTypes),
     healthCheck: t.optional(this.targetGroupHealthCheckType),
-    targets: t.optional(t.array(t.nonEmptyString)),
+    targets: t.optional(t.array(t.union([t.nonEmptyString, this.nlbTargetType]))),
     threshold: t.optional(this.targetGroupThresholdType),
     matcher: t.optional(this.targetGroupMatcherType),
   });
@@ -429,7 +435,7 @@ export class Ec2FirewallInstanceConfig implements t.TypeOf<typeof Customizations
    */
   readonly launchTemplate: LaunchTemplateConfig = new LaunchTemplateConfig();
   /**
-   * The friendly name of the VPC to deploy the firwall instance to
+   * The friendly name of the VPC to deploy the firewall instance to
    *
    * @remarks
    * This VPC must contain the subnet(s) defined for the network interfaces under the `launchTemplate` property
@@ -516,7 +522,7 @@ export class Ec2FirewallAutoScalingGroupConfig
    */
   readonly launchTemplate = new LaunchTemplateConfig();
   /**
-   * The friendly name of the VPC to deploy the firwall instance to
+   * The friendly name of the VPC to deploy the firewall instance to
    *
    * @remarks
    * This VPC must contain the subnet(s) defined for the network interfaces under the `launchTemplate` property
@@ -1294,11 +1300,11 @@ export class TargetGroupThresholdConfig implements t.TypeOf<typeof Customization
    */
   readonly unhealthy: number | undefined = undefined;
 }
+
 /**
- * *{@link CustomizationsConfig} / {@link AppConfigItem} | {@link Ec2FirewallConfig} / {@link TargetGroupItemConfig} / {@link TargetGroupMatcherConfig}*
- * The codes to use when checking for a successful response from a target. If the protocol version is gRPC, these are gRPC codes. Otherwise, these are HTTP codes.
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} | {@link Ec2FirewallConfig} / {@link TargetGroupItemConfig} / {@link NlbTargetTypeConfig}*
+ * Add the ability to target an NLB created by the Landing Zone Accelerator
  *
- * @see {@link https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_Matcher.html}
  *
  * @example
  * ```
@@ -1318,6 +1324,39 @@ export class TargetGroupMatcherConfig implements t.TypeOf<typeof CustomizationsC
    * Note that when using shorthand syntax, some values such as commas need to be escaped.
    */
   readonly httpCode: string | undefined = undefined;
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link AppConfigItem} | {@link Ec2FirewallConfig} / {@link TargetGroupItemConfig} / {@link TargetGroupMatcherConfig}*
+ * The codes to use when checking for a successful response from a target. If the protocol version is gRPC, these are gRPC codes. Otherwise, these are HTTP codes.
+ *
+ * @see {@link https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_Matcher.html}
+ *
+ * @example
+ * ```
+ * targets:
+ *  - account: MyAccount
+ *    region: us-east-1
+ *    nlbName: myNlb
+ * ```
+ */
+export class NlbTargetTypeConfig implements t.TypeOf<typeof CustomizationsConfigTypes.nlbTargetType> {
+  /**
+   * Friendly Account Name where the NLB is deployed
+   */
+  readonly account: string = '';
+
+  /**
+   * Region where the NLB is deployed
+   */
+
+  readonly region: string = '';
+
+  /**
+   * Friendly name of the NLB
+   */
+
+  readonly nlbName: string = '';
 }
 
 /**
@@ -1405,7 +1444,7 @@ export class TargetGroupItemConfig implements t.TypeOf<typeof CustomizationsConf
    * This property should only be defined if also defining EC2-based firewall instances.
    * It should be left undefined for application configurations.
    */
-  readonly targets: string[] | undefined = undefined;
+  readonly targets: (string | NlbTargetTypeConfig)[] | undefined = undefined;
   /**
    * Target Group Threshold.
    * @see {@link CustomizationsConfigTypes.targetGroupThresholdType}

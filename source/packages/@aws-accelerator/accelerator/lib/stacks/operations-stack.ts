@@ -614,7 +614,7 @@ export class OperationsStack extends AcceleratorStack {
       );
     }
 
-    const convertedSessionDuration = this.convertMinutestoIso8601(identityCenterPermissionSet.sessionDuration);
+    const convertedSessionDuration = this.convertMinutesToIso8601(identityCenterPermissionSet.sessionDuration);
 
     try {
       //if check for managedpolicy or customer managed

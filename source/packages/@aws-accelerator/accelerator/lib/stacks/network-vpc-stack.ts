@@ -33,11 +33,13 @@ import {
   CertificateConfig,
 } from '@aws-accelerator/config';
 import {
+  ApplicationLoadBalancer,
   DeleteDefaultVpc,
   DhcpOptions,
   GatewayLoadBalancer,
   NatGateway,
   NetworkAcl,
+  NetworkLoadBalancer,
   PrefixList,
   RouteTable,
   SecurityGroup,
@@ -90,7 +92,6 @@ export class NetworkVpcStack extends AcceleratorStack {
     // Set private properties
     this.accountsConfig = props.accountsConfig;
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
-
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
       'AcceleratorGetCloudWatchKey',
@@ -99,7 +100,10 @@ export class NetworkVpcStack extends AcceleratorStack {
         AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
       ),
     ) as cdk.aws_kms.Key;
-
+    //
+    // Create ACM Certificates
+    //
+    this.createCertificates();
     //
     // Create Transit Gateway peering
     //
@@ -201,7 +205,7 @@ export class NetworkVpcStack extends AcceleratorStack {
       });
       new cdk.aws_iam.Role(this, 'DescribeTgwAttachRole', {
         roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
-        assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
+        assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
             statements: [
@@ -1099,6 +1103,13 @@ export class NetworkVpcStack extends AcceleratorStack {
             this.createGatewayLoadBalancer(loadBalancerItem, subnetMap);
           }
         }
+
+        //
+        // Create NLBs
+        //
+        this.createNetworkLoadBalancers(vpcItem, subnetMap);
+
+        this.createApplicationLoadBalancers(vpcItem, subnetMap, securityGroupMap);
       }
     }
 
@@ -1107,14 +1118,149 @@ export class NetworkVpcStack extends AcceleratorStack {
     //
     this.createSsmParameters();
 
-    /**
-     * Create ACM Certificates
-     */
-    this.createCertificates();
-
     Logger.info('[network-vpc-stack] Completed stack synthesis');
   }
 
+  private createNetworkLoadBalancers(vpcItem: VpcConfig | VpcTemplatesConfig, subnetMap: Map<string, Subnet>) {
+    // Get account IDs
+    if (!vpcItem.loadBalancers?.networkLoadBalancers || vpcItem.loadBalancers.networkLoadBalancers.length === 0) {
+      return;
+    }
+    const vpcItemsWithTargetGroups = this.props.networkConfig.vpcs.filter(
+      vpcItem => vpcItem.targetGroups && vpcItem.targetGroups.length > 0,
+    );
+    const vpcTemplatesWithTargetGroups =
+      this.props.networkConfig.vpcTemplates?.filter(
+        vpcItem => vpcItem.targetGroups && vpcItem.targetGroups.length > 0,
+      ) ?? [];
+    const accountIdTargetsForVpcs = vpcItemsWithTargetGroups.map(vpcItem =>
+      this.props.accountsConfig.getAccountId(vpcItem.account),
+    );
+    const accountIdTargetsForVpcTemplates =
+      vpcTemplatesWithTargetGroups?.map(vpcTemplate =>
+        this.getAccountIdsFromDeploymentTarget(vpcTemplate.deploymentTargets),
+      ) ?? [];
+    const principalAccountIds = [...accountIdTargetsForVpcs, ...accountIdTargetsForVpcTemplates];
+    principalAccountIds.push(cdk.Stack.of(this).account);
+    const principalIds = [...new Set(principalAccountIds)];
+    const principals = principalIds.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId)) ?? undefined;
+
+    const accessLogsBucket = `aws-accelerator-elb-access-logs-${this.props.accountsConfig.getLogArchiveAccountId()}-${
+      cdk.Stack.of(this).region
+    }`;
+
+    for (const nlbItem of vpcItem.loadBalancers?.networkLoadBalancers || []) {
+      const subnetLookups = nlbItem.subnets.map(subnetName => subnetMap.get(subnetName));
+      const subnetIds = subnetLookups.map(subnet => subnet!.subnetId);
+      if (!subnetIds || subnetIds.length === 0) {
+        throw new Error(`Could not find subnets for NLB Item ${nlbItem.name}`);
+      }
+      const nlb = new NetworkLoadBalancer(this, `${nlbItem.name}-${vpcItem.name}`, {
+        name: nlbItem.name,
+        appName: `${nlbItem.name}-${vpcItem.name}-app`,
+        subnets: subnetIds,
+        vpcName: vpcItem.name,
+        scheme: nlbItem.scheme,
+        deletionProtection: nlbItem.deletionProtection,
+        crossZoneLoadBalancing: nlbItem.crossZoneLoadBalancing,
+        accessLogsBucket,
+      });
+      for (const subnet of nlbItem.subnets || []) {
+        const subnetLookup = subnetMap.get(subnet);
+        if (subnetLookup) {
+          nlb.node.addDependency(subnetLookup);
+        }
+      }
+
+      this.ssmParameters.push({
+        logicalId: `${nlbItem.name}-${vpcItem.name}-ssm`,
+        parameterName: `/accelerator/network/vpc/${vpcItem.name}/nlb/${nlbItem.name}/id`,
+        stringValue: nlb.networkLoadBalancerArn,
+      });
+    }
+
+    if (
+      cdk.Stack.of(this).region === this.props.globalConfig.homeRegion &&
+      vpcItem.loadBalancers?.networkLoadBalancers &&
+      vpcItem.loadBalancers?.networkLoadBalancers.length > 0
+    ) {
+      new cdk.aws_iam.Role(this, `GetNLBIPAddressLookup`, {
+        roleName: `AWSAccelerator-GetNLBIPAddressLookup`,
+        assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
+        inlinePolicies: {
+          default: new cdk.aws_iam.PolicyDocument({
+            statements: [
+              new cdk.aws_iam.PolicyStatement({
+                effect: cdk.aws_iam.Effect.ALLOW,
+                actions: ['ec2:DescribeNetworkInterfaces'],
+                resources: ['*'],
+              }),
+            ],
+          }),
+        },
+      });
+
+      NagSuppressions.addResourceSuppressionsByPath(this, `/${this.stackName}/GetNLBIPAddressLookup`, [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Allows only specific role arns.',
+        },
+      ]);
+    }
+  }
+
+  private createApplicationLoadBalancers(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    subnetMap: Map<string, Subnet>,
+    securityGroupMap: Map<string, SecurityGroup>,
+  ) {
+    const accessLogsBucket = `aws-accelerator-elb-access-logs-${this.props.accountsConfig.getLogArchiveAccountId()}-${
+      cdk.Stack.of(this).region
+    }`;
+
+    for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers || []) {
+      const subnetLookups = albItem.subnets.map(subnetName => subnetMap.get(subnetName));
+      const subnetIds = subnetLookups.map(subnet => subnet!.subnetId);
+      const securityGroupLookups = albItem.securityGroups.map(securityGroupName =>
+        securityGroupMap.get(securityGroupName),
+      );
+      const securityGroupIds = securityGroupLookups.map(securityGroup => securityGroup!.securityGroupId);
+      if (!subnetIds || subnetIds.length === 0) {
+        throw new Error(`Could not find subnets for ALB Item ${albItem.name}`);
+      }
+      const alb = new ApplicationLoadBalancer(this, `${albItem.name}-${vpcItem.name}`, {
+        name: albItem.name,
+        subnets: subnetIds,
+        securityGroups: securityGroupIds ?? undefined,
+        scheme: albItem.scheme ?? 'internal',
+        accessLogsBucket,
+        attributes: albItem.attributes ?? undefined,
+      });
+      for (const subnet of albItem.subnets || []) {
+        const subnetLookup = subnetMap.get(subnet);
+        if (subnetLookup) {
+          alb.node.addDependency(subnetLookup);
+        }
+      }
+      for (const subnet of subnetLookups || []) {
+        if (subnet) {
+          alb.node.addDependency(subnet);
+        }
+      }
+
+      for (const securityGroup of securityGroupLookups || []) {
+        if (securityGroup) {
+          alb.node.addDependency(securityGroup);
+        }
+      }
+
+      this.ssmParameters.push({
+        logicalId: `${albItem.name}-${vpcItem.name}-ssm`,
+        parameterName: `/accelerator/network/vpc/${vpcItem.name}/alb/${albItem.name}/id`,
+        stringValue: alb.applicationLoadBalancerArn,
+      });
+    }
+  }
   private processNetworkAclTarget(target: string | NetworkAclSubnetSelection): {
     cidrBlock?: string;
     ipv6CidrBlock?: string;
@@ -1817,6 +1963,7 @@ export class NetworkVpcStack extends AcceleratorStack {
    * Create ACM certificates - check whether ACM should be deployed
    */
   private createCertificates() {
+    const certificateMap = new Map<string, CreateCertificate>();
     Logger.info('[network-vpc-stack] Evaluating AWS Certificate Manager certificates.');
     for (const certificate of this.props.networkConfig.certificates ?? []) {
       if (!this.isIncluded(certificate.deploymentTargets)) {
@@ -1826,8 +1973,11 @@ export class NetworkVpcStack extends AcceleratorStack {
       Logger.info(
         `[network-vpc-stack] Account (${cdk.Stack.of(this).account}) should be included, deploying ACM certificates.`,
       );
-      this.createAcmCertificates(certificate);
+      const certificateResource = this.createAcmCertificates(certificate);
+      certificateMap.set(certificate.name, certificateResource);
     }
+
+    return certificateMap;
   }
   /**
    * Create ACM certificates
@@ -1835,7 +1985,7 @@ export class NetworkVpcStack extends AcceleratorStack {
   private createAcmCertificates(certificate: CertificateConfig) {
     const resourceName = pascalCase(`Certificate${certificate.name}`);
 
-    new CreateCertificate(this, resourceName, {
+    return new CreateCertificate(this, resourceName, {
       name: certificate.name,
       type: certificate.type,
       privKey: certificate.privKey,

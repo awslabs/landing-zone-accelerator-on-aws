@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 import * as cdk from 'aws-cdk-lib';
+import { Reference } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 export interface ITargetGroupResource extends cdk.IResource {
@@ -60,7 +61,7 @@ export interface TargetGroupProps {
   /**
    * Targets for the target group
    */
-  readonly targets?: string[];
+  readonly targets?: string[] | Reference;
   /**
    * Target group Attributes (optional).
    */
@@ -231,7 +232,12 @@ export class TargetGroup extends cdk.Resource implements ITargetGroupResource {
     }
   }
 
-  private buildTargets(targets: string[]): cdk.aws_elasticloadbalancingv2.CfnTargetGroup.TargetDescriptionProperty[] {
+  private buildTargets(
+    targets: string[] | Reference,
+  ): cdk.aws_elasticloadbalancingv2.CfnTargetGroup.TargetDescriptionProperty[] | Reference {
+    if (targets instanceof Reference) {
+      return targets;
+    }
     return targets.map(target => {
       return { id: target };
     });
