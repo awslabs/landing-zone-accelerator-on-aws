@@ -205,7 +205,7 @@ export class NetworkVpcStack extends AcceleratorStack {
       });
       new cdk.aws_iam.Role(this, 'DescribeTgwAttachRole', {
         roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
-        assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
+        assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
             statements: [
