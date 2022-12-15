@@ -25,9 +25,6 @@ import {
   MoveAccounts,
   OrganizationalUnits,
   ValidateScpCount,
-  Bucket,
-  BucketEncryptionType,
-  Organization,
 } from '@aws-accelerator/constructs';
 
 import { LoadAcceleratorConfigTable } from '../load-config-table';
@@ -36,12 +33,8 @@ import { ValidateEnvironmentConfig } from '../validate-environment-config';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class PrepareStack extends AcceleratorStack {
-  private organizationId: string | undefined;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
-
-    // Set Organization ID
-    this.setOrganizationId();
 
     let organizationAccounts: CreateOrganizationAccounts | undefined;
     let controlTowerAccounts: CreateControlTowerAccounts | undefined;
@@ -514,19 +507,19 @@ export class PrepareStack extends AcceleratorStack {
 
             // cdk-nag suppressions
             const ctAccountsIam4SuppressionPaths = [
-              'CreateCTAccounts/CreateControlTowerAccountsProvider/framework-onTimeout/ServiceRole/Resource',
-              'CreateCTAccounts/CreateControlTowerAccountsProvider/framework-isComplete/ServiceRole/Resource',
-              'CreateCTAccounts/CreateControlTowerAccountsProvider/framework-onEvent/ServiceRole/Resource',
+              'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/Resource',
+              'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/Resource',
+              'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/Resource',
               'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/Resource',
               'CreateCTAccounts/CreateControlTowerAccount/ServiceRole/Resource',
             ];
 
             const ctAccountsIam5SuppressionPaths = [
               'CreateCTAccounts/CreateControlTowerAccountStatus/ServiceRole/DefaultPolicy/Resource',
-              'CreateCTAccounts/CreateControlTowerAccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
-              'CreateCTAccounts/CreateControlTowerAccountsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
-              'CreateCTAccounts/CreateControlTowerAccountsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
-              'CreateCTAccounts/CreateControlTowerAccountsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
+              'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource',
+              'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-isComplete/ServiceRole/DefaultPolicy/Resource',
+              'CreateCTAccounts/CreateControlTowerAcccountsProvider/framework-onTimeout/ServiceRole/DefaultPolicy/Resource',
+              'CreateCTAccounts/CreateControlTowerAcccountsProvider/waiter-state-machine/Role/DefaultPolicy/Resource',
             ];
 
             // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
@@ -714,16 +707,6 @@ export class PrepareStack extends AcceleratorStack {
     //
     this.createSsmParameters();
 
-    // Setup s3 bucket with CMK to only allow specific role access to the key.
-    // this bucket will be used to store private key material for the solution
-    // central assets bucket will only be created in the management account in home region
-    if (
-      cdk.Stack.of(this).account === this.props.accountsConfig.getManagementAccountId() &&
-      cdk.Stack.of(this).region === this.props.globalConfig.homeRegion
-    ) {
-      this.setupCertificateAssets();
-    }
-
     Logger.info('[prepare-stack] Completed stack synthesis');
   }
 
@@ -824,165 +807,5 @@ export class PrepareStack extends AcceleratorStack {
     }
 
     return { configAccounts: accounts, configOu: orgUnits, configScps: validateScpCountForOrg };
-  }
-  private setOrganizationId() {
-    if (this.props.organizationConfig.enable) {
-      this.organizationId = new Organization(this, 'Organization').id;
-    }
-  }
-
-  private setupCertificateAssets() {
-    const assetsKmsKey = new cdk.aws_kms.Key(this, 'AssetsKmsKey', {
-      alias: AcceleratorStack.ACCELERATOR_ASSETS_KEY_ARN_PARAMETER_NAME,
-      description: AcceleratorStack.ACCELERATOR_ASSETS_KEY_DESCRIPTION,
-      enableKeyRotation: true,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
-    // Allow management account access
-    assetsKmsKey.addToResourcePolicy(
-      new cdk.aws_iam.PolicyStatement({
-        sid: 'Management Actions',
-        principals: [new cdk.aws_iam.AccountPrincipal(cdk.Stack.of(this).account)],
-        actions: [
-          'kms:Create*',
-          'kms:Describe*',
-          'kms:Enable*',
-          'kms:List*',
-          'kms:Put*',
-          'kms:Update*',
-          'kms:Revoke*',
-          'kms:Disable*',
-          'kms:Get*',
-          'kms:Delete*',
-          'kms:ScheduleKeyDeletion',
-          'kms:CancelKeyDeletion',
-          'kms:GenerateDataKey',
-        ],
-        resources: ['*'],
-      }),
-    );
-
-    //grant s3 service access
-    assetsKmsKey.addToResourcePolicy(
-      new cdk.aws_iam.PolicyStatement({
-        sid: `Allow S3 to use the encryption key`,
-        principals: [new cdk.aws_iam.AnyPrincipal()],
-        actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
-        resources: ['*'],
-        conditions: {
-          StringEquals: {
-            'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
-            ...this.getPrincipalOrgIdCondition(this.organizationId),
-          },
-        },
-      }),
-    );
-
-    //grant AWSAccelerator-AssetsAccessRole access to KMS
-    assetsKmsKey.addToResourcePolicy(
-      new cdk.aws_iam.PolicyStatement({
-        principals: [new cdk.aws_iam.AnyPrincipal()],
-        actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
-        resources: ['*'],
-        conditions: {
-          StringLike: {
-            'aws:PrincipalARN': `arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-AssetsAccessRole`,
-            ...this.getPrincipalOrgIdCondition(this.organizationId),
-          },
-        },
-      }),
-    );
-    const serverAccessLogsBucket = new Bucket(this, 'AssetsAccessLogsBucket', {
-      encryptionType: BucketEncryptionType.SSE_S3, // Server access logging does not support SSE-KMS
-      s3BucketName: `aws-accelerator-assets-logs-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
-      s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.accessLogBucket?.lifecycleRules),
-    });
-
-    // AwsSolutions-S1: The S3 Bucket has server access logs disabled.
-    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/AssetsAccessLogsBucket/Resource/Resource`, [
-      {
-        id: 'AwsSolutions-S1',
-        reason: 'AccessLogsBucket has server access logs disabled till the task for access logging completed.',
-      },
-    ]);
-
-    //create assets bucket
-    const assetsBucket = new Bucket(this, 'CertificateAssetBucket', {
-      encryptionType: BucketEncryptionType.SSE_KMS,
-      s3BucketName: `aws-accelerator-assets-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`,
-      kmsKey: assetsKmsKey,
-      serverAccessLogsBucketName: serverAccessLogsBucket.getS3Bucket().bucketName,
-    });
-    assetsBucket.getS3Bucket().addToResourcePolicy(
-      new cdk.aws_iam.PolicyStatement({
-        principals: [new cdk.aws_iam.AnyPrincipal()],
-        actions: ['s3:GetObject*', 's3:ListBucket'],
-        resources: [assetsBucket.getS3Bucket().bucketArn, `${assetsBucket.getS3Bucket().bucketArn}/*`],
-        conditions: {
-          StringEquals: {
-            ...this.getPrincipalOrgIdCondition(this.organizationId),
-          },
-          StringLike: {
-            'aws:PrincipalARN': `arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-AssetsAccessRole`,
-          },
-        },
-      }),
-    );
-    new cdk.CfnOutput(this, 'AWSAcceleratorAssetsBucket', {
-      value: assetsBucket.getS3Bucket().bucketName,
-      description: 'Name of the bucket which hosts solution assets ',
-    });
-
-    const assetBucketKmsKeyArnSsmParameter = new cdk.aws_ssm.StringParameter(
-      this,
-      'SsmParamAssetsAccountBucketKMSArn',
-      {
-        parameterName: AcceleratorStack.ACCELERATOR_ASSETS_KEY_ARN_PARAMETER_NAME,
-        stringValue: assetsKmsKey.keyArn,
-      },
-    );
-
-    // SSM parameter access IAM Role for
-    new cdk.aws_iam.Role(this, 'CrossAccountAssetsBucketKMSArnSsmParamAccessRole', {
-      roleName: AcceleratorStack.ACCELERATOR_ASSETS_CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
-      assumedBy: this.getOrgPrincipals(this.organizationId),
-      inlinePolicies: {
-        default: new cdk.aws_iam.PolicyDocument({
-          statements: [
-            new cdk.aws_iam.PolicyStatement({
-              effect: cdk.aws_iam.Effect.ALLOW,
-              actions: ['ssm:GetParameters', 'ssm:GetParameter'],
-              resources: [assetBucketKmsKeyArnSsmParameter.parameterArn],
-              conditions: {
-                ArnLike: {
-                  'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
-                },
-              },
-            }),
-            new cdk.aws_iam.PolicyStatement({
-              effect: cdk.aws_iam.Effect.ALLOW,
-              actions: ['ssm:DescribeParameters'],
-              resources: ['*'],
-              conditions: {
-                ArnLike: {
-                  'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
-                },
-              },
-            }),
-          ],
-        }),
-      },
-    });
-
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/CrossAccountAssetsBucketKMSArnSsmParamAccessRole/Resource`,
-      [
-        {
-          id: 'AwsSolutions-IAM5',
-          reason: 'Cross account role allows AWSAccelerator to have read access on SSM',
-        },
-      ],
-    );
   }
 }
