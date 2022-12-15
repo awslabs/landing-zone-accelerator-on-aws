@@ -230,7 +230,7 @@ export class IamConfigTypes {
     instanceType: t.nonEmptyString,
     vpcName: t.nonEmptyString,
     imagePath: t.nonEmptyString,
-    securityGroupName: t.nonEmptyString,
+    securityGroupInboundSources: t.array(t.nonEmptyString),
     instanceRole: t.nonEmptyString,
     subnetName: t.nonEmptyString,
     userDataScripts: t.array(this.activeDirectoryConfigurationInstanceUserDataConfig),
@@ -450,7 +450,8 @@ export class ActiveDirectoryUserConfig implements t.TypeOf<typeof IamConfigTypes
  *      vpcName: MyVpc
  *      subnetName: subnet
  *      imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
- *      securityGroupName: ActiveDirectoryConfigInstanceSG
+ *      securityGroupInboundSources:
+ *        - 10.0.0.0/16
  *      instanceRole: EC2-Default-SSM-AD-Role
  *      userDataScripts:
  *        - scriptName: JoinDomain
@@ -529,9 +530,10 @@ export class ActiveDirectoryConfigurationInstanceConfig
    */
   readonly imagePath = '';
   /**
-   * Ec2 security group name
+   * Ec2 security group inbound sources
+   *
    */
-  readonly securityGroupName = '';
+  readonly securityGroupInboundSources = [];
   /**
    * Ec2 instance role name
    */
@@ -1351,7 +1353,8 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *      vpcName: MyVpc
    *      subnetName: subnet
    *      imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
-   *      securityGroupName: ActiveDirectoryConfigInstanceSG
+   *      securityGroupInboundSources:
+   *        - 10.0.0.0/16
    *      instanceRole: EC2-Default-SSM-AD-Role
    *      userDataScripts:
    *        - scriptName: JoinDomain
@@ -1523,9 +1526,11 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
     const sharedAccounts: string[] = [];
 
     let directoryFound = false;
+    let directoryAccount: string | undefined;
     for (const managedActiveDirectory of this.managedActiveDirectories ?? []) {
       if (managedActiveDirectory.name === directoryName) {
         directoryFound = true;
+        directoryAccount = managedActiveDirectory.account;
 
         if (managedActiveDirectory.sharedOrganizationalUnits) {
           const accountsConfig = AccountsConfig.load(configDir);
@@ -1557,7 +1562,8 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
     }
 
     if (directoryFound) {
-      return sharedAccounts;
+      // mad account can't be part of shared account
+      return sharedAccounts.filter(item => item !== directoryAccount!);
     }
     throw new Error(
       `[iam-config][getManageActiveDirectorySharedAccountNames] - Directory ${directoryName} not found in iam-config file`,

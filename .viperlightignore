@@ -164,5 +164,5 @@ source/packages/@aws-accelerator/config/lib/customizations-config.ts:935
 source/packages/@aws-accelerator/config/dist/lib/customizations-config.d.ts:1829
 source/packages/@aws-accelerator/config/lib/customizations-config.ts:939
 
-source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:146
-source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:147
+source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:140
+source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:141

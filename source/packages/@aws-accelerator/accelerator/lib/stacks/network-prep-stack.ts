@@ -301,7 +301,11 @@ export class NetworkPrepStack extends AcceleratorStack {
       ) {
         new cdk.aws_iam.Role(this, 'MadShareAcceptRole', {
           roleName: AcceleratorStack.ACCELERATOR_MAD_SHARE_ACCEPT_ROLE_NAME,
-          assumedBy: new cdk.aws_iam.AccountPrincipal(madAccountId),
+          assumedBy: new cdk.aws_iam.PrincipalWithConditions(new cdk.aws_iam.AccountPrincipal(madAccountId), {
+            ArnLike: {
+              'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::${madAccountId}:role/AWSAccelerator-*`],
+            },
+          }),
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({
               statements: [

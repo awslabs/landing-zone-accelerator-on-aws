@@ -90,16 +90,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':
-      for (const account of newTargetAccountIds) {
+      for (const account of existingSharedAccountIds) {
         await unshareDirectory(directoryServiceClient, directoryId, account);
+        await sleep(30000);
       }
-
-      let existingAccountIds = await getExistingSharedAccountIds(directoryServiceClient, directoryId);
-      do {
-        console.warn(`Directory unshare in progress, sleeping for 10 seconds before rechecking `);
-        await sleep(10000);
-        existingAccountIds = await getExistingSharedAccountIds(directoryServiceClient, directoryId);
-      } while (existingAccountIds.length === 0);
 
       return { Status: 'Success', StatusCode: 200 };
   }

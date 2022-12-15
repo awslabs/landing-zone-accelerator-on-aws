@@ -322,7 +322,11 @@ export class NetworkVpcDnsStack extends AcceleratorStack {
         );
         new cdk.aws_iam.Role(this, pascalCase(`AWSAccelerator-MAD-${ruleName}`), {
           roleName: `AWSAccelerator-MAD-${ruleName}`,
-          assumedBy: new cdk.aws_iam.AccountPrincipal(madAccountId),
+          assumedBy: new cdk.aws_iam.PrincipalWithConditions(new cdk.aws_iam.AccountPrincipal(madAccountId), {
+            ArnLike: {
+              'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::${madAccountId}:role/AWSAccelerator-*`],
+            },
+          }),
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({
               statements: [
