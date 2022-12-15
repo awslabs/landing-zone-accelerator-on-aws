@@ -329,6 +329,22 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected static readonly ACCELERATOR_MANAGEMENT_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
 
   /**
+   * Accelerator assets kms key alias
+   */
+  protected static readonly ACCELERATOR_ASSETS_KEY_ARN_PARAMETER_NAME = '/accelerator/assets/kms/key';
+
+  /**
+   * Accelerator assets kms key description
+   */
+  protected static readonly ACCELERATOR_ASSETS_KEY_DESCRIPTION = 'Key used to encrypt solution assets';
+
+  /**
+   * Accelerator assets kms key description
+   */
+  protected static readonly ACCELERATOR_ASSETS_CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME =
+    'AWSAccelerator-AssetsBucket-KeyArnParam-Role';
+
+  /**
    * Accelerator SSM parameters
    * This array is used to store SSM parameters that are created per-stack.
    */

@@ -22,6 +22,7 @@ import {
   BudgetDefinition,
   IdentityCenterGetInstanceId,
   Inventory,
+  KeyLookup,
   LimitsDefinition,
 } from '@aws-accelerator/constructs';
 
@@ -96,6 +97,9 @@ export class OperationsStack extends AcceleratorStack {
       // Service Quota Limits
       //
       this.increaseLimits();
+
+      // Create Accelerator Access Role in every region
+      this.createAssetAccessRole();
     }
 
     //
@@ -109,9 +113,6 @@ export class OperationsStack extends AcceleratorStack {
     ) {
       this.enableInventory();
     }
-
-    // Create Accelerator Access Role in every region
-    this.createAssetAccessRole();
 
     Logger.info('[operations-stack] Completed stack synthesis');
   }
@@ -766,10 +767,10 @@ export class OperationsStack extends AcceleratorStack {
     }`;
 
     const accountId = cdk.Stack.of(this).account;
-    const currentRegion = cdk.Stack.of(this).region;
-    const accessRoleResourceName = `AssetAccessRole${accountId}${currentRegion}`;
+
+    const accessRoleResourceName = `AssetAccessRole${accountId}`;
     const assetsAccessRole = new cdk.aws_iam.Role(this, accessRoleResourceName, {
-      roleName: `AWSAccelerator-AssetsAccessRole-${currentRegion}`,
+      roleName: `AWSAccelerator-AssetsAccessRole`,
       assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
       description: 'AWS Accelerator assets access role in workload accounts deploy ACM imported certificates.',
     });
@@ -798,6 +799,22 @@ export class OperationsStack extends AcceleratorStack {
       new cdk.aws_iam.PolicyStatement({
         resources: [`arn:${this.props.partition}:ssm:*:${accountId}:parameter/*`],
         actions: ['ssm:PutParameter', 'ssm:DeleteParameter', 'ssm:GetParameter'],
+      }),
+    );
+
+    const assetsBucketKmsKey = new KeyLookup(this, 'AssetsBucketKms', {
+      accountId: this.props.accountsConfig.getManagementAccountId(),
+      keyRegion: this.props.globalConfig.homeRegion,
+      roleName: AcceleratorStack.ACCELERATOR_ASSETS_CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
+      keyArnParameterName: AcceleratorStack.ACCELERATOR_ASSETS_KEY_ARN_PARAMETER_NAME,
+      kmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+    }).getKey();
+
+    assetsAccessRole.addToPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        resources: [assetsBucketKmsKey.keyArn],
+        actions: ['kms:Decrypt'],
       }),
     );
 
