@@ -91,11 +91,7 @@ export class CreateCertificate extends Construct {
       handler: 'index.handler',
       timeout: cdk.Duration.minutes(15),
       description: 'Create ACM certificates handler',
-      role: cdk.aws_iam.Role.fromRoleName(
-        this,
-        'AssetsFunctionRole',
-        `AWSAccelerator-AssetsAccessRole-${cdk.Stack.of(this).region}`,
-      ),
+      role: cdk.aws_iam.Role.fromRoleName(this, 'AssetsFunctionRole', 'AWSAccelerator-AssetsAccessRole'),
     });
 
     // Custom resource lambda log group
@@ -108,11 +104,6 @@ export class CreateCertificate extends Construct {
 
     const provider = new cdk.custom_resources.Provider(this, 'Custom::CreateAcmCerts', {
       onEventHandler: providerLambda,
-      role: cdk.aws_iam.Role.fromRoleName(
-        this,
-        'AssetsRole',
-        `AWSAccelerator-AssetsAccessRole-${cdk.Stack.of(this).region}`,
-      ),
     });
 
     const resource = new cdk.CustomResource(this, 'Resource', {

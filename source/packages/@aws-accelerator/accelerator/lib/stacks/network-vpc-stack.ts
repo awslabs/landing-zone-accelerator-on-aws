@@ -1863,6 +1863,16 @@ export class NetworkVpcStack extends AcceleratorStack {
       ],
     );
 
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${resourceName}/Custom::CreateAcmCerts/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: 'Policy permissions are part cdk provider framework',
+        },
+      ],
+    );
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
     // rule suppression with evidence for this permission.
     NagSuppressions.addResourceSuppressionsByPath(
@@ -1872,6 +1882,16 @@ export class NetworkVpcStack extends AcceleratorStack {
         {
           id: 'AwsSolutions-IAM4',
           reason: 'IAM Role for lambda needs AWS managed policy',
+        },
+      ],
+    );
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/${resourceName}/Custom::CreateAcmCerts/framework-onEvent/ServiceRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'IAM Role created by custom resource framework',
         },
       ],
     );
