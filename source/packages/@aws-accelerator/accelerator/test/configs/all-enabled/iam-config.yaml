@@ -95,7 +95,7 @@ secretSets:
 managedActiveDirectories:
   - name: AcceleratorManagedActiveDirectory
     type: AWS Managed Microsoft AD
-    account: SharedServices
+    account: LogArchive
     region: us-east-1
     dnsName: example.com
     netBiosDomainName: example
@@ -110,15 +110,15 @@ managedActiveDirectories:
     secretConfig:
       account: Audit
       region: us-east-1
-      adminSecretName: my-admin-001
+      adminSecretName: my-admin-002
     sharedOrganizationalUnits:
         organizationalUnits: 
           - Root
         excludedAccounts:
-          - Audit  
+          - Audit
     # sharedAccounts:
+    #   - Network
     #   - Management
-    #   - LogArchive
     logs:
       groupName: /aws/directoryservice/AcceleratorManagedActiveDirectory
       retentionInDays: 30
@@ -127,7 +127,16 @@ managedActiveDirectories:
       vpcName: SharedServices-Main
       subnetName: SharedServices-App-A
       imagePath: /aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base
-      securityGroupName: ActiveDirectoryConfigInstanceSG
+      securityGroupInboundSources: 
+          - 10.4.0.0/16
+      # securityGroupInboundConfigs: 
+      #   - description: Allow RDP and HTTPS Traffic Inbound
+      #     types: 
+      #       - RDP
+      #       - HTTPS
+      #     sources:
+      #       - 10.4.0.0/16
+      # securityGroupName: ActiveDirectoryConfigInstanceSG
       instanceRole: EC2-Default-SSM-AD-Role
       userDataScripts:
         - scriptName: JoinDomain
@@ -165,11 +174,11 @@ managedActiveDirectories:
         lockoutDuration: 30
         lockoutAttemptsReset: 30
       adUsers:
-        - name: adconnector-user
+        - name: adconnector-user-01
           email: example-adconnector-user@example.com
           groups:
             - ADConnector-grp
-        - name: user001
+        - name: user1-01
           email: example-user1@example.com
           groups:
             - aws-Provisioning
@@ -177,8 +186,9 @@ managedActiveDirectories:
             - "*-Admin"
             - "*-PowerUser"
             - AWS Delegated Administrators
-        - name: user002
+        - name: user2-002
           email: example-user2@example.com
           groups:
             - aws-Provisioning
             - "*-View"
+

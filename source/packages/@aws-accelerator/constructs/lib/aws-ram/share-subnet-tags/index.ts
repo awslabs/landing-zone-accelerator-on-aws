@@ -12,6 +12,7 @@
  */
 
 import { throttlingBackOff } from '@aws-accelerator/utils';
+import * as AWS from 'aws-sdk';
 import {
   EC2Client,
   DescribeTagsCommand,
@@ -44,16 +45,26 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const vpcTags = event.ResourceProperties['vpcTags'] || [];
   const subnetTags = event.ResourceProperties['subnetTags'] || [];
   const sharedSubnetId: string = event.ResourceProperties['sharedSubnetId'];
+  const sharedSubnetName: string = event.ResourceProperties['sharedSubnetName'];
+  const vpcName: string = event.ResourceProperties['vpcName'];
   const solutionId = process.env['SOLUTION_ID'];
 
   ec2Client = new EC2Client({ customUserAgent: solutionId });
+  const ssmClient = new AWS.SSM({ customUserAgent: solutionId });
 
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
+      // Create Shared Subnet SSM parameter
+      await createParameter(
+        ssmClient,
+        `/accelerator/shared/network/vpc/${vpcName}/subnet/${sharedSubnetName}/id`,
+        'Shared subnet',
+        sharedSubnetId,
+      );
       await updateSubnetTags(convertTags(subnetTags), sharedSubnetId);
       if (vpcTags?.length > 0) {
-        await updateVpcTags(convertTags(vpcTags), sharedSubnetId);
+        await updateVpcTags(convertTags(vpcTags), sharedSubnetId, ssmClient, vpcName);
       }
       return {
         PhysicalResourceId: sharedSubnetId,
@@ -61,11 +72,74 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       };
 
     case 'Delete':
+      // Delete Shared Subnet SSM parameter
+      await deleteParameter(ssmClient, `/accelerator/shared/network/vpc/${vpcName}/subnet/${sharedSubnetName}/id`);
       await deleteTags(sharedSubnetId);
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',
       };
+  }
+}
+
+async function isParameterExists(ssmClient: AWS.SSM, name: string): Promise<boolean> {
+  console.log(`Checking if parameter ${name} exists`);
+  try {
+    await throttlingBackOff(() =>
+      ssmClient
+        .getParameter({
+          Name: name,
+        })
+        .promise(),
+    );
+
+    console.log(`Parameter ${name} exists`);
+    return true;
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    e: any
+  ) {
+    if (
+      // SDKv2 Error Structure
+      e.code === 'ParameterNotFound' ||
+      // SDKv3 Error Structure
+      e.name === 'ParameterNotFound'
+    ) {
+      console.warn(e.name + ': ' + e.message);
+      return false;
+    } else {
+      throw new Error(e.name + ': ' + e.message);
+    }
+  }
+}
+
+async function createParameter(ssmClient: AWS.SSM, name: string, description: string, value: string): Promise<void> {
+  console.log(`Creating parameter ${name}`);
+  if (!(await isParameterExists(ssmClient, name))) {
+    await throttlingBackOff(() =>
+      ssmClient
+        .putParameter({
+          Name: name,
+          Description: description,
+          Value: value,
+          Type: 'String',
+          Overwrite: true,
+        })
+        .promise(),
+    );
+  }
+}
+
+async function deleteParameter(ssmClient: AWS.SSM, name: string): Promise<void> {
+  console.log(`Deleting parameter ${name}`);
+  if (!(await isParameterExists(ssmClient, name))) {
+    await throttlingBackOff(() =>
+      ssmClient
+        .deleteParameter({
+          Name: name,
+        })
+        .promise(),
+    );
   }
 }
 
@@ -75,6 +149,7 @@ async function updateSubnetTags(subnetTags: Tag[], subnetId: string) {
   const describeTagsResponse = await throttlingBackOff(() =>
     ec2Client.send(new DescribeTagsCommand({ Filters: [{ Name: 'resource-id', Values: [subnetId] }] })),
   );
+
   console.debug('describeTagsResponse: ', describeTagsResponse);
 
   // if tags don't exist create them
@@ -92,14 +167,14 @@ async function updateSubnetTags(subnetTags: Tag[], subnetId: string) {
   await createTags(subnetId, subnetTags);
 }
 
-async function updateVpcTags(vpcTags: Tag[], subnetId: string) {
+async function updateVpcTags(vpcTags: Tag[], subnetId: string, ssmClient: AWS.SSM, vpcName: string) {
   console.info('updateVpcTags');
   const describeSubnetsResponse = await throttlingBackOff(() =>
     ec2Client.send(new DescribeSubnetsCommand({ Filters: [{ Name: 'subnet-id', Values: [subnetId] }] })),
   );
   console.debug('describeSubnetsResponse: ', describeSubnetsResponse);
 
-  if (describeSubnetsResponse.Subnets?.length > 0) {
+  if (describeSubnetsResponse.Subnets!.length > 0) {
     console.log(`Found subnetId: ${subnetId} with vpcId: ${describeSubnetsResponse.Subnets?.[0].VpcId}`);
   } else {
     console.error(`Could not find shared subnetId ${subnetId}`);
@@ -109,6 +184,8 @@ async function updateVpcTags(vpcTags: Tag[], subnetId: string) {
   const vpcId = describeSubnetsResponse.Subnets?.[0].VpcId;
   if (vpcId) {
     console.debug('VPCId: ', vpcId);
+    // Create Shared VPC SSM parameter
+    await createParameter(ssmClient, `/accelerator/shared/network/vpc/${vpcName}/id`, 'Shared vpc', vpcId);
   } else {
     console.error(`Could not locate vpc for shared subnetId ${subnetId}`);
     return;

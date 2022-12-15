@@ -12,27 +12,26 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { ShareSubnetTags } from '../../lib/aws-ram/share-subnet-tags';
+
+import { SubnetIdLookup } from '../../lib/aws-ec2/subnet-id-lookup';
 import { snapShotTest } from '../snapshot-test';
 
-const testNamePrefix = 'Construct(ShareSubnetTest): ';
+const testNamePrefix = 'Construct(SubnetIdLookup): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new ShareSubnetTags(stack, 'ShareSubnetTags', {
-  subnetTags: [{ key: 'Key', value: 'value' }],
-  sharedSubnetId: 'abcdefg123',
-  owningAccountId: '9999999999',
-  vpcName: 'TestVpc',
+new SubnetIdLookup(stack, 'SubnetIdLookup', {
+  vpcId: 'vpce-00000000',
   subnetName: 'TestSubnet',
-  resourceLoggingKmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
-  logRetentionInDays: 3653,
+  lambdaKey: new cdk.aws_kms.Key(stack, 'LambdaKey'),
+  cloudwatchKey: new cdk.aws_kms.Key(stack, 'CWKey'),
+  cloudwatchLogRetentionInDays: 3653,
 });
 
 /**
- * ShareTransitGatewayTags construct test
+ * SubnetIdLookup construct test
  */
-describe('ShareSubnetTags', () => {
+describe('SubnetIdLookup', () => {
   snapShotTest(testNamePrefix, stack);
 });

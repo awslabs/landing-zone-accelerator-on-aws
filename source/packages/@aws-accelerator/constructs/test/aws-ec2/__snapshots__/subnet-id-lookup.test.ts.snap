@@ -1,0 +1,310 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SubnetIdLookup Construct(SubnetIdLookup):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CWKeyF87F989A": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "LambdaKey984A39D9": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "SubnetIdLookup5A070671": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "SubnetIdLookupSubnetIdLookupProviderframeworkonEvent54521939",
+            "Arn",
+          ],
+        },
+        "subnetName": "TestSubnet",
+        "vpcId": "vpce-00000000",
+      },
+      "Type": "Custom::SubnetIdLookup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SubnetIdLookupSubnetIdLookupFunction2C56B17D": Object {
+      "DependsOn": Array [
+        "SubnetIdLookupSubnetIdLookupFunctionServiceRoleDefaultPolicy20F5ACD5",
+        "SubnetIdLookupSubnetIdLookupFunctionServiceRoleD56D09B3",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Lookup subnet id from account",
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "LambdaKey984A39D9",
+            "Arn",
+          ],
+        },
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "SubnetIdLookupSubnetIdLookupFunctionServiceRoleD56D09B3",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "SubnetIdLookupSubnetIdLookupFunctionLogGroup2C86E34D": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CWKeyF87F989A",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "SubnetIdLookupSubnetIdLookupFunction2C56B17D",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "SubnetIdLookupSubnetIdLookupFunctionServiceRoleD56D09B3": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "SubnetIdLookupSubnetIdLookupFunctionServiceRoleDefaultPolicy20F5ACD5": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "ec2:DescribeSubnets",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "Ec2Actions",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "SubnetIdLookupSubnetIdLookupFunctionServiceRoleDefaultPolicy20F5ACD5",
+        "Roles": Array [
+          Object {
+            "Ref": "SubnetIdLookupSubnetIdLookupFunctionServiceRoleD56D09B3",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "SubnetIdLookupSubnetIdLookupProviderframeworkonEvent54521939": Object {
+      "DependsOn": Array [
+        "SubnetIdLookupSubnetIdLookupProviderframeworkonEventServiceRoleDefaultPolicy5FAE987E",
+        "SubnetIdLookupSubnetIdLookupProviderframeworkonEventServiceRoleC2619D79",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/SubnetIdLookup/SubnetIdLookupProvider)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "SubnetIdLookupSubnetIdLookupFunction2C56B17D",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "SubnetIdLookupSubnetIdLookupProviderframeworkonEventServiceRoleC2619D79",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "SubnetIdLookupSubnetIdLookupProviderframeworkonEventServiceRoleC2619D79": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "SubnetIdLookupSubnetIdLookupProviderframeworkonEventServiceRoleDefaultPolicy5FAE987E": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "SubnetIdLookupSubnetIdLookupFunction2C56B17D",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "SubnetIdLookupSubnetIdLookupFunction2C56B17D",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "SubnetIdLookupSubnetIdLookupProviderframeworkonEventServiceRoleDefaultPolicy5FAE987E",
+        "Roles": Array [
+          Object {
+            "Ref": "SubnetIdLookupSubnetIdLookupProviderframeworkonEventServiceRoleC2619D79",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+  },
+}
+`;
