@@ -1194,7 +1194,7 @@ export class LoggingStack extends AcceleratorStack {
     });
 
     new cdk.aws_logs.LogGroup(this, 'SnsForwarderFunctionLogGroup', {
-      logGroupName: `/aws/lambda/${this.snsForwarderFunction!.functionName}`,
+      logGroupName: `/aws/lambda/${this.snsForwarderFunction.functionName}`,
       retention: this.props.globalConfig.cloudwatchLogRetentionInDays,
       encryptionKey: this.cloudwatchKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,

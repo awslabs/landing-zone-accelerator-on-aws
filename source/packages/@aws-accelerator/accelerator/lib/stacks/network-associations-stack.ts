@@ -1619,17 +1619,17 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               );
             }
 
-            peering.addCrossAcctPeeringRoute(
-              routeId,
-              accepterAccountId,
-              accepterVpc.region,
-              this.props.partition,
-              this.crossAcctRouteProvider,
-              `AWSAccelerator-VpcPeeringRole-${accepterVpc.region}`,
+            peering.addCrossAcctPeeringRoute({
+              id: routeId,
+              ownerAccount: accepterAccountId,
+              ownerRegion: accepterVpc.region,
+              partition: this.props.partition,
+              provider: this.crossAcctRouteProvider,
+              roleName: `AWSAccelerator-VpcPeeringRole-${accepterVpc.region}`,
               routeTableId,
               destination,
               destinationPrefixListId,
-            );
+            });
           }
         }
       }

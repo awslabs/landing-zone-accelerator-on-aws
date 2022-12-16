@@ -22,7 +22,6 @@ export function policyReplacements(props: {
   let { content } = props;
 
   for (const [key, value] of Object.entries(additionalReplacements)) {
-    //console.debug(`key: ${key}, value: ${value}`);
     content = content.replace(new RegExp(key, 'g'), typeof value === 'string' ? value : JSON.stringify(value));
   }
 
@@ -33,11 +32,8 @@ export function policyReplacements(props: {
   };
 
   for (const [key, value] of Object.entries(replacements)) {
-    //console.debug(`key: ${key}, value: ${value}`);
     content = content.replace(new RegExp(key, 'g'), value);
   }
-
-  //console.debug(`Policy with placeholder values ${content}`);
 
   return content;
 }
