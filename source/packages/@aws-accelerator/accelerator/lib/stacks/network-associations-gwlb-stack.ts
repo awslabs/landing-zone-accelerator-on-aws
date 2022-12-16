@@ -389,11 +389,11 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
       group.name,
     );
     const autoscaling: AutoScalingConfig = this.processAutoScalingReplacements(group.autoscaling, group.vpc);
-
+    const resourceName = pascalCase(`${group.vpc}${group.name}FirewallAsg`);
     Logger.info(
       `[network-associations-gwlb-stack] Creating firewall autoscaling group ${group.name} in VPC ${group.vpc}`,
     );
-    new FirewallAutoScalingGroup(this, pascalCase(`${group.vpc}${group.name}FirewallAsg`), {
+    new FirewallAutoScalingGroup(this, resourceName, {
       name: group.name,
       autoscaling,
       configDir: this.props.configDirPath,
@@ -402,11 +402,9 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
       tags: group.tags,
     });
 
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/${pascalCase(`${group.vpc}${group.name}FirewallAsg`)}/Resource/Resource`,
-      [{ id: 'AwsSolutions-AS3', reason: 'Scaling policies are not offered as a part of this solution.' }],
-    );
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/${resourceName}/Resource/Resource`, [
+      { id: 'AwsSolutions-AS3', reason: 'Scaling policies are not offered as a part of this solution.' },
+    ]);
   }
 
   /**

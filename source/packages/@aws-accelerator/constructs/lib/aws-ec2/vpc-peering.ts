@@ -131,26 +131,26 @@ export class VpcPeering extends cdk.Resource implements IVpcPeering {
     }
   }
 
-  public addCrossAcctPeeringRoute(
-    id: string,
-    ownerAccount: string,
-    ownerRegion: string,
-    partition: string,
-    provider: cdk.custom_resources.Provider,
-    roleName: string,
-    routeTableId: string,
-    destination?: string,
-    destinationPrefixListId?: string,
-  ): void {
-    new CrossAccountRoute(this, id, {
-      ownerAccount,
-      ownerRegion,
-      partition,
-      provider,
-      roleName,
-      routeTableId,
-      destination,
-      destinationPrefixListId,
+  public addCrossAcctPeeringRoute(props: {
+    id: string;
+    ownerAccount: string;
+    ownerRegion: string;
+    partition: string;
+    provider: cdk.custom_resources.Provider;
+    roleName: string;
+    routeTableId: string;
+    destination?: string;
+    destinationPrefixListId?: string;
+  }): void {
+    new CrossAccountRoute(this, props.id, {
+      ownerAccount: props.ownerAccount,
+      ownerRegion: props.ownerRegion,
+      partition: props.partition,
+      provider: props.provider,
+      roleName: props.roleName,
+      routeTableId: props.routeTableId,
+      destination: props.destination,
+      destinationPrefixListId: props.destinationPrefixListId,
       vpcPeeringConnectionId: this.peeringId,
     });
   }

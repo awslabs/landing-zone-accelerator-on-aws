@@ -55,7 +55,7 @@ interface VpnTunnelOptionsSpecifications {
   /**
    * A Secrets Manager secret name
    */
-  readonly preSharedKey?: string | undefined;
+  readonly preSharedKey?: string;
 
   /**
    * An IP address that is a size /30 CIDR block from the 169.254.0.0/16.

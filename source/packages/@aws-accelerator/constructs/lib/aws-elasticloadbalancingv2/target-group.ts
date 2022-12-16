@@ -148,7 +148,7 @@ export class TargetGroup extends cdk.Resource implements ITargetGroupResource {
       if (props.attributes.deregistrationDelay) {
         targetGroupAttributesProperties.push({
           key: 'deregistration_delay.timeout_seconds',
-          value: props.attributes.deregistrationDelay!.toString(),
+          value: props.attributes.deregistrationDelay.toString(),
         });
       }
       if (props.attributes.stickiness) {

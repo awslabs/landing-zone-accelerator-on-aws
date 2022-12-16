@@ -17,14 +17,13 @@ import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
-import { MoveAccountRule } from '@aws-accelerator/constructs';
-
 import {
   EnablePolicyType,
   Policy,
   PolicyAttachment,
   PolicyType,
   PolicyTypeEnum,
+  MoveAccountRule,
   RevertScpChanges,
 } from '@aws-accelerator/constructs';
 
