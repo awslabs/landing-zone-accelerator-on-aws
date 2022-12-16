@@ -47,6 +47,10 @@ export interface RevertScpChangesProps {
    */
   readonly configDirPath: string;
   /**
+   * Accelerator home region
+   */
+  readonly homeRegion: string;
+  /**
    * Lambda log group encryption key
    */
   readonly kmsKeyCloudWatch: cdk.aws_kms.Key;
@@ -103,7 +107,7 @@ export class RevertScpChanges extends Construct {
     const revertScpChangesPolicyList = [kmsEncryptMessage, orgPolicyUpdate];
 
     if (props.snsTopicName) {
-      snsTopicArn = `arn:${cdk.Stack.of(this).partition}:sns:${cdk.Stack.of(this).region}:${
+      snsTopicArn = `arn:${cdk.Stack.of(this).partition}:sns:${props.homeRegion}:${
         cdk.Stack.of(this).account
       }:aws-accelerator-${props.snsTopicName}`;
       revertScpChangesPolicyList.push(
@@ -124,6 +128,7 @@ export class RevertScpChanges extends Construct {
       timeout: cdk.Duration.minutes(LAMBDA_TIMEOUT_IN_MINUTES),
       environment: {
         AWS_PARTITION: cdk.Aws.PARTITION,
+        HOME_REGION: props.homeRegion,
         SNS_TOPIC_ARN: snsTopicArn ?? '',
         MANAGEMENT_ACCOUNT_ID: props.managementAccountId,
         LOG_ARCHIVE_ACCOUNT_ID: props.logArchiveAccountId,
