@@ -1983,9 +1983,9 @@ export class NetworkVpcStack extends AcceleratorStack {
    * Create ACM certificates
    */
   private createAcmCertificates(certificate: CertificateConfig) {
-    const resourceName = pascalCase(`Certificate${certificate.name}`);
+    const resourceName = pascalCase(`${certificate.name}`);
 
-    return new CreateCertificate(this, resourceName, {
+    const acmCertificate = new CreateCertificate(this, resourceName, {
       name: certificate.name,
       type: certificate.type,
       privKey: certificate.privKey,
@@ -2045,5 +2045,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         },
       ],
     );
+
+    return acmCertificate;
   }
 }
