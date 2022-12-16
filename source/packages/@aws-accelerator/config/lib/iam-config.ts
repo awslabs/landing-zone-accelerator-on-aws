@@ -1316,7 +1316,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    * ```
    */
 
-  readonly identityCenter: IdentityCenterConfig = new IdentityCenterConfig();
+  readonly identityCenter: IdentityCenterConfig | undefined = undefined;
 
   /**
    * Managed active directory configuration
