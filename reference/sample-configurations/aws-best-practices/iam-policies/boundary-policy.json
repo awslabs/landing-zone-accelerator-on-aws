@@ -1,35 +1,30 @@
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": "*",
-      "Resource": "*"
-    },
-    {
-      "Effect": "Deny",
-      "NotAction": [
-        "iam:CreateVirtualMFADevice",
-        "iam:DeleteVirtualMFADevice",
-        "iam:ListVirtualMFADevices",
-        "iam:EnableMFADevice",
-        "iam:ResyncMFADevice",
-        "iam:ListAccountAliases",
-        "iam:ListUsers",
-        "iam:ListSSHPublicKeys",
-        "iam:ListAccessKeys",
-        "iam:ListServiceSpecificCredentials",
-        "iam:ListMFADevices",
-        "iam:GetAccountSummary",
-        "sts:GetSessionToken"
-      ],
-      "Resource": "*",
-      "Condition": {
-        "Bool": {
-          "aws:MultiFactorAuthPresent": "false",
-          "aws:ViaAWSService": "false"
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "*",
+        "Resource": "*"
+      },
+      {
+        "Effect": "Deny",
+        "NotAction": [
+          "iam:ChangePassword",
+          "iam:Getuser",
+          "iam:ListMFADevices",
+          "iam:CreateVirtualMFADevice",
+          "iam:EnableMFADevice",
+          "iam:ResyncMFADevice",
+          "iam:DeactivateMFADevice",
+          "iam:ListUsers"
+        ],
+        "Resource": "*",
+        "Condition": {
+          "Bool": {
+            "aws:MultiFactorAuthPresent": "false"
+          }
         }
       }
-    }
-  ]
-}
+    ]
+  }
+  
