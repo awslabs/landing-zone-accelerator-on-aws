@@ -24,12 +24,13 @@ const acceleratorRolePrefix = 'AWSAccelerator';
 const snsTopicArn = process.env['SNS_TOPIC_ARN'];
 const partition = process.env['AWS_PARTITION']!;
 const region = process.env['AWS_REGION']!;
+const homeRegion = process.env['HOME_REGION']!;
 const managementAccountId = process.env['MANAGEMENT_ACCOUNT_ID']!;
 const logArchiveAccountId = process.env['LOG_ARCHIVE_ACCOUNT_ID']!;
 const auditAccountId = process.env['AUDIT_ACCOUNT_ID']!;
 const managementAccountAccessRole = process.env['MANAGEMENT_ACCOUNT_ACCESS_ROLE']!;
 
-const snsClient = new AWS.SNS({});
+const snsClient = new AWS.SNS({ region: homeRegion });
 
 if (partition === 'aws-us-gov') {
   organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
