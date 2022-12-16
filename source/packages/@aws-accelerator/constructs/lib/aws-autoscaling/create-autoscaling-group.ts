@@ -59,7 +59,7 @@ export class AutoscalingGroup extends cdk.Resource implements IAutoscalingGroupR
       healthCheckType: props.healthCheckType!,
       healthCheckGracePeriod: props.healthCheckGracePeriod,
       targetGroupArns: props.targetGroups,
-      vpcZoneIdentifier: props.subnets!,
+      vpcZoneIdentifier: props.subnets,
       tags: props.tags ? this.processTags(props.tags) : undefined,
       // autoScalingGroupName: props.name,
     });

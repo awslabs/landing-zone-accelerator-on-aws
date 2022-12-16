@@ -33,7 +33,7 @@ export interface OperationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
 }
 
-interface permissionSetMapping {
+interface PermissionSetMapping {
   name: string;
   arn: string;
 }
@@ -585,7 +585,7 @@ export class OperationsStack extends AcceleratorStack {
    * needs to be updated.
    */
   private addIdentityCenterPermissionSets(securityAdminAccountId: string, identityCenterInstanceId: string) {
-    const permissionSetMap: permissionSetMapping[] = [];
+    const permissionSetMap: PermissionSetMapping[] = [];
     if (cdk.Stack.of(this).account == securityAdminAccountId) {
       const identityCenter = this.props.iamConfig.identityCenter;
       if (identityCenter?.identityCenterPermissionSets) {
@@ -601,9 +601,9 @@ export class OperationsStack extends AcceleratorStack {
   private createPermissionsSet(
     identityCenterPermissionSet: IdentityCenterPermissionSetConfig,
     identityCenterInstanceId: string,
-  ): permissionSetMapping {
+  ): PermissionSetMapping {
     let customerManagedPolicyReferencesList: cdk.aws_sso.CfnPermissionSet.CustomerManagedPolicyReferenceProperty[] = [];
-    const permissionSetPair: permissionSetMapping = {
+    const permissionSetPair: PermissionSetMapping = {
       name: '',
       arn: '',
     };
@@ -642,7 +642,7 @@ export class OperationsStack extends AcceleratorStack {
 
   private addIdentityCenterAssignments(
     securityAdminAccountId: string,
-    permissionSetMap: permissionSetMapping[],
+    permissionSetMap: PermissionSetMapping[],
     identityCenterInstanceId: string,
   ) {
     if (cdk.Stack.of(this).account == securityAdminAccountId) {
@@ -679,7 +679,7 @@ export class OperationsStack extends AcceleratorStack {
 
   private createAssignment(
     assignment: IdentityCenterAssignmentConfig,
-    permissionSetMap: permissionSetMapping[],
+    permissionSetMap: PermissionSetMapping[],
     identityCenterInstanceId: string,
   ) {
     let listOfTargets = [];
@@ -703,7 +703,7 @@ export class OperationsStack extends AcceleratorStack {
     }
   }
 
-  private getPermissionSetArn(permissionSetMap: permissionSetMapping[], name: string) {
+  private getPermissionSetArn(permissionSetMap: PermissionSetMapping[], name: string) {
     let permissionSetArn = '';
     for (const permissionSet of permissionSetMap) {
       if (permissionSet.name == name && permissionSet.arn) {

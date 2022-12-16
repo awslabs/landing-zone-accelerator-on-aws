@@ -15,9 +15,14 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import { Logger } from '../logger';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { AppConfigItem, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
 import { NagSuppressions } from 'cdk-nag';
+import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import {
+  AppConfigItem,
+  VpcConfig,
+  VpcTemplatesConfig,
+  ApplicationLoadBalancerListenerConfig,
+} from '@aws-accelerator/config';
 import {
   TargetGroup,
   NetworkLoadBalancer,
@@ -25,7 +30,6 @@ import {
   LaunchTemplate,
   AutoscalingGroup,
 } from '@aws-accelerator/constructs';
-import { ApplicationLoadBalancerListenerConfig } from '@aws-accelerator/config';
 
 export type PrivateIpAddressConfig = {
   primary: boolean | undefined;
@@ -214,13 +218,13 @@ export class ApplicationsStack extends AcceleratorStack {
           // Create target group resource
           const targetGroups = this.createTargetGroup(appConfigItem);
           // Create network load balancer resource
-          this.createNetworkLoadBalancer(appConfigItem, targetGroups!);
+          this.createNetworkLoadBalancer(appConfigItem, targetGroups);
           // Create application load balancer resource
-          this.createApplicationLoadBalancer(appConfigItem, targetGroups!);
+          this.createApplicationLoadBalancer(appConfigItem, targetGroups);
           // create launch template resource
           const lt = this.createLaunchTemplate(appConfigItem);
           // create autoscaling group resource
-          this.createAutoScalingGroup(appConfigItem, targetGroups!, lt!);
+          this.createAutoScalingGroup(appConfigItem, targetGroups, lt);
         }
       }
     }
@@ -244,7 +248,7 @@ export class ApplicationsStack extends AcceleratorStack {
         attributes: appConfigItem.applicationLoadBalancer.attributes ?? undefined,
         listeners: this.getAlbListenerTargetGroupArn(
           appConfigItem.applicationLoadBalancer?.listeners ?? undefined,
-          targetGroups!,
+          targetGroups,
         ),
       });
     }

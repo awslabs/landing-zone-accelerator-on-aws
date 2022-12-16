@@ -94,7 +94,7 @@ export class SecurityHubEventsLog extends Construct {
         new cdk.aws_iam.PolicyStatement({
           sid: 'sns',
           actions: ['sns:Publish'],
-          resources: [props.snsTopicArn!],
+          resources: [props.snsTopicArn],
         }),
       );
     }
@@ -104,7 +104,7 @@ export class SecurityHubEventsLog extends Construct {
         new cdk.aws_iam.PolicyStatement({
           sid: 'kms',
           actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
-          resources: [props.snsKmsKey!.keyArn],
+          resources: [props.snsKmsKey.keyArn],
         }),
       );
     }
