@@ -267,6 +267,7 @@ export class AccountsStack extends AcceleratorStack {
             logArchiveAccountId: props.accountsConfig.getLogArchiveAccountId(),
             managementAccountId: props.accountsConfig.getManagementAccountId(),
             configDirPath: props.configDirPath,
+            homeRegion: props.globalConfig.homeRegion,
             kmsKeyCloudWatch: this.cloudwatchKey,
             kmsKeyLambda: this.lambdaKey,
             logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
