@@ -1,5 +1,5 @@
+AWS developed the sample config files herein for use with the Landing Zone Accelerator on AWS (LZA) solution.  Using these sample config files with LZA will automate the deployment of [CCCS Medium](https://www.canada.ca/en/government/system/digital-government/digital-government-innovations/cloud-services/government-canada-security-control-profile-cloud-based-it-services.html) (formerly PBMM) security controls.  LZA will deploy an opinionated architecture that has been designed in consultation with CCCS and Government of Canada’s Treasury Board Secretariat.  Inheriting the controls from the [CCCS assessment of AWS](https://aws.amazon.com/compliance/services-in-scope/CCCS/) and deploying additional controls using LZA with the sample config files allow customers to meet up to 70% of the controls that have a technical element.  This reduces security control implementation time, allowing customers to focus on the evidentiary exercise in a [Security Assessment and Authorization](https://www.cyber.gc.ca/en/guidance/guidance-cloud-security-assessment-and-authorization-itsp50105) (SA&A) process like that used by the Government of Canada.  Work with your AWS Account Team to understand what additional configuration may be needed. Future iterations will continue to add functionality to close gaps in automation.
 
-The configuration files in this folder will get you started towards implementing the technical controls required for CCCS Medium Cloud Profile (formally PBMM). Work with your AWS Account Solutions Architect to understand what additional configuration is needed. Future iterations will continue to add functionality to close gaps in automation.
 
 ## Deployment Considerations
 
@@ -31,8 +31,8 @@ The Landing Zone Accelerator on AWS deploys an AWS CodeCommit repository along w
 
 ## Prerequisites
 
-1. Ensure the Mandatory Accounts, as described above, are configured
-2. [Enable AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_create.html)
+1. [Enable AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_create.html)
+2. Ensure the three Mandatory Accounts, as described above, are configured using AWS Organziations. See [Creating an AWS account in your organization](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_create.html).
 3. Create the **Infrastructure** Organization Unit. The default configuration for Landing Zone Accelerator on AWS assumes that an OU named **Infrastructure** has been created. This OU is intended to be used for core infrastructure workload accounts that you can add to your organization, such as central networking or shared services.
 
 
@@ -40,31 +40,25 @@ The Landing Zone Accelerator on AWS deploys an AWS CodeCommit repository along w
 ## Deployment overview
 
 Use the following steps to deploy this solution on AWS. For detailed instructions, follow the links for each step.
+
 [Step 1. Launch the stack](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-1.-launch-the-stack.html)
 
 * Launch the AWS CloudFormation template into your AWS account. (Ensure the region is switched back to Canada. It will default to US East (N. Virginia).
+* Ensure that the Environment Configuration for Control Tower Environment is **No** (AWS Organizations deployment)
 
-* Review the templates parameters and enter or adjust the default values as needed.
-
+* Review the template’s parameters and enter or adjust the default values as needed.
 
 [Step 2. Await initial environment deployment](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-2.-await-initial-environment-deployment.html)
 
-* At this time, the initial run of the `AWSAccelerator-Pipeline` pipeline will fail as it expects Control Tower to be enabled.  
-* Navigate to the `aws-accelerator-config` AWS CodeCommit repository. Open the global-config.yaml file and make the following two changes:
-    * managementAccountAccessRole: OrganizationAccountAccessRole
-    * controlTower:
-          enable: false
-* Commit the changes to the main branch, and manually Release the `AWSAccelerator-Pipeline` 
 * Await successful completion of `AWSAccelerator-Pipeline` pipeline.
-
 
 Step 3. Update the configuration files
 
 * Navigate to the `aws-accelerator-config` AWS CodeCommit repository.
 
-* Update the configuration files to match the desired state of your environment. Look for the #REPLACE comments for areas requiring updates.
+* Update the configuration files to match the desired state of your environment. Look for the #UPDATE EMAIL ADDRESS comments in all files for areas requiring updates.
 * Release a change manually to the AWSAccelerator-Pipeline pipeline. 
-* After the **Accounts** stage completes, the **Network** account will be created. VPC Service Limit increases need to be created in the Networking account before the Networking phase begins or the Pipeline will fail. (If it does, executing a **Retry** is the next action).
+* After the **Accounts** stage completes, the **Network** account will be created. VPC Service Limit increases need to be created in the Networking account before the Networking phase begins or the Pipeline will fail. This is approximately 20 minutes after the **Accounts** stage completes. (If it does, executing a **Retry** is the next action).
 
 * Two service limits need to be increased in the **Network** AWS Account. Follow these steps:
     * Assume the **OrganizationAccountAccessRole** Role into the **Network** account. (The AWS Account ID can be determined in AWS Organizations)

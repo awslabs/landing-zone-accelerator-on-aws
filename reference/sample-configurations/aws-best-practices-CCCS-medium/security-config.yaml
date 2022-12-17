@@ -4,18 +4,12 @@ centralSecurityServices:
   ebsDefaultVolumeEncryption:
     enable: true
     excludeRegions: []
+  scpRevertChangesConfig:
+    enable: true
+    snsTopicName: SecurityHigh
   s3PublicAccessBlock:
     enable: true
     excludeAccounts: []
-  snsSubscriptions:
-    - level: High
-      email: <notify-high>@example.com # <----- UPDATE EMAIL ADDRESS
-    - level: Medium
-      email: <notify-medium>@example.com # <----- UPDATE EMAIL ADDRESS
-    - level: Low
-      email: <notify-low>@example.com  # <----- UPDATE EMAIL ADDRESS
-    - level: Ignore
-      email: <notify-ignore>@example.com  # <----- UPDATE EMAIL ADDRESS
   macie:
     enable: true
     excludeRegions: []
@@ -2176,7 +2170,7 @@ cloudWatch:
         # CIS 1.1 – Avoid the use of the "root" account
         - alarmName: AWSAccelerator-CIS-1.1-RootAccountUsage
           alarmDescription: Alarm for usage of "root" account
-          snsAlertLevel: Low
+          snsTopicName: SecurityLow
           metricName: RootAccountUsage
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2188,7 +2182,7 @@ cloudWatch:
         # CIS 3.1 – Ensure a log metric filter and alarm exist for unauthorized API calls
         - alarmName: AWSAccelerator-CIS-3.1-UnauthorizedAPICalls
           alarmDescription: Alarm for unauthorized API calls
-          snsAlertLevel: Low
+          snsTopicName: SecurityLow
           metricName: UnauthorizedAPICalls
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2200,7 +2194,7 @@ cloudWatch:
         # CIS 3.2 – Ensure a log metric filter and alarm exist for AWS Management Console sign-in without MFA
         - alarmName: AWSAccelerator-CIS-3.2-ConsoleSigninWithoutMFA
           alarmDescription: Alarm for AWS Management Console sign-in without MFA
-          snsAlertLevel: High
+          snsTopicName: SecurityHigh
           metricName: ConsoleSigninWithoutMFA
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2213,7 +2207,7 @@ cloudWatch:
         # Duplicate of CIS 1.1
         # - alarmName: CIS-3.3-RootAccountUsage
         #   alarmDescription: Alarm for usage of "root" account
-        #   snsAlertLevel: Low
+        #   snsTopicName: SecurityLow
         #   metricName: RootAccountUsage
         #   namespace: CloudTrailMetrics
         #   comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2225,7 +2219,7 @@ cloudWatch:
         # CIS 3.4 – Ensure a log metric filter and alarm exist for IAM policy changes
         - alarmName: AWSAccelerator-CIS-3.4-IAMPolicyChanges
           alarmDescription: Alarm for IAM policy changes
-          snsAlertLevel: Medium
+          snsTopicName: SecurityMedium
           metricName: IAMPolicyChanges
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2237,7 +2231,7 @@ cloudWatch:
         # CIS 3.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
         - alarmName: AWSAccelerator-CIS-3.5-CloudTrailChanges
           alarmDescription: Alarm for CloudTrail configuration changes
-          snsAlertLevel: High
+          snsTopicName: SecurityHigh
           metricName: CloudTrailChanges
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2249,7 +2243,7 @@ cloudWatch:
         # CIS 3.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
         - alarmName: AWSAccelerator-CIS-3.6-ConsoleAuthenticationFailure
           alarmDescription: Alarm exist for AWS Management Console authentication failures
-          snsAlertLevel: Low
+          snsTopicName: SecurityLow
           metricName: ConsoleAuthenticationFailure
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2261,7 +2255,7 @@ cloudWatch:
         # CIS 3.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
         - alarmName: AWSAccelerator-CIS-3.7-DisableOrDeleteCMK
           alarmDescription: Alarm for disabling or scheduled deletion of customer created CMKs
-          snsAlertLevel: High
+          snsTopicName: SecurityHigh
           metricName: DisableOrDeleteCMK
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2273,7 +2267,7 @@ cloudWatch:
         # CIS 3.8 – Ensure a log metric filter and alarm exist for S3 bucket policy changes
         - alarmName: AWSAccelerator-CIS-3.8-S3BucketPolicyChanges.
           alarmDescription: Alarm for S3 bucket policy changes
-          snsAlertLevel: Medium
+          snsTopicName: SecurityMedium
           metricName: S3BucketPolicyChanges
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2285,7 +2279,7 @@ cloudWatch:
         # CIS 3.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
         - alarmName: AWSAccelerator-CIS-3.9-AWSConfigChanges
           alarmDescription: Alarm for AWS Config configuration changes
-          snsAlertLevel: High
+          snsTopicName: SecurityHigh
           metricName: AWSConfigChanges
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2297,7 +2291,7 @@ cloudWatch:
         # CIS 3.10 – Ensure a log metric filter and alarm exist for security group changes
         - alarmName: AWSAccelerator-CIS-3.10-SecurityGroupChanges
           alarmDescription: Alarm for security group changes
-          snsAlertLevel: Low
+          snsTopicName: SecurityLow
           metricName: SecurityGroupChanges
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2309,7 +2303,7 @@ cloudWatch:
         # CIS 3.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
         - alarmName: AWSAccelerator-CIS-3.11-NetworkACLChanges
           alarmDescription: Alarm for changes to Network Access Control Lists (NACL)
-          snsAlertLevel: Medium
+          snsTopicName: SecurityMedium
           metricName: NetworkACLChanges
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2321,7 +2315,7 @@ cloudWatch:
         # CIS 3.12 – Ensure a log metric filter and alarm exist for changes to network gateways
         - alarmName: AWSAccelerator-CIS-3.12-NetworkGatewayChanges
           alarmDescription: Alarm for changes to network gateways
-          snsAlertLevel: Medium
+          snsTopicName: SecurityMedium
           metricName: NetworkGatewayChanges
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2333,7 +2327,7 @@ cloudWatch:
         # CIS 3.13 – Ensure a log metric filter and alarm exist for route table changes
         - alarmName: AWSAccelerator-CIS-3.13-RouteTableChanges
           alarmDescription: Alarm for route table changes
-          snsAlertLevel: Medium
+          snsTopicName: SecurityMedium
           metricName: RouteTableChanges
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2345,7 +2339,7 @@ cloudWatch:
         # CIS 3.14 – Ensure a log metric filter and alarm exist for VPC changes
         - alarmName: AWSAccelerator-CIS-3.14-VPCChanges
           alarmDescription: Alarm for VPC changes
-          snsAlertLevel: Medium
+          snsTopicName: SecurityMedium
           metricName: VPCChanges
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2356,7 +2350,7 @@ cloudWatch:
           treatMissingData: notBreaching
         - alarmName: AWSAccelerator-AWS-EC2-Instances-Changed
           alarmDescription: Alarms when one or more API calls are made to create, terminate, start, stop or reboot any EC2 instance (in any account, any region of your AWS Organization).
-          snsAlertLevel: Low
+          snsTopicName: SecurityLow
           metricName: EC2InstanceEventCount
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2367,7 +2361,7 @@ cloudWatch:
           treatMissingData: notBreaching
         - alarmName: AWSAccelerator-AWS-EC2-Large-Instance-Changed
           alarmDescription: Alarms when one or more API calls are made to create, terminate, start, stop or reboot a 4x, 8x, 9x, 10x, 12x, 16x, 18x, 24x, 32x-large EC2 instance (in any account, any region of your AWS Organization).
-          snsAlertLevel: Medium
+          snsTopicName: SecurityMedium
           metricName: EC2LargeInstanceEventCount
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2378,7 +2372,7 @@ cloudWatch:
           treatMissingData: notBreaching
         - alarmName: AWSAccelerator-AWS-SSO-Authentication-From-Unapproved-IP
           alarmDescription: Alarms when someone authenticates using AWS SSO from an unauthorized IP address range.
-          snsAlertLevel: High
+          snsTopicName: SecurityHigh
           metricName: SSOAuthUnapprovedIPCount
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2389,7 +2383,7 @@ cloudWatch:
           treatMissingData: notBreaching
         - alarmName: AWSAccelerator-AWS-IAM-Authentication-From-Unapproved-IP
           alarmDescription: Alarms when someone authenticates using AWS IAM from an unauthorized IP address range.
-          snsAlertLevel: High
+          snsTopicName: SecurityHigh
           metricName: IAMAuthUnapprovedIPCount
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2400,7 +2394,7 @@ cloudWatch:
           treatMissingData: notBreaching
         - alarmName: AWSAccelerator-AWS-Unencrypted-Filesystem-Created
           alarmDescription: Alarms when one or more API calls are made to create an Unencrypted filesystem (i.e. EFS) (in any account, any region of your AWS Organization).
-          snsAlertLevel: High
+          snsTopicName: SecurityHigh
           metricName: UnencryptedFilesystemCreatedCount
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2411,7 +2405,7 @@ cloudWatch:
           treatMissingData: notBreaching
         - alarmName: AWSAccelerator-IGNORE-AWS-Authorization-Failure
           alarmDescription: Alarms when one or more unauthorized API calls are made (in any account, any region of your AWS Organization).
-          snsAlertLevel: Ignore
+          snsTopicName: SecurityIgnore
           metricName: IgnoreAuthorizationFailureCount
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2422,7 +2416,7 @@ cloudWatch:
           treatMissingData: notBreaching
         - alarmName: AWSAccelerator-IGNORE-AWS-Console-SignIn-Without-MFA
           alarmDescription: Alarms when MFA is NOT used to sign into the console with IAM (in any account, any region of your AWS Organization).
-          snsAlertLevel: Ignore
+          snsTopicName: SecurityIgnore
           metricName: IgnoreConsoleSignInWithoutMfaCount
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2433,7 +2427,7 @@ cloudWatch:
           treatMissingData: notBreaching
         - alarmName: AWSAccelerator-AWS-Console-SignIn-Failure
           alarmDescription: Alarms when one or more unauthenticated API calls are made to sign into the console (in any account, any region of your AWS Organization).
-          snsAlertLevel: High
+          snsTopicName: SecurityHigh
           metricName: ConsoleSignInFailureCount
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2444,7 +2438,7 @@ cloudWatch:
           treatMissingData: notBreaching
         - alarmName: AWSAccelerator-AWS-Authorization-Failure
           alarmDescription: Alarms when one or more unauthorized API calls are made (in any account, any region of your AWS Organization).
-          snsAlertLevel: Low
+          snsTopicName: SecurityLow
           metricName: AuthorizationFailureCount
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -2455,7 +2449,7 @@ cloudWatch:
           treatMissingData: notBreaching
         - alarmName: AWSAccelerator-AWS-Root-Login
           alarmDescription: Alarms when the root user successfully logs in one or more times (in any account, any region of your AWS Organization).
-          snsAlertLevel: High
+          snsTopicName: SecurityHigh
           metricName: RootLoginEventCount
           namespace: CloudTrailMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold

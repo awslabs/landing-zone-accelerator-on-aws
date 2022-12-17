@@ -22,6 +22,23 @@ cloudwatchLogRetentionInDays: 731
 terminationProtection: true
 centralizeCdkBuckets:
   enable: true
+snsTopics:
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+  topics:
+    - name: SecurityHigh
+      emailAddresses:
+        - <notify-high>@example.com # <----- UPDATE EMAIL ADDRESS
+    - name: SecurityMedium
+      emailAddresses:
+        - <notify-medium>@example.com # <----- UPDATE EMAIL ADDRESS
+    - name: SecurityLow
+      emailAddresses:
+        - <notify-low>@example.com # <----- UPDATE EMAIL ADDRESS
+    - name: SecurityIgnore
+      emailAddresses:
+        - <notify-ignore>@example.com # <----- UPDATE EMAIL ADDRESS
 controlTower:
   enable: false
 logging:
@@ -40,7 +57,7 @@ logging:
       apiCallRateInsight: true
     accountTrails:
       - name: AccountTrail
-        regions: 
+        regions:
           - *HOME_REGION
         deploymentTargets:
           accounts: []
@@ -78,6 +95,12 @@ logging:
         abortIncompleteMultipartUpload: 7
         expiration: 730
         noncurrentVersionExpiration: 730
+  elbLogBucket:
+    lifecycleRules:
+        - enabled: true
+          abortIncompleteMultipartUpload: 7
+          expiration: 730
+          noncurrentVersionExpiration: 730
 ssmInventory:
   enable: true
   deploymentTargets:
@@ -101,8 +124,13 @@ reports:
     reportVersioning: OVERWRITE_REPORT
     additionalArtifacts:
       - ATHENA
-    additionalSchemaElements: 
+    additionalSchemaElements:
       - RESOURCES
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
   budgets:
     - deploymentTargets:
         accounts:
@@ -197,7 +225,7 @@ reports:
           threshold: 50
           comparisonOperator: GREATER_THAN
           subscriptionType: EMAIL
-          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS  
+          address: <budget-alert>@example.com      # <----- UPDATE EMAIL ADDRESS
     - deploymentTargets:
         accounts:
           - Management

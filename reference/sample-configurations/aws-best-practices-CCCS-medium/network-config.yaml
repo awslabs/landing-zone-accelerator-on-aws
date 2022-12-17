@@ -134,7 +134,25 @@ centralNetworkServices:
                 - '80'
                 - '443'
   route53Resolver:
-    endpoints: []
+    endpoints:
+      - name: EndpointOutbound
+        type: OUTBOUND
+        vpc: Endpoint
+        allowedCidrs:
+          - 10.0.0.0/8
+        subnets:
+          - Endpoint-A
+          - Endpoint-B
+        rules:
+          - name: AWSAccelerator-Endpoint-mad-example-local
+            domainName: example.local
+            targetIps:
+              - ip: 1.1.1.1
+                # port: '5353' # only include if targeting a non-standard DNS port
+              - ip: 2.2.2.2
+            shareTargets:
+              accounts:
+                - Operations
     queryLogs:
       name: accelerator-query-logs
       destinations:
@@ -302,6 +320,8 @@ vpcs:
         # - service: transfer
         # - service: transfer.server
         # - service: workspaces
+    resolverRules:
+      - AWSAccelerator-Endpoint-mad-example-local
   - name: Perimeter
     tags:
       - key: Name
@@ -610,6 +630,8 @@ vpcs:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
+    resolverRules:
+      - AWSAccelerator-Endpoint-mad-example-local
   - name: Central
     tags:
       - key: Name
@@ -825,6 +847,8 @@ vpcs:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
+    resolverRules:
+      - AWSAccelerator-Endpoint-mad-example-local
   - name: Test
     tags:
       - key: Name
@@ -1004,6 +1028,8 @@ vpcs:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
+    resolverRules:
+      - AWSAccelerator-Endpoint-mad-example-local
   - name: Prod
     tags:
       - key: Name
@@ -1183,29 +1209,8 @@ vpcs:
         - service: s3
         - service: dynamodb
     useCentralEndpoints: true
-#   # - name: ForSSO
-#     # account: Management
-#     # region: *HOME_REGION
-#     # cidrs:
-#     #   - 10.249.1.0/24
-#     # internetGateway: false
-#     # enableDnsHostnames: true
-#     # enableDnsSupport: true
-#     # instanceTenancy: default
-#     # routeTables:
-#     #   - name: ForSSO_Shared
-#     #     routes: []
-#     #     # Need pcx to shared-network - blocked until https://gitlab.aws.dev/tsd/accelerators/landing-zone-accelerator-on-aws/-/issues/298
-#     # subnets:
-#     #   - name: ForSSO-A
-#     #     availabilityZone: a
-#     #     routeTable: ForSSO_Shared
-#     #     ipv4CidrBlock: 10.249.1.0/27
-#     #   - name: ForSSO-B
-#     #     availabilityZone: b
-#     #     routeTable: ForSSO_Shared
-#     #     ipv4CidrBlock: 10.249.1.32/27
-
+    resolverRules:
+      - AWSAccelerator-Endpoint-mad-example-local
 vpcTemplates:
   - name: Sandbox-Template
     region: *HOME_REGION
@@ -1328,12 +1333,3 @@ vpcFlowLogs:
     - pkt-dst-aws-service
     - flow-direction
     - traffic-path
-# #####################################
-# # VPC peering-- use this object to  #
-# # deploy peering between two VPCs   #
-# #####################################
-# # vpcPeering:
-# #   - name: Central-ForSSO_pcx
-# #     vpcs:
-# #       - Central
-# #       - ForSSO
