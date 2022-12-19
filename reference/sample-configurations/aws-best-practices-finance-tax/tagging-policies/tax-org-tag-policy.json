@@ -1,0 +1,39 @@
+{
+  "tags": {
+    "EnvironmentType": {
+      "tag_key": {
+        "@@assign": "EnvironmentType"
+      },
+      "tag_value": {
+        "@@assign": [
+          "Prod",
+          "Staging",
+          "Control",
+          "Dev"
+        ]
+      }
+    },
+    "DataClassification": {
+      "tag_key": {
+        "@@assign": "DataClassification"
+      },
+      "tag_value": {
+        "@@assign": [
+          "FTI-Data",
+          "Non-FTI-Data"
+        ]
+      },
+      "enforced_for": {
+        "@@assign": [
+          "dms:*",
+          "ec2:instance",
+          "ec2:volume",
+          "elasticfilesystem:*",
+          "fsx:*",
+          "s3:bucket"
+        ]
+      }
+    },
+    "AppID": {}
+  }
+}
