@@ -1,6 +1,6 @@
 # HIPAA based Service Contol Policies (SCPs)
 
-baseline-guardrails-hipaa.json file contains the Service Control Policies (SCPs) that can be deployed while building HIPAA eligible environments.
+scp-hlc-*.json file contains the Service Control Policies (SCPs) that can be deployed while building HIPAA eligible environments.
 HIPAA Eligible Services are last updated on April 18, 2022.
 
 The reference guide can be accessed via the following link: https://aws.amazon.com/compliance/hipaa-eligible-services-reference/
