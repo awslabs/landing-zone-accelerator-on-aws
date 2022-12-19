@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FMSNotificationChannel Construct(FMSNotificationChannel):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "FMSNotificationChannel09689B03": Object {
+      "Properties": Object {
+        "SnsRoleName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "\\"arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::111111111111:role/AWSAccelerator-SNSRole\\"",
+            ],
+          ],
+        },
+        "SnsTopicArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":sns:",
+              Object {
+                "Ref": "AWS::Region",
+              },
+              ":111111111111:aws-accelerator-Security",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::FMS::NotificationChannel",
+    },
+  },
+}
+`;

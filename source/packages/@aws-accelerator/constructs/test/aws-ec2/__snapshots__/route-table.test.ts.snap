@@ -3,6 +3,96 @@
 exports[`RouteTable Construct(RouteTable):  Snapshot Test 1`] = `
 Object {
   "Resources": Object {
+    "CustomPrefixListRouteCustomResourceProviderHandler5B28D077": Object {
+      "DependsOn": Array [
+        "CustomPrefixListRouteCustomResourceProviderRoleD08268B5",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomPrefixListRouteCustomResourceProviderRoleD08268B5",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomPrefixListRouteCustomResourceProviderLogGroup68DB81A5": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "testKey1CDDDD5E",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomPrefixListRouteCustomResourceProviderHandler5B28D077",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 10,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomPrefixListRouteCustomResourceProviderRoleD08268B5": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "ec2:CreateRoute",
+                    "ec2:DeleteRoute",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AllowModifyRoutes",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "RouteTable82FB8FA6": Object {
       "Properties": Object {
         "Tags": Array [
@@ -20,6 +110,190 @@ Object {
         },
       },
       "Type": "AWS::EC2::RouteTable",
+    },
+    "RouteTableGatewayAssociation99E18AA3": Object {
+      "DependsOn": Array [
+        "TestVpcInternetGatewayAttachment60E451D5",
+      ],
+      "Properties": Object {
+        "GatewayId": Object {
+          "Ref": "TestVpcInternetGateway01360C82",
+        },
+        "RouteTableId": Object {
+          "Ref": "RouteTable82FB8FA6",
+        },
+      },
+      "Type": "AWS::EC2::GatewayRouteTableAssociation",
+    },
+    "RouteTableVirtualPrivateGatewayAssociation6AD07550": Object {
+      "DependsOn": Array [
+        "TestVpcVirtualPrivateGatewayAttachment5D655F8D",
+      ],
+      "Properties": Object {
+        "GatewayId": Object {
+          "Ref": "TestVpcVirtualPrivateGateway56B5C340",
+        },
+        "RouteTableId": Object {
+          "Ref": "RouteTable82FB8FA6",
+        },
+      },
+      "Type": "AWS::EC2::GatewayRouteTableAssociation",
+    },
+    "RouteTabletest2NgwRoute7F788B8D": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomPrefixListRouteCustomResourceProviderLogGroup68DB81A5",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomPrefixListRouteCustomResourceProviderHandler5B28D077",
+            "Arn",
+          ],
+        },
+        "routeDefinition": Object {
+          "DestinationPrefixListId": "pl-1234",
+          "NatGatewayId": Object {
+            "Ref": "ngwBD1698D5",
+          },
+          "RouteTableId": Object {
+            "Ref": "RouteTable82FB8FA6",
+          },
+        },
+      },
+      "Type": "Custom::PrefixListRoute",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "RouteTabletestIgwRoute23DD8B83D": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomPrefixListRouteCustomResourceProviderLogGroup68DB81A5",
+        "TestVpcInternetGatewayAttachment60E451D5",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomPrefixListRouteCustomResourceProviderHandler5B28D077",
+            "Arn",
+          ],
+        },
+        "routeDefinition": Object {
+          "DestinationPrefixListId": "pl-1234",
+          "GatewayId": Object {
+            "Ref": "TestVpcInternetGateway01360C82",
+          },
+          "RouteTableId": Object {
+            "Ref": "RouteTable82FB8FA6",
+          },
+        },
+      },
+      "Type": "Custom::PrefixListRoute",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "RouteTabletestIgwRoute3732DB68": Object {
+      "DependsOn": Array [
+        "TestVpcInternetGatewayAttachment60E451D5",
+      ],
+      "Properties": Object {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": Object {
+          "Ref": "TestVpcInternetGateway01360C82",
+        },
+        "RouteTableId": Object {
+          "Ref": "RouteTable82FB8FA6",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "RouteTabletestNgwRouteAE321892": Object {
+      "Properties": Object {
+        "DestinationCidrBlock": "10.0.3.0/24",
+        "NatGatewayId": Object {
+          "Ref": "ngwBD1698D5",
+        },
+        "RouteTableId": Object {
+          "Ref": "RouteTable82FB8FA6",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "RouteTabletestVgw2RouteDD19A5B1": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomPrefixListRouteCustomResourceProviderLogGroup68DB81A5",
+        "TestVpcVirtualPrivateGatewayAttachment5D655F8D",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomPrefixListRouteCustomResourceProviderHandler5B28D077",
+            "Arn",
+          ],
+        },
+        "routeDefinition": Object {
+          "DestinationPrefixListId": "pl-1234",
+          "GatewayId": Object {
+            "Ref": "TestVpcVirtualPrivateGateway56B5C340",
+          },
+          "RouteTableId": Object {
+            "Ref": "RouteTable82FB8FA6",
+          },
+        },
+      },
+      "Type": "Custom::PrefixListRoute",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "RouteTabletestVgwRoute717D63D3": Object {
+      "DependsOn": Array [
+        "TestVpcVirtualPrivateGatewayAttachment5D655F8D",
+      ],
+      "Properties": Object {
+        "DestinationCidrBlock": "10.0.30./24",
+        "GatewayId": Object {
+          "Ref": "TestVpcVirtualPrivateGateway56B5C340",
+        },
+        "RouteTableId": Object {
+          "Ref": "RouteTable82FB8FA6",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "RouteTabletgCEFADE05": Object {
+      "DependsOn": Array [
+        "tgwAttachment",
+      ],
+      "Properties": Object {
+        "DestinationCidrBlock": "10.0.5.0/24",
+        "RouteTableId": Object {
+          "Ref": "RouteTable82FB8FA6",
+        },
+        "TransitGatewayId": "tg-1234",
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "RouteTabletgroute63CDF5B7": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomPrefixListRouteCustomResourceProviderLogGroup68DB81A5",
+        "tgwAttachment",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomPrefixListRouteCustomResourceProviderHandler5B28D077",
+            "Arn",
+          ],
+        },
+        "routeDefinition": Object {
+          "DestinationPrefixListId": "pl-1234",
+          "RouteTableId": Object {
+            "Ref": "RouteTable82FB8FA6",
+          },
+          "TransitGatewayId": "tgw-1234",
+        },
+      },
+      "Type": "Custom::PrefixListRoute",
+      "UpdateReplacePolicy": "Delete",
     },
     "TestVpcE77CE678": Object {
       "Properties": Object {
@@ -57,6 +331,136 @@ Object {
         },
       },
       "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+    "TestVpcVirtualPrivateGateway56B5C340": Object {
+      "Properties": Object {
+        "AmazonSideAsn": 65000,
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Test",
+          },
+        ],
+        "Type": "ipsec.1",
+      },
+      "Type": "AWS::EC2::VPNGateway",
+    },
+    "TestVpcVirtualPrivateGatewayAttachment5D655F8D": Object {
+      "Properties": Object {
+        "VpcId": Object {
+          "Ref": "TestVpcE77CE678",
+        },
+        "VpnGatewayId": Object {
+          "Ref": "TestVpcVirtualPrivateGateway56B5C340",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+    "ngwBD1698D5": Object {
+      "Properties": Object {
+        "AllocationId": Object {
+          "Fn::GetAtt": Array [
+            "ngwEipBD9BC2FE",
+            "AllocationId",
+          ],
+        },
+        "SubnetId": Object {
+          "Ref": "testsubnetFBD9E7FF",
+        },
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "ngw",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::NatGateway",
+    },
+    "ngwEipBD9BC2FE": Object {
+      "Properties": Object {
+        "Domain": "vpc",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "ngw",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::EIP",
+    },
+    "testKey1CDDDD5E": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "testsubnetFBD9E7FF": Object {
+      "Properties": Object {
+        "AvailabilityZone": "a",
+        "CidrBlock": "10.0.2.0/24",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "test-subnet",
+          },
+        ],
+        "VpcId": Object {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "testsubnetRouteTableAssociationA7927A11": Object {
+      "Properties": Object {
+        "RouteTableId": Object {
+          "Ref": "RouteTable82FB8FA6",
+        },
+        "SubnetId": Object {
+          "Ref": "testsubnetFBD9E7FF",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "tgwAttachment": Object {
+      "Properties": Object {
+        "SubnetIds": Array [
+          "subnet-123",
+        ],
+        "TransitGatewayId": "tgw-12324",
+        "VpcId": Object {
+          "Ref": "TestVpcE77CE678",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayAttachment",
     },
   },
 }

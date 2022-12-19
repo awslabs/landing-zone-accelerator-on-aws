@@ -1,0 +1,305 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FMSOrganizationAdminAccount Construct(FMSOrganizationAdminAccount):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E": Object {
+      "DependsOn": Array [
+        "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy83E36C98",
+        "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 180,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy83E36C98": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "fms:AssociateAdminAccount",
+                "fms:DisassociateAdminAccount",
+                "fms:GetAdminAccount",
+                "organizations:DescribeAccount",
+                "organizations:DescribeOrganization",
+                "organizations:DescribeOrganizationalUnit",
+                "organizations:DeregisterDelegatedAdministrator",
+                "organizations:DisableAWSServiceAccess",
+                "organizations:EnableAwsServiceAccess",
+                "organizations:ListAccounts",
+                "organizations:ListAWSServiceAccessForOrganization",
+                "organizations:ListChildren",
+                "organizations:ListDelegatedAdministrators",
+                "organizations:ListDelegatedServicesForAccount",
+                "organizations:ListOrganizationalUnitsForParent",
+                "organizations:ListParents",
+                "organizations:ListRoots",
+                "organizations:RegisterDelegatedAdministrator",
+                "sts:AssumeRole",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy83E36C98",
+        "Roles": Array [
+          Object {
+            "Ref": "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "FMSOrganizationAdminAccountfmsAdmin111111111111F4637515": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "FMSOrganizationAdminAccountframeworkonEvent17783F2B",
+            "Arn",
+          ],
+        },
+        "adminAccountId": "111111111111",
+        "assumeRoleName": "testRole",
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FMSOrganizationAdminAccountframeworkonEvent17783F2B": Object {
+      "DependsOn": Array [
+        "FMSOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicyD56A7BD5",
+        "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/FMSOrganizationAdminAccount/Resource)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "FMSOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicyD56A7BD5": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "FMSOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicyD56A7BD5",
+        "Roles": Array [
+          Object {
+            "Ref": "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "fmsTestKey6EA63218": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
+}
+`;
