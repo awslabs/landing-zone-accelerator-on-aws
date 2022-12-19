@@ -97,13 +97,13 @@ This document is intended to outline the technical measures that are delivered b
 
 National security, defence, and national law enforcement organizations around the world need the scale, global footprint, agility, and services that cloud brings to their critical missions—all while they are required to meet stringent security and compliance requirements for their data. Increasingly, these organizations leverage the AWS global hyper-scale cloud to deliver their missions while keeping their sensitive data and workloads secure. To help you accelerate these sensitive missions in cloud, we developed Trusted Secure Enclaves for National Security, Defence and National Law Enforcement.
 
-The _Trusted Secure Enclaves Sensitive Edition (TSE-SE) Reference Architecture_ is a comprehensive, multi-account AWS cloud architecture targeting sensitive level workloads. This architecture was designed in collaboration with our national security; defence; national law enforcement; and federal, provincial, and municipal government customers to accelerate compliance with their strict and unique security and compliance requirements. The _TSE-SE Reference Architecture_ was designed to help customers address central identity and access management, governance, data security, comprehensive logging, and network design/segmentation in alignment with security frameworks such as NIST 800-53, ITSG-33, FEDRAMP Moderate, IRAP, and other [Sensitive][sensitive] or Medium level security profiles.
+The _Trusted Secure Enclaves Sensitive Edition (TSE-SE) Reference Architecture_ is a comprehensive, multi-account AWS cloud architecture targeting sensitive level workloads. This architecture was designed in collaboration with our national security; defence; national law enforcement; and federal, provincial, and municipal government customers to accelerate compliance with their strict and unique security and compliance requirements. The _TSE-SE Reference Architecture_ was designed to help customers address central identity and access management, governance, data security, comprehensive logging, and network design/segmentation in alignment with security frameworks such as NIST 800-53, ITSG-33, FEDRAMP Moderate, CCCS-Medium, IRAP, and other [sensitive][sensitive] or medium level security profiles.
 
 This document is solely focused on the deployed or resulting reference architecture and does NOT talk about the tooling, mechanisms, or automation engine used to deploy the architecture. The [Landing Zone Accelerator](https://github.com/awslabs/landing-zone-accelerator-on-aws) (LZA) is one tool capable of deploying this architecture (along with many other architectures), but customers are free to choose whichever mechanism they deem appropriate to deploy it. Readers should refer to the [LZA documentation](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/solution-overview.html) for references to the LZA automation engine's architecture, design, operation, and troubleshooting. If using the LZA automation engine, this document reflects the resulting architecture deployed using the TSE-SE sample configuration files. This architecture document should stand on its own in depicting the `deployed` architecture.
 
 The _TSE-SE Architecture_ is a standalone architecture, irrespective of how it was delivered into a customer AWS environment. It is nonetheless anticipated that most customers will choose to realize their _TSE-SE Architecture_ via the delivery mechanism of the _LZA_ automation engine. Except where absolutely necessary, this document will refrain from referencing the _LZA_ automation engine further.
 
-**NOTE: The initial release of the TSE-SE LZA sample configuration files as part of LZA v1.3 does not yet fully automate the delivery of this architecture. This will be resolved in subsequent LZA releases.**
+**NOTE: The initial release of the TSE-SE LZA sample configuration files included as part of LZA v1.3 do not yet fully automate the delivery of this architecture. This will be resolved in subsequent LZA releases.**
 
 ## 2.1. Design Principles
 
@@ -912,3 +912,7 @@ These services must still be appropriately configured. This includes ensuring bo
 [pci]: https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-pci-controls.html
 [cis]: https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html
 [ssm]: https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html
+
+---
+
+**Continue to [LZA configuration files and installation instructions](../config/readme.md)**
