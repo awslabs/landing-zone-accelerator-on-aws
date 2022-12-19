@@ -62,6 +62,7 @@ centralSecurityServices:
           - CIS.1.17
           - CIS.1.16
   ssmAutomation:
+    excludeRegions: []
     documentSets:
       - shareTargets:
           organizationalUnits:
@@ -130,11 +131,13 @@ awsConfig:
               - name: IamInstanceProfile
                 value: ${ACCEL_LOOKUP::InstanceProfile:EC2-Default-SSM-AD-Role}
                 type: StringList
+        # Note these example CustomerManagedPolicies are hardcoded for us-east-1
         - name: accelerator-ec2-instance-profile-permission
           type: Custom
           description: Custom role to remediate EC2 instance profile permission
           inputParameters:
             AWSManagedPolicies: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
+            #            CustomerManagedPolicies: ${ACCEL_LOOKUP::CustomerManagedPolicy:AWSAccelerator-SessionManagerLogging-us-east-1}
             #            CustomerManagedPolicies: ${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>},${ACCEL_LOOKUP::CustomerManagedPolicy:<POLICY_NAME>}
             ResourceId: RESOURCE_ID
           customRule:
@@ -168,6 +171,10 @@ awsConfig:
               # - name: CustomerManagedPolicies
               #   value: ${ACCEL_LOOKUP::CustomerManagedPolicy:policy-00},${ACCEL_LOOKUP::CustomerManagedPolicy:policy-01}
               #   type: StringList
+              # - name: CustomerManagedPolicies
+              #   value: ${ACCEL_LOOKUP::CustomerManagedPolicy:AWSAccelerator-SessionManagerLogging-us-east-1}
+              #   type: StringList
+        # Note, included in Security Hub AFBP but this one has an automated remediation    
         - name: accelerator-s3-bucket-server-side-encryption-enabled
           identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
           complianceResourceTypes:
@@ -185,6 +192,7 @@ awsConfig:
               - name: KMSMasterKey
                 value: ${ACCEL_LOOKUP::KMS}
                 type: StringList
+        # Security Hub AFBP has a similar rule, but this one has an automated remediation.
         - name: accelerator-elb-logging-enabled
           identifier: ELB_LOGGING_ENABLED
           complianceResourceTypes:
@@ -252,10 +260,11 @@ awsConfig:
           complianceResourceTypes:
             - AWS::EC2::Instance
           identifier: INSTANCES_IN_VPC
+        # Note, included in Security Hub AFBP slightly different with ports 80 and 443
         - name: accelerator-vpc-sg-open-only-to-authorized-ports
           inputParameters:
             authorizedTcpPorts: "443"
-            authorizedUdpPorts: "1020-1025"
+            # authorizedUdpPorts: "1020-1025"
           complianceResourceTypes:
             - AWS::EC2::SecurityGroup
           identifier: VPC_SG_OPEN_ONLY_TO_AUTHORIZED_PORTS
@@ -370,6 +379,85 @@ awsConfig:
           complianceResourceTypes:
             - AWS::S3::Bucket
           identifier: S3_BUCKET_DEFAULT_LOCK_ENABLED
+
+        # NIST 800-53-rev5 Conformance Pack - Additional 15
+        - name: accelerator-account-part-of-organizations
+          identifier: ACCOUNT_PART_OF_ORGANIZATIONS
+        - name: accelerator-alb-waf-enabled
+          complianceResourceTypes:
+            - AWS::ElasticLoadBalancingV2::LoadBalancer
+          identifier: ALB_WAF_ENABLED
+        - name: accelerator-codebuild-project-artifact-encryption
+          complianceResourceTypes:
+            - AWS::CodeBuild::Project
+          identifier: CODEBUILD_PROJECT_ARTIFACT_ENCRYPTION
+        - name: accelerator-dynamodb-in-backup-plan
+          identifier: DYNAMODB_IN_BACKUP_PLAN
+        - name: accelerator-dynamodb-throughput-limit-check
+          identifier: DYNAMODB_THROUGHPUT_LIMIT_CHECK
+        - name: accelerator-ebs-in-backup-plan
+          identifier: EBS_IN_BACKUP_PLAN      
+        - name: accelerator-ebs-optimized-instance
+          complianceResourceTypes:
+            - AWS::EC2::Instance
+          identifier: EBS_OPTIMIZED_INSTANCE    
+        - name: accelerator-elbv2-acm-certificate-required
+          identifier: ELBV2_ACM_CERTIFICATE_REQUIRED     
+        - name: accelerator-lambda-dlq-check
+          complianceResourceTypes:
+            - AWS::Lambda::Function
+          identifier: LAMBDA_DLQ_CHECK     
+        - name: accelerator-no-unrestricted-route-to-igw
+          complianceResourceTypes:
+            - AWS::EC2::RouteTable
+          identifier: NO_UNRESTRICTED_ROUTE_TO_IGW    
+        - name: accelerator-rds-snapshot-encrypted
+          complianceResourceTypes:
+            - AWS::RDS::DBSnapshot
+            - AWS::RDS::DBClusterSnapshot
+          identifier: RDS_SNAPSHOT_ENCRYPTED   
+        - name: accelerator-redshift-cluster-kms-enabled
+          complianceResourceTypes:
+            - AWS::Redshift::Cluster
+          identifier: REDSHIFT_CLUSTER_KMS_ENABLED        
+        - name: accelerator-s3-default-encryption-kms
+          complianceResourceTypes:
+            - AWS::S3::Bucket
+          identifier: S3_DEFAULT_ENCRYPTION_KMS 
+        - name: accelerator-secretsmanager-using-cmk
+          complianceResourceTypes:
+            - AWS::SecretsManager::Secret
+          identifier: SECRETSMANAGER_USING_CMK  
+        - name: accelerator-wafv2-logging-enabled
+          identifier: WAFV2_LOGGING_ENABLED   
+
+    # Optional Config rules to check for resources protected by backups.
+    - deploymentTargets:
+        organizationalUnits: []
+      rules:
+        - name: accelerator-aurora-resources-protected-by-backup-plan
+          complianceResourceTypes:
+            - AWS::RDS::DBCluster
+          identifier: AURORA_RESOURCES_PROTECTED_BY_BACKUP_PLAN
+        - name: accelerator-backup-plan-min-frequency-and-min-retention-check
+          complianceResourceTypes:
+            - AWS::Backup::BackupPlan
+          identifier: BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK
+        - name: accelerator-backup-recovery-point-encrypted
+          complianceResourceTypes:
+            - AWS::Backup::RecoveryPoint
+          identifier: BACKUP_RECOVERY_POINT_ENCRYPTED
+        - name: accelerator-backup-recovery-point-manual-deletion-disabled
+          complianceResourceTypes:
+            - AWS::Backup::BackupVault
+          identifier: BACKUP_RECOVERY_POINT_MANUAL_DELETION_DISABLED
+        - name: accelerator-ec2-resources-protected-by-backup-plan
+          complianceResourceTypes:
+            - AWS::EC2::Instance
+          identifier: EC2_RESOURCES_PROTECTED_BY_BACKUP_PLAN
+        - name: accelerator-rds-in-backup-plan
+          identifier: RDS_IN_BACKUP_PLAN
+
 cloudWatch:
   metricSets:
     - regions:
