@@ -6,6 +6,7 @@ enable: true
 organizationalUnits:
   - name: Security
   - name: Infrastructure
+  - name: Workloads
 quarantineNewAccounts:
   enable: true
   scpPolicyName: Quarantine
@@ -35,11 +36,24 @@ serviceControlPolicies:
     type: customerManaged
     deploymentTargets:
       organizationalUnits: []
+  # https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps.html
+  # Refer to the following link for examples (including exception conditions, etc.):
+  # https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scps_examples_general.html
+  # Modify the section below to meet your organization's needs.
+  - name: DenyNonUSRegions
+    description: >
+      Prevents the use of non-US regions in your environment.  This policy enables the
+      four commercial and two GovCloud US regions only if enabled.
+    policy: service-control-policies/deny-non-us-regions.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Root
  # https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html
 taggingPolicies:
   - name: TagPolicy
-    description: Organization Tagging Policy
-    policy: tagging-policies/org-tag-policy.json
+    description: Organization Tagging Policy for Elections
+    policy: tagging-policies/elections-tag-policy.json
     deploymentTargets:
       organizationalUnits:
         - Root
@@ -47,10 +61,10 @@ taggingPolicies:
 # backup policies contain a `delete_after_days` value of 1095 days, or 3 years.  Before
 # enabling this policy, ensure that `delete_after_days` meets your organization's records retention
 # policies.  Similarly, ensure that `move_to_cold_storage_after_days` meets business requirements.
-backupPolicies:
-  - name: BackupPolicy
-    description: Organization Backup Policy
-    policy: backup-policies/backup-plan.json
-    deploymentTargets:
-      organizationalUnits:
-        - Root
+backupPolicies: []
+  # - name: BackupPolicy
+  #   description: Organization Backup Policy
+  #   policy: backup-policies/backup-plan.json
+  #   deploymentTargets:
+  #     organizationalUnits:
+  #       - Root
