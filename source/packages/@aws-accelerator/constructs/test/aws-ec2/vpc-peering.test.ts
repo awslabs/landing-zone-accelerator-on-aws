@@ -20,7 +20,7 @@ const testNamePrefix = 'Construct(VpcPeering): ';
 //Initialize stack for tests
 const stack = new cdk.Stack();
 
-new VpcPeering(stack, 'TestPeering', {
+const vpcPeer = new VpcPeering(stack, 'TestPeering', {
   name: 'Test',
   peerOwnerId: '111111111111',
   peerRegion: 'us-east-1',
@@ -30,6 +30,32 @@ new VpcPeering(stack, 'TestPeering', {
   tags: [],
 });
 
+vpcPeer.addPeeringRoute(
+  'vpcPeeringRoute',
+  'rt-12345',
+  '10.0.0.5/32',
+  undefined,
+  new cdk.aws_kms.Key(stack, 'kmsKey'),
+  10,
+);
+
+const crLambda = new cdk.aws_lambda.Function(stack, 'test', {
+  code: new cdk.aws_lambda.InlineCode('foo'),
+  handler: 'handler',
+  runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
+});
+const crProvider = new cdk.custom_resources.Provider(stack, 'myProvider', { onEventHandler: crLambda });
+
+vpcPeer.addCrossAcctPeeringRoute({
+  id: 'crossAccountPeerRoute',
+  ownerAccount: '111111111111',
+  ownerRegion: stack.region,
+  partition: stack.partition,
+  provider: crProvider,
+  roleName: 'role',
+  routeTableId: 'rt-3456',
+  destination: '10.0.0.6/32',
+});
 /**
  * VPC peering construct test
  */
