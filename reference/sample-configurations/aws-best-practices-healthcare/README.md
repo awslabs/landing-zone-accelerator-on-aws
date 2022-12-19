@@ -1,8 +1,39 @@
-# Healthcare Landing Zone Accelerator
+# Landing Zone Accelerator on AWS for Healthcare 
 
 ## Overview
 
-The Landing Zone Accelerator (LZA) for Healthcare is an industry specific deployment of the [Landing Zone Accelerator on AWS](https://aws.amazon.com/solutions/implementations/landing-zone-accelerator-on-aws/) solution architected to align with AWS best practices and in conformance with multiple, global compliance frameworks. Built on top of the standard AWS Control Tower accounts, namely `Management`, `Audit`, and `LogArchive`, the LZA for Healthcare deploys additional resources that helps establish platform readiness with security, compliance, and operational capabilities.  It is important to note that the Landing Zone Accelerator solution will not, by itself, make you compliant. It provides the foundational infrastructure from which additional complementary solutions can be integrated. You must review, evaluate, assess, and approve the solution in compliance with your organization’s particular security features, tools, and configurations.
+The Landing Zone Accelerator (LZA) for Healthcare is an industry specific deployment of the [Landing Zone Accelerator on AWS](https://aws.amazon.com/solutions/implementations/landing-zone-accelerator-on-aws/) solution architected to align with AWS best practices and in conformance with multiple, global compliance frameworks. Built on top of the standard AWS Control Tower accounts, namely `Management`, `Audit`, and `LogArchive`, the LZA for Healthcare deploys additional resources that helps establish platform readiness with security, compliance, and operational capabilities.  
+
+The Healthcare industry best practices folder contains the deviation from the default [aws-best-practices](https://github.com/awslabs/landing-zone-accelerator-on-aws/tree/main/reference/sample-configurations/aws-best-practices) and the differences are noted in this readme.  To leverage these configs it is first expected that you use all of the `aws-best-practices` before adding or replacing the configuration files referenced in this folder.  The primary deviations from the `aws-best-practices` and the healthcare industry are related to the Organization/Account structure and the Network topology.  It is important to note that the Landing Zone Accelerator solution will not, by itself, make you compliant. It provides the foundational infrastructure from which additional complementary solutions can be integrated. You must review, evaluate, assess, and approve the solution in compliance with your organization’s particular security features, tools, and configurations.
+
+## Deployment Overview
+
+Use the following steps to deploy the industry guidance. For detailed instructions, follow the links for each step.
+
+[Step 1. Launch the stack](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-1.-launch-the-stack.html)
+
+* Launch the AWS CloudFormation template into your AWS account.
+* Review the templates parameters and enter or adjust the default values as needed.
+
+[Step 2. Await initial environment deployment](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/step-2.-await-initial-environment-deployment.html)
+
+* Await successful completion of `AWSAccelerator-Pipeline` pipeline.
+
+Step 3. Copy the configuration files
+
+* Clone the `aws-accelerator-config` AWS CodeCommit repository.
+* Clone the [landing-zone-accelerator-on-aws](https://github.com/awslabs/landing-zone-accelerator-on-aws) repo
+* Copy the configs and all the contents from the `aws-best-practices` folder under `reference/sample-configurations` to your local `aws-accelerator-config` repo.
+* Copy the contents from the `aws-best-practices-healthcare` folder under `reference/sample-configurations` to your local `aws-accelerator-config` repo.  You may be prompted to over-write duplicate configs, such as `accounts-config.yaml`.
+
+Step 4. Update the configuration files and release a change.
+
+* Using the IDE of your choice.  Update the `homeRegion` variable at the top of each config to match the region you deployed the solution to.
+* Update the configuration files to match the desired state of your environment. Look for the `UPDATE` comments for areas requiring updates, such as e-mail addresses in your `accounts-config.yaml`
+* Review the contents in the `Security Controls` section below to understand if any changes need to be made to meet organizational requirements, such as applying SCPs to the various OUs.
+* Commit and push all your change to the `aws-accelerator-config` AWS CodeCommit repository.
+* Release a change manually to the AWSAccelerator-Pipeline pipeline.
+
 
 ## Security Frameworks
 The healthcare industry is high regulated.  The LZA for Healthcare provides additional guardrails to help mitigate against the threats faced by healthcare customers.  The LZA for Healthcare is not meant to be feature complete for fully compliant, but rather is intended to help accelerate cloud migrations and cloud refactoring efforts by organizations serving the healthcare industry.  While much effort has been made to reduce the effort required to manually build a production-ready infrastructure, you will still need to tailor it to your unique business needs.
@@ -12,14 +43,16 @@ This solution includes controls from frameworks in various geographies, includin
 ## Security Controls 
 These controls are created as detective or preventative guardrails in the AWS environment through AWS Config rules or through Service Control Policies (SCPs).  Within the file `organization-config.yaml` are sections for declaring SCPs, Tagging Policies, and Backup Policies.  SCPs can be highly specific to the organization and its workload(s) and should be reviewed and modified to meet your specific requirements.  Sample policies have been provided for the following:  
 * `Service Control Policies`:  A service control policy has been provided in `service-control-policies/scp-hlc-base-root.json` that prevents accounts from leaving your organization or disabling block public access.  The `service-control-policies/scp-hlc-hipaa-service.json` policy is an example of a policy that can be used to ensure only HIPAA eligible services can be used in a specific OU or account.  It is important to note that SCPs are not automatically updated and that changes to the HIPAA eligible service list will be to be updated.  However, this is an example of how your organization can ensure that a select list of AWS services are used for specific use cases.
-* `Tagging Policies`: A sample tagging policy has been provided in `tagging-policies/org-tag-policy.json` showing how you can further extend these policies to define `Environment Type` for `Prod`, `QA`, and `Dev` workloads, `Data Classification` to track sensitive and non-sentive workloads such as `PHI` and `Company Confidental` and how to enforce them to specific AWS services. The sample policy should be edited to reflect your own organization's cost centers so that resources provisioned by the LZA are automatically tagged in accordance with your business requirements.
-* `Backup policies`: A sample backup policy has been provided in `backup-policies/org-backup-policies.json` as an example for how backups can scheduled along with lifecycle and retention management settings.
+* `Tagging Policies`: A sample tagging policy has been provided in `tagging-policies/healthcare-org-tag-policy.json` showing how you can further extend these policies to define `Environment Type` for `Prod`, `QA`, and `Dev` workloads, `Data Classification` to track sensitive and non-sentive workloads such as `PHI` and `Company Confidental` and how to enforce them to specific AWS services. The sample policy should be edited to reflect your own organization's cost centers so that resources provisioned by the LZA are automatically tagged in accordance with your business requirements.
+* `Backup policies`: A sample backup policy has been provided in `backup-policies/backup-plan.json` as an example for how backups can scheduled along with lifecycle and retention management settings.
 
-In the `security-config.yaml` file, AWS security services can be configured such as AWS Config, AWS Security Hub, and enabling storage encryption. Additional alarms and metrics have been provided to inform you of actions within your AWS Cloud environment.  For a list of all of the services and settings that can be configured, see the [LZA on AWS Implementation Guide](#references) in the references section below.  This file also contains the AWS Config rules that make up the list of detective guardrails used to meet many of the controls from the various frameworks.  These rules are implemented through a combination from Security Hub AWS Foundational Security Best Practices, CIS AWS Foundations Benchmark, and the rules from the [Operational Best Practices for HIPAA Security sample conformance pack](https://docs.aws.amazon.com/config/latest/developerguide/operational-best-practices-for-hipaa_security.html).  
+In the `security-config.yaml` file, AWS security services can be configured such as AWS Config, AWS Security Hub, and enabling storage encryption. Additional alarms and metrics have been provided to inform you of actions within your AWS Cloud environment.  For a list of all of the services and settings that can be configured, see the [LZA on AWS Implementation Guide](#references) in the references section below.  This file also contains the AWS Config rules that make up the list of detective guardrails used to meet many of the controls from the various frameworks.  These rules are implemented through a combination from Security Hub AWS Foundational Security Best Practices, CIS AWS Foundations Benchmark, and the rules from the [Operational Best Practices for HIPAA Security sample conformance pack](https://docs.aws.amazon.com/config/latest/developerguide/operational-best-practices-for-hipaa_security.html). The default best-practices has the Security Hub PCI rules enabled, however it is encouraged to not enable the PCI rules if they are not needed in your environment to reduce cost.
 
-The `global-config.yaml` file contains the settings that enable regions, centralized logging using AWS CloudTrail and Amazon CloudWatch Logs and the retention period for those logs to help you meet your specific auditing and monitoring needs.
+Amazon Macie is enabled by default in the LZA aws-best-practices.  This can be leveraged to identify various types of [PHI](https://docs.aws.amazon.com/macie/latest/user/managed-data-identifiers.html#managed-data-identifiers-phi). 
 
-You are encouraged to review these settings to better understand what has already been configured and what needs to be altered for your specific requirements.
+The `global-config.yaml` file contains the settings that enable regions, centralized logging using AWS CloudTrail and Amazon CloudWatch Logs and the retention period for those logs to help you meet your specific auditing and monitoring needs.  You can also define cost and usage reporting with budgets in the this file and examples are provided.
+
+You are encouraged to review these settings to better understand what has already been configured and what needs to be altered for your specific requirements.  For example you may remove the reports section if you do no need any cost and usage reporting for budgets in your organization.
 
 ## Organizational Structure
 
@@ -103,7 +136,8 @@ Although the Healthcare LZA aims to be prescriptive in applying best practices f
 
 * LZA on AWS [Implementation Guide].  This is the official documenation of the Landing Zone Accelerator Project and serves as your starting point.  Use the instructions in the implementation guide to stand up your environment and then return to this project for Healthcare-specific customization.
 * AWS Labs [LZA Accelerator] GitHub Repository.  The official codebase of the Landing Zone Accelerator Project.
-
+* Introduding the AWS [LZA for Healthcare] blog 
+* Get started with the [LZA Immersion Day] and follow the LZA Best Practices Day section for guidance on using the healthcare specific configuration files.
 <!-- Hyperlinks -->
 [Best Practices]: https://aws.amazon.com/blogs/mt/best-practices-for-organizational-units-with-aws-organizations/
 [Recommended OUs and accounts]: https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/recommended-ous-and-accounts.html
@@ -112,3 +146,5 @@ Although the Healthcare LZA aims to be prescriptive in applying best practices f
 [LZA Accelerator]: https://github.com/awslabs/landing-zone-accelerator-on-aws
 [Operational Best Practices for HIPAA Security]: https://docs.aws.amazon.com/config/latest/developerguide/operational-best-practices-for-hipaa_security.html
 [VPC Sharing: key considerations and best practices]: https://aws.amazon.com/blogs/networking-and-content-delivery/vpc-sharing-key-considerations-and-best-practices/
+[LZA for Healthcare]: https://aws.amazon.com/blogs/industries/introducing-landing-zone-accelerator-for-healthcare/
+[LZA Immersion Day]: https://catalog.workshops.aws/landing-zone-accelerator
