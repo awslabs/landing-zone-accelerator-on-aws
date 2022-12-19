@@ -1,0 +1,54 @@
+mandatoryAccounts:
+  # We recommend you do not change mandatory account names. These are used within Landing Zone Accelerator to reference the accounts from other config files. 
+  # The "name" value does not currently support spaces
+  # The "name" value DOES NOT need to match the account name
+  - name: Management
+    description: The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: <management-account>@example.com <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Root
+  - name: LogArchive
+    description: The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: <log-archive>@example.com  <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Security
+  - name: Audit
+    description: The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: <audit>@example.com  <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Security
+workloadAccounts:
+  # The "name" will be used to set the AWS Account name
+  # The "name" value does not currently support spaces
+  # The "name" value DOES NOT need to match the account name
+  - name: SharedServices
+    description: The SharedServices account
+    email: <shared-services>@example.com  <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Infrastructure
+  - name: Network
+    description: The Network account
+    email: <network>@example.com  <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Infrastructure
+  - name: Production
+    description: >-
+        The Prod account for Tax. 
+    email: <production>@example.com  <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Tax
+  - name: Control
+    description: >-
+        The Control account for Tax. 
+    email: <control>@example.com  <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Tax
+  - name: Staging
+    description: >-
+        The Staging account for Tax. 
+    email: <staging>@example.com  <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Tax
+  - name: DevTest 
+    description: >-
+        The Dev and Test account for Tax. 
+    email: <devtest>@example.com  <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Tax
+  - name: DisasterRecovery 
+    description: >-
+        The DR account for Tax. 
+    email: <disasterrecovery>@example.com  <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Tax
+    

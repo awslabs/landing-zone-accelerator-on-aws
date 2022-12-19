@@ -1,0 +1,1180 @@
+homeRegion: &HOME_REGION us-east-1
+disasterRecoveryRegion: &DR_REGION us-west-2
+defaultVpc:
+  delete: true
+  excludeAccounts: []
+transitGateways:
+  - name: Network-Main
+    account: Network
+    region: *HOME_REGION
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+        - Tax
+    asn: 65521
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    routeTables:
+      - name: egress-rtb
+        routes:
+        - destinationCidrBlock: 0.0.0.0/0
+          attachment:
+            vpcName: egress-vpc
+            account: Network
+      - name: core-rtb
+        routes:
+          - destinationCidrBlock: 0.0.0.0/0
+            attachment:
+              vpcName: egress-vpc
+              account: Network
+      - name: prod-rtb
+        routes:
+          - destinationCidrBlock: 0.0.0.0/0
+            attachment:
+              vpcName: egress-vpc
+              account: Network
+          - destinationCidrBlock: 10.0.40.0/21
+            blackhole: true
+      - name: stage-rtb
+        routes:
+          - destinationCidrBlock: 0.0.0.0/0
+            attachment:
+              vpcName: egress-vpc
+              account: Network
+          - destinationCidrBlock: 10.0.40.0/21
+            blackhole: true
+      - name: devtest-rtb
+        routes:
+        - destinationCidrBlock: 0.0.0.0/0
+          attachment:
+            vpcName: egress-vpc
+            account: Network
+        - destinationCidrBlock: 10.0.24.0/21
+          blackhole: true
+        - destinationCidrBlock: 10.0.32.0/21
+          blackhole: true
+
+endpointPolicies:
+  - name: Default
+    document: vpc-endpoint-policies/default.json
+  - name: Ec2
+    document: vpc-endpoint-policies/ec2.json
+
+vpcs:
+  ##############################
+  # Network Account Egress VPC #
+  ##############################
+  - name: egress-vpc
+    account: Network
+    region: *HOME_REGION
+    cidrs:
+      - 10.0.0.0/21
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: egress-vpc-private-rtb-a
+        routes:
+          - name: default-route
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: egress-vpc-natgw-a
+      - name: egress-vpc-private-rtb-b
+        routes:
+          - name: default-route
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: egress-vpc-natgw-b
+      - name: egress-vpc-private-rtb-c
+        routes:
+          - name: default-route
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: egress-vpc-natgw-c
+      - name: egress-vpc-public-rtb-a
+        routes:
+          - name: default-route
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+          - name: core-route
+            destination: 10.0.0.0/8
+            type: transitGateway
+            target: Network-Main
+      - name: egress-vpc-public-rtb-b
+        routes:
+          - name: default-route
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+          - name: core-route
+            destination: 10.0.0.0/8
+            type: transitGateway
+            target: Network-Main
+      - name: egress-vpc-public-rtb-c
+        routes:
+          - name: default-route
+            destination: 0.0.0.0/0
+            type: internetGateway
+            target: IGW
+          - name: core-route
+            destination: 10.0.0.0/8
+            type: transitGateway
+            target: Network-Main
+      - name: egress-vpc-tgw-endpoints-rtb-a
+        routes:
+          - name: default-route
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: egress-vpc-natgw-a 
+          - name: tgw-internal
+            destination: 10.0.0.0/8
+            type: transitGateway
+            target: Network-Main
+      - name: egress-vpc-tgw-endpoints-rtb-b
+        routes:
+          - name: default-route
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: egress-vpc-natgw-b 
+          - name: tgw-internal
+            destination: 10.0.0.0/8
+            type: transitGateway
+            target: Network-Main
+      - name: egress-vpc-tgw-endpoints-rtb-c
+        routes:
+          - name: default-route
+            destination: 0.0.0.0/0
+            type: natGateway
+            target: egress-vpc-natgw-c
+          - name: tgw-internal
+            destination: 10.0.0.0/8
+            type: transitGateway
+            target: Network-Main
+    subnets:
+      - name: egress-vpc-private-sub-a
+        availabilityZone: a
+        routeTable: egress-vpc-private-rtb-a
+        ipv4CidrBlock: 10.0.0.0/25
+      - name: egress-vpc-private-sub-b
+        availabilityZone: b
+        routeTable: egress-vpc-private-rtb-b
+        ipv4CidrBlock: 10.0.0.128/25
+      - name: egress-vpc-private-sub-c
+        availabilityZone: c
+        routeTable: egress-vpc-private-rtb-c
+        ipv4CidrBlock: 10.0.1.0/25
+      - name: egress-vpc-public-sub-a
+        availabilityZone: a
+        routeTable: egress-vpc-public-rtb-a
+        ipv4CidrBlock: 10.0.1.128/25
+      - name: egress-vpc-public-sub-b
+        availabilityZone: b
+        routeTable: egress-vpc-public-rtb-b
+        ipv4CidrBlock: 10.0.2.0/25
+      - name: egress-vpc-public-sub-c
+        availabilityZone: c
+        routeTable: egress-vpc-public-rtb-c
+        ipv4CidrBlock: 10.0.2.128/25
+      - name: egress-vpc-tgw-endpoints-a
+        availabilityZone: a
+        routeTable: egress-vpc-tgw-endpoints-rtb-a
+        ipv4CidrBlock: 10.0.3.0/28
+      - name: egress-vpc-tgw-endpoints-b
+        availabilityZone: b
+        routeTable: egress-vpc-tgw-endpoints-rtb-b
+        ipv4CidrBlock: 10.0.3.16/28
+      - name: egress-vpc-tgw-endpoints-c
+        availabilityZone: c
+        routeTable: egress-vpc-tgw-endpoints-rtb-c
+        ipv4CidrBlock: 10.0.3.32/28
+    natGateways:
+      - name: egress-vpc-natgw-a
+        subnet: egress-vpc-public-sub-a
+      - name: egress-vpc-natgw-b
+        subnet: egress-vpc-public-sub-b
+      - name: egress-vpc-natgw-c
+        subnet: egress-vpc-public-sub-c
+    transitGatewayAttachments:
+      - name: egress-tgw-attachments
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - egress-rtb
+        routeTablePropagations: []
+        subnets:
+          - egress-vpc-tgw-endpoints-a
+          - egress-vpc-tgw-endpoints-b
+          - egress-vpc-tgw-endpoints-c
+
+
+  ################################
+  ## Shared Services Account VPC #
+  ################################
+  - name: shared-serve-vpc
+    account: SharedServices
+    region: *HOME_REGION
+    cidrs:
+      - 10.0.8.0/21
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: ad-private-sub-rtb-a
+        routes:
+          - name: tgw-main-route
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: ad-private-sub-rtb-b
+        routes:
+          - name: tgw-main-route
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: ad-private-sub-rtb-c
+        routes:
+          - name: tgw-main-route
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: cust-bast-private-sub-rtb-a
+        routes:
+          - name: tgw-main-route
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: cust-bast-private-sub-rtb-b
+        routes:
+          - name: tgw-main-route
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: cust-bast-private-sub-rtb-c
+        routes:
+          - name: tgw-main-route
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: endpoint-sec-private-sub-rtb-a
+        routes:
+          - name: tgw-main-route
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: endpoint-sec-private-sub-rtb-b
+        routes:
+          - name: tgw-main-route
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: endpoint-sec-private-sub-rtb-c
+        routes:
+          - name: tgw-main-route
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: tgw-endpoints-rtb-a
+        routes:
+          - name: tgw-main-route
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: tgw-endpoints-rtb-b
+        routes:
+          - name: tgw-main-route
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+      - name: tgw-endpoints-rtb-c
+        routes:
+          - name: tgw-main-route
+            destination: 0.0.0.0/0
+            type: transitGateway
+            target: Network-Main
+    subnets:
+      - name: ad-private-sub-a
+        availabilityZone: a
+        routeTable: ad-private-sub-rtb-a
+        ipv4CidrBlock: 10.0.8.0/25
+      - name: ad-private-sub-b
+        availabilityZone: b
+        routeTable: ad-private-sub-rtb-b
+        ipv4CidrBlock: 10.0.8.128/25
+      - name: ad-private-sub-c
+        availabilityZone: c
+        routeTable: ad-private-sub-rtb-c
+        ipv4CidrBlock: 10.0.9.0/25
+      - name: cust-bast-private-sub-a
+        availabilityZone: a
+        routeTable: cust-bast-private-sub-rtb-a
+        ipv4CidrBlock: 10.0.9.128/25
+      - name: cust-bast-private-sub-b
+        availabilityZone: b
+        routeTable: cust-bast-private-sub-rtb-b
+        ipv4CidrBlock: 10.0.10.0/25
+      - name: cust-bast-private-sub-c
+        availabilityZone: c
+        routeTable: cust-bast-private-sub-rtb-c
+        ipv4CidrBlock: 10.0.10.128/25
+      - name: endpoint-sec-private-sub-a
+        availabilityZone: a
+        routeTable: endpoint-sec-private-sub-rtb-a
+        ipv4CidrBlock: 10.0.11.0/25
+      - name: endpoint-sec-private-sub-b
+        availabilityZone: b
+        routeTable: endpoint-sec-private-sub-rtb-b
+        ipv4CidrBlock: 10.0.11.128/25
+      - name: endpoint-sec-private-sub-c
+        availabilityZone: c
+        routeTable: endpoint-sec-private-sub-rtb-c
+        ipv4CidrBlock: 10.0.12.0/25
+      - name: tgw-endponts-sub-a
+        availabilityZone: a
+        routeTable: tgw-endpoints-rtb-a
+        ipv4CidrBlock: 10.0.12.128/28
+      - name: tgw-endponts-sub-b
+        availabilityZone: b
+        routeTable: tgw-endpoints-rtb-b
+        ipv4CidrBlock: 10.0.12.144/28
+      - name: tgw-endponts-sub-c
+        availabilityZone: c
+        routeTable: tgw-endpoints-rtb-c
+        ipv4CidrBlock: 10.0.12.160/28
+    transitGatewayAttachments:
+      - name: shared-services-tgw-attachment
+        transitGateway:
+          name: Network-Main
+          account: Network
+        routeTableAssociations:
+          - core-rtb
+        routeTablePropagations:
+          - egress-rtb
+          - prod-rtb
+          - stage-rtb
+          - devtest-rtb
+        subnets:
+          - tgw-endponts-sub-a
+          - tgw-endponts-sub-b
+          - tgw-endponts-sub-c
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+    interfaceEndpoints:
+      central: true
+      defaultPolicy: Default
+      subnets:
+        - endpoint-sec-private-sub-a
+        - endpoint-sec-private-sub-b
+        - endpoint-sec-private-sub-c
+      endpoints:
+        - service: ec2
+        - service: ec2messages
+        - service: ssm
+        - service: ssmmessages
+        - service: logs
+        - service: kms
+
+
+
+  ################################
+  ## Control Account VPC #       #
+  ################################
+  - name: control-vpc
+    account: Control
+    region: *HOME_REGION
+    cidrs:
+      - 10.0.16.0/21
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+    - name: control-vpc-pub-sub-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: control-vpc-pub-sub-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: control-vpc-pub-sub-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: control-vpc-app-sub-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: control-vpc-app-sub-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: control-vpc-app-sub-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: control-vpc-db-sub-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: control-vpc-db-sub-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: control-vpc-db-sub-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: tgw-endpoints-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: tgw-endpoints-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: tgw-endpoints-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    subnets:
+    - name: control-vpc-public-sub-a
+      availabilityZone: a
+      routeTable: control-vpc-pub-sub-rtb-a
+      ipv4CidrBlock: 10.0.16.0/25
+    - name: control-vpc-public-sub-b
+      availabilityZone: b
+      routeTable: control-vpc-pub-sub-rtb-b
+      ipv4CidrBlock: 10.0.16.128/25
+    - name: control-vpc-public-sub-c
+      availabilityZone: c
+      routeTable: control-vpc-pub-sub-rtb-c
+      ipv4CidrBlock: 10.0.17.0/25
+    - name: control-vpc-app-sub-a
+      availabilityZone: a
+      routeTable: control-vpc-app-sub-rtb-a
+      ipv4CidrBlock: 10.0.17.128/25
+    - name: control-vpc-app-sub-b
+      availabilityZone: b
+      routeTable: control-vpc-app-sub-rtb-b
+      ipv4CidrBlock: 10.0.18.0/25
+    - name: control-vpc-app-sub-c
+      availabilityZone: c
+      routeTable: control-vpc-app-sub-rtb-c
+      ipv4CidrBlock: 10.0.18.128/25
+    - name: control-vpc-db-sub-a
+      availabilityZone: a
+      routeTable: control-vpc-db-sub-rtb-a
+      ipv4CidrBlock: 10.0.19.0/25
+    - name: control-vpc-db-sub-b
+      availabilityZone: b
+      routeTable: control-vpc-db-sub-rtb-b
+      ipv4CidrBlock: 10.0.19.128/25
+    - name: control-vpc-db-sub-c
+      availabilityZone: c
+      routeTable: control-vpc-db-sub-rtb-c
+      ipv4CidrBlock: 10.0.20.0/25
+    - name: control-vpc-tgw-endponts-sub-a
+      availabilityZone: a
+      routeTable: tgw-endpoints-rtb-a
+      ipv4CidrBlock: 10.0.20.128/28
+    - name: control-vpc-tgw-endponts-sub-b
+      availabilityZone: b
+      routeTable: tgw-endpoints-rtb-b
+      ipv4CidrBlock: 10.0.20.144/28
+    - name: control-vpc-tgw-endponts-sub-c
+      availabilityZone: c
+      routeTable: tgw-endpoints-rtb-c
+      ipv4CidrBlock: 10.0.20.160/28
+    transitGatewayAttachments:
+    - name: control-tgw-attachment
+      transitGateway:
+        name: Network-Main
+        account: Network
+      routeTableAssociations:
+        - core-rtb
+      routeTablePropagations:
+        - egress-rtb
+        - prod-rtb
+        - stage-rtb
+        - devtest-rtb
+      subnets:
+        - control-vpc-tgw-endponts-sub-a
+        - control-vpc-tgw-endponts-sub-b
+        - control-vpc-tgw-endponts-sub-c
+
+
+  ################################
+  ## Prod Account VPC #          #
+  ################################
+  - name: prod-vpc
+    account: Production
+    region: *HOME_REGION
+    cidrs:
+      - 10.0.24.0/21
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+    - name: prod-vpc-pub-sub-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: prod-vpc-pub-sub-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: prod-vpc-pub-sub-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+        - name: S3Gateway
+          type: gatewayEndpoint
+          target: s3
+    - name: prod-vpc-app-sub-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+        - name: S3Gateway
+          type: gatewayEndpoint
+          target: s3
+    - name: prod-vpc-app-sub-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+        - name: S3Gateway
+          type: gatewayEndpoint
+          target: s3
+    - name: prod-vpc-app-sub-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+        - name: S3Gateway
+          type: gatewayEndpoint
+          target: s3
+    - name: prod-vpc-db-sub-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+        - name: S3Gateway
+          type: gatewayEndpoint
+          target: s3
+    - name: prod-vpc-db-sub-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+        - name: S3Gateway
+          type: gatewayEndpoint
+          target: s3
+    - name: prod-vpc-db-sub-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+        - name: S3Gateway
+          type: gatewayEndpoint
+          target: s3
+    - name: tgw-endpoints-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: tgw-endpoints-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: tgw-endpoints-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    subnets:
+    - name: prod-vpc-public-sub-a
+      availabilityZone: a
+      routeTable: prod-vpc-pub-sub-rtb-a
+      ipv4CidrBlock: 10.0.24.0/25
+    - name: prod-vpc-public-sub-b
+      availabilityZone: b
+      routeTable: prod-vpc-pub-sub-rtb-b
+      ipv4CidrBlock: 10.0.24.128/25
+    - name: prod-vpc-public-sub-c
+      availabilityZone: c
+      routeTable: prod-vpc-pub-sub-rtb-c
+      ipv4CidrBlock: 10.0.25.0/25
+    - name: prod-vpc-app-sub-a
+      availabilityZone: a
+      routeTable: prod-vpc-app-sub-rtb-a
+      ipv4CidrBlock: 10.0.25.128/25
+    - name: prod-vpc-app-sub-b
+      availabilityZone: b
+      routeTable: prod-vpc-app-sub-rtb-b
+      ipv4CidrBlock: 10.0.26.0/25
+    - name: prod-vpc-app-sub-c
+      availabilityZone: c
+      routeTable: prod-vpc-app-sub-rtb-c
+      ipv4CidrBlock: 10.0.26.128/25
+    - name: prod-vpc-db-sub-a
+      availabilityZone: a
+      routeTable: prod-vpc-db-sub-rtb-a
+      ipv4CidrBlock: 10.0.27.0/25
+    - name: prod-vpc-db-sub-b
+      availabilityZone: b
+      routeTable: prod-vpc-db-sub-rtb-b
+      ipv4CidrBlock: 10.0.27.128/25
+    - name: prod-vpc-db-sub-c
+      availabilityZone: c
+      routeTable: prod-vpc-db-sub-rtb-c
+      ipv4CidrBlock: 10.0.28.0/25
+    - name: prod-vpc-tgw-endponts-sub-a
+      availabilityZone: a
+      routeTable: tgw-endpoints-rtb-a
+      ipv4CidrBlock: 10.0.28.128/28
+    - name: prod-vpc-tgw-endponts-sub-b
+      availabilityZone: b
+      routeTable: tgw-endpoints-rtb-b
+      ipv4CidrBlock: 10.0.28.144/28
+    - name: prod-vpc-tgw-endponts-sub-c
+      availabilityZone: c
+      routeTable: tgw-endpoints-rtb-c
+      ipv4CidrBlock: 10.0.28.160/28
+    transitGatewayAttachments:
+    - name: prod-tgw-attachment
+      transitGateway:
+        name: Network-Main
+        account: Network
+      routeTableAssociations:
+        - prod-rtb
+      routeTablePropagations:
+        - egress-rtb
+        - core-rtb
+        - stage-rtb
+      subnets:
+        - prod-vpc-tgw-endponts-sub-a
+        - prod-vpc-tgw-endponts-sub-b
+        - prod-vpc-tgw-endponts-sub-c
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+    useCentralEndpoints: true
+
+
+  ################################
+  ## Staging Account VPC #       #
+  ################################
+  - name: stage-vpc
+    account: Staging
+    region: *HOME_REGION
+    cidrs:
+      - 10.0.32.0/21
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+    - name: stage-vpc-pub-sub-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: stage-vpc-pub-sub-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: stage-vpc-pub-sub-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: stage-vpc-app-sub-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: stage-vpc-app-sub-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: stage-vpc-app-sub-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: stage-vpc-db-sub-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: stage-vpc-db-sub-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: stage-vpc-db-sub-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: tgw-endpoints-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: tgw-endpoints-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: tgw-endpoints-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    subnets:
+    - name: stage-vpc-public-sub-a
+      availabilityZone: a
+      routeTable: stage-vpc-pub-sub-rtb-a
+      ipv4CidrBlock: 10.0.32.0/25
+    - name: stage-vpc-public-sub-b
+      availabilityZone: b
+      routeTable: stage-vpc-pub-sub-rtb-b
+      ipv4CidrBlock: 10.0.32.128/25
+    - name: stage-vpc-public-sub-c
+      availabilityZone: c
+      routeTable: stage-vpc-pub-sub-rtb-c
+      ipv4CidrBlock: 10.0.33.0/25
+    - name: stage-vpc-app-sub-a
+      availabilityZone: a
+      routeTable: stage-vpc-app-sub-rtb-a
+      ipv4CidrBlock: 10.0.33.128/25
+    - name: stage-vpc-app-sub-b
+      availabilityZone: b
+      routeTable: stage-vpc-app-sub-rtb-b
+      ipv4CidrBlock: 10.0.34.0/25
+    - name: stage-vpc-app-sub-c
+      availabilityZone: c
+      routeTable: stage-vpc-app-sub-rtb-c
+      ipv4CidrBlock: 10.0.34.128/25
+    - name: stage-vpc-db-sub-a
+      availabilityZone: a
+      routeTable: stage-vpc-db-sub-rtb-a
+      ipv4CidrBlock: 10.0.35.0/25
+    - name: stage-vpc-db-sub-b
+      availabilityZone: b
+      routeTable: stage-vpc-db-sub-rtb-b
+      ipv4CidrBlock: 10.0.35.128/25
+    - name: stage-vpc-db-sub-c
+      availabilityZone: c
+      routeTable: stage-vpc-db-sub-rtb-c
+      ipv4CidrBlock: 10.0.36.0/25
+    - name: stage-vpc-tgw-endponts-sub-a
+      availabilityZone: a
+      routeTable: tgw-endpoints-rtb-a
+      ipv4CidrBlock: 10.0.36.128/28
+    - name: stage-vpc-tgw-endponts-sub-b
+      availabilityZone: b
+      routeTable: tgw-endpoints-rtb-b
+      ipv4CidrBlock: 10.0.36.144/28
+    - name: stage-vpc-tgw-endponts-sub-c
+      availabilityZone: c
+      routeTable: tgw-endpoints-rtb-c
+      ipv4CidrBlock: 10.0.36.160/28
+    transitGatewayAttachments:
+    - name: stage-tgw-attachment
+      transitGateway:
+        name: Network-Main
+        account: Network
+      routeTableAssociations:
+        - stage-rtb
+      routeTablePropagations:
+        - egress-rtb
+        - prod-rtb
+        - core-rtb
+      subnets:
+        - stage-vpc-tgw-endponts-sub-a
+        - stage-vpc-tgw-endponts-sub-b
+        - stage-vpc-tgw-endponts-sub-c
+
+
+  ################################
+  ## DevTest Account VPC #       #
+  ################################
+  - name: devtest-vpc
+    account: DevTest
+    region: *HOME_REGION
+    cidrs:
+      - 10.0.40.0/21
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+    - name: devtest-vpc-pub-sub-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: devtest-vpc-pub-sub-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: devtest-vpc-pub-sub-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: devtest-vpc-app-sub-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: devtest-vpc-app-sub-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: devtest-vpc-app-sub-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: devtest-vpc-db-sub-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: devtest-vpc-db-sub-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: devtest-vpc-db-sub-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: tgw-endpoints-rtb-a
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: tgw-endpoints-rtb-b
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    - name: tgw-endpoints-rtb-c
+      routes:
+        - name: tgw-main-route
+          destination: 0.0.0.0/0
+          type: transitGateway
+          target: Network-Main
+    subnets:
+    - name: devtest-vpc-public-sub-a
+      availabilityZone: a
+      routeTable: devtest-vpc-pub-sub-rtb-a
+      ipv4CidrBlock: 10.0.40.0/25
+    - name: devtest-vpc-public-sub-b
+      availabilityZone: b
+      routeTable: devtest-vpc-pub-sub-rtb-b
+      ipv4CidrBlock: 10.0.40.128/25
+    - name: devtest-vpc-public-sub-c
+      availabilityZone: c
+      routeTable: devtest-vpc-pub-sub-rtb-c
+      ipv4CidrBlock: 10.0.41.0/25
+    - name: devtest-vpc-app-sub-a
+      availabilityZone: a
+      routeTable: devtest-vpc-app-sub-rtb-a
+      ipv4CidrBlock: 10.0.41.128/25
+    - name: devtest-vpc-app-sub-b
+      availabilityZone: b
+      routeTable: devtest-vpc-app-sub-rtb-b
+      ipv4CidrBlock: 10.0.42.0/25
+    - name: devtest-vpc-app-sub-c
+      availabilityZone: c
+      routeTable: devtest-vpc-app-sub-rtb-c
+      ipv4CidrBlock: 10.0.42.128/25
+    - name: devtest-vpc-db-sub-a
+      availabilityZone: a
+      routeTable: devtest-vpc-db-sub-rtb-a
+      ipv4CidrBlock: 10.0.43.0/25
+    - name: devtest-vpc-db-sub-b
+      availabilityZone: b
+      routeTable: devtest-vpc-db-sub-rtb-b
+      ipv4CidrBlock: 10.0.43.128/25
+    - name: devtest-vpc-db-sub-c
+      availabilityZone: c
+      routeTable: devtest-vpc-db-sub-rtb-c
+      ipv4CidrBlock: 10.0.44.0/25
+    - name: devtest-vpc-tgw-endponts-sub-a
+      availabilityZone: a
+      routeTable: tgw-endpoints-rtb-a
+      ipv4CidrBlock: 10.0.44.128/28
+    - name: devtest-vpc-tgw-endponts-sub-b
+      availabilityZone: b
+      routeTable: tgw-endpoints-rtb-b
+      ipv4CidrBlock: 10.0.44.144/28
+    - name: devtest-vpc-tgw-endponts-sub-c
+      availabilityZone: c
+      routeTable: tgw-endpoints-rtb-c
+      ipv4CidrBlock: 10.0.44.160/28
+    transitGatewayAttachments:
+    - name: devtest-tgw-attachment
+      transitGateway:
+        name: Network-Main
+        account: Network
+      routeTableAssociations:
+        - devtest-rtb
+      routeTablePropagations:
+        - egress-rtb
+        - core-rtb
+      subnets:
+        - devtest-vpc-tgw-endponts-sub-a
+        - devtest-vpc-tgw-endponts-sub-b
+        - devtest-vpc-tgw-endponts-sub-c
+
+
+  ##################################
+  ## DisasterRecovery Account VPC ##
+  ##################################
+  - name: dr-vpc
+    account: DisasterRecovery
+    region: *DR_REGION
+    cidrs:
+      - 10.0.48.0/21
+    internetGateway: true
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+    - name: dr-vpc-pub-sub-rtb-a
+      routes:
+        - name: default-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: dr-vpc-pub-sub-rtb-b
+      routes:
+        - name: default-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: dr-vpc-pub-sub-rtb-c
+      routes:
+        - name: default-route
+          destination: 0.0.0.0/0
+          type: internetGateway
+          target: IGW
+    - name: dr-vpc-app-sub-rtb-a
+      routes:
+        - name: default-route
+          destination: 0.0.0.0/0
+          type: natGateway
+          target: dr-vpc-natgw-a
+    - name: dr-vpc-app-sub-rtb-b
+      routes:
+        - name: default-route
+          destination: 0.0.0.0/0
+          type: natGateway
+          target: dr-vpc-natgw-b
+    - name: dr-vpc-app-sub-rtb-c
+      routes:
+        - name: default-route
+          destination: 0.0.0.0/0
+          type: natGateway
+          target: dr-vpc-natgw-c
+    - name: dr-vpc-db-sub-rtb-a
+      routes:
+        - name: default-route
+          destination: 0.0.0.0/0
+          type: natGateway
+          target: dr-vpc-natgw-a
+    - name: dr-vpc-db-sub-rtb-b
+      routes:
+        - name: default-route
+          destination: 0.0.0.0/0
+          type: natGateway
+          target: dr-vpc-natgw-b
+    - name: dr-vpc-db-sub-rtb-c
+      routes:
+        - name: default-route
+          destination: 0.0.0.0/0
+          type: natGateway
+          target: dr-vpc-natgw-c
+    subnets:
+    - name: dr-vpc-public-sub-a
+      availabilityZone: a
+      routeTable: dr-vpc-pub-sub-rtb-a
+      ipv4CidrBlock: 10.0.48.0/25
+    - name: dr-vpc-public-sub-b
+      availabilityZone: b
+      routeTable: dr-vpc-pub-sub-rtb-b
+      ipv4CidrBlock: 10.0.48.128/25
+    - name: dr-vpc-public-sub-c
+      availabilityZone: c
+      routeTable: dr-vpc-pub-sub-rtb-c
+      ipv4CidrBlock: 10.0.49.0/25
+    - name: dr-vpc-app-sub-a
+      availabilityZone: a
+      routeTable: dr-vpc-app-sub-rtb-a
+      ipv4CidrBlock: 10.0.49.128/25
+    - name: dr-vpc-app-sub-b
+      availabilityZone: b
+      routeTable: dr-vpc-app-sub-rtb-b
+      ipv4CidrBlock: 10.0.50.0/25
+    - name: dr-vpc-app-sub-c
+      availabilityZone: c
+      routeTable: dr-vpc-app-sub-rtb-c
+      ipv4CidrBlock: 10.0.50.128/25
+    - name: dr-vpc-db-sub-a
+      availabilityZone: a
+      routeTable: dr-vpc-db-sub-rtb-a
+      ipv4CidrBlock: 10.0.51.0/25
+    - name: dr-vpc-db-sub-b
+      availabilityZone: b
+      routeTable: dr-vpc-db-sub-rtb-b
+      ipv4CidrBlock: 10.0.51.128/25
+    - name: dr-vpc-db-sub-c
+      availabilityZone: c
+      routeTable: dr-vpc-db-sub-rtb-c
+      ipv4CidrBlock: 10.0.52.0/25
+    transitGatewayAttachments: []
+    natGateways:
+      - name: dr-vpc-natgw-a
+        subnet: dr-vpc-public-sub-a
+      - name: dr-vpc-natgw-b
+        subnet: dr-vpc-public-sub-b
+      - name: dr-vpc-natgw-c
+        subnet: dr-vpc-public-sub-c
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+
+
+vpcFlowLogs:
+  trafficType: ALL
+  maxAggregationInterval: 600
+  destinations:
+    - s3
+    - cloud-watch-logs
+  defaultFormat: false
+  customFields:
+    - version
+    - account-id
+    - interface-id
+    - srcaddr
+    - dstaddr
+    - srcport
+    - dstport
+    - protocol
+    - packets
+    - bytes
+    - start
+    - end
+    - action
+    - log-status
+    - vpc-id
+    - subnet-id
+    - instance-id
+    - tcp-flags
+    - type
+    - pkt-srcaddr
+    - pkt-dstaddr
+    - region
+    - az-id
+    - pkt-src-aws-service
+    - pkt-dst-aws-service
+    - flow-direction
+    - traffic-path
+
+# vpcPeering:
+#   - name: ProdToDR
+#     vpcs:
+#       - dr-vpc
+#       - prod-vpc
+#   - name: SharedServices≥ToDR
+#     vpcs:
+#       - dr-vpc
+#       - shared-serve-vpc
+    
