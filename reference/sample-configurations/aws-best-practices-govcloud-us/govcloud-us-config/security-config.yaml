@@ -31,9 +31,9 @@ centralSecurityServices:
       - name: AWS Foundational Security Best Practices v1.0.0
         enable: true
         controlsToDisable:
-          - IAM.1
-          - EC2.10
-          - Lambda.4
+          - IAM.1 # IAM policies should not allow for full admin privs
+          - EC2.10  # checks for VPC endpoint for EC2
+          - Lambda.4  # retired
       - name: CIS AWS Foundations Benchmark v1.2.0
         enable: true
         controlsToDisable:
@@ -41,6 +41,7 @@ centralSecurityServices:
           - CIS.1.22
           - CIS.2.6
   ssmAutomation:
+      excludeRegions: []
     documentSets:
       - shareTargets:
           organizationalUnits:
@@ -67,7 +68,11 @@ iamPasswordPolicy:
   requireLowercaseCharacters: true
   requireSymbols: true
   requireNumbers: true
-  minimumPasswordLength: 14
+  #####################################
+  # The minimum password length was chosen to be 14 to align with common industry practices.    #
+  # If you need to comply with NIST SP 800-63B you can modify the password length to 8.         #
+  #####################################
+  minimumPasswordLength: 14 
   passwordReusePrevention: 24
   maxPasswordAge: 90
 awsConfig:
@@ -78,6 +83,29 @@ awsConfig:
         organizationalUnits:
           - Root
       rules:
+        # The following rules are encouraged, but are not available in Gov-East.
+        # If you are only deploying to Gov-West you can enable these rules.
+
+        # - name: accelerator-sagemaker-endpoint-configuration-kms-key-configured
+        #   identifier: SAGEMAKER_ENDPOINT_CONFIGURATION_KMS_KEY_CONFIGURED
+        # - name: accelerator-sagemaker-notebook-instance-kms-key-configured
+        #   identifier: SAGEMAKER_NOTEBOOK_INSTANCE_KMS_KEY_CONFIGURED
+        # - name: accelerator-eip-attached
+        #   complianceResourceTypes:
+        #     - AWS::EC2::EIP
+        #   identifier: EIP_ATTACHED
+        # - name: accelerator-account-part-of-organizations
+        #   complianceResourceTypes:
+        #     - AWS::EC2::EIP
+        #   identifier: ACCOUNT_PART_OF_ORGANIZATIONS
+        # - name: accelerator-codebuild-project-envvar-awscred-check
+        #   complianceResourceTypes:
+        #     - AWS::CODEBUILD::Project
+        #   identifier: CODEBUILD_PROJECT_ENVVAR_AWSCRED_CHECK
+        # - name: accelerator-codebuild-project-source-repo-url-check
+        #   complianceResourceTypes:
+        #     - AWS::CODEBUILD::Project
+        #   identifier: CODEBUILD_PROJECT_SOURCE_REPO_URL_CHECK
         - name: accelerator-attach-ec2-instance-profile
           type: Custom
           description: Custom rule for checking EC2 instance IAM profile attachment
@@ -333,6 +361,48 @@ awsConfig:
           complianceResourceTypes:
             - AWS::S3::Bucket
           identifier: S3_BUCKET_DEFAULT_LOCK_ENABLED
+        - name: accelerator-cmk-backing-key-rotation-enabled
+          identifier: CMK_BACKING_KEY_ROTATION_ENABLED
+        - name: accelerator-restricted-ssh
+          complianceResourceTypes:
+            - AWS::EC2::SecurityGroup
+          identifier: INCOMING_SSH_DISABLED
+        - name: accelerator-iam-password-policy #Also deployed by SH with 8 char pw length.
+          inputParameters:
+            MaxPasswordAge: "90"
+            MinimumPasswordLength: "8" #Minimum established by NIST SP 800-63B
+            PasswordReusePrevention: "24"
+            RequireLowercaseCharacters: "TRUE"
+            RequireNumbers: "TRUE"
+            RequireSymbols: "TRUE"
+            RequireUppercaseCharacters: "TRUE"
+          identifier: IAM_PASSWORD_POLICY
+        - name: accelerator-dynamodb-table-encryption-enabled
+          complianceResourceTypes:
+            - AWS::DynamoDB::Table
+          identifier: DYNAMODB_TABLE_ENCRYPTION_ENABLED
+        - name: accelerator-ec2-managedinstance-patch-compliance-status-check
+          complianceResourceTypes:
+            - AWS::SSM:PatchCompliance
+          identifier: EC2_MANAGEDINSTANCE_PATCH_COMPLIANCE_STATUS_CHECK
+        - name: accelerator-ec2-security-group-attached-to-eni-periodic
+          complianceResourceTypes:
+            - AWS::EC2::SecurityGroup
+          identifier: EC2_SECURITY_GROUP_ATTACHED_TO_ENI_PERIODIC
+        - name: accelerator-eks-secrets-encrypted
+          identifier: EKS_SECRETS_ENCRYPTED
+        - name: accelerator-s3-account-level-public-access-blocks
+          complianceResourceTypes:
+            - AWS::S3::AccountPublicAccessBlock
+          identifier: S3_ACCOUNT_LEVEL_PUBLIC_ACCESS_BLOCKS
+        - name: accelerator-ssm-document-not-public
+          identifier: SSM_DOCUMENT_NOT_PUBLIC
+        - name: accelerator-iam-policy-no-statements-with-admin-access
+          complianceResourceTypes:
+            - AWS::IAM::Policy
+          identifier: IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS
+        - name: accelerator-multi-region-cloudtrail-enabled
+          identifier: MULTI_REGION_CLOUD_TRAIL_ENABLED  
 cloudWatch:
   metricSets:
     - regions:
