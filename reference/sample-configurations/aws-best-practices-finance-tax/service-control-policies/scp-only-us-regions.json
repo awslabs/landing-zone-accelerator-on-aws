@@ -1,0 +1,67 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenyAllNonUSRegions",
+            "Effect": "Deny",
+            "NotAction": [
+                "a4b:*",
+                "acm:*",
+                "aws-marketplace-management:*",
+                "aws-marketplace:*",
+                "aws-portal:*",
+                "budgets:*",
+                "ce:*",
+                "chime:*",
+                "cloudfront:*",
+                "config:*",
+                "cur:*",
+                "directconnect:*",
+                "ec2:DescribeRegions",
+                "ec2:DescribeTransitGateways",
+                "ec2:DescribeVpnGateways",
+                "fms:*",
+                "globalaccelerator:*",
+                "health:*",
+                "iam:*",
+                "importexport:*",
+                "kms:*",
+                "mobileanalytics:*",
+                "networkmanager:*",
+                "organizations:*",
+                "pricing:*",
+                "route53:*",
+                "route53domains:*",
+                "s3:GetAccountPublic*",
+                "s3:ListAllMyBuckets",
+                "s3:PutAccountPublic*",
+                "shield:*",
+                "sts:*",
+                "support:*",
+                "trustedadvisor:*",
+                "waf-regional:*",
+                "waf:*",
+                "wafv2:*",
+                "wellarchitected:*"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringNotEquals": {
+                    "aws:RequestedRegion": [
+                        "us-west-1",
+                        "us-west-2",
+                        "us-east-1",
+                        "us-east-2"
+                    ]
+                },
+                "ArnNotLike": {
+                    "aws:PrincipalARN": [
+                        "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+                        "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+                        "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+                    ]
+                }
+            }
+        }
+    ]
+}
