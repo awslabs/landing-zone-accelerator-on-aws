@@ -1,0 +1,78 @@
+{
+    "tags": {
+        "CostCenter": {
+            "tag_key": {
+                "@@assign": "CostCenter"
+            },
+            "tag_value": {
+                "@@assign": [
+                    "100 - General",
+                    "200 - IT budget",
+                    "300 - Operations department budget",
+                    "400 - Finance department budget",
+                    "500 - Campaign budget",
+                    "600 - In-kind contribution"
+                ]
+            },
+            "enforced_for": {
+                "@@assign": [
+                    "dynamodb:table",
+                    "ec2:instance",
+                    "elasticfilesystem:*",
+                    "eks:cluster",
+                    "ecs:cluster",
+                    "s3:bucket"
+                ]
+            }
+        },
+        "EnvironmentType": {
+            "tag_key": {
+              "@@assign": "EnvironmentType"
+            },
+            "tag_value": {
+              "@@assign": [
+                "Production",
+                "Staging",
+                "Development"
+              ]
+            },
+            "enforced_for": {
+                "@@assign": [
+                    "dynamodb:table",
+                    "ec2:instance",
+                    "elasticfilesystem:*",
+                    "eks:cluster",
+                    "ecs:cluster",
+                    "s3:bucket"
+                ]
+            }
+          },
+          "DataClassification": {
+            "tag_key": {
+              "@@assign": "DataClassification"
+            },
+            "tag_value": {
+              "@@assign": [
+                "NonConfidential",
+                "Confidential",
+                "PII"
+              ]
+            },
+            "enforced_for": {
+              "@@assign": [
+                "dms:*",
+                "dynamodb:table",
+                "ec2:instance",
+                "elasticfilesystem:*",
+                "eks:cluster",
+                "ecs:cluster",
+                "elasticmapreduce:cluster",
+                "fsx:*",
+                "rds:cluster-endpoint",
+                "redshift:*",
+                "s3:bucket"
+              ]
+            }
+        }
+    }
+}
