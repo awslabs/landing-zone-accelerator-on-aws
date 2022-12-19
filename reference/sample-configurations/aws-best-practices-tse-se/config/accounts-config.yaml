@@ -11,8 +11,8 @@ mandatoryAccounts:
     email: <log-archive>@example.com  # <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Security
   - name: Audit
-    description: The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
-    email: <audit>@example.com   # <----- UPDATE EMAIL ADDRESS
+    description: The security tooling account (referred internally as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: <security-tooling>@example.com   # <----- UPDATE EMAIL ADDRESS
     organizationalUnit: Security
 workloadAccounts:
   # The "name" will be used to set the AWS Account name
