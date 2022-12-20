@@ -1,4 +1,7 @@
 homeRegion: &HOME_REGION us-east-1
+snsSubscriptionConfig:
+  - level: High
+    email: foo@example.com
 keyManagementService:
   keySets:
     - name: key1
@@ -16,25 +19,32 @@ centralSecurityServices:
   delegatedAdminAccount: Audit
   ebsDefaultVolumeEncryption:
     enable: true
-    kmsKey: key1
-    excludeRegions: []
+    #kmsKey: key1
+    excludeRegions:
+      - us-west-2
   s3PublicAccessBlock:
     enable: true
-    excludeAccounts: []
+    excludeAccounts:
+      - Management
   scpRevertChangesConfig:
     enable: true
     snsTopicName: Security
   macie:
     enable: true
-    excludeRegions: []
+    excludeRegions:
+      - us-west-2
     policyFindingsPublishingFrequency: FIFTEEN_MINUTES
     publishSensitiveDataFindings: true
   guardduty:
     enable: true
-    excludeRegions: []
+    excludeRegions:
+      - us-west-2
     s3Protection:
       enable: true
-      excludeRegions: []
+      excludeRegions:
+        - us-west-2
+    eksProtection:
+      enable: true
     exportConfiguration:
       enable: true
       overrideExisting: true
@@ -42,19 +52,22 @@ centralSecurityServices:
       exportFrequency: FIFTEEN_MINUTES
   auditManager:
     enable: true
-    excludeRegions: []
+    excludeRegions:
+      - us-west-2
     defaultReportsConfiguration:
       enable: true
       destinationType: S3
   detective:
     enable: true
-    excludeRegions: []
+    excludeRegions:
+      - us-west-2
   securityHub:
     enable: true
     regionAggregation: true
     snsTopicName: Security
     notificationLevel: HIGH
-    excludeRegions: []
+    excludeRegions:
+      - us-west-2
     standards:
       - name: AWS Foundational Security Best Practices v1.0.0
         enable: true

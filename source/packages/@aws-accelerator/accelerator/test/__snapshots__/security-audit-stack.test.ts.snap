@@ -2055,7 +2055,7 @@ def script_handler(events, context):
             "Arn",
           ],
         },
-        "enableEksProtection": false,
+        "enableEksProtection": true,
         "enableS3Protection": true,
         "exportFrequency": "FIFTEEN_MINUTES",
         "region": "us-east-1",
@@ -2075,7 +2075,7 @@ def script_handler(events, context):
             "Arn",
           ],
         },
-        "enableEksProtection": false,
+        "enableEksProtection": true,
         "enableS3Protection": true,
         "partition": Object {
           "Ref": "AWS::Partition",
