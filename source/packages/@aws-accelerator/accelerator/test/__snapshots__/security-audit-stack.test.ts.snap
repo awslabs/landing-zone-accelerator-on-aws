@@ -2378,3 +2378,2386 @@ def script_handler(events, context):
   },
 }
 `;
+
+exports[`delegatedAdminStack Construct(SecurityAuditStack):  Snapshot Test 1`] = `
+Object {
+  "Parameters": Object {
+    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/cloudwatch/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/s3/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": Object {
+    "AccessAnalyzer": Object {
+      "Properties": Object {
+        "Type": "ORGANIZATION",
+      },
+      "Type": "AWS::AccessAnalyzer::Analyzer",
+    },
+    "AttachIamInstanceProfileC858EC06": Object {
+      "Properties": Object {
+        "Content": Object {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "Associate AWS Iam Instance Profile to EC2 Instance",
+          "mainSteps": Array [
+            Object {
+              "action": "aws:executeAwsApi",
+              "inputs": Object {
+                "Api": "associate_iam_instance_profile",
+                "IamInstanceProfile": Object {
+                  "Name": "{{ IamInstanceProfile }}",
+                },
+                "InstanceId": "{{ InstanceId }}",
+                "Service": "ec2",
+              },
+              "name": "associateIamProfile",
+            },
+          ],
+          "parameters": Object {
+            "AutomationAssumeRole": Object {
+              "type": "String",
+            },
+            "IamInstanceProfile": Object {
+              "type": "String",
+            },
+            "InstanceId": Object {
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentType": "Automation",
+        "Name": "Attach-IAM-Instance-Profile",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "AttachIamInstanceProfileShareDocumentD1F87A43": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87",
+            "Arn",
+          ],
+        },
+        "accountIds": Array [
+          "111111111111",
+          "222222222222",
+          "333333333333",
+          "444444444444",
+          "555555555555",
+          "666666666666",
+        ],
+        "name": Object {
+          "Ref": "AttachIamInstanceProfileC858EC06",
+        },
+      },
+      "Type": "Custom::SSMShareDocument",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AttachIamRolePolicy19A43F7E": Object {
+      "Properties": Object {
+        "Content": Object {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "IAM Role Policy",
+          "mainSteps": Array [
+            Object {
+              "action": "aws:executeScript",
+              "inputs": Object {
+                "Handler": "script_handler",
+                "InputPayload": Object {
+                  "AWSManagedPolicies": "{{ AWSManagedPolicies }}",
+                  "CustomerManagedPolicies": "{{ CustomerManagedPolicies }}",
+                  "ResourceId": "{{ ResourceId }}",
+                },
+                "Runtime": "python3.7",
+                "Script": "import boto3
+partition = boto3.client(\\"sts\\").get_caller_identity()['Arn'].split(\\":\\")[1]
+iam = boto3.client(\\"iam\\")
+config = boto3.client(\\"config\\")
+def script_handler(events, context):
+  resource_id = events[\\"ResourceId\\"]
+  response = config.batch_get_resource_config(
+    resourceKeys=[{
+      'resourceType': 'AWS::IAM::Role',
+      'resourceId': resource_id
+    }]
+  )
+  role_name = response[\\"baseConfigurationItems\\"][0]['resourceName']
+  aws_policy_names = events[\\"AWSManagedPolicies\\"]
+  customer_policy_names = events[\\"CustomerManagedPolicies\\"]
+  for policy in aws_policy_names:
+    iam.attach_role_policy(
+      PolicyArn=\\"arn:%s:iam::aws:policy/%s\\" %(partition, policy),
+      RoleName=role_name
+    )
+  for policy in customer_policy_names:
+    iam.attach_role_policy(
+      PolicyArn=policy,
+      RoleName=role_name
+    )",
+              },
+              "name": "attachPolicy",
+            },
+          ],
+          "parameters": Object {
+            "AWSManagedPolicies": Object {
+              "type": "StringList",
+            },
+            "AutomationAssumeRole": Object {
+              "type": "String",
+            },
+            "CustomerManagedPolicies": Object {
+              "default": Array [],
+              "minItems": 0,
+              "type": "StringList",
+            },
+            "ResourceId": Object {
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentType": "Automation",
+        "Name": "Attach-IAM-Role-Policy",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "AttachIamRolePolicyShareDocumentF5C9E6C7": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87",
+            "Arn",
+          ],
+        },
+        "accountIds": Array [
+          "111111111111",
+          "222222222222",
+          "333333333333",
+          "444444444444",
+          "555555555555",
+          "666666666666",
+        ],
+        "name": Object {
+          "Ref": "AttachIamRolePolicy19A43F7E",
+        },
+      },
+      "Type": "Custom::SSMShareDocument",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AuditManagerDefaultReportsDestinationAFD20D60": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderLogGroupF5AC3566",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderHandler6BCBC433",
+            "Arn",
+          ],
+        },
+        "bucket": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "s3://'",
+              Object {
+                "Ref": "AuditManagerPublishingDestinationBucket74974FCF",
+              },
+              "/audit-manager/222222222222/",
+            ],
+          ],
+        },
+        "defaultReportsDestinationType": "S3",
+        "kmsKeyArn": Object {
+          "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "region": "us-east-1",
+      },
+      "Type": "Custom::AuditManagerCreateDefaultReportsDestination",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AuditManagerPublishingDestinationBucket74974FCF": Object {
+      "DeletionPolicy": "Retain",
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-S1",
+              "reason": "AuditManagerPublishingDestinationBucket has server access logs disabled till the task for access logging completed.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "BucketEncryption": Object {
+          "ServerSideEncryptionConfiguration": Array [
+            Object {
+              "ServerSideEncryptionByDefault": Object {
+                "KMSMasterKeyID": Object {
+                  "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                },
+                "SSEAlgorithm": "aws:kms",
+              },
+            },
+          ],
+        },
+        "BucketName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "aws-accelerator-auditmgr-",
+              Object {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              Object {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "aws-accelerator-s3-access-logs-",
+                Object {
+                  "Ref": "AWS::AccountId",
+                },
+                "-",
+                Object {
+                  "Ref": "AWS::Region",
+                },
+              ],
+            ],
+          },
+        },
+        "OwnershipControls": Object {
+          "Rules": Array [
+            Object {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": Object {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "Tags": Array [
+          Object {
+            "Key": "aws-cdk:auto-audit-manager-access-bucket",
+            "Value": "true",
+          },
+          Object {
+            "Key": "aws-cdk:auto-auditManager-access-bucket",
+            "Value": "true",
+          },
+        ],
+        "VersioningConfiguration": Object {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy6D87750E": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "s3:GetObjectLegalHold",
+                "s3:GetObjectRetention",
+                "s3:GetObjectVersion",
+                "s3:GetObjectVersionAcl",
+                "s3:GetObjectVersionForReplication",
+                "s3:GetObjectVersionTagging",
+                "s3:GetReplicationConfiguration",
+                "s3:ListBucket",
+                "s3:ReplicateDelete",
+                "s3:ReplicateObject",
+                "s3:ReplicateTags",
+              ],
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AuditManagerPublishingDestinationBucket74974FCF",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AuditManagerPublishingDestinationBucket74974FCF",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "s3:GetBucketVersioning",
+                "s3:GetObjectVersionTagging",
+                "s3:ObjectOwnerOverrideToBucketOwner",
+                "s3:PutBucketVersioning",
+                "s3:ReplicateDelete",
+                "s3:ReplicateObject",
+                "s3:ReplicateTags",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
+                  ],
+                ],
+              },
+            },
+            Object {
+              "Action": "kms:Decrypt",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Ref": "SsmParameterValueacceleratorkmss3keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+            },
+            Object {
+              "Action": "kms:Encrypt",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy6D87750E",
+        "Roles": Array [
+          Object {
+            "Ref": "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleE0509DD9",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleE0509DD9": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "s3.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Path": "/service-role/",
+        "Tags": Array [
+          Object {
+            "Key": "aws-cdk:auto-audit-manager-access-bucket",
+            "Value": "true",
+          },
+          Object {
+            "Key": "aws-cdk:auto-auditManager-access-bucket",
+            "Value": "true",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationECF1B287": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
+            "Arn",
+          ],
+        },
+        "destinationAccountId": "333333333333",
+        "destinationBucketArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+            ],
+          ],
+        },
+        "destinationBucketKeyArn": Object {
+          "Ref": "CentralLogsBucketKeyLookup52CD8A37",
+        },
+        "prefix": "",
+        "replicationRoleArn": Object {
+          "Fn::GetAtt": Array [
+            "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleE0509DD9",
+            "Arn",
+          ],
+        },
+        "sourceBucketName": Object {
+          "Ref": "AuditManagerPublishingDestinationBucket74974FCF",
+        },
+      },
+      "Type": "Custom::S3PutBucketReplication",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AuditManagerPublishingDestinationBucketPolicy3992854B": Object {
+      "Properties": Object {
+        "Bucket": Object {
+          "Ref": "AuditManagerPublishingDestinationBucket74974FCF",
+        },
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "s3:*",
+              "Condition": Object {
+                "Bool": Object {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AuditManagerPublishingDestinationBucket74974FCF",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AuditManagerPublishingDestinationBucket74974FCF",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "deny-insecure-connections",
+            },
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "auditmanager.amazonaws.com",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AuditManagerPublishingDestinationBucket74974FCF",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AuditManagerPublishingDestinationBucket74974FCF",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "s3:GetBucketLocation",
+                "s3:PutObject",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AuditManagerPublishingDestinationBucket74974FCF",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AuditManagerPublishingDestinationBucket74974FCF",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "Allow Organization principals to use of the bucket",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "CentralLogsBucketKeyLookup52CD8A37": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+            "Arn",
+          ],
+        },
+        "assumeRoleArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
+            ],
+          ],
+        },
+        "invokingAccountID": "222222222222",
+        "invokingRegion": "us-east-1",
+        "parameterAccountID": "333333333333",
+        "parameterName": "/accelerator/logging/central-bucket/kms/arn",
+        "parameterRegion": "us-west-2",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmGetParameterValue",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ControlTowerNotificationsForwarderFunctionAllowInvokeAWSAcceleratorSecurityAuditStack222222222222useast1ControlTowerSNSTopic2C923A0CF50B8C0E": Object {
+      "Properties": Object {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": Object {
+          "Fn::GetAtt": Array [
+            "ControlTowerNotificationsForwarderFunctionFA79B131",
+            "Arn",
+          ],
+        },
+        "Principal": "sns.amazonaws.com",
+        "SourceArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":sns:us-east-1:222222222222:aws-controltower-AggregateSecurityNotifications",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ControlTowerNotificationsForwarderFunctionControlTowerSNSTopicF1309D6C": Object {
+      "Properties": Object {
+        "Endpoint": Object {
+          "Fn::GetAtt": Array [
+            "ControlTowerNotificationsForwarderFunctionFA79B131",
+            "Arn",
+          ],
+        },
+        "Protocol": "lambda",
+        "Region": "us-east-1",
+        "TopicArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":sns:us-east-1:222222222222:aws-controltower-AggregateSecurityNotifications",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::SNS::Subscription",
+    },
+    "ControlTowerNotificationsForwarderFunctionFA79B131": Object {
+      "DependsOn": Array [
+        "ControlTowerNotificationsForwarderFunctionServiceRoleDefaultPolicyEBACE9AF",
+        "ControlTowerNotificationsForwarderFunctionServiceRoleE83D121D",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Lambda function to forward ControlTower notifications to management account",
+        "Environment": Object {
+          "Variables": Object {
+            "SNS_TOPIC_ARN": Object {
+              "Fn::Join": Array [
+                "",
+                Array [
+                  "arn:",
+                  Object {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":sns:us-east-1:111111111111:AWSAccelerator-ControlTowerNotification",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "ControlTowerNotificationsForwarderFunctionServiceRoleE83D121D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 120,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ControlTowerNotificationsForwarderFunctionServiceRoleDefaultPolicyEBACE9AF": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Require access to all keys in management account",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":sns:us-east-1:111111111111:AWSAccelerator-ControlTowerNotification",
+                  ],
+                ],
+              },
+              "Sid": "sns",
+            },
+            Object {
+              "Action": Array [
+                "kms:DescribeKey",
+                "kms:GenerateDataKey",
+                "kms:Decrypt",
+                "kms:Encrypt",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":kms:us-east-1:111111111111:key/*",
+                  ],
+                ],
+              },
+              "Sid": "kms",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ControlTowerNotificationsForwarderFunctionServiceRoleDefaultPolicyEBACE9AF",
+        "Roles": Array [
+          Object {
+            "Ref": "ControlTowerNotificationsForwarderFunctionServiceRoleE83D121D",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ControlTowerNotificationsForwarderFunctionServiceRoleE83D121D": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider lambda role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderHandler6BCBC433": Object {
+      "DependsOn": Array [
+        "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderLogGroupF5AC3566": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderHandler6BCBC433",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomAuditManagerCreateDefaultReportsDestinationCustomResourceProviderRoleAEE72AE5": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "auditmanager:UpdateSettings",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "AuditManagerCreatePublishingDestinationCommandTaskAuditManagerActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomDetectiveCreateMembersCustomResourceProviderHandler0A0D060D": Object {
+      "DependsOn": Array [
+        "CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomDetectiveCreateMembersCustomResourceProviderLogGroup8A5563BD": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomDetectiveCreateMembersCustomResourceProviderHandler0A0D060D",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomDetectiveCreateMembersCustomResourceProviderRole90BCDD0D": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "detective:ListOrganizationAdminAccounts",
+                    "detective:UpdateOrganizationConfiguration",
+                    "detective:CreateMembers",
+                    "detective:DeleteMembers",
+                    "detective:DisassociateMembership",
+                    "detective:ListMembers",
+                    "detective:ListGraphs",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "DetectiveCreateMembersTaskDetectiveActions",
+                },
+                Object {
+                  "Action": Array [
+                    "iam:CreateServiceLinkedRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    "*",
+                  ],
+                  "Sid": "ServiceLinkedRoleDetective",
+                },
+                Object {
+                  "Action": Array [
+                    "organizations:ListAccounts",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    "*",
+                  ],
+                  "Sid": "OrganisationsListDetective",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomDetectiveUpdateGraphCustomResourceProviderHandlerD4473EC1": Object {
+      "DependsOn": Array [
+        "CustomDetectiveUpdateGraphCustomResourceProviderRole54CD7295",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomDetectiveUpdateGraphCustomResourceProviderRole54CD7295",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomDetectiveUpdateGraphCustomResourceProviderLogGroupDF150426": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomDetectiveUpdateGraphCustomResourceProviderHandlerD4473EC1",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomDetectiveUpdateGraphCustomResourceProviderRole54CD7295": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:DeregisterDelegatedAdministrator",
+                    "organizations:DescribeOrganization",
+                    "organizations:EnableAWSServiceAccess",
+                    "organizations:ListAWSServiceAccessForOrganization",
+                    "organizations:ListAccounts",
+                    "organizations:ListDelegatedAdministrators",
+                    "organizations:RegisterDelegatedAdministrator",
+                    "organizations:ServicePrincipal",
+                    "organizations:UpdateOrganizationConfiguration",
+                  ],
+                  "Condition": Object {
+                    "StringLikeIfExists": Object {
+                      "organizations:DeregisterDelegatedAdministrator": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:DescribeOrganization": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:EnableAWSServiceAccess": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:ListAWSServiceAccessForOrganization": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:ListAccounts": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:ListDelegatedAdministrators": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:RegisterDelegatedAdministrator": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:ServicePrincipal": Array [
+                        "detective.amazonaws.com",
+                      ],
+                      "organizations:UpdateOrganizationConfiguration": Array [
+                        "detective.amazonaws.com",
+                      ],
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "DetectiveConfigureOrganizationAdminAccountTaskOrganizationActions",
+                },
+                Object {
+                  "Action": Array [
+                    "detective:UpdateOrganizationConfiguration",
+                    "detective:ListGraphs",
+                    "detective:ListMembers",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "DetectiveUpdateGraphTaskDetectiveActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomGuardDutyCreateMembersCustomResourceProviderHandler0A16C673": Object {
+      "DependsOn": Array [
+        "CustomGuardDutyCreateMembersCustomResourceProviderRole2D82020E",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomGuardDutyCreateMembersCustomResourceProviderRole2D82020E",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGuardDutyCreateMembersCustomResourceProviderLogGroupB5134860": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomGuardDutyCreateMembersCustomResourceProviderHandler0A16C673",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGuardDutyCreateMembersCustomResourceProviderRole2D82020E": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:ListAccounts",
+                  ],
+                  "Condition": Object {
+                    "StringLikeIfExists": Object {
+                      "organizations:ListAccounts": Array [
+                        "guardduty.amazonaws.com",
+                      ],
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "GuardDutyCreateMembersTaskOrganizationAction",
+                },
+                Object {
+                  "Action": Array [
+                    "guardDuty:ListDetectors",
+                    "guardDuty:ListOrganizationAdminAccounts",
+                    "guardDuty:UpdateOrganizationConfiguration",
+                    "guardduty:CreateMembers",
+                    "guardduty:DeleteMembers",
+                    "guardduty:DisassociateMembers",
+                    "guardduty:ListDetectors",
+                    "guardduty:ListMembers",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "GuardDutyCreateMembersTaskGuardDutyActions",
+                },
+                Object {
+                  "Action": Array [
+                    "iam:CreateServiceLinkedRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    "*",
+                  ],
+                  "Sid": "ServiceLinkedRoleSecurityHub",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomGuardDutyUpdateDetectorCustomResourceProviderHandler78DF0FF9": Object {
+      "DependsOn": Array [
+        "CustomGuardDutyUpdateDetectorCustomResourceProviderRole3014073E",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomGuardDutyUpdateDetectorCustomResourceProviderRole3014073E",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomGuardDutyUpdateDetectorCustomResourceProviderLogGroup0E4B1900": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomGuardDutyUpdateDetectorCustomResourceProviderHandler78DF0FF9",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomGuardDutyUpdateDetectorCustomResourceProviderRole3014073E": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "guardduty:ListDetectors",
+                    "guardduty:ListMembers",
+                    "guardduty:UpdateDetector",
+                    "guardduty:UpdateMemberDetectors",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "GuardDutyUpdateDetectorTaskGuardDutyActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomMacieCreateMemberCustomResourceProviderHandler913F75DB": Object {
+      "DependsOn": Array [
+        "CustomMacieCreateMemberCustomResourceProviderRole3E8977EE",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomMacieCreateMemberCustomResourceProviderRole3E8977EE",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomMacieCreateMemberCustomResourceProviderLogGroupB2DBC335": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomMacieCreateMemberCustomResourceProviderHandler913F75DB",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomMacieCreateMemberCustomResourceProviderRole3E8977EE": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:ListAccounts",
+                  ],
+                  "Condition": Object {
+                    "StringLikeIfExists": Object {
+                      "organizations:ListAccounts": Array [
+                        "macie.amazonaws.com",
+                      ],
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "MacieCreateMemberTaskOrganizationAction",
+                },
+                Object {
+                  "Action": Array [
+                    "macie2:CreateMember",
+                    "macie2:DeleteMember",
+                    "macie2:DescribeOrganizationConfiguration",
+                    "macie2:DisassociateMember",
+                    "macie2:EnableMacie",
+                    "macie2:GetMacieSession",
+                    "macie2:ListMembers",
+                    "macie2:UpdateOrganizationConfiguration",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "MacieCreateMemberTaskMacieActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1": Object {
+      "DependsOn": Array [
+        "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:DescribeOrganization",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C": Object {
+      "DependsOn": Array [
+        "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "iam:PassRole",
+                    "s3:PutLifecycleConfiguration",
+                    "s3:PutReplicationConfiguration",
+                    "s3:PutBucketVersioning",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "S3PutReplicationConfigurationTaskActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87": Object {
+      "DependsOn": Array [
+        "CustomSSMShareDocumentCustomResourceProviderRole53A2A3EC",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomSSMShareDocumentCustomResourceProviderRole53A2A3EC",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSSMShareDocumentCustomResourceProviderRole53A2A3EC": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "ssm:DescribeDocumentPermission",
+                    "ssm:ModifyDocumentPermission",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":ssm:us-east-1:222222222222:document/*",
+                      ],
+                    ],
+                  },
+                  "Sid": "ShareDocumentActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomSecurityHubCreateMembersCustomResourceProviderHandler31D82BF3": Object {
+      "DependsOn": Array [
+        "CustomSecurityHubCreateMembersCustomResourceProviderRoleFD355CB6",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomSecurityHubCreateMembersCustomResourceProviderRoleFD355CB6",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSecurityHubCreateMembersCustomResourceProviderLogGroup51212673": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomSecurityHubCreateMembersCustomResourceProviderHandler31D82BF3",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSecurityHubCreateMembersCustomResourceProviderRoleFD355CB6": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:ListAccounts",
+                  ],
+                  "Condition": Object {
+                    "StringLikeIfExists": Object {
+                      "organizations:ListAccounts": Array [
+                        "securityhub.amazonaws.com",
+                      ],
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "SecurityHubCreateMembersTaskOrganizationAction",
+                },
+                Object {
+                  "Action": Array [
+                    "securityhub:CreateMembers",
+                    "securityhub:DeleteMembers",
+                    "securityhub:DisassociateMembers",
+                    "securityhub:EnableSecurityHub",
+                    "securityhub:ListMembers",
+                    "securityhub:UpdateOrganizationConfiguration",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "SecurityHubCreateMembersTaskSecurityHubActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomSecurityHubRegionAggregationCustomResourceProviderHandler4B24978A": Object {
+      "DependsOn": Array [
+        "CustomSecurityHubRegionAggregationCustomResourceProviderRole15741044",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomSecurityHubRegionAggregationCustomResourceProviderRole15741044",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 180,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSecurityHubRegionAggregationCustomResourceProviderLogGroup241F2158": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomSecurityHubRegionAggregationCustomResourceProviderHandler4B24978A",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSecurityHubRegionAggregationCustomResourceProviderRole15741044": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "securityhub:CreateFindingAggregator",
+                    "securityhub:UpdateFindingAggregator",
+                    "securityhub:DeleteFindingAggregator",
+                    "securityhub:ListFindingAggregators",
+                    "securityhub:GetFindingAggregator",
+                    "securityhub:DescribeHub",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "SecurityHubModifyRegionAggregation",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE": Object {
+      "DependsOn": Array [
+        "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "ssm:GetParameters",
+                    "ssm:GetParameter",
+                    "ssm:DescribeParameters",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    "*",
+                  ],
+                  "Sid": "SsmGetParameterActions",
+                },
+                Object {
+                  "Action": Array [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "StsAssumeRoleActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DetectiveGraphConfig248C4B9F": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomDetectiveUpdateGraphCustomResourceProviderLogGroupDF150426",
+        "DetectiveMembers42A16137",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomDetectiveUpdateGraphCustomResourceProviderHandlerD4473EC1",
+            "Arn",
+          ],
+        },
+        "region": "us-east-1",
+      },
+      "Type": "Custom::DetectiveUpdateGraph",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "DetectiveMembers42A16137": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomDetectiveCreateMembersCustomResourceProviderLogGroup8A5563BD",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomDetectiveCreateMembersCustomResourceProviderHandler0A0D060D",
+            "Arn",
+          ],
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "region": "us-east-1",
+      },
+      "Type": "Custom::DetectiveCreateMembers",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "GuardDutyDetectorConfigDD64B103": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomGuardDutyUpdateDetectorCustomResourceProviderLogGroup0E4B1900",
+        "GuardDutyMembersD34CA003",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomGuardDutyUpdateDetectorCustomResourceProviderHandler78DF0FF9",
+            "Arn",
+          ],
+        },
+        "enableEksProtection": false,
+        "enableS3Protection": true,
+        "exportFrequency": "FIFTEEN_MINUTES",
+        "region": "us-east-1",
+      },
+      "Type": "Custom::GuardDutyUpdateDetector",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "GuardDutyMembersD34CA003": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomGuardDutyCreateMembersCustomResourceProviderLogGroupB5134860",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomGuardDutyCreateMembersCustomResourceProviderHandler0A16C673",
+            "Arn",
+          ],
+        },
+        "enableEksProtection": false,
+        "enableS3Protection": true,
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "region": "us-east-1",
+      },
+      "Type": "Custom::GuardDutyCreateMembers",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "MacieMembers1B6840B4": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomMacieCreateMemberCustomResourceProviderLogGroupB2DBC335",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomMacieCreateMemberCustomResourceProviderHandler913F75DB",
+            "Arn",
+          ],
+        },
+        "adminAccountId": "222222222222",
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "region": "us-east-1",
+      },
+      "Type": "Custom::MacieCreateMember",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "Organization29A5FC3F": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1",
+            "Arn",
+          ],
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+      },
+      "Type": "Custom::DescribeOrganization",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "PutS3Encryption383DF0CE": Object {
+      "Properties": Object {
+        "Content": Object {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "Enables Encryption on S3 Bucket",
+          "mainSteps": Array [
+            Object {
+              "action": "aws:executeAwsApi",
+              "inputs": Object {
+                "Api": "PutBucketEncryption",
+                "Bucket": "{{BucketName}}",
+                "ServerSideEncryptionConfiguration": Object {
+                  "Rules": Array [
+                    Object {
+                      "ApplyServerSideEncryptionByDefault": Object {
+                        "KMSMasterKeyID": "{{KMSMasterKey}}",
+                        "SSEAlgorithm": "aws:kms",
+                      },
+                    },
+                  ],
+                },
+                "Service": "s3",
+              },
+              "isEnd": true,
+              "name": "PutBucketEncryption",
+            },
+          ],
+          "parameters": Object {
+            "AutomationAssumeRole": Object {
+              "default": "",
+              "description": "(Optional) The ARN of the role that allows Automation to perform the actions on your behalf.",
+              "type": "String",
+            },
+            "BucketName": Object {
+              "description": "(Required) The name of the S3 Bucket whose content will be encrypted.",
+              "type": "String",
+            },
+            "KMSMasterKey": Object {
+              "description": "(Optional) AWS Key Management Service (KMS) customer master key ARN to use for the default encryption.",
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentType": "Automation",
+        "Name": "Put-S3-Encryption",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "PutS3EncryptionShareDocumentF7F3A94E": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87",
+            "Arn",
+          ],
+        },
+        "accountIds": Array [
+          "111111111111",
+          "222222222222",
+          "333333333333",
+          "444444444444",
+          "555555555555",
+          "666666666666",
+        ],
+        "name": Object {
+          "Ref": "PutS3Encryption383DF0CE",
+        },
+      },
+      "Type": "Custom::SSMShareDocument",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SecurityHubMembers2A2B77C4": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSecurityHubCreateMembersCustomResourceProviderLogGroup51212673",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSecurityHubCreateMembersCustomResourceProviderHandler31D82BF3",
+            "Arn",
+          ],
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "region": "us-east-1",
+      },
+      "Type": "Custom::SecurityHubCreateMembers",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SecurityHubRegionAggregation0CC69E1B": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSecurityHubRegionAggregationCustomResourceProviderLogGroup241F2158",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSecurityHubRegionAggregationCustomResourceProviderHandler4B24978A",
+            "Arn",
+          ],
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "region": "us-east-1",
+      },
+      "Type": "Custom::SecurityHubRegionAggregation",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SsmElbEnableLoggingDB91F105": Object {
+      "Properties": Object {
+        "Content": Object {
+          "assumeRole": "{{ AutomationAssumeRole }}",
+          "description": "Enable logging on Elastic Load-Balancer",
+          "mainSteps": Array [
+            Object {
+              "action": "aws:executeAwsApi",
+              "inputs": Object {
+                "Api": "get_caller_identity",
+                "Service": "sts",
+              },
+              "name": "getAccount",
+              "outputs": Array [
+                Object {
+                  "Name": "Id",
+                  "Selector": "$.Account",
+                  "Type": "String",
+                },
+              ],
+            },
+            Object {
+              "action": "aws:executeAwsApi",
+              "inputs": Object {
+                "Api": "describe_load_balancers",
+                "LoadBalancerArns": Array [
+                  "{{ LoadBalancerArn }}",
+                ],
+                "Service": "elbv2",
+              },
+              "name": "getLoadBalancer",
+              "outputs": Array [
+                Object {
+                  "Name": "Name",
+                  "Selector": "$.LoadBalancers[0].LoadBalancerName",
+                  "Type": "String",
+                },
+              ],
+            },
+            Object {
+              "action": "aws:executeAwsApi",
+              "inputs": Object {
+                "Api": "modify_load_balancer_attributes",
+                "Attributes": Array [
+                  Object {
+                    "Key": "access_logs.s3.enabled",
+                    "Value": "true",
+                  },
+                  Object {
+                    "Key": "access_logs.s3.bucket",
+                    "Value": "{{ LogDestination }}",
+                  },
+                  Object {
+                    "Key": "access_logs.s3.prefix",
+                    "Value": "{{ getAccount.Id }}/elb-{{ getLoadBalancer.Name }}",
+                  },
+                ],
+                "LoadBalancerArn": "{{ LoadBalancerArn }}",
+                "Service": "elbv2",
+              },
+              "name": "enableLogging",
+            },
+          ],
+          "parameters": Object {
+            "AutomationAssumeRole": Object {
+              "type": "String",
+            },
+            "LoadBalancerArn": Object {
+              "type": "String",
+            },
+            "LogDestination": Object {
+              "type": "String",
+            },
+          },
+          "schemaVersion": "0.3",
+        },
+        "DocumentType": "Automation",
+        "Name": "SSM-ELB-Enable-Logging",
+      },
+      "Type": "AWS::SSM::Document",
+    },
+    "SsmElbEnableLoggingShareDocument16727B30": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87",
+            "Arn",
+          ],
+        },
+        "accountIds": Array [
+          "111111111111",
+          "222222222222",
+          "333333333333",
+          "444444444444",
+          "555555555555",
+          "666666666666",
+        ],
+        "name": Object {
+          "Ref": "SsmElbEnableLoggingDB91F105",
+        },
+      },
+      "Type": "Custom::SSMShareDocument",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SsmParamAcceleratorVersionFF83282D": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-SecurityAuditStack-222222222222-us-east-1/version",
+        "Type": "String",
+        "Value": "1.2.2",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamOrganizationAuditManagerPublishingDestinationBucketArn488415E7": Object {
+      "Properties": Object {
+        "Name": "/accelerator/organization/security/auditManager/publishing-destination/bucket-arn",
+        "Type": "String",
+        "Value": Object {
+          "Fn::GetAtt": Array [
+            "AuditManagerPublishingDestinationBucket74974FCF",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-SecurityAuditStack-222222222222-us-east-1/stack-id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;

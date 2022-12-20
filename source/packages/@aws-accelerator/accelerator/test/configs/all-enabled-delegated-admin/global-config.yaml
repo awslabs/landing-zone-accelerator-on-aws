@@ -1,0 +1,114 @@
+homeRegion: &HOME_REGION us-east-1
+enabledRegions:
+  - *HOME_REGION
+  - us-west-2
+managementAccountAccessRole: AWSControlTowerExecution
+cloudwatchLogRetentionInDays: 3653
+snsTopics:
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+  topics:
+    - name: Security
+      emailAddresses:
+        - <notify-security>@example.com <----- UPDATE EMAIL ADDRESS
+terminationProtection: true
+controlTower:
+  enable: true
+centralizeCdkBuckets:
+  enable: true
+logging:
+  account: LogArchive
+  centralizedLoggingRegion: us-west-2
+  cloudtrail:
+    enable: false
+    organizationTrail: false
+  sessionManager:
+    sendToCloudWatchLogs: false
+    sendToS3: true
+  cloudwatchLogs:
+    dynamicPartitioning: dynamic-partitioning/log-filters.json
+    exclusions:
+      - organizationalUnits:
+          - Infrastructure
+        excludeAll: true
+      - accounts:
+          - Management
+        regions:
+          - us-east-1
+        logGroupNames:
+          - test/*
+
+limits:
+  - serviceCode: lambda
+    quotaCode: L-B99A9384
+    desiredValue: 1000
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+reports:
+  costAndUsageReport:
+    compression: Parquet
+    format: Parquet
+    reportName: accelerator-cur
+    s3Prefix: cur
+    timeUnit: DAILY
+    refreshClosedReports: true
+    reportVersioning: CREATE_NEW_REPORT
+  budgets:
+    - deploymentTargets:
+        organizationalUnits:
+          - Root
+      name: accel-budget
+      timeUnit: MONTHLY
+      type: COST
+      amount: 2000
+      includeUpfront: true
+      includeTax: true
+      includeSupport: true
+      includeSubscription: true
+      includeRecurring: true
+      includeOtherSubscription: true
+      includeDiscount: true
+      includeCredit: false
+      includeRefund: false
+      useBlended: false
+      useAmortized: false
+      unit: USD
+      notifications:
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 100
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 90
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 80
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 75
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 50
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: myemail+pa-budg@example.com
+backup:
+  vaults:
+    - name: BackupVault
+      deploymentTargets:
+        organizationalUnits:
+          - Root
