@@ -49,7 +49,8 @@ import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { ApplicationsStack } from '../lib/stacks/applications-stack';
-import { isIncluded } from '../lib/stacks/custom-stack';
+import { CustomStack, generateCustomStackMappings, isIncluded } from '../lib/stacks/custom-stack';
+import { Stack } from 'aws-cdk-lib';
 
 export class AcceleratorSynthStacks {
   private readonly configFolderName: string;
@@ -65,7 +66,7 @@ export class AcceleratorSynthStacks {
   private readonly stageName: string;
   private readonly globalRegion: string;
 
-  public readonly stacks = new Map<string, AcceleratorStack>();
+  public readonly stacks = new Map<string, AcceleratorStack | CustomStack | Stack>();
   constructor(stageName: string, configFolderName: string, partition: string, globalRegion: string) {
     this.configFolderName = configFolderName;
     this.partition = partition;
@@ -270,9 +271,55 @@ export class AcceleratorSynthStacks {
         );
       }
     }
+    this.synthCustomStacks();
   }
   /**
-   * synth Customizations stacks
+   * synth Custom stacks
+   */
+  private synthCustomStacks() {
+    for (const region of this.props.globalConfig.enabledRegions) {
+      for (const account of [
+        ...this.props.accountsConfig.mandatoryAccounts,
+        ...this.props.accountsConfig.workloadAccounts,
+      ]) {
+        const accountId = this.props.accountsConfig.getAccountId(account.name);
+        const customStackList = generateCustomStackMappings(
+          this.props.accountsConfig,
+          this.props.organizationConfig,
+          this.props.customizationsConfig,
+          accountId,
+          region,
+        );
+
+        for (const stack of customStackList ?? []) {
+          stack.stackObj = new CustomStack(this.app, `${stack.stackConfig.name}-${accountId}-${region}`, {
+            env: {
+              account: accountId,
+              region: region,
+            },
+            description: stack.stackConfig.description,
+            runOrder: stack.stackConfig.runOrder,
+            stackName: stack.stackConfig.name,
+            templateFile: stack.stackConfig.template,
+            terminationProtection: stack.stackConfig.terminationProtection,
+            ...this.props,
+          });
+
+          if (stack.dependsOn) {
+            for (const stackName of stack.dependsOn) {
+              const previousStack = customStackList.find(a => a.stackConfig.name == stackName)?.stackObj;
+              if (previousStack) {
+                stack.stackObj.addDependency(previousStack);
+              }
+            }
+          }
+          this.stacks.set(`${stack.stackConfig.name}-${accountId}-${region}`, stack.stackObj);
+        }
+      }
+    }
+  }
+  /**
+   * synth Applications stacks
    */
   private synthApplicationsStacks() {
     for (const application of this.props.customizationsConfig.applications ?? []) {
@@ -540,17 +587,13 @@ export class AcceleratorSynthStacks {
     for (const region of this.props.globalConfig.enabledRegions) {
       this.stacks.set(
         `${this.auditAccount.name}-${region}`,
-        new KeyStack(
-          this.app,
-          `${AcceleratorStackNames[AcceleratorStage.KEY]}-${this.auditAccountId}-${region}`,
-          {
-            env: {
-              account: this.auditAccountId,
-              region: region,
-            },
-            ...this.props,
+        new KeyStack(this.app, `${AcceleratorStackNames[AcceleratorStage.KEY]}-${this.auditAccountId}-${region}`, {
+          env: {
+            account: this.auditAccountId,
+            region: region,
           },
-        ),
+          ...this.props,
+        }),
       );
     }
   }

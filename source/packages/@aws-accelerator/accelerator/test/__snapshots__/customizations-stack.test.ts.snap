@@ -7,6 +7,8 @@ Object {
       "Properties": Object {
         "Capabilities": Array [
           "CAPABILITY_IAM",
+          "CAPABILITY_NAMED_IAM",
+          "CAPABILITY_AUTO_EXPAND",
         ],
         "Description": "Sample stackset description",
         "OperationPreferences": Object {
@@ -21,6 +23,7 @@ Object {
               "Accounts": Array [
                 "444444444444",
                 "555555555555",
+                "111111111111",
               ],
             },
             "Regions": Array [
