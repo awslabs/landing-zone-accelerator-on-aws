@@ -66,6 +66,7 @@ export class NetworkConfigValidator {
     new CustomerGatewaysValidator(values, configDir, accountNames, errors);
     new DirectConnectGatewaysValidator(values, errors);
     new FirewallManagerValidator(values, snsTopicNames, accountNames, errors);
+    new CertificatesValidator(values, errors);
 
     if (errors.length) {
       throw new Error(`${NetworkConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
@@ -1676,6 +1677,67 @@ class FirewallManagerValidator {
   ) {
     if (!snsTopicNames.includes(notificationChannel.snsTopic)) {
       errors.push(`The SNS Topic name ${notificationChannel.snsTopic} for the notification channel does not exist.`);
+    }
+  }
+}
+
+class CertificatesValidator {
+  constructor(values: NetworkConfig, errors: string[]) {
+    //
+    // Validate ACM certificate configurations
+    //
+    this.validateCertificates(values, errors);
+  }
+  private validateCertificates(values: NetworkConfig, errors: string[]) {
+    const allCertificateNames: string[] = [];
+    for (const certificate of values.certificates ?? []) {
+      allCertificateNames.push(certificate.name);
+      // check certificate import keys
+      if (certificate.type === 'import') {
+        this.checkImportCertificateInput(certificate, errors);
+      }
+      // check certificate request keys
+      if (certificate.type === 'request') {
+        this.checkRequestCertificateInput(certificate, errors);
+      }
+    }
+    // check certificate for duplicate names
+    this.checkCertificateForDuplicateNames(allCertificateNames, errors);
+  }
+  private checkImportCertificateInput(
+    certificate: t.TypeOf<typeof NetworkConfigTypes.certificateConfig>,
+    errors: string[],
+  ) {
+    // when cert is set to import users must mention a privateKey and certificate
+    if (!certificate.privKey || !certificate.cert) {
+      errors.push(
+        `Certificate: ${
+          certificate.name
+        } is set to import which requires both privKey and cert. Found: ${JSON.stringify(certificate)}`,
+      );
+    }
+  }
+  private checkRequestCertificateInput(
+    certificate: t.TypeOf<typeof NetworkConfigTypes.certificateConfig>,
+    errors: string[],
+  ) {
+    // when cert is set to request users must mention a privateKey and certificate
+    if (!certificate.domain || !certificate.validation) {
+      errors.push(
+        `Certificate: ${
+          certificate.name
+        } is set to request which requires both validation and domain. Found: ${JSON.stringify(certificate)}`,
+      );
+    }
+  }
+  private checkCertificateForDuplicateNames(allCertificateNames: string[], errors: string[]) {
+    if (allCertificateNames.length > 1) {
+      const duplicateCertNames = allCertificateNames.some(element => {
+        return allCertificateNames.indexOf(element) !== allCertificateNames.lastIndexOf(element);
+      });
+      if (duplicateCertNames) {
+        errors.push(`There are duplicates in certificate names. Certificate names: ${allCertificateNames.join(',')}`);
+      }
     }
   }
 }

@@ -131,12 +131,23 @@ export class ApplicationLoadBalancer extends cdk.Resource implements IApplicatio
       new cdk.aws_elasticloadbalancingv2.CfnListener(this, pascalCase(`Listener${listener.name}`), {
         defaultActions: [listenerAction],
         loadBalancerArn: resource.ref,
-        certificates: [{ certificateArn: listener.certificate! }],
+        certificates: [{ certificateArn: this.getCertificate(listener.certificate) }],
         port: listener.port!,
         protocol: listener.protocol!,
         sslPolicy: listener.sslPolicy!,
       });
     }
+  }
+  private getCertificate(certificate: string | undefined) {
+    if (certificate) {
+      //check if user provided arn. If so do nothing, if not get it from ssm
+      if (certificate.match('\\arn:*')) {
+        return certificate;
+      } else {
+        return cdk.aws_ssm.StringParameter.valueForStringParameter(this, `/accelerator/acm/${certificate}/arn`);
+      }
+    }
+    return undefined;
   }
   private getListenerAction(
     listener: ApplicationLoadBalancerListenerConfig,

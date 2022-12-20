@@ -1031,3 +1031,25 @@ vpcFlowLogs:
     - pkt-dst-aws-service
     - flow-direction
     - traffic-path
+
+certificates:
+  - name: cert1
+    type: import
+    privKey: cert1/privKey.key
+    cert: cert1/cert.crt
+    deploymentTargets:
+      accounts:
+        - Management
+        - Audit
+  - name: cert2
+    type: request
+    validation: DNS
+    domain: example.com
+    san:
+      - www.example.com
+      - www.example.net
+      - e.co
+    deploymentTargets:
+      OU:
+        - Infrastructure
+

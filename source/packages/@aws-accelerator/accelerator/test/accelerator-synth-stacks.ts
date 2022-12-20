@@ -47,6 +47,7 @@ import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { ApplicationsStack } from '../lib/stacks/applications-stack';
+import { isIncluded } from '../lib/stacks/custom-stack';
 
 export class AcceleratorSynthStacks {
   private readonly configFolderName: string;
@@ -75,7 +76,6 @@ export class AcceleratorSynthStacks {
     });
     this.configDirPath = this.app.node.tryGetContext('config-dir');
 
-    console.log(`Using config directory ${this.configDirPath}`);
     const globalConfig = GlobalConfig.load(this.configDirPath);
 
     let customizationsConfig: CustomizationsConfig;
@@ -83,7 +83,6 @@ export class AcceleratorSynthStacks {
     // Create empty customizationsConfig if optional configuration file does not exist
     if (fs.existsSync(path.join(this.configDirPath, 'customizations-config.yaml'))) {
       customizationsConfig = CustomizationsConfig.load(this.configDirPath);
-      console.log(`Using customizations-config.yaml`);
     } else {
       customizationsConfig = new CustomizationsConfig();
     }
@@ -271,23 +270,26 @@ export class AcceleratorSynthStacks {
   }
 
   private synthProcessEachApplicationStack(application: AppConfigItem) {
-    for (const targetEnvironmentItem of application.targetEnvironments) {
-      const accountId = this.props.accountsConfig.getAccountId(targetEnvironmentItem.account);
-      for (const regionItem of targetEnvironmentItem.region) {
-        if (this.homeRegion === regionItem && accountId === '444444444444') {
-          const applicationStackName = `AWSAccelerator-App-${application.name}-${accountId}-${regionItem}`;
-          const env = {
-            account: accountId,
-            region: regionItem,
-          };
+    if (
+      isIncluded(
+        application.deploymentTargets,
+        'us-east-1',
+        '444444444444',
+        this.props.accountsConfig,
+        this.props.organizationConfig,
+      )
+    ) {
+      const applicationStackName = `AWSAccelerator-App-${application.name}-444444444444-us-east-1`;
+      const env = {
+        account: '444444444444',
+        region: 'us-east-1',
+      };
 
-          new ApplicationsStack(this.app, applicationStackName, {
-            env,
-            ...this.props,
-            appConfigItem: application,
-          });
-        }
-      }
+      new ApplicationsStack(this.app, applicationStackName, {
+        env,
+        ...this.props,
+        appConfigItem: application,
+      });
     }
   }
   /**

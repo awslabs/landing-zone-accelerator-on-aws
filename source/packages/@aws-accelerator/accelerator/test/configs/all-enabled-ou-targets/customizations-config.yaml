@@ -26,10 +26,11 @@ applications:
   - name: appA
     # vpc name is taken from network-config.yaml under vpcs
     vpc: SharedServices-Main
-    targetEnvironments: 
-      - account: SharedServices
-        region: 
-          - us-east-1
+    deploymentTargets: 
+      accounts: 
+        - SharedServices
+      excludedRegions: 
+        - us-west-2
     autoscaling:
       name: appA-asg
       maxSize: 4
