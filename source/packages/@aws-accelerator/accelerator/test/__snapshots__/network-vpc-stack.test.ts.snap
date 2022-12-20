@@ -565,6 +565,60 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
+    "GetNLBIPAddressLookupCB983550": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific role arns.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::555555555555:root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": "ec2:DescribeNetworkInterfaces",
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "default",
+          },
+        ],
+        "RoleName": "AWSAccelerator-GetNLBIPAddressLookup",
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "NetworkEndpointsASubnetShareResourceShare2DF08804": Object {
       "Properties": Object {
         "Name": "Network-Endpoints-A_SubnetShare",
@@ -2019,7 +2073,7 @@ Object {
     },
     "SsmParamAcceleratorGwlbGwlbArn7CF5F889": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/arn",
@@ -2032,7 +2086,7 @@ Object {
     },
     "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
@@ -2206,6 +2260,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionDataSecurityGroup1FD45226": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/securityGroup/Data/id",
         "Type": "String",
@@ -2216,6 +2273,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionARouteTableIdAA9E21C5": Object {
+      "DependsOn": Array [
+        "appAalb01NetworkEndpointsssmF399A7CC",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-A/id",
         "Type": "String",
@@ -2226,6 +2286,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-A/id",
         "Type": "String",
@@ -2237,7 +2300,7 @@ Object {
     },
     "SsmParamNetworkInspectionNetworkInspectionBRouteTableIdAC1C6F68": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionARouteTableIdAA9E21C5",
+        "appAalb01NetworkEndpointsssmF399A7CC",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-B/id",
@@ -2250,7 +2313,7 @@ Object {
     },
     "SsmParamNetworkInspectionNetworkInspectionBSubnetId08F48703": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982",
+        "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-B/id",
@@ -2263,7 +2326,7 @@ Object {
     },
     "SsmParamNetworkInspectionNetworkInspectionGatewayRouteTableId9C85DF52": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionARouteTableIdAA9E21C5",
+        "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Gateway/id",
@@ -2276,7 +2339,7 @@ Object {
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwARouteTableId838420AE": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionARouteTableIdAA9E21C5",
+        "appAalb01NetworkEndpointsssmF399A7CC",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-A/id",
@@ -2289,7 +2352,7 @@ Object {
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwAttachASubnetId90B86E86": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982",
+        "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-A/id",
@@ -2301,9 +2364,6 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9": Object {
-      "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982",
-      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-B/id",
         "Type": "String",
@@ -2314,9 +2374,6 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4": Object {
-      "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionARouteTableIdAA9E21C5",
-      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-B/id",
         "Type": "String",
@@ -2328,7 +2385,7 @@ Object {
     },
     "SsmParamNetworkInspectionNetworkInspectionTransitGatewayAttachmentId80B7A8EF": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982",
+        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/transitGatewayAttachment/Network-Inspection/id",
@@ -2341,7 +2398,7 @@ Object {
     },
     "SsmParamNetworkInspectionVpcIdFD2142E1": Object {
       "DependsOn": Array [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7",
+        "appAalb01NetworkEndpointsssmF399A7CC",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/id",
@@ -2358,6 +2415,129 @@ Object {
         "Type": "String",
         "Value": Object {
           "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "appAalb01NetworkEndpointsD769A400": Object {
+      "DependsOn": Array [
+        "NetworkEndpointsVpcManagementSgManagementEgress00D58058BF",
+        "NetworkEndpointsVpcManagementSgManagementIngress008FD972B5",
+        "NetworkEndpointsVpcManagementSg2B8F9418",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnetRouteTableAssociation958ED1AB",
+      ],
+      "Properties": Object {
+        "LoadBalancerAttributes": Array [
+          Object {
+            "Key": "access_logs.s3.enabled",
+            "Value": "true",
+          },
+          Object {
+            "Key": "access_logs.s3.bucket",
+            "Value": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
+          },
+          Object {
+            "Key": "access_logs.s3.prefix",
+            "Value": "555555555555/us-east-1/appA-alb-01",
+          },
+        ],
+        "Name": "appA-alb-01",
+        "Scheme": "internet-facing",
+        "SecurityGroups": Array [
+          Object {
+            "Ref": "NetworkEndpointsVpcManagementSg2B8F9418",
+          },
+        ],
+        "Subnets": Array [
+          Object {
+            "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+          },
+          Object {
+            "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+          },
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "appA-alb-01",
+          },
+        ],
+        "Type": "application",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    },
+    "appAalb01NetworkEndpointsssmF399A7CC": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/alb/appA-alb-01/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "appAalb01NetworkEndpointsD769A400",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "appAnlb01NetworkEndpoints0281B174": Object {
+      "DependsOn": Array [
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnetRouteTableAssociation4D925D52",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+        "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnetRouteTableAssociation958ED1AB",
+      ],
+      "Properties": Object {
+        "LoadBalancerAttributes": Array [
+          Object {
+            "Key": "deletion_protection.enabled",
+            "Value": "false",
+          },
+          Object {
+            "Key": "load_balancing.cross_zone.enabled",
+            "Value": "true",
+          },
+          Object {
+            "Key": "access_logs.s3.enabled",
+            "Value": "true",
+          },
+          Object {
+            "Key": "access_logs.s3.bucket",
+            "Value": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
+          },
+          Object {
+            "Key": "access_logs.s3.prefix",
+            "Value": "555555555555/us-east-1/appA-nlb-01",
+          },
+        ],
+        "Name": "appA-nlb-01",
+        "Scheme": "internet-facing",
+        "Subnets": Array [
+          Object {
+            "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachASubnet3580E1C3",
+          },
+          Object {
+            "Ref": "NetworkEndpointsVpcNetworkEndpointsTgwAttachBSubnet7F2CD5B5",
+          },
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "appA-nlb-01",
+          },
+        ],
+        "Type": "network",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    },
+    "appAnlb01NetworkEndpointsssm0DA0AE1E": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7",
+      ],
+      "Properties": Object {
+        "Name": "/accelerator/network/vpc/Network-Endpoints/nlb/appA-nlb-01/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "appAnlb01NetworkEndpoints0281B174",
         },
       },
       "Type": "AWS::SSM::Parameter",

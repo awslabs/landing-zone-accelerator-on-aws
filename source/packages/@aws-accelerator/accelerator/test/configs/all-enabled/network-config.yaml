@@ -37,12 +37,12 @@ transitGateways:
       - name: Network-Main-Segregated
         routes: []
       - name: Network-Main-Shared
-        routes: 
+        routes:
           - destinationCidrBlock: 10.200.0.0/16
             attachment:
               transitGatewayPeeringName: Network-Main-And-SharedServices-Main-Peering
       - name: Network-Main-Standalone
-        routes: []        
+        routes: []
   - name: SharedServices-Main
     account: SharedServices
     region: *HOME_REGION
@@ -61,7 +61,7 @@ transitGateways:
       - name: SharedServices-Main-Segregated
         routes: []
       - name: SharedServices-Main-Shared
-        routes: 
+        routes:
           - destinationCidrBlock: 10.100.0.0/16
             attachment:
               transitGatewayPeeringName: Network-Main-And-SharedServices-Main-Peering
@@ -74,17 +74,17 @@ transitGatewayPeering:
       account: SharedServices
       region: *HOME_REGION
       routeTableAssociations: SharedServices-Main-Shared
-      tags: 
-      - key: Name
-        value: Network-Main-And-SharedServices-Main-Peering
-      - key: CostCenter
-        value: TSD-LZA
-      - key: Company
-        value: AWS
-      - key: Organization
-        value: WWPS
-      - key: Team
-        value: Development
+      tags:
+        - key: Name
+          value: Network-Main-And-SharedServices-Main-Peering
+        - key: CostCenter
+          value: TSD-LZA
+        - key: Company
+          value: AWS
+        - key: Organization
+          value: WWPS
+        - key: Team
+          value: Development
     accepter:
       transitGatewayName: Network-Main
       account: Network
@@ -676,6 +676,56 @@ vpcs:
         - pkt-dst-aws-service
         - flow-direction
         - traffic-path
+    loadBalancers:
+      applicationLoadBalancers:
+        - name: appA-alb-01
+          scheme: internet-facing
+          subnets:
+            - 'Network-EndpointsTgwAttach-A'
+            - 'Network-EndpointsTgwAttach-B'
+          securityGroups:
+            - Management
+          listeners:
+            - name: appA-listener-2
+              port: 80
+              protocol: HTTP
+              targetGroup: appA-alb-tg-1
+              type: forward
+      networkLoadBalancers:
+        - name: appA-nlb-01
+          scheme: internet-facing
+          deletionProtection: false
+          subnets:
+            - 'Network-EndpointsTgwAttach-A'
+            - 'Network-EndpointsTgwAttach-B'
+          listeners:
+            - name: appA-listener-1
+              port: 80
+              protocol: TCP
+              targetGroup: appA-nlb-tg-1
+    targetGroups:
+      - name: appA-nlb-tg-1
+        port: 80
+        protocol: TCP
+        type: instance
+        connectionTermination: true
+        preserveClientIp: true
+        proxyProtocolV2: true
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: TCP
+      - name: appA-alb-tg-1
+        port: 80
+        protocol: HTTP
+        type: instance
+        connectionTermination: true
+        preserveClientIp: true
+        proxyProtocolV2: true
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: HTTP
 
   - name: Network-Inspection
     account: Network
@@ -1052,4 +1102,3 @@ certificates:
     deploymentTargets:
       OU:
         - Infrastructure
-
