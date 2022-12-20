@@ -2,23 +2,49 @@ customizations:
   cloudFormationStacks:
     - deploymentTargets:
         accounts:
-          - SharedServices
+          - Management
       description: Sample stack description
       name: Custom-S3-Stack
-      regions: 
-      - us-east-1
+      regions:
+        - us-east-1
       runOrder: 1
       template: cloudformation-templates/custom-s3-bucket.yaml
       terminationProtection: false
+    - deploymentTargets:
+        organizationalUnits:
+          - Security
+      description: Second sample stack description
+      name: Custom-S3-Stack-2
+      regions:
+        - us-east-1
+        - us-west-2
+      runOrder: 2
+      template: cloudformation-templates/custom-s3-bucket.yaml
+      terminationProtection: true
+    - deploymentTargets:
+        accounts:
+          - Management
+        organizationalUnits:
+          - Infrastructure
+      description: Third sample stack description
+      name: Custom-S3-Stack-3
+      regions:
+        - us-east-1
+        - us-west-2
+      runOrder: 2
+      template: cloudformation-templates/custom-s3-bucket.yaml
+      terminationProtection: true
   cloudFormationStackSets:
-    - capabilities: [CAPABILITY_IAM]
+    - capabilities: [CAPABILITY_IAM, CAPABILITY_NAMED_IAM, CAPABILITY_AUTO_EXPAND]
       deploymentTargets:
         organizationalUnits:
           - Infrastructure
+        accounts:
+          - Management
       description: Sample stackset description
       name: Custom-S3-Stackset
-      regions: 
-      - us-east-1
+      regions:
+        - us-east-1
       runOrder: 1
       template: cloudformation-templates/custom-s3-bucket.yaml
 
@@ -26,10 +52,10 @@ applications:
   - name: appA
     # vpc name is taken from network-config.yaml under vpcs
     vpc: SharedServices-Main
-    deploymentTargets: 
-      accounts: 
+    deploymentTargets:
+      accounts:
         - SharedServices
-      excludedRegions: 
+      excludedRegions:
         - us-west-2
     autoscaling:
       name: appA-asg
@@ -81,7 +107,7 @@ applications:
           networkCardIndex: 1
           # subnet is from network-config.yaml under the same vpc
           subnetId: SharedServices-App-A
-      # this path is relative to the config repository and the content should be in regular text. 
+      # this path is relative to the config repository and the content should be in regular text.
       # Its encoded in base64 before passing in to launch Template
       userData: appConfigs/appA/launchTemplate/userData.sh
 
@@ -155,7 +181,7 @@ firewalls:
         networkInterfaces:
           - deviceIndex: 0
             description: Primary interface
-            groups: 
+            groups:
               - Data
             subnetId: Network-Inspection-A
           - deviceIndex: 1
@@ -196,7 +222,7 @@ firewalls:
         networkInterfaces:
           - deviceIndex: 0
             description: Primary interface
-            groups: 
+            groups:
               - Data
           - deviceIndex: 1
             description: Secondary
@@ -222,7 +248,7 @@ firewalls:
         networkInterfaces:
           - deviceIndex: 0
             description: Primary interface
-            groups: 
+            groups:
               - Data
             subnetId: Network-Inspection-A
           - deviceIndex: 1
