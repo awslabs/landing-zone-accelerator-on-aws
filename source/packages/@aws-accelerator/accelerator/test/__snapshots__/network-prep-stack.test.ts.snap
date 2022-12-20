@@ -1353,6 +1353,94 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:\\"example.com\
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "TgwPeeringRole3CC1F9AB": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "TgwPeeringRole needs access to create peering connections for TGWs in the account ",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::444444444444:root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "ssm:GetParameters",
+                    "ssm:GetParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":ssm:",
+                        Object {
+                          "Ref": "AWS::Region",
+                        },
+                        ":",
+                        Object {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":parameter/accelerator/network/transitGateways/*",
+                      ],
+                    ],
+                  },
+                },
+                Object {
+                  "Action": Array [
+                    "ec2:DescribeTransitGatewayPeeringAttachments",
+                    "ec2:AcceptTransitGatewayPeeringAttachment",
+                    "ec2:AssociateTransitGatewayRouteTable",
+                    "ec2:DisassociateTransitGatewayRouteTable",
+                    "ec2:DescribeTransitGatewayAttachments",
+                    "ec2:CreateTags",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "default",
+          },
+        ],
+        "RoleName": "AWSAccelerator-TgwPeering-Role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "WestRegionPoolPoolB2DED4AA": Object {
       "Properties": Object {
         "AddressFamily": "ipv4",

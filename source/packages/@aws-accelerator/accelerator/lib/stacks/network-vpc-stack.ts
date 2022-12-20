@@ -42,8 +42,10 @@ import {
   SecurityGroup,
   SecurityGroupEgressRuleProps,
   SecurityGroupIngressRuleProps,
+  SsmParameterLookup,
   Subnet,
   TransitGatewayAttachment,
+  TransitGatewayPeering,
   Vpc,
 } from '@aws-accelerator/constructs';
 
@@ -94,6 +96,11 @@ export class NetworkVpcStack extends AcceleratorStack {
         AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
       ),
     ) as cdk.aws_kms.Key;
+
+    //
+    // Create Transit Gateway peering
+    //
+    this.createTransitGatewayPeering();
 
     //
     // Set IPAM map
@@ -1645,5 +1652,100 @@ export class NetworkVpcStack extends AcceleratorStack {
       }
     }
     return poolMap;
+  }
+
+  /**
+   * Function to create TGW peering
+   */
+  private createTransitGatewayPeering() {
+    for (const transitGatewayPeeringItem of this.props.networkConfig.transitGatewayPeering ?? []) {
+      if (
+        this.props.accountsConfig.getAccountId(transitGatewayPeeringItem.requester.account) ===
+          cdk.Stack.of(this).account &&
+        transitGatewayPeeringItem.requester.region == cdk.Stack.of(this).region
+      ) {
+        Logger.info(
+          `[network-associations-stack] Creating transit gateway peering for tgw ${transitGatewayPeeringItem.requester.transitGatewayName} with accepter tgw ${transitGatewayPeeringItem.accepter.transitGatewayName}`,
+        );
+
+        const requesterTransitGatewayRouteTableId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          `/accelerator/network/transitGateways/${transitGatewayPeeringItem.requester.transitGatewayName}/routeTables/${transitGatewayPeeringItem.requester.routeTableAssociations}/id`,
+        );
+
+        const accepterTransitGatewayId = new SsmParameterLookup(this, 'AccepterTransitGatewayIdLookup', {
+          name: `/accelerator/network/transitGateways/${transitGatewayPeeringItem.accepter.transitGatewayName}/id`,
+          accountId: this.props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
+          parameterRegion: transitGatewayPeeringItem.accepter.region,
+          roleName: AcceleratorStack.ACCELERATOR_TGW_PEERING_ROLE_NAME,
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays ?? 365,
+        }).value;
+
+        const accepterTransitGatewayRouteTableId = new SsmParameterLookup(
+          this,
+          'AccepterTransitGatewayRouteTableIdLookup',
+          {
+            name: `/accelerator/network/transitGateways/${transitGatewayPeeringItem.accepter.transitGatewayName}/routeTables/${transitGatewayPeeringItem.accepter.routeTableAssociations}/id`,
+            accountId: this.props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
+            parameterRegion: transitGatewayPeeringItem.accepter.region,
+            roleName: AcceleratorStack.ACCELERATOR_TGW_PEERING_ROLE_NAME,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays ?? 365,
+          },
+        ).value;
+
+        let requesterTags: cdk.CfnTag[] | undefined;
+
+        if (transitGatewayPeeringItem.requester.tags) {
+          if (transitGatewayPeeringItem.requester.tags.length > 0) {
+            requesterTags = transitGatewayPeeringItem.requester.tags;
+          }
+        }
+
+        const peeringAttachmentId = new TransitGatewayPeering(
+          this,
+          pascalCase(
+            `${transitGatewayPeeringItem.requester.transitGatewayName}-${transitGatewayPeeringItem.accepter.transitGatewayName}-Peering`,
+          ),
+          {
+            requester: {
+              accountName: transitGatewayPeeringItem.requester.account,
+              transitGatewayName: transitGatewayPeeringItem.requester.transitGatewayName,
+              transitGatewayRouteTableId: requesterTransitGatewayRouteTableId,
+              tags: requesterTags,
+            },
+            accepter: {
+              accountId: this.props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
+              accountAccessRoleName: AcceleratorStack.ACCELERATOR_TGW_PEERING_ROLE_NAME,
+              region: transitGatewayPeeringItem.accepter.region,
+              transitGatewayName: transitGatewayPeeringItem.accepter.transitGatewayName,
+              transitGatewayId: accepterTransitGatewayId,
+              transitGatewayRouteTableId: accepterTransitGatewayRouteTableId,
+              applyTags: transitGatewayPeeringItem.accepter.applyTags ?? false,
+              autoAccept: transitGatewayPeeringItem.accepter.autoAccept ?? true,
+            },
+            customLambdaLogKmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays ?? 365,
+          },
+        ).peeringAttachmentId;
+
+        // Create SSM parameter for peering attachment ID
+        new cdk.aws_ssm.StringParameter(
+          this,
+          pascalCase(
+            `SsmParam${transitGatewayPeeringItem.requester.transitGatewayName}${transitGatewayPeeringItem.name}PeeringAttachmentId`,
+          ),
+          {
+            parameterName: `/accelerator/network/transitGateways/${transitGatewayPeeringItem.requester.transitGatewayName}/peering/${transitGatewayPeeringItem.name}/id`,
+            stringValue: peeringAttachmentId,
+          },
+        );
+
+        Logger.info(
+          `[network-associations-stack] Completed transit gateway peering for tgw ${transitGatewayPeeringItem.requester.transitGatewayName} with accepter tgw ${transitGatewayPeeringItem.accepter.transitGatewayName}`,
+        );
+      }
+    }
   }
 }
