@@ -364,6 +364,11 @@ export class ApplicationsStack extends AcceleratorStack {
         }
         subnets.push(subnetId);
       }
+
+      if (lt === undefined) {
+        throw new Error(`[customizations-application-stack] Launch template is undefined for ${appConfigItem.name}`);
+      }
+
       new AutoscalingGroup(
         this,
         `AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(appConfigItem.autoscaling.name)}`,
@@ -372,8 +377,8 @@ export class ApplicationsStack extends AcceleratorStack {
           minSize: appConfigItem.autoscaling.minSize,
           maxSize: appConfigItem.autoscaling.maxSize,
           desiredSize: appConfigItem.autoscaling.desiredSize,
-          launchTemplateVersion: lt!.version,
-          launchTemplateId: lt!.launchTemplateId,
+          launchTemplateVersion: lt.version,
+          launchTemplateId: lt.launchTemplateId,
           healthCheckGracePeriod: appConfigItem.autoscaling.healthCheckGracePeriod ?? undefined,
           healthCheckType: appConfigItem.autoscaling.healthCheckType ?? undefined,
           targetGroups,
