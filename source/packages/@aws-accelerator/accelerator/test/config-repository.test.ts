@@ -22,15 +22,26 @@ describe('accounts-config', () => {
     repositoryName: 'aws-accelerator-config',
     repositoryBranchName: 'main',
     description: 'LZA config repo',
-    managementAccountEmail: 'aws-accel-root@amazon.com',
-    logArchiveAccountEmail: 'aws-accel-log-archvie@amazon.com',
-    auditAccountEmail: 'aws-accel-audit@amazon.com',
-    controlTowerEnabled: 'aws-accel-audit@amazon.com',
+    managementAccountEmail: 'example1@example.com',
+    logArchiveAccountEmail: 'example2@example.com',
+    auditAccountEmail: 'example3@example.com',
+    controlTowerEnabled: 'yes',
+  });
+
+  const configRepository2 = new ConfigRepository(stack, 'ConfigRepository2', {
+    repositoryName: 'aws-accelerator-config',
+    repositoryBranchName: 'main',
+    description: 'LZA config repo',
+    managementAccountEmail: 'example1@example.com',
+    logArchiveAccountEmail: 'example2@example.com',
+    auditAccountEmail: 'example3@example.com',
+    controlTowerEnabled: 'no',
   });
 
   describe('AccountIdConfig', () => {
     it('is tested', () => {
       expect(configRepository.getRepository()).toBeInstanceOf(Repository);
+      expect(configRepository2.getRepository()).toBeInstanceOf(Repository);
     });
   });
 });
