@@ -5,7 +5,6 @@ Config
 # Use of opensource-codeofconduct email for amazon is expected
 
 CODE_OF_CONDUCT.md:4
-CONTRIBUTING.md:51
 
 ^cdk.out/
 ^dist/
@@ -13,23 +12,29 @@ node_modules/
 
 .html
 .js
+.d.ts
+.snap
 
 yarn.lock
+
 
 # Ignore typescript documentation
 docs
 
+# Ignore test reports
 source/test-reports
+
+# Ignore runtime logs
+combined.log
+error.log
 
 # Ignore reference custom rules lambda zip files
 .*/attach-ec2-instance-profile.zip
 .*/ec2-instance-profile-permissions.zip
 
-reference/sample-configurations/aws-best-practices-us-slg-central-it/README.md:102
-
-source/packages/@aws-accelerator/installer/bin/installer.ts:18
-source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:59
-source/packages/@aws-cdk-extensions/cdk-plugin-assume-role/lib/assume-role-provider-source.ts:58
+#
+# Line level file ignores (keep in alphabetical order)
+#
 
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:32
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:33
@@ -57,9 +62,14 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:54
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:55
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:56
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:57
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:455
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:485
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:506
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:507
+
+source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:140
+source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:141
+
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts:69
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts:70
 
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:57
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:58
@@ -67,104 +77,19 @@ source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:56
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:57
 
-source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:56
-source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:57
-
-source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:25
-source/packages/@aws-accelerator/constructs/test/aws-ssm/ssm-parameter-lookup.test.ts:25
-
-source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:35
-source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:36
-source/packages/@aws-accelerator/accelerator/test/pipeline-stack.test.ts:37
-
-source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1369
-source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1492
-source/packages/@aws-accelerator/accelerator/test/security-audit-stack.test.ts:1637
-
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1230
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1239
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1249
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1258
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1267
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1276
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1917
-
-
-
-
-source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:68
-source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:82
-source/packages/@aws-accelerator/tester/lambdas/test-target-functions/validate-transit-gateway.ts:92
-
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:4
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:8
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:12
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:17
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:21
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:24
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:26
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:28
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:30
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled/accounts-config.yaml:32
-
-source/packages/@aws-accelerator/accelerator/lib/stacks/operations-stack.ts:281
-
-source/packages/@aws-accelerator/installer/lib/installer-stack.ts:485
-source/packages/@aws-accelerator/installer/lib/installer-stack.ts:485
-source/packages/@aws-accelerator/installer/test/installer.test.ts:453
-source/packages/@aws-accelerator/installer/test/installer.test.ts:670
-source/packages/@aws-accelerator/installer/test/installer.test.ts:863
-source/packages/@aws-accelerator/installer/test/installer.test.ts:1080
-source/packages/@aws-accelerator/installer/test/installer.test.ts:453
-source/packages/@aws-accelerator/installer/test/installer.test.ts:670
-source/packages/@aws-accelerator/installer/test/installer.test.ts:863
-source/packages/@aws-accelerator/installer/test/installer.test.ts:1080
-
-source/packages/@aws-accelerator/constructs/lib/aws-iam/password-policy.ts
-source/packages/@aws-accelerator/constructs/test/aws-iam/password-policy.test.ts
-source/packages/@aws-accelerator/accelerator/combined.log
-source/packages/@aws-accelerator/accelerator/error.log
-source/packages/@aws-accelerator/constructs/lib/aws-iam/password-policy.d.ts
-source/packages/@aws-accelerator/constructs/test/aws-iam/__snapshots__/password-policy.test.ts.snap
-
-
-source/packages/@aws-accelerator/constructs/test/aws-cloudwatch-logs/put-destination.test.ts:28
-source/packages/@aws-accelerator/config/test/accounts-config.test.ts
-
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:507
-source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts:69
-source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts:70
-
-source/packages/@aws-accelerator/config/lib/customizations-config.ts:631
-
-source/packages/@aws-accelerator/config/dist/lib/customizations-config.d.ts:1016
-source/packages/@aws-accelerator/config/lib/customizations-config.ts:631 
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1231
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1239
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1240
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1249
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1250
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1258
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1259
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1267
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1268
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1276
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1277
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1917
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1918
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml:4
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml:8
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml:12
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml:17
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml:21
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml:24
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml:26
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml:28
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml:30
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml:32
-source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts
-source/packages/@aws-accelerator/accelerator/test/configs/all-enabled-ou-targets/accounts-config.yaml
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:506
-source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts
-source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts
 
-source/packages/@aws-accelerator/config/lib/customizations-config.ts:935
-source/packages/@aws-accelerator/config/dist/lib/customizations-config.d.ts:1829
-source/packages/@aws-accelerator/config/lib/customizations-config.ts:939
-
-source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:140
-source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:141
+reference/sample-configurations/aws-best-practices-us-slg-central-it/README.md:102
