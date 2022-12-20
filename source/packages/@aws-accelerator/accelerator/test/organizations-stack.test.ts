@@ -22,14 +22,24 @@ const testNamePrefix = 'Construct(OrganizationsStack): ';
 /**
  * OrganizationsStack
  */
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.ORGANIZATIONS, 'all-enabled', 'aws');
+const acceleratorTestStacks = new AcceleratorSynthStacks(
+  AcceleratorStage.ORGANIZATIONS,
+  'all-enabled',
+  'aws',
+  'us-east-1',
+);
 const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 
 describe('OrganizationsStack', () => {
   snapShotTest(testNamePrefix, stack);
 });
 
-const multiOuTestStacks = new AcceleratorSynthStacks(AcceleratorStage.ORGANIZATIONS, 'all-enabled-ou-targets', 'aws');
+const multiOuTestStacks = new AcceleratorSynthStacks(
+  AcceleratorStage.ORGANIZATIONS,
+  'all-enabled-ou-targets',
+  'aws',
+  'us-east-1',
+);
 const multiOuStack = multiOuTestStacks.stacks.get(`Management-us-east-1`)!;
 
 describe('MultiOuOrganizationsStack', () => {

@@ -21,7 +21,7 @@ const testNamePrefix = 'Construct(SecurityStack): ';
 /**
  * SecurityStack
  */
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.SECURITY, 'all-enabled', 'aws');
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.SECURITY, 'all-enabled', 'aws', 'us-east-1');
 const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 
 describe('SecurityStack', () => {
