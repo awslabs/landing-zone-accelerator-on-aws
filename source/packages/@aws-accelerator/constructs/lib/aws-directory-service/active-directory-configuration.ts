@@ -255,8 +255,6 @@ export class ActiveDirectoryConfiguration extends Construct {
     // Creating AD Users scripts
     const adUsersScripts = this.getAdUsersScripts(adUserSetupScriptName);
 
-    // const accountNames = ['Management', 'Audit'];
-
     const accountNames = props.accountNames;
 
     const configGroups = props.adGroups.concat(props.adPerAccountGroups).concat(props.adConnectorGroup);

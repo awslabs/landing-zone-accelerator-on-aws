@@ -1,0 +1,331 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ShareActiveDirectory Construct(ShareActiveDirectory):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CustomCWLKey7119CF89": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomLambdaKey2287F5A9": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ShareActiveDirectory09C8BFAC": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "ShareActiveDirectoryShareManageActiveDirectoryProviderframeworkonEventFB17B3F7",
+            "Arn",
+          ],
+        },
+        "assumeRoleName": "AWSAccelerator-MadAccept-Role",
+        "directoryId": "directoryId",
+        "madAccountId": Object {
+          "Ref": "AWS::AccountId",
+        },
+        "region": Object {
+          "Ref": "AWS::Region",
+        },
+        "shareTargetAccountIds": Array [
+          "111111111111",
+          "222222222222",
+        ],
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::ShareActiveDirectory",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ShareActiveDirectoryShareManageActiveDirectoryFunction44493028": Object {
+      "DependsOn": Array [
+        "ShareActiveDirectoryShareManageActiveDirectoryFunctionServiceRoleDefaultPolicyA7BEAEFF",
+        "ShareActiveDirectoryShareManageActiveDirectoryFunctionServiceRole60F965A9",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Share Manage active directory handler",
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "CustomLambdaKey2287F5A9",
+            "Arn",
+          ],
+        },
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "ShareActiveDirectoryShareManageActiveDirectoryFunctionServiceRole60F965A9",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ShareActiveDirectoryShareManageActiveDirectoryFunctionLogGroupB93888CF": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomCWLKey7119CF89",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "ShareActiveDirectoryShareManageActiveDirectoryFunction44493028",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 30,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ShareActiveDirectoryShareManageActiveDirectoryFunctionServiceRole60F965A9": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ShareActiveDirectoryShareManageActiveDirectoryFunctionServiceRoleDefaultPolicyA7BEAEFF": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "ds:ShareDirectory",
+                "ds:UnshareDirectory",
+                "ds:DescribeSharedDirectories",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "DirectoryServices",
+            },
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": "arn:aws:iam::*:role/AWSAccelerator-MadAccept-Role",
+              "Sid": "StsAssumeRoleActions",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ShareActiveDirectoryShareManageActiveDirectoryFunctionServiceRoleDefaultPolicyA7BEAEFF",
+        "Roles": Array [
+          Object {
+            "Ref": "ShareActiveDirectoryShareManageActiveDirectoryFunctionServiceRole60F965A9",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ShareActiveDirectoryShareManageActiveDirectoryProviderframeworkonEventFB17B3F7": Object {
+      "DependsOn": Array [
+        "ShareActiveDirectoryShareManageActiveDirectoryProviderframeworkonEventServiceRoleDefaultPolicyA9CF197C",
+        "ShareActiveDirectoryShareManageActiveDirectoryProviderframeworkonEventServiceRole949DC7C2",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/ShareActiveDirectory/ShareManageActiveDirectoryProvider)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "ShareActiveDirectoryShareManageActiveDirectoryFunction44493028",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "ShareActiveDirectoryShareManageActiveDirectoryProviderframeworkonEventServiceRole949DC7C2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ShareActiveDirectoryShareManageActiveDirectoryProviderframeworkonEventServiceRole949DC7C2": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ShareActiveDirectoryShareManageActiveDirectoryProviderframeworkonEventServiceRoleDefaultPolicyA9CF197C": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "ShareActiveDirectoryShareManageActiveDirectoryFunction44493028",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "ShareActiveDirectoryShareManageActiveDirectoryFunction44493028",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ShareActiveDirectoryShareManageActiveDirectoryProviderframeworkonEventServiceRoleDefaultPolicyA9CF197C",
+        "Roles": Array [
+          Object {
+            "Ref": "ShareActiveDirectoryShareManageActiveDirectoryProviderframeworkonEventServiceRole949DC7C2",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+  },
+}
+`;

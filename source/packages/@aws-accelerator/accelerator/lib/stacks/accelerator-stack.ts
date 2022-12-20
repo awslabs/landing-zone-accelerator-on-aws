@@ -159,6 +159,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * Transit Gateway peering role name, which gives permission on TGW related ssm parameters to configure tgw peering
    */
   public static readonly ACCELERATOR_TGW_PEERING_ROLE_NAME = 'AWSAccelerator-TgwPeering-Role';
+
+  /**
+   * Managed active directory share accept role name
+   */
+  public static readonly ACCELERATOR_MAD_SHARE_ACCEPT_ROLE_NAME = 'AWSAccelerator-MadAccept-Role';
   /**
    * Accelerator generic KMS Key
    */
