@@ -55,8 +55,16 @@ Object {
       "Default": "/accelerator/network/transitGateways/Network-Main/routeTables/Network-Main-Standalone/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsalbappAalb01idC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/alb/appA-alb-01/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
       "Default": "/accelerator/network/vpc/Network-Endpoints/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsnlbappAnlb01idC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/nlb/appA-nlb-01/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsroute53hostedZoneec2idC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
@@ -1225,6 +1233,67 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
+    "ListenerNetworkEndpointsappAAlb01appAListener2": Object {
+      "Properties": Object {
+        "Certificates": Array [
+          Object {},
+        ],
+        "DefaultActions": Array [
+          Object {
+            "ForwardConfig": Object {
+              "TargetGroups": Array [
+                Object {
+                  "TargetGroupArn": Object {
+                    "Ref": "NetworkEndpointsappAalbtg176E11B7D",
+                  },
+                },
+              ],
+            },
+            "TargetGroupArn": Object {
+              "Ref": "NetworkEndpointsappAalbtg176E11B7D",
+            },
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsalbappAalb01idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Port": 80,
+        "Protocol": "HTTP",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
+    "ListenerNetworkEndpointsappANlb01appAListener1": Object {
+      "Properties": Object {
+        "AlpnPolicy": Array [],
+        "Certificates": Array [
+          Object {},
+        ],
+        "DefaultActions": Array [
+          Object {
+            "ForwardConfig": Object {
+              "TargetGroups": Array [
+                Object {
+                  "TargetGroupArn": Object {
+                    "Ref": "NetworkEndpointsappAnlbtg19C910FB9",
+                  },
+                },
+              ],
+            },
+            "TargetGroupArn": Object {
+              "Ref": "NetworkEndpointsappAnlbtg19C910FB9",
+            },
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsnlbappAnlb01idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Port": 80,
+        "Protocol": "TCP",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
     "NetworkDxgwNetworkMainCoreAssociation1B0096A1": Object {
       "Properties": Object {
         "TransitGatewayAttachmentId": Object {
@@ -1375,6 +1444,50 @@ Object {
         },
       },
       "Type": "AWS::Route53Resolver::ResolverQueryLoggingConfigAssociation",
+    },
+    "NetworkEndpointsappAalbtg176E11B7D": Object {
+      "Properties": Object {
+        "HealthCheckEnabled": true,
+        "HealthCheckPort": "80",
+        "HealthCheckProtocol": "HTTP",
+        "Matcher": Object {},
+        "Name": "appA-alb-tg-1",
+        "Port": 80,
+        "Protocol": "HTTP",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "appA-alb-tg-1",
+          },
+        ],
+        "TargetType": "instance",
+        "VpcId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
+    "NetworkEndpointsappAnlbtg19C910FB9": Object {
+      "Properties": Object {
+        "HealthCheckEnabled": true,
+        "HealthCheckPort": "80",
+        "HealthCheckProtocol": "TCP",
+        "Matcher": Object {},
+        "Name": "appA-nlb-tg-1",
+        "Port": 80,
+        "Protocol": "TCP",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "appA-nlb-tg-1",
+          },
+        ],
+        "TargetType": "instance",
+        "VpcId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
     },
     "NetworkEndpointsexampleRuleRuleAssociationB302A795": Object {
       "Properties": Object {

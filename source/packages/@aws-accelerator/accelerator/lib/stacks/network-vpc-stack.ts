@@ -1151,8 +1151,9 @@ export class NetworkVpcStack extends AcceleratorStack {
 
     for (const nlbItem of vpcItem.loadBalancers?.networkLoadBalancers || []) {
       const subnetLookups = nlbItem.subnets.map(subnetName => subnetMap.get(subnetName));
-      const subnetIds = subnetLookups.map(subnet => subnet!.subnetId);
-      if (!subnetIds || subnetIds.length === 0) {
+      const nonNullsubnets = subnetLookups.filter(subnet => subnet) as Subnet[];
+      const subnetIds = nonNullsubnets.map(subnet => subnet.subnetId);
+      if (subnetIds.length === 0) {
         throw new Error(`Could not find subnets for NLB Item ${nlbItem.name}`);
       }
       const nlb = new NetworkLoadBalancer(this, `${nlbItem.name}-${vpcItem.name}`, {
@@ -1220,12 +1221,14 @@ export class NetworkVpcStack extends AcceleratorStack {
 
     for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers || []) {
       const subnetLookups = albItem.subnets.map(subnetName => subnetMap.get(subnetName));
-      const subnetIds = subnetLookups.map(subnet => subnet!.subnetId);
+      const nonNullsubnets = subnetLookups.filter(subnet => subnet) as Subnet[];
+      const subnetIds = nonNullsubnets.map(subnet => subnet.subnetId);
       const securityGroupLookups = albItem.securityGroups.map(securityGroupName =>
         securityGroupMap.get(securityGroupName),
       );
-      const securityGroupIds = securityGroupLookups.map(securityGroup => securityGroup!.securityGroupId);
-      if (!subnetIds || subnetIds.length === 0) {
+      const nonNullSecurityGroups = securityGroupLookups.filter(group => group) as SecurityGroup[];
+      const securityGroupIds = nonNullSecurityGroups.map(securityGroup => securityGroup.securityGroupId);
+      if (subnetIds.length === 0) {
         throw new Error(`Could not find subnets for ALB Item ${albItem.name}`);
       }
       const alb = new ApplicationLoadBalancer(this, `${albItem.name}-${vpcItem.name}`, {
