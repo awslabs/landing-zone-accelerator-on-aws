@@ -905,7 +905,7 @@ export class LoggingStack extends AcceleratorStack {
     // Find the unique account, region pair in the given input
     type excludeUniqueItemType = { account: string; region: string };
     const excludeItemsMapUnique: excludeUniqueItemType[] = [];
-    processedItems.map(item => {
+    processedItems.forEach(item => {
       const output = { account: item.account, region: item.region };
       const findItem = excludeItemsMapUnique.find(obj => {
         return obj.account === output.account && obj.region === output.region;
@@ -928,12 +928,12 @@ export class LoggingStack extends AcceleratorStack {
 
         const allLogGroupNames: string[] = [];
         let globalExclude: boolean | undefined = undefined;
-        filteredItems.map(obj => {
+        filteredItems.forEach(obj => {
           if (obj.excludeAll) {
             globalExclude = true;
           }
         });
-        filteredItems.map(obj => {
+        filteredItems.forEach(obj => {
           if (obj.logGroupNames) {
             allLogGroupNames.push(...obj.logGroupNames);
           }
