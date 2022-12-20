@@ -47,6 +47,7 @@ import {
   ShareActiveDirectory,
   ShareSubnetTags,
   SsmParameterLookup,
+  SubnetIdLookup,
   TransitGatewayAttachment,
   TransitGatewayAttachmentType,
   TransitGatewayPrefixListReference,
@@ -54,6 +55,7 @@ import {
   TransitGatewayRouteTablePropagation,
   TransitGatewayStaticRoute,
   VpcPeering,
+  VpcIdLookup,
   UserDataScriptsType,
   KeyLookup,
 } from '@aws-accelerator/constructs';
@@ -1874,6 +1876,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                 subnetTags,
                 sharedSubnetId,
                 owningAccountId,
+                vpcName: vpc.name,
+                subnetName: subnet.name,
                 resourceLoggingKmsKey: this.cloudwatchKey,
                 logRetentionInDays: this.logRetention,
               });
@@ -1893,18 +1897,148 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
       if (madAccountId === cdk.Stack.of(this).account && managedActiveDirectory.region === cdk.Stack.of(this).region) {
         Logger.info(`[network-associations-stack] Creating Managed active directory ${managedActiveDirectory.name}`);
-        const madVpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+
+        const madVpcLookup = new VpcIdLookup(this, `${pascalCase(managedActiveDirectory.name)}VpcLookup`, {
+          vpcName: managedActiveDirectory.vpcSettings.vpcName,
+          lambdaKey: this.lambdaKey,
+          cloudwatchKey: this.cloudwatchKey,
+          cloudwatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        });
+
+        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+        NagSuppressions.addResourceSuppressionsByPath(
           this,
-          `/accelerator/network/vpc/${managedActiveDirectory.vpcSettings.vpcName}/id`,
+          `${this.stackName}/${pascalCase(
+            managedActiveDirectory.name,
+          )}VpcLookup/VpcIdLookupFunction/ServiceRole/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM4',
+              reason: 'Custom resource lambda needs this access.',
+            },
+          ],
+        );
+
+        // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/${pascalCase(
+            managedActiveDirectory.name,
+          )}VpcLookup/VpcIdLookupProvider/framework-onEvent/ServiceRole/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM4',
+              reason: 'Custom resource lambda needs this access.',
+            },
+          ],
+        );
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/${pascalCase(
+            managedActiveDirectory.name,
+          )}VpcLookup/VpcIdLookupFunction/ServiceRole/DefaultPolicy/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason: 'Custom resource lambda needs this access.',
+            },
+          ],
+        );
+
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+        NagSuppressions.addResourceSuppressionsByPath(
+          this,
+          `${this.stackName}/${pascalCase(
+            managedActiveDirectory.name,
+          )}VpcLookup/VpcIdLookupProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+          [
+            {
+              id: 'AwsSolutions-IAM5',
+              reason: 'Custom resource lambda needs this access.',
+            },
+          ],
         );
 
         const madSubnetIds: string[] = [];
+        let madInstanceSubnetId: string | undefined;
         for (const madSubnet of managedActiveDirectory.vpcSettings.subnets ?? []) {
-          const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+          const madSubnetLookup = new SubnetIdLookup(
             this,
-            `/accelerator/network/vpc/${managedActiveDirectory.vpcSettings.vpcName}/subnet/${madSubnet}/id`,
+            `${pascalCase(managedActiveDirectory.name)}${pascalCase(madSubnet)}SubnetLookup`,
+            {
+              subnetName: madSubnet,
+              vpcId: madVpcLookup.vpcId,
+              lambdaKey: this.lambdaKey,
+              cloudwatchKey: this.cloudwatchKey,
+              cloudwatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+            },
           );
-          madSubnetIds.push(subnetId);
+
+          // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(managedActiveDirectory.name)}${pascalCase(
+              madSubnet,
+            )}SubnetLookup/SubnetIdLookupFunction/ServiceRole/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM4',
+                reason: 'Custom resource lambda needs this access.',
+              },
+            ],
+          );
+
+          // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(managedActiveDirectory.name)}${pascalCase(
+              madSubnet,
+            )}SubnetLookup/SubnetIdLookupProvider/framework-onEvent/ServiceRole/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM4',
+                reason: 'Custom resource lambda needs this access.',
+              },
+            ],
+          );
+
+          // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(managedActiveDirectory.name)}${pascalCase(
+              madSubnet,
+            )}SubnetLookup/SubnetIdLookupProvider/framework-onEvent/ServiceRole/DefaultPolicy/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM5',
+                reason: 'Custom resource lambda needs this access.',
+              },
+            ],
+          );
+
+          // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+          NagSuppressions.addResourceSuppressionsByPath(
+            this,
+            `${this.stackName}/${pascalCase(managedActiveDirectory.name)}${pascalCase(
+              madSubnet,
+            )}SubnetLookup/SubnetIdLookupFunction/ServiceRole/DefaultPolicy/Resource`,
+            [
+              {
+                id: 'AwsSolutions-IAM5',
+                reason: 'Custom resource lambda needs this access.',
+              },
+            ],
+          );
+          madSubnetIds.push(madSubnetLookup.subnetId);
+
+          if (
+            managedActiveDirectory.activeDirectoryConfigurationInstance &&
+            madSubnet === managedActiveDirectory.activeDirectoryConfigurationInstance.subnetName
+          ) {
+            madInstanceSubnetId = madSubnetLookup.subnetId;
+          }
         }
 
         let logGroupName = `/aws/directoryservice/${managedActiveDirectory.name}`;
@@ -1916,9 +2050,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         const secretName = `/accelerator/ad-user/${
           managedActiveDirectory.name
         }/${this.props.iamConfig.getManageActiveDirectoryAdminSecretName(managedActiveDirectory.name)}`;
+
         const madAdminSecretAccountId = this.props.accountsConfig.getAccountId(
           this.props.iamConfig.getManageActiveDirectorySecretAccountName(managedActiveDirectory.name),
         );
+
         const madAdminSecretRegion = this.props.iamConfig.getManageActiveDirectorySecretRegion(
           managedActiveDirectory.name,
         );
@@ -1930,7 +2066,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         const activeDirectory = new ActiveDirectory(this, `${pascalCase(managedActiveDirectory.name)}ActiveDirectory`, {
           directoryName: managedActiveDirectory.name,
           dnsName: managedActiveDirectory.dnsName,
-          vpcId: madVpcId,
+          vpcId: madVpcLookup.vpcId,
           madSubnetIds: madSubnetIds,
           adminSecretValue,
           edition: managedActiveDirectory.edition,
@@ -2099,6 +2235,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           madAdminSecretAccountId,
           madAdminSecretRegion,
           sharedAccountNames,
+          madInstanceSubnetId!,
+          madVpcLookup.vpcId,
         );
       }
     }
@@ -2191,16 +2329,37 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     adSecretAccountId: string,
     adSecretRegion: string,
     sharedAccountNames: string[],
+    madInstanceSubnetId: string,
+    vpcId: string,
   ) {
     if (managedActiveDirectory.activeDirectoryConfigurationInstance) {
       const adInstanceConfig = managedActiveDirectory.activeDirectoryConfigurationInstance;
-      const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+      const inboundRules: cdk.aws_ec2.CfnSecurityGroup.IngressProperty[] = [];
+
+      for (const securityGroupInboundSource of adInstanceConfig.securityGroupInboundSources) {
+        inboundRules.push({ ipProtocol: 'tcp', cidrIp: securityGroupInboundSource, fromPort: 3389, toPort: 3389 });
+        inboundRules.push({ ipProtocol: 'tcp', cidrIp: securityGroupInboundSource, fromPort: 443, toPort: 443 });
+      }
+
+      const securityGroup = new cdk.aws_ec2.CfnSecurityGroup(
         this,
-        `/accelerator/network/vpc/${adInstanceConfig.vpcName}/subnet/${adInstanceConfig.subnetName}/id`,
-      );
-      const securityGroupId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        `/accelerator/network/vpc/${adInstanceConfig.vpcName}/securityGroup/${adInstanceConfig.securityGroupName}/id`,
+        `${pascalCase(managedActiveDirectory.name)}SecurityGroup`,
+        {
+          groupDescription: `${pascalCase(
+            managedActiveDirectory.name,
+          )} managed active directory instance security group`,
+          securityGroupEgress: [{ ipProtocol: '-1', cidrIp: '0.0.0.0/0' }],
+          securityGroupIngress: inboundRules,
+          groupName: `${managedActiveDirectory.name}_mad_instance_sg`,
+          vpcId: vpcId,
+          tags: [
+            { key: 'Name', value: `${managedActiveDirectory.name}_mad_instance_sg` },
+            {
+              key: 'Description',
+              value: `Security group for ${managedActiveDirectory.name} managed active directory instance`,
+            },
+          ],
+        },
       );
 
       const userDataScripts: UserDataScriptsType[] = [];
@@ -2234,8 +2393,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           netBiosDomainName: managedActiveDirectory.netBiosDomainName,
           adminPwdSecretArn: adminSecretArn,
           secretKeyArn: secretKey.keyArn,
-          subnetId,
-          securityGroupId,
+          subnetId: madInstanceSubnetId,
+          securityGroupId: securityGroup.ref,
           instanceRoleName: adInstanceConfig.instanceRole,
           userDataScripts,
           adGroups: adInstanceConfig.adGroups,

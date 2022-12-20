@@ -914,6 +914,24 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:\\"example.com\
           "Statement": Array [
             Object {
               "Action": "sts:AssumeRole",
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::333333333333:role/AWSAccelerator-*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+              },
               "Effect": "Allow",
               "Principal": Object {
                 "AWS": Object {
@@ -924,7 +942,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:\\"example.com\
                       Object {
                         "Ref": "AWS::Partition",
                       },
-                      ":iam::444444444444:root",
+                      ":iam::333333333333:root",
                     ],
                   ],
                 },

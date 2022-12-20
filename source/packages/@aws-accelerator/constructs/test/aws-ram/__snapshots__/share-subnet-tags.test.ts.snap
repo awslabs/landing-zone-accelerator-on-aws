@@ -200,6 +200,15 @@ Object {
                   "Effect": "Allow",
                   "Resource": "*",
                 },
+                Object {
+                  "Action": Array [
+                    "ssm:GetParameter",
+                    "ssm:PutParameter",
+                    "ssm:DeleteParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
               ],
               "Version": "2012-10-17",
             },
@@ -222,12 +231,14 @@ Object {
           ],
         },
         "sharedSubnetId": "abcdefg123",
+        "sharedSubnetName": "TestSubnet",
         "subnetTags": Array [
           Object {
             "key": "Key",
             "value": "value",
           },
         ],
+        "vpcName": "TestVpc",
       },
       "Type": "Custom::ShareSubnetTags",
       "UpdateReplacePolicy": "Delete",

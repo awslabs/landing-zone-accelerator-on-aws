@@ -15,7 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { v4 as uuidv4 } from 'uuid';
 
-const path = require('path');
+import path = require('path');
 
 /**
  * Initialized ActiveDirectoryResolverRuleProps properties

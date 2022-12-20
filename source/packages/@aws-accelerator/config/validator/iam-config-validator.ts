@@ -485,6 +485,11 @@ class ManagedActiveDirectoryValidator {
     this.validateMandatoryUserDataScripts(values, errors);
 
     //
+    // Validate instance security group source list
+    //
+    this.validateSecurityGroupInboundSources(values, errors);
+
+    //
     // Validate ad user groups
     //
     this.validateAdUserGroups(values, errors);
@@ -494,6 +499,23 @@ class ManagedActiveDirectoryValidator {
     //
     // Validate MAD sharing configuration
     this.validateMadSharingConfig(values, ouIdNames, accountNames, errors);
+  }
+
+  /**
+   * Function to validate instance security group inbound sources
+   * @param values
+   * @param errors
+   */
+  private validateSecurityGroupInboundSources(values: IamConfig, errors: string[]) {
+    for (const managedActiveDirectory of values.managedActiveDirectories ?? []) {
+      if (managedActiveDirectory.activeDirectoryConfigurationInstance) {
+        if (managedActiveDirectory.activeDirectoryConfigurationInstance.securityGroupInboundSources.length === 0) {
+          errors.push(
+            `[Managed Active Directory: ${managedActiveDirectory.name}]: instance security group inbound source list empty !!!`,
+          );
+        }
+      }
+    }
   }
 
   /**
@@ -643,12 +665,6 @@ class ManagedActiveDirectoryValidator {
       ) {
         errors.push(
           `Managed active directory ${managedActiveDirectory.name} sharing can have only one option from sharedOrganizationalUnits and sharedAccounts, both can't be defined`,
-        );
-      }
-
-      if (!managedActiveDirectory.sharedAccounts && !managedActiveDirectory.sharedOrganizationalUnits) {
-        errors.push(
-          `Managed active directory ${managedActiveDirectory.name} missing sharing configuration, one option from sharedOrganizationalUnits and sharedAccounts must be provided`,
         );
       }
 

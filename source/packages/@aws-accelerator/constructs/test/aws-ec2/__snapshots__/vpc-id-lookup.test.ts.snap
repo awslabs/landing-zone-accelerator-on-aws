@@ -1,0 +1,309 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VpcIdLookup Construct(VpcIdLookup):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "CWKeyF87F989A": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "LambdaKey984A39D9": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "VpcIdLookupD915DEA4": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "VpcIdLookupVpcIdLookupProviderframeworkonEventA6FF7933",
+            "Arn",
+          ],
+        },
+        "vpcName": "TestVpc",
+      },
+      "Type": "Custom::VpcIdLookup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "VpcIdLookupVpcIdLookupFunctionCE747608": Object {
+      "DependsOn": Array [
+        "VpcIdLookupVpcIdLookupFunctionServiceRoleDefaultPolicyE4E2B3D6",
+        "VpcIdLookupVpcIdLookupFunctionServiceRoleB001E74A",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Lookup vpc id from account",
+        "Handler": "index.handler",
+        "KmsKeyArn": Object {
+          "Fn::GetAtt": Array [
+            "LambdaKey984A39D9",
+            "Arn",
+          ],
+        },
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "VpcIdLookupVpcIdLookupFunctionServiceRoleB001E74A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "VpcIdLookupVpcIdLookupFunctionLogGroup394AB6B3": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CWKeyF87F989A",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "VpcIdLookupVpcIdLookupFunctionCE747608",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "VpcIdLookupVpcIdLookupFunctionServiceRoleB001E74A": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "VpcIdLookupVpcIdLookupFunctionServiceRoleDefaultPolicyE4E2B3D6": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "ec2:DescribeVpcs",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "Ec2Actions",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "VpcIdLookupVpcIdLookupFunctionServiceRoleDefaultPolicyE4E2B3D6",
+        "Roles": Array [
+          Object {
+            "Ref": "VpcIdLookupVpcIdLookupFunctionServiceRoleB001E74A",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "VpcIdLookupVpcIdLookupProviderframeworkonEventA6FF7933": Object {
+      "DependsOn": Array [
+        "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRoleDefaultPolicyF53A1EC3",
+        "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRole5452CF47",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/VpcIdLookup/VpcIdLookupProvider)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "VpcIdLookupVpcIdLookupFunctionCE747608",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRole5452CF47",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRole5452CF47": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRoleDefaultPolicyF53A1EC3": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "VpcIdLookupVpcIdLookupFunctionCE747608",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "VpcIdLookupVpcIdLookupFunctionCE747608",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRoleDefaultPolicyF53A1EC3",
+        "Roles": Array [
+          Object {
+            "Ref": "VpcIdLookupVpcIdLookupProviderframeworkonEventServiceRole5452CF47",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+  },
+}
+`;

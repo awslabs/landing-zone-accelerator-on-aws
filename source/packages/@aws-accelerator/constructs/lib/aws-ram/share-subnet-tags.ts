@@ -22,6 +22,14 @@ export interface ShareSubnetTagsProps {
   readonly sharedSubnetId: string;
   readonly owningAccountId: string;
   /**
+   * Friendly name for the shared vpc
+   */
+  readonly vpcName: string;
+  /**
+   * Friendly name for the shared subnet
+   */
+  readonly subnetName: string;
+  /**
    * Custom resource lambda log group encryption key
    */
   readonly resourceLoggingKmsKey: cdk.aws_kms.IKey;
@@ -64,6 +72,11 @@ export class ShareSubnetTags extends Construct {
           Action: ['ec2:DescribeTags', 'ec2:DescribeVpcs', 'ec2:DescribeSubnets'],
           Resource: '*',
         },
+        {
+          Effect: 'Allow',
+          Action: ['ssm:GetParameter', 'ssm:PutParameter', 'ssm:DeleteParameter'],
+          Resource: '*',
+        },
       ],
     });
 
@@ -72,6 +85,8 @@ export class ShareSubnetTags extends Construct {
         vpcTags: props.vpcTags,
         subnetTags: props.subnetTags,
         sharedSubnetId: props.sharedSubnetId,
+        sharedSubnetName: props.subnetName,
+        vpcName: props.vpcName,
       },
       resourceType: SHARE_SUBNET_TAGS_TYPE,
       serviceToken: provider.serviceToken,
