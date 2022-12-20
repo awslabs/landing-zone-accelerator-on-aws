@@ -57,6 +57,8 @@ module.exports = {
   // This option allows the use of a custom results processor.
   testResultsProcessor: 'jest-sonar-reporter',
 
+  setupFiles: ['<rootDir>/jest/setEnvVars.js'],
+
   // Run tests with jest-junit reporters.
   reporters: [
     'default',

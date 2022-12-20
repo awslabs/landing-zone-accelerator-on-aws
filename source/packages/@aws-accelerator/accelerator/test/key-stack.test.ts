@@ -11,24 +11,16 @@
  *  and limitations under the License.
  */
 
-import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
+import { AcceleratorStage } from '../lib/accelerator-stage';
 import { describe } from '@jest/globals';
 import { snapShotTest } from './snapshot-test';
 
-const testNamePrefix = 'Construct(NetworkVpcDnsStack): ';
+const testNamePrefix = 'Construct(KeyStack): ';
 
-/**
- * NetworkVpcEndpointsStack
- */
-const acceleratorTestStacks = new AcceleratorSynthStacks(
-  AcceleratorStage.NETWORK_VPC_DNS,
-  'all-enabled',
-  'aws',
-  'us-east-1',
-);
-const stack = acceleratorTestStacks.stacks.get(`Network-us-east-1`)!;
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.KEY, 'all-enabled', 'aws', 'us-east-1');
+const stack = acceleratorTestStacks.stacks.get(`Audit-us-east-1`)!;
 
-describe('NetworkVpcDnsStack', () => {
+describe('KeyStack', () => {
   snapShotTest(testNamePrefix, stack);
 });

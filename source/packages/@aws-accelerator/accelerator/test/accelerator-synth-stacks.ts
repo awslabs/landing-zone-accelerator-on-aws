@@ -34,6 +34,7 @@ import { AccountsStack } from '../lib/stacks/accounts-stack';
 import { BootstrapStack } from '../lib/stacks/bootstrap-stack';
 import { CustomizationsStack } from '../lib/stacks/customizations-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
+import { KeyStack } from '../lib/stacks/key-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
 import { NetworkAssociationsGwlbStack } from '../lib/stacks/network-associations-gwlb-stack';
 import { NetworkAssociationsStack } from '../lib/stacks/network-associations-stack';
@@ -42,6 +43,7 @@ import { NetworkVpcDnsStack } from '../lib/stacks/network-vpc-dns-stack';
 import { NetworkVpcEndpointsStack } from '../lib/stacks/network-vpc-endpoints-stack';
 import { NetworkVpcStack } from '../lib/stacks/network-vpc-stack';
 import { OperationsStack } from '../lib/stacks/operations-stack';
+import { PrepareStack } from '../lib/stacks/prepare-stack';
 import { OrganizationsStack } from '../lib/stacks/organizations-stack';
 import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
@@ -61,12 +63,14 @@ export class AcceleratorSynthStacks {
   private readonly auditAccountId: string;
   private readonly auditAccount: AccountConfig;
   private readonly stageName: string;
+  private readonly globalRegion: string;
 
   public readonly stacks = new Map<string, AcceleratorStack>();
-  constructor(stageName: string, configFolderName: string, partition: string) {
+  constructor(stageName: string, configFolderName: string, partition: string, globalRegion: string) {
     this.configFolderName = configFolderName;
     this.partition = partition;
     this.stageName = stageName;
+    this.globalRegion = globalRegion;
 
     /**
      * Test stack CDK app
@@ -98,6 +102,7 @@ export class AcceleratorSynthStacks {
       organizationConfig: OrganizationConfig.load(this.configDirPath),
       securityConfig: SecurityConfig.load(this.configDirPath),
       partition: this.partition,
+      globalRegion: this.globalRegion,
       centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
     };
 
@@ -153,6 +158,12 @@ export class AcceleratorSynthStacks {
         break;
       case AcceleratorStage.ORGANIZATIONS:
         this.synthOrganizationsStacks();
+        break;
+      case AcceleratorStage.PREPARE:
+        this.synthPrepareStacks();
+        break;
+      case AcceleratorStage.KEY:
+        this.synthKeyStacks();
         break;
       case AcceleratorStage.SECURITY_RESOURCES:
         this.synthSecurityResourcesStacks();
@@ -495,6 +506,46 @@ export class AcceleratorSynthStacks {
           {
             env: {
               account: this.managementAccountId,
+              region: region,
+            },
+            ...this.props,
+          },
+        ),
+      );
+    }
+  }
+  /**
+   * synth Prepare stacks
+   */
+  private synthPrepareStacks() {
+    this.stacks.set(
+      `${this.managementAccount.name}-${this.homeRegion}`,
+      new PrepareStack(
+        this.app,
+        `${AcceleratorStackNames[AcceleratorStage.PREPARE]}-${this.managementAccountId}-${this.homeRegion}`,
+        {
+          env: {
+            account: this.managementAccountId,
+            region: this.homeRegion,
+          },
+          ...this.props,
+        },
+      ),
+    );
+  }
+  /**
+   * synth Key stacks
+   */
+  private synthKeyStacks() {
+    for (const region of this.props.globalConfig.enabledRegions) {
+      this.stacks.set(
+        `${this.auditAccount.name}-${region}`,
+        new KeyStack(
+          this.app,
+          `${AcceleratorStackNames[AcceleratorStage.KEY]}-${this.auditAccountId}-${region}`,
+          {
+            env: {
+              account: this.auditAccountId,
               region: region,
             },
             ...this.props,

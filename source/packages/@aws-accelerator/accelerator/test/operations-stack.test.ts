@@ -21,9 +21,13 @@ const testNamePrefix = 'Construct(OperationsStack): ';
 /**
  * OperationsStack
  */
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.OPERATIONS, 'all-enabled', 'aws');
+const acceleratorTestStacks = new AcceleratorSynthStacks(
+  AcceleratorStage.OPERATIONS,
+  'all-enabled',
+  'aws',
+  'us-east-1',
+);
 const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
-
 
 describe('OperationsStack', () => {
   snapShotTest(testNamePrefix, stack);
