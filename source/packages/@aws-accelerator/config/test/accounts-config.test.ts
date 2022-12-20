@@ -21,21 +21,21 @@ const accountsConfigObject = {
       name: 'Management',
       description:
         'The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
-      email: 'management-account@somewhere.com',
+      email: 'some-management-account@example.com',
       organizationalUnit: 'Root',
     },
     {
       name: 'LogArchive',
       description:
         'The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
-      email: 'logarchive-account@somewhere.com',
+      email: 'some-logarchive-account@example.com',
       organizationalUnit: 'Security',
     },
     {
       name: 'Audit',
       description:
         'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
-      email: 'audit-account@somewhere.com',
+      email: 'some-audit-account@example.com',
       organizationalUnit: 'Security',
     },
   ],
@@ -43,31 +43,31 @@ const accountsConfigObject = {
     {
       name: 'SharedServices',
       description: 'The SharedServices account',
-      email: 'shared-services@somewhere.com',
+      email: 'shared-services@example.com',
       organizationalUnit: 'Infrastructure',
     },
     {
       name: 'Network',
       description: 'The Network account',
-      email: 'network@somewhere.com',
+      email: 'network@example.com',
       organizationalUnit: 'Infrastructure',
     },
   ],
   accountIds: [
     {
-      email: 'management-account@somewhere.com',
+      email: 'some-management-account@example.com',
       accountId: '111111111111',
     },
-    { email: 'audit-account@somewhere.com', accountId: '222222222222' },
+    { email: 'some-audit-account@example.com', accountId: '222222222222' },
     {
-      email: 'logarchive-account@somewhere.com',
+      email: 'some-logarchive-account@example.com',
       accountId: '333333333333',
     },
     {
-      email: 'shared-services@somewhere.com',
+      email: 'shared-services@example.com',
       accountId: '444444444444',
     },
-    { email: 'network@somewhere.com', accountId: '555555555555' },
+    { email: 'network@example.com', accountId: '555555555555' },
   ],
 };
 
@@ -101,19 +101,19 @@ describe('accounts-config', () => {
   });
   describe('AccountsConfig', () => {
     const configA = new AccountsConfig({
-      managementAccountEmail: 'hello@world.com',
-      logArchiveAccountEmail: 'log@world.com',
-      auditAccountEmail: 'audit@world.com',
+      managementAccountEmail: 'hello@example.com',
+      logArchiveAccountEmail: 'log@example.com',
+      auditAccountEmail: 'audit@example.com',
     });
     const configB = new AccountsConfig(
       {
-        managementAccountEmail: 'hello@world.com',
-        logArchiveAccountEmail: 'log@world.com',
-        auditAccountEmail: 'audit@world.com',
+        managementAccountEmail: 'hello@example.com',
+        logArchiveAccountEmail: 'log@example.com',
+        auditAccountEmail: 'audit@example.com',
       },
       {
         mandatoryAccounts: [
-          { name: 'hello', email: 'world@google.com', description: undefined, organizationalUnit: undefined },
+          { name: 'hello', email: 'world@example.com', description: undefined, organizationalUnit: undefined },
         ],
         workloadAccounts: [govCloudAccountConfig],
         accountIds: [],
@@ -121,9 +121,9 @@ describe('accounts-config', () => {
     );
     const configC = new AccountsConfig(
       {
-        managementAccountEmail: 'management-account@somewhere.com',
-        logArchiveAccountEmail: 'logarchive-account@somewhere.com',
-        auditAccountEmail: 'audit-account@somewhere.com',
+        managementAccountEmail: 'some-management-account@example.com',
+        logArchiveAccountEmail: 'some-logarchive-account@example.com',
+        auditAccountEmail: 'some-audit-account@example.com',
       },
       accountsConfigObject,
       path.resolve('../accelerator/test/configs/all-enabled'),
@@ -146,7 +146,7 @@ describe('accounts-config', () => {
       expect(configC.getManagementAccount()).toStrictEqual({
         description:
           'The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
-        email: 'management-account@somewhere.com',
+        email: 'some-management-account@example.com',
         name: 'Management',
         organizationalUnit: 'Root',
       });
@@ -156,7 +156,7 @@ describe('accounts-config', () => {
         name: 'LogArchive',
         description:
           'The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
-        email: 'logarchive-account@somewhere.com',
+        email: 'some-logarchive-account@example.com',
         organizationalUnit: 'Security',
       });
 
@@ -164,7 +164,7 @@ describe('accounts-config', () => {
         name: 'Audit',
         description:
           'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
-        email: 'audit-account@somewhere.com',
+        email: 'some-audit-account@example.com',
         organizationalUnit: 'Security',
       });
       expect(configC.getAuditAccountId()).toBe('222222222222');
@@ -180,7 +180,7 @@ describe('accounts-config', () => {
         name: 'Audit',
         description:
           'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
-        email: 'audit-account@somewhere.com',
+        email: 'some-audit-account@example.com',
         organizationalUnit: 'Security',
       });
       expect(() => {
