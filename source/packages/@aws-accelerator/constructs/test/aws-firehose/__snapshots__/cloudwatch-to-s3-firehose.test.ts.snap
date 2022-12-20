@@ -166,7 +166,7 @@ Object {
         },
         "Environment": Object {
           "Variables": Object {
-            "DynamicS3LogPartitioningMapping": "",
+            "DynamicS3LogPartitioningMapping": "dynamic-partitioning/log-filters.json",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -681,7 +681,7 @@ Object {
         },
         "Environment": Object {
           "Variables": Object {
-            "DynamicS3LogPartitioningMapping": "",
+            "DynamicS3LogPartitioningMapping": "dynamic-partitioning/log-filters.json",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -1476,7 +1476,7 @@ Object {
         },
         "Environment": Object {
           "Variables": Object {
-            "DynamicS3LogPartitioningMapping": "",
+            "DynamicS3LogPartitioningMapping": "dynamic-partitioning/log-filters.json",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -1991,7 +1991,7 @@ Object {
         },
         "Environment": Object {
           "Variables": Object {
-            "DynamicS3LogPartitioningMapping": "",
+            "DynamicS3LogPartitioningMapping": "dynamic-partitioning/log-filters.json",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",

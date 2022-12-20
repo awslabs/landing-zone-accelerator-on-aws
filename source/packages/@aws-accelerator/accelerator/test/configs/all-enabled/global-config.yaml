@@ -28,6 +28,17 @@ logging:
     sendToS3: true
   cloudwatchLogs:
     dynamicPartitioning: dynamic-partitioning/log-filters.json
+    exclusions:
+      - organizationalUnits:
+          - Infrastructure
+        excludeAll: true
+      - accounts:
+          - Management
+        regions:
+          - us-east-1
+        logGroupNames:
+          - test/*
+
 limits:
   - serviceCode: lambda
     quotaCode: L-B99A9384

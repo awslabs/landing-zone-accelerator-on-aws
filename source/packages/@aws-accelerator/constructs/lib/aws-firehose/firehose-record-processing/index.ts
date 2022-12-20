@@ -12,6 +12,8 @@
  */
 
 import * as AWS from 'aws-sdk';
+import * as fs from 'fs';
+import * as path from 'path';
 const zlib = require('zlib');
 
 AWS.config.logger = console;
@@ -123,9 +125,10 @@ async function checkDynamicPartition(firehoseRecordDynamicPartition: CloudWatchL
   let mappings: S3LogPartitionType[] | undefined;
 
   const dynamicPartitionMapping = process.env['DynamicS3LogPartitioningMapping']!;
+
   // if there is a mapping proceed to create a mapping
-  if (dynamicPartitionMapping && dynamicPartitionMapping.length > 0) {
-    mappings = JSON.parse(dynamicPartitionMapping);
+  if (dynamicPartitionMapping) {
+    mappings = JSON.parse(fs.readFileSync(path.join(__dirname, dynamicPartitionMapping), 'utf-8'));
   }
 
   let serviceName = null;
