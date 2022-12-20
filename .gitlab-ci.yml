@@ -9,7 +9,7 @@ accelerator-build:
   stage: build
   tags:
     - arch:amd64
-    - size:large
+    - size:xlarge
   script:
     - "export NODE_OPTIONS=--max_old_space_size=16384"
     - "cd source"
@@ -30,9 +30,9 @@ accelerator-test:
   stage: test
   tags:
     - arch:amd64
-    - size:large
+    - size:xlarge
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=4096"
+    - "export NODE_OPTIONS=--max_old_space_size=16384"
     - "cd source"
     - "npm install --global yarn"
     - "yarn install"
@@ -58,7 +58,7 @@ pages:
     - arch:amd64
     - size:xlarge
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=8192"
+    - "export NODE_OPTIONS=--max_old_space_size=16384"
     - "cd source"
     - "yarn install"
     - "yarn build"
