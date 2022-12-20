@@ -6,6 +6,8 @@ AWS developed the sample config files herein for use with the Landing Zone Accel
 
 LZA will deploy an opinionated architecture that has been designed in consultation with CCCS and Government of Canada’s Treasury Board Secretariat. Inheriting the controls from the [CCCS assessment of AWS](https://aws.amazon.com/compliance/services-in-scope/CCCS/) and deploying additional controls using LZA with the sample config files allow customers to meet up to 70% of the controls that have a technical element. This reduces security control implementation time, allowing customers to focus on operational capabilities and the evidentiary exercise in a [Security Assessment and Authorization](https://www.cyber.gc.ca/en/guidance/guidance-cloud-security-assessment-and-authorization-itsp50105) (SA&A) process like that used by the Government of Canada.
 
+The sample config files define a log retention period of 2 years based on [guidance](https://www.canada.ca/en/government/system/digital-government/online-security-privacy/event-logging-guidance.html) provided by the Treasury Board Secretariat.  Customers are encouraged to consider defining longer retention periods, such as 10 years, so that you'll have the data you need to investigate and reconstruct events long after they occur.
+
 Customers are encouraged to work with their local AWS Account Teams to learn more about customizing this configuration, to learn more about the CCCS-Medium reference architecture, and the Landing Zone Accelerator on AWS solution.
 
 **NOTE: The initial release of the CCCS-Medium LZA sample configuration files included as part of LZA v1.3 do not yet fully automate the delivery of this architecture. This will be resolved in subsequent LZA releases.**
@@ -73,3 +75,4 @@ Step 3. Update the configuration files
   - (It takes approximately 15-30 minutes for the requested quota increase to apply)
 - (optional) Retry the failed Pipeline Stage if the quota increase was not completed in time.
 - Await successful completion of `AWSAccelerator-Pipeline` pipeline.
+
