@@ -1,6 +1,5 @@
 image: public.ecr.aws/bitnami/node:14
 
-
 stages:
   - build
   - test
@@ -12,7 +11,7 @@ accelerator-build:
     - arch:amd64
     - size:large
   script:
-    - "export NODE_OPTIONS=--max_old_space_size=4096"
+    - "export NODE_OPTIONS=--max_old_space_size=16384"
     - "cd source"
     - "npm install --global yarn"
     - "yarn install"
@@ -41,12 +40,12 @@ accelerator-test:
     - "yarn lerna link"
     - "yarn build"
     - "yarn test"
-    ## Temporary disabled viperlight till the issue fixed      
+    ## Temporary disabled viperlight till the issue fixed
     # - "wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip'"
     # - "unzip -qo viperlight.zip -d ../viperlight"
     # - "rm -r ./viperlight.zip"
     # - "../viperlight/bin/viperlight scan"
-    - "echo Temporary disabled viperlight till the issue fixed"  
+    - "echo Temporary disabled viperlight till the issue fixed"
   artifacts:
     when: always
     reports:
@@ -57,7 +56,7 @@ pages:
   stage: metadata
   tags:
     - arch:amd64
-    - size:large
+    - size:xlarge
   script:
     - "export NODE_OPTIONS=--max_old_space_size=8192"
     - "cd source"
