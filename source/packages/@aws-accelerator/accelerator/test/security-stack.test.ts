@@ -27,3 +27,15 @@ const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
 describe('SecurityStack', () => {
   snapShotTest(testNamePrefix, stack);
 });
+
+const delegatedAdminTestStacks = new AcceleratorSynthStacks(
+  AcceleratorStage.SECURITY,
+  'all-enabled-delegated-admin',
+  'aws',
+  'us-east-1',
+);
+const delegatedAdminStack = delegatedAdminTestStacks.stacks.get(`Management-us-east-1`)!;
+
+describe('delegatedAdminStack', () => {
+  snapShotTest(testNamePrefix, delegatedAdminStack);
+});

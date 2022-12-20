@@ -46,6 +46,18 @@ describe('MultiOuOrganizationsStack', () => {
   snapShotTest(testNamePrefix, multiOuStack);
 });
 
+const delegatedAdminTestStacks = new AcceleratorSynthStacks(
+  AcceleratorStage.ORGANIZATIONS,
+  'all-enabled-delegated-admin',
+  'aws',
+  'us-east-1',
+);
+const delegatedAdminStack = delegatedAdminTestStacks.stacks.get(`Management-us-east-1`)!;
+
+describe('delegatedAdminStack', () => {
+  snapShotTest(testNamePrefix, delegatedAdminStack);
+});
+
 describe('tagging policies', () => {
   test("two OU's both get tagging policies", () => {
     const template = Template.fromStack(multiOuStack);
