@@ -303,14 +303,6 @@ awsConfig:
           identifier: API_GW_EXECUTION_LOGGING_ENABLED
         - name: accelerator-cloudwatch-log-group-encrypted
           identifier: CLOUDWATCH_LOG_GROUP_ENCRYPTED
-        - name: accelerator-cloudwatch-alarm-action-check
-          complianceResourceTypes:
-            - AWS::CloudWatch::Alarm
-          inputParameters:
-            alarmActionRequired: "TRUE"
-            insufficientDataActionRequired: "TRUE"
-            okActionRequired: "FALSE"
-          identifier: CLOUDWATCH_ALARM_ACTION_CHECK  
         - name: accelerator-s3-bucket-replication-enabled
           complianceResourceTypes:
             - AWS::S3::Bucket
