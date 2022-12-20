@@ -22,7 +22,7 @@ const stack = new cdk.Stack();
 
 new SsmParameterLookup(stack, 'SsmParameter', {
   name: 'TestParameter',
-  accountId: '123123123123',
+  accountId: '111111111111',
   parameterRegion: 'us-east-1',
   roleName: 'TestRole',
   logRetentionInDays: 3653,

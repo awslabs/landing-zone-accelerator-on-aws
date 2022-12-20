@@ -32,13 +32,12 @@ const stack = new PipelineStack(app, 'PipelineStack', {
   qualifier: 'aws-accelerator',
   managementAccountId: app.account,
   managementAccountRoleName: 'AcceleratorAccountAccessRole',
-  managementAccountEmail: 'accelerator-root@mydomain.com',
-  logArchiveAccountEmail: 'accelerator-log-archive@mydomain.com',
-  auditAccountEmail: 'accelerator-audit@mydomain.com',
+  managementAccountEmail: 'accelerator-root@example.com',
+  logArchiveAccountEmail: 'accelerator-log-archive@example.com',
+  auditAccountEmail: 'accelerator-audit@example.com',
   controlTowerEnabled: 'Yes',
   partition: 'aws',
 });
-
 
 describe('PipelineStack', () => {
   snapShotTest(testNamePrefix, stack);

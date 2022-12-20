@@ -131,7 +131,7 @@ Object {
               Object {
                 "Ref": "AWS::Partition",
               },
-              ":iam::123123123123:role/TestRole",
+              ":iam::111111111111:role/TestRole",
             ],
           ],
         },
@@ -141,7 +141,7 @@ Object {
         "invokingRegion": Object {
           "Ref": "AWS::Region",
         },
-        "parameterAccountID": "123123123123",
+        "parameterAccountID": "111111111111",
         "parameterName": "TestParameter",
         "parameterRegion": "us-east-1",
         "uuid": "REPLACED-UUID",
