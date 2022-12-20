@@ -31,7 +31,7 @@ import {
 } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
-import { Logger } from '../logger';
+// import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 enum ACCEL_LOOKUP_TYPE {
@@ -155,17 +155,17 @@ export class SecurityResourcesStack extends AcceleratorStack {
     //
     for (const metricSetItem of props.securityConfig.cloudWatch.metricSets ?? []) {
       if (!metricSetItem.regions?.includes(cdk.Stack.of(this).region)) {
-        Logger.info(`[security-resources-stack] Current region not explicity specified for metric item, skip`);
+        // Logger.info(`[security-resources-stack] Current region not explicity specified for metric item, skip`);
         continue;
       }
 
       if (!this.isIncluded(metricSetItem.deploymentTargets)) {
-        Logger.info(`[security-resources-stack] Item excluded`);
+        // Logger.info(`[security-resources-stack] Item excluded`);
         continue;
       }
 
       for (const metricItem of metricSetItem.metrics ?? []) {
-        Logger.info(`[security-resources-stack] Creating CloudWatch metric filter ${metricItem.filterName}`);
+        // Logger.info(`[security-resources-stack] Creating CloudWatch metric filter ${metricItem.filterName}`);
         const metricFilter = new cdk.aws_logs.MetricFilter(this, pascalCase(metricItem.filterName), {
           logGroup: cdk.aws_logs.LogGroup.fromLogGroupName(
             this,
@@ -218,7 +218,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
     //
     this.createManagedActiveDirectorySecrets();
 
-    Logger.info('[security-resources-stack] Completed stack synthesis');
+    // Logger.info('[security-resources-stack] Completed stack synthesis');
   }
 
   /**
@@ -371,17 +371,17 @@ export class SecurityResourcesStack extends AcceleratorStack {
   private configureCloudwatchAlarm() {
     for (const alarmSetItem of this.props.securityConfig.cloudWatch.alarmSets ?? []) {
       if (!alarmSetItem.regions?.includes(cdk.Stack.of(this).region)) {
-        Logger.info(`[security-resources-stack] Current region not explicity specified for alarm item, skip`);
+        // Logger.info(`[security-resources-stack] Current region not explicity specified for alarm item, skip`);
         continue;
       }
 
       if (!this.isIncluded(alarmSetItem.deploymentTargets)) {
-        Logger.info(`[security-resources-stack] Item excluded`);
+        // Logger.info(`[security-resources-stack] Item excluded`);
         continue;
       }
 
       for (const alarmItem of alarmSetItem.alarms ?? []) {
-        Logger.info(`[security-resources-stack] Creating CloudWatch alarm ${alarmItem.alarmName}`);
+        // Logger.info(`[security-resources-stack] Creating CloudWatch alarm ${alarmItem.alarmName}`);
 
         const alarm = new cdk.aws_cloudwatch.Alarm(this, pascalCase(alarmItem.alarmName), {
           alarmName: alarmItem.alarmName,
@@ -517,7 +517,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
    * @returns
    */
   private createManagedConfigRule(rule: ConfigRule): CustomConfigRuleType {
-    Logger.info(`[security-resources-stack] Creating managed rule ${rule.name}`);
+    // // Logger.info(`[security-resources-stack] Creating managed rule ${rule.name}`);
 
     const resourceTypes: config.ResourceType[] = [];
     for (const resourceType of rule.complianceResourceTypes ?? []) {
@@ -543,7 +543,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
    * @returns
    */
   private createCustomConfigRule(rule: ConfigRule): CustomConfigRuleType {
-    Logger.info(`[security-resources-stack] Creating custom rule ${rule.name}`);
+    // // Logger.info(`[security-resources-stack] Creating custom rule ${rule.name}`);
     let ruleScope: config.RuleScope | undefined;
 
     if (rule.customRule.triggeringResources.lookupType == 'ResourceTypes') {
@@ -759,8 +759,6 @@ export class SecurityResourcesStack extends AcceleratorStack {
         // Create remediation for config rule
         if (rule.remediation) {
           this.setupConfigRuleRemediation(rule, configRule);
-        } else {
-          Logger.info(`[security-resources-stack] No remediation provided for custom config rule ${rule.name}`);
         }
 
         if (this.configRecorder) {
@@ -774,19 +772,19 @@ export class SecurityResourcesStack extends AcceleratorStack {
    * Function to setup AWS Config rules
    */
   private setupAwsConfigRules() {
-    Logger.info('[security-resources-stack] Evaluating AWS Config rule sets');
+    // Logger.info('[security-resources-stack] Evaluating AWS Config rule sets');
 
     for (const ruleSet of this.props.securityConfig.awsConfig.ruleSets) {
       if (!this.isIncluded(ruleSet.deploymentTargets)) {
-        Logger.info('[security-resources-stack] Item excluded');
+        // Logger.info('[security-resources-stack] Item excluded');
         continue;
       }
 
-      Logger.info(
-        `[security-resources-stack] Account (${
-          cdk.Stack.of(this).account
-        }) should be included, deploying AWS Config Rules`,
-      );
+      // Logger.info(
+      //   `[security-resources-stack] Account (${
+      //     cdk.Stack.of(this).account
+      //   }) should be included, deploying AWS Config Rules`,
+      // );
       this.createAwsConfigRules(ruleSet);
     }
   }
@@ -1134,10 +1132,10 @@ export class SecurityResourcesStack extends AcceleratorStack {
       this.props.globalConfig.logging.sessionManager.sendToCloudWatchLogs ||
       this.props.globalConfig.logging.sessionManager.sendToS3
     ) {
-      Logger.info(`[security-resources-stack] Creating Session Manager Logging Resources`);
-      Logger.info(
-        `[security-resources-stack] IAM Roles adding session manager policies ${this.props.globalConfig.logging.sessionManager.attachPolicyToIamRoles}`,
-      );
+      // Logger.info(`[security-resources-stack] Creating Session Manager Logging Resources`);
+      // Logger.info(
+      //   `[security-resources-stack] IAM Roles adding session manager policies ${this.props.globalConfig.logging.sessionManager.attachPolicyToIamRoles}`,
+      // );
       // Set up Session Manager Logging
       new SsmSessionManagerSettings(this, 'SsmSessionManagerSettings', {
         s3BucketName: `${
@@ -1194,7 +1192,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
         notificationLevel: this.props.securityConfig.centralSecurityServices.securityHub.notificationLevel,
         lambdaKey: this.lambdaKey,
       });
-      Logger.debug(`Stack: ${this.stackName}`);
+      // Logger.debug(`Stack: ${this.stackName}`);
       NagSuppressions.addResourceSuppressionsByPath(
         this,
         `/${this.stackName}/SecurityHubEventsLog/SecurityHubEventsFunction/ServiceRole/Resource`,
@@ -1231,7 +1229,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
   }
 
   private configureAccountCloudTrails() {
-    Logger.debug('[logging-stack] In Configure Account CloudTrails');
+    // Logger.debug('[logging-stack] In Configure Account CloudTrails');
 
     for (const accountTrail of this.stackProperties.globalConfig.logging.cloudtrail.accountTrails ?? []) {
       if (!accountTrail.regions?.includes(cdk.Stack.of(this).region)) {
@@ -1243,7 +1241,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
       }
 
       const trailName = `AWSAccelerator-CloudTrail-${accountTrail.name}`;
-      Logger.info(`[logging-stack] Adding Account CloudTrail ${trailName}`);
+      // Logger.info(`[logging-stack] Adding Account CloudTrail ${trailName}`);
 
       let accountTrailCloudWatchLogGroup: cdk.aws_logs.LogGroup | undefined = undefined;
       if (accountTrail.settings.sendToCloudWatchLogs) {

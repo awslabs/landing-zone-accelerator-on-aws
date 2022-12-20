@@ -32,8 +32,8 @@ centralSecurityServices:
         enable: true
         controlsToDisable:
           - IAM.1 # IAM policies should not allow for full admin privs
-          - EC2.10  # checks for VPC endpoint for EC2
-          - Lambda.4  # retired
+          - EC2.10 # checks for VPC endpoint for EC2
+          - Lambda.4 # retired
       - name: CIS AWS Foundations Benchmark v1.2.0
         enable: true
         controlsToDisable:
@@ -41,7 +41,7 @@ centralSecurityServices:
           - CIS.1.22
           - CIS.2.6
   ssmAutomation:
-      excludeRegions: []
+    excludeRegions: []
     documentSets:
       - shareTargets:
           organizationalUnits:
@@ -72,7 +72,7 @@ iamPasswordPolicy:
   # The minimum password length was chosen to be 14 to align with common industry practices.    #
   # If you need to comply with NIST SP 800-63B you can modify the password length to 8.         #
   #####################################
-  minimumPasswordLength: 14 
+  minimumPasswordLength: 14
   passwordReusePrevention: 24
   maxPasswordAge: 90
 awsConfig:
@@ -402,7 +402,7 @@ awsConfig:
             - AWS::IAM::Policy
           identifier: IAM_POLICY_NO_STATEMENTS_WITH_ADMIN_ACCESS
         - name: accelerator-multi-region-cloudtrail-enabled
-          identifier: MULTI_REGION_CLOUD_TRAIL_ENABLED  
+          identifier: MULTI_REGION_CLOUD_TRAIL_ENABLED
 cloudWatch:
   metricSets:
     - regions:
