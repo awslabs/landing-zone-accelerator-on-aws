@@ -240,24 +240,22 @@ export function getStackDependencies(stackMappings: customStackMapping[]): custo
   // extract unique runOrder values
   const runOrderValues = [...new Set(runOrderList)];
 
-  // if there are less than 2 stacks, stacks won't depend on each other
-  if (runOrderValues.length < 2) {
-    return sortedMappings;
-  }
-
-  for (const mapping of sortedMappings) {
-    // Get the index of the runOrder of the current stack
-    const currentRunOrderIndex = runOrderValues.indexOf(mapping.runOrder);
-    // If the stack has the lowest runOrder value, it will not depend on any other stacks
-    if (currentRunOrderIndex !== 0) {
-      // Get the index of the unique runOrder value immediately before the current stack
-      const dependencyIndex = currentRunOrderIndex - 1;
-      // Get the corresponding runOrder value
-      const dependencyValue = runOrderValues[dependencyIndex];
-      // Find all stacks with a matching runOrder value and add them as dependencies.
-      const stackDependencies = sortedMappings.filter(e => e.runOrder == dependencyValue) ?? [];
-      for (const stack of stackDependencies) {
-        mapping.dependsOn.push(stack.stackConfig.name);
+  // if there is more than one stack, set dependencies
+  if (runOrderValues.length > 1) {
+    for (const mapping of sortedMappings) {
+      // Get the index of the runOrder of the current stack
+      const currentRunOrderIndex = runOrderValues.indexOf(mapping.runOrder);
+      // If the stack has the lowest runOrder value, it will not depend on any other stacks
+      if (currentRunOrderIndex !== 0) {
+        // Get the index of the unique runOrder value immediately before the current stack
+        const dependencyIndex = currentRunOrderIndex - 1;
+        // Get the corresponding runOrder value
+        const dependencyValue = runOrderValues[dependencyIndex];
+        // Find all stacks with a matching runOrder value and add them as dependencies.
+        const stackDependencies = sortedMappings.filter(e => e.runOrder == dependencyValue) ?? [];
+        for (const stack of stackDependencies) {
+          mapping.dependsOn.push(stack.stackConfig.name);
+        }
       }
     }
   }

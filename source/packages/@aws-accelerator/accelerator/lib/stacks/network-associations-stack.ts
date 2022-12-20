@@ -428,7 +428,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     try {
       //Get NLB Targets in Ip Targets for lookup
       const nlbTargets = targetGroupItem.targets?.filter(target => {
-        return !(typeof target === 'string');
+        return typeof target !== 'string';
       }) as NlbTargetTypeConfig[];
       //Set AccountIds for lookup Custom Resource
       const nlbTargetsWithAccountIds =
@@ -2580,16 +2580,16 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         );
 
         // Configure managed active directory using provisioned EC2 instance user data
-        this.configureManagedActiveDirectory(
+        this.configureManagedActiveDirectory({
           managedActiveDirectory,
           activeDirectory,
           adminSecretArn,
-          madAdminSecretAccountId,
-          madAdminSecretRegion,
+          adSecretAccountId: madAdminSecretAccountId,
+          adSecretRegion: madAdminSecretRegion,
           sharedAccountNames,
-          madInstanceSubnetId!,
-          madVpcLookup.vpcId,
-        );
+          madInstanceSubnetId: madInstanceSubnetId!,
+          vpcId: madVpcLookup.vpcId,
+        });
       }
     }
   }
@@ -2674,18 +2674,18 @@ export class NetworkAssociationsStack extends AcceleratorStack {
    * Function to configure MAD
    * @param managedActiveDirectory
    */
-  private configureManagedActiveDirectory(
-    managedActiveDirectory: ManagedActiveDirectoryConfig,
-    activeDirectory: ActiveDirectory,
-    adminSecretArn: string,
-    adSecretAccountId: string,
-    adSecretRegion: string,
-    sharedAccountNames: string[],
-    madInstanceSubnetId: string,
-    vpcId: string,
-  ) {
-    if (managedActiveDirectory.activeDirectoryConfigurationInstance) {
-      const adInstanceConfig = managedActiveDirectory.activeDirectoryConfigurationInstance;
+  private configureManagedActiveDirectory(props: {
+    managedActiveDirectory: ManagedActiveDirectoryConfig;
+    activeDirectory: ActiveDirectory;
+    adminSecretArn: string;
+    adSecretAccountId: string;
+    adSecretRegion: string;
+    sharedAccountNames: string[];
+    madInstanceSubnetId: string;
+    vpcId: string;
+  }) {
+    if (props.managedActiveDirectory.activeDirectoryConfigurationInstance) {
+      const adInstanceConfig = props.managedActiveDirectory.activeDirectoryConfigurationInstance;
       const inboundRules: cdk.aws_ec2.CfnSecurityGroup.IngressProperty[] = [];
 
       for (const securityGroupInboundSource of adInstanceConfig.securityGroupInboundSources) {
@@ -2695,20 +2695,20 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
       const securityGroup = new cdk.aws_ec2.CfnSecurityGroup(
         this,
-        `${pascalCase(managedActiveDirectory.name)}SecurityGroup`,
+        `${pascalCase(props.managedActiveDirectory.name)}SecurityGroup`,
         {
           groupDescription: `${pascalCase(
-            managedActiveDirectory.name,
+            props.managedActiveDirectory.name,
           )} managed active directory instance security group`,
           securityGroupEgress: [{ ipProtocol: '-1', cidrIp: '0.0.0.0/0' }],
           securityGroupIngress: inboundRules,
-          groupName: `${managedActiveDirectory.name}_mad_instance_sg`,
-          vpcId: vpcId,
+          groupName: `${props.managedActiveDirectory.name}_mad_instance_sg`,
+          vpcId: props.vpcId,
           tags: [
-            { key: 'Name', value: `${managedActiveDirectory.name}_mad_instance_sg` },
+            { key: 'Name', value: `${props.managedActiveDirectory.name}_mad_instance_sg` },
             {
               key: 'Description',
-              value: `Security group for ${managedActiveDirectory.name} managed active directory instance`,
+              value: `Security group for ${props.managedActiveDirectory.name} managed active directory instance`,
             },
           ],
         },
@@ -2725,8 +2725,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       }
 
       const secretKey = new KeyLookup(this, 'SecretsKmsKeyLookup', {
-        accountId: adSecretAccountId,
-        keyRegion: adSecretRegion,
+        accountId: props.adSecretAccountId,
+        keyRegion: props.adSecretRegion,
         roleName: AcceleratorStack.ACCELERATOR_CROSS_ACCOUNT_SECRETS_KMS_ARN_PARAMETER_ROLE_NAME,
         keyArnParameterName: AcceleratorStack.ACCELERATOR_SECRET_MANAGER_KEY_ARN_PARAMETER_NAME,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
@@ -2734,18 +2734,18 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
       const activeDirectoryConfiguration = new ActiveDirectoryConfiguration(
         this,
-        `${pascalCase(managedActiveDirectory.name)}ConfigInstance`,
+        `${pascalCase(props.managedActiveDirectory.name)}ConfigInstance`,
         {
           instanceType: adInstanceConfig.instanceType,
           imagePath: adInstanceConfig.imagePath,
-          managedActiveDirectoryName: managedActiveDirectory.name,
-          managedActiveDirectorySecretAccountId: adSecretAccountId,
-          managedActiveDirectorySecretRegion: adSecretRegion,
-          dnsName: managedActiveDirectory.dnsName,
-          netBiosDomainName: managedActiveDirectory.netBiosDomainName,
-          adminPwdSecretArn: adminSecretArn,
+          managedActiveDirectoryName: props.managedActiveDirectory.name,
+          managedActiveDirectorySecretAccountId: props.adSecretAccountId,
+          managedActiveDirectorySecretRegion: props.adSecretRegion,
+          dnsName: props.managedActiveDirectory.dnsName,
+          netBiosDomainName: props.managedActiveDirectory.netBiosDomainName,
+          adminPwdSecretArn: props.adminSecretArn,
           secretKeyArn: secretKey.keyArn,
-          subnetId: madInstanceSubnetId,
+          subnetId: props.madInstanceSubnetId,
           securityGroupId: securityGroup.ref,
           instanceRoleName: adInstanceConfig.instanceRole,
           userDataScripts,
@@ -2754,19 +2754,19 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           adConnectorGroup: adInstanceConfig.adConnectorGroup,
           adUsers: adInstanceConfig.adUsers,
           adPasswordPolicy: adInstanceConfig.adPasswordPolicy,
-          accountNames: sharedAccountNames,
+          accountNames: props.sharedAccountNames,
         },
       );
 
-      activeDirectoryConfiguration.node.addDependency(activeDirectory);
+      activeDirectoryConfiguration.node.addDependency(props.activeDirectory);
 
       // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
       NagSuppressions.addResourceSuppressionsByPath(
         this,
         `${this.stackName}/` +
-          pascalCase(managedActiveDirectory.name) +
+          pascalCase(props.managedActiveDirectory.name) +
           'ConfigInstance/' +
-          pascalCase(managedActiveDirectory.name) +
+          pascalCase(props.managedActiveDirectory.name) +
           'InstanceRole/Resource',
         [
           {
@@ -2780,9 +2780,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       NagSuppressions.addResourceSuppressionsByPath(
         this,
         `${this.stackName}/` +
-          pascalCase(managedActiveDirectory.name) +
+          pascalCase(props.managedActiveDirectory.name) +
           'ConfigInstance/' +
-          pascalCase(managedActiveDirectory.name) +
+          pascalCase(props.managedActiveDirectory.name) +
           'InstanceRole/Instance',
         [
           {
@@ -2796,9 +2796,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       NagSuppressions.addResourceSuppressionsByPath(
         this,
         `${this.stackName}/` +
-          pascalCase(managedActiveDirectory.name) +
+          pascalCase(props.managedActiveDirectory.name) +
           'ConfigInstance/' +
-          pascalCase(managedActiveDirectory.name) +
+          pascalCase(props.managedActiveDirectory.name) +
           'InstanceRole/Instance',
         [
           {
@@ -2812,9 +2812,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       NagSuppressions.addResourceSuppressionsByPath(
         this,
         `${this.stackName}/` +
-          pascalCase(managedActiveDirectory.name) +
+          pascalCase(props.managedActiveDirectory.name) +
           'ConfigInstance/' +
-          pascalCase(managedActiveDirectory.name) +
+          pascalCase(props.managedActiveDirectory.name) +
           'Instance',
         [
           {
@@ -2828,9 +2828,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       NagSuppressions.addResourceSuppressionsByPath(
         this,
         `${this.stackName}/` +
-          pascalCase(managedActiveDirectory.name) +
+          pascalCase(props.managedActiveDirectory.name) +
           'ConfigInstance/' +
-          pascalCase(managedActiveDirectory.name) +
+          pascalCase(props.managedActiveDirectory.name) +
           'Instance',
         [
           {
@@ -2845,7 +2845,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         NagSuppressions.addResourceSuppressionsByPath(
           this,
           `${this.stackName}/` +
-            pascalCase(managedActiveDirectory.name) +
+            pascalCase(props.managedActiveDirectory.name) +
             'ConfigInstance/' +
             pascalCase(adUser.name) +
             'Secret/Resource',
