@@ -1,0 +1,32 @@
+mandatoryAccounts:
+  # We recommend you do not change mandatory account names. These are used within Landing Zone Accelerator to reference the accounts from other config files. 
+  # The "name" value does not currently support spaces
+  # The "name" value DOES NOT need to match the account name
+  - name: Management
+    description: The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: <management-account>@example.com # <----- UPDATE EMAIL ADDRESS 
+    organizationalUnit: Root
+  - name: LogArchive
+    description: The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: <log-archive>@example.com  # <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Security
+  - name: Audit
+    description: The security tooling account (referred internally as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: <security-tooling>@example.com   # <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Security
+workloadAccounts:
+  # The "name" will be used to set the AWS Account name
+  # The "name" value does not currently support spaces
+  # The "name" value DOES NOT need to match the account name
+  - name: Network
+    description: The shared network account is used for shared networking resources. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: <shared-network>@example.com  # <----- UPDATE EMAIL ADDRESS 
+    organizationalUnit: Infrastructure
+  - name: Operations
+    description: This Account is used for centralized IT Operational resources (MAD, rsyslog, ITSM, etc.). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: <operations>@example.com   # <----- UPDATE EMAIL ADDRESS 
+    organizationalUnit: Infrastructure
+  - name: Perimeter
+    description: Used for Internet facing, IaaS-based ingress/egress security services
+    email: <perimeter>@example.com   # <----- UPDATE EMAIL ADDRESS 
+    organizationalUnit: Infrastructure 

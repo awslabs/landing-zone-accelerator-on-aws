@@ -1,0 +1,8 @@
+[
+  { "logGroupPattern": "/AWSAccelerator/MAD", "s3Prefix": "managed-ad" },
+  { "logGroupPattern": "/AWSAccelerator/rql", "s3Prefix": "rql" },
+  { "logGroupPattern": "/AWSAccelerator-SecurityHub", "s3Prefix": "security-hub" },
+  { "logGroupPattern": "AwsAcceleratorFirewallFlowLogGroup", "s3Prefix": "nfw" },
+  { "logGroupPattern": "/AWSAccelerator/rsyslog", "s3Prefix": "rsyslog" },
+  { "logGroupPattern": "aws-accelerator-sessionmanager-logs", "s3Prefix": "ssm" }
+]
