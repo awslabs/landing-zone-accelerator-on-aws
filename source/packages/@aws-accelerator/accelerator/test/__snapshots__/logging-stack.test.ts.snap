@@ -1182,6 +1182,7 @@ Object {
                 Object {
                   "Action": Array [
                     "logs:PutSubscriptionFilter",
+                    "logs:DeleteSubscriptionFilter",
                   ],
                   "Effect": "Allow",
                   "Resource": Array [
@@ -1729,10 +1730,7 @@ Object {
         },
         "Environment": Object {
           "Variables": Object {
-            "DynamicS3LogPartitioningMapping": "[
-  { \\"logGroupPattern\\": \\"/AWSAccelerator-SecurityHub\\", \\"s3Prefix\\": \\"security-hub\\" }
-]
-",
+            "DynamicS3LogPartitioningMapping": "REPLACED-JSON-PATH.json",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
@@ -2472,7 +2470,10 @@ Object {
               },
             },
             Object {
-              "Action": "logs:PutSubscriptionFilter",
+              "Action": Array [
+                "logs:PutSubscriptionFilter",
+                "logs:DeleteSubscriptionFilter",
+              ],
               "Effect": "Allow",
               "Resource": Array [
                 Object {

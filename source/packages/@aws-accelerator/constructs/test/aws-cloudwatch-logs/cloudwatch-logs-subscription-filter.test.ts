@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { CloudWatchLogsSubscriptionFilter } from '../../lib/aws-cloudwatch-logs/cloudwatch-logs-subscription-filter';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(CloudWatchLogsSubscriptionFilter): ';
 

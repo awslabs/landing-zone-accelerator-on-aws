@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { NewCloudWatchLogEvent } from '../../lib/aws-events/new-cloudwatch-log-event-rule';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(NewCloudWatchLogEvent): ';
 
