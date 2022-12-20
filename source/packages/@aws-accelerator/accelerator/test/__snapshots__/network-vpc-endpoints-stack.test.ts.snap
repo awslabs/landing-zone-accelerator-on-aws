@@ -763,7 +763,8 @@ Object {
           "LogDestinationConfigs": Array [
             Object {
               "LogDestination": Object {
-                "bucketName": "aws-accelerator-central-logs-333333333333-us-east-1",
+                "bucketName": "aws-accelerator-central-logs-333333333333-us-west-2",
+                "prefix": "firewall",
               },
               "LogDestinationType": "S3",
               "LogType": "ALERT",

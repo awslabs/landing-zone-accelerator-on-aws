@@ -358,20 +358,23 @@ export abstract class Accelerator {
     }
 
     //
-    // Home region logging stack needs to complete first before other enable regions. Because CentralLog buckets is created in home region.
-    // ELB access log bucket is created in every region, ELB access log bucket needs to replicate to Central Log bucket, so home region must be completed
+    // CentralLogs bucket region logging stack needs to complete first before other enable regions. Because CentralLog buckets is created in home region.
+    // ELB access log bucket is created in every region, ELB access log bucket needs to replicate to Central Log bucket, so CentralLogs bucket region must be completed
     // before any other region.
+    // When CentralLogs bucket is not defined, CentralLogs bucket will be pipeline home region.
     if (props.stage === AcceleratorStage.LOGGING) {
       const logAccountId = accountsConfig.getLogArchiveAccountId();
       const logAccountName = accountsConfig.getAccountId(accountsConfig.getLogArchiveAccount().name);
-      const homeRegion = globalConfig.homeRegion;
+      const centralLogsBucketRegion = globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion;
 
       // Execute home region before other region for LogArchive account
-      Logger.info(`[accelerator] Executing ${props.stage} for ${logAccountName} account in ${homeRegion} region.`);
+      Logger.info(
+        `[accelerator] Executing ${props.stage} for ${logAccountName} account in ${centralLogsBucketRegion} region.`,
+      );
       await AcceleratorToolkit.execute({
         command: props.command,
         accountId: logAccountId,
-        region: homeRegion,
+        region: centralLogsBucketRegion,
         partition: props.partition,
         stage: props.stage,
         configDirPath: props.configDirPath,
@@ -380,17 +383,19 @@ export abstract class Accelerator {
       });
       // execute in all other regions for Logging account, except home region
       for (const region of globalConfig.enabledRegions) {
-        Logger.info(`[accelerator] Executing ${props.stage} for ${logAccountName} account in ${region} region.`);
-        await AcceleratorToolkit.execute({
-          command: props.command,
-          accountId: logAccountId,
-          region: region,
-          partition: props.partition,
-          stage: props.stage,
-          configDirPath: props.configDirPath,
-          requireApproval: props.requireApproval,
-          app: props.app,
-        });
+        if (region !== centralLogsBucketRegion) {
+          Logger.info(`[accelerator] Executing ${props.stage} for ${logAccountName} account in ${region} region.`);
+          await AcceleratorToolkit.execute({
+            command: props.command,
+            accountId: logAccountId,
+            region: region,
+            partition: props.partition,
+            stage: props.stage,
+            configDirPath: props.configDirPath,
+            requireApproval: props.requireApproval,
+            app: props.app,
+          });
+        }
       }
       // execute in all other regions for all accounts, except logging account home region
       for (const region of globalConfig.enabledRegions) {

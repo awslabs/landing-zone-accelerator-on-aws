@@ -56,7 +56,7 @@ export interface OrganizationsStackProps extends AcceleratorStackProps {
 export class OrganizationsStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.Key;
   private centralLogsBucketKey: cdk.aws_kms.Key;
-  private centralLogBucketReplicationProps: BucketReplicationProps;
+  private bucketReplicationProps: BucketReplicationProps;
   private logRetention: number;
   private stackProperties: AcceleratorStackProps;
 
@@ -79,19 +79,17 @@ export class OrganizationsStack extends AcceleratorStack {
 
     this.centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
       accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
-      keyRegion: this.stackProperties.globalConfig.homeRegion,
+      keyRegion: props.centralizedLoggingRegion,
       roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
       keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
       logRetentionInDays: this.stackProperties.globalConfig.cloudwatchLogRetentionInDays,
     }).getKey();
 
-    this.centralLogBucketReplicationProps = {
+    this.bucketReplicationProps = {
       destination: {
         bucketName: `${
           AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
-        }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
-          this.stackProperties.globalConfig.homeRegion
-        }`,
+        }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
         accountId: this.stackProperties.accountsConfig.getLogArchiveAccountId(),
         keyArn: this.centralLogsBucketKey.keyArn,
       },
@@ -224,7 +222,7 @@ export class OrganizationsStack extends AcceleratorStack {
         s3LifeCycleRules: this.getS3LifeCycleRules(
           this.stackProperties.globalConfig.reports.costAndUsageReport.lifecycleRules,
         ),
-        replicationProps: this.centralLogBucketReplicationProps,
+        replicationProps: this.bucketReplicationProps,
       });
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
@@ -234,9 +232,7 @@ export class OrganizationsStack extends AcceleratorStack {
           pascalCase(
             `${
               AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
-            }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${
-              this.stackProperties.globalConfig.homeRegion
-            }`,
+            }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
           ) +
           '-ReplicationRole/DefaultPolicy/Resource',
         [

@@ -1,6 +1,7 @@
 homeRegion: &HOME_REGION us-east-1
 enabledRegions:
   - *HOME_REGION
+  - us-west-2
 managementAccountAccessRole: AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 3653
 terminationProtection: true
@@ -10,6 +11,7 @@ centralizeCdkBuckets:
   enable: true
 logging:
   account: LogArchive
+  centralizedLoggingRegion: us-west-2
   cloudtrail:
     enable: false
     organizationTrail: false

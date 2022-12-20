@@ -228,13 +228,14 @@ async function main() {
     }
 
     if (configDirPath) {
+      const globalConfig = GlobalConfig.load(configDirPath);
       //
       // Create properties to be used by AcceleratorStack types
       //
       const props = {
         configDirPath,
         accountsConfig: AccountsConfig.load(configDirPath),
-        globalConfig: GlobalConfig.load(configDirPath),
+        globalConfig,
         iamConfig: IamConfig.load(configDirPath),
         networkConfig: NetworkConfig.load(configDirPath),
         organizationConfig: OrganizationConfig.load(configDirPath),
@@ -243,6 +244,7 @@ async function main() {
         qualifier: process.env['ACCELERATOR_QUALIFIER'],
         configCommitId: process.env['CONFIG_COMMIT_ID'],
         globalRegion: globalRegion,
+        centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
       };
 
       //

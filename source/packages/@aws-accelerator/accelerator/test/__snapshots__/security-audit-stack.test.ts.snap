@@ -101,7 +101,7 @@ Object {
               Object {
                 "Ref": "AWS::Partition",
               },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-east-1",
+              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
             ],
           ],
         },
@@ -111,7 +111,7 @@ Object {
         "prefix": "",
         "replicationRoleArn": Object {
           "Fn::GetAtt": Array [
-            "AcceleratorCloudTrailBucketAcceleratorCloudTrailBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRoleEEAC3A72",
+            "AcceleratorCloudTrailBucketAcceleratorCloudTrailBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole3A48AFCD",
             "Arn",
           ],
         },
@@ -122,7 +122,25 @@ Object {
       "Type": "Custom::S3PutBucketReplication",
       "UpdateReplacePolicy": "Delete",
     },
-    "AcceleratorCloudTrailBucketAcceleratorCloudTrailBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRoleDefaultPolicyEE973955": Object {
+    "AcceleratorCloudTrailBucketAcceleratorCloudTrailBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole3A48AFCD": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "s3.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Path": "/service-role/",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AcceleratorCloudTrailBucketAcceleratorCloudTrailBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy54FB3460": Object {
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [
@@ -193,7 +211,7 @@ Object {
                     Object {
                       "Ref": "AWS::Partition",
                     },
-                    ":s3:::aws-accelerator-central-logs-333333333333-us-east-1/*",
+                    ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
                   ],
                 ],
               },
@@ -215,32 +233,14 @@ Object {
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "railBucketAcceleratorCloudTrailBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRoleDefaultPolicyEE973955",
+        "PolicyName": "railBucketAcceleratorCloudTrailBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy54FB3460",
         "Roles": Array [
           Object {
-            "Ref": "AcceleratorCloudTrailBucketAcceleratorCloudTrailBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRoleEEAC3A72",
+            "Ref": "AcceleratorCloudTrailBucketAcceleratorCloudTrailBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRole3A48AFCD",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
-    },
-    "AcceleratorCloudTrailBucketAcceleratorCloudTrailBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRoleEEAC3A72": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": Object {
-                "Service": "s3.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Path": "/service-role/",
-      },
-      "Type": "AWS::IAM::Role",
     },
     "AcceleratorCloudTrailBucketPolicy0D7244D6": Object {
       "Properties": Object {
@@ -720,35 +720,7 @@ def script_handler(events, context):
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRole6A72DBC5": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": Object {
-                "Service": "s3.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "Path": "/service-role/",
-        "Tags": Array [
-          Object {
-            "Key": "aws-cdk:auto-audit-manager-access-bucket",
-            "Value": "true",
-          },
-          Object {
-            "Key": "aws-cdk:auto-auditManager-access-bucket",
-            "Value": "true",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRoleDefaultPolicy1198EC52": Object {
+    "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy6D87750E": Object {
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [
@@ -819,7 +791,7 @@ def script_handler(events, context):
                     Object {
                       "Ref": "AWS::Partition",
                     },
-                    ":s3:::aws-accelerator-central-logs-333333333333-us-east-1/*",
+                    ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/*",
                   ],
                 ],
               },
@@ -841,14 +813,42 @@ def script_handler(events, context):
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "ditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRoleDefaultPolicy1198EC52",
+        "PolicyName": "ditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleDefaultPolicy6D87750E",
         "Roles": Array [
           Object {
-            "Ref": "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRole6A72DBC5",
+            "Ref": "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleE0509DD9",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleE0509DD9": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "s3.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Path": "/service-role/",
+        "Tags": Array [
+          Object {
+            "Key": "aws-cdk:auto-audit-manager-access-bucket",
+            "Value": "true",
+          },
+          Object {
+            "Key": "aws-cdk:auto-auditManager-access-bucket",
+            "Value": "true",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
     },
     "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationECF1B287": Object {
       "DeletionPolicy": "Delete",
@@ -871,7 +871,7 @@ def script_handler(events, context):
               Object {
                 "Ref": "AWS::Partition",
               },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-east-1",
+              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
             ],
           ],
         },
@@ -881,7 +881,7 @@ def script_handler(events, context):
         "prefix": "",
         "replicationRoleArn": Object {
           "Fn::GetAtt": Array [
-            "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsEast1ReplicationRole6A72DBC5",
+            "AuditManagerPublishingDestinationBucketAuditManagerPublishingDestinationBucketReplicationAwsAcceleratorCentralLogs333333333333UsWest2ReplicationRoleE0509DD9",
             "Arn",
           ],
         },
@@ -1048,7 +1048,7 @@ def script_handler(events, context):
         "invokingRegion": "us-east-1",
         "parameterAccountID": "333333333333",
         "parameterName": "/accelerator/logging/central-bucket/kms/arn",
-        "parameterRegion": "us-east-1",
+        "parameterRegion": "us-west-2",
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::SsmGetParameterValue",
