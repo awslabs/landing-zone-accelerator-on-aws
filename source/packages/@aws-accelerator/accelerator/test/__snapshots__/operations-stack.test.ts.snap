@@ -401,6 +401,50 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "StackSetAdminRole10A324D2": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policies definition are derived from accelerator iam-config boundary-policy file",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "cloudformation.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "Assumes AWSCloudFormationStackSetExecutionRole in workload accounts to deploy StackSets",
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": "sts:AssumeRole",
+                  "Effect": "Allow",
+                  "Resource": "arn:*:iam::*:role/AWSCloudFormationStackSetExecutionRole",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "AssumeRole",
+          },
+        ],
+        "RoleName": "AWSCloudFormationStackSetAdministrationRole",
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "accelbudgetBudgetDefinitionaccelbudget73707CCE": Object {
       "Properties": Object {
         "Budget": Object {

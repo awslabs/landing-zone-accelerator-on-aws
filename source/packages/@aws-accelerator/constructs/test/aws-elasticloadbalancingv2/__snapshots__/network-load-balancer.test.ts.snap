@@ -1,0 +1,144 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NetworkLoadBalancer Construct(NetworkLoadBalancer):  Snapshot Test 1`] = `
+Object {
+  "Parameters": Object {
+    "SsmParameterValueacceleratorapplicationtargetGroupappAvpcAtargetgrouptest1arnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/application/targetGroup/appA/vpcA/target-group-test1/arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratorapplicationtargetGroupappAvpcAtargetgrouptestarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/application/targetGroup/appA/vpcA/target-group-test/arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": Object {
+    "Test7BFAF513": Object {
+      "Properties": Object {
+        "LoadBalancerAttributes": Array [
+          Object {
+            "Key": "deletion_protection.enabled",
+            "Value": "true",
+          },
+          Object {
+            "Key": "load_balancing.cross_zone.enabled",
+            "Value": "true",
+          },
+          Object {
+            "Key": "access_logs.s3.enabled",
+            "Value": "true",
+          },
+          Object {
+            "Key": "access_logs.s3.bucket",
+            "Value": "test-bucket",
+          },
+          Object {
+            "Key": "access_logs.s3.prefix",
+            "Value": Object {
+              "Fn::Join": Array [
+                "",
+                Array [
+                  Object {
+                    "Ref": "AWS::AccountId",
+                  },
+                  "/",
+                  Object {
+                    "Ref": "AWS::Region",
+                  },
+                  "/Test",
+                ],
+              ],
+            },
+          },
+        ],
+        "Name": "Test",
+        "Scheme": "internal",
+        "Subnets": Array [
+          "subnet-test123",
+          "subnet-test456",
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Test",
+          },
+        ],
+        "Type": "network",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    },
+    "TestListenerstring15C484455": Object {
+      "Properties": Object {
+        "AlpnPolicy": Array [
+          "TLS_V1_2_2018",
+        ],
+        "Certificates": Array [
+          Object {
+            "CertificateArn": "fully-qualified-arn-acm",
+          },
+        ],
+        "DefaultActions": Array [
+          Object {
+            "ForwardConfig": Object {
+              "TargetGroups": Array [
+                Object {
+                  "TargetGroupArn": Object {
+                    "Ref": "SsmParameterValueacceleratorapplicationtargetGroupappAvpcAtargetgrouptest1arnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                  },
+                },
+              ],
+            },
+            "TargetGroupArn": Object {
+              "Ref": "SsmParameterValueacceleratorapplicationtargetGroupappAvpcAtargetgrouptest1arnC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": Object {
+          "Ref": "Test7BFAF513",
+        },
+        "Port": 81,
+        "Protocol": "HTTP",
+        "SslPolicy": "ELBSecurityPolicy-2016-08",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
+    "TestListenerstring7A65A381": Object {
+      "Properties": Object {
+        "AlpnPolicy": Array [
+          "TLS_V1_2_2018",
+        ],
+        "Certificates": Array [
+          Object {
+            "CertificateArn": "fully-qualified-arn-acm",
+          },
+        ],
+        "DefaultActions": Array [
+          Object {
+            "ForwardConfig": Object {
+              "TargetGroups": Array [
+                Object {
+                  "TargetGroupArn": Object {
+                    "Ref": "SsmParameterValueacceleratorapplicationtargetGroupappAvpcAtargetgrouptestarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                  },
+                },
+              ],
+            },
+            "TargetGroupArn": Object {
+              "Ref": "SsmParameterValueacceleratorapplicationtargetGroupappAvpcAtargetgrouptestarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+            },
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": Object {
+          "Ref": "Test7BFAF513",
+        },
+        "Port": 80,
+        "Protocol": "HTTP",
+        "SslPolicy": "ELBSecurityPolicy-2016-08",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
+  },
+}
+`;

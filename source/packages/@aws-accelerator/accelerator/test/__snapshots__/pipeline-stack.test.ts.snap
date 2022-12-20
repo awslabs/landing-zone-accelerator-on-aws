@@ -853,6 +853,37 @@ Object {
                   "Version": "1",
                 },
                 "Configuration": Object {
+                  "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage customizations\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"customizations\\"}]",
+                  "PrimarySource": "Build",
+                  "ProjectName": Object {
+                    "Ref": "PipelineToolkitProjectBCBD6910",
+                  },
+                },
+                "InputArtifacts": Array [
+                  Object {
+                    "Name": "Build",
+                  },
+                  Object {
+                    "Name": "Config",
+                  },
+                ],
+                "Name": "Customizations",
+                "RoleArn": Object {
+                  "Fn::GetAtt": Array [
+                    "PipelinePipelineRole6D983AD5",
+                    "Arn",
+                  ],
+                },
+                "RunOrder": 4,
+              },
+              Object {
+                "ActionTypeId": Object {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Provider": "CodeBuild",
+                  "Version": "1",
+                },
+                "Configuration": Object {
                   "EnvironmentVariables": "[{\\"name\\":\\"CDK_OPTIONS\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"deploy --stage finalize\\"},{\\"name\\":\\"CONFIG_COMMIT_ID\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"#{Config-Vars.CommitId}\\"},{\\"name\\":\\"ACCELERATOR_STAGE\\",\\"type\\":\\"PLAINTEXT\\",\\"value\\":\\"finalize\\"}]",
                   "PrimarySource": "Build",
                   "ProjectName": Object {
@@ -874,7 +905,7 @@ Object {
                     "Arn",
                   ],
                 },
-                "RunOrder": 4,
+                "RunOrder": 5,
               },
             ],
             "Name": "Deploy",

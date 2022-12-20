@@ -16,9 +16,12 @@ import {
   IamConfig,
   OrganizationConfig,
   SecurityConfig,
+  CustomizationsConfigValidator,
   NetworkConfigValidator,
 } from '@aws-accelerator/config';
 import { Logger } from './logger';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const configDirPath = process.argv[2];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,6 +63,15 @@ if (configDirPath) {
     SecurityConfig.load(configDirPath, true);
   } catch (e) {
     errors.push({ file: 'security-config.yaml', message: e });
+  }
+
+  // Validate optional configuration files if they exist
+  if (fs.existsSync(path.join(configDirPath, 'customizations-config.yaml'))) {
+    try {
+      new CustomizationsConfigValidator(configDirPath);
+    } catch (e) {
+      errors.push({ file: 'customizations-config.yaml', message: e });
+    }
   }
 
   if (errors.length > 0) {

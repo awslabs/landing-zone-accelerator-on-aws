@@ -101,3 +101,8 @@ export * from './lib/aws-ssm/session-manager-settings';
 export * from './lib/aws-ssm/put-ssm-parameter';
 export * from './lib/aws-ssm/ssm-parameter-lookup';
 export * from './lib/aws-events/security-hub-events-log';
+export * from './lib/aws-ec2/create-launch-template';
+export * from './lib/aws-autoscaling/create-autoscaling-group';
+export * from './lib/aws-elasticloadbalancingv2/target-group';
+export * from './lib/aws-elasticloadbalancingv2/network-load-balancer';
+export * from './lib/aws-elasticloadbalancingv2/application-load-balancer';

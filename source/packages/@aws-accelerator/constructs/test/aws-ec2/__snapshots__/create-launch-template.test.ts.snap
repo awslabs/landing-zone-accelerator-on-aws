@@ -1,0 +1,49 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LaunchTemplate Construct(LaunchTemplate):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestLaunchTemplateAC264C67": Object {
+      "Properties": Object {
+        "LaunchTemplateData": Object {
+          "BlockDeviceMappings": Array [
+            Object {
+              "DeviceName": "test",
+              "Ebs": Object {
+                "DeleteOnTermination": true,
+                "Encrypted": true,
+                "Iops": 300,
+                "KmsKeyId": "test",
+                "VolumeSize": 10,
+              },
+            },
+          ],
+          "IamInstanceProfile": Object {},
+          "ImageId": "ami-1234",
+          "InstanceType": "t3.micro",
+          "MetadataOptions": Object {
+            "HttpTokens": "required",
+          },
+          "SecurityGroupIds": Array [
+            "sg-1234",
+          ],
+          "UserData": Object {
+            "Fn::Base64": "#!/bin/bash
+yum update -y
+yum install -y httpd 
+systemctl start httpd
+systemctl enable httpd
+usermod -a -G apache ec2-user
+chown -R ec2-user:apache /var/www
+chmod 2775 /var/www
+find /var/www -type d -exec chmod 2775 {} \\\\;
+find /var/www -type f -exec chmod 0664 {} \\\\;",
+          },
+        },
+        "LaunchTemplateName": "Test",
+      },
+      "Type": "AWS::EC2::LaunchTemplate",
+    },
+  },
+}
+`;

@@ -67,6 +67,7 @@ export class OperationsStack extends AcceleratorStack {
       this.addRoles();
       this.addGroups();
       this.addUsers();
+      this.createStackSetRoles();
       //
       // Budgets
       //
@@ -440,5 +441,68 @@ export class OperationsStack extends AcceleratorStack {
       accountId: cdk.Stack.of(this).account,
       prefix: 'aws-accelerator',
     });
+  }
+
+  /**
+   * Creates CloudFormation roles required for StackSets if stacksets are defined in customizations-config.yaml
+   * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html#prereqs-self-managed-permissions
+   */
+  private createStackSetRoles() {
+    if (this.props.customizationsConfig?.customizations?.cloudFormationStackSets) {
+      const managementAccountId = this.props.accountsConfig.getManagementAccountId();
+      if (cdk.Stack.of(this).account == managementAccountId) {
+        this.createStackSetAdminRole();
+      } else {
+        this.createStackSetExecutionRole(managementAccountId);
+      }
+    }
+  }
+
+  private createStackSetAdminRole() {
+    Logger.info(`[operations-stack] Creating StackSet Administrator Role`);
+    new cdk.aws_iam.Role(this, 'StackSetAdminRole', {
+      roleName: 'AWSCloudFormationStackSetAdministrationRole',
+      assumedBy: new cdk.aws_iam.ServicePrincipal('cloudformation.amazonaws.com'),
+      description: 'Assumes AWSCloudFormationStackSetExecutionRole in workload accounts to deploy StackSets',
+      inlinePolicies: {
+        AssumeRole: new cdk.aws_iam.PolicyDocument({
+          statements: [
+            new cdk.aws_iam.PolicyStatement({
+              effect: cdk.aws_iam.Effect.ALLOW,
+              actions: ['sts:AssumeRole'],
+              resources: ['arn:*:iam::*:role/AWSCloudFormationStackSetExecutionRole'],
+            }),
+          ],
+        }),
+      },
+    });
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/StackSetAdminRole/Resource`, [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Policies definition are derived from accelerator iam-config boundary-policy file',
+      },
+    ]);
+  }
+
+  private createStackSetExecutionRole(managementAccountId: string) {
+    Logger.info(`[operations-stack] Creating StackSet Execution Role`);
+    new cdk.aws_iam.Role(this, 'StackSetExecutionRole', {
+      roleName: 'AWSCloudFormationStackSetExecutionRole',
+      assumedBy: new cdk.aws_iam.AccountPrincipal(managementAccountId),
+      description: 'Used to deploy StackSets',
+      managedPolicies: [cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess')],
+    });
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    // rule suppression with evidence for this permission.
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/StackSetExecutionRole/Resource`, [
+      {
+        id: 'AwsSolutions-IAM4',
+        reason: 'IAM Role created as per accelerator iam-config needs AWS managed policy',
+      },
+    ]);
   }
 }
