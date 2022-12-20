@@ -44,7 +44,7 @@ describe('CustomizationsConfig', () => {
     const customizationsConfig = new CustomizationsConfig();
 
     it('has loaded successfully', () => {
-      expect(customizationsConfigFromFile.customizations.cloudFormationStacks.length).toBe(1);
+      expect(customizationsConfigFromFile.customizations.cloudFormationStacks.length).toBe(3);
       expect(customizationsConfig.customizations.cloudFormationStacks.length).toBe(0);
       expect(customizationsConfigFromFile.applications.length).toBe(1);
       expect(customizationsConfig.applications.length).toBe(0);
