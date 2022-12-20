@@ -7,10 +7,6 @@ Object {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
-      "Default": "/accelerator/kms/key1/key-arn",
-      "Type": "AWS::SSM::Parameter::Value<String>",
-    },
     "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
       "Default": "/accelerator/network/gwlb/Accelerator-GWLB/arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -101,6 +97,10 @@ Object {
     },
     "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionTgwAttachBidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
       "Default": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-B/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/security-stack/ebsDefaultVolumeEncryptionKeyArn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amihvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter": Object {
@@ -256,7 +256,7 @@ Object {
                               "Fn::Split": Array [
                                 ":",
                                 Object {
-                                  "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                  "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
                                 },
                               ],
                             },
@@ -286,7 +286,7 @@ Object {
                               "Fn::Split": Array [
                                 ":",
                                 Object {
-                                  "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                  "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
                                 },
                               ],
                             },
@@ -397,7 +397,7 @@ Object {
                               "Fn::Split": Array [
                                 ":",
                                 Object {
-                                  "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                  "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
                                 },
                               ],
                             },
@@ -427,7 +427,7 @@ Object {
                               "Fn::Split": Array [
                                 ":",
                                 Object {
-                                  "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                  "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
                                 },
                               ],
                             },
@@ -617,7 +617,7 @@ Object {
                               "Fn::Split": Array [
                                 ":",
                                 Object {
-                                  "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                  "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
                                 },
                               ],
                             },
@@ -647,7 +647,7 @@ Object {
                               "Fn::Split": Array [
                                 ":",
                                 Object {
-                                  "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+                                  "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
                                 },
                               ],
                             },
