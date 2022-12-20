@@ -19,7 +19,12 @@ import { snapShotTest } from './snapshot-test';
 
 const testNamePrefix = 'Construct(NetworkAssociationsStack): ';
 
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.NETWORK_ASSOCIATIONS, 'all-enabled', 'aws');
+const acceleratorTestStacks = new AcceleratorSynthStacks(
+  AcceleratorStage.NETWORK_ASSOCIATIONS,
+  'all-enabled',
+  'aws',
+  'us-east-1',
+);
 const stack = acceleratorTestStacks.stacks.get(`Network-us-east-1`)!;
 
 describe('NetworkAssociationsStack', () => {

@@ -18,7 +18,7 @@ import { snapShotTest } from './snapshot-test';
 
 const testNamePrefix = 'Construct(LoggingStack): ';
 
-const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.LOGGING, 'all-enabled', 'aws');
+const acceleratorTestStacks = new AcceleratorSynthStacks(AcceleratorStage.LOGGING, 'all-enabled', 'aws', 'us-east-1');
 const stack = acceleratorTestStacks.stacks.get(`LogArchive-us-east-1`)!;
 
 describe('LoggingStack', () => {
