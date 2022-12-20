@@ -39,11 +39,10 @@ serviceControlPolicies:
   - name: Accelerator-HIPAA
     description: >
       Enforce only HIPAA eligible services.
-    policy: service-control-policies/scp-hcl-hipaa-service.json
+    policy: service-control-policies/scp-hlc-hipaa-service.json
     type: customerManaged
     deploymentTargets:
-      organizationalUnits:
-        - Tenant-HIS
+      organizationalUnits: []
 
   - name: Quarantine
     description: >
