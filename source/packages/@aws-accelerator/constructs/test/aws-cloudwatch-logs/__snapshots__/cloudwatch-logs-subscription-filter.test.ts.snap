@@ -169,6 +169,7 @@ Object {
                 Object {
                   "Action": Array [
                     "logs:PutSubscriptionFilter",
+                    "logs:DeleteSubscriptionFilter",
                   ],
                   "Effect": "Allow",
                   "Resource": Array [

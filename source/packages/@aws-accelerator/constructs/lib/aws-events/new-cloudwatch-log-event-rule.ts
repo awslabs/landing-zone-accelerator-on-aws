@@ -13,6 +13,14 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
+
+export type cloudwatchExclusionProcessedItem = {
+  account: string;
+  region: string;
+  excludeAll?: boolean;
+  logGroupNames?: string[];
+};
+
 /**
  * Construction properties for CloudWatch Logs Creating account.
  */
@@ -48,6 +56,10 @@ export interface NewCloudWatchLogsEventProps {
    * AWS Partition where code is being executed
    */
   logArchiveAccountId: string;
+  /**
+   * CloudWatch Logs exclusion setting
+   */
+  exclusionSetting?: cloudwatchExclusionProcessedItem;
 }
 
 /**
@@ -83,6 +95,7 @@ export class NewCloudWatchLogEvent extends Construct {
           LogDestination: props.logDestinationArn,
           LogSubscriptionRole: props.subscriptionFilterRoleArn,
           LogKmsKeyArn: props.logsKmsKey.keyArn,
+          LogExclusion: JSON.stringify(props.exclusionSetting!),
         },
         initialPolicy: [
           new cdk.aws_iam.PolicyStatement({
@@ -99,7 +112,7 @@ export class NewCloudWatchLogEvent extends Construct {
             ],
           }),
           new cdk.aws_iam.PolicyStatement({
-            actions: ['logs:PutSubscriptionFilter'],
+            actions: ['logs:PutSubscriptionFilter', 'logs:DeleteSubscriptionFilter'],
             resources: [
               `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
                 cdk.Stack.of(this).account

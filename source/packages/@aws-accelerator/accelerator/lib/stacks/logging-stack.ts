@@ -15,11 +15,10 @@ import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
-import * as fs from 'fs';
 import { pascalCase } from 'pascal-case';
 import path from 'path';
 
-import { SnsTopicConfig, VpcFlowLogsConfig } from '@aws-accelerator/config';
+import { SnsTopicConfig, VpcFlowLogsConfig, CloudWatchLogsExclusionConfig } from '@aws-accelerator/config';
 import * as t from '@aws-accelerator/config/lib/common-types/types';
 import {
   Bucket,
@@ -40,6 +39,13 @@ import {
 import { AcceleratorElbRootAccounts } from '../accelerator';
 import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+
+export type cloudwatchExclusionProcessedItem = {
+  account: string;
+  region: string;
+  excludeAll?: boolean;
+  logGroupNames?: string[];
+};
 
 export class LoggingStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.IKey;
@@ -391,17 +397,21 @@ export class LoggingStack extends AcceleratorStack {
     // Some or all of these services may not be available in all regions.
     // Only deploy in standard and GovCloud partitions
 
-    if (props.partition === 'aws' || props.partition === 'aws-us-gov' || props.partition === 'aws-cn') {
-      if (cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) {
-        const receivingLogs = this.cloudwatchLogReceivingAccount(this.centralLogsBucketName, this.lambdaKey);
-        const creatingLogs = this.cloudwatchLogCreatingAccount();
+    // check to see if users specified enable on CloudWatch logs in global config.
+    // Defaults to true if undefined. If set to false, no resources are created.
+    if (props.globalConfig.logging.cloudwatchLogs?.enable ?? true) {
+      if (props.partition === 'aws' || props.partition === 'aws-us-gov' || props.partition === 'aws-cn') {
+        if (cdk.Stack.of(this).account === props.accountsConfig.getLogArchiveAccountId()) {
+          const receivingLogs = this.cloudwatchLogReceivingAccount(this.centralLogsBucketName, this.lambdaKey);
+          const creatingLogs = this.cloudwatchLogCreatingAccount();
 
-        // Log receiving setup should be complete before logs creation setup can start or else there will be errors about destination not ready.
-        creatingLogs.node.addDependency(receivingLogs);
-      } else {
-        // Any account in LZA needs to setup log subscriptions for CloudWatch Logs
-        // The destination needs to be present before its setup
-        this.cloudwatchLogCreatingAccount();
+          // Log receiving setup should be complete before logs creation setup can start or else there will be errors about destination not ready.
+          creatingLogs.node.addDependency(receivingLogs);
+        } else {
+          // Any account in LZA needs to setup log subscriptions for CloudWatch Logs
+          // The destination needs to be present before its setup
+          this.cloudwatchLogCreatingAccount();
+        }
       }
     }
 
@@ -674,14 +684,6 @@ export class LoggingStack extends AcceleratorStack {
       // it can be destroyed as encrypts service
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    // Check to see if Dynamic Partitioning was used
-    let dynamicPartitionValue = '';
-    if (this.props.globalConfig.logging.cloudwatchLogs?.dynamicPartitioning) {
-      dynamicPartitionValue = fs.readFileSync(
-        path.join(this.props.configDirPath, this.props.globalConfig.logging.cloudwatchLogs?.dynamicPartitioning),
-        'utf-8',
-      );
-    }
 
     // // Create Kinesis Data Stream
     // Kinesis Stream - data stream which will get data from CloudWatch logs
@@ -722,13 +724,14 @@ export class LoggingStack extends AcceleratorStack {
     // Dynamic partition incoming records
     // so files from particular log group can be placed in their respective S3 prefix
     new CloudWatchToS3Firehose(this, 'FirehoseToS3Setup', {
-      dynamicPartitioningValue: dynamicPartitionValue,
+      dynamicPartitioningValue: this.props.globalConfig.logging.cloudwatchLogs?.dynamicPartitioning ?? undefined,
       bucketName: centralLogsBucketName,
       kinesisStream: logsKinesisStream,
       firehoseKmsKey: this.centralLogBucketKey!, // for firehose to access s3
       kinesisKmsKey: logsReplicationKmsKey, // for firehose to access kinesis
       homeRegion: this.props.globalConfig.homeRegion,
       lambdaKey: lambdaKey, // to encrypt lambda environment
+      configDir: this.props.configDirPath,
     });
     // FirehosePrefixProcessingLambda/ServiceRole AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies.
     NagSuppressions.addResourceSuppressionsByPath(
@@ -793,6 +796,27 @@ export class LoggingStack extends AcceleratorStack {
         }),
       },
     });
+
+    const exclusionAccountMap: cloudwatchExclusionProcessedItem[] = this.prepareCloudWatchExclusionList(
+      this.props.globalConfig.logging.cloudwatchLogs?.exclusions ?? [],
+    );
+    let accountRegionExclusion: cloudwatchExclusionProcessedItem | undefined = undefined;
+    if (exclusionAccountMap.length > 0) {
+      const accountSpecificExclusion = exclusionAccountMap.filter(obj => {
+        return obj.account === cdk.Stack.of(this).account && obj.region === cdk.Stack.of(this).region;
+      });
+      if (accountSpecificExclusion.length > 1) {
+        Logger.error(
+          `[Logging-stack] (Multiple cloudwatch exclusions ${JSON.stringify(
+            accountSpecificExclusion,
+          )} found for account: ${cdk.Stack.of(this).account} in region: ${cdk.Stack.of(this).region}`,
+        );
+      } else {
+        accountRegionExclusion = exclusionAccountMap.find(obj => {
+          return obj.account === cdk.Stack.of(this).account && obj.region === cdk.Stack.of(this).region;
+        });
+      }
+    }
     // Run a custom resource to update subscription, KMS and retention for all existing log groups
     const customResourceExistingLogs = new CloudWatchLogsSubscriptionFilter(this, 'LogsSubscriptionFilter', {
       logDestinationArn: logsDestinationArnValue,
@@ -800,6 +824,7 @@ export class LoggingStack extends AcceleratorStack {
       logArchiveAccountId: this.props.accountsConfig.getLogArchiveAccountId(),
       logsRetentionInDaysValue: this.props.globalConfig.cloudwatchLogRetentionInDays.toString(),
       subscriptionFilterRoleArn: subscriptionFilterRole.roleArn,
+      exclusionSetting: accountRegionExclusion!,
     });
 
     //For every new log group that is created, set up subscription, KMS and retention
@@ -810,6 +835,7 @@ export class LoggingStack extends AcceleratorStack {
       logArchiveAccountId: this.props.accountsConfig.getLogArchiveAccountId(),
       logsRetentionInDaysValue: this.props.globalConfig.cloudwatchLogRetentionInDays.toString(),
       subscriptionFilterRoleArn: subscriptionFilterRole.roleArn,
+      exclusionSetting: accountRegionExclusion!,
     });
 
     // create custom resource before the new log group logic is created.
@@ -866,6 +892,126 @@ export class LoggingStack extends AcceleratorStack {
     );
 
     return customResourceExistingLogs;
+  }
+
+  private prepareCloudWatchExclusionList(exclusionList: CloudWatchLogsExclusionConfig[]) {
+    // Input will be an array of OUs and account.
+    // Decompose input to account Ids with single regions
+    const processedItems: cloudwatchExclusionProcessedItem[] = [];
+    for (const exclusion of exclusionList) {
+      processedItems.push(...this.convertCloudWatchExclusionToAccountIds(exclusion));
+    }
+
+    // Find the unique account, region pair in the given input
+    type excludeUniqueItemType = { account: string; region: string };
+    const excludeItemsMapUnique: excludeUniqueItemType[] = [];
+    processedItems.map(item => {
+      const output = { account: item.account, region: item.region };
+      const findItem = excludeItemsMapUnique.find(obj => {
+        return obj.account === output.account && obj.region === output.region;
+      });
+
+      if (!findItem) {
+        excludeItemsMapUnique.push(output);
+      }
+    });
+
+    const output: cloudwatchExclusionProcessedItem[] = [];
+    for (const uniqueElement of excludeItemsMapUnique) {
+      //pick objects from main array which match uniqueElement
+      const filteredItems: cloudwatchExclusionProcessedItem[] | undefined = processedItems.filter(item => {
+        return item.account === uniqueElement.account && item.region === uniqueElement.region;
+      });
+      if (filteredItems) {
+        // merge excludeAll - if for an account/region there is even one excludeAll then exclude (like IAM policies do Deny)
+        // merge logGroupsNames - merge all arrays and run Set to remove duplicates
+
+        const allLogGroupNames: string[] = [];
+        let globalExclude: boolean | undefined = undefined;
+        filteredItems.map(obj => {
+          if (obj.excludeAll) {
+            globalExclude = true;
+          }
+        });
+        filteredItems.map(obj => {
+          if (obj.logGroupNames) {
+            allLogGroupNames.push(...obj.logGroupNames);
+          }
+        });
+        output.push({
+          account: uniqueElement.account,
+          region: uniqueElement.region,
+          excludeAll: globalExclude,
+          logGroupNames: allLogGroupNames,
+        });
+      }
+    }
+    return output;
+  }
+
+  private convertCloudWatchExclusionToAccountIds(exclusion: CloudWatchLogsExclusionConfig) {
+    const output: cloudwatchExclusionProcessedItem[] = [];
+    if (exclusion.organizationalUnits) {
+      const accountsNamesInOu = this.getAccountsFromOu(exclusion.organizationalUnits);
+      const getOuExclusionList: cloudwatchExclusionProcessedItem[] =
+        this.convertCloudWatchExclusionAccountsToAccountIds(accountsNamesInOu, exclusion);
+
+      output.push(...getOuExclusionList);
+    }
+    if (exclusion.accounts) {
+      const getAccountExclusionList: cloudwatchExclusionProcessedItem[] =
+        this.convertCloudWatchExclusionAccountsToAccountIds(exclusion.accounts, exclusion);
+      output.push(...getAccountExclusionList);
+    }
+    return output;
+  }
+  private getAccountsFromOu(ouNames: string[]) {
+    const allAccounts = [...this.props.accountsConfig.mandatoryAccounts, ...this.props.accountsConfig.workloadAccounts];
+    const allAccountNames: string[] = [];
+    if (ouNames.includes('Root')) {
+      // root means all accounts
+      for (const allAccountItem of allAccounts) {
+        allAccountNames.push(allAccountItem.name);
+      }
+    } else {
+      for (const ouName of ouNames) {
+        // look in all accounts for specific OU
+        for (const allAccountItem of allAccounts) {
+          if (ouName === allAccountItem.organizationalUnit) {
+            allAccountNames.push(allAccountItem.name);
+          }
+        }
+      }
+    }
+    return allAccountNames;
+  }
+
+  private convertCloudWatchExclusionAccountsToAccountIds(
+    accountsList: string[],
+    exclusion: CloudWatchLogsExclusionConfig,
+  ) {
+    const output: cloudwatchExclusionProcessedItem[] = [];
+    for (const accountItem of accountsList) {
+      const outputItem: cloudwatchExclusionProcessedItem[] = this.reduceCloudWatchExclusionAccountByRegion(
+        accountItem,
+        exclusion,
+      );
+      output.push(...outputItem);
+    }
+    return output;
+  }
+  private reduceCloudWatchExclusionAccountByRegion(accountItem: string, exclusion: CloudWatchLogsExclusionConfig) {
+    const processedItems: cloudwatchExclusionProcessedItem[] = [];
+    for (const regionItem of exclusion.regions ?? this.props.globalConfig.enabledRegions) {
+      const singleProcessedItem: cloudwatchExclusionProcessedItem = {
+        account: this.props.accountsConfig.getAccountId(accountItem),
+        region: regionItem,
+        excludeAll: exclusion.excludeAll,
+        logGroupNames: exclusion.logGroupNames,
+      };
+      processedItems.push(singleProcessedItem);
+    }
+    return processedItems;
   }
 
   private lookupManagementAccountCloudWatchKey() {

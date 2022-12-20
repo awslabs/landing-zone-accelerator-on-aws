@@ -14,6 +14,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { pascalCase } from 'change-case';
 import * as path from 'path';
+import * as fs from 'fs';
 
 /**
  * Construction properties for CloudWatch to S3 replication for Kinesis Stream.
@@ -61,6 +62,11 @@ export interface CloudWatchToS3FirehoseProps {
    * KMS key to encrypt the Lambda
    */
   kinesisKmsKey: cdk.aws_kms.IKey;
+  /**
+   *
+   * Config directory path
+   */
+  configDir: string;
 }
 /**
  * Class to configure CloudWatch replication on logs receiving account
@@ -69,18 +75,16 @@ export class CloudWatchToS3Firehose extends Construct {
   constructor(scope: Construct, id: string, props: CloudWatchToS3FirehoseProps) {
     super(scope, id);
 
-    let dynamicPartitioning = '';
     if (props.dynamicPartitioningValue) {
-      dynamicPartitioning = props.dynamicPartitioningValue;
+      this.packageDynamicPartitionInDeployment(props.configDir, props.dynamicPartitioningValue);
     }
 
     let logsStorageBucket: cdk.aws_s3.IBucket;
-    if (props.bucket && props.bucketName) {
-      throw new Error('Source bucket or source bucketName (only one property) should be defined.');
-    }
 
-    if (!props.bucket && !props.bucketName) {
-      throw new Error('Source bucket or source bucketName property must be defined when using bucket replication.');
+    if ((!props.bucket && !props.bucketName) || (props.bucket && props.bucketName)) {
+      throw new Error(
+        'Either source bucket or source bucketName property must be defined. Only one property must be defined.',
+      );
     }
 
     if (props.bucketName) {
@@ -156,7 +160,7 @@ export class CloudWatchToS3Firehose extends Construct {
       timeout: cdk.Duration.minutes(5),
       environmentEncryption: props.lambdaKey,
       environment: {
-        DynamicS3LogPartitioningMapping: dynamicPartitioning,
+        DynamicS3LogPartitioningMapping: props.dynamicPartitioningValue!,
       },
     });
 
@@ -320,5 +324,18 @@ export class CloudWatchToS3Firehose extends Construct {
         },
       },
     });
+  }
+  private packageDynamicPartitionInDeployment(configDirPath: string, dynamicPartitionPath: string) {
+    const deploymentPackagePath = path.join(__dirname, 'firehose-record-processing/dist');
+
+    // Make deployment folder
+    fs.mkdirSync(path.join(deploymentPackagePath), { recursive: true });
+    // dynamic partition can be in a path. Create the path in deployment package before copying file in.
+    fs.mkdirSync(path.dirname(path.join(deploymentPackagePath, dynamicPartitionPath)), { recursive: true });
+    // Copy file
+    fs.copyFileSync(
+      path.join(configDirPath, dynamicPartitionPath),
+      path.join(deploymentPackagePath, dynamicPartitionPath),
+    );
   }
 }

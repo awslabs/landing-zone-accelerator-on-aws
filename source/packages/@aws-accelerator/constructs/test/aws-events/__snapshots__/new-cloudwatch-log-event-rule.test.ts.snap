@@ -236,7 +236,10 @@ Object {
               },
             },
             Object {
-              "Action": "logs:PutSubscriptionFilter",
+              "Action": Array [
+                "logs:PutSubscriptionFilter",
+                "logs:DeleteSubscriptionFilter",
+              ],
               "Effect": "Allow",
               "Resource": Array [
                 Object {

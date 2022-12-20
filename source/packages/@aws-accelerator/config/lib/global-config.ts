@@ -83,8 +83,18 @@ export abstract class GlobalConfigTypes {
     s3ResourcePolicyAttachments: t.optional(t.array(t.resourcePolicyStatement)),
   });
 
+  static readonly cloudWatchLogsExclusionConfig = t.interface({
+    organizationalUnits: t.optional(t.array(t.nonEmptyString)),
+    regions: t.optional(t.array(t.region)),
+    accounts: t.optional(t.array(t.nonEmptyString)),
+    excludeAll: t.optional(t.boolean),
+    logGroupNames: t.optional(t.array(t.nonEmptyString)),
+  });
+
   static readonly cloudwatchLogsConfig = t.interface({
-    dynamicPartitioning: t.nonEmptyString,
+    dynamicPartitioning: t.optional(t.nonEmptyString),
+    enable: t.optional(t.boolean),
+    exclusions: t.optional(t.array(GlobalConfigTypes.cloudWatchLogsExclusionConfig)),
   });
 
   static readonly loggingConfig = t.interface({
@@ -577,6 +587,55 @@ export class ElbLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.elb
   readonly lifecycleRules: t.LifeCycleRule[] = [];
   readonly s3ResourcePolicyAttachments: t.ResourcePolicyStatement[] | undefined = undefined;
 }
+/**
+ * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}/ {@link CloudWatchLogsExclusionConfig}*
+ *
+ * Accelerator global CloudWatch Logs exclusion configuration
+ *
+ * @example
+ * ```
+ * organizationalUnits:
+ *  - Sandbox
+ * regions:
+ *  - us-west-1
+ *  - us-west-2
+ * accounts:
+ *  - WorkloadAccount1
+ * excludeAll: true
+ * logGroupNames:
+ *  - 'test/*'
+ *  - '/appA/*'
+ *
+ * ```
+ */
+export class CloudWatchLogsExclusionConfig implements t.TypeOf<typeof GlobalConfigTypes.cloudWatchLogsExclusionConfig> {
+  /**
+   * List of OUs that the exclusion will apply to
+   */
+  readonly organizationalUnits: string[] | undefined = undefined;
+  /**
+   * List of regions where the exclusion will be applied to. If no value is supplied, exclusion is applied to all enabled regions.
+   */
+  readonly regions: t.Region[] | undefined = undefined;
+  /**
+   * List of accounts where the exclusion will be applied to
+   */
+  readonly accounts: string[] | undefined = undefined;
+  /**
+   * Exclude replication on all logs. By default this is set to true.
+   *
+   * @remarks
+   * If undefined, this is set to true. When set to false, it disables replication on entire OU or account for that region. Setting OU as `Root` with no region specified and making this false will fail validation since that usage is redundant. Instead use the {@link CloudWatchLogsConfig | enable} parameter in cloudwatch log config which will disable replication across all accounts in all regions.
+   */
+  readonly excludeAll: boolean | undefined = undefined;
+  /**
+   * List of log groups names where the exclusion will be applied to
+   *
+   * @remarks
+   * Wild cards are supported. These log group names are added in the eventbridge payload which triggers lambda. If `excludeAll` is used then all logGroups are excluded and this parameter is not used.
+   */
+  readonly logGroupNames: string[] | undefined = undefined;
+}
 
 /**
  * *{@link GlobalConfig} / {@link LoggingConfig} / {@link CloudWatchLogsConfig}*
@@ -587,13 +646,46 @@ export class ElbLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.elb
  * ```
  * cloudwatchLogs:
  *   dynamicPartitioning: path/to/filter.json
+ *   # default is true, if undefined this is set to true
+ *   # if set to false, no replication is performed which is useful in test or temporary environments
+ *   enable: true
+ *   exclusions:
+ *    # in these OUs do not do log replication
+ *    - organizationalUnits:
+ *        - Research
+ *        - ProofOfConcept
+ *      excludeAll: true
+ *    # in these accounts exclude pattern testApp
+ *    - accounts:
+ *        - WorkloadAccount1
+ *        - WorkloadAccount1
+ *      logGroupNames:
+ *        - testApp*
+ *    # in these accounts exclude logs in specific regions
+ *    - accounts:
+ *        - WorkloadAccount1
+ *        - WorkloadAccount1
+ *      regions:
+ *        - us-west-2
+ *        - eu-west-1
+ *      logGroupNames:
+ *        - pattern1*
  * ```
+ *
  */
 export class CloudWatchLogsConfig implements t.TypeOf<typeof GlobalConfigTypes.cloudwatchLogsConfig> {
   /**
    * Declaration of Dynamic Partition for Kinesis Firehose.
    */
-  readonly dynamicPartitioning: string = '';
+  readonly dynamicPartitioning: string | undefined = undefined;
+  /**
+   * Enable or disable CloudWatch replication
+   */
+  readonly enable: boolean | undefined = undefined;
+  /**
+   * Exclude Log Groups during replication
+   */
+  readonly exclusions: CloudWatchLogsExclusionConfig[] | undefined = undefined;
 }
 
 /**
@@ -1365,7 +1457,8 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         //
         // validate cloudwatch logging
         //
-        this.validateCloudWatchDynamicPartition(values, configDir, errors);
+        this.validateCloudWatch(values, configDir, ouIdNames, accountNames, errors);
+
         // cloudtrail settings validation
         //
         this.validateCloudTrailSettings(values, errors);
@@ -1548,6 +1641,88 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       }
       if (lifecycleRule.expiration && lifecycleRule.expiredObjectDeleteMarker) {
         errors.push('You may not configure expiredObjectDeleteMarker with expiration. S3 Access Log Bucket');
+      }
+    }
+  }
+
+  /**
+   * Validate CloudWatch Logs replication
+   */
+  private validateCloudWatch(
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    configDir: string,
+    ouIdNames: string[],
+    accountNames: string[],
+    errors: string[],
+  ) {
+    if (values.logging.cloudwatchLogs?.enable ?? true) {
+      if (values.logging.cloudwatchLogs?.dynamicPartitioning) {
+        //
+        // validate cloudwatch logging dynamic partition
+        //
+        this.validateCloudWatchDynamicPartition(values, configDir, errors);
+      }
+      if (values.logging.cloudwatchLogs?.exclusions) {
+        //
+        // validate cloudwatch logs exclusion config
+        //
+        this.validateCloudWatchExclusions(values, ouIdNames, accountNames, errors);
+      }
+    }
+  }
+
+  /**
+   * Validate Cloudwatch logs exclusion inputs
+   */
+  private validateCloudWatchExclusions(
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    ouIdNames: string[],
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const exclusion of values.logging.cloudwatchLogs?.exclusions ?? []) {
+      // check if users input array of Organization Units is valid
+      this.validateCloudWatchExclusionsTargets(exclusion.organizationalUnits ?? [], ouIdNames, errors);
+      // check if users input array of accounts is valid
+      this.validateCloudWatchExclusionsTargets(exclusion.accounts ?? [], accountNames, errors);
+      // check if OU is root and excludeAll is provided
+      const foundRoot = exclusion.organizationalUnits?.find(ou => {
+        return ou === 'Root';
+      });
+      if (foundRoot && exclusion.excludeAll === true) {
+        errors.push(`CloudWatch exclusion found root OU with excludeAll instead set enable: false cloudwatchLogs.`);
+      }
+
+      // if logGroupNames are provided then ensure OUs or accounts are provided
+      const ouLength = exclusion.organizationalUnits?.length ?? 0;
+      const accountLength = exclusion.accounts?.length ?? 0;
+      if (exclusion.logGroupNames && ouLength === 0 && accountLength === 0) {
+        errors.push(
+          `CloudWatch exclusion logGroupNames (${exclusion.logGroupNames.join(
+            ',',
+          )}) are provided but no account or OU specified.`,
+        );
+      }
+
+      // if excludeAll is provided then ensure OU or accounts are provided
+      if (exclusion.excludeAll === true && ouLength === 0 && accountLength === 0) {
+        errors.push(`CloudWatch exclusion excludeAll was specified but no account or OU specified.`);
+      }
+
+      // either specify logGroupNames or excludeAll
+      if (exclusion.excludeAll === undefined && exclusion.logGroupNames === undefined) {
+        errors.push(`CloudWatch exclusion either specify excludeAll or logGroupNames.`);
+      }
+    }
+  }
+
+  private validateCloudWatchExclusionsTargets(inputList: string[], globalList: string[], errors: string[]) {
+    for (const input of inputList) {
+      // from the input list pick each element,
+      // if OU or account name is in global config pass
+      // else bubble up the error
+      if (!globalList.includes(input)) {
+        errors.push(`CloudWatch exclusions invalid value ${input} provided. Current values: ${globalList.join(',')}.`);
       }
     }
   }
