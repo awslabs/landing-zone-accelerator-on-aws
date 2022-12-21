@@ -145,7 +145,7 @@ function addAcceleratorTags(node: IConstruct, partition: string): void {
 
   for (const resource of node.node.findAll()) {
     if (resource instanceof cdk.CfnResource && !excludeResourceTypes.includes(resource.cfnResourceType)) {
-      if (node instanceof cdk.aws_ec2.CfnTransitGateway && partition !== 'aws') {
+      if (resource instanceof cdk.aws_ec2.CfnTransitGateway && partition !== 'aws') {
         continue;
       }
       new cdk.Tag('Accel-P', acceleratorPrefix).visit(resource);
