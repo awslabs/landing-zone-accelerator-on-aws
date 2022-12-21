@@ -21,6 +21,7 @@
                 "automation:*",
                 "aws-portal:*",
                 "backup:*",
+                "backup-storage:*",
                 "batch:*",
                 "budgets:*",
                 "cassandra:*",
