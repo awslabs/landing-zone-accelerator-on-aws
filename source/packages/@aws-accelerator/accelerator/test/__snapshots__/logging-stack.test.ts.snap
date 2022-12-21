@@ -2681,7 +2681,7 @@ Object {
       "Properties": Object {
         "Name": "/accelerator/AWSAccelerator-LoggingStack-333333333333-us-east-1/version",
         "Type": "String",
-        "Value": "1.2.2",
+        "Value": "1.3.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
