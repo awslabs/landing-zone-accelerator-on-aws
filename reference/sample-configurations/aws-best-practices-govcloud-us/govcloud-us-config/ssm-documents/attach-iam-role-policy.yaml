@@ -1,6 +1,6 @@
 description: IAM Role Policy
-schemaVersion: '0.3'
-assumeRole: '{{ AutomationAssumeRole }}'
+schemaVersion: "0.3"
+assumeRole: "{{ AutomationAssumeRole }}"
 parameters:
   ResourceId:
     type: String
@@ -14,7 +14,7 @@ parameters:
     type: String
 mainSteps:
   - name: attachPolicy
-    action: 'aws:executeScript'
+    action: "aws:executeScript"
     inputs:
       Runtime: python3.7
       Handler: script_handler
@@ -45,6 +45,6 @@ mainSteps:
               RoleName=role_name
             )
       InputPayload:
-        ResourceId: '{{ ResourceId }}'
-        AWSManagedPolicies: '{{ AWSManagedPolicies }}'
-        CustomerManagedPolicies: '{{ CustomerManagedPolicies }}'
+        ResourceId: "{{ ResourceId }}"
+        AWSManagedPolicies: "{{ AWSManagedPolicies }}"
+        CustomerManagedPolicies: "{{ CustomerManagedPolicies }}"

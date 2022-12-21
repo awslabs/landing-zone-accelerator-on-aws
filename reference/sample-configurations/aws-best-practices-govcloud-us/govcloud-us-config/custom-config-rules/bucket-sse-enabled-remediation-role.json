@@ -3,7 +3,10 @@
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": ["s3:GetEncryptionConfiguration", "s3:PutEncryptionConfiguration"],
+      "Action": [
+        "s3:GetEncryptionConfiguration",
+        "s3:PutEncryptionConfiguration"
+      ],
       "Resource": "*"
     }
   ]

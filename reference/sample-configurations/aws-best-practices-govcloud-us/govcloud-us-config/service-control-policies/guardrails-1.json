@@ -86,6 +86,49 @@
           ]
         }
       }
+    },
+    {
+      "Sid": "PreventCloudWatchLogsModification",
+      "Effect": "Deny",
+      "Action": [
+        "logs:DisassociateKmsKey",
+        "logs:DeleteLogGroup",
+        "logs:DeleteRetentionPolicy",
+        "logs:AssociateKmsKey",
+        "logs:PutRetentionPolicy",
+        "logs:CreateLogGroup"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:logs:*:*:log-group:aws-accelerator-*",
+        "arn:${PARTITION}:logs:*:*:log-group:/aws/lambda/AWSAccelerator-*"
+      ],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "PreventCloudWatchLogStreamModification",
+      "Effect": "Deny",
+      "Action": ["logs:DeleteLogStream"],
+      "Resource": [
+        "arn:${PARTITION}:logs:*:*:log-group:aws-accelerator-*:log-stream:*",
+        "arn:${PARTITION}:logs:*:*:log-group:/aws/lambda/AWSAccelerator-*:log-stream:*"
+      ],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
+            "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+            "arn:${PARTITION}:iam::*:role/cdk-accel-*"
+          ]
+        }
+      }
     }
   ]
 }

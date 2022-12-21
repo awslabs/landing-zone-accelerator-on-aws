@@ -3,10 +3,7 @@
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "config:BatchGetResourceConfig",
-        "iam:AttachRolePolicy"      
-      ],
+      "Action": ["config:BatchGetResourceConfig", "iam:AttachRolePolicy"],
       "Resource": "*"
     }
   ]
