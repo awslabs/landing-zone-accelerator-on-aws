@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(logs): allow specification of centralized logging bucket region independent of home region
 - feat(iam): add ability for IAM policy replacements
 - feat(organizations): add support to ignore organizational units
-- feat(organizations): add functionality to move accounts between ous
+- feat(organizations): add functionality to move accounts between ous (orgs-only install)
 - feat(security): add centralized and configurable sns topics
 - feat(security): add ability to create ACM from s3 and integrate that with ELBv2
 - feat(guardDuty): enable S3 export config override
@@ -31,9 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(cloudformation): Create custom CloudFormation stacks
 - feat(s3): add ability to define policy statements to s3 buckets and keys
 - feat(quotas): limits increase for services
-- feat(sso): add ability to configure IAM identity center
+- feat(sso): add ability to configure iam identity center
 - feat(mad): add ability to configure managed ad
-- feat(kms) - allow parameter replacement in key files
+- feat(kms): allow parameter replacement in key files
 
 ### Changed
 
@@ -45,15 +45,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - enhancement(organizations): added checks for scps with no OUs or accounts
 - enhancement(organizations): validate scp count
 - enhancement(configs): add config rules and ssm auto remediation in AWS GovCloud (US) reference config
-- fix(logging): Update Central Log key lookup set log bucket to central log region
-- fix(logging): Move Account CloudTrail S3 logs to central log bucket
+- fix(logging): update central log key lookup set log bucket to central log region
+- fix(logging): move account CloudTrail S3 logs to central log bucket
 - fix(organizations): add cases for null organizations and accounts in SCP
 - fix(pipeline): force bootstraping to run in global region and home region if missing
 - fix(ssm) limit api calls to 20 accounts per invocation
 - fix(sns): update sns policies
 - fix(sns): added account check on sns kms key policy
 - fix(kms): add ebs kms policy for cloud9
-- fix(scps): updated sns topic to use home region rather than global region
+- fix(security): updated sns topic to use home region rather than global region
 
 ### New Configurations
 
