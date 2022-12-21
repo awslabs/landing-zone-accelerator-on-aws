@@ -2,23 +2,26 @@ defaultVpc:
   delete: true
   excludeAccounts: []
 transitGateways: []
+transitGatewayPeering: []
 endpointPolicies: []
 vpcs: []
 
-
 ##############################################################
 # Global configuration for VPC flow logs                     #
-# Where there is no flow log configuration defined with VPC  # 
+# Where there is no flow log configuration defined with VPC  #
 # this configuration will be used for flow log configuration #
 ##############################################################
 vpcFlowLogs:
   trafficType: ALL
   maxAggregationInterval: 600
   destinations:
+    - s3
     - cloud-watch-logs
   destinationsConfig:
+    s3:
+      lifecycleRules: []
     cloudWatchLogs:
-      retentionInDays: 30
+      retentionInDays: 3653
   defaultFormat: false
   customFields:
     - version

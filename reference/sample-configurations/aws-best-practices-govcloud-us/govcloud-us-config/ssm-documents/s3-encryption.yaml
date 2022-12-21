@@ -13,16 +13,15 @@ parameters:
     description: (Optional) The ARN of the role that allows Automation to perform the actions on your behalf.
     default: ""
 mainSteps:
-- name: PutBucketEncryption
-  action: aws:executeAwsApi
-  inputs:
-    Service: s3
-    Api:  PutBucketEncryption
-    Bucket: "{{BucketName}}"
-    ServerSideEncryptionConfiguration:
+  - name: PutBucketEncryption
+    action: aws:executeAwsApi
+    inputs:
+      Service: s3
+      Api: PutBucketEncryption
+      Bucket: "{{BucketName}}"
+      ServerSideEncryptionConfiguration:
         Rules:
-        -
-          ApplyServerSideEncryptionByDefault:
-            SSEAlgorithm: "aws:kms"
-            KMSMasterKeyID: "{{KMSMasterKey}}"
-  isEnd: true
+          - ApplyServerSideEncryptionByDefault:
+              SSEAlgorithm: "aws:kms"
+              KMSMasterKeyID: "{{KMSMasterKey}}"
+    isEnd: true

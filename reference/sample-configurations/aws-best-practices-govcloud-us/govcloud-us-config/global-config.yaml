@@ -3,11 +3,20 @@ enabledRegions:
   - *HOME_REGION
 managementAccountAccessRole: AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 3653
+terminationProtection: true
 centralizeCdkBuckets:
   enable: true
-# Setting controlTower to false will enable accelerator to 
-# configure resources like AWS Config. 
-# If set to true, accelerator will assume Control Tower 
+snsTopics:
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+  topics:
+    - name: Security
+      emailAddresses:
+        - <security-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
+# Setting controlTower to false will enable accelerator to
+# configure resources like AWS Config.
+# If set to true, accelerator will assume Control Tower
 # will manage resources.
 controlTower:
   enable: false
@@ -26,10 +35,11 @@ logging:
       apiErrorRateInsight: false
       apiCallRateInsight: false
     accountTrails:
-      - name: AWSAccelerator-Account-Cloudtrail
+      - name: AccountTrail
         regions:
           - *HOME_REGION
         deploymentTargets:
+          accounts: []
           organizationalUnits:
             - Root
         settings:
@@ -39,15 +49,12 @@ logging:
           s3DataEvents: true
           lambdaDataEvents: true
           sendToCloudWatchLogs: true
-          apiErrorRateInsight: true
-          apiCallRateInsight: true
-
-    lifecycleRules: []
+          apiErrorRateInsight: false
+          apiCallRateInsight: false
   sessionManager:
-    sendToCloudWatchLogs: true
-    sendToS3: false
-    excludeRegions: []
-    excludeAccounts: []
-    lifecycleRules: []
+    sendToCloudWatchLogs: false
+    sendToS3: true
+    attachPolicyToIamRoles:
+      - EC2-Default-SSM-AD-Role
   cloudwatchLogs:
     dynamicPartitioning: dynamic-partitioning/log-filters.json

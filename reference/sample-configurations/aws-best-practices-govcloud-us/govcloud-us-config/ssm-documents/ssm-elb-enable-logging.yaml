@@ -1,6 +1,6 @@
 description: Enable logging on Elastic Load-Balancer
-schemaVersion: '0.3'
-assumeRole: '{{ AutomationAssumeRole }}'
+schemaVersion: "0.3"
+assumeRole: "{{ AutomationAssumeRole }}"
 parameters:
   LogDestination:
     type: String
@@ -10,7 +10,7 @@ parameters:
     type: String
 mainSteps:
   - name: getAccount
-    action: 'aws:executeAwsApi'
+    action: "aws:executeAwsApi"
     inputs:
       Service: sts
       Api: get_caller_identity
@@ -19,26 +19,26 @@ mainSteps:
         Selector: $.Account
         Type: String
   - name: getLoadBalancer
-    action: 'aws:executeAwsApi'
+    action: "aws:executeAwsApi"
     inputs:
       Service: elbv2
       Api: describe_load_balancers
       LoadBalancerArns:
-        - '{{ LoadBalancerArn }}'
+        - "{{ LoadBalancerArn }}"
     outputs:
       - Name: Name
         Selector: $.LoadBalancers[0].LoadBalancerName
         Type: String
   - name: enableLogging
-    action: 'aws:executeAwsApi'
+    action: "aws:executeAwsApi"
     inputs:
       Service: elbv2
       Api: modify_load_balancer_attributes
-      LoadBalancerArn: '{{ LoadBalancerArn }}'
+      LoadBalancerArn: "{{ LoadBalancerArn }}"
       Attributes:
         - Key: access_logs.s3.enabled
-          Value: 'true'
+          Value: "true"
         - Key: access_logs.s3.bucket
-          Value: '{{ LogDestination }}'
+          Value: "{{ LogDestination }}"
         - Key: access_logs.s3.prefix
-          Value: '{{ getAccount.Id }}/elb-{{ getLoadBalancer.Name }}'
+          Value: "{{ getAccount.Id }}/elb-{{ getLoadBalancer.Name }}"

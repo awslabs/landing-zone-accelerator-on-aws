@@ -3,10 +3,7 @@
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "iam:Get*",
-        "iam:List*"
-      ],
+      "Action": ["iam:Get*", "iam:List*"],
       "Resource": "*"
     }
   ]
