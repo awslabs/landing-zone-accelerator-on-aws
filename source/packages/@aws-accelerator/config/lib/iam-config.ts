@@ -974,25 +974,25 @@ export class RoleConfig implements t.TypeOf<typeof IamConfigTypes.roleConfig> {
  *
  * @example
  * ```
-identityCenter:
-  name: identityCenter1
-  identityCenterPermissionSets:
-    - name: PermissionSet1
-      policies:
-        awsManaged:
-          - arn:aws:iam::aws:policy/AdministratorAccess
-        customerManaged:
-          - ResourceConfigurationCollectorPolicy
-      sessionDuration: 60
-
-  identityCenterAssignments:
-    - name: Assignment1
-      permissionSetName: PermissionSet1
-      principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
-      principalType: USER
-      deploymentTargets:
-        accounts:
-          - LogArchive
+ * identityCenter:
+ *  name: identityCenter1
+ *  identityCenterPermissionSets:
+ *    - name: PermissionSet1
+ *      policies:
+ *        awsManaged:
+ *          - arn:aws:iam::aws:policy/AdministratorAccess
+ *        customerManaged:
+ *          - ResourceConfigurationCollectorPolicy
+ *      sessionDuration: 60
+ *
+ *  identityCenterAssignments:
+ *    - name: Assignment1
+ *      permissionSetName: PermissionSet1
+ *      principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
+ *      principalType: USER
+ *      deploymentTargets:
+ *        accounts:
+ *          - LogArchive
  * ```
  */
 
@@ -1020,17 +1020,17 @@ export class IdentityCenterConfig implements t.TypeOf<typeof IamConfigTypes.iden
  *
  * @example
  * ```
-name: identityCenter1
-identityCenterPermissionSets:
-  - name: PermissionSet1
-    policies:
-      awsManaged:
-        - arn:aws:iam::aws:policy/AdministratorAccess
-      customerManaged:
-        - ResourceConfigurationCollectorPolicy
-    sessionDuration: 60
-  * ```
-  */
+ * name: identityCenter1
+ * identityCenterPermissionSets:
+ *   - name: PermissionSet1
+ *     policies:
+ *       awsManaged:
+ *         - arn:aws:iam::aws:policy/AdministratorAccess
+ *       customerManaged:
+ *         - ResourceConfigurationCollectorPolicy
+ *     sessionDuration: 60
+ * ```
+ */
 export class IdentityCenterPermissionSetConfig
   implements t.TypeOf<typeof IamConfigTypes.identityCenterPermissionSetConfig>
 {
@@ -1057,23 +1057,23 @@ export class IdentityCenterPermissionSetConfig
  *
  * @example
  * ```
-identityCenterAssignments:
-  - name: Assignment1
-    permissionSetName: PermissionSet1
-    principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
-    principalType: USER
-    deploymentTargets:
-      accounts:
-        - LogArchive
-  - name: Assignment2
-    permissionSetName: PermissionSet2
-    principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
-    principalType: GROUP
-    deploymentTargets:
-      organizationalUnits:
-        - Security
-  * ```
-  */
+ * identityCenterAssignments:
+ *   - name: Assignment1
+ *     permissionSetName: PermissionSet1
+ *     principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
+ *     principalType: USER
+ *     deploymentTargets:
+ *       accounts:
+ *         - LogArchive
+ *   - name: Assignment2
+ *     permissionSetName: PermissionSet2
+ *     principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
+ *     principalType: GROUP
+ *     deploymentTargets:
+ *       organizationalUnits:
+ *         - Security
+ * ```
+ */
 export class IdentityCenterAssignmentConfig implements t.TypeOf<typeof IamConfigTypes.identityCenterAssignmentConfig> {
   /**
    * The Name for the Assignment
