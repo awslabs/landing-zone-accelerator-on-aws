@@ -679,26 +679,26 @@ export class PrepareStack extends AcceleratorStack {
             );
           }
         }
-      }
-      Logger.info(`[prepare-stack] SCP Validation`);
-      const scpValidateInput = this.validateScp();
-      // cannot add 5 scps from console or cli externally.
-      // LZA needs to have some value in configScps - which are scps from config file
-      // putting an if condition here to only create custom resource; optimize performance
-      if (scpValidateInput.configScps.length) {
-        const validateScp = new ValidateScpCount(this, 'ValidateScpCount', {
-          organizationUnits: scpValidateInput.configOu,
-          accounts: scpValidateInput.configAccounts,
-          scps: scpValidateInput.configScps,
-          kmsKey: cloudwatchKey,
-          logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-        });
-
-        if (controlTowerAccounts) {
-          validateScp.node.addDependency(controlTowerAccounts);
-        }
-        if (organizationAccounts) {
-          validateScp.node.addDependency(organizationAccounts);
+        Logger.info(`[prepare-stack] SCP Validation`);
+        const scpValidateInput = this.validateScp();
+        // cannot add 5 scps from console or cli externally.
+        // LZA needs to have some value in configScps - which are scps from config file
+        // putting an if condition here to only create custom resource; optimize performance
+        if (scpValidateInput.configScps.length) {
+          const validateScp = new ValidateScpCount(this, 'ValidateScpCount', {
+            organizationUnits: scpValidateInput.configOu,
+            accounts: scpValidateInput.configAccounts,
+            scps: scpValidateInput.configScps,
+            kmsKey: cloudwatchKey,
+            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          });
+  
+          if (controlTowerAccounts) {
+            validateScp.node.addDependency(controlTowerAccounts);
+          }
+          if (organizationAccounts) {
+            validateScp.node.addDependency(organizationAccounts);
+          }
         }
       }
     }
