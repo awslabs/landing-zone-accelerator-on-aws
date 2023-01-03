@@ -5,9 +5,7 @@
 <!-- Provide a high level description of the implementation. Explain as you would to an intern who is familiar with the AWS Services. -->
 
 ## Related issue(s)
-<!-- This project only accepts pull requests related to open issues -->
-<!-- If suggesting a new feature or change, please discuss it in an issue first -->
-<!-- If fixing a bug, there should be an issue describing it with steps to reproduce -->
+<!-- This project only accepts merge requests related to open issues -->
 <!-- Please link to the issue(s) here: -->
 
 ## What is the [security risk](https://panost.pages.aws.dev/proserve-security-guidance/terms/#risk) introduced by this change?
@@ -30,14 +28,12 @@
 <!-- Put an `x` in one of the boxes below, or otherwise enter the number of minutes. This data will help us improve the template moving forward. -->
 - [ ] < 30 minutes
 - [ ] 30 - 60 minutes
-- [ ] 60 - 90 minutes
-- [ ] 90 - 120 minutes
-- [ ] > 120 minutes
+- [ ] > 60 minutes
 
 ## Checklist:
 <!-- Go over all the following points, and put an `x` in all the boxes that apply. -->
 - [ ] My code follows the code style of this project.
-- [ ] My change requires a change to the documentation.
-- [ ] I have updated the documentation accordingly.
+- [ ] I have updated the [Implementation Guide](https://quip-amazon.com/zarXA1cbqSom/Implementation-Guide-Strategy) accordingly, if applicable.
+- [ ] I have included pathing, examples, and a description to any new configuration objects. Example found [here](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.GwlbConfig.html).
+- [ ] I have added validations for any new configuration objects.
 - [ ] I have added tests to cover my changes.
-- [ ] All new and existing tests passed.
