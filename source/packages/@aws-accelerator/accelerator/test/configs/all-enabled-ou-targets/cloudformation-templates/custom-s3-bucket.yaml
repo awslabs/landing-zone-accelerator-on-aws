@@ -7,29 +7,31 @@ Resources:
         ServerSideEncryptionConfiguration:
           - BucketKeyEnabled: false
             ServerSideEncryptionByDefault:
-              SSEAlgorithm: "aws:kms"
-              KMSMasterKeyID: "aws/s3"
+              SSEAlgorithm: 'aws:kms'
+              KMSMasterKeyID: 'aws/s3'
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
 
   LZACustomizationsSampleBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref LZACustomizationsBucket
       PolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Principal:
-              AWS: "*"
+              AWS: '*'
             Action:
-              - "s3:*"
+              - 's3:*'
             Resource:
-              - !Sub "arn:aws:s3:::${LZACustomizationsBucket}/*"
-              - !Sub "arn:aws:s3:::${LZACustomizationsBucket}"
-            Effect: "Deny"
+              - !Sub 'arn:aws:s3:::${LZACustomizationsBucket}/*'
+              - !Sub 'arn:aws:s3:::${LZACustomizationsBucket}'
+            Effect: 'Deny'
             Condition:
               Bool:
-                aws:SecureTransport: "false"
+                aws:SecureTransport: 'false'
