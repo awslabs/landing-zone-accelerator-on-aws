@@ -1346,10 +1346,7 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:\\"example.com\
         "Name": "/accelerator/network/vpnConnection/accelerator-vpn/id",
         "Type": "String",
         "Value": Object {
-          "Fn::GetAtt": Array [
-            "AcceleratorVpnVpnConnection4C6D9196",
-            "VpnConnectionId",
-          ],
+          "Ref": "AcceleratorVpnVpnConnection4C6D9196",
         },
       },
       "Type": "AWS::SSM::Parameter",

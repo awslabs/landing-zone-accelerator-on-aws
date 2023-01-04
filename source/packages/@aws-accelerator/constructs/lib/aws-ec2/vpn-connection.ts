@@ -111,7 +111,7 @@ export class VpnConnection extends cdk.Resource implements ICfnVpnConnection {
     });
     cdk.Tags.of(this).add('Name', props.name);
 
-    this.vpnConnectionId = resource.attrVpnConnectionId;
+    this.vpnConnectionId = resource.ref;
     this.vpnConnectionName = props.name;
   }
 }
