@@ -692,7 +692,7 @@ export class PrepareStack extends AcceleratorStack {
             kmsKey: cloudwatchKey,
             logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
           });
-  
+
           if (controlTowerAccounts) {
             validateScp.node.addDependency(controlTowerAccounts);
           }
