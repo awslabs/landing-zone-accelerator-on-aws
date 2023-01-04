@@ -700,14 +700,14 @@ export class OperationsStack extends AcceleratorStack {
     let listOfTargets = [];
     listOfTargets = this.getAccountIdsFromDeploymentTarget(assignment.deploymentTargets);
     const permissionSetArnValue = this.getPermissionSetArn(permissionSetMap, assignment.permissionSetName);
-    const principalIdValue = this.getPrincipalId(groupMap, assignment.principalName);
+
     for (const target of listOfTargets) {
       Logger.info(`[operations-stack] Creating Identity Center Assignment ${assignment.name}-${target}`);
       try {
         new cdk.aws_sso.CfnAssignment(this, `${pascalCase(assignment.name)}-${target}`, {
           instanceArn: identityCenterInstanceArn,
           permissionSetArn: permissionSetArnValue,
-          principalId: principalIdValue,
+          principalId: this.getPrincipalId(groupMap, assignment),
           principalType: assignment.principalType,
           targetId: target,
           targetType: 'AWS_ACCOUNT',
@@ -719,14 +719,17 @@ export class OperationsStack extends AcceleratorStack {
     }
   }
 
-  getPrincipalId(groupMap: GroupMapping[], name: string): string {
-    let groupPrincipalId = '';
-    for (const group of groupMap) {
-      if (group.name == name && group.principalId) {
-        groupPrincipalId = group.principalId;
-      }
+  getPrincipalId(groupMap: GroupMapping[], assignment: IdentityCenterAssignmentConfig): string {
+    let principalId: string | undefined;
+    if (assignment.principalId) {
+      principalId = assignment.principalId;
+    } else if (assignment.principalName && assignment.principalType == 'GROUP') {
+      principalId = groupMap.find(group => group.name == assignment.principalName)?.principalId;
     }
-    return groupPrincipalId;
+    if (!principalId) {
+      throw new Error(`[operations-stack] Principal ID not found for assignment ${assignment.name} principal`);
+    }
+    return principalId;
   }
 
   private getPermissionSetArn(permissionSetMap: PermissionSetMapping[], name: string) {

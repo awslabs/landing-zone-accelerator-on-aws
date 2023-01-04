@@ -176,7 +176,8 @@ export class IamConfigTypes {
    */
   static readonly identityCenterAssignmentConfig = t.interface({
     permissionSetName: t.nonEmptyString,
-    principalName: t.nonEmptyString,
+    principalName: t.optional(t.string),
+    principalId: t.optional(t.string),
     principalType: this.principalTypeEnum,
     deploymentTargets: t.deploymentTargets,
     name: t.nonEmptyString,
@@ -1097,7 +1098,7 @@ export class IdentityCenterPermissionSetConfig
 identityCenterAssignments:
   - name: Assignment1
     permissionSetName: PermissionSet1
-    principalName: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
+    principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
     principalType: USER
     deploymentTargets:
       accounts:
@@ -1123,9 +1124,15 @@ export class IdentityCenterAssignmentConfig implements t.TypeOf<typeof IamConfig
   readonly permissionSetName: string = '';
 
   /**
-   * PrincipalName that will be used for the Assignment
+   * PrincipalId that will be used for the Assignment
    */
-  readonly principalName: string = '';
+  readonly principalId: string | undefined = undefined;
+
+  /**
+   * PrincipalName that will be used for the Assignment (ignored if principalId is set)
+   * Only works for groups created through identityCenterGroups
+   */
+  readonly principalName: string | undefined = undefined;
 
   /**
    * PrinipalType that will be used for the Assignment

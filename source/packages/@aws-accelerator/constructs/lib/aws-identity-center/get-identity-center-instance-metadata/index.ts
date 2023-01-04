@@ -20,7 +20,7 @@ export interface responseData {
   identityStoreId: string | undefined;
 }
 /**
- * get-identity-center-instance-id - lambda handler
+ * get-identity-center-instance-metadata - lambda handler
  *
  * @param event
  * @returns

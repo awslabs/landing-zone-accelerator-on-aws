@@ -51,19 +51,17 @@ identityCenter:
   identityCenterGroups:
     - name: Group1
       description: group 1
-    - name: Group2
-      description: group 2
   identityCenterAssignments:
     - name: Assignment1
       permissionSetName: PermissionSet1
-      principalName: Group1
+      principalId: 'abcd1234-1001-70f0-9c12-56a6aa967ca4'
       principalType: USER
       deploymentTargets:
         accounts:
           - LogArchive
     - name: Assignment2
       permissionSetName: PermissionSet1
-      principalName: Group2
+      principalName: Group1
       principalType: GROUP
       deploymentTargets:
         organizationalUnits:
