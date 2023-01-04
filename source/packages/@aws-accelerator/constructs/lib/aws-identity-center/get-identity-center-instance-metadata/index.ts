@@ -16,7 +16,8 @@ import * as AWS from 'aws-sdk';
 AWS.config.logger = console;
 
 export interface responseData {
-  identityCenterInstanceId: string | undefined;
+  instanceArn: string | undefined;
+  identityStoreId: string | undefined;
 }
 /**
  * get-identity-center-instance-id - lambda handler
@@ -59,14 +60,17 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Update':
       console.log('Checking for IdentityCenter Instance Id...');
       const listInstanceResponse = await throttlingBackOff(() => identityCenterClient.listInstances().promise());
-      const identityCenterInstanceIdList = listInstanceResponse.Instances;
-      let identityCenterInstance;
-      if (identityCenterInstanceIdList) {
-        for (const identityCenterInstanceId of identityCenterInstanceIdList) {
-          identityCenterInstance = identityCenterInstanceId.InstanceArn;
+      const identityCenterInstanceList = listInstanceResponse.Instances;
+      let identityCenterInstanceMetadata;
+      if (identityCenterInstanceList) {
+        for (const identityCenterInstance of identityCenterInstanceList) {
+          identityCenterInstanceMetadata = identityCenterInstance;
         }
       }
-      const responseData = { identityCenterInstanceId: identityCenterInstance };
+      const responseData = {
+        instanceArn: identityCenterInstanceMetadata?.InstanceArn,
+        identityStoreId: identityCenterInstanceMetadata?.IdentityStoreId,
+      };
       console.log(responseData);
 
       return { Status: 'Success', Data: responseData, StatusCode: 200 };

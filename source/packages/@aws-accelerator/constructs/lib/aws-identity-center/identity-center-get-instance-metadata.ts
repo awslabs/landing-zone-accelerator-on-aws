@@ -20,15 +20,15 @@ import * as path from 'path';
 /**
  * Class for IdentityCenterOrganizationAdminAccount
  */
-export class IdentityCenterGetInstanceId extends Construct {
+export class IdentityCenterGetInstanceMetadata extends Construct {
   readonly provider: cdk.custom_resources.Provider;
   readonly resource: cdk.CustomResource;
-  readonly instanceId: string;
+  readonly instanceMetadata: { instanceArn: string; identityStoreId: string };
   constructor(scope: Construct, id: string) {
     super(scope, id);
     const functionId = `${id}ProviderLambda`;
     const providerLambda = new cdk.aws_lambda.Function(this, functionId, {
-      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-identity-center-instance-id/dist')),
+      code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-identity-center-instance-metadata/dist')),
       runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
       timeout: cdk.Duration.seconds(160),
       initialPolicy: [
@@ -54,7 +54,10 @@ export class IdentityCenterGetInstanceId extends Construct {
     });
 
     const stack = cdk.Stack.of(scope);
-    this.instanceId = this.resource.getAtt('identityCenterInstanceId').toString();
+    this.instanceMetadata = {
+      instanceArn: this.resource.getAtt('instanceArn').toString(),
+      identityStoreId: this.resource.getAtt('identityStoreId').toString(),
+    };
 
     // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
     NagSuppressions.addResourceSuppressionsByPath(

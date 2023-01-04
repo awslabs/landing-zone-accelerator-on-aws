@@ -157,6 +157,14 @@ export class IamConfigTypes {
   });
 
   /**
+   * Identity Center Group configuration
+   */
+  static readonly identityCenterGroupConfig = t.interface({
+    name: t.nonEmptyString,
+    description: t.optional(t.string),
+  });
+
+  /**
    * An enum for assume by configuration
    *
    * Possible values user or group
@@ -168,7 +176,7 @@ export class IamConfigTypes {
    */
   static readonly identityCenterAssignmentConfig = t.interface({
     permissionSetName: t.nonEmptyString,
-    principalId: t.nonEmptyString,
+    principalName: t.nonEmptyString,
     principalType: this.principalTypeEnum,
     deploymentTargets: t.deploymentTargets,
     name: t.nonEmptyString,
@@ -988,7 +996,7 @@ identityCenter:
   identityCenterAssignments:
     - name: Assignment1
       permissionSetName: PermissionSet1
-      principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
+      principalName: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
       principalType: USER
       deploymentTargets:
         accounts:
@@ -1003,6 +1011,11 @@ export class IdentityCenterConfig implements t.TypeOf<typeof IamConfigTypes.iden
   readonly name: string = '';
 
   /**
+   * List of Identity Center Group
+   */
+  readonly identityCenterGroups: IdentityCenterGroupConfig[] = [];
+
+  /**
    * List of PermissionSets
    */
   readonly identityCenterPermissionSets: IdentityCenterPermissionSetConfig[] = [];
@@ -1011,6 +1024,30 @@ export class IdentityCenterConfig implements t.TypeOf<typeof IamConfigTypes.iden
    * List of Assignments
    */
   readonly identityCenterAssignments: IdentityCenterAssignmentConfig[] = [];
+}
+
+/**
+ * *{@link IamConfig} / {@link IdentityCenterConfig} / {@link IdentityCenterGroupConfig}*
+ *
+ * Identity Center Group Configuration
+ *
+ * @example
+ * ```
+ * identityCenterGroups:
+ *  - name: Group1
+ *   description: Group1
+ * ```
+ */
+export class IdentityCenterGroupConfig implements t.TypeOf<typeof IamConfigTypes.identityCenterGroupConfig> {
+  /**
+   * A name for the Identity Center Group
+   */
+  readonly name: string = '';
+
+  /**
+   * A description for the Identity Center Group
+   */
+  readonly description: string | undefined = undefined;
 }
 
 /**
@@ -1060,14 +1097,14 @@ export class IdentityCenterPermissionSetConfig
 identityCenterAssignments:
   - name: Assignment1
     permissionSetName: PermissionSet1
-    principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
+    principalName: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
     principalType: USER
     deploymentTargets:
       accounts:
         - LogArchive
   - name: Assignment2
     permissionSetName: PermissionSet2
-    principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
+    principalName: Administrators
     principalType: GROUP
     deploymentTargets:
       organizationalUnits:
@@ -1086,9 +1123,9 @@ export class IdentityCenterAssignmentConfig implements t.TypeOf<typeof IamConfig
   readonly permissionSetName: string = '';
 
   /**
-   * PrincipalId that will be used for the Assignment
+   * PrincipalName that will be used for the Assignment
    */
-  readonly principalId: string = '';
+  readonly principalName: string = '';
 
   /**
    * PrinipalType that will be used for the Assignment
