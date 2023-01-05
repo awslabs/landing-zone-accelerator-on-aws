@@ -1095,7 +1095,7 @@ Object {
               "Value": "main",
             },
           ],
-          "Image": "aws/codebuild/standard:5.0",
+          "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": true,
           "Type": "LINUX_CONTAINER",
@@ -1116,7 +1116,7 @@ Object {
 phases:
   install:
     runtime-versions:
-      nodejs: 14
+      nodejs: 16
   build:
     commands:
       - cd source
