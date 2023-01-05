@@ -1490,7 +1490,7 @@ Object {
               "Value": "AWSControlTowerExecution",
             },
           ],
-          "Image": "aws/codebuild/standard:5.0",
+          "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": true,
           "Type": "LINUX_CONTAINER",
@@ -1511,7 +1511,7 @@ Object {
 phases:
   install:
     runtime-versions:
-      nodejs: 14
+      nodejs: 16
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT=\\"no\\"
@@ -3997,7 +3997,7 @@ Object {
               },
             },
           ],
-          "Image": "aws/codebuild/standard:5.0",
+          "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": true,
           "Type": "LINUX_CONTAINER",
@@ -4018,7 +4018,7 @@ Object {
 phases:
   install:
     runtime-versions:
-      nodejs: 14
+      nodejs: 16
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT=\\"no\\"
@@ -6631,7 +6631,7 @@ Object {
               "Value": "AWSControlTowerExecution",
             },
           ],
-          "Image": "aws/codebuild/standard:5.0",
+          "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": true,
           "Type": "LINUX_CONTAINER",
@@ -6662,7 +6662,7 @@ Object {
 phases:
   install:
     runtime-versions:
-      nodejs: 14
+      nodejs: 16
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT=\\"no\\"
@@ -9337,7 +9337,7 @@ Object {
               },
             },
           ],
-          "Image": "aws/codebuild/standard:5.0",
+          "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": true,
           "Type": "LINUX_CONTAINER",
@@ -9368,7 +9368,7 @@ Object {
 phases:
   install:
     runtime-versions:
-      nodejs: 14
+      nodejs: 16
   pre_build:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT=\\"no\\"
