@@ -21,13 +21,16 @@ import {
   CustomizationsConfig,
   CustomizationsConfigTypes,
   NlbTargetTypeConfig,
+  PortfolioConfig,
 } from '../lib/customizations-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { NetworkConfig, NetworkConfigTypes, VpcConfig, VpcTemplatesConfig } from '../lib/network-config';
 import console from 'console';
 import { SecurityConfig } from '../lib/security-config';
+import { IamConfig } from '../lib/iam-config';
 import { GlobalConfig } from '../lib/global-config';
 import { Region } from '../lib/common-types';
+import { DeploymentTargets } from '../lib/common-types';
 
 /**
  * Customizations Configuration validator.
@@ -115,6 +118,9 @@ class CustomizationValidator {
 
     // Validate applications inputs
     this.validateApplicationsInputs(configDir, values, errors);
+
+    // Validate Service Catalog portfolio inputs
+    this.validateServiceCatalogInputs(configDir, values, errors, accountNames, ouIdNames);
   }
 
   /**
@@ -139,6 +145,17 @@ class CustomizationValidator {
         errors.push(
           `Invalid or missing template file ${cloudFormationStackSet.template} for CloudFormation StackSet ${cloudFormationStackSet.name} !!!`,
         );
+      }
+    }
+    for (const serviceCatalogPortfolio of values.customizations?.serviceCatalogPortfolios ?? []) {
+      for (const serviceCatalogProduct of serviceCatalogPortfolio.products ?? []) {
+        for (const productVersion of serviceCatalogProduct.versions ?? []) {
+          if (!fs.existsSync(path.join(configDir, productVersion.template))) {
+            errors.push(
+              `Product version ${productVersion.name} template file ${productVersion.template} of portfolio ${serviceCatalogPortfolio.name} not found !!!`,
+            );
+          }
+        }
       }
     }
   }
@@ -524,6 +541,132 @@ class CustomizationValidator {
       }
     }
   }
+
+  /**
+   * Function to validate the service catalog config inputs.
+   * @param configDir
+   * @param values
+   * @param errors
+   */
+  private validateServiceCatalogInputs(
+    configDir: string,
+    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    errors: string[],
+    accountNames: string[],
+    ouIdNames: string[],
+  ) {
+    const iamConfig = IamConfig.load(configDir);
+    const accountsConfig = AccountsConfig.load(configDir);
+    const managementAccount = accountsConfig.getManagementAccount().name;
+
+    this.validateServiceCatalogShareTargetAccounts(values, accountNames, errors);
+
+    this.validateServiceCatalogShareTargetOUs(values, ouIdNames, errors, managementAccount);
+
+    for (const portfolio of values?.customizations?.serviceCatalogPortfolios ?? []) {
+      if (portfolio?.portfolioAssociations) {
+        // Validate portfolio association targets exist in iam-config.yaml and are in same account
+        this.validatePortfolioAssociations(accountsConfig, errors, iamConfig, <PortfolioConfig>portfolio);
+
+        // Validate portfolio names are unique
+        this.validatePortfolioNameForUniqueness(values, errors);
+      }
+    }
+  }
+
+  /**
+   * Function to validate portfolio names are unique
+   * @param values
+   */
+  private validatePortfolioNameForUniqueness(
+    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    errors: string[],
+  ) {
+    const portfolioNames = [...(values.customizations?.serviceCatalogPortfolios ?? [])].map(item => item.name);
+
+    if (new Set(portfolioNames).size !== portfolioNames.length) {
+      errors.push(`Duplicate Service Catalog Portfolio names defined [${portfolioNames}].`);
+    }
+  }
+
+  /**
+   * Function to validate existence of Service Catalog share target Accounts
+   * Make sure deployment target Accounts are part of account config file
+   * @param values
+   */
+  private validateServiceCatalogShareTargetAccounts(
+    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const portfolio of values.customizations?.serviceCatalogPortfolios ?? []) {
+      for (const account of portfolio?.shareTargets?.accounts ?? []) {
+        if (accountNames.indexOf(account) === -1) {
+          errors.push(
+            `Share target account ${account} for Service Catalog portfolio ${portfolio.name} does not exist in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
+   * Function to validate existence of Service Catalog share target OUs
+   * Make sure deployment target OUs are part of Organization config file
+   * @param values
+   */
+  private validateServiceCatalogShareTargetOUs(
+    values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    ouIdNames: string[],
+    errors: string[],
+    managementAccount: string,
+  ) {
+    for (const portfolio of values.customizations?.serviceCatalogPortfolios ?? []) {
+      for (const ou of portfolio?.shareTargets?.organizationalUnits ?? []) {
+        if (portfolio.account !== managementAccount) {
+          errors.push(
+            `Error sharing Service Catalog portfolio ${portfolio.name} with Organizational Unit ${ou}. Sharing portfolios to Organizational Units is only supported in the Management account.`,
+          );
+        }
+        if (ouIdNames.indexOf(ou) === -1) {
+          errors.push(
+            `Share target OU ${ou} for Service Catalog portfolio ${portfolio.name} does not exist in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+
+  private validatePortfolioAssociations(
+    accountsConfig: AccountsConfig,
+    errors: string[],
+    iamConfig: IamConfig,
+    portfolio: PortfolioConfig,
+  ) {
+    const helpers = new CustomizationHelperMethods();
+
+    const iamUsers = helpers.getIamUsersDeployedToAccount(iamConfig, accountsConfig, portfolio.account);
+    const iamGroups = helpers.getIamGroupsDeployedToAccount(iamConfig, accountsConfig, portfolio.account);
+    const iamRoles = helpers.getIamRolesDeployedToAccount(iamConfig, accountsConfig, portfolio.account);
+
+    for (const portfolioAssociationItem of portfolio?.portfolioAssociations ?? []) {
+      if (portfolioAssociationItem.type === 'User' && !iamUsers.includes(portfolioAssociationItem.name)) {
+        errors.push(
+          `Portfolio ${portfolio.name} can't be associated with user ${portfolioAssociationItem.name} because that user is not deployed to account ${portfolio.account} in iam-config.yaml`,
+        );
+      }
+      if (portfolioAssociationItem.type === 'Group' && !iamGroups.includes(portfolioAssociationItem.name)) {
+        errors.push(
+          `Portfolio ${portfolio.name} can't be associated with group ${portfolioAssociationItem.name} because that group is not deployed to account ${portfolio.account} in iam-config.yaml`,
+        );
+      }
+      if (portfolioAssociationItem.type === 'Role' && !iamRoles.includes(portfolioAssociationItem.name)) {
+        errors.push(
+          `Portfolio ${portfolio.name} can't be associated with role ${portfolioAssociationItem.name} because that role is not deployed to account ${portfolio.account} in iam-config.yaml`,
+        );
+      }
+    }
+  }
 }
 
 class CustomizationHelperMethods {
@@ -620,6 +763,85 @@ class CustomizationHelperMethods {
         }
       }
     }
+  }
+
+  public getIamUsersDeployedToAccount(iamConfig: IamConfig, accountsConfig: AccountsConfig, accountName: string) {
+    const usernameList = [];
+    for (const userSetItem of iamConfig.userSets ?? []) {
+      const deploymentAccountNames = this.getAccountNamesFromDeploymentTarget(
+        userSetItem.deploymentTargets,
+        accountsConfig,
+      );
+      if (deploymentAccountNames.includes(accountName)) {
+        usernameList.push(...userSetItem.users.map(a => a.username));
+      }
+    }
+    return usernameList;
+  }
+
+  public getIamGroupsDeployedToAccount(iamConfig: IamConfig, accountsConfig: AccountsConfig, accountName: string) {
+    const groupList = [];
+    for (const groupSetItem of iamConfig.groupSets ?? []) {
+      const deploymentAccountNames = this.getAccountNamesFromDeploymentTarget(
+        groupSetItem.deploymentTargets,
+        accountsConfig,
+      );
+      if (deploymentAccountNames.includes(accountName)) {
+        groupList.push(...groupSetItem.groups.map(a => a.name));
+      }
+    }
+    return groupList;
+  }
+
+  public getIamRolesDeployedToAccount(iamConfig: IamConfig, accountsConfig: AccountsConfig, accountName: string) {
+    const roleList = [];
+    for (const roleSetItem of iamConfig.roleSets ?? []) {
+      const deploymentAccountNames = this.getAccountNamesFromDeploymentTarget(
+        roleSetItem.deploymentTargets,
+        accountsConfig,
+      );
+      if (deploymentAccountNames.includes(accountName)) {
+        roleList.push(...roleSetItem.roles.map(a => a.name));
+      }
+    }
+    return roleList;
+  }
+
+  private getAccountNamesFromDeploymentTarget(
+    deploymentTargets: DeploymentTargets,
+    accountsConfig: AccountsConfig,
+  ): string[] {
+    const accountNames: string[] = [];
+    // Helper function to add an account to the list
+    const addAccountName = (accountName: string) => {
+      if (!accountNames.includes(accountName)) {
+        accountNames.push(accountName);
+      }
+    };
+    /**
+     * @param configDir
+     * @returns
+     */
+
+    for (const ou of deploymentTargets.organizationalUnits ?? []) {
+      if (ou === 'Root') {
+        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+          addAccountName(account.name);
+        }
+      } else {
+        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+          if (ou === account.organizationalUnit) {
+            addAccountName(account.name);
+          }
+        }
+      }
+    }
+
+    for (const account of deploymentTargets.accounts ?? []) {
+      addAccountName(account);
+    }
+
+    return accountNames;
   }
 }
 

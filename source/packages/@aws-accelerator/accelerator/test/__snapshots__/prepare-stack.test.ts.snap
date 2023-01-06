@@ -4027,7 +4027,7 @@ Object {
             "Arn",
           ],
         },
-        "accountConfigS3Key": "e21dbd2755a431818201cd9428886065749383e8071a23e00b58186a3072c966.yaml",
+        "accountConfigS3Key": "1eb9d1c45665f0cfee83f229c98a22aba3bb5cc63e04920abcb8d5c7856898b2.yaml",
         "auditAccountEmail": "audit-account@example.com",
         "commitId": "",
         "configRepositoryName": "aws-accelerator-config",
