@@ -41,6 +41,7 @@ export const isThrottlingError = (
   e.code === 'ConcurrentModifications' || // Retry for AssociateHostedZone
   e.code === 'LimitExceededException' || // Retry for SecurityHub
   e.code === 'OperationNotPermittedException' || // Retry for RAM
+  e.code === 'InvalidStateException' || //retry for ServiceCatalog
   e.code === 'TooManyRequestsException' ||
   e.code === 'Throttling' ||
   e.code === 'ThrottlingException' ||

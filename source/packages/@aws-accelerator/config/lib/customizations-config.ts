@@ -349,9 +349,81 @@ export class CustomizationsConfigTypes {
     template: t.nonEmptyString,
   });
 
+  /**
+   * Portfolio association type
+   */
+  static readonly portfolioAssociationType = t.enums('PortfolioAssociationType', ['User', 'Group', 'Role']);
+
+  /**
+   * Portfolio Association configuration
+   */
+  static readonly portfolioAssociationConfig = t.interface({
+    type: this.portfolioAssociationType,
+    name: t.nonEmptyString,
+  });
+
+  /**
+   * Product Version Configuration
+   */
+  static readonly productVersionConfig = t.interface({
+    name: t.nonEmptyString,
+    template: t.nonEmptyString,
+    description: t.optional(t.nonEmptyString),
+  });
+
+  /**
+   * Product Support configuration
+   */
+  static readonly productSupportConfig = t.interface({
+    email: t.optional(t.nonEmptyString),
+    url: t.optional(t.nonEmptyString),
+    description: t.optional(t.nonEmptyString),
+  });
+
+  /**
+   * Service Catalog TagOptions configuration
+   */
+  static readonly tagOptionsConfig = t.interface({
+    key: t.nonEmptyString,
+    values: t.array(t.nonEmptyString),
+  });
+
+  /**
+   * Service Catalog Products configuration
+   */
+  static readonly productConfig = t.interface({
+    name: t.nonEmptyString,
+    owner: t.nonEmptyString,
+    versions: t.array(this.productVersionConfig),
+    description: t.optional(t.nonEmptyString),
+    distributor: t.optional(t.nonEmptyString),
+    support: t.optional(this.productSupportConfig),
+    tagOptions: t.optional(t.array(this.tagOptionsConfig)),
+  });
+
+  /**
+   * Service Catalog Portfolios configuration
+   */
+  static readonly portfolioConfig = t.interface({
+    name: t.nonEmptyString,
+    account: t.nonEmptyString,
+    regions: t.array(t.region),
+    provider: t.nonEmptyString,
+    portfolioAssociations: t.optional(t.array(this.portfolioAssociationConfig)),
+    products: t.optional(t.array(this.productConfig)),
+    shareTargets: t.optional(t.shareTargets),
+    shareTagOptions: t.optional(t.boolean),
+    tagOptions: t.optional(t.array(this.tagOptionsConfig)),
+  });
+
+  static readonly serviceCatalogConfig = t.interface({
+    portfolios: t.array(this.portfolioConfig),
+  });
+
   static readonly customizationConfig = t.interface({
     cloudFormationStacks: t.optional(t.array(this.cloudFormationStack)),
     cloudFormationStackSets: t.optional(t.array(this.cloudFormationStackSet)),
+    serviceCatalogPortfolios: t.optional(t.array(this.portfolioConfig)),
   });
 
   static readonly ec2FirewallInstanceConfig = t.interface({
@@ -2087,6 +2159,236 @@ export class AppConfigItem implements t.TypeOf<typeof CustomizationsConfigTypes.
 }
 
 /**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} / {@link PortfolioAssociationConfig}*
+ *
+ * Portfolio Associations configuration
+ *
+ * @example
+ * ```
+ * - type: Group
+ *   name: Administrators
+ * - type: Role
+ *   name: EC2-Default-SSM-AD-Role
+ * - type: User
+ *   name: breakGlassUser01
+ * ```
+ */
+export class PortfolioAssociationConfig
+  implements t.TypeOf<typeof CustomizationsConfigTypes.portfolioAssociationConfig>
+{
+  /**
+   * indicates the type of portfolio Associations
+   */
+  readonly type: t.TypeOf<typeof CustomizationsConfigTypes.portfolioAssociationType> = 'Role';
+  /**
+   * indicates the name of the portfolio Associations
+   */
+  readonly name: string = '';
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} / {@link ProductConfig} / {@link ProductVersionConfig}*
+ *
+ * Product Versions configuration
+ *
+ * @example
+ * ```
+ * - name: v1
+ *   description: Product version 1
+ *   template: path/to/template.json
+ * ```
+ */
+export class ProductVersionConfig implements t.TypeOf<typeof CustomizationsConfigTypes.productVersionConfig> {
+  /**
+   * Name of the version of the product
+   */
+  readonly name: string = '';
+  /**
+   * The version description
+   */
+  readonly description: string = '';
+  /**
+   * The product template.
+   */
+  readonly template: string = '';
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} / {@link ProductConfig} / {@link ProductSupportConfig}*
+ *
+ * Product Support configuration
+ *
+ * @example
+ * ```
+ * description: Product support details
+ * email: support@example.com
+ * url: support.example.com
+ * ```
+ */
+export class ProductSupportConfig implements t.TypeOf<typeof CustomizationsConfigTypes.productSupportConfig> {
+  /**
+   * The email address to report issues with the product
+   */
+  readonly email: string | undefined = undefined;
+  /**
+   * The url to the site where users can find support information or file tickets.
+   */
+  readonly url: string | undefined = undefined;
+  /**
+   * Support description of how users should use email contact and support link.
+   */
+  readonly description: string | undefined = undefined;
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} | {@link ProductConfig} / {@link TagOptionsConfig}*
+ *
+ * Service Catalog TagOptions configuration.
+ *
+ * @example
+ * ```
+ * - key: Environment
+ *   values: [Dev, Test, Prod]
+ * ```
+ */
+export class TagOptionsConfig implements t.TypeOf<typeof CustomizationsConfigTypes.tagOptionsConfig> {
+  /**
+   * The tag key
+   */
+  readonly key: string = '';
+  /**
+   * An array of values that can be used for the tag key
+   */
+  readonly values: string[] = [];
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig} / {@link ProductConfig}*
+ *
+ * Service Catalog Products configuration
+ *
+ * @example
+ * ```
+ * - name: Product01
+ *   description: Example product
+ *   owner: Product-Owner
+ *   versions:
+ *     - name: v1
+ *       description: Product version 1
+ *       template: path/to/template.json
+ * ```
+ */
+export class ProductConfig implements t.TypeOf<typeof CustomizationsConfigTypes.productConfig> {
+  /**
+   * The name of the product
+   */
+  readonly name: string = '';
+  /**
+   * The owner of the product
+   */
+  readonly owner: string = '';
+  /**
+   * Product version configuration
+   */
+  readonly versions: ProductVersionConfig[] = [];
+  /**
+   * Product description
+   */
+  readonly description: string | undefined = undefined;
+  /**
+   * The name of the product's publisher.
+   */
+  readonly distributor: string | undefined = undefined;
+  /**
+   * Product support details.
+   */
+  readonly support: ProductSupportConfig | undefined = undefined;
+  /**
+   * Product TagOptions configuration
+   */
+  readonly tagOptions: TagOptionsConfig[] | undefined = undefined;
+}
+
+/**
+ * *{@link CustomizationsConfig} / {@link CustomizationConfig} / {@link PortfolioConfig}*
+ *
+ * Service Catalog Portfolios configuration
+ *
+ * @example
+ * ```
+ * - name: accelerator-portfolio
+ *   provider: landing-zone-accelerator
+ *   account: Management
+ *   regions:
+ *     - us-east-1
+ *   shareTargets:
+ *     organizationalUnits:
+ *       - Root
+ *   shareTagOptions: true
+ *   portfolioAssociations:
+ *     - type: Group
+ *       name: Administrators
+ *   products:
+ *     - name: Product01
+ *       description: Example product
+ *       owner: Product-Owner
+ *       versions:
+ *         - name: v1
+ *           description: Product version 1
+ *           template: path/to/template.json
+ *   tagOptions:
+ *     - key: Environment
+ *       values: [Dev, Test, Prod]
+ * ```
+ *
+ */
+export class PortfolioConfig implements t.TypeOf<typeof CustomizationsConfigTypes.portfolioConfig> {
+  /**
+   * The name of the portfolio
+   */
+  readonly name: string = '';
+  /**
+   * The provider of the portfolio
+   */
+  readonly provider: string = '';
+  /**
+   * The name of the account to deploy the portfolio.
+   */
+  readonly account: string = '';
+  /**
+   * The region names to deploy the portfolio.
+   */
+  readonly regions: t.Region[] = [];
+  /**
+   * Configuration of portfolio associations to give access to the end users.
+   */
+  readonly portfolioAssociations: PortfolioAssociationConfig[] = [];
+  /**
+   * Product Configuration
+   */
+  readonly products: ProductConfig[] = [];
+  /**
+   * Portfolio share target
+   *
+   * @remarks
+   * Valid values are the friendly names of organizational unit(s) and/or account(s).
+   *
+   */
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
+  /**
+   * Whether or not to share TagOptions with other account(s)/OU(s)
+   *
+   * @remarks
+   * This property is only applicable if the `shareTargets` property is defined
+   */
+  readonly shareTagOptions: boolean | undefined = undefined;
+  /**
+   * Portfolio TagOptions configuration
+   */
+  readonly tagOptions: TagOptionsConfig[] | undefined = undefined;
+}
+
+/**
  * *{@link CustomizationsConfig} / {@link CustomizationConfig}*
  *
  * Defines CloudFormation Stacks and StackSets to be deployed to the environment.
@@ -2098,6 +2400,7 @@ export class AppConfigItem implements t.TypeOf<typeof CustomizationsConfigTypes.
 export class CustomizationConfig implements t.TypeOf<typeof CustomizationsConfigTypes.customizationConfig> {
   readonly cloudFormationStacks: CloudFormationStackConfig[] = [];
   readonly cloudFormationStackSets: CloudFormationStackSetConfig[] = [];
+  readonly serviceCatalogPortfolios: PortfolioConfig[] = [];
 }
 
 /**
