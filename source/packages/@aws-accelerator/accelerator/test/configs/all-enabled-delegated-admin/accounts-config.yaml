@@ -26,14 +26,14 @@ workloadAccounts:
     organizationalUnit: Security
 accountIds:
   - email: management-account@example.com
-    accountId: "111111111111"
+    accountId: '111111111111'
   - email: audit-account@example.com
-    accountId: "222222222222"
+    accountId: '222222222222'
   - email: logarchive-account@example.com
-    accountId: "333333333333"
+    accountId: '333333333333'
   - email: shared-services@example.com
-    accountId: "444444444444"
+    accountId: '444444444444'
   - email: network@example.com
-    accountId: "555555555555"
+    accountId: '555555555555'
   - email: central-security@example.com
-    accountId: "666666666666"
+    accountId: '666666666666'

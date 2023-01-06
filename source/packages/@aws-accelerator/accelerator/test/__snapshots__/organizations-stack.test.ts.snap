@@ -1816,6 +1816,26 @@ Object {
       "Type": "Custom::EnableAwsServiceAccess",
       "UpdateReplacePolicy": "Delete",
     },
+    "EnableOrganizationsServiceCatalog4D66D976": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderLogGroupEB99134A",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderHandlerDCD56D71",
+            "Arn",
+          ],
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "servicePrincipal": "servicecatalog.amazonaws.com",
+      },
+      "Type": "Custom::EnableAwsServiceAccess",
+      "UpdateReplacePolicy": "Delete",
+    },
     "EnableSharingWithAwsOrganization81D5714F": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
@@ -4384,6 +4404,26 @@ Object {
       "Type": "Custom::EnableAwsServiceAccess",
       "UpdateReplacePolicy": "Delete",
     },
+    "EnableOrganizationsServiceCatalog4D66D976": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderLogGroupEB99134A",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderHandlerDCD56D71",
+            "Arn",
+          ],
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "servicePrincipal": "servicecatalog.amazonaws.com",
+      },
+      "Type": "Custom::EnableAwsServiceAccess",
+      "UpdateReplacePolicy": "Delete",
+    },
     "EnableSharingWithAwsOrganization81D5714F": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
@@ -6948,6 +6988,26 @@ Object {
           "Ref": "AWS::Partition",
         },
         "servicePrincipal": "access-analyzer.amazonaws.com",
+      },
+      "Type": "Custom::EnableAwsServiceAccess",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "EnableOrganizationsServiceCatalog4D66D976": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderLogGroupEB99134A",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderHandlerDCD56D71",
+            "Arn",
+          ],
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "servicePrincipal": "servicecatalog.amazonaws.com",
       },
       "Type": "Custom::EnableAwsServiceAccess",
       "UpdateReplacePolicy": "Delete",

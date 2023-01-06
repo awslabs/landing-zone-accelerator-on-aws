@@ -134,6 +134,11 @@ export class OrganizationsStack extends AcceleratorStack {
       this.enableRamOrganizationSharing();
 
       //
+      // Enable Service Catalog
+      //
+      this.enableServiceCatalog();
+
+      //
       // Enable IPAM delegated administrator
       //
       this.enableIpamDelegatedAdminAccount();
@@ -313,7 +318,18 @@ export class OrganizationsStack extends AcceleratorStack {
       });
     }
   }
-
+  //
+  // Enable Service Catalog
+  //
+  private enableServiceCatalog() {
+    if (this.props.customizationsConfig?.customizations?.serviceCatalogPortfolios?.length > 0) {
+      new EnableAwsServiceAccess(this, 'EnableOrganizationsServiceCatalog', {
+        servicePrincipal: 'servicecatalog.amazonaws.com',
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.logRetention,
+      });
+    }
+  }
   /**
    * Function to enable IPAM delegated admin account
    */
