@@ -697,7 +697,7 @@ export class PrepareStack extends AcceleratorStack {
             validateScp.node.addDependency(controlTowerAccounts);
           }
           if (organizationAccounts) {
-            validateScp.node.addDependency(organizationAccounts);
+            validateScp.node.addDependency(moveAccounts);
           }
         }
       }
