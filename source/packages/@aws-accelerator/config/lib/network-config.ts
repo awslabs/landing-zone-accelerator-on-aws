@@ -919,7 +919,7 @@ export class NetworkConfigTypes {
  *
  * @example
  * ```
- * defaultVpcs:
+ * defaultVpc:
  *   delete: true
  *   excludeAccounts: []
  * ```
@@ -5260,8 +5260,21 @@ export class GwlbConfig implements t.TypeOf<typeof NetworkConfigTypes.gwlbConfig
  *   delegatedAdminAccount: Network
  *   gatewayLoadBalancers: []
  *   ipams: []
- *   networkFirewall: []
- *   route53Resolver: []
+ *   networkFirewall:
+ *     firewalls: []
+ *     policies: []
+ *     rules: []
+ *   route53Resolver:
+ *     endpoints: []
+ *     firewallRuleGroups: []
+ *     queryLogs:
+ *       name: accelerator-query-logs
+ *       destinations:
+ *         - cloud-watch-logs
+ *         - s3
+ *       shareTargets:
+ *         organizationalUnits:
+ *           - Root
  * ```
  */
 export class CentralNetworkServicesConfig implements t.TypeOf<typeof NetworkConfigTypes.centralNetworkServicesConfig> {
