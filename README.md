@@ -19,6 +19,7 @@
     - [@aws-cdk-extensions/tester](#aws-cdk-extensionstester)
   - [Creating an Installer Stack](#creating-an-installer-stack)
     - [1. Build the Installer stack for deployment](#1-build-the-installer-stack-for-deployment)
+    - [2. Deploy the Installer stack](#2-deploy-the-installer-stack)
 
 # Landing Zone Accelerator on AWS
 
@@ -251,12 +252,32 @@ directly via the AWS CLI or console. Below are the commands for completing the d
 
 ### 1. Build the Installer stack for deployment
 
+- Install dependencies for the Installer stack
+
+```
+- [Node](https://nodejs.org/en/)
+- [AWS CDK](https://aws.amazon.com/cdk/)
+- [Yarn](https://yarnpkg.com/)
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+```
+
+- Install project dependencies
+  
+```
+cd <rootDir>/source
+yarn link && yarn install
+```
+
 - To run the CDK synthesis
 
 ```
 cd <rootDir>/source/packages/@aws-accelerator/installer
-yarn cdk synth
+yarn build && yarn cdk synth
 ```
+
+After running these commands, the Installer stack template will be saved to `<rootDir>/source/packages/@aws-accelerator/installer/cdk.out/AWSAccelerator-InstallerStack.template.json`
+
+### 2. Deploy the Installer stack
 
 - Configure the AWS CLI CloudFormation command for the Installer stack
 
@@ -270,29 +291,21 @@ ParameterKey=ManagementAccountEmail,ParameterValue=<Management_Email> \
 ParameterKey=ManagementAccountRoleName,ParameterValue= \
 ParameterKey=LogArchiveAccountEmail,ParameterValue=<LogArchive_Email> \
 ParameterKey=AuditAccountEmail,ParameterValue=<Audit_Email> \
-ParameterKey=EnableApprovalStage,ParameterValue=Yes
-ParameterKey=ApprovalStageNotifyEmailList,ParameterValue=comma-delimited-notify-emails
+ParameterKey=EnableApprovalStage,ParameterValue=Yes \
+ParameterKey=ApprovalStageNotifyEmailList,ParameterValue=comma-delimited-notify-emails \
+ParameterKey=ControlTowerEnabled,ParameterValue=Yes \
 --capabilities CAPABILITY_IAM
 ```
 
 - Alternate deployment of CloudFormation via AWS console:
 
 ```
-- Navigate to CloudFormation page in the AWS console
+- From your Management account, navigate to CloudFormation page in the AWS console
 - Select ‘Create Stack’ and from the dropdown pick ‘with new resources (standard)’
 - For the prerequisite template, select ‘Template is ready’
 - When specifying the template, select ‘Upload a template file’
 - Ensure that you select the correct file ‘AWSLandingZoneAccelerator-InstallerStack.template.json’
 - Fill out the required parameters in the UI, and create the stack once the parameters are inputted.
-```
-
-- Dependencies for the Installer stack
-
-```
-- [Node](https://nodejs.org/en/)
-- [AWS CDK](https://aws.amazon.com/cdk/)
-- [Yarn](https://yarnpkg.com/)
-- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 ```
 
 ---
