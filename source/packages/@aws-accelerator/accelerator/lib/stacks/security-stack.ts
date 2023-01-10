@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
+import { NagSuppressions } from 'cdk-nag';
 
 import { Region } from '@aws-accelerator/config';
 import {
@@ -24,6 +25,7 @@ import {
   MacieExportConfigClassification,
   PasswordPolicy,
   SecurityHubStandards,
+  ConfigAggregation,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
@@ -40,6 +42,7 @@ export class SecurityStack extends AcceleratorStack {
   readonly auditAccountName: string;
   readonly centralLogsBucketName: string;
   readonly centralLogsBucketKey: cdk.aws_kms.Key;
+  readonly configAggregationAccountId: string;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -47,6 +50,15 @@ export class SecurityStack extends AcceleratorStack {
     this.auditAccountName = props.securityConfig.getDelegatedAccountName();
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
+    this.configAggregationAccountId = props.accountsConfig.getManagementAccountId();
+    if (
+      props.securityConfig.awsConfig.aggregation?.enable &&
+      props.securityConfig.awsConfig.aggregation.delegatedAdminAccount
+    ) {
+      this.configAggregationAccountId = props.accountsConfig.getAccountId(
+        props.securityConfig.awsConfig.aggregation.delegatedAdminAccount,
+      );
+    }
     this.centralLogsBucketName = `${
       AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
     }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
@@ -97,6 +109,13 @@ export class SecurityStack extends AcceleratorStack {
     // Create SSM Parameters
     //
     this.createSsmParameters();
+
+    if (
+      this.props.securityConfig.awsConfig.aggregation?.enable &&
+      this.configAggregationAccountId === cdk.Stack.of(this).account
+    ) {
+      this.enableConfigAggregation();
+    }
 
     Logger.info('[security-stack] Completed stack synthesis');
   }
@@ -319,5 +338,27 @@ export class SecurityStack extends AcceleratorStack {
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
       });
     }
+  }
+
+  /**
+   * Function to config aggregator
+   */
+  private enableConfigAggregation() {
+    Logger.info('[security-stack] Enabling Config Aggregation');
+    new ConfigAggregation(this, 'EnableConfigAggregation', {
+      acceleratorPrefix: 'AWSAccelerator',
+    });
+
+    // AwsSolutions-IAM4: The IAM user, role, or group uses AWS managed policies
+    NagSuppressions.addResourceSuppressionsByPath(
+      this,
+      `${this.stackName}/EnableConfigAggregation/ConfigAggregatorRole/Resource`,
+      [
+        {
+          id: 'AwsSolutions-IAM4',
+          reason: 'AWS Config managed role required.',
+        },
+      ],
+    );
   }
 }

@@ -457,9 +457,15 @@ export class SecurityConfigTypes {
     rules: t.array(this.configRule),
   });
 
+  static readonly awsConfigAggregation = t.interface({
+    enable: t.boolean,
+    delegatedAdminAccount: t.optional(t.nonEmptyString),
+  });
+
   static readonly awsConfig = t.interface({
     enableConfigurationRecorder: t.boolean,
     enableDeliveryChannel: t.boolean,
+    aggregation: t.optional(this.awsConfigAggregation),
     ruleSets: t.array(this.awsConfigRuleSet),
   });
 
@@ -1465,6 +1471,34 @@ export class IamPasswordPolicyConfig implements t.TypeOf<typeof SecurityConfigTy
 }
 
 /**
+ * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigAggregation}*
+ *
+ * AWS Config Aggregation Configuration
+ * Not used in Control Tower environment
+ * Aggregation will be configured in all enabled regions
+ * unless specifically excluded
+ * If the delegatedAdmin account is not provided
+ * config will be aggregated to the management account
+ *
+ * @example
+ * AWS Config Aggregation with a delegated admin account:
+ * ```
+ * aggregation:
+ *   enable: true
+ *   delegatedAdminAccount: LogArchive
+ * ```
+ * AWS Config Aggregation in the management account:
+ * ```
+ * configAggregation:
+ *   enable: true
+ * ```
+ */
+export class AwsConfigAggregation implements t.TypeOf<typeof SecurityConfigTypes.awsConfigAggregation> {
+  readonly enable = true;
+  readonly delegatedAdminAccount: string | undefined = undefined;
+}
+
+/**
  * *{@link SecurityConfig} / {@link AwsConfig} / {@link AwsConfigRuleSet} / {@link ConfigRule}*
  *
  * AWS ConfigRule configuration
@@ -1768,13 +1802,16 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
 /**
  * *{@link SecurityConfig} / {@link AwsConfig}*
  *
- * AWS Config rule
+ * AWS Config Recorder and Rules
  *
  * @example
  * ```
  * awsConfig:
  *   enableConfigurationRecorder: true
  *   enableDeliveryChannel: true
+ *   aggregation:
+ *     enable: true
+ *     delegatedAdminAccount: LogArchive
  *   ruleSets:
  *     - deploymentTargets:
  *         organizationalUnits:
@@ -1801,6 +1838,10 @@ export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig>
    * AWS Config uses the delivery channel to deliver the configuration changes to your Amazon S3 bucket or Amazon SNS topic.
    */
   readonly enableDeliveryChannel = true;
+  /**
+   * Config Recorder Aggergation configuration
+   */
+  readonly aggregation: AwsConfigAggregation | undefined;
   /**
    * AWS Config rule sets
    */
@@ -2234,6 +2275,8 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
           this.centralSecurityServices.securityHub.notificationLevel ?? undefined,
           errors,
         );
+
+        this.validateAwsConfigAggregation(configDir, accountNames, values, errors);
       }
 
       if (errors.length) {
@@ -2726,6 +2769,29 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
       );
     }
   }
+
+  private validateAwsConfigAggregation(
+    configDir: string,
+    accountNames: string[],
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    errors: string[],
+  ) {
+    const globalConfig = GlobalConfig.load(configDir);
+    if (values.awsConfig.aggregation && globalConfig.controlTower.enable) {
+      errors.push(`Control Tower is enabled.  Config aggregation cannot be managed by AWS LZA`);
+    }
+
+    if (
+      values.awsConfig.aggregation &&
+      values.awsConfig.aggregation.delegatedAdminAccount &&
+      accountNames.indexOf(values.awsConfig.aggregation?.delegatedAdminAccount) === -1
+    ) {
+      errors.push(
+        `Delegated admin account '${values.awsConfig.aggregation?.delegatedAdminAccount}' provided for config aggregation does not exist in the accounts-config.yaml file.`,
+      );
+    }
+  }
+
   /**
    * Return delegated-admin-account name
    */
