@@ -150,6 +150,9 @@ export class OrganizationsStack extends AcceleratorStack {
 
       //IdentityCenter Config
       this.enableIdentityCenterDelegatedAdminAccount(securityAdminAccountId);
+
+      //Enable Config Recorder Delegated Admin
+      this.enableConfigRecorderDelegatedAdminAccount();
     }
 
     // Macie Configuration
@@ -367,6 +370,40 @@ export class OrganizationsStack extends AcceleratorStack {
         logRetentionInDays: this.logRetention,
         assumeRole: this.stackProperties.globalConfig.managementAccountAccessRole,
       });
+    }
+  }
+
+  /**
+   * Function to enable Config Recorder delegated admin account
+   */
+  private enableConfigRecorderDelegatedAdminAccount() {
+    if (
+      this.stackProperties.securityConfig.awsConfig.aggregation?.enable &&
+      this.stackProperties.securityConfig.awsConfig.aggregation.delegatedAdminAccount &&
+      !this.stackProperties.globalConfig.controlTower.enable &&
+      this.stackProperties.organizationConfig.enable
+    ) {
+      Logger.debug('[organizations-stack] enableConfigRecorderDelegateAdminAccount');
+      const enableConfigServiceAccess = new EnableAwsServiceAccess(this, 'EnableConfigAccess', {
+        servicePrincipal: 'config.amazonaws.com',
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.logRetention,
+      });
+
+      const registerConfigDelegatedAdministrator = new RegisterDelegatedAdministrator(
+        this,
+        'RegisterConfigDelegatedAdministrator',
+        {
+          accountId: this.stackProperties.accountsConfig.getAccountId(
+            this.stackProperties.securityConfig.awsConfig.aggregation.delegatedAdminAccount,
+          ),
+          servicePrincipal: 'config.amazonaws.com',
+          kmsKey: this.cloudwatchKey,
+          logRetentionInDays: this.logRetention,
+        },
+      );
+
+      registerConfigDelegatedAdministrator.node.addDependency(enableConfigServiceAccess);
     }
   }
 
