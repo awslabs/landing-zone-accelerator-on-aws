@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConfigAggregation Construct(ConfigAggregation):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "TestConfigAggregationConfigAggregatorE086B6C8": Object {
+      "Properties": Object {
+        "ConfigurationAggregatorName": "AWSAccelerator-Aggregator",
+        "OrganizationAggregationSource": Object {
+          "AllAwsRegions": true,
+          "RoleArn": Object {
+            "Fn::GetAtt": Array [
+              "TestConfigAggregationConfigAggregatorRole43BBA16A",
+              "Arn",
+            ],
+          },
+        },
+      },
+      "Type": "AWS::Config::ConfigurationAggregator",
+    },
+    "TestConfigAggregationConfigAggregatorRole43BBA16A": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "config.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Description": "Role used by the AWS Config Service aggregation to use organization resources",
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSConfigRoleForOrganizations",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+  },
+}
+`;
