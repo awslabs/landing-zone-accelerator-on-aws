@@ -825,4 +825,6 @@ async function main() {
   }
 }
 
-main();
+(async () => {
+  await main();
+})();
