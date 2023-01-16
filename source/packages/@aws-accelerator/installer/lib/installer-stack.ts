@@ -550,7 +550,7 @@ export class InstallerStack extends cdk.Stack {
       }),
       environment: {
         buildImage: cdk.aws_codebuild.LinuxBuildImage.STANDARD_6_0,
-        privileged: true, // Allow access to the Docker daemon
+        privileged: false, // Allow access to the Docker daemon
         computeType: cdk.aws_codebuild.ComputeType.MEDIUM,
         environmentVariables: {
           NODE_OPTIONS: {
