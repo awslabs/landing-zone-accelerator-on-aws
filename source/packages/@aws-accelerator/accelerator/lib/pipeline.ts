@@ -227,7 +227,7 @@ export class AcceleratorPipeline extends Construct {
       }),
       environment: {
         buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
-        privileged: true, // Allow access to the Docker daemon
+        privileged: false, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.MEDIUM,
         environmentVariables: {
           NODE_OPTIONS: {
@@ -286,7 +286,7 @@ export class AcceleratorPipeline extends Construct {
       }),
       environment: {
         buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
-        privileged: true, // Allow access to the Docker daemon
+        privileged: false, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.LARGE,
         environmentVariables: {
           NODE_OPTIONS: {
