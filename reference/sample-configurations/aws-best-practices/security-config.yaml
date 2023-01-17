@@ -32,6 +32,11 @@ centralSecurityServices:
     defaultReportsConfiguration:
       enable: true
       destinationType: S3
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
   detective:
     enable: false
     excludeRegions: []
