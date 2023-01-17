@@ -239,7 +239,7 @@ export class NetworkPrepStack extends AcceleratorStack {
               statements: [
                 new cdk.aws_iam.PolicyStatement({
                   effect: cdk.aws_iam.Effect.ALLOW,
-                  actions: ['ssm:GetParameters', 'ssm:GetParameter'],
+                  actions: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:PutParameter'],
                   resources: [
                     `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/network/transitGateways/*`,
                   ],
