@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { ResolverRule, ResolverRuleAssociation } from '../../lib/aws-route-53-resolver/resolver-rule';
 import { snapShotTest } from '../snapshot-test';
+import { describe, expect, it } from '@jest/globals';
 
 const testNamePrefix = 'Construct(ResolverRule): ';
 
@@ -56,4 +57,53 @@ new ResolverRuleAssociation(systemRuleStack, 'TestResolverRuleAssoc', {
 describe('ResolverRule', () => {
   snapShotTest(testNamePrefix, forwardRuleStack);
   snapShotTest(testNamePrefix, systemRuleStack);
+  it('throw error when targetInbound is specified without kmsKey', () => {
+    function targetInboundKmsKeyError() {
+      new ResolverRule(systemRuleStack, 'TargetInboundKmsKeyError', {
+        domainName: 'test.com',
+        name: 'TestResolverRule',
+        resolverEndpointId: 'TestEndpoint',
+        targetIps: ipAddresses,
+        tags: [],
+        targetInbound: 'targetInbound',
+        logRetentionInDays: 3653,
+        ruleType: 'SYSTEM',
+      });
+    }
+    expect(targetInboundKmsKeyError).toThrow(
+      new Error('kmsKey property must be included if targetInbound property is defined.'),
+    );
+  });
+  it('throw error when targetInbound is specified without logRetention', () => {
+    function targetInboundLogRetentionError() {
+      new ResolverRule(systemRuleStack, 'TargetInboundLogRetentionError', {
+        domainName: 'test.com',
+        name: 'TestResolverRule',
+        resolverEndpointId: 'TestEndpoint',
+        targetIps: ipAddresses,
+        tags: [],
+        targetInbound: 'targetInbound',
+        kmsKey: new cdk.aws_kms.Key(systemRuleStack, 'CustomKeyTargetInboundLogRetentionError', {}),
+        ruleType: 'SYSTEM',
+      });
+    }
+    expect(targetInboundLogRetentionError).toThrow(
+      new Error('logRetentionInDays property must be included if targetInbound property is defined.'),
+    );
+  });
+  it('test private function lookup inbound', () => {
+    const testLookupInbound = new ResolverRule(systemRuleStack, 'TestLookupInbound', {
+      domainName: 'test.com',
+      name: 'TestResolverRule',
+      resolverEndpointId: 'TestEndpoint',
+      targetIps: ipAddresses,
+      tags: [],
+      targetInbound: 'targetInbound',
+      kmsKey: new cdk.aws_kms.Key(systemRuleStack, 'CustomKeyTestLookupInbound', {}),
+      logRetentionInDays: 3653,
+      ruleType: 'SYSTEM',
+    });
+    //output of testLookupId ruleId is a cdk token hash so the check here is to make sure its a string
+    expect(typeof testLookupInbound.ruleId).toBe('string');
+  });
 });

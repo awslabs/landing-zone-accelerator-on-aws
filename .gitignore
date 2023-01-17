@@ -62,3 +62,7 @@ development
 
 ### Viperlight
 viperlight*.zip
+
+
+### Sonarqube
+.scannerwork

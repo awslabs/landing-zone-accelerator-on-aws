@@ -3,6 +3,58 @@
 exports[`Network Firewall Policy Construct(NetworkFirewallPolicy):  Snapshot Test 1`] = `
 Object {
   "Resources": Object {
+    "TestPolicy14DF854C3": Object {
+      "Properties": Object {
+        "FirewallPolicy": Object {
+          "StatefulDefaultActions": Array [
+            "statefulDefaultActions",
+          ],
+          "StatefulEngineOptions": Object {
+            "RuleOrder": "statefulEngineOptions",
+          },
+          "StatefulRuleGroupReferences": Array [
+            Object {
+              "Priority": 123,
+              "ResourceArn": "resourceArn",
+            },
+          ],
+          "StatelessCustomActions": Array [
+            Object {
+              "ActionDefinition": Object {
+                "PublishMetricAction": Object {
+                  "Dimensions": Array [
+                    Object {
+                      "Value": "CustomValue",
+                    },
+                  ],
+                },
+              },
+              "ActionName": "actionName",
+            },
+          ],
+          "StatelessDefaultActions": Array [
+            "statelessDefaultActions",
+          ],
+          "StatelessFragmentDefaultActions": Array [
+            "statelessFragmentDefaultActions",
+          ],
+          "StatelessRuleGroupReferences": Array [
+            Object {
+              "Priority": 123,
+              "ResourceArn": "resourceArn",
+            },
+          ],
+        },
+        "FirewallPolicyName": "TestFirewallPolicy1",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "TestFirewallPolicy1",
+          },
+        ],
+      },
+      "Type": "AWS::NetworkFirewall::FirewallPolicy",
+    },
     "TestPolicyCC05E598": Object {
       "Properties": Object {
         "FirewallPolicy": Object {

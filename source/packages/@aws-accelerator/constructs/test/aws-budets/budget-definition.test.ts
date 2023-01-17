@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 
 import { BudgetDefinition } from '../../lib/aws-budgets/budget-definition';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(BudgetDefinition): ';
 

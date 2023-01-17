@@ -13,6 +13,89 @@ Object {
     },
   },
   "Resources": Object {
+    "AcceleratorSnsKeyAlias1909B90C": Object {
+      "Properties": Object {
+        "AliasName": "alias/accelerator/kms/sns/key",
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorSnsKeyDADF94B1",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
+    "AcceleratorSnsKeyDADF94B1": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "Description": "AWS Accelerator SNS Kms Key",
+        "EnableKeyRotation": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::222222222222:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator-*",
+                        ],
+                      ],
+                    },
+                  ],
+                },
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow Accelerator Role to use the encryption key",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
     "AccessAnalyzer": Object {
       "Properties": Object {
         "Type": "ORGANIZATION",
@@ -74,6 +157,7 @@ Object {
           "333333333333",
           "444444444444",
           "555555555555",
+          "666666666666",
         ],
         "name": Object {
           "Ref": "AttachIamInstanceProfileC858EC06",
@@ -168,6 +252,7 @@ def script_handler(events, context):
           "333333333333",
           "444444444444",
           "555555555555",
+          "666666666666",
         ],
         "name": Object {
           "Ref": "AttachIamRolePolicy19A43F7E",
@@ -2085,6 +2170,206 @@ def script_handler(events, context):
       "Type": "Custom::GuardDutyCreateMembers",
       "UpdateReplacePolicy": "Delete",
     },
+    "HighSnsTopicF69104E5": Object {
+      "Properties": Object {
+        "DisplayName": "AWS Accelerator - High Notifications",
+        "KmsMasterKeyId": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorSnsKeyDADF94B1",
+            "Arn",
+          ],
+        },
+        "TopicName": "aws-accelerator-HighNotifications",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "HighSnsTopicPolicy59BE4137": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "cloudwatch.amazonaws.com",
+              },
+              "Resource": Object {
+                "Ref": "HighSnsTopicF69104E5",
+              },
+              "Sid": "0",
+            },
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+              "Resource": Object {
+                "Ref": "HighSnsTopicF69104E5",
+              },
+              "Sid": "1",
+            },
+            Object {
+              "Action": "sns:Publish",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Object {
+                "Ref": "HighSnsTopicF69104E5",
+              },
+              "Sid": "2",
+            },
+            Object {
+              "Action": Array [
+                "sns:ListSubscriptionsByTopic",
+                "sns:ListTagsForResource",
+                "sns:GetTopicAttributes",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Object {
+                "Ref": "HighSnsTopicF69104E5",
+              },
+              "Sid": "Allow Organization list topic",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": Array [
+          Object {
+            "Ref": "HighSnsTopicF69104E5",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
+    },
+    "HighSnsTopicnotifyhighexamplecomD3D4C272": Object {
+      "Properties": Object {
+        "Endpoint": "notify-high@example.com",
+        "Protocol": "email",
+        "TopicArn": Object {
+          "Ref": "HighSnsTopicF69104E5",
+        },
+      },
+      "Type": "AWS::SNS::Subscription",
+    },
+    "LowSnsTopic53AD0F18": Object {
+      "Properties": Object {
+        "DisplayName": "AWS Accelerator - Low Notifications",
+        "KmsMasterKeyId": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorSnsKeyDADF94B1",
+            "Arn",
+          ],
+        },
+        "TopicName": "aws-accelerator-LowNotifications",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "LowSnsTopicPolicy0C1FEB12": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "cloudwatch.amazonaws.com",
+              },
+              "Resource": Object {
+                "Ref": "LowSnsTopic53AD0F18",
+              },
+              "Sid": "0",
+            },
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+              "Resource": Object {
+                "Ref": "LowSnsTopic53AD0F18",
+              },
+              "Sid": "1",
+            },
+            Object {
+              "Action": "sns:Publish",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Object {
+                "Ref": "LowSnsTopic53AD0F18",
+              },
+              "Sid": "2",
+            },
+            Object {
+              "Action": Array [
+                "sns:ListSubscriptionsByTopic",
+                "sns:ListTagsForResource",
+                "sns:GetTopicAttributes",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Object {
+                "Ref": "LowSnsTopic53AD0F18",
+              },
+              "Sid": "Allow Organization list topic",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": Array [
+          Object {
+            "Ref": "LowSnsTopic53AD0F18",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
+    },
+    "LowSnsTopicnotifylowexamplecom00FF09F7": Object {
+      "Properties": Object {
+        "Endpoint": "notify-low@example.com",
+        "Protocol": "email",
+        "TopicArn": Object {
+          "Ref": "LowSnsTopic53AD0F18",
+        },
+      },
+      "Type": "AWS::SNS::Subscription",
+    },
     "MacieMembers1B6840B4": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
@@ -2105,6 +2390,106 @@ def script_handler(events, context):
       },
       "Type": "Custom::MacieCreateMember",
       "UpdateReplacePolicy": "Delete",
+    },
+    "MediumSnsTopic267CAB5B": Object {
+      "Properties": Object {
+        "DisplayName": "AWS Accelerator - Medium Notifications",
+        "KmsMasterKeyId": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorSnsKeyDADF94B1",
+            "Arn",
+          ],
+        },
+        "TopicName": "aws-accelerator-MediumNotifications",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "MediumSnsTopicPolicy0B54F62B": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "cloudwatch.amazonaws.com",
+              },
+              "Resource": Object {
+                "Ref": "MediumSnsTopic267CAB5B",
+              },
+              "Sid": "0",
+            },
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+              "Resource": Object {
+                "Ref": "MediumSnsTopic267CAB5B",
+              },
+              "Sid": "1",
+            },
+            Object {
+              "Action": "sns:Publish",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Object {
+                "Ref": "MediumSnsTopic267CAB5B",
+              },
+              "Sid": "2",
+            },
+            Object {
+              "Action": Array [
+                "sns:ListSubscriptionsByTopic",
+                "sns:ListTagsForResource",
+                "sns:GetTopicAttributes",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Object {
+                "Ref": "MediumSnsTopic267CAB5B",
+              },
+              "Sid": "Allow Organization list topic",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": Array [
+          Object {
+            "Ref": "MediumSnsTopic267CAB5B",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
+    },
+    "MediumSnsTopicnotifymediumexamplecom8D67BD3D": Object {
+      "Properties": Object {
+        "Endpoint": "notify-medium@example.com",
+        "Protocol": "email",
+        "TopicArn": Object {
+          "Ref": "MediumSnsTopic267CAB5B",
+        },
+      },
+      "Type": "AWS::SNS::Subscription",
     },
     "Organization29A5FC3F": Object {
       "DeletionPolicy": "Delete",
@@ -2189,6 +2574,7 @@ def script_handler(events, context):
           "333333333333",
           "444444444444",
           "555555555555",
+          "666666666666",
         ],
         "name": Object {
           "Ref": "PutS3Encryption383DF0CE",
@@ -2336,6 +2722,7 @@ def script_handler(events, context):
           "333333333333",
           "444444444444",
           "555555555555",
+          "666666666666",
         ],
         "name": Object {
           "Ref": "SsmElbEnableLoggingDB91F105",

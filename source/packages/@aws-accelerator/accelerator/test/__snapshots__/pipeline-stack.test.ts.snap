@@ -84,15 +84,7 @@ Object {
                       Object {
                         "Ref": "AWS::Partition",
                       },
-                      ":logs:",
-                      Object {
-                        "Ref": "AWS::Region",
-                      },
-                      ":",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":log-group:/aws/codebuild/",
+                      ":logs:us-east-1:000000000000:log-group:/aws/codebuild/",
                       Object {
                         "Ref": "PipelineToolkitProjectBCBD6910",
                       },
@@ -107,15 +99,7 @@ Object {
                       Object {
                         "Ref": "AWS::Partition",
                       },
-                      ":logs:",
-                      Object {
-                        "Ref": "AWS::Region",
-                      },
-                      ":",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":log-group:/aws/codebuild/",
+                      ":logs:us-east-1:000000000000:log-group:/aws/codebuild/",
                       Object {
                         "Ref": "PipelineToolkitProjectBCBD6910",
                       },
@@ -142,15 +126,7 @@ Object {
                     Object {
                       "Ref": "AWS::Partition",
                     },
-                    ":codebuild:",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":report-group/",
+                    ":codebuild:us-east-1:000000000000:report-group/",
                     Object {
                       "Ref": "PipelineToolkitProjectBCBD6910",
                     },
@@ -225,6 +201,7 @@ Object {
     },
     "Pipeline8E4BFAC9": Object {
       "DependsOn": Array [
+        "PipelineAWSServiceRoleForCodeStarNotificationsDA052A10",
         "PipelinePipelineRoleDefaultPolicy7D262A22",
         "PipelinePipelineRole6D983AD5",
       ],
@@ -914,6 +891,192 @@ Object {
       },
       "Type": "AWS::CodePipeline::Pipeline",
     },
+    "PipelineAWSServiceRoleForCodeStarNotificationsDA052A10": Object {
+      "Properties": Object {
+        "AWSServiceName": "codestar-notifications.amazonaws.com",
+        "Description": "Allows AWS CodeStar Notifications to access Amazon CloudWatch Events on your behalf",
+      },
+      "Type": "AWS::IAM::ServiceLinkedRole",
+    },
+    "PipelineAcceleratorFailedStatusTopic614002B3": Object {
+      "Properties": Object {
+        "DisplayName": "aws-accelerator-pipeline-failed-status-topic",
+        "KmsMasterKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-failed-status-topic",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelineAcceleratorFailedStatusTopicPolicy903B57F7": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codestar-notifications.amazonaws.com",
+              },
+              "Resource": Object {
+                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
+              },
+              "Sid": "0",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": Array [
+          Object {
+            "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
+    },
+    "PipelineAcceleratorPipelineFailureAlarm479BDCEA": Object {
+      "Properties": Object {
+        "AlarmDescription": "AWS Accelerator pipeline failure alarm, created by accelerator",
+        "AlarmName": "aws-accelerator-pipeline-failed-alarm",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 1,
+        "Dimensions": Array [
+          Object {
+            "Name": "TopicName",
+            "Value": Object {
+              "Fn::GetAtt": Array [
+                "PipelineAcceleratorFailedStatusTopic614002B3",
+                "TopicName",
+              ],
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "NumberOfMessagesPublished",
+        "Namespace": "AWS/SNS",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "PipelineAcceleratorPipelineFailureNotification5BE0EB21": Object {
+      "DependsOn": Array [
+        "PipelineAWSServiceRoleForCodeStarNotificationsDA052A10",
+      ],
+      "Properties": Object {
+        "DetailType": "FULL",
+        "EventTypeIds": Array [
+          "codepipeline-pipeline-pipeline-execution-failed",
+        ],
+        "Name": "elineStackPipelineAcceleratorPipelineFailureNotificationDB4C2A96",
+        "Resource": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":codepipeline:us-east-1:000000000000:",
+              Object {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "Targets": Array [
+          Object {
+            "TargetAddress": Object {
+              "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
+            },
+            "TargetType": "SNS",
+          },
+        ],
+      },
+      "Type": "AWS::CodeStarNotifications::NotificationRule",
+    },
+    "PipelineAcceleratorPipelineStatusNotification0FCF4387": Object {
+      "DependsOn": Array [
+        "PipelineAWSServiceRoleForCodeStarNotificationsDA052A10",
+      ],
+      "Properties": Object {
+        "DetailType": "FULL",
+        "EventTypeIds": Array [
+          "codepipeline-pipeline-manual-approval-failed",
+          "codepipeline-pipeline-manual-approval-needed",
+          "codepipeline-pipeline-manual-approval-succeeded",
+          "codepipeline-pipeline-pipeline-execution-canceled",
+          "codepipeline-pipeline-pipeline-execution-failed",
+          "codepipeline-pipeline-pipeline-execution-resumed",
+          "codepipeline-pipeline-pipeline-execution-started",
+          "codepipeline-pipeline-pipeline-execution-succeeded",
+          "codepipeline-pipeline-pipeline-execution-superseded",
+        ],
+        "Name": "pelineStackPipelineAcceleratorPipelineStatusNotification753A71B4",
+        "Resource": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":codepipeline:us-east-1:000000000000:",
+              Object {
+                "Ref": "Pipeline8E4BFAC9",
+              },
+            ],
+          ],
+        },
+        "Targets": Array [
+          Object {
+            "TargetAddress": Object {
+              "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
+            },
+            "TargetType": "SNS",
+          },
+        ],
+      },
+      "Type": "AWS::CodeStarNotifications::NotificationRule",
+    },
+    "PipelineAcceleratorStatusTopic2BD5793F": Object {
+      "Properties": Object {
+        "DisplayName": "aws-accelerator-pipeline-status-topic",
+        "KmsMasterKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorawsacceleratorinstallerkmskeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TopicName": "aws-accelerator-pipeline-status-topic",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "PipelineAcceleratorStatusTopicPolicy30BCED97": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "codestar-notifications.amazonaws.com",
+              },
+              "Resource": Object {
+                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
+              },
+              "Sid": "0",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Topics": Array [
+          Object {
+            "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
+          },
+        ],
+      },
+      "Type": "AWS::SNS::TopicPolicy",
+    },
     "PipelineBuildProject9D447FA8": Object {
       "Metadata": Object {
         "cdk_nag": Object {
@@ -1050,15 +1213,7 @@ Object {
                       Object {
                         "Ref": "AWS::Partition",
                       },
-                      ":logs:",
-                      Object {
-                        "Ref": "AWS::Region",
-                      },
-                      ":",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":log-group:/aws/codebuild/",
+                      ":logs:us-east-1:000000000000:log-group:/aws/codebuild/",
                       Object {
                         "Ref": "PipelineBuildProject9D447FA8",
                       },
@@ -1073,15 +1228,7 @@ Object {
                       Object {
                         "Ref": "AWS::Partition",
                       },
-                      ":logs:",
-                      Object {
-                        "Ref": "AWS::Region",
-                      },
-                      ":",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":log-group:/aws/codebuild/",
+                      ":logs:us-east-1:000000000000:log-group:/aws/codebuild/",
                       Object {
                         "Ref": "PipelineBuildProject9D447FA8",
                       },
@@ -1108,15 +1255,7 @@ Object {
                     Object {
                       "Ref": "AWS::Partition",
                     },
-                    ":codebuild:",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":report-group/",
+                    ":codebuild:us-east-1:000000000000:report-group/",
                     Object {
                       "Ref": "PipelineBuildProject9D447FA8",
                     },
@@ -1204,9 +1343,7 @@ Object {
         "Code": Object {
           "BranchName": "main",
           "S3": Object {
-            "Bucket": Object {
-              "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
-            },
+            "Bucket": "cdk-hnb659fds-assets-000000000000-us-east-1",
             "Key": "REPLACED-GENERATED-NAME.zip",
           },
         },
@@ -1373,6 +1510,20 @@ Object {
                 ],
               },
             },
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Ref": "PipelineAcceleratorStatusTopic2BD5793F",
+              },
+            },
+            Object {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Ref": "PipelineAcceleratorFailedStatusTopic614002B3",
+              },
+            },
           ],
           "Version": "2012-10-17",
         },
@@ -1386,6 +1537,9 @@ Object {
       "Type": "AWS::IAM::Policy",
     },
     "PipelineReviewApproveCodePipelineActionRole3122ED42": Object {
+      "DependsOn": Array [
+        "PipelineAWSServiceRoleForCodeStarNotificationsDA052A10",
+      ],
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
           "Statement": Array [
@@ -1401,11 +1555,7 @@ Object {
                       Object {
                         "Ref": "AWS::Partition",
                       },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
+                      ":iam::000000000000:root",
                     ],
                   ],
                 },
@@ -1418,6 +1568,9 @@ Object {
       "Type": "AWS::IAM::Role",
     },
     "PipelineReviewApproveCodePipelineActionRoleDefaultPolicyD445B059": Object {
+      "DependsOn": Array [
+        "PipelineAWSServiceRoleForCodeStarNotificationsDA052A10",
+      ],
       "Properties": Object {
         "PolicyDocument": Object {
           "Statement": Array [
@@ -1455,21 +1608,7 @@ Object {
             },
           ],
         },
-        "BucketName": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "aws-accelerator-pipeline-",
-              Object {
-                "Ref": "AWS::AccountId",
-              },
-              "-",
-              Object {
-                "Ref": "AWS::Region",
-              },
-            ],
-          ],
-        },
+        "BucketName": "aws-accelerator-pipeline-000000000000-us-east-1",
         "LifecycleConfiguration": Object {
           "Rules": Array [
             Object {
@@ -1478,21 +1617,7 @@ Object {
               },
               "ExpirationInDays": 1825,
               "ExpiredObjectDeleteMarker": false,
-              "Id": Object {
-                "Fn::Join": Array [
-                  "",
-                  Array [
-                    "LifecycleRuleaws-accelerator-pipeline-",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    "-",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                  ],
-                ],
-              },
+              "Id": "LifecycleRuleaws-accelerator-pipeline-000000000000-us-east-1",
               "NoncurrentVersionExpiration": Object {
                 "NoncurrentDays": 1825,
               },
@@ -1586,6 +1711,9 @@ Object {
       "Type": "AWS::S3::BucketPolicy",
     },
     "PipelineSourceCodePipelineActionRoleBBC58FD5": Object {
+      "DependsOn": Array [
+        "PipelineAWSServiceRoleForCodeStarNotificationsDA052A10",
+      ],
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
           "Statement": Array [
@@ -1601,11 +1729,7 @@ Object {
                       Object {
                         "Ref": "AWS::Partition",
                       },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
+                      ":iam::000000000000:root",
                     ],
                   ],
                 },
@@ -1618,6 +1742,9 @@ Object {
       "Type": "AWS::IAM::Role",
     },
     "PipelineSourceCodePipelineActionRoleDefaultPolicy5FD830BF": Object {
+      "DependsOn": Array [
+        "PipelineAWSServiceRoleForCodeStarNotificationsDA052A10",
+      ],
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [
@@ -1698,15 +1825,7 @@ Object {
                     Object {
                       "Ref": "AWS::Partition",
                     },
-                    ":codecommit:",
-                    Object {
-                      "Ref": "AWS::Region",
-                    },
-                    ":",
-                    Object {
-                      "Ref": "AWS::AccountId",
-                    },
-                    ":accelerator-source",
+                    ":codecommit:us-east-1:000000000000:accelerator-source",
                   ],
                 ],
               },
@@ -1724,6 +1843,9 @@ Object {
       "Type": "AWS::IAM::Policy",
     },
     "PipelineSourceConfigurationCodePipelineActionRoleA2807B19": Object {
+      "DependsOn": Array [
+        "PipelineAWSServiceRoleForCodeStarNotificationsDA052A10",
+      ],
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
           "Statement": Array [
@@ -1739,11 +1861,7 @@ Object {
                       Object {
                         "Ref": "AWS::Partition",
                       },
-                      ":iam::",
-                      Object {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
+                      ":iam::000000000000:root",
                     ],
                   ],
                 },
@@ -1756,6 +1874,9 @@ Object {
       "Type": "AWS::IAM::Role",
     },
     "PipelineSourceConfigurationCodePipelineActionRoleDefaultPolicy5FE1A228": Object {
+      "DependsOn": Array [
+        "PipelineAWSServiceRoleForCodeStarNotificationsDA052A10",
+      ],
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [

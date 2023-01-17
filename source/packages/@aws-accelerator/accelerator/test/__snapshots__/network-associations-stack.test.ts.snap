@@ -1294,6 +1294,37 @@ Object {
       },
       "Type": "AWS::ElasticLoadBalancingV2::Listener",
     },
+    "ListenerNetworkEndpointsappANlb01appAListener2": Object {
+      "Properties": Object {
+        "AlpnPolicy": Array [],
+        "Certificates": Array [
+          Object {},
+        ],
+        "DefaultActions": Array [
+          Object {
+            "ForwardConfig": Object {
+              "TargetGroups": Array [
+                Object {
+                  "TargetGroupArn": Object {
+                    "Ref": "NetworkEndpointsappAnlbtg2EE7F2886",
+                  },
+                },
+              ],
+            },
+            "TargetGroupArn": Object {
+              "Ref": "NetworkEndpointsappAnlbtg2EE7F2886",
+            },
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsnlbappAnlb01idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Port": 80,
+        "Protocol": "TCP",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
     "NetworkDxgwNetworkMainCoreAssociation1B0096A1": Object {
       "Properties": Object {
         "TransitGatewayAttachmentId": Object {
@@ -1483,6 +1514,34 @@ Object {
           },
         ],
         "TargetType": "instance",
+        "VpcId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
+    "NetworkEndpointsappAnlbtg2EE7F2886": Object {
+      "Properties": Object {
+        "HealthCheckEnabled": true,
+        "HealthCheckPort": "80",
+        "HealthCheckProtocol": "TCP",
+        "Matcher": Object {},
+        "Name": "appA-nlb-tg-2",
+        "Port": 80,
+        "Protocol": "TCP",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "appA-nlb-tg-2",
+          },
+        ],
+        "TargetType": "ip",
+        "Targets": Object {
+          "Fn::GetAtt": Array [
+            "appAnlbtg2ipLookupB24081DE",
+            "ipAddresses",
+          ],
+        },
         "VpcId": Object {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
@@ -1871,6 +1930,273 @@ Object {
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "appAnlbtg2ipLookupB24081DE": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEvent694CD713",
+            "Arn",
+          ],
+        },
+        "assumeRoleName": "AWSAccelerator-GetNLBIPAddressLookup",
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "targets": Array [
+          Object {
+            "account": "555555555555",
+            "nlbName": "appA-nlb-01",
+            "region": "us-east-1",
+          },
+        ],
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2": Object {
+      "DependsOn": Array [
+        "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRoleDefaultPolicyD488029A",
+        "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRole92332B48",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRole92332B48",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 15,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaLogGroup713C77F0": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRole92332B48": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRoleDefaultPolicyD488029A": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "StsAssumeRole",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRoleDefaultPolicyD488029A",
+        "Roles": Array [
+          Object {
+            "Ref": "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaServiceRole92332B48",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEvent694CD713": Object {
+      "DependsOn": Array [
+        "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleDefaultPolicy60AF00B7",
+        "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleA31E553B",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-NetworkAssociationsStack-555555555555-us-east-1/appA-nlb-tg-2-ipLookup/appA-nlb-tg-2-ipLookupProvider)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleA31E553B",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleA31E553B": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleDefaultPolicy60AF00B7": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderLambdaEF941FA2",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleDefaultPolicy60AF00B7",
+        "Roles": Array [
+          Object {
+            "Ref": "appAnlbtg2ipLookupappAnlbtg2ipLookupProviderframeworkonEventServiceRoleA31E553B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
   },
 }

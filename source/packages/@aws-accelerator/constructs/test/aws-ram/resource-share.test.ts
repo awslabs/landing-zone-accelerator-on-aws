@@ -12,8 +12,9 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { ResourceShare, ResourceShareOwner } from '../../index';
+import { ResourceShare, ResourceShareOwner, ResourceShareItem } from '../../lib/aws-ram/resource-share';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(ResourceShare): ';
 
@@ -45,5 +46,25 @@ ResourceShare.fromLookup(stackLookup, 'ResourceShareLookup', {
  * ResourceShare construct test
  */
 describe('ResourceShare', () => {
+  snapShotTest(testNamePrefix, stack);
+});
+
+//Lookup Resource share item
+// const resourceShare: IResourceShare =
+ResourceShareItem.fromLookup(stackLookup, 'ResourceShareItem', {
+  logRetentionInDays: 7,
+  kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
+  resourceShareItemType: 'resourceShareItemType',
+  resourceShare: ResourceShare.fromLookup(stackLookup, 'ResourceShareItemLookup', {
+    resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
+    resourceShareName: 'ResourceShareName',
+    owningAccountId: '111111111111',
+  }),
+});
+
+/**
+ * ResourceShare construct test
+ */
+describe('ResourceShareItem', () => {
   snapShotTest(testNamePrefix, stack);
 });

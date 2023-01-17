@@ -12,27 +12,21 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { Document } from '../../lib/aws-ssm/document';
+import { IdentityCenterOrganizationAdminAccount } from '../../lib/aws-identity-center/identity-center-organization-admin-account';
 import { snapShotTest } from '../snapshot-test';
 import { describe } from '@jest/globals';
-
-const testNamePrefix = 'Construct(Document): ';
+const testNamePrefix = 'Construct(IdentityCenterOrganizationAdminAccount): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new Document(stack, 'Document', {
-  name: 'DocumentName',
-  content: JSON.parse('{}'),
-  documentType: 'Automation',
-  sharedWithAccountIds: ['accountA'],
-  logRetentionInDays: 3653,
-  kmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
+new IdentityCenterOrganizationAdminAccount(stack, 'IdentityCenterOrganizationAdminAccount', {
+  adminAccountId: 'adminAccountId',
 });
 
 /**
- * Document construct test
+ * IdentityCenterOrganizationAdminAccount construct test
  */
-describe('Document', () => {
+describe('IdentityCenterOrganizationAdminAccount', () => {
   snapShotTest(testNamePrefix, stack);
 });

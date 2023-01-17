@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { NfwRuleGroupRuleConfig } from '@aws-accelerator/config';
 import { NetworkFirewallRuleGroup } from '../../lib/aws-networkfirewall/rule-group';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(NetworkFirewallPolicy): ';
 
@@ -63,5 +64,79 @@ new NetworkFirewallRuleGroup(stack, 'TestGroup', {
  * Network Firewall construct test
  */
 describe('Network Firewall Rule Group', () => {
+  snapShotTest(testNamePrefix, stack);
+});
+
+const statelessRule: NfwRuleGroupRuleConfig = {
+  rulesSource: {
+    statelessRulesAndCustomActions: {
+      statelessRules: [
+        {
+          priority: 100,
+          ruleDefinition: {
+            actions: ['aws:pass'],
+            matchAttributes: {
+              protocols: undefined,
+              tcpFlags: undefined,
+              sources: ['10.1.0.0/16'],
+              sourcePorts: [
+                {
+                  fromPort: 1024,
+                  toPort: 65535,
+                },
+              ],
+              destinations: ['10.0.0.0/16'],
+              destinationPorts: [
+                {
+                  fromPort: 22,
+                  toPort: 22,
+                },
+              ],
+            },
+          },
+        },
+      ],
+      customActions: [
+        {
+          actionDefinition: {
+            publishMetricAction: {
+              dimensions: ['CustomValue'],
+            },
+          },
+          actionName: 'CustomAction',
+        },
+      ],
+    },
+    rulesSourceList: undefined,
+    statefulRules: undefined,
+    rulesString: undefined,
+    rulesFile: '../../accelerator/test/configs/all-enabled/firewall-rules/rules.txt',
+  },
+
+  ruleVariables: {
+    ipSets: {
+      name: 'HOME_NET',
+      definition: ['10.0.0.0/16'],
+    },
+    portSets: {
+      name: 'HOME_NET',
+      definition: ['80', '443'],
+    },
+  },
+
+  statefulRuleOptions: 'STRICT_ORDER',
+};
+
+new NetworkFirewallRuleGroup(stack, 'TestGroupStateless', {
+  name: 'TestGroupStateless',
+  capacity: 100,
+  type: 'STATELESS',
+  ruleGroup: statelessRule,
+  tags: [{ key: 'someKey', value: 'someValue' }],
+});
+/*
+ * Network Firewall construct test
+ */
+describe('Network Firewall Rule Group Stateless', () => {
   snapShotTest(testNamePrefix, stack);
 });

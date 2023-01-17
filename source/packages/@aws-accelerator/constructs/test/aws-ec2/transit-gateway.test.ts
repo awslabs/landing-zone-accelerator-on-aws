@@ -12,8 +12,15 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { TransitGatewayRouteTableAssociation } from '../../lib/aws-ec2/transit-gateway';
+import {
+  TransitGatewayRouteTableAssociation,
+  TransitGatewayAttachment,
+  TransitGatewayRouteTablePropagation,
+  TransitGateway,
+  TransitGatewayAttachmentType,
+} from '../../lib/aws-ec2/transit-gateway';
 import { snapShotTest } from '../snapshot-test';
+import { describe, it } from '@jest/globals';
 
 const testNamePrefix = 'Construct(TransitGatewayRouteTableAssociation): ';
 
@@ -29,4 +36,90 @@ new TransitGatewayRouteTableAssociation(stack, 'TransitGatewayRouteTableAssociat
  */
 describe('TransitGatewayRouteTableAssociation', () => {
   snapShotTest(testNamePrefix, stack);
+});
+
+/**
+ * TransitGatewayAttachment construct test
+ */
+describe('TransitGatewayAttachment', () => {
+  it('regular tgw attachment', () => {
+    new TransitGatewayAttachment(stack, 'TransitGatewayAttachment', {
+      name: 'name',
+      partition: 'partition',
+      transitGatewayId: 'transitGatewayId',
+      subnetIds: ['one', 'two', 'three'],
+      vpcId: 'vpcId',
+      options: {
+        applianceModeSupport: 'enable',
+        dnsSupport: 'enable',
+        ipv6Support: 'disable',
+      },
+    });
+  });
+
+  it('tgw lookup', () => {
+    TransitGatewayAttachment.fromLookup(stack, 'TgwAttachLookup', {
+      transitGatewayId: 'transitGatewayId',
+      name: 'name',
+      owningAccountId: 'owningAccountId',
+      type: TransitGatewayAttachmentType.VPC,
+      roleName: 'roleName',
+      kmsKey: new cdk.aws_kms.Key(stack, 'TgwAttachLookupKms'),
+      logRetentionInDays: 7,
+    });
+  });
+  it('regular tgw attachment in aws partition', () => {
+    new TransitGatewayAttachment(stack, 'TransitGatewayAttachmentAwsPartition', {
+      name: 'name',
+      partition: 'aws',
+      transitGatewayId: 'transitGatewayId',
+      subnetIds: ['one', 'two', 'three'],
+      vpcId: 'vpcId',
+      options: {
+        applianceModeSupport: 'enable',
+        dnsSupport: 'disable',
+        ipv6Support: 'enable',
+      },
+    });
+  });
+  it('regular tgw attachment in aws partition options toggled', () => {
+    new TransitGatewayAttachment(stack, 'TransitGatewayAttachmentAwsPartitionOptions', {
+      name: 'name',
+      partition: 'aws',
+      transitGatewayId: 'transitGatewayId',
+      subnetIds: ['one', 'two', 'three'],
+      vpcId: 'vpcId',
+    });
+  });
+  snapShotTest('Construct(TransitGatewayAttachment): ', stack);
+});
+
+/**
+ * TransitGatewayRouteTablePropagation construct test
+ */
+describe('TransitGatewayRouteTablePropagation', () => {
+  new TransitGatewayRouteTablePropagation(stack, 'TransitGatewayRouteTablePropagation', {
+    transitGatewayAttachmentId: 'transitGatewayAttachmentId',
+    transitGatewayRouteTableId: 'transitGatewayRouteTableId',
+  });
+  snapShotTest('Construct(TransitGatewayRouteTablePropagation): ', stack);
+});
+
+/**
+ * TransitGateway construct test
+ */
+describe('TransitGateway', () => {
+  new TransitGateway(stack, 'TransitGateway', {
+    name: 'name',
+    amazonSideAsn: 1234,
+    autoAcceptSharedAttachments: 'enable',
+    defaultRouteTableAssociation: 'enable',
+    defaultRouteTablePropagation: 'enable',
+    description: 'description',
+    dnsSupport: 'enable',
+    multicastSupport: 'enable',
+    vpnEcmpSupport: 'enable',
+    tags: [{ key: 'key', value: 'value' }],
+  });
+  snapShotTest('Construct(TransitGateway): ', stack);
 });

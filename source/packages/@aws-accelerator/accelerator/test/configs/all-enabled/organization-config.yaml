@@ -6,6 +6,7 @@ enable: true
 organizationalUnits:
   - name: Security
   - name: Infrastructure
+  - name: GovCloud
 quarantineNewAccounts:
   enable: true
   scpPolicyName: Quarantine
@@ -24,8 +25,8 @@ serviceControlPolicies:
     policy: service-control-policies/guardrails-2.json
     type: customerManaged
     deploymentTargets:
-      organizationalUnits:
-        - Infrastructure
+      accounts:
+        - SharedServices
   - name: Quarantine
     description: >
       This SCP is used to prevent changes to new accounts until the Accelerator

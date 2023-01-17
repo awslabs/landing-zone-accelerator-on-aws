@@ -2257,7 +2257,9 @@ Object {
         "Environment": Object {
           "Variables": Object {
             "AccountRoleName": "AWSControlTowerExecution",
-            "GovCloudAccountMappingTableName": "",
+            "GovCloudAccountMappingTableName": Object {
+              "Ref": "govCloudAccountMapping0E3D2AD8",
+            },
             "NewOrgAccountsTableName": Object {
               "Ref": "NewOrgAccountsE5BA262F",
             },
@@ -2413,6 +2415,36 @@ Object {
               "Effect": "Allow",
               "Resource": "*",
               "Sid": "Organizations",
+            },
+            Object {
+              "Action": Array [
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "govCloudAccountMapping0E3D2AD8",
+                  "Arn",
+                ],
+              },
+              "Sid": "MappingDynamoDb",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:GenerateDataKey*",
+                "kms:DescribeKey",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "ManagementKey0813A4D9",
+                  "Arn",
+                ],
+              },
+              "Sid": "MappingKMS",
             },
           ],
           "Version": "2012-10-17",
@@ -3989,6 +4021,19 @@ Object {
       "Type": "Custom::GetPortfolioId",
       "UpdateReplacePolicy": "Delete",
     },
+    "GovCloudAccountMappingTableNameParameter9B54E984": Object {
+      "DependsOn": Array [
+        "NewCTAccountsTableNameParameter065A4927",
+      ],
+      "Properties": Object {
+        "Name": "/accelerator/prepare-stack/govCloudAccountMappingTableName",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "govCloudAccountMapping0E3D2AD8",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "InviteAccountsToOu482336A1": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
@@ -4027,7 +4072,7 @@ Object {
             "Arn",
           ],
         },
-        "accountConfigS3Key": "1eb9d1c45665f0cfee83f229c98a22aba3bb5cc63e04920abcb8d5c7856898b2.yaml",
+        "accountConfigS3Key": "e730c7bd6bcf687517f83e5c22990ce530077fe6e3710da826c0af2dc58f3469.yaml",
         "auditAccountEmail": "audit-account@example.com",
         "commitId": "",
         "configRepositoryName": "aws-accelerator-config",
@@ -4037,7 +4082,7 @@ Object {
         },
         "logArchiveAccountEmail": "logarchive-account@example.com",
         "managementAccountEmail": "management-account@example.com",
-        "organizationsConfigS3Key": "d80151f292700fcae278bee5efbaa85812e808988f3f4f07fa144b2b1740b6c3.yaml",
+        "organizationsConfigS3Key": "e2d344b253b923d66432493f819482f9d76b616377cb89294e5a1370ff29f41b.yaml",
         "partition": "aws",
         "stackName": "AWSAccelerator-PrepareStack-111111111111-us-east-1",
         "uuid": "REPLACED-UUID",
@@ -4429,6 +4474,10 @@ Object {
             "accountId": "555555555555",
             "name": "Network",
           },
+          Object {
+            "accountId": "666666666666",
+            "name": "GovCloudWorkloadAccount01",
+          },
         ],
         "organizationUnits": Array [
           Object {
@@ -4451,16 +4500,56 @@ Object {
           Object {
             "appliedScpName": Array [
               "AcceleratorGuardrails1",
-              "AcceleratorGuardrails2",
             ],
             "orgEntity": "Infrastructure",
             "orgEntityId": "ou-asdf-22222222",
             "orgEntityType": "OU",
           },
+          Object {
+            "appliedScpName": Array [
+              "AcceleratorGuardrails2",
+            ],
+            "orgEntity": "SharedServices",
+            "orgEntityId": "444444444444",
+            "orgEntityType": "Account",
+          },
         ],
       },
       "Type": "Custom::ValidateScpCount",
       "UpdateReplacePolicy": "Delete",
+    },
+    "govCloudAccountMapping0E3D2AD8": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "AttributeDefinitions": Array [
+          Object {
+            "AttributeName": "commercialAccountId",
+            "AttributeType": "S",
+          },
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "KeySchema": Array [
+          Object {
+            "AttributeName": "commercialAccountId",
+            "KeyType": "HASH",
+          },
+        ],
+        "PointInTimeRecoverySpecification": Object {
+          "PointInTimeRecoveryEnabled": true,
+        },
+        "SSESpecification": Object {
+          "KMSMasterKeyId": Object {
+            "Fn::GetAtt": Array [
+              "ManagementKey0813A4D9",
+              "Arn",
+            ],
+          },
+          "SSEEnabled": true,
+          "SSEType": "KMS",
+        },
+      },
+      "Type": "AWS::DynamoDB::Table",
+      "UpdateReplacePolicy": "Retain",
     },
   },
 }

@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { IpamSubnet } from '../../lib/aws-ec2/ipam-subnet';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(IpamSubnet): ';
 
@@ -31,6 +32,7 @@ new IpamSubnet(stack, 'TestIpamSubnet', {
   kmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
   logRetentionInDays: 3653,
   vpcId: 'vpc-test',
+  tags: [{ key: 'key', value: 'value' }],
 });
 
 /**
