@@ -52,6 +52,7 @@ import {
   Vpc,
   VpnConnection,
   CreateCertificate,
+  PutSsmParameter,
 } from '@aws-accelerator/constructs';
 
 import { Logger } from '../logger';
@@ -1785,9 +1786,15 @@ export class NetworkVpcStack extends AcceleratorStack {
    */
   private createTransitGatewayPeering() {
     for (const transitGatewayPeeringItem of this.props.networkConfig.transitGatewayPeering ?? []) {
+      // Get account IDs
+      const requesterAccountId = this.accountsConfig.getAccountId(transitGatewayPeeringItem.requester.account);
+      const accepterAccountId = this.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account);
+      const crossAccountCondition =
+        accepterAccountId !== requesterAccountId ||
+        transitGatewayPeeringItem.accepter.region !== transitGatewayPeeringItem.requester.region;
+
       if (
-        this.props.accountsConfig.getAccountId(transitGatewayPeeringItem.requester.account) ===
-          cdk.Stack.of(this).account &&
+        requesterAccountId === cdk.Stack.of(this).account &&
         transitGatewayPeeringItem.requester.region == cdk.Stack.of(this).region
       ) {
         Logger.info(
@@ -1856,7 +1863,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           },
         ).peeringAttachmentId;
 
-        // Create SSM parameter for peering attachment ID
+        // Create SSM parameter for peering attachment ID in requester region
         this.ssmParameters.push({
           logicalId: pascalCase(
             `SsmParam${transitGatewayPeeringItem.requester.transitGatewayName}${transitGatewayPeeringItem.name}PeeringAttachmentId`,
@@ -1864,6 +1871,38 @@ export class NetworkVpcStack extends AcceleratorStack {
           parameterName: `/accelerator/network/transitGateways/${transitGatewayPeeringItem.requester.transitGatewayName}/peering/${transitGatewayPeeringItem.name}/id`,
           stringValue: peeringAttachmentId,
         });
+
+        // Create SSM parameter for peering attachment ID in accepter account/region if different than requester account/region
+        if (crossAccountCondition) {
+          new PutSsmParameter(
+            this,
+            pascalCase(
+              `CrossAcctSsmParam${transitGatewayPeeringItem.accepter.transitGatewayName}${transitGatewayPeeringItem.name}PeeringAttachmentId`,
+            ),
+            {
+              region: transitGatewayPeeringItem.accepter.region,
+              partition: this.props.partition,
+              kmsKey: this.cloudwatchKey,
+              logRetentionInDays: this.logRetention,
+              parameter: {
+                name: `/accelerator/network/transitGateways/${transitGatewayPeeringItem.accepter.transitGatewayName}/peering/${transitGatewayPeeringItem.name}/id`,
+                accountId: this.props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
+                roleName: AcceleratorStack.ACCELERATOR_TGW_PEERING_ROLE_NAME,
+                value: peeringAttachmentId,
+              },
+              invokingAccountID: cdk.Stack.of(this).account,
+            },
+          );
+        } else {
+          // Create SSM parameter for peering attachment ID in accepter account/region if same as requester account/region
+          this.ssmParameters.push({
+            logicalId: pascalCase(
+              `SsmParam${transitGatewayPeeringItem.accepter.transitGatewayName}${transitGatewayPeeringItem.name}PeeringAttachmentId`,
+            ),
+            parameterName: `/accelerator/network/transitGateways/${transitGatewayPeeringItem.accepter.transitGatewayName}/peering/${transitGatewayPeeringItem.name}/id`,
+            stringValue: peeringAttachmentId,
+          });
+        }
 
         Logger.info(
           `[network-associations-stack] Completed transit gateway peering for tgw ${transitGatewayPeeringItem.requester.transitGatewayName} with accepter tgw ${transitGatewayPeeringItem.accepter.transitGatewayName}`,
