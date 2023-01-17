@@ -252,6 +252,8 @@ export abstract class Accelerator {
       globalRegion = 'us-gov-west-1';
     } else if (props.partition === 'aws-iso-b') {
       globalRegion = 'us-isob-east-1';
+    } else if (props.partition === 'aws-iso') {
+      globalRegion = 'us-iso-east-1';
     } else if (props.partition === 'aws-cn') {
       globalRegion = 'cn-northwest-1';
     }

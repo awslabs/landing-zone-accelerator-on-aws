@@ -106,6 +106,32 @@ export class IsobOverrides implements cdk.IAspect {
   }
 }
 
+export class IsoOverrides implements cdk.IAspect {
+  public visit(node: IConstruct): void {
+    if (node instanceof cdk.aws_ec2.CfnFlowLog) {
+      node.addPropertyDeletionOverride('LogFormat');
+      node.addPropertyDeletionOverride('Tags');
+      node.addPropertyDeletionOverride('MaxAggregationInterval');
+    }
+    if (node instanceof cdk.aws_logs.CfnLogGroup) {
+      node.addPropertyDeletionOverride('KmsKeyId');
+      node.addPropertyDeletionOverride('Tags');
+    }
+    if (node instanceof cdk.aws_s3.CfnBucket) {
+      node.addPropertyDeletionOverride('PublicAccessBlockConfiguration');
+      node.addPropertyDeletionOverride('OwnershipControls');
+    }
+    if (node instanceof cdk.aws_cloudtrail.CfnTrail) {
+      node.addPropertyDeletionOverride('InsightSelectors');
+      node.addPropertyDeletionOverride('IsOrganizationTrail');
+    }
+    if (node instanceof cdk.aws_ec2.CfnVPCEndpoint) {
+      const ServiceName = node.serviceName.replace('com.amazonaws.us', 'gov.ic.c2s.us');
+      node.addPropertyOverride('ServiceName', ServiceName);
+    }
+  }
+}
+
 export class CnOverrides implements cdk.IAspect {
   public visit(node: IConstruct): void {
     if (node instanceof cdk.aws_logs.CfnLogGroup) {
@@ -178,6 +204,11 @@ async function main() {
     if (partition === 'aws-iso-b') {
       cdk.Aspects.of(app).add(new IsobOverrides());
       globalRegion = 'us-isob-east-1';
+    }
+
+    if (partition === 'aws-iso') {
+      cdk.Aspects.of(app).add(new IsoOverrides());
+      globalRegion = 'us-iso-east-1';
     }
 
     if (partition === 'aws-cn') {
