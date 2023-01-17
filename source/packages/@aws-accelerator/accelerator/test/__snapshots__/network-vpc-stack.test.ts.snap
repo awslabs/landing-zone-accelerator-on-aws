@@ -987,7 +987,12 @@ Object {
           "netmaskLength": 27,
         },
         "name": "Network-Endpoints-A",
-        "tags": Array [],
+        "tags": Array [
+          Object {
+            "Key": "exampleKey",
+            "Value": "exampleValue",
+          },
+        ],
         "vpcId": Object {
           "Ref": "NetworkEndpointsVpc619A1F01",
         },

@@ -12,7 +12,6 @@
  */
 
 import { describe } from '@jest/globals';
-
 import { AcceleratorStage } from '../lib/accelerator-stage';
 import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
 import { snapShotTest } from './snapshot-test';

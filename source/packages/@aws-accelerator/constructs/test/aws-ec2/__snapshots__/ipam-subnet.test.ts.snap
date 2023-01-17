@@ -224,7 +224,12 @@ Object {
           "netmaskLength": 24,
         },
         "name": "Test",
-        "tags": Array [],
+        "tags": Array [
+          Object {
+            "Key": "key",
+            "Value": "value",
+          },
+        ],
         "vpcId": "vpc-test",
       },
       "Type": "Custom::IpamSubnet",

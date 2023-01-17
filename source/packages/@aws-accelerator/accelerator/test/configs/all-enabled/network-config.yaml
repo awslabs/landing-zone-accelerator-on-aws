@@ -67,6 +67,10 @@ transitGateways:
               transitGatewayPeeringName: Network-Main-And-SharedServices-Main-Peering
       - name: SharedServices-Main-Standalone
         routes: []
+      - name: SharedServices-Main-Test01
+        routes: 
+          - destinationPrefixList: accelerator-prefix-list-001
+            blackhole: true
 transitGatewayPeering:
   - name: Network-Main-And-SharedServices-Main-Peering
     requester:
@@ -349,6 +353,15 @@ prefixLists:
     maxEntries: 1
     entries:
       - 10.1.0.1/32
+  - name: accelerator-prefix-list-001
+    accounts:
+      - SharedServices
+    regions:
+      - *HOME_REGION
+    addressFamily: 'IPv4'
+    maxEntries: 1
+    entries:
+      - 10.100.0.1/32
 
 endpointPolicies:
   - name: Default
@@ -434,6 +447,9 @@ vpcs:
             - Infrastructure
           accounts:
             - Network
+        tags: 
+          - key: exampleKey
+            value: exampleValue
       - name: Network-Endpoints-B
         availabilityZone: b
         routeTable: Network-Endpoints-B
@@ -703,6 +719,10 @@ vpcs:
               port: 80
               protocol: TCP
               targetGroup: appA-nlb-tg-1
+            - name: appA-listener-2
+              port: 80
+              protocol: TCP
+              targetGroup: appA-nlb-tg-2
     targetGroups:
       - name: appA-nlb-tg-1
         port: 80
@@ -726,6 +746,21 @@ vpcs:
           enabled: true
           port: 80
           protocol: HTTP
+      - name: appA-nlb-tg-2
+        port: 80
+        protocol: TCP
+        type: ip
+        targets: 
+          - account: Network
+            region: *HOME_REGION
+            nlbName: appA-nlb-01
+        connectionTermination: true
+        preserveClientIp: true
+        proxyProtocolV2: true
+        healthCheck:
+          enabled: true
+          port: 80
+          protocol: TCP
 
   - name: Network-Inspection
     account: Network

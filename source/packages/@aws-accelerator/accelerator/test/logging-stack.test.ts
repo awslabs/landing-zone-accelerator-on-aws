@@ -24,3 +24,15 @@ const stack = acceleratorTestStacks.stacks.get(`LogArchive-us-east-1`)!;
 describe('LoggingStack', () => {
   snapShotTest(testNamePrefix, stack);
 });
+
+const acceleratorTestStacksOuTargets = new AcceleratorSynthStacks(
+  AcceleratorStage.LOGGING,
+  'all-enabled-ou-targets',
+  'aws',
+  'us-east-1',
+);
+const stackOuTargets = acceleratorTestStacksOuTargets.stacks.get(`LogArchive-us-east-1`)!;
+
+describe('LoggingStackOuTargets', () => {
+  snapShotTest('Construct(LoggingStackOuTargets): ', stackOuTargets);
+});

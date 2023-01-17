@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { GetPortfolioId } from '../../lib/aws-servicecatalog/get-portfolio-id';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(GetPortfolioId): ';
 

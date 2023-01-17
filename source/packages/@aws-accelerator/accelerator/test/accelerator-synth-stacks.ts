@@ -675,19 +675,21 @@ export class AcceleratorSynthStacks {
    */
 
   private synthAccountStacks() {
-    this.stacks.set(
-      `${this.managementAccount.name}-${this.homeRegion}`,
-      new AccountsStack(
-        this.app,
-        `${AcceleratorStackNames[AcceleratorStage.ACCOUNTS]}-${this.managementAccountId}-${this.homeRegion}`,
-        {
-          env: {
-            account: this.managementAccountId,
-            region: this.homeRegion,
+    for (const region of this.props.globalConfig.enabledRegions) {
+      this.stacks.set(
+        `${this.managementAccount.name}-${region}`,
+        new AccountsStack(
+          this.app,
+          `${AcceleratorStackNames[AcceleratorStage.ACCOUNTS]}-${this.managementAccountId}-${region}`,
+          {
+            env: {
+              account: this.managementAccountId,
+              region: region,
+            },
+            ...this.props,
           },
-          ...this.props,
-        },
-      ),
-    );
+        ),
+      );
+    }
   }
 }

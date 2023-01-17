@@ -12,27 +12,27 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { Document } from '../../lib/aws-ssm/document';
+import { SharePortfolioWithOrg } from '../../lib/aws-servicecatalog/share-portfolio-with-org';
 import { snapShotTest } from '../snapshot-test';
 import { describe } from '@jest/globals';
 
-const testNamePrefix = 'Construct(Document): ';
+const testNamePrefix = 'Construct(SharePortfolioWithOrg): ';
 
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
-new Document(stack, 'Document', {
-  name: 'DocumentName',
-  content: JSON.parse('{}'),
-  documentType: 'Automation',
-  sharedWithAccountIds: ['accountA'],
+new SharePortfolioWithOrg(stack, 'SharePortfolioWithOrg', {
+  portfolioId: 'portfolioId',
+  organizationalUnitIds: ['org1', 'org2'],
+  organizationId: 'organizationId',
+  tagShareOptions: true,
   logRetentionInDays: 3653,
   kmsKey: new cdk.aws_kms.Key(stack, 'Key', {}),
 });
 
 /**
- * Document construct test
+ * SharePortfolioWithOrg construct test
  */
-describe('Document', () => {
+describe('SharePortfolioWithOrg', () => {
   snapShotTest(testNamePrefix, stack);
 });

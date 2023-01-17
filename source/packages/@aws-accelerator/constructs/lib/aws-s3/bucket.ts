@@ -284,8 +284,6 @@ export class Bucket extends Construct {
       this.encryptionType = s3.BucketEncryption.KMS;
     } else if (this.props.encryptionType == BucketEncryptionType.SSE_S3) {
       this.encryptionType = s3.BucketEncryption.S3_MANAGED;
-    } else {
-      throw new Error(`encryptionType ${this.props.encryptionType} is not valid.`);
     }
   }
 
