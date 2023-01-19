@@ -95,6 +95,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
+  const globalRegion = event.ResourceProperties['globalRegion'];
   const partition = event.ResourceProperties['partition'];
   const configTableName = event.ResourceProperties['configTableName'];
   const newOrgAccountsTableName = event.ResourceProperties['newOrgAccountsTableName'];
@@ -103,8 +104,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const organizationsEnabled = event.ResourceProperties['organizationsEnabled'];
   const commitId = event.ResourceProperties['commitId'];
   const stackName = event.ResourceProperties['stackName'];
+  const numberOfAccountsInConfig = event.ResourceProperties['numberOfAccountsInConfig'];
   driftDetectionParameterName = event.ResourceProperties['driftDetectionParameterName'];
   driftDetectionMessageParameterName = event.ResourceProperties['driftDetectionMessageParameterName'];
+
   const solutionId = process.env['SOLUTION_ID'];
 
   if (partition === 'aws-us-gov') {
@@ -140,6 +143,9 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         };
       }
       console.log(`Configuration repository commit id ${commitId}`);
+
+      const accountQuotaError = await validateMaximumAccountQuota(globalRegion, numberOfAccountsInConfig, solutionId);
+      validationErrors.push(...accountQuotaError);
 
       if (organizationsEnabled) {
         configAllOuKeys = await getConfigOuKeys(configTableName, commitId);
@@ -730,4 +736,62 @@ async function getRootId(): Promise<string> {
     nextToken = page.NextToken;
   } while (nextToken);
   return rootId;
+}
+
+/**
+ * Function to validate number of accounts in account config against maximum number of accounts quota
+ * @param globalRegion
+ * @param numberOfAccountsInConfig
+ * @param solutionId
+ * @returns
+ */
+async function validateMaximumAccountQuota(
+  globalRegion: string,
+  numberOfAccountsInConfig: number,
+  solutionId?: string,
+): Promise<string[]> {
+  const errors: string[] = [];
+  console.log(
+    `Start validate account quota, total accounts defined in account-config file is: ${numberOfAccountsInConfig}`,
+  );
+  if (numberOfAccountsInConfig > 10) {
+    const serviceQuotasClient = new AWS.ServiceQuotas({ region: globalRegion, customUserAgent: solutionId });
+
+    let nextToken: string | undefined = undefined;
+    const quotaRequests: { createDate: Date; desiredValue: number; requestStatus: string }[] = [];
+    do {
+      const page = await throttlingBackOff(() =>
+        serviceQuotasClient
+          .listRequestedServiceQuotaChangeHistoryByQuota({ ServiceCode: 'organizations', QuotaCode: 'L-29A0C5DF' })
+          .promise(),
+      );
+
+      for (const requestedQuota of page.RequestedQuotas ?? []) {
+        quotaRequests.push({
+          createDate: requestedQuota.Created!,
+          desiredValue: requestedQuota.DesiredValue!,
+          requestStatus: requestedQuota.Status!,
+        });
+      }
+      nextToken = page.NextToken;
+    } while (nextToken);
+
+    const sortedRequests = quotaRequests
+      .sort((a, b) => (a.createDate > b.createDate ? -1 : 1))
+      .filter(item => item.requestStatus === 'CASE_CLOSED');
+
+    if (sortedRequests.length === 0 || quotaRequests.length === 0) {
+      errors.push(
+        `Maximum number of accounts quota is 10, that is less than number of accounts ${numberOfAccountsInConfig} defined in account-config file, please increase maximum number of accounts quota to match number of accounts defined in account-config file.`,
+      );
+      return errors;
+    }
+    if (sortedRequests[0].desiredValue < numberOfAccountsInConfig) {
+      errors.push(
+        `Maximum number of accounts quota is ${sortedRequests[0].desiredValue}, that is less than number of accounts ${numberOfAccountsInConfig} defined in account-config file, please increase maximum number of accounts quota to match number of accounts defined in account-config file.`,
+      );
+    }
+  }
+
+  return errors;
 }

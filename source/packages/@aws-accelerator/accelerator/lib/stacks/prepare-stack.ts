@@ -417,7 +417,10 @@ export class PrepareStack extends AcceleratorStack {
           });
 
           Logger.info(`[prepare-stack] Validate Environment`);
+          const numberOfAccountsInConfig =
+            props.accountsConfig.mandatoryAccounts.length + props.accountsConfig.workloadAccounts.length;
           const validation = new ValidateEnvironmentConfig(this, 'ValidateEnvironmentConfig', {
+            globalRegion: props.globalRegion ?? props.globalConfig.homeRegion,
             acceleratorConfigTable: configTable,
             newOrgAccountsTable: newOrgAccountsTable,
             newCTAccountsTable: newCTAccountsTable,
@@ -432,6 +435,7 @@ export class PrepareStack extends AcceleratorStack {
             logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             driftDetectionParameter: driftDetectedParameter,
             driftDetectionMessageParameter: driftMessageParameter,
+            numberOfAccountsInConfig,
           });
 
           validation.node.addDependency(moveAccounts);

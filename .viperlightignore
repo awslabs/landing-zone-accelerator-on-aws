@@ -31,6 +31,7 @@ error.log
 # Ignore reference custom rules lambda zip files
 .*/attach-ec2-instance-profile.zip
 .*/ec2-instance-profile-permissions.zip
+.*/targetDocumentLambda.zip
 
 #
 # Line level file ignores (keep in alphabetical order)
@@ -62,8 +63,8 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:54
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:55
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:56
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:57
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:506
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:507
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:508
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:509
 
 source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:140
 source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:141
