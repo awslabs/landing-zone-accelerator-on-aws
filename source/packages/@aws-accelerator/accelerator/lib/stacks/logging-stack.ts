@@ -240,7 +240,7 @@ export class LoggingStack extends AcceleratorStack {
       destination: {
         bucketName: this.centralLogsBucketName,
         accountId: this.props.accountsConfig.getLogArchiveAccountId(),
-        keyArn: this.centralLogBucketKey!.keyArn,
+        keyArn: this.centralLogBucketKey.keyArn,
       },
       kmsKey: this.cloudwatchKey,
       logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,

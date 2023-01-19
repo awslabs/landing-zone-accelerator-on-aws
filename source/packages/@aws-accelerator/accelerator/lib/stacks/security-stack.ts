@@ -125,7 +125,7 @@ export class SecurityStack extends AcceleratorStack {
   private configureMacie() {
     if (
       this.props.securityConfig.centralSecurityServices.macie.enable &&
-      this.props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
+      this.props.securityConfig.centralSecurityServices.macie.excludeRegions.indexOf(
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
@@ -150,7 +150,7 @@ export class SecurityStack extends AcceleratorStack {
   private configureGuardDuty() {
     if (
       this.props.securityConfig.centralSecurityServices.guardduty.enable &&
-      this.props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
+      this.props.securityConfig.centralSecurityServices.guardduty.excludeRegions.indexOf(
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
@@ -180,7 +180,7 @@ export class SecurityStack extends AcceleratorStack {
   private configureSecurityHub() {
     if (
       this.props.securityConfig.centralSecurityServices.securityHub.enable &&
-      this.props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(
+      this.props.securityConfig.centralSecurityServices.securityHub.excludeRegions.indexOf(
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
@@ -203,7 +203,7 @@ export class SecurityStack extends AcceleratorStack {
   private configureDefaultEbsEncryption() {
     if (
       this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.enable &&
-      this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.excludeRegions!.indexOf(
+      this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.excludeRegions.indexOf(
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
