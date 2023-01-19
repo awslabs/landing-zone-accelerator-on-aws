@@ -59,7 +59,7 @@ async function updateCodePipelineSourceStage(pipelineDetails, secretValue) {
   const pipelineStages = pipelineDetails.pipeline.stages;
   const sourceStage = pipelineStages.find(o => o.name == 'Source');
   const sourceAction = sourceStage.actions.find(a => a.name == 'Source');
-  if (sourceAction.provider != 'GitHub') {
+  if (sourceAction.actionTypeId.provider !== 'GitHub') {
     console.log('Pipeline source is not GitHub, no action will be taken.');
     return;
   }
