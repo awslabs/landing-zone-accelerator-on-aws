@@ -161,7 +161,7 @@ export class SecurityAuditStack extends AcceleratorStack {
       );
 
       if (
-        this.props.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
+        this.props.securityConfig.centralSecurityServices.macie.excludeRegions.indexOf(
           cdk.Stack.of(this).region as Region,
         ) === -1
       ) {
@@ -186,7 +186,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
     if (this.props.securityConfig.centralSecurityServices.guardduty.enable) {
       if (
-        this.props.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
+        this.props.securityConfig.centralSecurityServices.guardduty.excludeRegions.indexOf(
           cdk.Stack.of(this).region as Region,
         ) === -1
       ) {
@@ -201,7 +201,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         });
 
         if (
-          this.props.securityConfig.centralSecurityServices.guardduty.s3Protection.excludeRegions!.indexOf(
+          this.props.securityConfig.centralSecurityServices.guardduty.s3Protection.excludeRegions.indexOf(
             cdk.Stack.of(this).region as Region,
           ) === -1
         ) {
@@ -321,7 +321,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
     if (this.props.securityConfig.centralSecurityServices.detective?.enable) {
       if (
-        this.props.securityConfig.centralSecurityServices.detective?.excludeRegions!.indexOf(
+        this.props.securityConfig.centralSecurityServices.detective?.excludeRegions.indexOf(
           cdk.Stack.of(this).region as Region,
         ) === -1
       ) {
@@ -349,7 +349,7 @@ export class SecurityAuditStack extends AcceleratorStack {
     );
     if (
       this.props.securityConfig.centralSecurityServices.securityHub.enable &&
-      this.props.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(
+      this.props.securityConfig.centralSecurityServices.securityHub.excludeRegions.indexOf(
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {

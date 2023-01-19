@@ -357,8 +357,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
                   defaultActions: [listenerAction],
                   loadBalancerArn: albArn,
                   certificates: [{ certificateArn: this.getCertificate(listener.certificate) }],
-                  port: listener.port!,
-                  protocol: listener.protocol!,
+                  port: listener.port,
+                  protocol: listener.protocol,
                   sslPolicy: listener.sslPolicy!,
                 },
               );

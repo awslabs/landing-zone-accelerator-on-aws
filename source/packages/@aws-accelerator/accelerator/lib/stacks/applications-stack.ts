@@ -503,7 +503,7 @@ export class ApplicationsStack extends AcceleratorStack {
       throw new Error(`Configuration validation failed at runtime.`);
     }
     if (appConfigItem.targetGroups) {
-      for (const targetGroup of appConfigItem.targetGroups!) {
+      for (const targetGroup of appConfigItem.targetGroups) {
         const tg = new TargetGroup(this, pascalCase(`AppTargetGroup${appConfigItem.name}${targetGroup.name}`), {
           name: targetGroup.name,
           port: targetGroup.port,

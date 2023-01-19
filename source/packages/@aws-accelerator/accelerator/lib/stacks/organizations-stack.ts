@@ -339,7 +339,7 @@ export class OrganizationsStack extends AcceleratorStack {
     if (this.stackProperties.networkConfig.centralNetworkServices?.ipams) {
       // Get delegated admin account
       const networkAdminAccountId = this.stackProperties.accountsConfig.getAccountId(
-        this.stackProperties.networkConfig.centralNetworkServices!.delegatedAdminAccount,
+        this.stackProperties.networkConfig.centralNetworkServices.delegatedAdminAccount,
       );
 
       // Create delegated admin if the account ID is not the management account
@@ -413,7 +413,7 @@ export class OrganizationsStack extends AcceleratorStack {
   private enableMacieDelegatedAdminAccount(adminAccountId: string) {
     if (this.stackProperties.securityConfig.centralSecurityServices.macie.enable) {
       if (
-        this.stackProperties.securityConfig.centralSecurityServices.macie.excludeRegions!.indexOf(
+        this.stackProperties.securityConfig.centralSecurityServices.macie.excludeRegions.indexOf(
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
@@ -445,7 +445,7 @@ export class OrganizationsStack extends AcceleratorStack {
   private enableGuardDutyDelegatedAdminAccount(adminAccountId: string) {
     if (this.stackProperties.securityConfig.centralSecurityServices.guardduty.enable) {
       if (
-        this.stackProperties.securityConfig.centralSecurityServices.guardduty.excludeRegions!.indexOf(
+        this.stackProperties.securityConfig.centralSecurityServices.guardduty.excludeRegions.indexOf(
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
@@ -478,7 +478,7 @@ export class OrganizationsStack extends AcceleratorStack {
   private enableAuditManagerDelegatedAdminAccount(adminAccountId: string) {
     if (this.stackProperties.securityConfig.centralSecurityServices.auditManager?.enable) {
       if (
-        this.stackProperties.securityConfig.centralSecurityServices.auditManager?.excludeRegions!.indexOf(
+        this.stackProperties.securityConfig.centralSecurityServices.auditManager?.excludeRegions.indexOf(
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
@@ -511,7 +511,7 @@ export class OrganizationsStack extends AcceleratorStack {
   private enableDetectiveDelegatedAdminAccount(adminAccountId: string) {
     if (this.stackProperties.securityConfig.centralSecurityServices.detective?.enable) {
       if (
-        this.stackProperties.securityConfig.centralSecurityServices.detective?.excludeRegions!.indexOf(
+        this.stackProperties.securityConfig.centralSecurityServices.detective?.excludeRegions.indexOf(
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
@@ -543,7 +543,7 @@ export class OrganizationsStack extends AcceleratorStack {
   private enableSecurityHubDelegatedAdminAccount(adminAccountId: string) {
     if (this.stackProperties.securityConfig.centralSecurityServices.securityHub.enable) {
       if (
-        this.stackProperties.securityConfig.centralSecurityServices.securityHub.excludeRegions!.indexOf(
+        this.stackProperties.securityConfig.centralSecurityServices.securityHub.excludeRegions.indexOf(
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
@@ -729,7 +729,7 @@ export class OrganizationsStack extends AcceleratorStack {
           ]);
         }
 
-        organizationsTrail.node.addDependency(enableCloudtrailServiceAccess!);
+        organizationsTrail.node.addDependency(enableCloudtrailServiceAccess);
       }
     }
   }

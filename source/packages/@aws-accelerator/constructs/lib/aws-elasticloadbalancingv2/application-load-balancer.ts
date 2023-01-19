@@ -132,8 +132,8 @@ export class ApplicationLoadBalancer extends cdk.Resource implements IApplicatio
         defaultActions: [listenerAction],
         loadBalancerArn: resource.ref,
         certificates: [{ certificateArn: this.getCertificate(listener.certificate) }],
-        port: listener.port!,
-        protocol: listener.protocol!,
+        port: listener.port,
+        protocol: listener.protocol,
         sslPolicy: listener.sslPolicy!,
       });
     }
