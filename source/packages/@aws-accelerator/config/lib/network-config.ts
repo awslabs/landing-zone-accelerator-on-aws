@@ -374,6 +374,7 @@ export class NetworkConfigTypes {
     account: t.optional(t.nonEmptyString),
     vpc: t.nonEmptyString,
     subnet: t.nonEmptyString,
+    region: t.optional(t.region),
   });
 
   static readonly networkAclInboundRuleConfig = t.interface({
@@ -2672,6 +2673,11 @@ export class NetworkAclSubnetSelection implements t.TypeOf<typeof NetworkConfigT
    * The friendly name of the subnet.
    */
   readonly subnet = '';
+
+  /**
+   * The region that the subnet is located in.
+   */
+  readonly region: t.Region | undefined = undefined;
 }
 
 /**

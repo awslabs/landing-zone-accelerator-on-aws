@@ -87,6 +87,26 @@ Object {
       "Default": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-B/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Secondary/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-A-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-B-Rt/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryAidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-A/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryBidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-B/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": Object {
     "AcceleratorFirewallFlowLogGroupC8720B1F": Object {
@@ -850,6 +870,70 @@ Object {
         },
       },
       "Type": "AWS::EC2::Route",
+    },
+    "NetworkSecondaryVpcDynamodbD30AC83F": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "*",
+              "Effect": "Allow",
+              "Principal": "*",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "RouteTableIds": Array [],
+        "ServiceName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "com.amazonaws.",
+              Object {
+                "Ref": "AWS::Region",
+              },
+              ".dynamodb",
+            ],
+          ],
+        },
+        "VpcId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "NetworkSecondaryVpcS395D8AC66": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "*",
+              "Effect": "Allow",
+              "Principal": "*",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "RouteTableIds": Array [],
+        "ServiceName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "com.amazonaws.",
+              Object {
+                "Ref": "AWS::Region",
+              },
+              ".s3",
+            ],
+          ],
+        },
+        "VpcId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
     },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {

@@ -71,6 +71,10 @@ Object {
       "Default": "/accelerator/network/vpc/Network-Inspection/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/network/vpc/Network-Secondary/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
   },
   "Resources": Object {
     "AcceleratorOutboundResolverRuleExampleRule8B329125": Object {
