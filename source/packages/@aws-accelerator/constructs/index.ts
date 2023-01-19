@@ -40,6 +40,7 @@ export * from './lib/aws-ec2/ipam';
 export * from './lib/aws-ec2/ipam-pool';
 export * from './lib/aws-ec2/ipam-organization-admin-account';
 export * from './lib/aws-ec2/ipam-scope';
+export * from './lib/aws-ec2/ipam-subnet';
 export * from './lib/aws-ec2/prefix-list';
 export * from './lib/aws-ec2/prefix-list-route';
 export * from './lib/aws-ec2/route-table';

@@ -40,6 +40,7 @@ import {
   NatGateway,
   NetworkAcl,
   NetworkLoadBalancer,
+  Organization,
   PrefixList,
   RouteTable,
   SecurityGroup,
@@ -86,6 +87,7 @@ export class NetworkVpcStack extends AcceleratorStack {
   private ipamPoolMap: Map<string, string>;
   private logRetention: number;
   readonly cloudwatchKey: cdk.aws_kms.Key;
+  organizationId: string | undefined;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -93,6 +95,8 @@ export class NetworkVpcStack extends AcceleratorStack {
     // Set private properties
     this.accountsConfig = props.accountsConfig;
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
+    this.organizationId = this.setOrganizationId();
+
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
       'AcceleratorGetCloudWatchKey',
@@ -315,6 +319,11 @@ export class NetworkVpcStack extends AcceleratorStack {
         );
       }
     }
+
+    //
+    // Create Get IPAM Cidr Role
+    //
+    this.createGetIpamCidrRole(props);
 
     //
     // Create VPC peering cross-account role, if required
@@ -545,7 +554,6 @@ export class NetworkVpcStack extends AcceleratorStack {
             );
           }
           Logger.info(`[network-vpc-stack] Adding subnet ${subnetItem.name}`);
-
           // Get route table for subnet association
           const routeTable = routeTableMap.get(subnetItem.routeTable);
           if (!routeTable) {
@@ -1025,34 +1033,37 @@ export class NetworkVpcStack extends AcceleratorStack {
           }
 
           for (const inboundRuleItem of naclItem.inboundRules ?? []) {
-            Logger.info(`[network-vpc-stack] Adding inbound rule ${inboundRuleItem.rule} to ${naclItem.name}`);
+            Logger.info(`[network-vpc-stack] Adding inbound entries`);
             const inboundAclTargetProps: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
               inboundRuleItem.source,
             );
-
-            Logger.info(`[network-vpc-stack] Adding inbound entries`);
-            networkAcl.addEntry(
-              `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}-Inbound-${inboundRuleItem.rule}`,
-              {
-                egress: false,
-                protocol: inboundRuleItem.protocol,
-                ruleAction: inboundRuleItem.action,
-                ruleNumber: inboundRuleItem.rule,
-                portRange: {
-                  from: inboundRuleItem.fromPort,
-                  to: inboundRuleItem.toPort,
+            // If logic to determine if the VPC is not IPAM-based
+            if (!this.isCrossAccountNaclSource(inboundRuleItem.source)) {
+              Logger.info(`[network-vpc-stack] Adding inbound rule ${inboundRuleItem.rule} to ${naclItem.name}`);
+              networkAcl.addEntry(
+                `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}-Inbound-${inboundRuleItem.rule}`,
+                {
+                  egress: false,
+                  protocol: inboundRuleItem.protocol,
+                  ruleAction: inboundRuleItem.action,
+                  ruleNumber: inboundRuleItem.rule,
+                  portRange: {
+                    from: inboundRuleItem.fromPort,
+                    to: inboundRuleItem.toPort,
+                  },
+                  ...inboundAclTargetProps,
                 },
-                ...inboundAclTargetProps,
-              },
-            );
-            // Suppression for AwsSolutions-VPC3: A Network ACL or Network ACL entry has been implemented.
-            NagSuppressions.addResourceSuppressionsByPath(
-              this,
-              `${this.stackName}/${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}Nacl/${pascalCase(
-                vpcItem.name,
-              )}Vpc${pascalCase(naclItem.name)}-Inbound-${inboundRuleItem.rule}`,
-              [{ id: 'AwsSolutions-VPC3', reason: 'NACL added to VPC' }],
-            );
+              );
+
+              // Suppression for AwsSolutions-VPC3: A Network ACL or Network ACL entry has been implemented.
+              NagSuppressions.addResourceSuppressionsByPath(
+                this,
+                `${this.stackName}/${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}Nacl/${pascalCase(
+                  vpcItem.name,
+                )}Vpc${pascalCase(naclItem.name)}-Inbound-${inboundRuleItem.rule}`,
+                [{ id: 'AwsSolutions-VPC3', reason: 'NACL added to VPC' }],
+              );
+            }
           }
 
           for (const outboundRuleItem of naclItem.outboundRules ?? []) {
@@ -1060,22 +1071,23 @@ export class NetworkVpcStack extends AcceleratorStack {
             const outboundAclTargetProps: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
               outboundRuleItem.destination,
             );
-
-            Logger.info(`[network-vpc-stack] Adding outbound entries`);
-            networkAcl.addEntry(
-              `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}-Outbound-${outboundRuleItem.rule}`,
-              {
-                egress: true,
-                protocol: outboundRuleItem.protocol,
-                ruleAction: outboundRuleItem.action,
-                ruleNumber: outboundRuleItem.rule,
-                portRange: {
-                  from: outboundRuleItem.fromPort,
-                  to: outboundRuleItem.toPort,
+            if (!this.isCrossAccountNaclSource(outboundRuleItem.destination)) {
+              Logger.info(`[network-vpc-stack] Adding outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`);
+              networkAcl.addEntry(
+                `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}-Outbound-${outboundRuleItem.rule}`,
+                {
+                  egress: true,
+                  protocol: outboundRuleItem.protocol,
+                  ruleAction: outboundRuleItem.action,
+                  ruleNumber: outboundRuleItem.rule,
+                  portRange: {
+                    from: outboundRuleItem.fromPort,
+                    to: outboundRuleItem.toPort,
+                  },
+                  ...outboundAclTargetProps,
                 },
-                ...outboundAclTargetProps,
-              },
-            );
+              );
+            }
             // Suppression for AwsSolutions-VPC3: A Network ACL or Network ACL entry has been implemented.
             NagSuppressions.addResourceSuppressionsByPath(
               this,
@@ -1520,6 +1532,48 @@ export class NetworkVpcStack extends AcceleratorStack {
     }
 
     return rules;
+  }
+  private createGetIpamCidrRole(props: AcceleratorStackProps) {
+    const vpcAccountIds = [];
+    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      vpcAccountIds.push(...this.getVpcAccountIds(vpcItem));
+    }
+    const accountIds = [...new Set(vpcAccountIds)];
+    for (const account of accountIds) {
+      if (cdk.Stack.of(this).region === this.props.globalConfig.homeRegion && cdk.Stack.of(this).account === account) {
+        const role = new cdk.aws_iam.Role(this, `Get${pascalCase(account)}IpamCidrRole`, {
+          roleName: `AWSAccelerator-GetIpamCidrRole-${cdk.Stack.of(this).region}`,
+          assumedBy: new cdk.aws_iam.AnyPrincipal(),
+          inlinePolicies: {
+            default: new cdk.aws_iam.PolicyDocument({
+              statements: [
+                new cdk.aws_iam.PolicyStatement({
+                  effect: cdk.aws_iam.Effect.ALLOW,
+                  actions: ['ec2:DescribeSubnets', 'ssm:GetParameter'],
+                  resources: ['*'],
+                  conditions: {
+                    StringEquals: {
+                      ...this.getPrincipalOrgIdCondition(this.organizationId),
+                    },
+                  },
+                }),
+              ],
+            }),
+          },
+        });
+        // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.
+        NagSuppressions.addResourceSuppressions(role, [
+          { id: 'AwsSolutions-IAM5', reason: 'Allow read role to get CIDRs from dynamic IPAM resources.' },
+        ]);
+      }
+    }
+  }
+
+  private setOrganizationId() {
+    if (this.props.organizationConfig.enable) {
+      return new Organization(this, 'Organization').id;
+    }
+    return undefined;
   }
 
   private createGatewayLoadBalancer(loadBalancerItem: GwlbConfig, subnetMap: Map<string, Subnet>): void {

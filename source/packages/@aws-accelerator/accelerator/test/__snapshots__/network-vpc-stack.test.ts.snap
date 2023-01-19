@@ -391,6 +391,67 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
+    "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1": Object {
+      "DependsOn": Array [
+        "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:DescribeOrganization",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "CustomPrefixListRouteCustomResourceProviderHandler5B28D077": Object {
       "DependsOn": Array [
         "CustomPrefixListRouteCustomResourceProviderRoleD08268B5",
@@ -491,6 +552,59 @@ Object {
       },
       "Type": "Custom::DeleteDefaultVpc",
       "UpdateReplacePolicy": "Delete",
+    },
+    "Get555555555555IpamCidrRoleA17CA412": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allow read role to get CIDRs from dynamic IPAM resources.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "ec2:DescribeSubnets",
+                    "ssm:GetParameter",
+                  ],
+                  "Condition": Object {
+                    "StringEquals": Object {
+                      "aws:PrincipalOrgID": Object {
+                        "Ref": "Organization29A5FC3F",
+                      },
+                    },
+                  },
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "default",
+          },
+        ],
+        "RoleName": "AWSAccelerator-GetIpamCidrRole-us-east-1",
+      },
+      "Type": "AWS::IAM::Role",
     },
     "GetAcceleratorGwlbSsmParamRole6013B2CA": Object {
       "Metadata": Object {
@@ -1326,32 +1440,6 @@ Object {
       },
       "Type": "AWS::EC2::NetworkAclEntry",
     },
-    "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclInbound204B9A2831": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
-              "id": "AwsSolutions-VPC3",
-              "reason": "NACL added to VPC",
-            },
-          ],
-        },
-      },
-      "Properties": Object {
-        "Egress": false,
-        "NetworkAclId": Object {
-          "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3",
-        },
-        "PortRange": Object {
-          "From": -1,
-          "To": -1,
-        },
-        "Protocol": -1,
-        "RuleAction": "allow",
-        "RuleNumber": 20,
-      },
-      "Type": "AWS::EC2::NetworkAclEntry",
-    },
     "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclNaclAssociateNetworkEndpointsA4115E6F7": Object {
       "Properties": Object {
         "NetworkAclId": Object {
@@ -1387,32 +1475,6 @@ Object {
         "Protocol": -1,
         "RuleAction": "allow",
         "RuleNumber": 10,
-      },
-      "Type": "AWS::EC2::NetworkAclEntry",
-    },
-    "NetworkEndpointsVpcTestNaclNaclNetworkEndpointsVpcTestNaclOutbound20634A981E": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
-              "id": "AwsSolutions-VPC3",
-              "reason": "NACL added to VPC",
-            },
-          ],
-        },
-      },
-      "Properties": Object {
-        "Egress": true,
-        "NetworkAclId": Object {
-          "Ref": "NetworkEndpointsVpcTestNaclNaclD97515C3",
-        },
-        "PortRange": Object {
-          "From": -1,
-          "To": -1,
-        },
-        "Protocol": -1,
-        "RuleAction": "allow",
-        "RuleNumber": 20,
       },
       "Type": "AWS::EC2::NetworkAclEntry",
     },
@@ -2076,10 +2138,492 @@ Object {
       },
       "Type": "AWS::EC2::VPCCidrBlock",
     },
-    "SsmParamAcceleratorGwlbGwlbArn7CF5F889": Object {
+    "NetworkSecondaryVpc37FB1791": Object {
+      "Properties": Object {
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Ipv4IpamPoolId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkipampoolshomeregionprodpoolidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "Ipv4NetmaskLength": 25,
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Network-Secondary",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "NetworkSecondaryVpcCloudWatchFlowLogFA128544": Object {
+      "Properties": Object {
+        "DeliverLogsPermissionArn": Object {
+          "Fn::GetAtt": Array [
+            "NetworkSecondaryVpcFlowLogsRole8D6C92BF",
+            "Arn",
+          ],
+        },
+        "LogDestination": Object {
+          "Fn::GetAtt": Array [
+            "NetworkSecondaryVpcFlowLogsGroup3069B74B",
+            "Arn",
+          ],
+        },
+        "LogDestinationType": "cloud-watch-logs",
+        "MaxAggregationInterval": 60,
+        "ResourceId": Object {
+          "Ref": "NetworkSecondaryVpc37FB1791",
+        },
+        "ResourceType": "VPC",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Network-Secondary",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "NetworkSecondaryVpcFlowLogsGroup3069B74B": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "RetentionInDays": 3653,
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Network-Secondary",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "NetworkSecondaryVpcFlowLogsRole8D6C92BF": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "vpc-flow-logs.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Network-Secondary",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "NetworkSecondaryVpcFlowLogsRoleDefaultPolicy8B098897": Object {
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "logs:CreateLogDelivery",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DeleteLogDelivery",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::GetAtt": Array [
+                  "NetworkSecondaryVpcFlowLogsGroup3069B74B",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "NetworkSecondaryVpcFlowLogsRoleDefaultPolicy8B098897",
+        "Roles": Array [
+          Object {
+            "Ref": "NetworkSecondaryVpcFlowLogsRole8D6C92BF",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "NetworkSecondaryVpcNetworkSecondaryARtRouteTable649EACD5": Object {
+      "Properties": Object {
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Network-Secondary-A-Rt",
+          },
+        ],
+        "VpcId": Object {
+          "Ref": "NetworkSecondaryVpc37FB1791",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "NetworkSecondaryVpcNetworkSecondaryASubnet791F4607": Object {
+      "DeletionPolicy": "Delete",
       "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
       ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZone": "us-east-1a",
+        "basePool": Array [
+          "10.0.0.0/24",
+        ],
+        "ipamAllocation": Object {
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": 28,
+        },
+        "name": "Network-Secondary-A",
+        "tags": Array [],
+        "vpcId": Object {
+          "Ref": "NetworkSecondaryVpc37FB1791",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryVpcNetworkSecondaryASubnetRouteTableAssociationBBEA4449": Object {
+      "Properties": Object {
+        "RouteTableId": Object {
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryARtRouteTable649EACD5",
+        },
+        "SubnetId": Object {
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryASubnet791F4607",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkSecondaryVpcNetworkSecondaryBRtRouteTable851997AF": Object {
+      "Properties": Object {
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Network-Secondary-B-Rt",
+          },
+        ],
+        "VpcId": Object {
+          "Ref": "NetworkSecondaryVpc37FB1791",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "NetworkSecondaryVpcNetworkSecondaryBSubnetDD64E26D": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomIpamSubnetCustomResourceProviderLogGroup3BB67050",
+        "NetworkSecondaryVpcNetworkSecondaryASubnet791F4607",
+        "NetworkSecondaryVpcNetworkSecondaryASubnetRouteTableAssociationBBEA4449",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomIpamSubnetCustomResourceProviderHandlerF7AF0D7A",
+            "Arn",
+          ],
+        },
+        "availabilityZone": "us-east-1b",
+        "basePool": Array [
+          "10.0.0.0/24",
+        ],
+        "ipamAllocation": Object {
+          "ipamPoolName": "home-region-prod-pool",
+          "netmaskLength": 28,
+        },
+        "name": "Network-Secondary-B",
+        "tags": Array [],
+        "vpcId": Object {
+          "Ref": "NetworkSecondaryVpc37FB1791",
+        },
+      },
+      "Type": "Custom::IpamSubnet",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryVpcNetworkSecondaryBSubnetRouteTableAssociation6EB02D15": Object {
+      "DependsOn": Array [
+        "NetworkSecondaryVpcNetworkSecondaryASubnet791F4607",
+        "NetworkSecondaryVpcNetworkSecondaryASubnetRouteTableAssociationBBEA4449",
+      ],
+      "Properties": Object {
+        "RouteTableId": Object {
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryBRtRouteTable851997AF",
+        },
+        "SubnetId": Object {
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryBSubnetDD64E26D",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "NetworkSecondaryVpcS3FlowLogA736115E": Object {
+      "Properties": Object {
+        "LogDestination": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              Object {
+                "Ref": "SsmParameterValueacceleratorvpcflowlogsdestinationbucketarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+              },
+              "/vpc-flow-logs/",
+            ],
+          ],
+        },
+        "LogDestinationType": "s3",
+        "MaxAggregationInterval": 60,
+        "ResourceId": Object {
+          "Ref": "NetworkSecondaryVpc37FB1791",
+        },
+        "ResourceType": "VPC",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "Network-Secondary",
+          },
+        ],
+        "TrafficType": "ALL",
+      },
+      "Type": "AWS::EC2::FlowLog",
+    },
+    "NetworkSecondaryVpcTestNaclNacl63646F9E": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "TestNacl",
+          },
+        ],
+        "VpcId": Object {
+          "Ref": "NetworkSecondaryVpc37FB1791",
+        },
+      },
+      "Type": "AWS::EC2::NetworkAcl",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclInbound1016BE52CB8": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "CidrBlock": "10.0.0.0/24",
+        "Egress": false,
+        "NetworkAclId": Object {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": Object {
+          "From": 22,
+          "To": 22,
+        },
+        "Protocol": 22,
+        "RuleAction": "allow",
+        "RuleNumber": 101,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclInbound10299C8DDCC": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Egress": false,
+        "NetworkAclId": Object {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": Object {
+          "From": 443,
+          "To": 443,
+        },
+        "Protocol": -1,
+        "RuleAction": "deny",
+        "RuleNumber": 102,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclInbound10371F28952": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Egress": false,
+        "NetworkAclId": Object {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": Object {
+          "From": 80,
+          "To": 80,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 103,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclNaclAssociateNetworkSecondaryA052E10A4": Object {
+      "Properties": Object {
+        "NetworkAclId": Object {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "SubnetId": Object {
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryASubnet791F4607",
+        },
+      },
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclNaclAssociateNetworkSecondaryBD9BA3321": Object {
+      "Properties": Object {
+        "NetworkAclId": Object {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "SubnetId": Object {
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryBSubnetDD64E26D",
+        },
+      },
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclOutbound10101A31DA2": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "CidrBlock": "172.16.0.0/12",
+        "Egress": true,
+        "NetworkAclId": Object {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": Object {
+          "From": 80,
+          "To": 80,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 101,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclOutbound10295F76BCA": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Egress": true,
+        "NetworkAclId": Object {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": Object {
+          "From": 443,
+          "To": 443,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 102,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclOutbound1038303E3E9": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Egress": true,
+        "NetworkAclId": Object {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": Object {
+          "From": 80,
+          "To": 80,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 103,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "Organization29A5FC3F": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1",
+            "Arn",
+          ],
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+      },
+      "Type": "Custom::DescribeOrganization",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "SsmParamAcceleratorGwlbGwlbArn7CF5F889": Object {
       "Properties": Object {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/arn",
         "Type": "String",
@@ -2091,7 +2635,7 @@ Object {
     },
     "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
+        "SsmParamNetworkInspectionNetworkInspectionTgwAttachASubnetId90B86E86",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
@@ -2125,7 +2669,7 @@ Object {
     },
     "SsmParamNetworkEndpointsManagementSecurityGroup157CDC67": Object {
       "DependsOn": Array [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7",
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Management/id",
@@ -2137,6 +2681,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-A/id",
         "Type": "String",
@@ -2148,7 +2695,7 @@ Object {
     },
     "SsmParamNetworkEndpointsNetworkEndpointsASubnetIdF53EDCC9": Object {
       "DependsOn": Array [
-        "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4",
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
@@ -2161,7 +2708,7 @@ Object {
     },
     "SsmParamNetworkEndpointsNetworkEndpointsBRouteTableId03F05790": Object {
       "DependsOn": Array [
-        "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4",
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-B/id",
@@ -2174,7 +2721,7 @@ Object {
     },
     "SsmParamNetworkEndpointsNetworkEndpointsBSubnetId62D810E8": Object {
       "DependsOn": Array [
-        "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4",
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwBRouteTableIdC8AB07B7",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/id",
@@ -2186,6 +2733,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTgwARouteTableId2037B6B4": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-A/id",
         "Type": "String",
@@ -2196,9 +2746,6 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02": Object {
-      "DependsOn": Array [
-        "SsmParamNetworkEndpointsNetworkEndpointsARouteTableIdC55DBCD4",
-      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-A/id",
         "Type": "String",
@@ -2209,6 +2756,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-B/id",
         "Type": "String",
@@ -2230,7 +2780,7 @@ Object {
     },
     "SsmParamNetworkEndpointsNetworkEndpointsTransitGatewayAttachmentId2EBCB846": Object {
       "DependsOn": Array [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7",
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/transitGatewayAttachment/Network-Endpoints/id",
@@ -2243,7 +2793,7 @@ Object {
     },
     "SsmParamNetworkEndpointsTestNaclNaclED9584AC": Object {
       "DependsOn": Array [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7",
+        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachASubnetId72C0AC02",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/networkAcl/TestNACL/id",
@@ -2255,6 +2805,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkEndpointsVpcIdD8AF7DB9": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/id",
         "Type": "String",
@@ -2266,7 +2819,7 @@ Object {
     },
     "SsmParamNetworkInspectionDataSecurityGroup1FD45226": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
+        "SsmParamNetworkInspectionNetworkInspectionTgwAttachASubnetId90B86E86",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/securityGroup/Data/id",
@@ -2279,7 +2832,7 @@ Object {
     },
     "SsmParamNetworkInspectionNetworkInspectionARouteTableIdAA9E21C5": Object {
       "DependsOn": Array [
-        "appAalb01NetworkEndpointsssmF399A7CC",
+        "appAnlb01NetworkEndpointsssm0DA0AE1E",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-A/id",
@@ -2292,7 +2845,7 @@ Object {
     },
     "SsmParamNetworkInspectionNetworkInspectionASubnetId84BB7982": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4",
+        "SsmParamNetworkInspectionNetworkInspectionTgwARouteTableId838420AE",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-A/id",
@@ -2305,7 +2858,7 @@ Object {
     },
     "SsmParamNetworkInspectionNetworkInspectionBRouteTableIdAC1C6F68": Object {
       "DependsOn": Array [
-        "appAalb01NetworkEndpointsssmF399A7CC",
+        "appAnlb01NetworkEndpointsssm0DA0AE1E",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-B/id",
@@ -2318,7 +2871,7 @@ Object {
     },
     "SsmParamNetworkInspectionNetworkInspectionBSubnetId08F48703": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4",
+        "SsmParamNetworkInspectionNetworkInspectionTgwARouteTableId838420AE",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-B/id",
@@ -2331,7 +2884,7 @@ Object {
     },
     "SsmParamNetworkInspectionNetworkInspectionGatewayRouteTableId9C85DF52": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4",
+        "SsmParamNetworkInspectionNetworkInspectionTgwARouteTableId838420AE",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Gateway/id",
@@ -2343,9 +2896,6 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwARouteTableId838420AE": Object {
-      "DependsOn": Array [
-        "appAalb01NetworkEndpointsssmF399A7CC",
-      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-A/id",
         "Type": "String",
@@ -2356,9 +2906,6 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwAttachASubnetId90B86E86": Object {
-      "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4",
-      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-A/id",
         "Type": "String",
@@ -2369,6 +2916,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionTgwAttachASubnetId90B86E86",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-B/id",
         "Type": "String",
@@ -2379,6 +2929,9 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTgwBRouteTableId7113F1A4": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionTgwARouteTableId838420AE",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-B/id",
         "Type": "String",
@@ -2390,7 +2943,7 @@ Object {
     },
     "SsmParamNetworkInspectionNetworkInspectionTransitGatewayAttachmentId80B7A8EF": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionTgwAttachBSubnetId470AEEA9",
+        "SsmParamNetworkInspectionNetworkInspectionTgwAttachASubnetId90B86E86",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/transitGatewayAttachment/Network-Inspection/id",
@@ -2403,13 +2956,79 @@ Object {
     },
     "SsmParamNetworkInspectionVpcIdFD2142E1": Object {
       "DependsOn": Array [
-        "appAalb01NetworkEndpointsssmF399A7CC",
+        "appAnlb01NetworkEndpointsssm0DA0AE1E",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/id",
         "Type": "String",
         "Value": Object {
           "Ref": "NetworkInspectionVpc302E00C0",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryNetworkSecondaryARtRouteTableIdD8813C63": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-A-Rt/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryARtRouteTable649EACD5",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-A/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryASubnet791F4607",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryNetworkSecondaryBRtRouteTableIdFA654D75": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-B-Rt/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryBRtRouteTable851997AF",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryNetworkSecondaryBSubnetIdDF008255": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23",
+      ],
+      "Properties": Object {
+        "Name": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-B/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "NetworkSecondaryVpcNetworkSecondaryBSubnetDD64E26D",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryTestNaclNacl0FC3F602": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkSecondaryNetworkSecondaryASubnetId121C5F23",
+      ],
+      "Properties": Object {
+        "Name": "/accelerator/network/vpc/Network-Secondary/networkAcl/TestNacl/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkSecondaryVpcIdB6CE5CFB": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/vpc/Network-Secondary/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "NetworkSecondaryVpc37FB1791",
         },
       },
       "Type": "AWS::SSM::Parameter",
@@ -2475,6 +3094,9 @@ Object {
       "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
     },
     "appAalb01NetworkEndpointsssmF399A7CC": Object {
+      "DependsOn": Array [
+        "appAnlb01NetworkEndpointsssm0DA0AE1E",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/alb/appA-alb-01/id",
         "Type": "String",
@@ -2535,9 +3157,6 @@ Object {
       "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
     },
     "appAnlb01NetworkEndpointsssm0DA0AE1E": Object {
-      "DependsOn": Array [
-        "SsmParamNetworkEndpointsNetworkEndpointsTgwAttachBSubnetId0B7C06C7",
-      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Endpoints/nlb/appA-nlb-01/id",
         "Type": "String",

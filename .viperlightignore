@@ -94,3 +94,10 @@ source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1917
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1918
 
 reference/sample-configurations/aws-best-practices-us-slg-central-it/README.md:102
+
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:46
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:47
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:56
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:57
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:63
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:64

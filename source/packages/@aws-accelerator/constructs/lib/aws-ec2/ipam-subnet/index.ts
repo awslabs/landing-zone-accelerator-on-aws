@@ -48,7 +48,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const ipamAllocation: IpamAllocation = event.ResourceProperties['ipamAllocation'];
   let mapPublicIpOnLaunch: boolean | undefined = event.ResourceProperties['mapPublicIpOnLaunch'] ?? false;
   const subnetName: string = event.ResourceProperties['name'];
-  const tags: Tag[] = event.ResourceProperties['tags'];
+  const tags: Tag[] = event.ResourceProperties['tags'] ?? [];
   const vpcId: string = event.ResourceProperties['vpcId'];
   const outpostArn: string = event.ResourceProperties['outpostArn'] ?? undefined;
   const solutionId = process.env['SOLUTION_ID'];

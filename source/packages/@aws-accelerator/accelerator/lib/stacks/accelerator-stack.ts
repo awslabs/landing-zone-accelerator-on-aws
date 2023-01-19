@@ -30,6 +30,7 @@ import {
   IamConfig,
   IpamPoolConfig,
   LifeCycleRule,
+  NetworkAclSubnetSelection,
   NetworkConfig,
   NetworkConfigTypes,
   NfwFirewallPolicyConfig,
@@ -965,6 +966,22 @@ export abstract class AcceleratorStack extends cdk.Stack {
       return cdk.aws_ssm.StringParameter.valueForStringParameter(this, imageIdMatch![1]);
     } else {
       return imageId;
+    }
+  }
+
+  protected isCrossAccountNaclSource(naclItem: string | NetworkAclSubnetSelection): boolean {
+    if (typeof naclItem === 'string') {
+      return false;
+    }
+    const accountId = cdk.Stack.of(this).account;
+    const naclAccount = this.props.accountsConfig.getAccountId(naclItem.account);
+    const region = cdk.Stack.of(this).region;
+    const naclRegion = naclItem.region;
+
+    if (naclRegion && accountId === naclAccount && region === naclRegion) {
+      return false;
+    } else {
+      return true;
     }
   }
 }
