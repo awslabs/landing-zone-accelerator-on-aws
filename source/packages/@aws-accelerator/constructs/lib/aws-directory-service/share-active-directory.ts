@@ -78,7 +78,7 @@ export class ShareActiveDirectory extends Construct {
         sid: 'StsAssumeRoleActions',
         effect: cdk.aws_iam.Effect.ALLOW,
         actions: ['sts:AssumeRole'],
-        resources: [`arn:aws:iam::*:role/${props.accountAccessRoleName}`],
+        resources: [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.accountAccessRoleName}`],
       }),
     );
 
@@ -98,6 +98,7 @@ export class ShareActiveDirectory extends Construct {
       resourceType: 'Custom::ShareActiveDirectory',
       serviceToken: provider.serviceToken,
       properties: {
+        partition: cdk.Stack.of(this).partition,
         region: cdk.Stack.of(this).region,
         madAccountId: cdk.Stack.of(this).account,
         directoryId: props.directoryId,

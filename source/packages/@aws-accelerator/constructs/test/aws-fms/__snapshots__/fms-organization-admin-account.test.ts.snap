@@ -133,6 +133,9 @@ Object {
         "partition": Object {
           "Ref": "AWS::Partition",
         },
+        "region": Object {
+          "Ref": "AWS::Region",
+        },
       },
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",

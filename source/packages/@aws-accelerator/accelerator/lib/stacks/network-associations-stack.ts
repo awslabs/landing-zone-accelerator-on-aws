@@ -2536,7 +2536,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           managedActiveDirectory.name,
         );
 
-        const adminSecretArn = `arn:aws:secretsmanager:${madAdminSecretRegion}:${madAdminSecretAccountId}:secret:${secretName}`;
+        const adminSecretArn = `arn:${
+          cdk.Stack.of(this).partition
+        }:secretsmanager:${madAdminSecretRegion}:${madAdminSecretAccountId}:secret:${secretName}`;
 
         const adminSecretValue = cdk.SecretValue.secretsManager(adminSecretArn);
 

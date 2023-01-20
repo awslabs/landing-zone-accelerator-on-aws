@@ -63,14 +63,14 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:54
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:55
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:56
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:57
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:508
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:509
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:510
 
-source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:140
-source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:141
+source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:143
+source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:144
 
-source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts:69
-source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts:70
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts:71
+source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts:72
 
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:57
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:58

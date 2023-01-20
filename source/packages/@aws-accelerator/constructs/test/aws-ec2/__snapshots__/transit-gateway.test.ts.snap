@@ -112,6 +112,9 @@ Object {
           ],
         },
         "name": "name",
+        "region": Object {
+          "Ref": "AWS::Region",
+        },
         "roleArn": Object {
           "Fn::Join": Array [
             "",
@@ -381,6 +384,9 @@ Object {
           ],
         },
         "name": "name",
+        "region": Object {
+          "Ref": "AWS::Region",
+        },
         "roleArn": Object {
           "Fn::Join": Array [
             "",
@@ -692,6 +698,9 @@ Object {
           ],
         },
         "name": "name",
+        "region": Object {
+          "Ref": "AWS::Region",
+        },
         "roleArn": Object {
           "Fn::Join": Array [
             "",
