@@ -33,6 +33,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const roleName = event.ResourceProperties['roleName'];
   const route53ResolverRuleName = event.ResourceProperties['route53ResolverRuleName'];
   const targetIps = event.ResourceProperties['targetIps'];
+  const region = event.ResourceProperties['region'];
   const solutionId = process.env['SOLUTION_ID'];
 
   let route53ResolverClient = new AWS.Route53Resolver({ customUserAgent: solutionId });
@@ -42,7 +43,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     throw new Error(`Resolver rule ${route53ResolverRuleName} owner id not found !!!`);
   }
 
-  const stsClient = new AWS.STS({ customUserAgent: solutionId });
+  const stsClient = new AWS.STS({ customUserAgent: solutionId, region: region });
   if (ruleOwnerId !== executingAccountId) {
     const assumeRoleResponse = await throttlingBackOff(() =>
       stsClient

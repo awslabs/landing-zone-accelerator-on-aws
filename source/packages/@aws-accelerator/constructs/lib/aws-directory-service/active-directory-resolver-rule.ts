@@ -92,6 +92,7 @@ export class ActiveDirectoryResolverRule extends Construct {
       properties: {
         executingAccountId: cdk.Stack.of(this).account,
         partition: cdk.Stack.of(this).partition,
+        region: cdk.Stack.of(this).region,
         roleName: props.roleName,
         route53ResolverRuleName: props.route53ResolverRuleName,
         targetIps: props.targetIps,

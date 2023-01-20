@@ -196,6 +196,7 @@ Object {
           ],
         },
         "name": "accelerator-vpn",
+        "region": "us-east-1",
         "transitGatewayId": Object {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
@@ -1815,6 +1816,7 @@ Object {
           ],
         },
         "name": "Network-Main-And-SharedServices-Main-Peering",
+        "region": "us-east-1",
         "transitGatewayId": Object {
           "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
@@ -1881,6 +1883,7 @@ Object {
           ],
         },
         "name": "SharedServices-Main",
+        "region": "us-east-1",
         "roleArn": Object {
           "Fn::Join": Array [
             "",
@@ -2158,6 +2161,7 @@ Object {
         "partition": Object {
           "Ref": "AWS::Partition",
         },
+        "region": "us-east-1",
         "targets": Array [
           Object {
             "account": "555555555555",

@@ -139,6 +139,7 @@ export abstract class Accelerator {
       // Load Plugins
       //
       assumeRolePlugin = new AssumeProfilePlugin({
+        region: props.region,
         assumeRoleName: globalConfig.managementAccountAccessRole,
         assumeRoleDuration: 3600,
         credentials: managementAccountCredentials,

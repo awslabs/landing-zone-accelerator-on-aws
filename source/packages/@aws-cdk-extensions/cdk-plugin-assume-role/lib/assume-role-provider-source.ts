@@ -23,6 +23,7 @@ export interface AssumeRoleProviderSourceProps {
   name: string;
   assumeRoleName: string;
   assumeRoleDuration: number;
+  region: string;
   credentials?: AWS.STS.Credentials;
   partition?: string;
   caBundlePath?: string;
@@ -83,13 +84,14 @@ export class AssumeRoleProviderSource implements CredentialProviderSource {
     let sts: AWS.STS;
     if (this.props.credentials) {
       sts = new AWS.STS({
+        region: this.props.region,
         accessKeyId: this.props.credentials.AccessKeyId,
         secretAccessKey: this.props.credentials.SecretAccessKey,
         sessionToken: this.props.credentials.SessionToken,
         httpOptions,
       });
     } else {
-      sts = new AWS.STS({ httpOptions });
+      sts = new AWS.STS({ region: this.props.region, httpOptions });
     }
 
     return throttlingBackOff(() =>

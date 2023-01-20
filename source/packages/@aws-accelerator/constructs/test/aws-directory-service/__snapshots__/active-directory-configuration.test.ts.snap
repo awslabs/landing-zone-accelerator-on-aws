@@ -42,7 +42,22 @@ Object {
           "createADConnectorUser": Object {
             "commands": Object {
               "a-create-ad-users": Object {
-                "command": "powershell.exe -ExecutionPolicy RemoteSigned C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName user1 -Password ((Get-SECSecretValue -SecretId arn:aws:secretsmanager:us-east-1:111111111111:secret:/accelerator/ad-user/AcceleratorManagedActiveDirectory/user1).SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes -UserEmailAddress example-user1@example.com; C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName user2 -Password ((Get-SECSecretValue -SecretId arn:aws:secretsmanager:us-east-1:111111111111:secret:/accelerator/ad-user/AcceleratorManagedActiveDirectory/user2).SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes -UserEmailAddress example-user2@example.com; C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName admin -Password ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes",
+                "command": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "powershell.exe -ExecutionPolicy RemoteSigned C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName user1 -Password ((Get-SECSecretValue -SecretId arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":secretsmanager:us-east-1:111111111111:secret:/accelerator/ad-user/AcceleratorManagedActiveDirectory/user1).SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes -UserEmailAddress example-user1@example.com; C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName user2 -Password ((Get-SECSecretValue -SecretId arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":secretsmanager:us-east-1:111111111111:secret:/accelerator/ad-user/AcceleratorManagedActiveDirectory/user2).SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes -UserEmailAddress example-user2@example.com; C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName admin -Password ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes",
+                    ],
+                  ],
+                },
                 "waitAfterCompletion": "0",
               },
               "b-create-ad-groups": Object {

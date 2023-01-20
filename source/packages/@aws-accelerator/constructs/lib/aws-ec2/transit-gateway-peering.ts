@@ -124,7 +124,9 @@ export class TransitGatewayPeering extends Construct {
           Sid: 'AllowAssumeRole',
           Effect: 'Allow',
           Action: ['sts:AssumeRole'],
-          Resource: `arn:aws:iam::${props.accepter.accountId}:role/${props.accepter.accountAccessRoleName}`,
+          Resource: `arn:${cdk.Stack.of(this).partition}:iam::${props.accepter.accountId}:role/${
+            props.accepter.accountAccessRoleName
+          }`,
         },
         {
           Sid: 'AllowModifyPeeringReferences',
