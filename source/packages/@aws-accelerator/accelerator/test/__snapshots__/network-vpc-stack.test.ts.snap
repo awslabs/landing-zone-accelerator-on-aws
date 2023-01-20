@@ -569,6 +569,13 @@ Object {
           "Statement": Array [
             Object {
               "Action": "sts:AssumeRole",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
               "Effect": "Allow",
               "Principal": Object {
                 "AWS": "*",
@@ -586,13 +593,6 @@ Object {
                     "ec2:DescribeSubnets",
                     "ssm:GetParameter",
                   ],
-                  "Condition": Object {
-                    "StringEquals": Object {
-                      "aws:PrincipalOrgID": Object {
-                        "Ref": "Organization29A5FC3F",
-                      },
-                    },
-                  },
                   "Effect": "Allow",
                   "Resource": "*",
                 },
