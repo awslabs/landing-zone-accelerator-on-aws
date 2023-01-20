@@ -42,7 +42,20 @@
                 "waf-regional:*",
                 "waf:*",
                 "wafv2:*",
-                "wellarchitected:*"
+                "wellarchitected:*",
+                "billing:*",
+                "payments:*",
+                "cur:GetClassicReport",
+                "cur:GetClassicReportPreferences",
+                "cur:PutClassicReportPreferences",
+                "cur:GetUsageReport",
+                "cur:ValidateReportDestination",
+                "freetier:*",
+                "invoicing:*",
+                "tax:*",
+                "account:GetAccountInformation",
+                "consolidatedbilling:ListLinkedAccounts",
+                "consolidatedbilling:GetAccountBillingRole"
             ],
             "Resource": "*",
             "Condition": {
