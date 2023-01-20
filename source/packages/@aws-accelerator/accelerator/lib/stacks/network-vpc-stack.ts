@@ -1543,7 +1543,7 @@ export class NetworkVpcStack extends AcceleratorStack {
       if (cdk.Stack.of(this).region === this.props.globalConfig.homeRegion && cdk.Stack.of(this).account === account) {
         const role = new cdk.aws_iam.Role(this, `Get${pascalCase(account)}IpamCidrRole`, {
           roleName: `AWSAccelerator-GetIpamCidrRole-${cdk.Stack.of(this).region}`,
-          assumedBy: new cdk.aws_iam.AnyPrincipal(),
+          assumedBy: this.getOrgPrincipals(this.organizationId),
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({
               statements: [
@@ -1551,11 +1551,6 @@ export class NetworkVpcStack extends AcceleratorStack {
                   effect: cdk.aws_iam.Effect.ALLOW,
                   actions: ['ec2:DescribeSubnets', 'ssm:GetParameter'],
                   resources: ['*'],
-                  conditions: {
-                    StringEquals: {
-                      ...this.getPrincipalOrgIdCondition(this.organizationId),
-                    },
-                  },
                 }),
               ],
             }),
