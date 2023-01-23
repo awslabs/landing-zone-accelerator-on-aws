@@ -636,18 +636,23 @@ export class ManagedActiveDirectoryVpcSettingsConfig
  *    netBiosDomainName: example
  *    description: Example managed active directory
  *    edition: Enterprise
+ *    resolverRuleName: example-com-rule
+ *    vpcSettings:
+ *      vpcName: ManagedAdVpc
+ *      subnets:
+ *        - subnet1
+ *        - subnet2
  *    secretConfig:
  *      account: Audit
  *      region: us-east-1
  *      adminSecretName: admin
- *    resolverRuleName: example-com-rule
- *    vpcSettings:
- *      vpcName: MyVpc
- *      subnets:
- *        - subnet1
- *        - subnet2
+ *    sharedOrganizationalUnits:
+ *      organizationalUnits:
+ *        - Root
+ *      excludedAccounts:
+ *        - Management
  *    logs:
- *      logGroupName: /aws/directoryservice/AcceleratorManagedActiveDirectory
+ *      groupName: /aws/directoryservice/AcceleratorManagedActiveDirectory
  *      retentionInDays: 30
  * ```
  */
@@ -1335,18 +1340,23 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *    netBiosDomainName: example
    *    description: Example managed active directory
    *    edition: Enterprise
-   *    adminSecret:
-   *      name: admin-secret
-   *      account: Audit
-   *      region: us-east-1
    *    resolverRuleName: example-com-rule
    *    vpcSettings:
-   *      vpcName: MyVpc
+   *      vpcName: ManagedAdVpc
    *      subnets:
    *        - subnet1
    *        - subnet2
+   *    secretConfig:
+   *      account: Audit
+   *      region: us-east-1
+   *      adminSecretName: admin
+   *    sharedOrganizationalUnits:
+   *      organizationalUnits:
+   *        - Root
+   *      excludedAccounts:
+   *        - Management
    *    logs:
-   *      logGroupName: /aws/directoryservice/AcceleratorManagedActiveDirectory
+   *      groupName: /aws/directoryservice/AcceleratorManagedActiveDirectory
    *      retentionInDays: 30
    *    activeDirectoryConfigurationInstance:
    *      instanceType: t3.large
