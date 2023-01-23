@@ -176,6 +176,7 @@ export interface INatGateway extends cdk.IResource {
 }
 
 export interface NatGatewayProps {
+  readonly allocationId?: string;
   readonly name: string;
   readonly subnet: ISubnet;
   readonly tags?: cdk.CfnTag[];
@@ -184,17 +185,23 @@ export interface NatGatewayProps {
 export class NatGateway extends cdk.Resource implements INatGateway {
   public readonly natGatewayId: string;
   public readonly natGatewayName: string;
+  private elasticIpAllocation?: string;
 
   constructor(scope: Construct, id: string, props: NatGatewayProps) {
     super(scope, id);
 
-    this.natGatewayName = props.name;
+    if (props.allocationId) {
+      this.elasticIpAllocation = props.allocationId;
+    } else {
+      this.elasticIpAllocation = new cdk.aws_ec2.CfnEIP(this, 'Eip', {
+        domain: 'vpc',
+      }).attrAllocationId;
+    }
 
+    this.natGatewayName = props.name;
     const resource = new cdk.aws_ec2.CfnNatGateway(this, 'Resource', {
       subnetId: props.subnet.subnetId,
-      allocationId: new cdk.aws_ec2.CfnEIP(this, 'Eip', {
-        domain: 'vpc',
-      }).attrAllocationId,
+      allocationId: this.elasticIpAllocation,
       tags: props.tags,
     });
     cdk.Tags.of(this).add('Name', props.name);

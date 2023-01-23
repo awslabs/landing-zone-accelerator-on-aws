@@ -239,6 +239,7 @@ export class NetworkConfigTypes {
   static readonly natGatewayConfig = t.interface({
     name: t.nonEmptyString,
     subnet: t.nonEmptyString,
+    allocationId: t.optional(t.nonEmptyString),
     tags: t.optional(t.array(t.tag)),
   });
 
@@ -2085,6 +2086,12 @@ export class NatGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.natG
    * The friendly name of the subnet for the NAT Gateway to be deployed.
    */
   readonly subnet = '';
+
+  /**
+   * The allocation ID of the Elastic IP address that's associated with the NAT gateway.
+   */
+  readonly allocationId = '';
+
   /**
    * An array of tag objects for the NAT Gateway.
    */

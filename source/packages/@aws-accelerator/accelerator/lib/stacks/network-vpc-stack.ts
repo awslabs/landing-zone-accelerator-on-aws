@@ -655,12 +655,12 @@ export class NetworkVpcStack extends AcceleratorStack {
           if (subnet === undefined) {
             throw new Error(`Subnet ${natGatewayItem.subnet} not defined`);
           }
-
           const natGateway = new NatGateway(
             this,
             pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${natGatewayItem.name}NatGateway`),
             {
               name: natGatewayItem.name,
+              allocationId: natGatewayItem.allocationId,
               subnet,
               tags: natGatewayItem.tags,
             },
