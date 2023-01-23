@@ -92,6 +92,9 @@ source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1276
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1277
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1917
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1918
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1919
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1997
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1998
 
 reference/sample-configurations/aws-best-practices-us-slg-central-it/README.md:102
 
