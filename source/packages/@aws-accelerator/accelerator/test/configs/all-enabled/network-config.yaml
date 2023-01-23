@@ -862,6 +862,12 @@ vpcs:
       - 10.2.0.0/22
       - 192.168.0.0/16
     internetGateway: true
+    natGateways:
+      - name: accelerator-nat-gw-a
+        subnet: Network-Inspection-A
+        allocationId: eipalloc-acbdefg123456
+      - name: accelerator-nat-gw-b
+        subnet: Network-Inspection-B
     routeTables:
       - name: Network-Inspection-A
         routes:
