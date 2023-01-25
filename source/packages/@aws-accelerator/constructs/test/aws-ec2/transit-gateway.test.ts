@@ -42,10 +42,25 @@ describe('TransitGatewayRouteTableAssociation', () => {
  * TransitGatewayAttachment construct test
  */
 describe('TransitGatewayAttachment', () => {
-  it('regular tgw attachment', () => {
+  it('default tgw attachment', () => {
     new TransitGatewayAttachment(stack, 'TransitGatewayAttachment', {
       name: 'name',
       partition: 'partition',
+      transitGatewayId: 'transitGatewayId',
+      subnetIds: ['one', 'two', 'three'],
+      vpcId: 'vpcId',
+      options: {
+        applianceModeSupport: 'enable',
+        dnsSupport: 'enable',
+        ipv6Support: 'disable',
+      },
+    });
+  });
+
+  it('govcloud tgw attachment', () => {
+    new TransitGatewayAttachment(stack, 'TransitGatewayAttachmentGovCloud', {
+      name: 'name',
+      partition: 'aws-us-gov',
       transitGatewayId: 'transitGatewayId',
       subnetIds: ['one', 'two', 'three'],
       vpcId: 'vpcId',
