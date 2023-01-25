@@ -1962,7 +1962,7 @@ export class AcceleratorTool {
               `[accelerator-tool] Ecr ${repository} in region ${region} of account ${account.accountName} deleted successfully`,
               'info',
             );
-          } catch (ResourceNotFoundException) {
+          } catch (RepositoryNotFoundException) {
             this.debugLog(
               `[accelerator-tool] Ecr delete Error, repository NOT FOUND ${repository} in region ${region} of account ${account.accountName}`,
               'info',
