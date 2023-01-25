@@ -56,7 +56,6 @@ import {
   PutSsmParameter,
 } from '@aws-accelerator/constructs';
 
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export interface SecurityGroupRuleProps {
@@ -126,7 +125,7 @@ export class NetworkVpcStack extends AcceleratorStack {
       props.networkConfig.defaultVpc?.delete &&
       !this.isAccountExcluded(props.networkConfig.defaultVpc.excludeAccounts)
     ) {
-      Logger.info('[network-vpc-stack] Add DeleteDefaultVpc');
+      this.logger.info('Add DeleteDefaultVpc');
       new DeleteDefaultVpc(this, 'DeleteDefaultVpc', {
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
@@ -148,16 +147,16 @@ export class NetworkVpcStack extends AcceleratorStack {
 
       if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         for (const attachment of vpcItem.transitGatewayAttachments ?? []) {
-          Logger.info(`[network-vpc-stack] Evaluating Transit Gateway key ${attachment.transitGateway.name}`);
+          this.logger.info(`Evaluating Transit Gateway key ${attachment.transitGateway.name}`);
 
           // Keep looking if already entered
           if (transitGatewayIds.has(attachment.transitGateway.name)) {
-            Logger.info(`[network-vpc-stack] Transit Gateway ${attachment.transitGateway.name} already in dictionary`);
+            this.logger.info(`Transit Gateway ${attachment.transitGateway.name} already in dictionary`);
             continue;
           }
 
-          Logger.info(
-            `[network-vpc-stack] Transit Gateway key ${attachment.transitGateway.name} is not in map, add resources to look up`,
+          this.logger.info(
+            `Transit Gateway key ${attachment.transitGateway.name} is not in map, add resources to look up`,
           );
           const owningAccountId = this.accountsConfig.getAccountId(attachment.transitGateway.account);
 
@@ -169,8 +168,8 @@ export class NetworkVpcStack extends AcceleratorStack {
               `/accelerator/network/transitGateways/${attachment.transitGateway.name}/id`,
             );
 
-            Logger.info(
-              `[network-vpc-stack] Adding [${attachment.transitGateway.name}]: ${transitGatewayId} to transitGatewayIds Map`,
+            this.logger.info(
+              `Adding [${attachment.transitGateway.name}]: ${transitGatewayId} to transitGatewayIds Map`,
             );
             transitGatewayIds.set(attachment.transitGateway.name, transitGatewayId);
           }
@@ -190,9 +189,7 @@ export class NetworkVpcStack extends AcceleratorStack {
               this.cloudwatchKey,
             ).resourceShareItemId;
 
-            Logger.info(
-              `[network-vpc-stack] Adding [${attachment.transitGateway.name}]: ${tgwId} to transitGatewayIds Map`,
-            );
+            this.logger.info(`Adding [${attachment.transitGateway.name}]: ${tgwId} to transitGatewayIds Map`);
             transitGatewayIds.set(attachment.transitGateway.name, tgwId);
           }
         }
@@ -202,7 +199,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     // Create cross account access role to read transit gateway attachments if
     // there are other accounts in the list
     if (transitGatewayAccountIds.length > 0) {
-      Logger.info(`[network-vpc-stack] Create IAM Cross Account Access Role`);
+      this.logger.info(`Create IAM Cross Account Access Role`);
 
       const principals: cdk.aws_iam.PrincipalBase[] = [];
       transitGatewayAccountIds.forEach(accountId => {
@@ -247,9 +244,10 @@ export class NetworkVpcStack extends AcceleratorStack {
       if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         if (vpcItem.useCentralEndpoints) {
           if (props.partition !== 'aws' && props.partition !== 'aws-cn') {
-            throw new Error(
+            this.logger.error(
               'useCentralEndpoints set to true, but AWS Partition is not commercial. Please change it to false.',
             );
+            throw new Error(`Configuration validation failed at runtime.`);
           }
 
           useCentralEndpoints = true;
@@ -262,19 +260,23 @@ export class NetworkVpcStack extends AcceleratorStack {
     //
     let centralEndpointVpc = undefined;
     if (useCentralEndpoints) {
-      Logger.info('[network-vpc-stack] VPC found in this account with useCentralEndpoints set to true');
+      this.logger.info('VPC found in this account with useCentralEndpoints set to true');
 
       // Find the central endpoints vpc (should only be one)
       const centralEndpointVpcs = props.networkConfig.vpcs.filter(
         item => item.interfaceEndpoints?.central && item.region === cdk.Stack.of(this).region,
       );
       if (centralEndpointVpcs.length === 0) {
-        throw new Error('useCentralEndpoints set to true, but no central endpoint vpc detected, should be exactly one');
+        this.logger.error(
+          'useCentralEndpoints set to true, but no central endpoint vpc detected, should be exactly one',
+        );
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       if (centralEndpointVpcs.length > 1) {
-        throw new Error(
+        this.logger.error(
           'useCentralEndpoints set to true, but multiple central endpoint vpcs detected, should only be one',
         );
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       centralEndpointVpc = centralEndpointVpcs[0];
     }
@@ -286,9 +288,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     if (centralEndpointVpc) {
       const centralEndpointVpcAccountId = this.accountsConfig.getAccountId(centralEndpointVpc.account);
       if (centralEndpointVpcAccountId !== cdk.Stack.of(this).account) {
-        Logger.info(
-          '[network-vpc-stack] Central Endpoints VPC is in an external account, create a role to enable central endpoints',
-        );
+        this.logger.info('Central Endpoints VPC is in an external account, create a role to enable central endpoints');
         new cdk.aws_iam.Role(this, 'EnableCentralEndpointsRole', {
           roleName: `AWSAccelerator-EnableCentralEndpointsRole-${cdk.Stack.of(this).region}`,
           assumedBy: new cdk.aws_iam.AccountPrincipal(centralEndpointVpcAccountId),
@@ -346,7 +346,7 @@ export class NetworkVpcStack extends AcceleratorStack {
       });
 
       if (accountIds.includes(cdk.Stack.of(this).account) && regions.includes(cdk.Stack.of(this).region)) {
-        Logger.info(`[network-vpc-stack] Adding DHCP options set ${dhcpItem.name}`);
+        this.logger.info(`Adding DHCP options set ${dhcpItem.name}`);
 
         const optionSet = new DhcpOptions(this, pascalCase(`${dhcpItem.name}DhcpOpts`), {
           name: dhcpItem.name,
@@ -377,7 +377,7 @@ export class NetworkVpcStack extends AcceleratorStack {
       });
 
       if (accountIds.includes(cdk.Stack.of(this).account) && regions.includes(cdk.Stack.of(this).region)) {
-        Logger.info(`[network-vpc-stack] Adding Prefix List ${prefixListItem.name}`);
+        this.logger.info(`Adding Prefix List ${prefixListItem.name}`);
 
         const prefixList = new PrefixList(this, pascalCase(`${prefixListItem.name}PrefixList`), {
           name: prefixListItem.name,
@@ -405,7 +405,7 @@ export class NetworkVpcStack extends AcceleratorStack {
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
       if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
-        Logger.info(`[network-vpc-stack] Adding VPC ${vpcItem.name}`);
+        this.logger.info(`Adding VPC ${vpcItem.name}`);
 
         //
         // Determine if using IPAM or manual CIDRs
@@ -422,9 +422,8 @@ export class NetworkVpcStack extends AcceleratorStack {
         if (vpcItem.ipamAllocations) {
           poolId = this.ipamPoolMap.get(vpcItem.ipamAllocations[0].ipamPoolName);
           if (!poolId) {
-            throw new Error(
-              `[network-vpc-stack] ${vpcItem.name}: unable to locate IPAM pool ${vpcItem.ipamAllocations[0].ipamPoolName}`,
-            );
+            this.logger.error(`${vpcItem.name}: unable to locate IPAM pool ${vpcItem.ipamAllocations[0].ipamPoolName}`);
+            throw new Error(`Configuration validation failed at runtime.`);
           }
           poolNetmask = vpcItem.ipamAllocations[0].netmaskLength;
         }
@@ -455,19 +454,20 @@ export class NetworkVpcStack extends AcceleratorStack {
         // Create additional CIDRs or IPAM allocations as needed
         if (vpcItem.cidrs && vpcItem.cidrs.length > 1) {
           for (const vpcCidr of vpcItem.cidrs.slice(1)) {
-            Logger.info(`[network-vpc-stack] Adding secondary CIDR ${vpcCidr} to VPC ${vpcItem.name}`);
+            this.logger.info(`Adding secondary CIDR ${vpcCidr} to VPC ${vpcItem.name}`);
             vpc.addCidr({ cidrBlock: vpcCidr });
           }
         }
 
         if (vpcItem.ipamAllocations && vpcItem.ipamAllocations.length > 1) {
           for (const alloc of vpcItem.ipamAllocations.slice(1)) {
-            Logger.info(
-              `[network-vpc-stack] Adding secondary IPAM allocation with netmask ${alloc.netmaskLength} to VPC ${vpcItem.name}`,
+            this.logger.info(
+              `Adding secondary IPAM allocation with netmask ${alloc.netmaskLength} to VPC ${vpcItem.name}`,
             );
             poolId = this.ipamPoolMap.get(alloc.ipamPoolName);
             if (!poolId) {
-              throw new Error(`[network-vpc-stack] ${vpcItem.name}: unable to locate IPAM pool ${alloc.ipamPoolName}`);
+              this.logger.error(`${vpcItem.name}: unable to locate IPAM pool ${alloc.ipamPoolName}`);
+              throw new Error(`Configuration validation failed at runtime.`);
             }
             vpc.addCidr({ ipv4IpamPoolId: poolId, ipv4NetmaskLength: alloc.netmaskLength });
           }
@@ -483,14 +483,16 @@ export class NetworkVpcStack extends AcceleratorStack {
         // associations for.
         //
         if (vpcItem.useCentralEndpoints && props.partition !== 'aws' && props.partition !== 'aws-cn') {
-          throw new Error(
+          this.logger.error(
             'useCentralEndpoints set to true, but AWS Partition is not commercial. No tags will be added',
           );
+          throw new Error(`Configuration validation failed at runtime.`);
         }
 
         if (vpcItem.useCentralEndpoints) {
           if (!centralEndpointVpc) {
-            throw new Error('Attempting to use central endpoints with no Central Endpoints defined');
+            this.logger.error('Attempting to use central endpoints with no Central Endpoints defined');
+            throw new Error(`Configuration validation failed at runtime.`);
           }
           cdk.Tags.of(vpc).add('accelerator:use-central-endpoints', 'true');
           cdk.Tags.of(vpc).add(
@@ -549,17 +551,20 @@ export class NetworkVpcStack extends AcceleratorStack {
 
         for (const subnetItem of vpcItem.subnets ?? []) {
           if (subnetItem.ipv4CidrBlock && subnetItem.ipamAllocation) {
-            throw new Error(
-              `[network-vpc-stack] Subnet ${subnetItem.name} includes ipv4CidrBlock and ipamAllocation properties. Please choose only one.`,
+            this.logger.error(
+              `Subnet ${subnetItem.name} includes ipv4CidrBlock and ipamAllocation properties. Please choose only one.`,
             );
+            throw new Error(`Configuration validation failed at runtime.`);
           }
-          Logger.info(`[network-vpc-stack] Adding subnet ${subnetItem.name}`);
+          this.logger.info(`Adding subnet ${subnetItem.name}`);
+
           // Get route table for subnet association
           const routeTable = routeTableMap.get(subnetItem.routeTable);
           if (!routeTable) {
-            throw new Error(
-              `[network-vpc-stack] Error creating subnet ${subnetItem.name}: route table ${subnetItem.routeTable} not defined`,
+            this.logger.error(
+              `Error creating subnet ${subnetItem.name}: route table ${subnetItem.routeTable} not defined`,
             );
+            throw new Error(`Configuration validation failed at runtime.`);
           }
           const outpost = outpostMap.get(subnetItem.outpost || '');
 
@@ -573,9 +578,8 @@ export class NetworkVpcStack extends AcceleratorStack {
           }
 
           if (!availabilityZone) {
-            throw new Error(
-              `[network-vpc-stack] Error creating subnet ${subnetItem.name}: Availability Zone not defined.`,
-            );
+            this.logger.error(`Error creating subnet ${subnetItem.name}: Availability Zone not defined.`);
+            throw new Error(`Configuration validation failed at runtime.`);
           }
           // Check for base IPAM pool CIDRs in config
           let basePool: string[] | undefined = undefined;
@@ -586,9 +590,10 @@ export class NetworkVpcStack extends AcceleratorStack {
             }
 
             if (!basePool) {
-              throw new Error(
-                `[network-vpc-stack] Error creating subnet ${subnetItem.name}: IPAM pool ${subnetItem.ipamAllocation.ipamPoolName} not defined`,
+              this.logger.error(
+                `Error creating subnet ${subnetItem.name}: IPAM pool ${subnetItem.ipamAllocation.ipamPoolName} not defined`,
               );
+              throw new Error(`Configuration validation failed at runtime.`);
             }
           }
 
@@ -629,9 +634,8 @@ export class NetworkVpcStack extends AcceleratorStack {
               const lastSubnet = ipamSubnetMap.get(index - 1);
 
               if (!lastSubnet) {
-                throw new Error(
-                  `[network-vpc-stack] Error creating subnet ${subnetItem.name}: previous IPAM subnet undefined`,
-                );
+                this.logger.error(`Error creating subnet ${subnetItem.name}: previous IPAM subnet undefined`);
+                throw new Error(`Configuration validation failed at runtime.`);
               }
               subnet.node.addDependency(lastSubnet);
             }
@@ -639,7 +643,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           }
 
           if (subnetItem.shareTargets) {
-            Logger.info(`[network-vpc-stack] Share subnet`);
+            this.logger.info(`Share subnet`);
             this.addResourceShare(subnetItem, `${subnetItem.name}_SubnetShare`, [subnet.subnetArn]);
           }
         }
@@ -649,11 +653,12 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         const natGatewayMap = new Map<string, NatGateway>();
         for (const natGatewayItem of vpcItem.natGateways ?? []) {
-          Logger.info(`[network-vpc-stack] Adding NAT Gateway ${natGatewayItem.name}`);
+          this.logger.info(`Adding NAT Gateway ${natGatewayItem.name}`);
 
           const subnet = subnetMap.get(natGatewayItem.subnet);
           if (subnet === undefined) {
-            throw new Error(`Subnet ${natGatewayItem.subnet} not defined`);
+            this.logger.error(`Subnet ${natGatewayItem.subnet} not defined`);
+            throw new Error(`Configuration validation failed at runtime.`);
           }
           const natGateway = new NatGateway(
             this,
@@ -678,20 +683,20 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         const transitGatewayAttachments = new Map<string, TransitGatewayAttachment>();
         for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
-          Logger.info(
-            `[network-vpc-stack] Adding Transit Gateway Attachment for ${tgwAttachmentItem.transitGateway.name}`,
-          );
+          this.logger.info(`Adding Transit Gateway Attachment for ${tgwAttachmentItem.transitGateway.name}`);
 
           const transitGatewayId = transitGatewayIds.get(tgwAttachmentItem.transitGateway.name);
           if (transitGatewayId === undefined) {
-            throw new Error(`Transit Gateway ${tgwAttachmentItem.transitGateway.name} not found`);
+            this.logger.error(`Transit Gateway ${tgwAttachmentItem.transitGateway.name} not found`);
+            throw new Error(`Configuration validation failed at runtime.`);
           }
 
           const subnetIds: string[] = [];
           for (const subnetItem of tgwAttachmentItem.subnets ?? []) {
             const subnet = subnetMap.get(subnetItem);
             if (subnet === undefined) {
-              throw new Error(`Subnet ${subnetItem} not defined`);
+              this.logger.error(`Subnet ${subnetItem} not defined`);
+              throw new Error(`Configuration validation failed at runtime.`);
             }
             subnetIds.push(subnet.subnetId);
           }
@@ -726,7 +731,8 @@ export class NetworkVpcStack extends AcceleratorStack {
           const routeTable = routeTableMap.get(routeTableItem.name);
 
           if (routeTable === undefined) {
-            throw new Error(`Route Table ${routeTableItem.name} not found`);
+            this.logger.error(`Route Table ${routeTableItem.name} not found`);
+            throw new Error(`Configuration validation failed at runtime.`);
           }
 
           for (const routeTableEntryItem of routeTableItem.routes ?? []) {
@@ -744,9 +750,8 @@ export class NetworkVpcStack extends AcceleratorStack {
                 // Get PL ID from map
                 const prefixList = prefixListMap.get(routeTableEntryItem.destinationPrefixList);
                 if (!prefixList) {
-                  throw new Error(
-                    `[network-vpc-stack] Prefix list ${routeTableEntryItem.destinationPrefixList} not found`,
-                  );
+                  this.logger.error(`Prefix list ${routeTableEntryItem.destinationPrefixList} not found`);
+                  throw new Error(`Configuration validation failed at runtime.`);
                 }
                 destinationPrefixListId = prefixList.prefixListId;
               } else {
@@ -755,16 +760,18 @@ export class NetworkVpcStack extends AcceleratorStack {
 
               // Route: Transit Gateway
               if (routeTableEntryItem.type === 'transitGateway') {
-                Logger.info(`[network-vpc-stack] Adding Transit Gateway Route Table Entry ${routeTableEntryItem.name}`);
+                this.logger.info(`Adding Transit Gateway Route Table Entry ${routeTableEntryItem.name}`);
 
                 const transitGatewayId = transitGatewayIds.get(routeTableEntryItem.target!);
                 if (transitGatewayId === undefined) {
-                  throw new Error(`Transit Gateway ${routeTableEntryItem.target} not found`);
+                  this.logger.error(`Transit Gateway ${routeTableEntryItem.target} not found`);
+                  throw new Error(`Configuration validation failed at runtime.`);
                 }
 
                 const transitGatewayAttachment = transitGatewayAttachments.get(routeTableEntryItem.target!);
                 if (transitGatewayAttachment === undefined) {
-                  throw new Error(`Transit Gateway Attachment ${routeTableEntryItem.target} not found`);
+                  this.logger.error(`Transit Gateway Attachment ${routeTableEntryItem.target} not found`);
+                  throw new Error(`Configuration validation failed at runtime.`);
                 }
 
                 routeTable.addTransitGatewayRoute(
@@ -780,11 +787,12 @@ export class NetworkVpcStack extends AcceleratorStack {
 
               // Route: NAT Gateway
               if (routeTableEntryItem.type === 'natGateway') {
-                Logger.info(`[network-vpc-stack] Adding NAT Gateway Route Table Entry ${routeTableEntryItem.name}`);
+                this.logger.info(`Adding NAT Gateway Route Table Entry ${routeTableEntryItem.name}`);
 
                 const natGateway = natGatewayMap.get(routeTableEntryItem.target!);
                 if (natGateway === undefined) {
-                  throw new Error(`NAT Gateway ${routeTableEntryItem.target} not found`);
+                  this.logger.error(`NAT Gateway ${routeTableEntryItem.target} not found`);
+                  throw new Error(`Configuration validation failed at runtime.`);
                 }
 
                 routeTable.addNatGatewayRoute(
@@ -799,9 +807,7 @@ export class NetworkVpcStack extends AcceleratorStack {
 
               // Route: Internet Gateway
               if (routeTableEntryItem.type === 'internetGateway') {
-                Logger.info(
-                  `[network-vpc-stack] Adding Internet Gateway Route Table Entry ${routeTableEntryItem.name}`,
-                );
+                this.logger.info(`Adding Internet Gateway Route Table Entry ${routeTableEntryItem.name}`);
                 routeTable.addInternetGatewayRoute(
                   routeId,
                   destination,
@@ -813,9 +819,7 @@ export class NetworkVpcStack extends AcceleratorStack {
 
               // Route: Virtual Private Gateway
               if (routeTableEntryItem.type === 'virtualPrivateGateway') {
-                Logger.info(
-                  `[network-vpc-stack] Adding Virtual Private Gateway Route Table Entry ${routeTableEntryItem.name}`,
-                );
+                this.logger.info(`Adding Virtual Private Gateway Route Table Entry ${routeTableEntryItem.name}`);
                 routeTable.addVirtualPrivateGatewayRoute(
                   routeId,
                   destination,
@@ -838,18 +842,18 @@ export class NetworkVpcStack extends AcceleratorStack {
           const processedEgressRules: SecurityGroupEgressRuleProps[] = [];
           let allIngressRule = false;
 
-          Logger.info(`[network-vpc-stack] Adding rules to ${securityGroupItem.name}`);
+          this.logger.info(`Adding rules to ${securityGroupItem.name}`);
 
           // Add ingress rules
           for (const [ruleId, ingressRuleItem] of securityGroupItem.inboundRules.entries() ?? []) {
-            Logger.info(`[network-vpc-stack] Adding ingress rule ${ruleId} to ${securityGroupItem.name}`);
+            this.logger.info(`Adding ingress rule ${ruleId} to ${securityGroupItem.name}`);
 
             const ingressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
               ingressRuleItem,
               prefixListMap,
             );
 
-            Logger.info(`[network-vpc-stack] Adding ${ingressRules.length} ingress rules`);
+            this.logger.info(`Adding ${ingressRules.length} ingress rules`);
 
             for (const ingressRule of ingressRules) {
               if (ingressRule.targetPrefixList) {
@@ -871,11 +875,11 @@ export class NetworkVpcStack extends AcceleratorStack {
 
           // Add egress rules
           for (const [ruleId, egressRuleItem] of securityGroupItem.outboundRules.entries() ?? []) {
-            Logger.info(`[network-vpc-stack] Adding egress rule ${ruleId} to ${securityGroupItem.name}`);
+            this.logger.info(`Adding egress rule ${ruleId} to ${securityGroupItem.name}`);
 
             const egressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(egressRuleItem, prefixListMap);
 
-            Logger.info(`[network-vpc-stack] Adding ${egressRules.length} egress rules`);
+            this.logger.info(`Adding ${egressRules.length} egress rules`);
 
             for (const egressRule of egressRules) {
               if (egressRule.targetPrefixList) {
@@ -893,7 +897,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           }
 
           // Create security group
-          Logger.info(`[network-vpc-stack] Adding Security Group ${securityGroupItem.name}`);
+          this.logger.info(`Adding Security Group ${securityGroupItem.name}`);
           const securityGroup = new SecurityGroup(
             this,
             pascalCase(`${vpcItem.name}Vpc`) + pascalCase(`${securityGroupItem.name}Sg`),
@@ -940,7 +944,8 @@ export class NetworkVpcStack extends AcceleratorStack {
               const securityGroup = securityGroupMap.get(securityGroupItem.name);
 
               if (!securityGroup) {
-                throw new Error(`[network-vpc-stack] Unable to locate security group ${securityGroupItem.name}`);
+                this.logger.error(`Unable to locate security group ${securityGroupItem.name}`);
+                throw new Error(`Configuration validation failed at runtime.`);
               }
 
               const ingressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
@@ -974,7 +979,8 @@ export class NetworkVpcStack extends AcceleratorStack {
               const securityGroup = securityGroupMap.get(securityGroupItem.name);
 
               if (!securityGroup) {
-                throw new Error(`[network-vpc-stack] Unable to locate security group ${securityGroupItem.name}`);
+                this.logger.error(`Unable to locate security group ${securityGroupItem.name}`);
+                throw new Error(`Configuration validation failed at runtime.`);
               }
 
               const egressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
@@ -998,7 +1004,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         // Create NACLs
         //
         for (const naclItem of vpcItem.networkAcls ?? []) {
-          Logger.info(`[network-vpc-stack] Adding Network ACL ${naclItem.name}`);
+          this.logger.info(`Adding Network ACL ${naclItem.name}`);
 
           const networkAcl = new NetworkAcl(this, `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}Nacl`, {
             networkAclName: naclItem.name,
@@ -1019,10 +1025,11 @@ export class NetworkVpcStack extends AcceleratorStack {
           });
 
           for (const subnetItem of naclItem.subnetAssociations) {
-            Logger.info(`[network-vpc-stack] Associate ${naclItem.name} to subnet ${subnetItem}`);
+            this.logger.info(`Associate ${naclItem.name} to subnet ${subnetItem}`);
             const subnet = subnetMap.get(subnetItem);
             if (subnet === undefined) {
-              throw new Error(`Subnet ${subnetItem} not defined`);
+              this.logger.error(`Subnet ${subnetItem} not defined`);
+              throw new Error(`Configuration validation failed at runtime.`);
             }
             networkAcl.associateSubnet(
               `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}NaclAssociate${pascalCase(subnetItem)}`,
@@ -1033,13 +1040,13 @@ export class NetworkVpcStack extends AcceleratorStack {
           }
 
           for (const inboundRuleItem of naclItem.inboundRules ?? []) {
-            Logger.info(`[network-vpc-stack] Adding inbound entries`);
+            this.logger.info(`Adding inbound entries`);
             const inboundAclTargetProps: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
               inboundRuleItem.source,
             );
             // If logic to determine if the VPC is not IPAM-based
             if (!this.isCrossAccountNaclSource(inboundRuleItem.source)) {
-              Logger.info(`[network-vpc-stack] Adding inbound rule ${inboundRuleItem.rule} to ${naclItem.name}`);
+              this.logger.info(`Adding inbound rule ${inboundRuleItem.rule} to ${naclItem.name}`);
               networkAcl.addEntry(
                 `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}-Inbound-${inboundRuleItem.rule}`,
                 {
@@ -1067,12 +1074,12 @@ export class NetworkVpcStack extends AcceleratorStack {
           }
 
           for (const outboundRuleItem of naclItem.outboundRules ?? []) {
-            Logger.info(`[network-vpc-stack] Adding outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`);
+            this.logger.info(`Adding outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`);
             const outboundAclTargetProps: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
               outboundRuleItem.destination,
             );
             if (!this.isCrossAccountNaclSource(outboundRuleItem.destination)) {
-              Logger.info(`[network-vpc-stack] Adding outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`);
+              this.logger.info(`Adding outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`);
               networkAcl.addEntry(
                 `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}-Outbound-${outboundRuleItem.rule}`,
                 {
@@ -1108,9 +1115,10 @@ export class NetworkVpcStack extends AcceleratorStack {
               props.networkConfig.centralNetworkServices!.delegatedAdminAccount,
             );
             if (cdk.Stack.of(this).account !== delegatedAdminAccountId) {
-              throw new Error(
-                `[network-vpc-stack] Attempting to deploy Gateway Load Balancer ${loadBalancerItem.name} to a VPC outside of the delegated administrator account`,
+              this.logger.error(
+                `Attempting to deploy Gateway Load Balancer ${loadBalancerItem.name} to a VPC outside of the delegated administrator account`,
               );
+              throw new Error(`Configuration validation failed at runtime.`);
             }
 
             this.createGatewayLoadBalancer(loadBalancerItem, subnetMap);
@@ -1131,7 +1139,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     //
     this.createSsmParameters();
 
-    Logger.info('[network-vpc-stack] Completed stack synthesis');
+    this.logger.info('Completed stack synthesis');
   }
 
   private createNetworkLoadBalancers(vpcItem: VpcConfig | VpcTemplatesConfig, subnetMap: Map<string, Subnet>) {
@@ -1167,7 +1175,8 @@ export class NetworkVpcStack extends AcceleratorStack {
       const nonNullsubnets = subnetLookups.filter(subnet => subnet) as Subnet[];
       const subnetIds = nonNullsubnets.map(subnet => subnet.subnetId);
       if (subnetIds.length === 0) {
-        throw new Error(`Could not find subnets for NLB Item ${nlbItem.name}`);
+        this.logger.error(`Could not find subnets for NLB Item ${nlbItem.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       const nlb = new NetworkLoadBalancer(this, `${nlbItem.name}-${vpcItem.name}`, {
         name: nlbItem.name,
@@ -1242,7 +1251,8 @@ export class NetworkVpcStack extends AcceleratorStack {
       const nonNullSecurityGroups = securityGroupLookups.filter(group => group) as SecurityGroup[];
       const securityGroupIds = nonNullSecurityGroups.map(securityGroup => securityGroup.securityGroupId);
       if (subnetIds.length === 0) {
-        throw new Error(`Could not find subnets for ALB Item ${albItem.name}`);
+        this.logger.error(`Could not find subnets for ALB Item ${albItem.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       const alb = new ApplicationLoadBalancer(this, `${albItem.name}-${vpcItem.name}`, {
         name: albItem.name,
@@ -1281,13 +1291,13 @@ export class NetworkVpcStack extends AcceleratorStack {
     cidrBlock?: string;
     ipv6CidrBlock?: string;
   } {
-    Logger.info(`[network-vpc-stack] processNetworkAclRules`);
+    this.logger.info(`processNetworkAclRules`);
 
     //
     // IP target
     //
     if (nonEmptyString.is(target)) {
-      Logger.info(`[network-vpc-stack] Evaluate IP Target ${target}`);
+      this.logger.info(`Evaluate IP Target ${target}`);
       if (target.includes('::')) {
         return { ipv6CidrBlock: target };
       } else {
@@ -1299,27 +1309,28 @@ export class NetworkVpcStack extends AcceleratorStack {
     // Subnet Source target
     //
     if (NetworkConfigTypes.networkAclSubnetSelection.is(target)) {
-      Logger.info(
-        `[network-vpc-stack] Evaluate Subnet Source account:${target.account} vpc:${target.vpc} subnets:[${target.subnet}]`,
-      );
+      this.logger.info(`Evaluate Subnet Source account:${target.account} vpc:${target.vpc} subnets:[${target.subnet}]`);
 
       // Locate the VPC
       const vpcItem = this.props.networkConfig.vpcs?.find(
         item => item.account === target.account && item.name === target.vpc,
       );
       if (vpcItem === undefined) {
-        throw new Error(`Specified VPC ${target.vpc} not defined`);
+        this.logger.error(`Specified VPC ${target.vpc} not defined`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       // Locate the Subnet
       const subnetItem = vpcItem.subnets?.find(item => item.name === target.subnet);
       if (subnetItem === undefined) {
-        throw new Error(`Specified subnet ${target.subnet} not defined`);
+        this.logger.error(`Specified subnet ${target.subnet} not defined`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       return { cidrBlock: subnetItem.ipv4CidrBlock };
     }
 
-    throw new Error(`Invalid input to processNetworkAclTargets`);
+    this.logger.error(`Invalid input to processNetworkAclTargets`);
+    throw new Error(`Configuration validation failed at runtime.`);
   }
 
   private processSecurityGroupRules(
@@ -1329,12 +1340,12 @@ export class NetworkVpcStack extends AcceleratorStack {
   ): SecurityGroupRuleProps[] {
     const rules: SecurityGroupRuleProps[] = [];
 
-    Logger.info(`[network-vpc-stack] processSecurityGroupRules`);
+    this.logger.info(`processSecurityGroupRules`);
 
     if (!item.types) {
-      Logger.info(`[network-vpc-stack] types not defined, expecting tcpPorts and udpPorts to be set`);
+      this.logger.info(`types not defined, expecting tcpPorts and udpPorts to be set`);
       for (const port of item.tcpPorts ?? []) {
-        Logger.debug(`[network-vpc-stack] Adding TCP port ${port}`);
+        this.logger.debug(`Adding TCP port ${port}`);
         rules.push(
           ...this.processSecurityGroupRuleSources(
             item.sources,
@@ -1351,7 +1362,7 @@ export class NetworkVpcStack extends AcceleratorStack {
       }
 
       for (const port of item.udpPorts ?? []) {
-        Logger.debug(`[network-vpc-stack] Adding UDP port ${port}`);
+        this.logger.debug(`Adding UDP port ${port}`);
         rules.push(
           ...this.processSecurityGroupRuleSources(
             item.sources,
@@ -1369,7 +1380,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     }
 
     for (const type of item.types ?? []) {
-      Logger.info(`[network-vpc-stack] Adding type ${type}`);
+      this.logger.info(`Adding type ${type}`);
       if (type === 'ALL') {
         rules.push(
           ...this.processSecurityGroupRuleSources(
@@ -1438,7 +1449,7 @@ export class NetworkVpcStack extends AcceleratorStack {
   ): SecurityGroupRuleProps[] {
     const rules: SecurityGroupRuleProps[] = [];
 
-    Logger.info(`[network-vpc-stack] processSecurityGroupRuleSources`);
+    this.logger.info(`processSecurityGroupRuleSources`);
 
     for (const source of sources ?? []) {
       // Conditional to only process non-security group sources
@@ -1447,7 +1458,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         // IP source
         //
         if (nonEmptyString.is(source)) {
-          Logger.info(`[network-vpc-stack] Evaluate IP Source ${source}`);
+          this.logger.info(`Evaluate IP Source ${source}`);
           if (source.includes('::')) {
             rules.push({
               cidrIpv6: source,
@@ -1465,8 +1476,8 @@ export class NetworkVpcStack extends AcceleratorStack {
         // Subnet source
         //
         if (NetworkConfigTypes.subnetSourceConfig.is(source)) {
-          Logger.info(
-            `[network-vpc-stack] Evaluate Subnet Source account:${source.account} vpc:${source.vpc} subnets:[${source.subnets}]`,
+          this.logger.info(
+            `Evaluate Subnet Source account:${source.account} vpc:${source.vpc} subnets:[${source.subnets}]`,
           );
 
           // Locate the VPC
@@ -1474,7 +1485,8 @@ export class NetworkVpcStack extends AcceleratorStack {
             item => item.account === source.account && item.name === source.vpc,
           );
           if (!vpcItem) {
-            throw new Error(`Specified VPC ${source.vpc} not defined`);
+            this.logger.error(`Specified VPC ${source.vpc} not defined`);
+            throw new Error(`Configuration validation failed at runtime.`);
           }
 
           // Loop through all subnets to add
@@ -1482,7 +1494,8 @@ export class NetworkVpcStack extends AcceleratorStack {
             // Locate the Subnet
             const subnetItem = vpcItem.subnets?.find(item => item.name === subnet);
             if (!subnetItem) {
-              throw new Error(`Specified subnet ${subnet} not defined`);
+              this.logger.error(`Specified subnet ${subnet} not defined`);
+              throw new Error(`Configuration validation failed at runtime.`);
             }
             rules.push({
               cidrIp: subnetItem.ipv4CidrBlock,
@@ -1495,12 +1508,13 @@ export class NetworkVpcStack extends AcceleratorStack {
         // Prefix List Source
         //
         if (NetworkConfigTypes.prefixListSourceConfig.is(source)) {
-          Logger.info(`[network-vpc-stack] Evaluate Prefix List Source prefixLists:[${source.prefixLists}]`);
+          this.logger.info(`Evaluate Prefix List Source prefixLists:[${source.prefixLists}]`);
 
           for (const prefixList of source.prefixLists ?? []) {
             const targetPrefixList = prefixListMap.get(prefixList);
             if (!targetPrefixList) {
-              throw new Error(`Specified Prefix List ${prefixList} not defined`);
+              this.logger.error(`Specified Prefix List ${prefixList} not defined`);
+              throw new Error(`Configuration validation failed at runtime.`);
             }
             rules.push({
               targetPrefixList,
@@ -1515,12 +1529,13 @@ export class NetworkVpcStack extends AcceleratorStack {
         // Security Group Source
         //
         if (NetworkConfigTypes.securityGroupSourceConfig.is(source)) {
-          Logger.info(`[network-vpc-stack] Evaluate Security Group Source securityGroups:[${source.securityGroups}]`);
+          this.logger.info(`Evaluate Security Group Source securityGroups:[${source.securityGroups}]`);
 
           for (const securityGroup of source.securityGroups ?? []) {
             const targetSecurityGroup = securityGroupMap.get(securityGroup);
             if (!targetSecurityGroup) {
-              throw new Error(`Specified Security Group ${securityGroup} not defined`);
+              this.logger.error(`Specified Security Group ${securityGroup} not defined`);
+              throw new Error(`Configuration validation failed at runtime.`);
             }
             rules.push({
               targetSecurityGroup,
@@ -1617,9 +1632,10 @@ export class NetworkVpcStack extends AcceleratorStack {
       const subnet = subnetMap.get(subnetItem);
 
       if (!subnet) {
-        throw new Error(
-          `[network-vpc-stack] Create Gateway Load Balancer: unable to find subnet ${subnetItem} in VPC ${loadBalancerItem.vpc}`,
+        this.logger.error(
+          `Create Gateway Load Balancer: unable to find subnet ${subnetItem} in VPC ${loadBalancerItem.vpc}`,
         );
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       if (!subnets.includes(subnet.subnetId)) {
@@ -1628,9 +1644,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     }
 
     // Create GWLB
-    Logger.info(
-      `[network-vpc-stack] Add Gateway Load Balancer ${loadBalancerItem.name} to VPC ${loadBalancerItem.vpc}`,
-    );
+    this.logger.info(`Add Gateway Load Balancer ${loadBalancerItem.name} to VPC ${loadBalancerItem.vpc}`);
     const loadBalancer = new GatewayLoadBalancer(this, `${pascalCase(loadBalancerItem.name)}GatewayLoadBalancer`, {
       name: loadBalancerItem.name,
       allowedPrincipals,
@@ -1772,9 +1786,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             `/accelerator/network/customerGateways/${cgw.name}/id`,
           );
           const virtualPrivateGatewayId = vpc.virtualPrivateGateway!.gatewayId;
-          Logger.info(
-            `[network-vpc-stack] Creating Vpn Connection with Customer Gateway ${cgw.name} to the VPC ${vpnConnection.vpc}`,
-          );
+          this.logger.info(`Creating Vpn Connection with Customer Gateway ${cgw.name} to the VPC ${vpnConnection.vpc}`);
           new VpnConnection(this, pascalCase(`${vpnConnection.vpc}-VgwVpnConnection`), {
             name: vpnConnection.name,
             customerGatewayId: customerGatewayId,
@@ -1846,8 +1858,8 @@ export class NetworkVpcStack extends AcceleratorStack {
         requesterAccountId === cdk.Stack.of(this).account &&
         transitGatewayPeeringItem.requester.region == cdk.Stack.of(this).region
       ) {
-        Logger.info(
-          `[network-associations-stack] Creating transit gateway peering for tgw ${transitGatewayPeeringItem.requester.transitGatewayName} with accepter tgw ${transitGatewayPeeringItem.accepter.transitGatewayName}`,
+        this.logger.info(
+          `Creating transit gateway peering for tgw ${transitGatewayPeeringItem.requester.transitGatewayName} with accepter tgw ${transitGatewayPeeringItem.accepter.transitGatewayName}`,
         );
 
         const requesterTransitGatewayRouteTableId = cdk.aws_ssm.StringParameter.valueForStringParameter(
@@ -1953,8 +1965,8 @@ export class NetworkVpcStack extends AcceleratorStack {
           });
         }
 
-        Logger.info(
-          `[network-associations-stack] Completed transit gateway peering for tgw ${transitGatewayPeeringItem.requester.transitGatewayName} with accepter tgw ${transitGatewayPeeringItem.accepter.transitGatewayName}`,
+        this.logger.info(
+          `Completed transit gateway peering for tgw ${transitGatewayPeeringItem.requester.transitGatewayName} with accepter tgw ${transitGatewayPeeringItem.accepter.transitGatewayName}`,
         );
       }
     }
@@ -1991,7 +2003,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     // Create VPC peering role
     //
     if (vpcPeeringAccountIds.length > 0) {
-      Logger.info(`[network-vpc-stack] Create cross-account IAM role for VPC peering`);
+      this.logger.info(`Create cross-account IAM role for VPC peering`);
 
       const principals: cdk.aws_iam.PrincipalBase[] = [];
       vpcPeeringAccountIds.forEach(accountId => {
@@ -2055,15 +2067,13 @@ export class NetworkVpcStack extends AcceleratorStack {
    */
   private createCertificates() {
     const certificateMap = new Map<string, CreateCertificate>();
-    Logger.info('[network-vpc-stack] Evaluating AWS Certificate Manager certificates.');
+    this.logger.info('Evaluating AWS Certificate Manager certificates.');
     for (const certificate of this.props.networkConfig.certificates ?? []) {
       if (!this.isIncluded(certificate.deploymentTargets)) {
-        Logger.info('[network-vpc-stack] Item excluded');
+        this.logger.info('Item excluded');
         continue;
       }
-      Logger.info(
-        `[network-vpc-stack] Account (${cdk.Stack.of(this).account}) should be included, deploying ACM certificates.`,
-      );
+      this.logger.info(`Account (${cdk.Stack.of(this).account}) should be included, deploying ACM certificates.`);
       const certificateResource = this.createAcmCertificates(certificate);
       certificateMap.set(certificate.name, certificateResource);
     }

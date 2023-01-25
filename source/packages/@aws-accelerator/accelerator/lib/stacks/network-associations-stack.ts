@@ -71,7 +71,6 @@ import {
   albListenerActionProperty,
 } from '@aws-accelerator/constructs';
 
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import path from 'path';
 
@@ -101,6 +100,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
     try {
       // Set private properties
       this.accountsConfig = props.accountsConfig;
@@ -222,9 +222,9 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       //
       this.createManagedActiveDirectories();
 
-      Logger.info('[network-associations-stack] Completed stack synthesis');
+      this.logger.info('Completed stack synthesis');
     } catch (err) {
-      Logger.error(`[network-associations-stack] ${err}`);
+      this.logger.error(`${err}`);
       throw err;
     }
   }
@@ -241,9 +241,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           for (const listener of nlbItem.listeners ?? []) {
             const targetGroup = targetGroupMap.get(`${vpcItem.name}-${listener.targetGroup}`);
             if (!targetGroup) {
-              throw new Error(
+              this.logger.error(
                 `The Listener ${listener.name} contains an invalid target group name ${listener.targetGroup} please ensure that the the target group name references a valid target group`,
               );
+              throw new Error(`Configuration validation failed at runtime.`);
             }
             new cdk.aws_elasticloadbalancingv2.CfnListener(
               this,
@@ -340,9 +341,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             for (const listener of albItem.listeners ?? []) {
               const targetGroup = targetGroupMap.get(`${vpcItem.name}-${listener.targetGroup}`);
               if (!targetGroup) {
-                throw new Error(
+                this.logger.error(
                   `The Listener ${listener.name} contains an invalid target group name ${listener.targetGroup} please ensure that the the target group name references a valid target group`,
                 );
+                throw new Error(`Configuration validation failed at runtime.`);
               }
               const listenerAction: cdk.aws_elasticloadbalancingv2.CfnListener.ActionProperty = this.getListenerAction(
                 listener,
@@ -367,7 +369,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       }
       return listenerMap;
     } catch (err) {
-      console.log(err);
+      this.logger.error(err);
       throw err;
     }
   }
@@ -409,7 +411,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           statusCode: listener.redirectConfig.statusCode ?? undefined,
         };
       } else {
-        throw new Error(`Listener ${listener.name} is set to redirect but redirectConfig is not defined`);
+        this.logger.error(`Listener ${listener.name} is set to redirect but redirectConfig is not defined`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
     } else if (listener.type === 'fixed-response') {
       if (listener.fixedResponseConfig) {
@@ -419,10 +422,12 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           statusCode: listener.fixedResponseConfig.statusCode ?? undefined,
         };
       } else {
-        throw new Error(`Listener ${listener.name} is set to fixed-response but fixedResponseConfig is not defined`);
+        this.logger.error(`Listener ${listener.name} is set to fixed-response but fixedResponseConfig is not defined`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
     } else {
-      throw new Error(`Listener ${listener.name} is not set to forward, fixed-response or redirect`);
+      this.logger.error(`Listener ${listener.name} is not set to forward, fixed-response or redirect`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
 
     return actionValues as cdk.aws_elasticloadbalancingv2.CfnListener.ActionProperty;
@@ -493,10 +498,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         });
       }
     } catch (err) {
-      Logger.error(`[network-associations-stack] - ${err}`);
-      throw new Error(
-        `[network-associations-stack] - Could not create target group for ${targetGroupItem.name} in vpc ${vpcItem.name}. Please review the target group configuration`,
+      this.logger.error(
+        `Could not create target group for ${targetGroupItem.name} in vpc ${vpcItem.name}. Please review the target group configuration`,
       );
+      throw new Error(`Configuration validation failed at runtime.`);
     }
   }
 
@@ -546,7 +551,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       }
       return targetGroupMap;
     } catch (err) {
-      console.log(err);
+      this.logger.error(err);
       throw err;
     }
   }
@@ -869,7 +874,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           // Get the Transit Gateway ID
           const transitGatewayId = this.transitGateways.get(tgwAttachmentItem.transitGateway.name);
           if (!transitGatewayId) {
-            throw new Error(`Transit Gateway ${tgwAttachmentItem.transitGateway.name} not found`);
+            this.logger.error(`Transit Gateway ${tgwAttachmentItem.transitGateway.name} not found`);
+            throw new Error(`Configuration validation failed at runtime.`);
           }
 
           // Get the Transit Gateway Attachment ID
@@ -883,8 +889,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             }
 
             if (accountId === owningAccountId) {
-              Logger.info(
-                `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from local account ${owningAccountId}`,
+              this.logger.info(
+                `Update route tables for attachment ${tgwAttachmentItem.name} from local account ${owningAccountId}`,
               );
               transitGatewayAttachmentId = ssm.StringParameter.valueForStringParameter(
                 this,
@@ -892,8 +898,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               );
               this.transitGatewayAttachments.set(attachmentKey, transitGatewayAttachmentId);
             } else {
-              Logger.info(
-                `[network-associations-stack] Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
+              this.logger.info(
+                `Update route tables for attachment ${tgwAttachmentItem.name} from external account ${owningAccountId}`,
               );
 
               const transitGatewayAttachment = TransitGatewayAttachment.fromLookup(
@@ -943,7 +949,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             // Get transit gateway attachment ID
             const transitGatewayAttachmentId = this.transitGatewayAttachments.get(attachmentKey);
             if (!transitGatewayAttachmentId) {
-              throw new Error(`Transit Gateway attachment ${attachmentKey} not found`);
+              this.logger.error(`Transit Gateway attachment ${attachmentKey} not found`);
+              throw new Error(`Configuration validation failed at runtime.`);
             }
 
             for (const routeTableItem of tgwAttachmentItem.routeTableAssociations ?? []) {
@@ -959,7 +966,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
               const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(associationsKey);
               if (transitGatewayRouteTableId === undefined) {
-                throw new Error(`Transit Gateway Route Table ${associationsKey} not found`);
+                this.logger.error(`Transit Gateway Route Table ${associationsKey} not found`);
+                throw new Error(`Configuration validation failed at runtime.`);
               }
 
               new TransitGatewayRouteTableAssociation(this, associationId, {
@@ -997,7 +1005,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             // Get transit gateway attachment ID
             const transitGatewayAttachmentId = this.transitGatewayAttachments.get(attachmentKey);
             if (!transitGatewayAttachmentId) {
-              throw new Error(`Transit Gateway attachment ${attachmentKey} not found`);
+              this.logger.error(`Transit Gateway attachment ${attachmentKey} not found`);
+              throw new Error(`Configuration validation failed at runtime.`);
             }
 
             for (const routeTableItem of tgwAttachmentItem.routeTablePropagations ?? []) {
@@ -1013,7 +1022,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
               const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(propagationsKey);
               if (!transitGatewayRouteTableId) {
-                throw new Error(`Transit Gateway Route Table ${propagationsKey} not found`);
+                this.logger.error(`Transit Gateway Route Table ${propagationsKey} not found`);
+                throw new Error(`Configuration validation failed at runtime.`);
               }
 
               new TransitGatewayRouteTablePropagation(this, propagationId, {
@@ -1049,7 +1059,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       const transitGatewayId = this.transitGateways.get(tgw.name);
 
       if (!transitGatewayId) {
-        throw new Error(`Transit Gateway ${tgw.name} not found`);
+        this.logger.error(`Transit Gateway ${tgw.name} not found`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       const vpnAttachmentId = TransitGatewayAttachment.fromLookup(
@@ -1086,7 +1097,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       const transitGatewayAttachmentId = this.transitGatewayAttachments.get(attachmentKey);
 
       if (!transitGatewayAttachmentId) {
-        throw new Error(`Transit Gateway attachment ${attachmentKey} not found`);
+        this.logger.error(`Transit Gateway attachment ${attachmentKey} not found`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       // Create route table associations
@@ -1095,7 +1107,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(routeTableKey);
 
         if (!transitGatewayRouteTableId) {
-          throw new Error(`Transit Gateway Route Table ${routeTableKey} not found`);
+          this.logger.error(`Transit Gateway Route Table ${routeTableKey} not found`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
 
         new TransitGatewayRouteTableAssociation(
@@ -1127,7 +1140,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       const transitGatewayAttachmentId = this.transitGatewayAttachments.get(attachmentKey);
 
       if (!transitGatewayAttachmentId) {
-        throw new Error(`Transit Gateway attachment ${attachmentKey} not found`);
+        this.logger.error(`Transit Gateway attachment ${attachmentKey} not found`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       // Create route table propagations
@@ -1136,7 +1150,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(routeTableKey);
 
         if (!transitGatewayRouteTableId) {
-          throw new Error(`Transit Gateway Route Table ${routeTableKey} not found`);
+          this.logger.error(`Transit Gateway Route Table ${routeTableKey} not found`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
 
         new TransitGatewayRouteTablePropagation(
@@ -1164,18 +1179,18 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     );
 
     if (this.props.partition !== 'aws' && this.props.partition !== 'aws-cn' && centralEndpointVpcs.length > 0) {
-      throw new Error('Central Endpoint VPC is only possible in commercial regions');
+      this.logger.error('Central Endpoint VPC is only possible in commercial regions');
+      throw new Error(`Configuration validation failed at runtime.`);
     }
 
     if (centralEndpointVpcs.length > 1) {
-      throw new Error(`multiple (${centralEndpointVpcs.length}) central endpoint vpcs detected, should only be one`);
+      this.logger.error(`multiple (${centralEndpointVpcs.length}) central endpoint vpcs detected, should only be one`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
     centralEndpointVpc = centralEndpointVpcs[0];
 
     if (centralEndpointVpc) {
-      Logger.info(
-        '[network-associations-stack] Central endpoints VPC detected, share private hosted zone with member VPCs',
-      );
+      this.logger.info('Central endpoints VPC detected, share private hosted zone with member VPCs');
 
       // Generate list of accounts with VPCs that needed to set up share
       const zoneAssociationAccountIds: string[] = [];
@@ -1285,11 +1300,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
       // Create association
       if (!this.dnsFirewallMap.get(firewallItem.name)) {
-        throw new Error(
-          `[network-associations-stack] Could not find existing DNS firewall rule group ${firewallItem.name}`,
-        );
+        this.logger.error(`Could not find existing DNS firewall rule group ${firewallItem.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
-      Logger.info(`[network-associations-stack] Add DNS firewall rule group ${firewallItem.name} to ${vpcItem.name}`);
+      this.logger.info(`Add DNS firewall rule group ${firewallItem.name} to ${vpcItem.name}`);
 
       new ResolverFirewallRuleGroupAssociation(
         this,
@@ -1354,9 +1368,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       // Create association
       for (const nameItem of configNames) {
         if (!this.queryLogMap.get(nameItem)) {
-          throw new Error(`[network-associations-stack] Could not find existing DNS query log config ${nameItem}`);
+          this.logger.error(`Could not find existing DNS query log config ${nameItem}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
-        Logger.info(`[network-associations-stack] Add DNS query log config ${nameItem} to ${vpcItem.name}`);
+        this.logger.info(`Add DNS query log config ${nameItem} to ${vpcItem.name}`);
         new QueryLoggingConfigAssociation(this, pascalCase(`${vpcItem.name}${nameItem}QueryLogAssociation`), {
           resolverQueryLogConfigId: this.queryLogMap.get(nameItem),
           vpcId: vpcId,
@@ -1404,9 +1419,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
       // Create association
       if (!this.resolverRuleMap.get(ruleItem)) {
-        throw new Error(`[network-associations-stack] Could not find existing Route 53 Resolver rule ${ruleItem}`);
+        this.logger.error(`Could not find existing Route 53 Resolver rule ${ruleItem}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
-      Logger.info(`[network-associations-stack] Add Route 53 Resolver rule ${ruleItem} to ${vpcItem.name}`);
+      this.logger.info(`Add Route 53 Resolver rule ${ruleItem} to ${vpcItem.name}`);
       new ResolverRuleAssociation(this, pascalCase(`${vpcItem.name}${ruleItem}RuleAssociation`), {
         resolverRuleId: this.resolverRuleMap.get(ruleItem)!,
         vpcId: vpcId,
@@ -1453,8 +1469,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       }
 
       // Create VPC peering
-      Logger.info(
-        `[network-associations-stack] Create VPC peering ${peering.name} between ${peering.requester.name} and ${peering.accepter.name}`,
+      this.logger.info(
+        `Create VPC peering ${peering.name} between ${peering.requester.name} and ${peering.accepter.name}`,
       );
       const vpcPeering = new VpcPeering(this, `${peering.name}VpcPeering`, {
         name: peering.name,
@@ -1523,9 +1539,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     for (const routeTable of requesterVpc.routeTables ?? []) {
       for (const routeTableEntry of routeTable.routes ?? []) {
         if (routeTableEntry.type && routeTableEntry.type === 'vpcPeering' && routeTableEntry.target === peering.name) {
-          Logger.info(
-            `[network-associations-stack] Add route ${routeTableEntry.name} targeting VPC peer ${peering.name}`,
-          );
+          this.logger.info(`Add route ${routeTableEntry.name} targeting VPC peer ${peering.name}`);
           let destination: string | undefined = undefined;
           let destinationPrefixListId: string | undefined = undefined;
           const routeTableId = this.routeTableMap.get(`${requesterVpc.name}_${routeTable.name}`);
@@ -1534,16 +1548,16 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             pascalCase(`${routeTable.name}RouteTable`) +
             pascalCase(routeTableEntry.name);
           if (!routeTableId) {
-            throw new Error(`Route Table ${routeTable.name} not found`);
+            this.logger.error(`Route Table ${routeTable.name} not found`);
+            throw new Error(`Configuration validation failed at runtime.`);
           }
 
           if (routeTableEntry.destinationPrefixList) {
             // Get PL ID from map
             destinationPrefixListId = this.prefixListMap.get(routeTableEntry.destinationPrefixList);
             if (!destinationPrefixListId) {
-              throw new Error(
-                `[network-associations-stack] Prefix list ${routeTableEntry.destinationPrefixList} not found`,
-              );
+              this.logger.error(`Prefix list ${routeTableEntry.destinationPrefixList} not found`);
+              throw new Error(`Configuration validation failed at runtime.`);
             }
           } else {
             destination = routeTableEntry.destination;
@@ -1578,9 +1592,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     for (const routeTable of accepterVpc.routeTables ?? []) {
       for (const routeTableEntry of routeTable.routes ?? []) {
         if (routeTableEntry.type && routeTableEntry.type === 'vpcPeering' && routeTableEntry.target === peering.name) {
-          Logger.info(
-            `[network-associations-stack] Add route ${routeTableEntry.name} targeting VPC peer ${peering.name}`,
-          );
+          this.logger.info(`Add route ${routeTableEntry.name} targeting VPC peer ${peering.name}`);
           let destination: string | undefined = undefined;
           let destinationPrefixListId: string | undefined = undefined;
           const routeId =
@@ -1589,7 +1601,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             pascalCase(routeTableEntry.name);
           const routeTableId = this.routeTableMap.get(`${accepterVpc.name}_${routeTable.name}`);
           if (!routeTableId) {
-            throw new Error(`[network-associations-stack] Route Table ${routeTable.name} not found`);
+            this.logger.error(`Route Table ${routeTable.name} not found`);
+            throw new Error(`Configuration validation failed at runtime.`);
           }
 
           if (requesterVpc.account === accepterVpc.account && requesterVpc.region === accepterVpc.region) {
@@ -1597,9 +1610,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               // Get PL ID from map
               destinationPrefixListId = this.prefixListMap.get(routeTableEntry.destinationPrefixList);
               if (!destinationPrefixListId) {
-                throw new Error(
-                  `[network-associations-stack] Prefix list ${routeTableEntry.destinationPrefixList} not found`,
-                );
+                this.logger.error(`Prefix list ${routeTableEntry.destinationPrefixList} not found`);
+                throw new Error(`Configuration validation failed at runtime.`);
               }
             } else {
               destination = routeTableEntry.destination;
@@ -1624,9 +1636,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             }
 
             if (!this.crossAcctRouteProvider) {
-              throw new Error(
-                `[network-associations-stack] Cross-account route provider not created but required for ${routeTableEntry.name}`,
-              );
+              this.logger.error(`Cross-account route provider not created but required for ${routeTableEntry.name}`);
+              throw new Error(`Configuration validation failed at runtime.`);
             }
 
             peering.addCrossAcctPeeringRoute({
@@ -1657,7 +1668,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           item => item.name === associationItem.name && item.account === associationItem.account,
         );
         if (!tgw) {
-          throw new Error(`[network-associations-stack] Unable to locate transit gateway ${associationItem.name}`);
+          this.logger.error(`Unable to locate transit gateway ${associationItem.name}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         const tgwAccountId = this.accountsConfig.getAccountId(tgw.account);
         //
@@ -1755,8 +1767,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       tgwAccountId === cdk.Stack.of(this).account &&
       tgw.region === cdk.Stack.of(this).region
     ) {
-      Logger.info(
-        `[network-associations-stack] Creating association proposal between DX Gateway ${dxgwItem.name} and transit gateway ${tgw.name}`,
+      this.logger.info(
+        `Creating association proposal between DX Gateway ${dxgwItem.name} and transit gateway ${tgw.name}`,
       );
       createAssociation = true;
       const directConnectGatewayId = this.dxGatewayMap.get(dxgwItem.name);
@@ -1765,14 +1777,12 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       const gatewayId = this.transitGateways.get(tgw.name);
 
       if (!directConnectGatewayId) {
-        throw new Error(
-          `[network-associations-stack] Create DX Gateway associations: unable to locate DX Gateway ID for ${dxgwItem.name}`,
-        );
+        this.logger.error(`Create DX Gateway associations: unable to locate DX Gateway ID for ${dxgwItem.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       if (!gatewayId) {
-        throw new Error(
-          `[network-associations-stack] Create DX Gateway associations: unable to locate transit gateway ID for ${tgw.name}`,
-        );
+        this.logger.error(`Create DX Gateway associations: unable to locate transit gateway ID for ${tgw.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       associationProps = {
@@ -1791,23 +1801,19 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       tgwAccountId === cdk.Stack.of(this).account &&
       tgw.region === cdk.Stack.of(this).region
     ) {
-      Logger.info(
-        `[network-associations-stack] Creating association between DX Gateway ${dxgwItem.name} and transit gateway ${tgw.name}`,
-      );
+      this.logger.info(`Creating association between DX Gateway ${dxgwItem.name} and transit gateway ${tgw.name}`);
       createAssociation = true;
       const directConnectGatewayId = this.dxGatewayMap.get(dxgwItem.name);
       associationLogicalId = pascalCase(`${dxgwItem.name}${tgw.name}DxGatewayAssociation`);
       const gatewayId = this.transitGateways.get(tgw.name);
 
       if (!directConnectGatewayId) {
-        throw new Error(
-          `[network-associations-stack] Create DX Gateway associations: unable to locate DX Gateway ID for ${dxgwItem.name}`,
-        );
+        this.logger.error(`Create DX Gateway associations: unable to locate DX Gateway ID for ${dxgwItem.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       if (!gatewayId) {
-        throw new Error(
-          `[network-associations-stack] Create DX Gateway associations: unable to locate transit gateway ID for ${tgw.name}`,
-        );
+        this.logger.error(`Create DX Gateway associations: unable to locate transit gateway ID for ${tgw.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       associationProps = {
@@ -1821,9 +1827,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
     if (createAssociation) {
       if (!associationLogicalId || !associationProps) {
-        throw new Error(
-          `[network-associations-stack] Create DX Gateway associations: unable to process properties for association between DX Gateway ${dxgwItem.name} and transit gateway ${tgw.name}`,
+        this.logger.error(
+          `Create DX Gateway associations: unable to process properties for association between DX Gateway ${dxgwItem.name} and transit gateway ${tgw.name}`,
         );
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       const association = new DirectConnectGatewayAssociation(this, associationLogicalId, associationProps);
       // Add attachment ID to map if exists
@@ -1851,20 +1858,20 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(`${tgw.name}_${tgwRouteTableName}`);
 
       if (!transitGatewayAttachmentId) {
-        throw new Error(
-          `[network-associations-stack] Create DX TGW route table associations: unable to locate attachment ${dxgwItem.name}_${tgw.name}`,
+        this.logger.error(
+          `Create DX TGW route table associations: unable to locate attachment ${dxgwItem.name}_${tgw.name}`,
         );
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       if (!transitGatewayRouteTableId) {
-        throw new Error(
-          `[network-associations-stack] Create DX TGW route table associations: unable to locate route table ${tgw.name}_${tgwRouteTableName}`,
+        this.logger.error(
+          `Create DX TGW route table associations: unable to locate route table ${tgw.name}_${tgwRouteTableName}`,
         );
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       // Create association
-      Logger.info(
-        `[network-associations-stack] Creating TGW route table association to ${tgwRouteTableName} for DX Gateway ${dxgwItem.name}`,
-      );
+      this.logger.info(`Creating TGW route table association to ${tgwRouteTableName} for DX Gateway ${dxgwItem.name}`);
       new TransitGatewayRouteTableAssociation(this, pascalCase(`${dxgwItem.name}${tgwRouteTableName}Association`), {
         transitGatewayAttachmentId,
         transitGatewayRouteTableId,
@@ -1890,19 +1897,21 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(`${tgw.name}_${tgwRouteTableName}`);
 
       if (!transitGatewayAttachmentId) {
-        throw new Error(
-          `[network-associations-stack] Create DX TGW route table associations: unable to locate attachment ${dxgwItem.name}_${tgw.name}`,
+        this.logger.error(
+          `Create DX TGW route table associations: unable to locate attachment ${dxgwItem.name}_${tgw.name}`,
         );
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       if (!transitGatewayRouteTableId) {
-        throw new Error(
-          `[network-associations-stack] Create DX TGW route table associations: unable to locate route table ${tgw.name}_${tgwRouteTableName}`,
+        this.logger.error(
+          `Create DX TGW route table associations: unable to locate route table ${tgw.name}_${tgwRouteTableName}`,
         );
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       // Create association
-      Logger.info(
-        `[network-associations-stack] Creating TGW route table propagation for DX Gateway ${dxgwItem.name} to route table ${tgwRouteTableName}`,
+      this.logger.info(
+        `Creating TGW route table propagation for DX Gateway ${dxgwItem.name} to route table ${tgwRouteTableName}`,
       );
       new TransitGatewayRouteTablePropagation(this, pascalCase(`${dxgwItem.name}${tgwRouteTableName}Propagation`), {
         transitGatewayAttachmentId,
@@ -1926,7 +1935,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(routeTableKey);
 
           if (!transitGatewayRouteTableId) {
-            throw new Error(`[network-associations-stack] Transit Gateway route table ${routeTableKey} not found`);
+            this.logger.error(`Transit Gateway route table ${routeTableKey} not found`);
+            throw new Error(`Configuration validation failed at runtime.`);
           }
 
           for (const routeItem of routeTableItem.routes ?? []) {
@@ -1957,16 +1967,16 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       let routeId = '';
       let transitGatewayAttachmentId: string | undefined = undefined;
       if (routeItem.blackhole) {
-        Logger.info(
-          `[network-associations-stack] Adding blackhole route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        this.logger.info(
+          `Adding blackhole route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
         routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-blackhole`;
       }
 
       // If route is for VPC attachment
       if (routeItem.attachment && NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig.is(routeItem.attachment)) {
-        Logger.info(
-          `[network-associations-stack] Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        this.logger.info(
+          `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
         routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpcName}-${routeItem.attachment.account}`;
 
@@ -1981,8 +1991,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         routeItem.attachment &&
         NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig.is(routeItem.attachment)
       ) {
-        Logger.info(
-          `[network-associations-stack] Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        this.logger.info(
+          `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
         routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.directConnectGatewayName}`;
 
@@ -1994,8 +2004,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
       // If route is for VPN attachment
       if (routeItem.attachment && NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeItem.attachment)) {
-        Logger.info(
-          `[network-associations-stack] Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        this.logger.info(
+          `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
         routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.vpnConnectionName}`;
 
@@ -2010,8 +2020,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         routeItem.attachment &&
         NetworkConfigTypes.transitGatewayRouteTableTgwPeeringEntryConfig.is(routeItem.attachment)
       ) {
-        Logger.info(
-          `[network-associations-stack] Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        this.logger.info(
+          `Adding route ${routeItem.destinationCidrBlock} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
         routeId = `${routeTableItem.name}-${routeItem.destinationCidrBlock}-${routeItem.attachment.transitGatewayPeeringName}`;
 
@@ -2023,9 +2033,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       }
 
       if (routeItem.attachment && !transitGatewayAttachmentId) {
-        throw new Error(
-          `[network-associations-stack] Unable to locate transit gateway attachment ID for route table item ${routeTableItem.name}`,
-        );
+        this.logger.error(`Unable to locate transit gateway attachment ID for route table item ${routeTableItem.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       // Create static route
@@ -2044,22 +2053,23 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       // Get PL ID from map
       const prefixListId = this.prefixListMap.get(routeItem.destinationPrefixList);
       if (!prefixListId) {
-        throw new Error(`[network-associations-stack] Prefix list ${routeItem.destinationPrefixList} not found`);
+        this.logger.error(`Prefix list ${routeItem.destinationPrefixList} not found`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       let plRouteId = '';
       let transitGatewayAttachmentId: string | undefined = undefined;
       if (routeItem.blackhole) {
-        Logger.info(
-          `[network-associations-stack] Adding blackhole prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        this.logger.info(
+          `Adding blackhole prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
         plRouteId = pascalCase(`${routeTableItem.name}${routeItem.destinationPrefixList}Blackhole`);
       }
 
       // If route is for VPC attachment
       if (routeItem.attachment && NetworkConfigTypes.transitGatewayRouteTableVpcEntryConfig.is(routeItem.attachment)) {
-        Logger.info(
-          `[network-associations-stack] Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        this.logger.info(
+          `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
         plRouteId = pascalCase(
           `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.vpcName}${routeItem.attachment.account}`,
@@ -2076,8 +2086,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         routeItem.attachment &&
         NetworkConfigTypes.transitGatewayRouteTableDxGatewayEntryConfig.is(routeItem.attachment)
       ) {
-        Logger.info(
-          `[network-associations-stack] Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        this.logger.info(
+          `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
         plRouteId = pascalCase(
           `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.directConnectGatewayName}`,
@@ -2091,8 +2101,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
       // If route is for VPN attachment
       if (routeItem.attachment && NetworkConfigTypes.transitGatewayRouteTableVpnEntryConfig.is(routeItem.attachment)) {
-        Logger.info(
-          `[network-associations-stack] Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        this.logger.info(
+          `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
         plRouteId = pascalCase(
           `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.vpnConnectionName}`,
@@ -2109,8 +2119,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         routeItem.attachment &&
         NetworkConfigTypes.transitGatewayRouteTableTgwPeeringEntryConfig.is(routeItem.attachment)
       ) {
-        Logger.info(
-          `[network-associations-stack] Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
+        this.logger.info(
+          `Adding prefix list reference ${routeItem.destinationPrefixList} to TGW route table ${routeTableItem.name} for TGW ${tgwItem.name} in account: ${tgwItem.account}`,
         );
         plRouteId = pascalCase(
           `${routeTableItem.name}${routeItem.destinationPrefixList}${routeItem.attachment.transitGatewayPeeringName}`,
@@ -2124,9 +2134,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       }
 
       if (routeItem.attachment && !transitGatewayAttachmentId) {
-        throw new Error(
-          `[network-associations-stack] Unable to locate transit gateway attachment ID for route table item ${routeTableItem.name}`,
-        );
+        this.logger.error(`Unable to locate transit gateway attachment ID for route table item ${routeTableItem.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       // Create prefix list reference
@@ -2158,7 +2167,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     );
 
     if (!requesterConfig || !accepterConfig) {
-      throw new Error(`Transit gateway peering ${transitGatewayPeeringName} not found !!!`);
+      this.logger.error(`Transit gateway peering ${transitGatewayPeeringName} not found !!!`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
 
     // Get TGW attachment ID for requester
@@ -2173,11 +2183,12 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     if (this.props.accountsConfig.getAccountId(accepterConfig.account) === cdk.Stack.of(this).account) {
       const transitGatewayId = this.transitGateways.get(accepterConfig.transitGatewayName);
       if (!transitGatewayId) {
-        throw new Error(`Transit Gateway ${accepterConfig.transitGatewayName} not found`);
+        this.logger.error(`Transit Gateway ${accepterConfig.transitGatewayName} not found`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
-      Logger.info(
-        `[network-associations-stack] Looking up transit gateway peering attachment id of accepter account ${accepterConfig.account}`,
+      this.logger.info(
+        `Looking up transit gateway peering attachment id of accepter account ${accepterConfig.account}`,
       );
       return TransitGatewayAttachment.fromLookup(
         this,
@@ -2193,7 +2204,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       ).transitGatewayAttachmentId;
     }
 
-    throw new Error(`Transit Gateway attachment id not found for ${transitGatewayPeeringName}`);
+    this.logger.error(`Transit Gateway attachment id not found for ${transitGatewayPeeringName}`);
+    throw new Error(`Configuration validation failed at runtime.`);
   }
   /**
    * Check if resource is shared with stack.
@@ -2229,9 +2241,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           const nacl = cdk.aws_ec2.NetworkAcl.fromNetworkAclId(this, `${naclItem.name}-${vpcItem.name}`, naclId);
           for (const inboundRuleItem of naclItem.inboundRules ?? []) {
             if (this.isCrossAccountNaclSource(inboundRuleItem.source)) {
-              Logger.info(
-                `[network-associations-stack] Checking inbound rule ${inboundRuleItem.rule} to ${naclItem.name}`,
-              );
+              this.logger.info(`Checking inbound rule ${inboundRuleItem.rule} to ${naclItem.name}`);
               const inboundAclTargetProps = this.getIpamSubnetCidr(
                 naclItem,
                 inboundRuleItem.source as NetworkAclSubnetSelection,
@@ -2264,9 +2274,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
           for (const outboundRuleItem of naclItem.outboundRules ?? []) {
             if (this.isCrossAccountNaclSource(outboundRuleItem.destination)) {
-              Logger.info(
-                `[network-associations-stack] Checking outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`,
-              );
+              this.logger.info(`]Checking outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`);
               const outboundAclTargetProps = this.getIpamSubnetCidr(
                 naclItem,
                 outboundRuleItem.destination as NetworkAclSubnetSelection,
@@ -2314,8 +2322,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     naclRule: NetworkAclInboundRuleConfig | NetworkAclOutboundRuleConfig,
     trafficType: string,
   ) {
-    Logger.info(
-      `[network-associations-stack] Retrieve IPAM Subnet CIDR for account:${target.account} vpc:${target.vpc} subnet:[${target.subnet}] in region:[${target.region}]`,
+    this.logger.info(
+      `Retrieve IPAM Subnet CIDR for account:${target.account} vpc:${target.vpc} subnet:[${target.subnet}] in region:[${target.region}]`,
     );
     const accountId = this.props.accountsConfig.getAccountId(target.account);
     return IpamSubnet.fromLookup(this, pascalCase(`${naclItem.name}${naclRule.rule}${trafficType}NaclRule`), {
@@ -2347,7 +2355,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               const vpcTags = vpc.tags;
               const subnetTags = subnet.tags;
               const sharedSubnetId = sharedSubnet.resourceShareItemId;
-              Logger.info('[network-associations-stack] Applying subnet and vpc tags for RAM shared resources');
+              this.logger.info('Applying subnet and vpc tags for RAM shared resources');
               new ShareSubnetTags(this, `ShareSubnetTags${vpc.account}-${subnet.name}`, {
                 vpcTags,
                 subnetTags,
@@ -2373,7 +2381,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       const madAccountId = this.props.accountsConfig.getAccountId(managedActiveDirectory.account);
 
       if (madAccountId === cdk.Stack.of(this).account && managedActiveDirectory.region === cdk.Stack.of(this).region) {
-        Logger.info(`[network-associations-stack] Creating Managed active directory ${managedActiveDirectory.name}`);
+        this.logger.info(`Creating Managed active directory ${managedActiveDirectory.name}`);
 
         const madVpcLookup = new VpcIdLookup(this, `${pascalCase(managedActiveDirectory.name)}VpcLookup`, {
           vpcName: managedActiveDirectory.vpcSettings.vpcName,
@@ -2626,7 +2634,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         }
 
         if (sharedAccountIds.length > 0) {
-          Logger.info(`[network-associations-stack] Sharing Managed active directory ${managedActiveDirectory.name}`);
+          this.logger.info(`Sharing Managed active directory ${managedActiveDirectory.name}`);
           const shareActiveDirectory = new ShareActiveDirectory(
             this,
             `${pascalCase(managedActiveDirectory.name)}ShareDirectory`,
@@ -2732,7 +2740,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     resolverRuleName: string,
     dnsIpAddresses: string[],
   ) {
-    Logger.info(`[network-associations-stack] Updating resolver group for directory ${directoryName}`);
+    this.logger.info(`Updating resolver group for directory ${directoryName}`);
     new ActiveDirectoryResolverRule(this, `${pascalCase(directoryName)}ResolverRule`, {
       route53ResolverRuleName: resolverRuleName,
       targetIps: dnsIpAddresses,

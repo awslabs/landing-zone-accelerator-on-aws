@@ -14,8 +14,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
-
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class BootstrapStack extends AcceleratorStack {
@@ -50,7 +48,7 @@ export class BootstrapStack extends AcceleratorStack {
     new cdk.CfnParameter(this, 'TrustedAccountsForLookup');
 
     if (this.account === this.managementAccount) {
-      Logger.info(`[accelerator-bootstrap] Creating bucket for region ${this.region} in account ${this.account}`);
+      this.logger.info(`Creating bucket for region ${this.region} in account ${this.account}`);
 
       const s3KmsKey = this.createBucketCmk({ managementAccountId: this.managementAccount, partition: partition });
       this.s3KmsKeyOutputValue = s3KmsKey.keyArn;

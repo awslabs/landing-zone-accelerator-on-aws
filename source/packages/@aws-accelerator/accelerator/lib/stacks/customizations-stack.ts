@@ -16,8 +16,6 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
 import * as fs from 'fs';
-
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class CustomizationsStack extends AcceleratorStack {
@@ -31,8 +29,7 @@ export class CustomizationsStack extends AcceleratorStack {
       this.deployCustomStackSets();
     }
 
-    Logger.debug(`[customizations-stack] Region: ${cdk.Stack.of(this).region}`);
-    Logger.info('[customizations-stack] Completed stack synthesis');
+    this.logger.info('Completed stack synthesis');
   }
 
   //
@@ -46,7 +43,7 @@ export class CustomizationsStack extends AcceleratorStack {
     ) {
       const customStackSetList = this.props.customizationsConfig.customizations.cloudFormationStackSets;
       for (const stackSet of customStackSetList ?? []) {
-        Logger.info(`[customizations-stack] New stack set ${stackSet.name}`);
+        this.logger.info(`New stack set ${stackSet.name}`);
         const deploymentTargetAccounts: string[] | undefined = this.getAccountIdsFromDeploymentTarget(
           stackSet.deploymentTargets,
         );

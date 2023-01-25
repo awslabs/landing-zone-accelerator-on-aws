@@ -19,6 +19,9 @@ import * as path from 'path';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 
 import * as t from './common-types';
+import { createLogger } from '@aws-accelerator/accelerator/lib/logger';
+
+const logger = createLogger(['organization-config']);
 
 /**
  * AWS Organizations configuration items.
@@ -434,7 +437,8 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
       }
 
       if (errors.length) {
-        throw new Error(`${OrganizationConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+        logger.error(`${OrganizationConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+        throw new Error('configuration validation failed');
       }
       Object.assign(this, values);
     }
@@ -589,11 +593,11 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
         const parentPath = this.getPath(item.name);
         for (const parent of parentPath.split('/')) {
           if (parent) {
-            let ouForParentnextToken: string | undefined = undefined;
+            let ouForParentNextToken: string | undefined = undefined;
             do {
               const page = await throttlingBackOff(() =>
                 organizationsClient
-                  .listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: ouForParentnextToken })
+                  .listOrganizationalUnitsForParent({ ParentId: parentId, NextToken: ouForParentNextToken })
                   .promise(),
               );
               for (const ou of page.OrganizationalUnits ?? []) {
@@ -602,8 +606,8 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
                   parentName = ou.Name;
                 }
               }
-              ouForParentnextToken = page.NextToken;
-            } while (ouForParentnextToken);
+              ouForParentNextToken = page.NextToken;
+            } while (ouForParentNextToken);
           }
         }
 
@@ -636,7 +640,8 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
         return ou.id;
       }
     }
-    throw new Error("Organizations not enabled or OU doesn't exist");
+    logger.error("Organizations not enabled or OU doesn't exist");
+    throw new Error('configuration validation failed.');
   }
 
   public getOrganizationalUnitArn(name: string): string {
@@ -648,7 +653,8 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
         return ou.arn;
       }
     }
-    throw new Error("Organizations not enabled or OU doesn't exist");
+    logger.error("Organizations not enabled or OU doesn't exist");
+    throw new Error('configuration validation failed.');
   }
 
   public isIgnored(name: string): boolean {

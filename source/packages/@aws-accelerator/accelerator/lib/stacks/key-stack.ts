@@ -16,15 +16,11 @@ import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { Organization } from '@aws-accelerator/constructs';
-import { Logger } from '../logger';
 
 export class KeyStack extends AcceleratorStack {
   private readonly organizationId: string;
-
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
-
-    Logger.debug(`[key-stack] Region: ${cdk.Stack.of(this).region}`);
 
     this.organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
 

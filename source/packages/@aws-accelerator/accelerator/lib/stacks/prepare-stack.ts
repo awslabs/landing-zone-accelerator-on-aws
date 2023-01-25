@@ -28,7 +28,6 @@ import {
 } from '@aws-accelerator/constructs';
 
 import { LoadAcceleratorConfigTable } from '../load-config-table';
-import { Logger } from '../logger';
 import { ValidateEnvironmentConfig } from '../validate-environment-config';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
@@ -44,7 +43,7 @@ export class PrepareStack extends AcceleratorStack {
       cdk.Stack.of(this).region === props.globalConfig.homeRegion &&
       cdk.Stack.of(this).account === props.accountsConfig.getManagementAccountId()
     ) {
-      Logger.info(`[prepare-stack] homeRegion: ${props.globalConfig.homeRegion}`);
+      this.logger.info(`homeRegion: ${props.globalConfig.homeRegion}`);
       this.ssmParameters.push({
         logicalId: 'Parameter',
         parameterName: `/accelerator/prepare-stack/validate`,
@@ -110,7 +109,7 @@ export class PrepareStack extends AcceleratorStack {
         stringValue: key.keyArn,
       });
 
-      Logger.info(`[prepare-stack] CloudWatch Encryption Key`);
+      this.logger.info(`CloudWatch Encryption Key`);
       cloudwatchKey = new cdk.aws_kms.Key(this, 'AcceleratorManagementCloudWatchKey', {
         alias: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ALIAS,
         description: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_DESCRIPTION,
@@ -143,7 +142,7 @@ export class PrepareStack extends AcceleratorStack {
         stringValue: cloudwatchKey.keyArn,
       });
 
-      Logger.info(`[prepare-stack] Lambda Encryption Key`);
+      this.logger.info(`Lambda Encryption Key`);
       const lambdaKey = new cdk.aws_kms.Key(this, 'AcceleratorManagementLambdaKey', {
         alias: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ALIAS,
         description: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_DESCRIPTION,
@@ -158,7 +157,7 @@ export class PrepareStack extends AcceleratorStack {
       });
 
       // Make assets from the configuration directory
-      Logger.info(`[prepare-stack] Configuration assets creation`);
+      this.logger.info(`Configuration assets creation`);
       const accountConfigAsset = new cdk.aws_s3_assets.Asset(this, 'AccountConfigAsset', {
         path: path.join(props.configDirPath, 'accounts-config.yaml'),
       });
@@ -242,7 +241,7 @@ export class PrepareStack extends AcceleratorStack {
           },
         ]);
 
-        Logger.info(`[prepare-stack] Load Config Table`);
+        this.logger.info(`Load Config Table`);
         const configRepoName = props.qualifier ? `${props.qualifier}-config` : 'aws-accelerator-config';
         const loadAcceleratorConfigTable = new LoadAcceleratorConfigTable(this, 'LoadAcceleratorConfigTable', {
           acceleratorConfigTable: configTable,
@@ -262,7 +261,7 @@ export class PrepareStack extends AcceleratorStack {
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
 
-        Logger.info(`[prepare-stack] Call create ou construct`);
+        this.logger.info(`Call create ou construct`);
         const createOrganizationalUnits = new OrganizationalUnits(this, 'CreateOrganizationalUnits', {
           acceleratorConfigTable: configTable,
           commitId: props.configCommitId || '',
@@ -275,7 +274,7 @@ export class PrepareStack extends AcceleratorStack {
         createOrganizationalUnits.node.addDependency(loadAcceleratorConfigTable);
 
         // Invite Accounts to Organization (GovCloud)
-        Logger.info(`[prepare-stack] Invite Accounts To OU`);
+        this.logger.info(`Invite Accounts To OU`);
         const inviteAccountsToOu = new Account(this, 'InviteAccountsToOu', {
           acceleratorConfigTable: configTable,
           commitId: props.configCommitId || '',
@@ -286,7 +285,7 @@ export class PrepareStack extends AcceleratorStack {
         inviteAccountsToOu.node.addDependency(createOrganizationalUnits);
 
         // Move accounts to OU based on config
-        Logger.info(`[prepare-stack] Move Accounts To OU`);
+        this.logger.info(`Move Accounts To OU`);
         const moveAccounts = new MoveAccounts(this, 'MoveAccounts', {
           globalRegion: props.globalRegion ?? props.globalConfig.homeRegion,
           configTable: configTable,
@@ -346,11 +345,11 @@ export class PrepareStack extends AcceleratorStack {
           ],
         );
 
-        Logger.info(`[prepare-stack] Tables`);
+        this.logger.info(`Tables`);
         if (props.partition == 'aws' || props.partition == 'aws-cn') {
-          Logger.info(`[prepare-stack] Create mapping table`);
+          this.logger.info(`Create mapping table`);
           let govCloudAccountMappingTable: cdk.aws_dynamodb.ITable | undefined;
-          Logger.info(`[prepare-stack] newOrgAccountsTable`);
+          this.logger.info(`newOrgAccountsTable`);
           const newOrgAccountsTable = new cdk.aws_dynamodb.Table(this, 'NewOrgAccounts', {
             partitionKey: { name: 'accountEmail', type: cdk.aws_dynamodb.AttributeType.STRING },
             billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -368,7 +367,7 @@ export class PrepareStack extends AcceleratorStack {
             },
           ]);
 
-          Logger.info(`[prepare-stack] newControlTowerAccountsTable`);
+          this.logger.info(`newControlTowerAccountsTable`);
           const newCTAccountsTable = new cdk.aws_dynamodb.Table(this, 'NewCTAccounts', {
             partitionKey: { name: 'accountEmail', type: cdk.aws_dynamodb.AttributeType.STRING },
             billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -386,7 +385,7 @@ export class PrepareStack extends AcceleratorStack {
             },
           ]);
 
-          Logger.info(`[prepare-stack] Table Parameter`);
+          this.logger.info(`Table Parameter`);
           this.ssmParameters.push({
             logicalId: 'NewCTAccountsTableNameParameter',
             parameterName: `/accelerator/prepare-stack/NewCTAccountsTableName`,
@@ -394,7 +393,7 @@ export class PrepareStack extends AcceleratorStack {
           });
 
           if (props.accountsConfig.anyGovCloudAccounts()) {
-            Logger.info(`[prepare-stack] Create GovCloudAccountsMappingTable`);
+            this.logger.info(`Create GovCloudAccountsMappingTable`);
             govCloudAccountMappingTable = new cdk.aws_dynamodb.Table(this, 'govCloudAccountMapping', {
               partitionKey: { name: 'commercialAccountId', type: cdk.aws_dynamodb.AttributeType.STRING },
               billingMode: cdk.aws_dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -416,7 +415,7 @@ export class PrepareStack extends AcceleratorStack {
             stringValue: newOrgAccountsTable.tableName,
           });
 
-          Logger.info(`[prepare-stack] Validate Environment`);
+          this.logger.info(`Validate Environment`);
           const numberOfAccountsInConfig =
             props.accountsConfig.mandatoryAccounts.length + props.accountsConfig.workloadAccounts.length;
           const validation = new ValidateEnvironmentConfig(this, 'ValidateEnvironmentConfig', {
@@ -440,7 +439,7 @@ export class PrepareStack extends AcceleratorStack {
 
           validation.node.addDependency(moveAccounts);
 
-          Logger.info(`[prepare-stack] Create new organization accounts`);
+          this.logger.info(`Create new organization accounts`);
           organizationAccounts = new CreateOrganizationAccounts(this, 'CreateOrganizationAccounts', {
             newOrgAccountsTable: newOrgAccountsTable,
             govCloudAccountMappingTable: govCloudAccountMappingTable,
@@ -492,14 +491,14 @@ export class PrepareStack extends AcceleratorStack {
               }),
             );
 
-            Logger.info(`[prepare-stack] Get Portfolio Id`);
+            this.logger.info(`Get Portfolio Id`);
             const portfolioResults = new GetPortfolioId(this, 'GetPortFolioId', {
               displayName: 'AWS Control Tower Account Factory Portfolio',
               providerName: 'AWS Control Tower',
               kmsKey: cloudwatchKey,
               logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             });
-            Logger.info(`[prepare-stack] Create new control tower accounts`);
+            this.logger.info(`Create new control tower accounts`);
             controlTowerAccounts = new CreateControlTowerAccounts(this, 'CreateCTAccounts', {
               table: newCTAccountsTable,
               portfolioId: portfolioResults.portfolioId,
@@ -683,7 +682,7 @@ export class PrepareStack extends AcceleratorStack {
             );
           }
         }
-        Logger.info(`[prepare-stack] SCP Validation`);
+        this.logger.info(`SCP Validation`);
         const scpValidateInput = this.validateScp();
         // cannot add 5 scps from console or cli externally.
         // LZA needs to have some value in configScps - which are scps from config file
@@ -711,7 +710,7 @@ export class PrepareStack extends AcceleratorStack {
     //
     this.createSsmParameters();
 
-    Logger.info('[prepare-stack] Completed stack synthesis');
+    this.logger.info('Completed stack synthesis');
   }
 
   /*
@@ -736,7 +735,7 @@ export class PrepareStack extends AcceleratorStack {
       appliedScpName: string[];
     };
 
-    Logger.info('[prepare-stack] Validate SCP Count');
+    this.logger.info('Validate SCP Count');
 
     // Get all account and organization unit for custom resource
     const accounts: accountOutputItem[] = [];
@@ -798,7 +797,7 @@ export class PrepareStack extends AcceleratorStack {
       try {
         accounts.push({ accountId: this.props.accountsConfig.getAccountId(accountItem.name), name: accountItem.name });
       } catch (e) {
-        Logger.info(`[prepare-stack] Account ${accountItem.name} not found to validate scp count.`);
+        this.logger.info(`Account ${accountItem.name} not found to validate scp count.`);
       }
     }
 
@@ -806,7 +805,7 @@ export class PrepareStack extends AcceleratorStack {
       try {
         orgUnits.push({ id: orgItem.id, name: orgItem.name });
       } catch (e) {
-        Logger.info(`[prepare-stack] Organization ${orgItem.name} not found to validate scp count.`);
+        this.logger.info(`Organization ${orgItem.name} not found to validate scp count.`);
       }
     }
 

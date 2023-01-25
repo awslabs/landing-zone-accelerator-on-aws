@@ -75,6 +75,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
+    this.logger.info('Begin stack synthesis');
     this.accountTrailCloudWatchLogGroups = new Map<string, cdk.aws_logs.LogGroup>();
     this.stackProperties = props;
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
@@ -214,6 +215,8 @@ export class SecurityResourcesStack extends AcceleratorStack {
     // Create Managed Active Directory secrets
     //
     this.createManagedActiveDirectorySecrets();
+
+    this.logger.info('End stack synthesis');
   }
 
   /**
@@ -967,9 +970,10 @@ export class SecurityResourcesStack extends AcceleratorStack {
       if (remediationFunctionName) {
         return remediationFunctionName;
       } else {
-        throw new Error(
+        this.logger.error(
           `Remediation function for ${ruleName} rule is undefined. Invalid lookup value ${replacementArray[1]}`,
         );
+        throw new Error(`Configuration validation failed at runtime.`);
       }
     }
 
@@ -977,7 +981,8 @@ export class SecurityResourcesStack extends AcceleratorStack {
       if (this.organizationId) {
         return this.organizationId;
       } else {
-        throw new Error(`${ruleName} parameter error !! Organization not enabled can not retrieve organization id`);
+        this.logger.error(`${ruleName} parameter error !! Organization not enabled can not retrieve organization id`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
     }
 
@@ -1030,7 +1035,8 @@ export class SecurityResourcesStack extends AcceleratorStack {
         ).bucketName;
       }
     }
-    throw new Error(`Config rule replacement key ${replacement.input} not found`);
+    this.logger.error(`Config rule replacement key ${replacement.input} not found`);
+    throw new Error(`Configuration validation failed at runtime.`);
   }
   /**
    * Function to create remediation role

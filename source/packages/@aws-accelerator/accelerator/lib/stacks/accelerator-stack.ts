@@ -54,7 +54,8 @@ import {
 import { policyReplacements } from '@aws-accelerator/utils';
 
 import { version } from '../../../../../package.json';
-import { Logger } from '../logger';
+import * as winston from 'winston';
+import { createLogger } from '../logger';
 
 type ResourceShareType =
   | DnsFirewallRuleGroupConfig
@@ -82,7 +83,14 @@ export interface AcceleratorStackProps extends cdk.StackProps {
   readonly centralizedLoggingRegion: string;
 }
 
+process.on('uncaughtException', err => {
+  const logger = createLogger(['accelerator']);
+  logger.error(err);
+  throw new Error('Synthesis failed');
+});
+
 export abstract class AcceleratorStack extends cdk.Stack {
+  protected logger: winston.Logger;
   protected props: AcceleratorStackProps;
 
   /**
@@ -353,6 +361,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
+
+    this.logger = createLogger([cdk.Stack.of(this).stackName]);
     this.props = props;
     this.ssmParameters = [];
 
@@ -388,9 +398,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
       if (index > 5) {
         const dependsOnParam = parameterMap.get(index - (index % 5));
         if (!dependsOnParam) {
-          throw new Error(
-            `[accelerator-stack] Error creating SSM parameter ${parameterItem.parameterName}: previous SSM parameter undefined`,
+          this.logger.error(
+            `Error creating SSM parameter ${parameterItem.parameterName}: previous SSM parameter undefined`,
           );
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         parameter.node.addDependency(dependsOnParam);
       }
@@ -553,7 +564,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
   protected isRegionExcluded(regions: string[]): boolean {
     if (regions?.includes(cdk.Stack.of(this).region)) {
-      Logger.info(`[accelerator-stack] ${cdk.Stack.of(this).region} region explicitly excluded`);
+      this.logger.info(`${cdk.Stack.of(this).region} region explicitly excluded`);
       return true;
     }
     return false;
@@ -562,7 +573,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected isAccountExcluded(accounts: string[]): boolean {
     for (const account of accounts ?? []) {
       if (cdk.Stack.of(this).account === this.props.accountsConfig.getAccountId(account)) {
-        Logger.info(`[accelerator-stack] ${account} account explicitly excluded`);
+        this.logger.info(`${account} account explicitly excluded`);
         return true;
       }
     }
@@ -574,12 +585,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
       if (cdk.Stack.of(this).account === this.props.accountsConfig.getAccountId(account)) {
         const accountConfig = this.props.accountsConfig.getAccount(account);
         if (this.props.organizationConfig.isIgnored(accountConfig.organizationalUnit)) {
-          Logger.info(
-            `[accelerator-stack] Account ${account} was not included as it is a member of an ignored organizational unit.`,
-          );
+          this.logger.info(`Account ${account} was not included as it is a member of an ignored organizational unit.`);
           return false;
         }
-        Logger.info(`[accelerator-stack] ${account} account explicitly included`);
+        this.logger.info(`${account} account explicitly included`);
         return true;
       }
     }
@@ -600,9 +609,9 @@ export abstract class AcceleratorStack extends cdk.Stack {
         if (organizationalUnits.indexOf(account.organizationalUnit) != -1 || organizationalUnits.includes('Root')) {
           const ignored = this.props.organizationConfig.isIgnored(account.organizationalUnit);
           if (ignored) {
-            Logger.info(`[accelerator-stack] ${account.organizationalUnit} is ignored and not included`);
+            this.logger.info(`${account.organizationalUnit} is ignored and not included`);
           }
-          Logger.info(`[accelerator-stack] ${account.organizationalUnit} organizational unit included`);
+          this.logger.info(`${account.organizationalUnit} organizational unit included`);
           return true;
         }
       }
@@ -667,14 +676,14 @@ export abstract class AcceleratorStack extends cdk.Stack {
       if (ouItem === 'Root') {
         ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
       }
-      Logger.info(`Share ${resourceShareName} with Organizational Unit ${ouItem}: ${ouArn}`);
+      this.logger.info(`Share ${resourceShareName} with Organizational Unit ${ouItem}: ${ouArn}`);
       principals.push(ouArn);
     }
 
     // Loop through all the defined accounts
     for (const account of item.shareTargets?.accounts ?? []) {
       const accountId = this.props.accountsConfig.getAccountId(account);
-      Logger.info(`Share ${resourceShareName} with Account ${account}: ${accountId}`);
+      this.logger.info(`Share ${resourceShareName} with Account ${account}: ${accountId}`);
       principals.push(accountId);
     }
 
@@ -739,7 +748,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
         'aws:PrincipalOrgID': organizationId,
       };
     }
-    throw new Error('Organization ID not found or account IDs not found');
+    this.logger.error('Organization ID not found or account IDs not found');
+    throw new Error(`Configuration validation failed at runtime.`);
   }
 
   /**
@@ -759,7 +769,8 @@ export abstract class AcceleratorStack extends cdk.Stack {
     if (organizationId) {
       return new cdk.aws_iam.OrganizationPrincipal(organizationId);
     }
-    throw new Error('Organization ID not found or account IDs not found');
+    this.logger.error('Organization ID not found or account IDs not found');
+    throw new Error(`Configuration validation failed at runtime.`);
   }
 
   /**
@@ -821,14 +832,14 @@ export abstract class AcceleratorStack extends cdk.Stack {
       try {
         fs.accessSync(process.env['Temp']!, fs.constants.W_OK);
       } catch (e) {
-        Logger.error(`Unable to write files to temp directory: ${e}`);
+        this.logger.error(`Unable to write files to temp directory: ${e}`);
       }
       tempDir = path.join(process.env['Temp']!, 'temp-accelerator-policies');
     } else {
       try {
         fs.accessSync('/tmp', fs.constants.W_OK);
       } catch (e) {
-        Logger.error(`Unable to write files to temp directory: ${e}`);
+        this.logger.error(`Unable to write files to temp directory: ${e}`);
       }
       tempDir = path.join('/tmp', 'temp-accelerator-policies');
     }

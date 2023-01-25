@@ -1236,3 +1236,5 @@ certificates:
     deploymentTargets:
       OU:
         - Infrastructure
+firewallManager:
+  delegatedAdminAccount: Audit

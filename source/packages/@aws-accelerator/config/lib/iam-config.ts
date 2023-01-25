@@ -17,6 +17,9 @@ import * as path from 'path';
 import { AccountsConfig } from './accounts-config';
 
 import * as t from './common-types';
+import { createLogger } from '@aws-accelerator/accelerator/lib/logger';
+
+const logger = createLogger(['iam-config']);
 
 /**
  * IAM Configuration items.
@@ -79,7 +82,7 @@ export class IamConfigTypes {
   static readonly assumedByTypeEnum = t.enums('AssumedByConfigType', ['service', 'account', 'provider']);
 
   /**
-   * Assumedby configuration
+   * AssumedBy configuration
    */
   static readonly assumedByConfig = t.interface({
     /**
@@ -908,7 +911,7 @@ export class GroupSetConfig implements t.TypeOf<typeof IamConfigTypes.groupSetCo
 /**
  * *{@link IamConfig} / {@link RoleSetConfig} / {@link RoleConfig} / {@link AssumedByConfig}*
  *
- * Assumedby configuration
+ * AssumedBy configuration
  *
  * @example
  * ```
@@ -1096,7 +1099,7 @@ export class IdentityCenterAssignmentConfig implements t.TypeOf<typeof IamConfig
   readonly principalId: string = '';
 
   /**
-   * PrinipalType that will be used for the Assignment
+   * PrincipalType that will be used for the Assignment
    */
   readonly principalType: t.TypeOf<typeof IamConfigTypes.principalTypeEnum> = 'USER';
 
@@ -1309,7 +1312,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *
    * @example
    * ```
-   * idetityCenterPermissionSets:
+   * identityCenterPermissionSets:
    *   - deploymentTargets:
    *       organizationalUnits:
    *         - Root
@@ -1457,9 +1460,9 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
       const values = t.parse(IamConfigTypes.iamConfig, yaml.load(content));
       return new IamConfig(values);
     } catch (e) {
-      console.log('[iam-config] Error parsing input, iam config undefined');
-      console.log(`${e}`);
-      return undefined;
+      logger.error('Error parsing input, iam config undefined');
+      logger.error(`${e}`);
+      throw new Error('Could not load iam configuration');
     }
   }
 
@@ -1478,9 +1481,8 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
     if (directoryFound) {
       return 'admin';
     }
-    throw new Error(
-      `[iam-config][getManageActiveDirectoryAdminSecretName] - Directory ${directoryName} not found in iam-config file`,
-    );
+    logger.error(`getManageActiveDirectoryAdminSecretName Directory ${directoryName} not found in iam-config file`);
+    throw new Error('configuration validation failed.');
   }
 
   public getManageActiveDirectorySecretAccountName(directoryName: string): string {
@@ -1502,9 +1504,8 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
     if (directoryFound) {
       return directoryAccount;
     }
-    throw new Error(
-      `[iam-config][getManageActiveDirectoryAdminSecretName] - Directory ${directoryName} not found in iam-config file`,
-    );
+    logger.error(`getManageActiveDirectoryAdminSecretName Directory ${directoryName} not found in iam-config file`);
+    throw new Error('configuration validation failed.');
   }
 
   public getManageActiveDirectorySecretRegion(directoryName: string): string {
@@ -1527,9 +1528,8 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
     if (directoryFound) {
       return directoryRegion;
     }
-    throw new Error(
-      `[iam-config][getManageActiveDirectoryAdminSecretName] - Directory ${directoryName} not found in iam-config file`,
-    );
+    logger.error(`getManageActiveDirectoryAdminSecretName Directory ${directoryName} not found in iam-config file`);
+    throw new Error('configuration validation failed.');
   }
 
   public getManageActiveDirectorySharedAccountNames(directoryName: string, configDir: string): string[] {
@@ -1575,8 +1575,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
       // mad account can't be part of shared account
       return sharedAccounts.filter(item => item !== directoryAccount!);
     }
-    throw new Error(
-      `[iam-config][getManageActiveDirectorySharedAccountNames] - Directory ${directoryName} not found in iam-config file`,
-    );
+    logger.error(`getManageActiveDirectoryAdminSecretName Directory ${directoryName} not found in iam-config file`);
+    throw new Error('configuration validation failed.');
   }
 }

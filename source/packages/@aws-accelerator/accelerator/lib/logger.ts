@@ -13,29 +13,23 @@
 
 import * as winston from 'winston';
 
-const printf = winston.format.printf(info => `[${info['timestamp']}] - ${info.level}: ${info.message}`);
-const timeFormat = 'YYYY-MM-DD HH:mm:ss';
-
-export const Logger = winston.createLogger({
-  level: process.env['LOG_LEVEL'] ?? 'debug',
-  format: winston.format.combine(winston.format.timestamp({ format: timeFormat }), winston.format.align(), printf),
-  transports: [
-    new winston.transports.File({
-      filename: 'error.log',
-      level: 'error',
+const Logger = winston.createLogger({
+  defaultMeta: { mainLabel: 'accelerator' },
+  level: process.env['LOG_LEVEL'] ?? 'info',
+  format: winston.format.combine(
+    winston.format.colorize(),
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+    winston.format.printf(({ message, timestamp, level, mainLabel, childLabel }) => {
+      return `${timestamp} | ${level} | ${childLabel || mainLabel} | ${message}`;
     }),
-    new winston.transports.File({
-      filename: 'combined.log',
-    }),
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.timestamp({ format: timeFormat }),
-        winston.format.align(),
-        printf,
-      ),
-    }),
-  ],
+    winston.format.align(),
+  ),
+  transports: [new winston.transports.Console()],
 });
 
 winston.add(Logger);
+
+export const createLogger = (logInfo: string[]) => {
+  const logInfoString = logInfo.join(' | ');
+  return Logger.child({ childLabel: logInfoString });
+};
