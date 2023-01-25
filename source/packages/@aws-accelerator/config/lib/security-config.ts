@@ -20,6 +20,10 @@ import * as t from './common-types';
 import { OrganizationConfig } from './organization-config';
 import { GlobalConfig } from './global-config';
 
+import { createLogger } from '@aws-accelerator/accelerator/lib/logger';
+
+const logger = createLogger(['security-config']);
+
 /**
  * AWS Accelerator SecurityConfig Types
  */
@@ -981,7 +985,7 @@ export class SecurityHubConfig implements t.TypeOf<typeof SecurityConfigTypes.se
    * SecurityHub notification level
    * Values accepted CRITICAL, HIGH, MEDIUM, LOW, INFORMATIONAL
    * Notifications will be sent for events at the Level provided and above
-   * Example, if you specifiy the HIGH level notifications will
+   * Example, if you specify the HIGH level notifications will
    * be sent for HIGH and CRITICAL
    */
   readonly notificationLevel = undefined;
@@ -1839,7 +1843,7 @@ export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig>
    */
   readonly enableDeliveryChannel = true;
   /**
-   * Config Recorder Aggergation configuration
+   * Config Recorder Aggregation configuration
    */
   readonly aggregation: AwsConfigAggregation | undefined;
   /**
@@ -2280,7 +2284,8 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
       }
 
       if (errors.length) {
-        throw new Error(`${SecurityConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+        logger.error(`${SecurityConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+        throw new Error('configuration validation failed.');
       }
     }
   }
@@ -2820,9 +2825,9 @@ export class SecurityConfig implements t.TypeOf<typeof SecurityConfigTypes.secur
       const values = t.parse(SecurityConfigTypes.securityConfig, yaml.load(content));
       return new SecurityConfig(values);
     } catch (e) {
-      console.log('[security-config] Error parsing input, global config undefined');
-      console.log(`${e}`);
-      return undefined;
+      logger.error('Error parsing input, global config undefined');
+      logger.error(`${e}`);
+      throw new Error('could not load configuration');
     }
   }
 }

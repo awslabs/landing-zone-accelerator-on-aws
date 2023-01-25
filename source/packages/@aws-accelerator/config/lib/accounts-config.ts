@@ -22,7 +22,9 @@ import { throttlingBackOff } from '@aws-accelerator/utils';
 import * as t from './common-types';
 import { OrganizationConfig } from './organization-config';
 import { DeploymentTargets } from './common-types';
+import { createLogger } from '@aws-accelerator/accelerator/lib/logger';
 
+const logger = createLogger(['accounts-config']);
 /**
  * Accounts configuration items.
  */
@@ -277,7 +279,8 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     }
 
     if (errors.length) {
-      throw new Error(`${AccountsConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      logger.error(`${AccountsConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      throw new Error('configuration validation failed.');
     }
   }
 
@@ -454,10 +457,10 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     if (accountId) {
       return accountId;
     }
-    throw new Error(`Account ID not found for ${name}. \
-     Validate that the emails in the parameter ManagementAccountEmail \
-     of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) \
-     match the correct account emails shown in AWS Organizations.`);
+    logger.error(
+      `Account ID not found for ${name}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations.`,
+    );
+    throw new Error('configuration validation failed.');
   }
 
   public getAccountIds(): string[] {
@@ -469,10 +472,10 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     if (value) {
       return value;
     }
-    throw new Error(`Account name not found for ${name}. \
-     Validate that the emails in the parameter ManagementAccountEmail \
-     of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) \
-     match the correct account emails shown in AWS Organizations.`);
+    logger.error(
+      `Account name not found for ${name}. Validate that the emails in the parameter ManagementAccountEmail of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) match the correct account emails shown in AWS Organizations.`,
+    );
+    throw new Error('configuration validation failed.');
   }
 
   public containsAccount(name: string): boolean {

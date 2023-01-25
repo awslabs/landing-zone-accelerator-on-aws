@@ -38,7 +38,6 @@ import {
   VpcEndpointType,
 } from '@aws-accelerator/constructs';
 
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class NetworkAssociationsGwlbStack extends AcceleratorStack {
@@ -82,7 +81,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
     //
     this.createGwlbResources();
 
-    Logger.info('[network-associations-gwlb-stack] Completed stack synthesis');
+    this.logger.info('Completed stack synthesis');
   }
 
   /**
@@ -226,9 +225,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
       firewallInstance.name,
     );
 
-    Logger.info(
-      `[network-associations-gwlb-stack] Creating standalone firewall instance ${firewallInstance.name} in VPC ${firewallInstance.vpc}`,
-    );
+    this.logger.info(`Creating standalone firewall instance ${firewallInstance.name} in VPC ${firewallInstance.vpc}`);
     const instance = new FirewallInstance(this, pascalCase(`${firewallInstance.vpc}${firewallInstance.name}Firewall`), {
       name: firewallInstance.name,
       configDir: this.props.configDirPath,
@@ -287,12 +284,11 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
   private createTargetGroup(group: TargetGroupItemConfig, vpcName: string, targets?: string[]): TargetGroup {
     const vpcId = this.vpcMap.get(vpcName);
     if (!vpcId) {
-      throw new Error(
-        `[network-associations-gwlb-stack] unable to retrieve VPC ${vpcName} for firewall target group ${group.name}`,
-      );
+      this.logger.error(`unable to retrieve VPC ${vpcName} for firewall target group ${group.name}`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
 
-    Logger.info(`[network-associations-gwlb-stack] Creating firewall target group ${group.name} in VPC ${vpcName}`);
+    this.logger.info(`Creating firewall target group ${group.name} in VPC ${vpcName}`);
     return new TargetGroup(this, `${vpcName}${group.name}FirewallTargetGroup`, {
       name: group.name,
       port: group.port,
@@ -340,9 +336,8 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
     });
 
     if (vpcs.some(vpc => vpc !== vpcs[0])) {
-      throw new Error(
-        `[network-associations-gwlb-stack] firewall target group ${group.name} targeted instances are in separate VPCs`,
-      );
+      this.logger.error(`firewall target group ${group.name} targeted instances are in separate VPCs`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
     return vpcs[0];
   }
@@ -359,7 +354,8 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
       targets.forEach(target => {
         const instance = instanceMap.get(target);
         if (!instance) {
-          throw new Error(`[network-associations-gwlb-stack] Unable to retrieve instance ${target} for target group`);
+          this.logger.error(`Unable to retrieve instance ${target} for target group`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         instances.push(instance.instanceId);
       });
@@ -390,9 +386,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
     );
     const autoscaling: AutoScalingConfig = this.processAutoScalingReplacements(group.autoscaling, group.vpc);
     const resourceName = pascalCase(`${group.vpc}${group.name}FirewallAsg`);
-    Logger.info(
-      `[network-associations-gwlb-stack] Creating firewall autoscaling group ${group.name} in VPC ${group.vpc}`,
-    );
+    this.logger.info(`Creating firewall autoscaling group ${group.name} in VPC ${group.vpc}`);
     new FirewallAutoScalingGroup(this, resourceName, {
       name: group.name,
       autoscaling,
@@ -482,9 +476,8 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
       groups.forEach(group => {
         const securityGroupItem = this.securityGroupMap.get(`${vpc}_${group}`);
         if (!securityGroupItem) {
-          throw new Error(
-            `[network-associations-gwlb-stack] Unable to retrieve security group ${group} from VPC ${vpc}`,
-          );
+          this.logger.error(`Unable to retrieve security group ${group} from VPC ${vpc}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         securityGroups.push(securityGroupItem);
       });
@@ -525,7 +518,8 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
       subnets.forEach(subnet => {
         const subnetItem = this.subnetMap.get(`${vpc}_${subnet}`);
         if (!subnetItem) {
-          throw new Error(`[network-associations-gwlb-stack] Unable to retrieve subnet ${subnet} from VPC ${vpc}`);
+          this.logger.error(`Unable to retrieve subnet ${subnet} from VPC ${vpc}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         processedSubnets.push(subnetItem);
       });
@@ -545,7 +539,8 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
       groups.forEach(group => {
         const groupItem = this.targetGroupMap.get(group);
         if (!groupItem) {
-          throw new Error(`[network-associations-gwlb-stack] Unable to retrieve target group ${group}`);
+          this.logger.error(`Unable to retrieve target group ${group}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         targetGroups.push(groupItem.targetGroupArn);
       });
@@ -583,18 +578,16 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
     const loadBalancerArn = this.gwlbMap.get(gwlbItem.name);
     const targetGroupArn = this.targetGroupMap.get(gwlbItem.targetGroup!)?.targetGroupArn;
     if (!loadBalancerArn) {
-      throw new Error(
-        `[network-associations-gwlb-stack] Unable to retrieve Gateway Load Balancer ARN for ${gwlbItem.name}`,
-      );
+      this.logger.error(`Unable to retrieve Gateway Load Balancer ARN for ${gwlbItem.name}`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
     if (!targetGroupArn) {
-      throw new Error(
-        `[network-associations-gwlb-stack] Unable to retrieve target group ARN for ${gwlbItem.targetGroup}`,
-      );
+      this.logger.error(`Unable to retrieve target group ARN for ${gwlbItem.targetGroup}`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
 
-    Logger.info(
-      `[network-associations-gwlb-stack] Creating listener on Gateway Load Balancer ${gwlbItem.name}: forwarding to target group ${gwlbItem.targetGroup}`,
+    this.logger.info(
+      `Creating listener on Gateway Load Balancer ${gwlbItem.name}: forwarding to target group ${gwlbItem.targetGroup}`,
     );
     new cdk.aws_elasticloadbalancingv2.CfnListener(this, pascalCase(`${gwlbItem.vpc}${gwlbItem.name}Listener`), {
       defaultActions: [
@@ -618,7 +611,8 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
       if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         const vpcId = this.vpcMap.get(vpcItem.name);
         if (!vpcId) {
-          throw new Error(`[network-associations-gwlb-stack] Unable to locate VPC ${vpcItem.name}`);
+          this.logger.error(`Unable to locate VPC ${vpcItem.name}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         // Create GWLB endpoints and set map
         const gwlbEndpointMap = this.createGwlbEndpoints(vpcItem, vpcId);
@@ -723,14 +717,15 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
     const subnet = this.subnetMap.get(subnetKey);
 
     if (!subnet) {
-      throw new Error(
-        `[network-associations-gwlb-stack] Create Gateway Load Balancer endpoint: subnet ${endpointItem.subnet} not found in VPC ${endpointItem.vpc}`,
+      this.logger.error(
+        `Create Gateway Load Balancer endpoint: subnet ${endpointItem.subnet} not found in VPC ${endpointItem.vpc}`,
       );
+      throw new Error(`Configuration validation failed at runtime.`);
     }
 
     // Create endpoint
-    Logger.info(
-      `[network-associations-gwlb-stack] Add Gateway Load Balancer endpoint ${endpointItem.name} to VPC ${endpointItem.vpc} subnet ${endpointItem.subnet}`,
+    this.logger.info(
+      `Add Gateway Load Balancer endpoint ${endpointItem.name} to VPC ${endpointItem.vpc} subnet ${endpointItem.subnet}`,
     );
     return new VpcEndpoint(this, `${pascalCase(endpointItem.vpc)}Vpc${pascalCase(endpointItem.name)}GwlbEp`, {
       service: endpointServiceId,
@@ -780,16 +775,16 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
 
       // Check if route table exists im map
       if (!routeTableId) {
-        throw new Error(`[network-associations-gwlb-stack] Unable to locate route table ${routeTableName}`);
+        this.logger.error(`Unable to locate route table ${routeTableName}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       if (!gwlbEndpoint) {
-        throw new Error(`[network-associations-gwlb-stack] Unable to locate endpoint ${routeTableEntryItem.target}`);
+        this.logger.error(`Unable to locate endpoint ${routeTableEntryItem.target}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       // Add route
-      Logger.info(
-        `[network-associations-gwlb-stack] Adding Gateway Load Balancer endpoint Route Table Entry ${routeTableEntryItem.name}`,
-      );
+      this.logger.info(`Adding Gateway Load Balancer endpoint Route Table Entry ${routeTableEntryItem.name}`);
       gwlbEndpoint.createEndpointRoute(endpointRouteId, routeTableEntryItem.destination!, routeTableId);
     }
   }

@@ -15,7 +15,6 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
-import { Logger } from '../logger';
 import {
   AccountsConfig,
   CloudFormationStackConfig,
@@ -28,7 +27,10 @@ import {
   SecurityConfig,
   Region,
 } from '@aws-accelerator/config';
+import { createLogger } from '../logger';
 import { version } from '../../../../../package.json';
+
+const logger = createLogger(['custom-stack']);
 
 export interface CustomStackProps extends cdk.StackProps {
   readonly configDirPath: string;
@@ -102,7 +104,7 @@ export function isIncluded(
 
 export function isRegionExcluded(regions: string[], currentRegion: string): boolean {
   if (regions?.includes(currentRegion)) {
-    Logger.info(`[custom-stack] ${currentRegion} region explicitly excluded`);
+    logger.info(`[custom-stack] ${currentRegion} region explicitly excluded`);
     return true;
   }
   return false;
@@ -111,7 +113,7 @@ export function isRegionExcluded(regions: string[], currentRegion: string): bool
 export function isAccountExcluded(accounts: string[], currentAccount: string, accountsConfig: AccountsConfig): boolean {
   for (const account of accounts ?? []) {
     if (currentAccount === accountsConfig.getAccountId(account)) {
-      Logger.info(`[custom-stack] ${account} account explicitly excluded`);
+      logger.info(`[custom-stack] ${account} account explicitly excluded`);
       return true;
     }
   }
@@ -128,12 +130,12 @@ export function isAccountIncluded(
     if (currentAccount === accountsConfig.getAccountId(account)) {
       const accountConfig = accountsConfig.getAccount(account);
       if (organizationConfig.isIgnored(accountConfig.organizationalUnit)) {
-        Logger.info(
+        logger.info(
           `[custom-stack] Account ${account} was not included as it is a member of an ignored organizational unit.`,
         );
         return false;
       }
-      Logger.info(`[custom-stack] ${account} account explicitly included`);
+      logger.info(`[custom-stack] ${account} account explicitly included`);
       return true;
     }
   }
@@ -157,9 +159,9 @@ export function isOrganizationalUnitIncluded(
       if (organizationalUnits.indexOf(account.organizationalUnit) != -1 || organizationalUnits.includes('Root')) {
         const ignored = organizationConfig.isIgnored(account.organizationalUnit);
         if (ignored) {
-          Logger.info(`[custom-stack] ${account.organizationalUnit} is ignored and not included`);
+          logger.info(`[custom-stack] ${account.organizationalUnit} is ignored and not included`);
         }
-        Logger.info(`[custom-stack] ${account.organizationalUnit} organizational unit included`);
+        logger.info(`[custom-stack] ${account.organizationalUnit} organizational unit included`);
         return true;
       }
     }
@@ -203,7 +205,7 @@ export function generateCustomStackMappings(
       isIncluded(stack.deploymentTargets ?? [], region, accountId, accountsConfig, organizationConfig) &&
       deploymentRegions.includes(region)
     ) {
-      Logger.debug(`[custom-stack] New stack ${stack.name} mapped to account ${accountId} in region ${region}`);
+      logger.debug(`New stack ${stack.name} mapped to account ${accountId} in region ${region}`);
 
       mappingList.push({
         account: accountId,

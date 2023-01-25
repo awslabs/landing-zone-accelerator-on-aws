@@ -14,7 +14,6 @@ import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
-import { Logger } from '../logger';
 import { NagSuppressions } from 'cdk-nag';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import {
@@ -122,8 +121,7 @@ export class ApplicationsStack extends AcceleratorStack {
     // Create SSM parameters
     this.createSsmParameters();
 
-    Logger.debug(`[customizations-application-stack] Region: ${cdk.Stack.of(this).region}`);
-    Logger.info('[customizations-application-stack] Completed stack synthesis');
+    this.logger.info('Completed stack synthesis');
   }
 
   /**
@@ -265,9 +263,8 @@ export class ApplicationsStack extends AcceleratorStack {
           return element.name === listener.targetGroup;
         });
         if (!filteredTargetGroup) {
-          throw new Error(
-            `[customizations-application-stack] ALB Listener ${listener.name} does not have a valid target group ${listener.targetGroup}`,
-          );
+          this.logger.error(`ALB Listener ${listener.name} does not have a valid target group ${listener.targetGroup}`);
+          throw new Error(`Configuration validation failed at runtime..`);
         }
         listener.targetGroup = filteredTargetGroup.targetGroup.targetGroupArn;
         output.push(listener as ApplicationLoadBalancerListenerConfig);
@@ -326,9 +323,8 @@ export class ApplicationsStack extends AcceleratorStack {
       if (networkInterface.subnetId) {
         const subnetIdValue = this.subnetMap.get(`${vpc}_${networkInterface.subnetId}`);
         if (!subnetIdValue) {
-          throw new Error(
-            `[customizations-application-stack] Network Interfaces: subnet ${networkInterface.subnetId} not found in VPC ${vpc}`,
-          );
+          this.logger.error(`Network Interfaces: subnet ${networkInterface.subnetId} not found in VPC ${vpc}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
       }
     }
@@ -358,15 +354,15 @@ export class ApplicationsStack extends AcceleratorStack {
       for (const subnet of appConfigItem.autoscaling.subnets ?? []) {
         const subnetId = this.subnetMap.get(`${appConfigItem.vpc}_${subnet}`);
         if (!subnetId) {
-          throw new Error(
-            `[customizations-application-stack] Create Autoscaling Groups: subnet ${subnet} not found in VPC ${appConfigItem.vpc}`,
-          );
+          this.logger.error(`Create Autoscaling Groups: subnet ${subnet} not found in VPC ${appConfigItem.vpc}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         subnets.push(subnetId);
       }
 
       if (lt === undefined) {
-        throw new Error(`[customizations-application-stack] Launch template is undefined for ${appConfigItem.name}`);
+        this.logger.error(` Launch template is undefined for ${appConfigItem.name}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       new AutoscalingGroup(
@@ -427,9 +423,8 @@ export class ApplicationsStack extends AcceleratorStack {
           return element.name === listener.targetGroup;
         });
         if (!filteredTargetGroup) {
-          throw new Error(
-            `[customizations-application-stack] NLB Listener ${listener.name} does not have a valid target group ${listener.targetGroup}`,
-          );
+          this.logger.error(`NLB Listener ${listener.name} does not have a valid target group ${listener.targetGroup}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         new cdk.aws_elasticloadbalancingv2.CfnListener(
           this,
@@ -476,7 +471,8 @@ export class ApplicationsStack extends AcceleratorStack {
     for (const subnet of subnets ?? []) {
       const subnetId = this.subnetMap.get(`${vpc}_${subnet}`);
       if (!subnetId) {
-        throw new Error(`[customizations-application-stack] Subnet ${subnet} not found in VPC ${vpc}`);
+        this.logger.error(`Subnet ${subnet} not found in VPC ${vpc}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       output.push(subnetId);
     }
@@ -487,7 +483,8 @@ export class ApplicationsStack extends AcceleratorStack {
     for (const sg of securityGroups ?? []) {
       const sgId = this.securityGroupMap.get(`${vpc}_${sg}`);
       if (!sgId) {
-        throw new Error(`[customization-stack] Security group ${sg} does not exist in VPC ${vpc}`);
+        this.logger.error(`Security group ${sg} does not exist in VPC ${vpc}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       output.push(sgId);
     }
@@ -502,7 +499,8 @@ export class ApplicationsStack extends AcceleratorStack {
     const output = [];
     const vpcId = this.vpcMap.get(appConfigItem.vpc);
     if (!vpcId) {
-      throw new Error(`[customizations-application-stack] Unable to locate VPC ${appConfigItem.vpc}`);
+      this.logger.error(`Unable to locate VPC ${appConfigItem.vpc}`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
     if (appConfigItem.targetGroups) {
       for (const targetGroup of appConfigItem.targetGroups!) {

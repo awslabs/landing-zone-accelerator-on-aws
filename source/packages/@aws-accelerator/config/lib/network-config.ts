@@ -17,6 +17,9 @@ import * as path from 'path';
 
 import * as t from './common-types';
 import * as CustomizationsConfig from './customizations-config';
+import { createLogger } from '@aws-accelerator/accelerator/lib/logger';
+
+const logger = createLogger(['network-config']);
 
 /**
  * Network configuration items.
@@ -5635,7 +5638,8 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
       }
     }
 
-    throw new Error(`Transit gateway peering ${peeringName} not found !!!`);
+    logger.error(`Transit gateway peering ${peeringName} not found !!!`);
+    throw new Error('configuration validation failed.');
   }
 
   /**
@@ -5658,9 +5662,9 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
       const values = t.parse(NetworkConfigTypes.networkConfig, yaml.load(content));
       return new NetworkConfig(values);
     } catch (e) {
-      console.log('[network-config] Error parsing input, global config undefined');
-      console.log(`${e}`);
-      return undefined;
+      logger.error('Error parsing input, network config undefined');
+      logger.error(`${e}`);
+      throw new Error('could not load configuration.');
     }
   }
 }

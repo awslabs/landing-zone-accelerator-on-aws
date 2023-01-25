@@ -37,7 +37,6 @@ import {
   VpcEndpointType,
 } from '@aws-accelerator/constructs';
 
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export class NetworkVpcEndpointsStack extends AcceleratorStack {
@@ -48,7 +47,6 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
-
     // Set private properties
     this.accountsConfig = props.accountsConfig;
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
@@ -123,7 +121,8 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
         const vpcId = vpcMap.get(vpcItem.name);
         if (!vpcId) {
-          throw new Error(`[network-vpc-endpoints-stack] Unable to locate VPC ${vpcItem.name}`);
+          this.logger.error(`Unable to locate VPC ${vpcItem.name}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         //
         // Create VPC endpoints
@@ -153,9 +152,10 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
                 if (subnetId) {
                   firewallSubnets.push(subnetId);
                 } else {
-                  throw new Error(
-                    `[network-vpc-endpoints-stack] Create Network Firewall: subnet ${subnetItem} not found in VPC ${firewallItem.vpc}`,
+                  this.logger.error(
+                    `Create Network Firewall: subnet ${subnetItem} not found in VPC ${firewallItem.vpc}`,
                   );
+                  throw new Error(`Configuration validation failed at runtime.`);
                 }
               }
 
@@ -184,7 +184,8 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
 
               // Check if route table exists im map
               if (!routeTableId) {
-                throw new Error(`[network-vpc-endpoints-stack] Unable to locate route table ${routeTableItem.name}`);
+                this.logger.error(`Unable to locate route table ${routeTableItem.name}`);
+                throw new Error(`Configuration validation failed at runtime.`);
               }
 
               // Get Network Firewall
@@ -192,14 +193,11 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
               const endpointAz = `${cdk.Stack.of(this).region}${routeTableEntryItem.targetAvailabilityZone}`;
 
               if (!firewall) {
-                throw new Error(
-                  `[network-vpc-endpoints-stack] Unable to locate Network Firewall ${routeTableEntryItem.target}`,
-                );
+                this.logger.error(`Unable to locate Network Firewall ${routeTableEntryItem.target}`);
+                throw new Error(`Configuration validation failed at runtime.`);
               }
               // Add route
-              Logger.info(
-                `[network-vpc-endpoints-stack] Adding Network Firewall Route Table Entry ${routeTableEntryItem.name}`,
-              );
+              this.logger.info(`Adding Network Firewall Route Table Entry ${routeTableEntryItem.name}`);
               firewall.addNetworkFirewallRoute(
                 endpointRouteId,
                 routeTableEntryItem.destination!,
@@ -228,9 +226,10 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
 
               // Check if this is the delegated admin account
               if (cdk.Stack.of(this).account !== delegatedAdminAccountId) {
-                throw new Error(
-                  '[network-vpc-endpoints-stack] VPC for Route 53 Resolver endpoints must be located in the delegated network administrator account',
+                this.logger.error(
+                  'VPC for Route 53 Resolver endpoints must be located in the delegated network administrator account',
                 );
+                throw new Error(`Configuration validation failed at runtime.`);
               }
 
               for (const subnetItem of endpointItem.subnets) {
@@ -239,9 +238,8 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
                 if (subnetId) {
                   endpointSubnets.push(subnetId);
                 } else {
-                  throw new Error(
-                    `[network-vpc-endpoints-stack] Create Route 53 Resolver endpoint: subnet not found in VPC ${vpcItem.name}`,
-                  );
+                  this.logger.error(`Create Route 53 Resolver endpoint: subnet not found in VPC ${vpcItem.name}`);
+                  throw new Error(`Configuration validation failed at runtime.`);
                 }
               }
               // Create endpoint
@@ -259,7 +257,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     //
     this.createSsmParameters();
 
-    Logger.info('[network-vpc-endpoints-stack] Completed stack synthesis');
+    this.logger.info('Completed stack synthesis');
   }
 
   /**
@@ -277,14 +275,13 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     subnets: string[],
     firewallLogBucket: cdk.aws_s3.IBucket,
   ): NetworkFirewall {
-    Logger.info(`[network-vpc-endpoints-stack] Add Network Firewall ${firewallItem.name} to VPC ${firewallItem.vpc}`);
+    this.logger.info(`Add Network Firewall ${firewallItem.name} to VPC ${firewallItem.vpc}`);
 
     // Fetch policy ARN
     const policyArn = this.nfwPolicyMap.get(firewallItem.firewallPolicy);
     if (!policyArn) {
-      throw new Error(
-        `[network-vpc-endpoints-stack] Unable to locate Network Firewall policy ${firewallItem.firewallPolicy}`,
-      );
+      this.logger.error(`Unable to locate Network Firewall policy ${firewallItem.firewallPolicy}`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
     // Create firewall
     const nfw = new NetworkFirewall(this, pascalCase(`${firewallItem.vpc}${firewallItem.name}NetworkFirewall`), {
@@ -310,9 +307,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     for (const logItem of firewallItem.loggingConfiguration ?? []) {
       if (logItem.destination === 'cloud-watch-logs') {
         // Create log group and log configuration
-        Logger.info(
-          `[network-vpc-endpoints-stack] Add CloudWatch ${logItem.type} logs for Network Firewall ${firewallItem.name}`,
-        );
+        this.logger.info(`Add CloudWatch ${logItem.type} logs for Network Firewall ${firewallItem.name}`);
         const logGroup = new cdk.aws_logs.LogGroup(this, pascalCase(`${firewallItem.name}${logItem.type}LogGroup`), {
           encryptionKey: this.cloudwatchKey,
           retention: this.logRetention,
@@ -327,9 +322,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       }
 
       if (logItem.destination === 's3') {
-        Logger.info(
-          `[network-vpc-endpoints-stack] Add S3 ${logItem.type} logs for Network Firewall ${firewallItem.name}`,
-        );
+        this.logger.info(`Add S3 ${logItem.type} logs for Network Firewall ${firewallItem.name}`);
 
         destinationConfigs.push({
           logDestination: {
@@ -373,7 +366,8 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       const routeTableId = routeTableMap.get(routeTableKey);
 
       if (!routeTableId) {
-        throw new Error(`[network-vpc-endpoints-stack] Route Table ${routeTableItem.name} not found`);
+        this.logger.error(`Route Table ${routeTableItem.name} not found`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       for (const routeTableEntryItem of routeTableItem.routes ?? []) {
@@ -397,7 +391,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     // Add Gateway Endpoints (AWS Services)
     //
     for (const gatewayEndpointItem of vpcItem.gatewayEndpoints?.endpoints ?? []) {
-      Logger.info(`[network-vpc-endpoints-stack] Adding Gateway Endpoint for ${gatewayEndpointItem.service}`);
+      this.logger.info(`Adding Gateway Endpoint for ${gatewayEndpointItem.service}`);
 
       if (gatewayEndpointItem.service === 's3') {
         new VpcEndpoint(this, pascalCase(`${vpcItem.name}Vpc`) + pascalCase(gatewayEndpointItem.service), {
@@ -444,9 +438,8 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       if (subnet) {
         subnets.push(subnet);
       } else {
-        throw new Error(
-          `[network-vpc-endpoints-stack] Attempting to add interface endpoints to subnet that does not exist (${subnetItem})`,
-        );
+        this.logger.error(`Attempting to add interface endpoints to subnet that does not exist (${subnetItem})`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
     }
 
@@ -458,7 +451,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     const privateDnsValue = !vpcItem.interfaceEndpoints?.central ?? true;
 
     for (const endpointItem of vpcItem.interfaceEndpoints?.endpoints ?? []) {
-      Logger.info(`[network-vpc-endpoints-stack] Adding Interface Endpoint for ${endpointItem.service}`);
+      this.logger.info(`Adding Interface Endpoint for ${endpointItem.service}`);
 
       if (endpointItem.service !== 'cassandra') {
         endpointSg = securityGroupMap.get('https');
@@ -478,9 +471,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
 
         // Add ingress and egress CIDRs
         for (const ingressCidr of vpcItem.interfaceEndpoints?.allowedCidrs || ['0.0.0.0/0']) {
-          Logger.info(
-            `[network-vpc-endpoints-stack] Interface endpoints: adding ingress cidr ${ingressCidr} TCP:${port}`,
-          );
+          this.logger.info(`Interface endpoints: adding ingress cidr ${ingressCidr} TCP:${port}`);
           ingressRules.push({
             ipProtocol: cdk.aws_ec2.Protocol.TCP,
             fromPort: port,
@@ -502,8 +493,8 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         });
 
         // Create Security Group
-        Logger.info(
-          `[network-vpc-endpoints-stack] Adding Security Group to VPC ${vpcItem.name} for interface endpoints -- ${trafficType} traffic`,
+        this.logger.info(
+          `Adding Security Group to VPC ${vpcItem.name} for interface endpoints -- ${trafficType} traffic`,
         );
         const securityGroup = new SecurityGroup(this, pascalCase(`${vpcItem.name}Vpc${trafficType}EpSecurityGroup`), {
           securityGroupName: `interface_ep_${trafficType}_sg`,
@@ -561,13 +552,12 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
   private createResolverEndpoint(endpointItem: ResolverEndpointConfig, vpcId: string, subnets: string[]): void {
     // Validate there are no rules associated with an inbound endpoint
     if (endpointItem.type === 'INBOUND' && endpointItem.rules) {
-      throw new Error('[network-vpc-endpoints-stack] Route 53 Resolver inbound endpoints cannot have rules.');
+      this.logger.error('Route 53 Resolver inbound endpoints cannot have rules.');
+      throw new Error(`Configuration validation failed at runtime.`);
     }
 
     // Begin creation of Route 53 resolver endpoint
-    Logger.info(
-      `[network-vpc-endpoints-stack] Add Route 53 Resolver ${endpointItem.type} endpoint ${endpointItem.name}`,
-    );
+    this.logger.info(`Add Route 53 Resolver ${endpointItem.type} endpoint ${endpointItem.name}`);
     const ingressRules: SecurityGroupIngressRuleProps[] = [];
     const egressRules: SecurityGroupEgressRuleProps[] = [];
     let includeNagSuppression = false;
@@ -576,7 +566,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       for (const ingressCidr of endpointItem.allowedCidrs || ['0.0.0.0/0']) {
         const port = 53;
 
-        Logger.info(`[network-vpc-endpoints-stack] Route 53 resolver: adding ingress cidr ${ingressCidr} TCP:${port}`);
+        this.logger.info(`Route 53 resolver: adding ingress cidr ${ingressCidr} TCP:${port}`);
         ingressRules.push({
           ipProtocol: cdk.aws_ec2.Protocol.TCP,
           fromPort: port,
@@ -584,7 +574,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
           cidrIp: ingressCidr,
         });
 
-        Logger.info(`[network-vpc-endpoints-stack] Route 53 resolver: adding ingress cidr ${ingressCidr} UDP:${port}`);
+        this.logger.info(`Route 53 resolver: adding ingress cidr ${ingressCidr} UDP:${port}`);
         ingressRules.push({
           ipProtocol: cdk.aws_ec2.Protocol.UDP,
           fromPort: port,
@@ -624,7 +614,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
           port = +nonStandardPort;
         }
 
-        Logger.info(`[network-vpc-endpoints-stack] Route 53 resolver: adding egress cidr ${egressCidr} TCP:${port}`);
+        this.logger.info(`Route 53 resolver: adding egress cidr ${egressCidr} TCP:${port}`);
         egressRules.push({
           ipProtocol: cdk.aws_ec2.Protocol.TCP,
           fromPort: port,
@@ -632,7 +622,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
           cidrIp: egressCidr,
         });
 
-        Logger.info(`[network-vpc-endpoints-stack] Route 53 resolver: adding egress cidr ${egressCidr} UDP:${port}`);
+        this.logger.info(`Route 53 resolver: adding egress cidr ${egressCidr} UDP:${port}`);
         egressRules.push({
           ipProtocol: cdk.aws_ec2.Protocol.UDP,
           fromPort: port,
@@ -643,9 +633,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     }
 
     // Create security group
-    Logger.info(
-      `[network-vpc-endpoints-stack] Adding Security Group for Route 53 Resolver endpoint ${endpointItem.name}`,
-    );
+    this.logger.info(`Adding Security Group for Route 53 Resolver endpoint ${endpointItem.name}`);
     const securityGroup = new SecurityGroup(this, pascalCase(`${endpointItem.name}EpSecurityGroup`), {
       securityGroupName: `ep_${endpointItem.name}_sg`,
       securityGroupEgress: egressRules,
@@ -735,35 +723,30 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     let policyName: string | undefined;
     let policyDocument: cdk.aws_iam.PolicyDocument | undefined = undefined;
     if (endpointItem.policy) {
-      Logger.info(`[network-vpc-endpoints-stack] Add custom endpoint policy for ${endpointItem.service}`);
+      this.logger.info(`Add custom endpoint policy for ${endpointItem.service}`);
       policyName = endpointItem.policy;
     } else if (!endpointItem.policy && isGatewayEndpoint) {
-      Logger.info(
-        `[network-vpc-endpoints-stack] Add default endpoint policy for gateway endpoint ${endpointItem.service}`,
-      );
+      this.logger.info(`Add default endpoint policy for gateway endpoint ${endpointItem.service}`);
       policyName = vpcItem.gatewayEndpoints?.defaultPolicy;
     } else {
-      Logger.info(
-        `[network-vpc-endpoints-stack] Add default endpoint policy for interface endpoint ${endpointItem.service}`,
-      );
+      this.logger.info(`Add default endpoint policy for interface endpoint ${endpointItem.service}`);
       policyName = vpcItem.interfaceEndpoints?.defaultPolicy;
     }
 
     // Find matching endpoint policy item
     if (!policyName) {
-      throw new Error(`[network-vpc-endpoints-stack] Create endpoint policy: unable to set a policy name.`);
+      this.logger.error(`Create endpoint policy: unable to set a policy name.`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
     const policyItem = this.props.networkConfig.endpointPolicies.filter(item => item.name === policyName);
 
     // Verify there is only one endpoint policy with the same name
     if (policyItem.length > 1) {
-      throw new Error(
-        `[network-vpc-endpoints-stack] Create endpoint policy: more than one policy with the name ${policyName} is configured.`,
-      );
+      this.logger.error(`Create endpoint policy: more than one policy with the name ${policyName} is configured.`);
+      throw new Error(`Configuration validation failed at runtime.`);
     } else if (policyItem.length === 0) {
-      throw new Error(
-        `[network-vpc-endpoints-stack] Create endpoint policy: unable to locate policy with the name ${policyName}.`,
-      );
+      this.logger.error(`Create endpoint policy: unable to locate policy with the name ${policyName}.`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
 
     // Set location and fetch document

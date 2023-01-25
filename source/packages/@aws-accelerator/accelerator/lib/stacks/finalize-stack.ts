@@ -14,17 +14,14 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { Logger } from '../logger';
 import { DetachQuarantineScp } from '../detach-quarantine-scp';
 
 export class FinalizeStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    Logger.debug(`[finalize-stack] Region: ${cdk.Stack.of(this).region}`);
-
     if (props.globalRegion === cdk.Stack.of(this).region) {
-      Logger.debug(`[finalize-stack] Retrieving CloudWatch kms key`);
+      this.logger.debug(`Retrieving CloudWatch kms key`);
       const cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
         this,
         'AcceleratorGetCloudWatchKey',
@@ -35,7 +32,7 @@ export class FinalizeStack extends AcceleratorStack {
       ) as cdk.aws_kms.Key;
 
       if (process.env['CONFIG_COMMIT_ID']) {
-        Logger.debug(`[finalize-stack] Storing configuration commit id in SSM`);
+        this.logger.debug(`Storing configuration commit id in SSM`);
         new cdk.aws_ssm.StringParameter(this, 'AcceleratorCommitIdParameter', {
           parameterName: '/accelerator/configuration/configCommitId',
           stringValue: process.env['CONFIG_COMMIT_ID'],
@@ -44,7 +41,7 @@ export class FinalizeStack extends AcceleratorStack {
       }
 
       if (props.organizationConfig.quarantineNewAccounts?.enable && props.partition == 'aws') {
-        Logger.debug(`[finalize-stack] Creating resources to detach quarantine scp`);
+        this.logger.debug(`Creating resources to detach quarantine scp`);
         const policyId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
           `/accelerator/organizations/scp/${props.organizationConfig.quarantineNewAccounts?.scpPolicyName}/id`,
@@ -59,6 +56,6 @@ export class FinalizeStack extends AcceleratorStack {
         });
       }
     }
-    Logger.info('[finalize-stack] Completed stack synthesis');
+    this.logger.info('Completed stack synthesis');
   }
 }

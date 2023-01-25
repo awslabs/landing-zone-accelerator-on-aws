@@ -54,7 +54,6 @@ import {
   VpnConnection,
 } from '@aws-accelerator/constructs';
 
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 interface ResolverFirewallRuleProps {
@@ -78,7 +77,6 @@ export class NetworkPrepStack extends AcceleratorStack {
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
-
     // Set private properties
     this.accountsConfig = props.accountsConfig;
     this.domainMap = new Map<string, string>();
@@ -133,7 +131,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     // FMS Notification Channel
     //
     this.createFMSNotificationChannels();
-    Logger.info('[network-prep-stack] Completed stack synthesis');
+    this.logger.info('Completed stack synthesis');
   }
 
   /**
@@ -158,7 +156,7 @@ export class NetworkPrepStack extends AcceleratorStack {
    * @param tgwItem
    */
   private createTransitGatewayItem(tgwItem: TransitGatewayConfig): TransitGateway {
-    Logger.info(`[network-prep-stack] Add Transit Gateway ${tgwItem.name}`);
+    this.logger.info(`Add Transit Gateway ${tgwItem.name}`);
 
     const tgw = new TransitGateway(this, pascalCase(`${tgwItem.name}TransitGateway`), {
       name: tgwItem.name,
@@ -177,7 +175,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     });
 
     for (const routeTableItem of tgwItem.routeTables ?? []) {
-      Logger.info(`[network-prep-stack] Add Transit Gateway Route Tables ${routeTableItem.name}`);
+      this.logger.info(`Add Transit Gateway Route Tables ${routeTableItem.name}`);
 
       const routeTable = new TransitGatewayRouteTable(
         this,
@@ -200,7 +198,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     }
 
     if (tgwItem.shareTargets) {
-      Logger.info(`[network-prep-stack] Share transit gateway`);
+      this.logger.info(`Share transit gateway`);
       this.addResourceShare(tgwItem, `${tgwItem.name}_TransitGatewayShare`, [tgw.transitGatewayArn]);
     }
     return tgw;
@@ -276,7 +274,7 @@ export class NetworkPrepStack extends AcceleratorStack {
   }
 
   /**
-   * Function to create Managed active directory share accept role. This role is used to assume by MAD account to auto accept share reauest
+   * Function to create Managed active directory share accept role. This role is used to assume by MAD account to auto accept share request
    * This role is created only if account is a shared target for MAD.
    * This role gets created only in home region
    * @returns
@@ -342,7 +340,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     for (const cgwItem of props.networkConfig.customerGateways ?? []) {
       const accountId = this.accountsConfig.getAccountId(cgwItem.account);
       if (accountId === cdk.Stack.of(this).account && cgwItem.region == cdk.Stack.of(this).region) {
-        Logger.info(`[network-prep-stack] Add Customer Gateway ${cgwItem.name} in ${cgwItem.region}`);
+        this.logger.info(`Add Customer Gateway ${cgwItem.name} in ${cgwItem.region}`);
         const cgw = new CustomerGateway(this, pascalCase(`${cgwItem.name}CustomerGateway`), {
           name: cgwItem.name,
           bgpAsn: cgwItem.asn,
@@ -379,11 +377,12 @@ export class NetworkPrepStack extends AcceleratorStack {
     // Get the Transit Gateway ID
     const transitGatewayId = this.transitGatewayMap.get(vpnConnectItem.transitGateway!);
     if (!transitGatewayId) {
-      throw new Error(`Transit Gateway ${vpnConnectItem.transitGateway} not found`);
+      this.logger.error(`Transit Gateway ${vpnConnectItem.transitGateway} not found`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
 
-    Logger.info(
-      `[network-prep-stack] Attaching Customer Gateway ${cgwItem.name} to ${vpnConnectItem.transitGateway} in ${cgwItem.region}`,
+    this.logger.info(
+      `Attaching Customer Gateway ${cgwItem.name} to ${vpnConnectItem.transitGateway} in ${cgwItem.region}`,
     );
     const vpnConnection = new VpnConnection(this, pascalCase(`${vpnConnectItem.name}VpnConnection`), {
       name: vpnConnectItem.name,
@@ -421,7 +420,7 @@ export class NetworkPrepStack extends AcceleratorStack {
 
     // DXGW is a global object -- only create in home region
     if (accountId === cdk.Stack.of(this).account && this.props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
-      Logger.info(`[network-prep-stack] Creating Direct Connect Gateway ${dxgwItem.name}`);
+      this.logger.info(`Creating Direct Connect Gateway ${dxgwItem.name}`);
       const dxGateway = new DirectConnectGateway(this, pascalCase(`${dxgwItem.name}DxGateway`), {
         gatewayName: dxgwItem.gatewayName,
         asn: dxgwItem.asn,
@@ -455,8 +454,8 @@ export class NetworkPrepStack extends AcceleratorStack {
         connectionOwnerAccountId === cdk.Stack.of(this).account &&
         this.props.globalConfig.homeRegion === cdk.Stack.of(this).region
       ) {
-        Logger.info(
-          `[network-prep-stack] Creating virtual interface allocation ${vifItem.name} to Direct Connect Gateway ${dxgwItem.name}`,
+        this.logger.info(
+          `Creating virtual interface allocation ${vifItem.name} to Direct Connect Gateway ${dxgwItem.name}`,
         );
         createVif = true;
         vifLogicalId = pascalCase(`${dxgwItem.name}${vifItem.name}VirtualInterfaceAllocation`);
@@ -486,13 +485,12 @@ export class NetworkPrepStack extends AcceleratorStack {
         connectionOwnerAccountId === cdk.Stack.of(this).account &&
         this.props.globalConfig.homeRegion === cdk.Stack.of(this).region
       ) {
-        Logger.info(
-          `[network-prep-stack] Creating virtual interface ${vifItem.name} to Direct Connect Gateway ${dxgwItem.name}`,
-        );
+        this.logger.info(`Creating virtual interface ${vifItem.name} to Direct Connect Gateway ${dxgwItem.name}`);
         createVif = true;
         const directConnectGatewayId = this.dxGatewayMap.get(dxgwItem.name);
         if (!directConnectGatewayId) {
-          throw new Error(`Unable to locate Direct Connect Gateway ${dxgwItem.name}`);
+          this.logger.error(`Unable to locate Direct Connect Gateway ${dxgwItem.name}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         vifLogicalId = pascalCase(`${dxgwItem.name}${vifItem.name}VirtualInterface`);
         vifProps = {
@@ -535,7 +533,8 @@ export class NetworkPrepStack extends AcceleratorStack {
     vifProps?: VirtualInterfaceProps,
   ): void {
     if (!vifLogicalId || !vifProps) {
-      throw new Error(`Create virtual interfaces: unable to process properties for virtual interface ${vifName}`);
+      this.logger.error(`Create virtual interfaces: unable to process properties for virtual interface ${vifName}`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
     const virtualInterface = new VirtualInterface(this, vifLogicalId, vifProps);
     this.ssmParameters.push({
@@ -554,7 +553,8 @@ export class NetworkPrepStack extends AcceleratorStack {
           item => item.name === associationItem.name && item.account === associationItem.account,
         );
         if (!tgw) {
-          throw new Error(`[network-associations-stack] Unable to locate transit gateway ${associationItem.name}`);
+          this.logger.error(`Unable to locate transit gateway ${associationItem.name}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         const tgwAccountId = this.accountsConfig.getAccountId(tgw.account);
 
@@ -569,7 +569,7 @@ export class NetworkPrepStack extends AcceleratorStack {
       }
 
       if (accountIds.length > 0) {
-        Logger.info(`[network-prep-stack] Direct Connect Gateway: Create IAM cross-account access role`);
+        this.logger.info(`Direct Connect Gateway: Create IAM cross-account access role`);
 
         const principals: cdk.aws_iam.PrincipalBase[] = [];
         accountIds.forEach(accountId => {
@@ -673,7 +673,8 @@ export class NetworkPrepStack extends AcceleratorStack {
         const snsTopicsGlobal = this.props.globalConfig.snsTopics?.topics.map(snsTopic => snsTopic.name) || [];
         const snsTopics = [...snsTopicsSecurity, ...snsTopicsGlobal];
         if (!snsTopics.includes(snsTopicName)) {
-          throw new Error(`SNS Topic level ${snsTopicName} does not exist in the security config SNS Topics`);
+          this.logger.error(`SNS Topic level ${snsTopicName} does not exist in the security config SNS Topics`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         let snsTopicArn = `arn:${cdk.Stack.of(this).partition}:sns:${cdk.Stack.of(this).region}:${
           cdk.Stack.of(this).account
@@ -684,8 +685,8 @@ export class NetworkPrepStack extends AcceleratorStack {
             cdk.Stack.of(this).region
           }:${auditAccountId}:aws-accelerator-${snsTopicName}Notifications`;
         }
-        Logger.info(
-          `[network-prep-stack] Adding FMS notification channel for ${fmsConfiguration.delegatedAdminAccount} in region ${notificationChannel.region} to topic ${snsTopicArn}`,
+        this.logger.info(
+          `Adding FMS notification channel for ${fmsConfiguration.delegatedAdminAccount} in region ${notificationChannel.region} to topic ${snsTopicArn}`,
         );
 
         new FMSNotificationChannel(this, `fmsNotification-${this.account}-${this.region}`, {
@@ -693,7 +694,7 @@ export class NetworkPrepStack extends AcceleratorStack {
           snsRoleArn: roleArn,
         });
 
-        Logger.info(`[network-prep-stack] Created FMS notification Channel`);
+        this.logger.info(`Created FMS notification Channel`);
       }
     }
   }
@@ -708,7 +709,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     const scopeMap = new Map<string, IpamScope>();
 
     if (accountId === cdk.Stack.of(this).account && ipamItem.region === cdk.Stack.of(this).region) {
-      Logger.info(`[network-prep-stack] Add IPAM ${ipamItem.name}`);
+      this.logger.info(`Add IPAM ${ipamItem.name}`);
 
       // Create IPAM
       const ipam = new Ipam(this, pascalCase(`${ipamItem.name}Ipam`), {
@@ -724,7 +725,7 @@ export class NetworkPrepStack extends AcceleratorStack {
 
       // Create scopes
       for (const scopeItem of ipamItem.scopes ?? []) {
-        Logger.info(`[network-prep-stack] Add IPAM scope ${scopeItem.name}`);
+        this.logger.info(`Add IPAM scope ${scopeItem.name}`);
         const ipamScope = new IpamScope(this, pascalCase(`${scopeItem.name}Scope`), {
           ipamId: ipam.ipamId,
           name: scopeItem.name,
@@ -745,16 +746,15 @@ export class NetworkPrepStack extends AcceleratorStack {
           return !item.sourceIpamPool;
         });
         for (const poolItem of basePools ?? []) {
-          Logger.info(`[network-prep-stack] Add IPAM top-level pool ${poolItem.name}`);
+          this.logger.info(`Add IPAM top-level pool ${poolItem.name}`);
           let poolScope: string | undefined;
 
           if (poolItem.scope) {
             poolScope = scopeMap.get(poolItem.scope)?.ipamScopeId;
 
             if (!poolScope) {
-              throw new Error(
-                `[network-prep-stack] Unable to locate IPAM scope ${poolItem.scope} for pool ${poolItem.name}`,
-              );
+              this.logger.error(`Unable to locate IPAM scope ${poolItem.scope} for pool ${poolItem.name}`);
+              throw new Error(`Configuration validation failed at runtime.`);
             }
           }
 
@@ -781,7 +781,7 @@ export class NetworkPrepStack extends AcceleratorStack {
 
           // Add resource shares
           if (poolItem.shareTargets) {
-            Logger.info(`[network-prep-stack] Share IPAM pool ${poolItem.name}`);
+            this.logger.info(`Share IPAM pool ${poolItem.name}`);
             this.addResourceShare(poolItem, `${poolItem.name}_IpamPoolShare`, [pool.ipamPoolArn]);
           }
         }
@@ -800,9 +800,10 @@ export class NetworkPrepStack extends AcceleratorStack {
               // Check for case where the source pool hasn't been created yet
               const sourcePoolExists = nestedPools.find(item => item.name === poolItem.sourceIpamPool);
               if (!sourcePoolExists) {
-                throw new Error(
-                  `[network-prep-stack] Unable to locate source IPAM pool ${poolItem.sourceIpamPool} for pool ${poolItem.name}`,
+                this.logger.error(
+                  `Unable to locate source IPAM pool ${poolItem.sourceIpamPool} for pool ${poolItem.name}`,
                 );
+                throw new Error(`Configuration validation failed at runtime.`);
               }
               // Skip iteration if source pool exists but has not yet been created
               continue;
@@ -812,16 +813,15 @@ export class NetworkPrepStack extends AcceleratorStack {
             const poolExists = poolMap.get(poolItem.name);
 
             if (sourcePool && !poolExists) {
-              Logger.info(`[network-prep-stack] Add IPAM nested pool ${poolItem.name}`);
+              this.logger.info(`Add IPAM nested pool ${poolItem.name}`);
               let poolScope: string | undefined;
 
               if (poolItem.scope) {
                 poolScope = scopeMap.get(poolItem.scope)?.ipamScopeId;
 
                 if (!poolScope) {
-                  throw new Error(
-                    `[network-prep-stack] Unable to locate IPAM scope ${poolItem.scope} for pool ${poolItem.name}`,
-                  );
+                  this.logger.error(`Unable to locate IPAM scope ${poolItem.scope} for pool ${poolItem.name}`);
+                  throw new Error(`Configuration validation failed at runtime.`);
                 }
               }
 
@@ -850,7 +850,7 @@ export class NetworkPrepStack extends AcceleratorStack {
 
               // Add resource shares
               if (poolItem.shareTargets) {
-                Logger.info(`[network-prep-stack] Share IPAM pool ${poolItem.name}`);
+                this.logger.info(`Share IPAM pool ${poolItem.name}`);
                 this.addResourceShare(poolItem, `${poolItem.name}_IpamPoolShare`, [pool.ipamPoolArn]);
               }
             }
@@ -878,30 +878,29 @@ export class NetworkPrepStack extends AcceleratorStack {
         let listName: string;
         // Check to ensure both types aren't defined
         if (ruleItem.customDomainList && ruleItem.managedDomainList) {
-          throw new Error(
-            `[network-prep-stack] Only one of customDomainList or managedDomainList may be defined for ${ruleItem.name}`,
-          );
+          this.logger.error(`Only one of customDomainList or managedDomainList may be defined for ${ruleItem.name}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         } else if (ruleItem.customDomainList) {
           domainListType = ResolverFirewallDomainListType.CUSTOM;
           filePath = path.join(this.props.configDirPath, ruleItem.customDomainList);
           try {
             listName = ruleItem.customDomainList.split('/')[1].split('.')[0];
             if (!this.domainMap.has(listName)) {
-              Logger.info(`[network-prep-stack] Creating DNS firewall custom domain list ${listName}`);
+              this.logger.info(`Creating DNS firewall custom domain list ${listName}`);
             }
           } catch (e) {
-            throw new Error(`[network-prep-stack] Error creating DNS firewall domain list: ${e}`);
+            this.logger.error(`Error creating DNS firewall domain list: ${e}`);
+            throw new Error(`Configuration validation failed at runtime.`);
           }
         } else if (ruleItem.managedDomainList) {
           domainListType = ResolverFirewallDomainListType.MANAGED;
           listName = ruleItem.managedDomainList;
           if (!this.domainMap.has(listName)) {
-            Logger.info(`[network-prep-stack] Looking up DNS firewall managed domain list ${listName}`);
+            this.logger.info(`Looking up DNS firewall managed domain list ${listName}`);
           }
         } else {
-          throw new Error(
-            `[network-prep-stack] One of customDomainList or managedDomainList must be defined for ${ruleItem.name}`,
-          );
+          this.logger.error(`One of customDomainList or managedDomainList must be defined for ${ruleItem.name}`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
 
         // Create or look up domain list
@@ -927,7 +926,8 @@ export class NetworkPrepStack extends AcceleratorStack {
           try {
             domainListName = ruleItem.customDomainList.split('/')[1].split('.')[0];
           } catch (e) {
-            throw new Error(`[network-prep-stack] Error parsing list name from ${ruleItem.customDomainList}`);
+            this.logger.error(`Error parsing list name from ${ruleItem.customDomainList}`);
+            throw new Error(`Configuration validation failed at runtime.`);
           }
         } else {
           domainListName = ruleItem.managedDomainList!;
@@ -955,11 +955,12 @@ export class NetworkPrepStack extends AcceleratorStack {
             });
           }
         } else {
-          throw new Error(`Domain list ${domainListName} not found in domain map`);
+          this.logger.error(`Domain list ${domainListName} not found in domain map`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
       }
 
-      Logger.info(`[network-prep-stack] Creating DNS firewall rule group ${firewallItem.name}`);
+      this.logger.info(`Creating DNS firewall rule group ${firewallItem.name}`);
       const ruleGroup = new ResolverFirewallRuleGroup(this, pascalCase(`${firewallItem.name}RuleGroup`), {
         firewallRules: ruleList,
         name: firewallItem.name,
@@ -971,7 +972,7 @@ export class NetworkPrepStack extends AcceleratorStack {
       });
 
       if (firewallItem.shareTargets) {
-        Logger.info(`[network-prep-stack] Share DNS firewall rule group ${firewallItem.name}`);
+        this.logger.info(`Share DNS firewall rule group ${firewallItem.name}`);
         this.addResourceShare(firewallItem, `${firewallItem.name}_ResolverFirewallRuleGroupShare`, [
           ruleGroup.groupArn,
         ]);
@@ -985,7 +986,7 @@ export class NetworkPrepStack extends AcceleratorStack {
    */
   private createResolverQueryLogs(logItem: DnsQueryLogsConfig): void {
     if (logItem.destinations.includes('s3')) {
-      Logger.info(`[network-prep-stack] Create DNS query log ${logItem.name}-s3 for central S3 destination`);
+      this.logger.info(`Create DNS query log ${logItem.name}-s3 for central S3 destination`);
       const centralLogsBucket = cdk.aws_s3.Bucket.fromBucketName(
         this,
         'CentralLogsBucket',
@@ -1007,15 +1008,13 @@ export class NetworkPrepStack extends AcceleratorStack {
       });
 
       if (logItem.shareTargets) {
-        Logger.info(`[network-prep-stack] Share DNS query log config ${logItem.name}-s3`);
+        this.logger.info(`Share DNS query log config ${logItem.name}-s3`);
         this.addResourceShare(logItem, `${logItem.name}-s3_QueryLogConfigShare`, [s3QueryLogConfig.logArn]);
       }
     }
 
     if (logItem.destinations.includes('cloud-watch-logs')) {
-      Logger.info(
-        `[network-prep-stack] Create DNS query log ${logItem.name}-cwl for central CloudWatch logs destination`,
-      );
+      this.logger.info(`Create DNS query log ${logItem.name}-cwl for central CloudWatch logs destination`);
       const organization = new Organization(this, 'Organization');
 
       const logGroup = new cdk.aws_logs.LogGroup(this, 'QueryLogsLogGroup', {
@@ -1037,7 +1036,7 @@ export class NetworkPrepStack extends AcceleratorStack {
       });
 
       if (logItem.shareTargets) {
-        Logger.info(`[network-prep-stack] Share DNS query log config ${logItem.name}-cwl`);
+        this.logger.info(`Share DNS query log config ${logItem.name}-cwl`);
         this.addResourceShare(logItem, `${logItem.name}-cwl_QueryLogConfigShare`, [cwlQueryLogConfig.logArn]);
       }
     }
@@ -1064,7 +1063,8 @@ export class NetworkPrepStack extends AcceleratorStack {
     if (rules.length > 0) {
       return rules.join('\n');
     } else {
-      throw new Error(`[network-prep-stack] No rule definition found in suricata rules file ${fileName}`);
+      this.logger.error(`No rule definition found in suricata rules file ${fileName}`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
   }
 
@@ -1080,7 +1080,7 @@ export class NetworkPrepStack extends AcceleratorStack {
 
     // Create regional rule groups in the delegated admin account
     if (accountId === cdk.Stack.of(this).account && regions.includes(cdk.Stack.of(this).region)) {
-      Logger.info(`[network-prep-stack] Create network firewall rule group ${ruleItem.name}`);
+      this.logger.info(`Create network firewall rule group ${ruleItem.name}`);
       let nfwRuleGroupRuleConfig: NfwRuleGroupRuleConfig | undefined;
 
       //
@@ -1118,7 +1118,7 @@ export class NetworkPrepStack extends AcceleratorStack {
       });
 
       if (ruleItem.shareTargets) {
-        Logger.info(`[network-prep-stack] Share Network Firewall rule group ${ruleItem.name}`);
+        this.logger.info(`Share Network Firewall rule group ${ruleItem.name}`);
         this.addResourceShare(ruleItem, `${ruleItem.name}_NetworkFirewallRuleGroupShare`, [rule.groupArn]);
       }
     }
@@ -1144,7 +1144,8 @@ export class NetworkPrepStack extends AcceleratorStack {
         if (this.nfwRuleMap.has(group.name)) {
           statefulGroups.push({ priority: group.priority, resourceArn: this.nfwRuleMap.get(group.name)! });
         } else {
-          throw new Error(`[network-prep-stack] Rule group ${group.name} not found in rule map`);
+          this.logger.error(`Rule group ${group.name} not found in rule map`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
       }
 
@@ -1152,7 +1153,8 @@ export class NetworkPrepStack extends AcceleratorStack {
         if (this.nfwRuleMap.has(group.name)) {
           statelessGroups.push({ priority: group.priority, resourceArn: this.nfwRuleMap.get(group.name)! });
         } else {
-          throw new Error(`[network-prep-stack] Rule group ${group.name} not found in rule map`);
+          this.logger.error(`Rule group ${group.name} not found in rule map`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
       }
 
@@ -1168,7 +1170,7 @@ export class NetworkPrepStack extends AcceleratorStack {
       };
 
       // Instantiate firewall policy construct
-      Logger.info(`[network-prep-stack] Create network firewall policy ${policyItem.name}`);
+      this.logger.info(`Create network firewall policy ${policyItem.name}`);
       const policy = new NetworkFirewallPolicy(this, pascalCase(`${policyItem.name}NetworkFirewallPolicy`), {
         name: policyItem.name,
         firewallPolicy: firewallPolicy,
@@ -1181,7 +1183,7 @@ export class NetworkPrepStack extends AcceleratorStack {
       });
 
       if (policyItem.shareTargets) {
-        Logger.info(`[network-prep-stack] Share Network Firewall policy ${policyItem.name}`);
+        this.logger.info(`Share Network Firewall policy ${policyItem.name}`);
         this.addResourceShare(policyItem, `${policyItem.name}_NetworkFirewallPolicyShare`, [policy.policyArn]);
       }
     }

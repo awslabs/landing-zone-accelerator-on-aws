@@ -39,7 +39,6 @@ import {
   SecurityHubRegionAggregation,
 } from '@aws-accelerator/constructs';
 
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { KeyStack } from './key-stack';
 import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
@@ -145,20 +144,20 @@ export class SecurityAuditStack extends AcceleratorStack {
     //
     this.createSsmParameters();
 
-    Logger.info('[security-audit-stack] Completed stack synthesis');
+    this.logger.info('Completed stack synthesis');
   }
 
   /**
    * Function to configure Macie
    */
   private configureMacie() {
-    Logger.debug(
-      `[security-audit-stack] centralSecurityServices.macie.enable: ${this.props.securityConfig.centralSecurityServices.macie.enable}`,
+    this.logger.debug(
+      `centralSecurityServices.macie.enable: ${this.props.securityConfig.centralSecurityServices.macie.enable}`,
     );
 
     if (this.props.securityConfig.centralSecurityServices.macie.enable) {
-      Logger.info(
-        `[security-audit-stack] Creating macie export config bucket - aws-accelerator-macie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+      this.logger.info(
+        `Creating macie export config bucket - aws-accelerator-macie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
       );
 
       if (
@@ -166,7 +165,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           cdk.Stack.of(this).region as Region,
         ) === -1
       ) {
-        Logger.info('[security-audit-stack] Adding Macie');
+        this.logger.info('Adding Macie');
 
         new MacieMembers(this, 'MacieMembers', {
           adminAccountId: cdk.Stack.of(this).account,
@@ -181,8 +180,8 @@ export class SecurityAuditStack extends AcceleratorStack {
    * Function to configure GuardDuty
    */
   private configureGuardDuty() {
-    Logger.debug(
-      `[security-audit-stack] centralSecurityServices.guardduty.enable: ${this.props.securityConfig.centralSecurityServices.guardduty.enable}`,
+    this.logger.debug(
+      `centralSecurityServices.guardduty.enable: ${this.props.securityConfig.centralSecurityServices.guardduty.enable}`,
     );
 
     if (this.props.securityConfig.centralSecurityServices.guardduty.enable) {
@@ -191,7 +190,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           cdk.Stack.of(this).region as Region,
         ) === -1
       ) {
-        Logger.info('[security-audit-stack] Enabling GuardDuty for all existing accounts');
+        this.logger.info('Enabling GuardDuty for all existing accounts');
 
         const guardDutyMembers = new GuardDutyMembers(this, 'GuardDutyMembers', {
           enableS3Protection: this.props.securityConfig.centralSecurityServices.guardduty.s3Protection.enable,
@@ -225,12 +224,12 @@ export class SecurityAuditStack extends AcceleratorStack {
    * Function to configure Audit manager
    */
   private configureAuditManager() {
-    Logger.debug(
-      `[security-audit-stack] centralSecurityServices.auditManager?.enable: ${this.props.securityConfig.centralSecurityServices.auditManager?.enable}`,
+    this.logger.debug(
+      `centralSecurityServices.auditManager?.enable: ${this.props.securityConfig.centralSecurityServices.auditManager?.enable}`,
     );
 
     if (this.props.securityConfig.centralSecurityServices.auditManager?.enable) {
-      Logger.info('[security-audit-stack] Adding Audit Manager ');
+      this.logger.info('Adding Audit Manager ');
 
       const bucket = new Bucket(this, 'AuditManagerPublishingDestinationBucket', {
         encryptionType: BucketEncryptionType.SSE_KMS,
@@ -316,8 +315,8 @@ export class SecurityAuditStack extends AcceleratorStack {
    * Function to Configure Detective
    */
   private configureDetective() {
-    Logger.debug(
-      `[security-audit-stack] centralSecurityServices.detective?.enable: ${this.props.securityConfig.centralSecurityServices.detective?.enable}`,
+    this.logger.debug(
+      `centralSecurityServices.detective?.enable: ${this.props.securityConfig.centralSecurityServices.detective?.enable}`,
     );
 
     if (this.props.securityConfig.centralSecurityServices.detective?.enable) {
@@ -326,7 +325,7 @@ export class SecurityAuditStack extends AcceleratorStack {
           cdk.Stack.of(this).region as Region,
         ) === -1
       ) {
-        Logger.info('[security-audit-stack] Adding Detective ');
+        this.logger.info('Adding Detective ');
 
         const detectiveMembers = new DetectiveMembers(this, 'DetectiveMembers', {
           kmsKey: this.cloudwatchKey,
@@ -345,8 +344,8 @@ export class SecurityAuditStack extends AcceleratorStack {
    * Function to configure SecurityHub
    */
   private configureSecurityHub() {
-    Logger.debug(
-      `[security-audit-stack] centralSecurityServices.securityHub.enable: ${this.props.securityConfig.centralSecurityServices.securityHub.enable}`,
+    this.logger.debug(
+      `centralSecurityServices.securityHub.enable: ${this.props.securityConfig.centralSecurityServices.securityHub.enable}`,
     );
     if (
       this.props.securityConfig.centralSecurityServices.securityHub.enable &&
@@ -354,7 +353,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         cdk.Stack.of(this).region as Region,
       ) === -1
     ) {
-      Logger.info('[security-audit-stack] Adding SecurityHub ');
+      this.logger.info('Adding SecurityHub ');
 
       new SecurityHubMembers(this, 'SecurityHubMembers', {
         kmsKey: this.cloudwatchKey,
@@ -362,15 +361,15 @@ export class SecurityAuditStack extends AcceleratorStack {
       });
     }
 
-    Logger.debug(
-      `[security-audit-stack] centralSecurityServices.securityHub.regionAggregation: ${this.props.securityConfig.centralSecurityServices.securityHub.regionAggregation}`,
+    this.logger.debug(
+      `centralSecurityServices.securityHub.regionAggregation: ${this.props.securityConfig.centralSecurityServices.securityHub.regionAggregation}`,
     );
     if (
       this.props.securityConfig.centralSecurityServices.securityHub.enable &&
       this.props.securityConfig.centralSecurityServices.securityHub.regionAggregation &&
       this.props.globalConfig.homeRegion == cdk.Stack.of(this).region
     ) {
-      Logger.info('[security-audit-stack] Enabling region aggregation for SecurityHub in the Home Region');
+      this.logger.info('Enabling region aggregation for SecurityHub in the Home Region');
 
       new SecurityHubRegionAggregation(this, 'SecurityHubRegionAggregation', {
         kmsKey: this.cloudwatchKey,
@@ -383,7 +382,7 @@ export class SecurityAuditStack extends AcceleratorStack {
    * Function to configure SSM documents
    */
   private configureSsmDocuments() {
-    Logger.info(`[security-audit-stack] Adding SSM Automation Docs`);
+    this.logger.info(`Adding SSM Automation Docs`);
     if (
       this.props.securityConfig.centralSecurityServices.ssmAutomation.excludeRegions === undefined ||
       this.props.securityConfig.centralSecurityServices.ssmAutomation.excludeRegions.indexOf(
@@ -397,7 +396,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         const accountIds: string[] = this.getAccountIdsFromShareTarget(documentSetItem.shareTargets);
 
         for (const documentItem of documentSetItem.documents ?? []) {
-          Logger.info(`[security-audit-stack] Adding ${documentItem.name}`);
+          this.logger.info(`Adding ${documentItem.name}`);
 
           // Read in the document which should be properly formatted
           const buffer = fs.readFileSync(path.join(this.props.configDirPath, documentItem.template), 'utf8');
@@ -427,12 +426,12 @@ export class SecurityAuditStack extends AcceleratorStack {
    * Function to configure IAM Analyzer
    */
   private configureIamAnalyzer() {
-    Logger.debug(`[security-audit-stack] accessAnalyzer.enable: ${this.props.securityConfig.accessAnalyzer.enable}`);
+    this.logger.debug(`accessAnalyzer.enable: ${this.props.securityConfig.accessAnalyzer.enable}`);
     if (
       this.props.securityConfig.accessAnalyzer.enable &&
       this.props.globalConfig.homeRegion === cdk.Stack.of(this).region
     ) {
-      Logger.info('[security-audit-stack] Adding IAM Access Analyzer ');
+      this.logger.info('Adding IAM Access Analyzer ');
       new cdk.aws_accessanalyzer.CfnAnalyzer(this, 'AccessAnalyzer', {
         type: 'ORGANIZATION',
       });
@@ -443,7 +442,7 @@ export class SecurityAuditStack extends AcceleratorStack {
    * Function to configure SNS Notifications
    */
   private configureSnsNotifications() {
-    Logger.info(`[security-audit-stack] Create SNS Topics and Subscriptions`);
+    this.logger.info(`Create SNS Topics and Subscriptions`);
 
     //
     // Create KMS Key for SNS topic when there are SNS topics are to be created
@@ -477,7 +476,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
     // Loop through all the subscription entries
     for (const snsSubscriptionItem of this.props.securityConfig.centralSecurityServices.snsSubscriptions ?? []) {
-      Logger.info(`[security-audit-stack] Create SNS Topic: ${snsSubscriptionItem.level}`);
+      this.logger.info(`Create SNS Topic: ${snsSubscriptionItem.level}`);
       const topic = new cdk.aws_sns.Topic(this, `${pascalCase(snsSubscriptionItem.level)}SnsTopic`, {
         displayName: `AWS Accelerator - ${snsSubscriptionItem.level} Notifications`,
         topicName: `aws-accelerator-${snsSubscriptionItem.level}Notifications`,
@@ -513,7 +512,7 @@ export class SecurityAuditStack extends AcceleratorStack {
         }),
       );
 
-      Logger.info(`[security-audit-stack] Create SNS Subscription: ${snsSubscriptionItem.email}`);
+      this.logger.info(`Create SNS Subscription: ${snsSubscriptionItem.email}`);
       topic.addSubscription(new cdk.aws_sns_subscriptions.EmailSubscription(snsSubscriptionItem.email));
     }
   }
