@@ -44,7 +44,6 @@ import {
 } from '@aws-accelerator/constructs';
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export interface OrganizationsStackProps extends AcceleratorStackProps {
@@ -70,7 +69,7 @@ export class OrganizationsStack extends AcceleratorStack {
     const delegatedAdminAccount = props.securityConfig.centralSecurityServices.delegatedAdminAccount;
     const securityAdminAccountId = props.accountsConfig.getAccountId(delegatedAdminAccount);
 
-    Logger.debug(`[organizations-stack] homeRegion: ${props.globalConfig.homeRegion}`);
+    this.logger.debug(`homeRegion: ${props.globalConfig.homeRegion}`);
     // Set private properties
     this.stackProperties = props;
     this.logRetention = this.stackProperties.globalConfig.cloudwatchLogRetentionInDays;
@@ -179,7 +178,7 @@ export class OrganizationsStack extends AcceleratorStack {
     // Configure Trusted Services and Delegated Management Accounts
     //
     //
-    Logger.info('[organizations-stack] Completed stack synthesis');
+    this.logger.info('Completed stack synthesis');
   }
 
   /**
@@ -187,7 +186,7 @@ export class OrganizationsStack extends AcceleratorStack {
    */
   private addBackupPolicies() {
     if (this.stackProperties.organizationConfig.backupPolicies.length > 0) {
-      Logger.info(`[organizations-stack] Adding Backup Policies`);
+      this.logger.info(`Adding Backup Policies`);
 
       const enablePolicyTypeBackup = new EnablePolicyType(this, 'enablePolicyTypeBackup', {
         policyType: PolicyTypeEnum.BACKUP_POLICY,
@@ -229,7 +228,7 @@ export class OrganizationsStack extends AcceleratorStack {
    */
   private addCostAndUsageReport() {
     if (this.stackProperties.globalConfig.reports?.costAndUsageReport) {
-      Logger.info('[organizations-stack] Adding Cost and Usage Reports');
+      this.logger.info('Adding Cost and Usage Reports');
 
       const reportBucket = new Bucket(this, 'ReportBucket', {
         encryptionType: BucketEncryptionType.SSE_S3, // CUR does not support KMS CMK
@@ -287,7 +286,7 @@ export class OrganizationsStack extends AcceleratorStack {
    */
   private enableIamAccessAnalyzer() {
     if (this.stackProperties.securityConfig.accessAnalyzer.enable) {
-      Logger.debug('[organizations-stack] Enable Service Access for access-analyzer.amazonaws.com');
+      this.logger.debug('Enable Service Access for access-analyzer.amazonaws.com');
 
       const enableAccessAnalyzer = new EnableAwsServiceAccess(this, 'EnableAccessAnalyzer', {
         servicePrincipal: 'access-analyzer.amazonaws.com',
@@ -345,7 +344,7 @@ export class OrganizationsStack extends AcceleratorStack {
 
       // Create delegated admin if the account ID is not the management account
       if (networkAdminAccountId !== cdk.Stack.of(this).account) {
-        Logger.info(`[organizations-stack] Enabling IPAM delegated administrator for account ${networkAdminAccountId}`);
+        this.logger.info(`Enabling IPAM delegated administrator for account ${networkAdminAccountId}`);
 
         new IpamOrganizationAdminAccount(this, 'IpamAdminAccount', {
           accountId: networkAdminAccountId,
@@ -383,7 +382,7 @@ export class OrganizationsStack extends AcceleratorStack {
       !this.stackProperties.globalConfig.controlTower.enable &&
       this.stackProperties.organizationConfig.enable
     ) {
-      Logger.debug('[organizations-stack] enableConfigRecorderDelegateAdminAccount');
+      this.logger.debug('enableConfigRecorderDelegateAdminAccount');
       const enableConfigServiceAccess = new EnableAwsServiceAccess(this, 'EnableConfigAccess', {
         servicePrincipal: 'config.amazonaws.com',
         kmsKey: this.cloudwatchKey,
@@ -418,23 +417,21 @@ export class OrganizationsStack extends AcceleratorStack {
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
-        Logger.debug(
-          `[organizations-stack] Starts macie admin account delegation to the account with email ${
+        this.logger.debug(
+          `Starts macie admin account delegation to the account with email ${
             this.stackProperties.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
-        Logger.debug(`[organizations-stack] Macie Admin Account ID is ${adminAccountId}`);
+        this.logger.debug(`Macie Admin Account ID is ${adminAccountId}`);
         new MacieOrganizationAdminAccount(this, 'MacieOrganizationAdminAccount', {
           adminAccountId,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
         });
       } else {
-        Logger.debug(
-          `[organizations-stack] ${
-            cdk.Stack.of(this).region
-          } region was in macie excluded list so ignoring this region for ${
+        this.logger.debug(
+          `${cdk.Stack.of(this).region} region was in macie excluded list so ignoring this region for ${
             this.stackProperties.accountsConfig.getAuditAccount().email
           } account`,
         );
@@ -452,23 +449,21 @@ export class OrganizationsStack extends AcceleratorStack {
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
-        Logger.debug(
-          `[organizations-stack] Starts guardduty admin account delegation to the account with email ${
+        this.logger.debug(
+          `Starts guardduty admin account delegation to the account with email ${
             this.stackProperties.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
-        Logger.debug(`[organizations-stack] Guardduty Admin Account ID is ${adminAccountId}`);
+        this.logger.debug(`Guardduty Admin Account ID is ${adminAccountId}`);
         new GuardDutyOrganizationAdminAccount(this, 'GuardDutyEnableOrganizationAdminAccount', {
           adminAccountId,
           logRetentionInDays: this.logRetention,
           kmsKey: this.cloudwatchKey,
         });
       } else {
-        Logger.debug(
-          `[organizations-stack] ${
-            cdk.Stack.of(this).region
-          } region was in guardduty excluded list so ignoring this region for ${
+        this.logger.debug(
+          `${cdk.Stack.of(this).region} region was in guardduty excluded list so ignoring this region for ${
             this.stackProperties.accountsConfig.getAuditAccount().email
           } account`,
         );
@@ -487,23 +482,21 @@ export class OrganizationsStack extends AcceleratorStack {
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
-        Logger.debug(
-          `[organizations-stack] Starts audit manager admin account delegation to the account with email ${
+        this.logger.debug(
+          `Starts audit manager admin account delegation to the account with email ${
             this.stackProperties.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
-        Logger.debug(`[organizations-stack] AuditManager Admin Account ID is ${adminAccountId}`);
+        this.logger.debug(`AuditManager Admin Account ID is ${adminAccountId}`);
         new AuditManagerOrganizationAdminAccount(this, 'AuditManagerEnableOrganizationAdminAccount', {
           adminAccountId,
           logRetentionInDays: this.logRetention,
           kmsKey: this.cloudwatchKey,
         });
       } else {
-        Logger.debug(
-          `[organizations-stack] ${
-            cdk.Stack.of(this).region
-          } region was in auditmanager excluded list so ignoring this region for ${
+        this.logger.debug(
+          `${cdk.Stack.of(this).region} region was in auditmanager excluded list so ignoring this region for ${
             this.stackProperties.accountsConfig.getAuditAccount().email
           } account`,
         );
@@ -522,23 +515,21 @@ export class OrganizationsStack extends AcceleratorStack {
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
-        Logger.debug(
-          `[organizations-stack] Starts detective admin account delegation to the account with email ${
+        this.logger.debug(
+          `Starts detective admin account delegation to the account with email ${
             this.stackProperties.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
-        Logger.debug(`[organizations-stack] Detective Admin Account ID is ${adminAccountId}`);
+        this.logger.debug(`Detective Admin Account ID is ${adminAccountId}`);
         new DetectiveOrganizationAdminAccount(this, 'DetectiveOrganizationAdminAccount', {
           adminAccountId,
           logRetentionInDays: this.logRetention,
           kmsKey: this.cloudwatchKey,
         });
       } else {
-        Logger.debug(
-          `[organizations-stack] ${
-            cdk.Stack.of(this).region
-          } region was in detective excluded list so ignoring this region for ${
+        this.logger.debug(
+          `${cdk.Stack.of(this).region} region was in detective excluded list so ignoring this region for ${
             this.stackProperties.accountsConfig.getAuditAccount().email
           } account`,
         );
@@ -556,23 +547,21 @@ export class OrganizationsStack extends AcceleratorStack {
           cdk.Stack.of(this).region as Region,
         ) == -1
       ) {
-        Logger.debug(
-          `[organizations-stack] Starts SecurityHub admin account delegation to the account with email ${
+        this.logger.debug(
+          `Starts SecurityHub admin account delegation to the account with email ${
             this.stackProperties.accountsConfig.getAuditAccount().email
           } account in ${cdk.Stack.of(this).region} region`,
         );
 
-        Logger.debug(`[organizations-stack] SecurityHub Admin Account ID is ${adminAccountId}`);
+        this.logger.debug(`SecurityHub Admin Account ID is ${adminAccountId}`);
         new SecurityHubOrganizationAdminAccount(this, 'SecurityHubOrganizationAdminAccount', {
           adminAccountId,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
         });
       } else {
-        Logger.debug(
-          `[organizations-stack] ${
-            cdk.Stack.of(this).region
-          } region was in SecurityHub excluded list so ignoring this region for ${
+        this.logger.debug(
+          `${cdk.Stack.of(this).region} region was in SecurityHub excluded list so ignoring this region for ${
             this.stackProperties.accountsConfig.getAuditAccount().email
           } account`,
         );
@@ -585,7 +574,7 @@ export class OrganizationsStack extends AcceleratorStack {
    */
   private addTaggingPolicies() {
     if (this.stackProperties.organizationConfig.taggingPolicies.length > 0) {
-      Logger.info(`[organizations-stack] Adding Tagging Policies`);
+      this.logger.info(`Adding Tagging Policies`);
       const enablePolicyTypeTag = new EnablePolicyType(this, 'enablePolicyTypeTag', {
         policyType: PolicyTypeEnum.TAG_POLICY,
         kmsKey: this.cloudwatchKey,
@@ -632,20 +621,18 @@ export class OrganizationsStack extends AcceleratorStack {
       new IdentityCenterOrganizationAdminAccount(this, `IdentityCenterAdmin`, {
         adminAccountId: adminAccountId,
       });
-      Logger.info(`[organizations-stack] Delegated Admin account for Identity Center is: ${adminAccountId}`);
+      this.logger.info(`Delegated Admin account for Identity Center is: ${adminAccountId}`);
     }
   }
 
   private configureOrganizationCloudTrail() {
-    Logger.debug(
-      `[organizations-stack] logging.cloudtrail.enable: ${this.stackProperties.globalConfig.logging.cloudtrail.enable}`,
-    );
-    Logger.debug(
-      `[organizations-stack] logging.cloudtrail.organizationTrail: ${this.stackProperties.globalConfig.logging.cloudtrail.organizationTrail}`,
+    this.logger.debug(`logging.cloudtrail.enable: ${this.stackProperties.globalConfig.logging.cloudtrail.enable}`);
+    this.logger.debug(
+      `logging.cloudtrail.organizationTrail: ${this.stackProperties.globalConfig.logging.cloudtrail.organizationTrail}`,
     );
 
     if (this.stackProperties.globalConfig.logging.cloudtrail.enable) {
-      Logger.info('[organizations-stack] Enable CloudTrail Service Access');
+      this.logger.info('Enable CloudTrail Service Access');
       const enableCloudtrailServiceAccess = new EnableAwsServiceAccess(this, 'EnableOrganizationsCloudTrail', {
         servicePrincipal: 'cloudtrail.amazonaws.com',
         kmsKey: this.cloudwatchKey,
@@ -653,7 +640,7 @@ export class OrganizationsStack extends AcceleratorStack {
       });
 
       if (this.stackProperties.globalConfig.logging.cloudtrail.organizationTrail) {
-        Logger.info('[organizations-stack] Adding Organizations CloudTrail');
+        this.logger.info('Adding Organizations CloudTrail');
 
         const cloudTrailCloudWatchCmk = new cdk.aws_kms.Key(this, 'CloudTrailCloudWatchCmk', {
           enableKeyRotation: true,

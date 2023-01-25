@@ -19,16 +19,17 @@ import {
   NetworkConfigValidator,
   IamConfigValidator,
 } from '@aws-accelerator/config';
-import { Logger } from './logger';
+import { createLogger } from './logger';
 import * as fs from 'fs';
 import * as path from 'path';
 
+const logger = createLogger(['config-validator']);
 const configDirPath = process.argv[2];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const errors: { file: string; message: any }[] = [];
 
 if (configDirPath) {
-  Logger.info(`[config-validator] Config source directory -  ${configDirPath}`);
+  logger.info(`Config source directory -  ${configDirPath}`);
 
   try {
     AccountsConfig.load(configDirPath, true);
@@ -76,14 +77,14 @@ if (configDirPath) {
   }
 
   if (errors.length > 0) {
-    Logger.warn(`[config-validator] Config file validation failed !!!`);
+    logger.warn(`Config file validation failed !!!`);
     errors.forEach(item => {
-      Logger.warn(`[config-validator] ${item.message} in ${item.file} config file`);
+      logger.warn(`${item.message} in ${item.file} config file`);
     });
     process.exit(1);
   } else {
-    Logger.info(`[config-validator] Config file validation successful.`);
+    logger.info(`Config file validation successful.`);
   }
 } else {
-  Logger.info('[config-validator] Config source directory undefined !!!');
+  logger.info('Config source directory undefined !!!');
 }

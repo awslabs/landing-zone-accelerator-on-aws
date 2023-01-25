@@ -185,19 +185,13 @@ describe('accounts-config', () => {
       });
       expect(() => {
         configC.getAccount('notpresent');
-      }).toThrow(`Account name not found for notpresent. \
-     Validate that the emails in the parameter ManagementAccountEmail \
-     of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) \
-     match the correct account emails shown in AWS Organizations.`);
+      }).toThrow('configuration validation failed.');
     });
 
     it('get account ID', () => {
       expect(() => {
         configC.getAccountId('missing');
-      }).toThrow(`Account name not found for missing. \
-     Validate that the emails in the parameter ManagementAccountEmail \
-     of the AWSAccelerator-InstallerStack and account configs (accounts-config.yaml) \
-     match the correct account emails shown in AWS Organizations.`);
+      }).toThrow('configuration validation failed.');
     });
 
     it('load config successfully', () => {

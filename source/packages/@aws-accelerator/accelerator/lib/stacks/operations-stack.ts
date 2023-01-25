@@ -34,7 +34,6 @@ import {
   SharePortfolioWithOrg,
 } from '@aws-accelerator/constructs';
 
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export interface OperationsStackProps extends AcceleratorStackProps {
@@ -91,7 +90,6 @@ export class OperationsStack extends AcceleratorStack {
    */
   constructor(scope: Construct, id: string, props: OperationsStackProps) {
     super(scope, id, props);
-
     this.organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
@@ -159,7 +157,7 @@ export class OperationsStack extends AcceleratorStack {
     //
     this.createSsmParameters();
 
-    Logger.info('[operations-stack] Completed stack synthesis');
+    this.logger.info('Completed stack synthesis');
   }
 
   /* Enable AWS Service Quota Limits
@@ -168,7 +166,7 @@ export class OperationsStack extends AcceleratorStack {
   private increaseLimits() {
     for (const limit of this.props.globalConfig.limits ?? []) {
       if (this.isIncluded(limit.deploymentTargets ?? [])) {
-        Logger.info(`[operations-stack] Updating limits for provided services.`);
+        this.logger.info(`Updating limits for provided services.`);
         new LimitsDefinition(this, `ServiceQuotaUpdates${limit.quotaCode}` + `${limit.desiredValue}`, {
           serviceCode: limit.serviceCode,
           quotaCode: limit.quotaCode,
@@ -185,7 +183,7 @@ export class OperationsStack extends AcceleratorStack {
    */
   private addProviders() {
     for (const providerItem of this.props.iamConfig.providers ?? []) {
-      Logger.info(`[operations-stack] Add Provider ${providerItem.name}`);
+      this.logger.info(`Add Provider ${providerItem.name}`);
       this.providers[providerItem.name] = new cdk.aws_iam.SamlProvider(
         this,
         `${pascalCase(providerItem.name)}SamlProvider`,
@@ -205,12 +203,12 @@ export class OperationsStack extends AcceleratorStack {
   private addManagedPolicies() {
     for (const policySetItem of this.props.iamConfig.policySets ?? []) {
       if (!this.isIncluded(policySetItem.deploymentTargets)) {
-        Logger.info(`[operations-stack] Item excluded`);
+        this.logger.info(`Item excluded`);
         continue;
       }
 
       for (const policyItem of policySetItem.policies) {
-        Logger.info(`[operations-stack] Add customer managed policy ${policyItem.name}`);
+        this.logger.info(`Add customer managed policy ${policyItem.name}`);
 
         // Read in the policy document which should be properly formatted json
         const policyDocument = JSON.parse(
@@ -255,9 +253,7 @@ export class OperationsStack extends AcceleratorStack {
     const principals: cdk.aws_iam.PrincipalBase[] = [];
 
     for (const assumedByItem of roleItem.assumedBy ?? []) {
-      Logger.info(
-        `[operations-stack] Role - assumed by type(${assumedByItem.type}) principal(${assumedByItem.principal})`,
-      );
+      this.logger.info(`Role - assumed by type(${assumedByItem.type}) principal(${assumedByItem.principal})`);
 
       if (assumedByItem.type === 'service') {
         principals.push(new cdk.aws_iam.ServicePrincipal(assumedByItem.principal));
@@ -300,11 +296,11 @@ export class OperationsStack extends AcceleratorStack {
     const managedPolicies: cdk.aws_iam.IManagedPolicy[] = [];
 
     for (const policyItem of roleItem.policies?.awsManaged ?? []) {
-      Logger.info(`[operations-stack] Role - aws managed policy ${policyItem}`);
+      this.logger.info(`Role - aws managed policy ${policyItem}`);
       managedPolicies.push(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(policyItem));
     }
     for (const policyItem of roleItem.policies?.customerManaged ?? []) {
-      Logger.info(`[operations-stack] Role - customer managed policy ${policyItem}`);
+      this.logger.info(`Role - customer managed policy ${policyItem}`);
       managedPolicies.push(this.policies[policyItem]);
     }
 
@@ -317,12 +313,12 @@ export class OperationsStack extends AcceleratorStack {
   private addRoles() {
     for (const roleSetItem of this.props.iamConfig.roleSets ?? []) {
       if (!this.isIncluded(roleSetItem.deploymentTargets)) {
-        Logger.info(`[operations-stack] Item excluded`);
+        this.logger.info(`Item excluded`);
         continue;
       }
 
       for (const roleItem of roleSetItem.roles) {
-        Logger.info(`[operations-stack] Add role ${roleItem.name}`);
+        this.logger.info(`Add role ${roleItem.name}`);
 
         const principals = this.getRolePrincipals(roleItem);
         const managedPolicies = this.getManagedPolicies(roleItem);
@@ -332,7 +328,8 @@ export class OperationsStack extends AcceleratorStack {
           // Since a SamlConsolePrincipal creates conditions, we can not
           // use the CompositePrincipal. Verify that it is alone
           if (principals.length > 1) {
-            throw new Error('More than one principal found when adding provider');
+            this.logger.error('More than one principal found when adding provider');
+            throw new Error(`Configuration validation failed at runtime.`);
           }
           assumedBy = principals[0];
         } else {
@@ -358,7 +355,7 @@ export class OperationsStack extends AcceleratorStack {
 
         // Create instance profile
         if (roleItem.instanceProfile) {
-          Logger.info(`[operations-stack] Role - creating instance profile for ${roleItem.name}`);
+          this.logger.info(`Role - creating instance profile for ${roleItem.name}`);
           new cdk.aws_iam.CfnInstanceProfile(this, `${pascalCase(roleItem.name)}InstanceProfile`, {
             // Use role object to force use of Ref
             instanceProfileName: role.roleName,
@@ -400,7 +397,7 @@ export class OperationsStack extends AcceleratorStack {
             managedActiveDirectory.name
           }/*`;
           // Attach MAD instance role access to MAD secrets
-          Logger.info(`[operations-stack] Granting mad secret access to ${roleName}`);
+          this.logger.info(`Granting mad secret access to ${roleName}`);
           role.attachInlinePolicy(
             new cdk.aws_iam.Policy(
               this,
@@ -439,20 +436,20 @@ export class OperationsStack extends AcceleratorStack {
   private addGroups() {
     for (const groupSetItem of this.props.iamConfig.groupSets ?? []) {
       if (!this.isIncluded(groupSetItem.deploymentTargets)) {
-        Logger.info(`[operations-stack] Item excluded`);
+        this.logger.info(`Item excluded`);
         continue;
       }
 
       for (const groupItem of groupSetItem.groups) {
-        Logger.info(`[operations-stack] Add group ${groupItem.name}`);
+        this.logger.info(`Add group ${groupItem.name}`);
 
         const managedPolicies: cdk.aws_iam.IManagedPolicy[] = [];
         for (const policyItem of groupItem.policies?.awsManaged ?? []) {
-          Logger.info(`[operations-stack] Group - aws managed policy ${policyItem}`);
+          this.logger.info(`Group - aws managed policy ${policyItem}`);
           managedPolicies.push(cdk.aws_iam.ManagedPolicy.fromAwsManagedPolicyName(policyItem));
         }
         for (const policyItem of groupItem.policies?.customerManaged ?? []) {
-          Logger.info(`[operations-stack] Group - customer managed policy ${policyItem}`);
+          this.logger.info(`Group - customer managed policy ${policyItem}`);
           managedPolicies.push(this.policies[policyItem]);
         }
 
@@ -483,12 +480,12 @@ export class OperationsStack extends AcceleratorStack {
   private addUsers() {
     for (const userSet of this.props.iamConfig.userSets ?? []) {
       if (!this.isIncluded(userSet.deploymentTargets)) {
-        Logger.info(`[operations-stack] Item excluded`);
+        this.logger.info(`Item excluded`);
         continue;
       }
 
       for (const user of userSet.users ?? []) {
-        Logger.info(`[operations-stack] Add user ${user.username}`);
+        this.logger.info(`Add user ${user.username}`);
 
         const secret = new cdk.aws_secretsmanager.Secret(this, pascalCase(`${user.username}Secret`), {
           generateSecretString: {
@@ -511,7 +508,7 @@ export class OperationsStack extends AcceleratorStack {
           ],
         );
 
-        Logger.info(`[operations-stack] User - password stored to /accelerator/${user.username}`);
+        this.logger.info(`User - password stored to /accelerator/${user.username}`);
 
         this.users[user.username] = new cdk.aws_iam.User(this, pascalCase(user.username), {
           userName: user.username,
@@ -531,7 +528,7 @@ export class OperationsStack extends AcceleratorStack {
     if (this.props.globalConfig.reports?.budgets) {
       for (const budget of this.props.globalConfig.reports.budgets ?? []) {
         if (this.isIncluded(budget.deploymentTargets ?? [])) {
-          Logger.info(`[operations-stack] Add budget ${budget.name}`);
+          this.logger.info(`Add budget ${budget.name}`);
           new BudgetDefinition(this, `${budget.name}BudgetDefinition`, {
             amount: budget.amount,
             includeCredit: budget.includeCredit,
@@ -583,7 +580,7 @@ export class OperationsStack extends AcceleratorStack {
   }
 
   private enableInventory() {
-    Logger.info('[operations-stack] Enabling SSM Inventory');
+    this.logger.info('Enabling SSM Inventory');
 
     new Inventory(this, 'AcceleratorSsmInventory', {
       bucketName: `${
@@ -610,7 +607,7 @@ export class OperationsStack extends AcceleratorStack {
   }
 
   private createStackSetAdminRole() {
-    Logger.info(`[operations-stack] Creating StackSet Administrator Role`);
+    this.logger.info(`Creating StackSet Administrator Role`);
     new cdk.aws_iam.Role(this, 'StackSetAdminRole', {
       roleName: 'AWSCloudFormationStackSetAdministrationRole',
       assumedBy: new cdk.aws_iam.ServicePrincipal('cloudformation.amazonaws.com'),
@@ -656,7 +653,7 @@ export class OperationsStack extends AcceleratorStack {
       name: '',
       arn: '',
     };
-    Logger.info(`[operations-stack] Adding Identity Center Permission Set ${identityCenterPermissionSet.name}`);
+    this.logger.info(`Adding Identity Center Permission Set ${identityCenterPermissionSet.name}`);
     if (identityCenterPermissionSet.policies?.customerManaged) {
       customerManagedPolicyReferencesList = this.generateManagedPolicyReferences(
         identityCenterPermissionSet.policies?.customerManaged,
@@ -682,7 +679,7 @@ export class OperationsStack extends AcceleratorStack {
       permissionSetPair.name = permissionSet.name;
       permissionSetPair.arn = permissionSet.attrPermissionSetArn;
     } catch (e) {
-      Logger.error(e);
+      this.logger.error(e);
       throw e;
     }
 
@@ -708,7 +705,7 @@ export class OperationsStack extends AcceleratorStack {
    * Retrieve Identity Center Instance Id
    */
   private getIdentityCenterInstanceId(securityAdminAccountId: string) {
-    Logger.info(`[operations-stack] Retrieving Identity Center Instance Id`);
+    this.logger.info(`Retrieving Identity Center Instance Id`);
     let identityCenterInstanceResponse;
     let identityCenterInstanceId;
     if (!securityAdminAccountId) {
@@ -719,7 +716,7 @@ export class OperationsStack extends AcceleratorStack {
         identityCenterInstanceResponse = new IdentityCenterGetInstanceId(this, `IdentityCenterGetInstanceId`);
         identityCenterInstanceId = identityCenterInstanceResponse.instanceId;
       } catch (e) {
-        Logger.error(e);
+        this.logger.error(e);
         throw e;
       }
     }
@@ -735,7 +732,7 @@ export class OperationsStack extends AcceleratorStack {
     listOfTargets = this.getAccountIdsFromDeploymentTarget(assignment.deploymentTargets);
     const permissionSetArnValue = this.getPermissionSetArn(permissionSetMap, assignment.permissionSetName);
     for (const target of listOfTargets) {
-      Logger.info(`[operations-stack] Creating Identity Center Assignment ${assignment.name}-${target}`);
+      this.logger.info(`Creating Identity Center Assignment ${assignment.name}-${target}`);
       try {
         new cdk.aws_sso.CfnAssignment(this, `${pascalCase(assignment.name)}-${target}`, {
           instanceArn: identityCenterInstanceId,
@@ -746,7 +743,7 @@ export class OperationsStack extends AcceleratorStack {
           targetType: 'AWS_ACCOUNT',
         });
       } catch (e) {
-        Logger.error(e);
+        this.logger.error(e);
         throw e;
       }
     }
@@ -767,9 +764,10 @@ export class OperationsStack extends AcceleratorStack {
       if (cdk.Stack.of(this).account == securityAdminAccountId) {
         const identityCenterInstanceId = this.getIdentityCenterInstanceId(securityAdminAccountId);
         if (!identityCenterInstanceId) {
-          throw new Error(
-            `[operations-stack] No Identity Center instance found. Please ensure that the Identity Service is enabled, and rerun the Code Pipeline`,
+          this.logger.error(
+            `No Identity Center instance found. Please ensure that the Identity Service is enabled, and rerun the Code Pipeline`,
           );
+          throw new Error(`Configuration validation failed at runtime.`);
         }
         const permissionSetList = this.addIdentityCenterPermissionSets(
           securityAdminAccountId,
@@ -781,7 +779,7 @@ export class OperationsStack extends AcceleratorStack {
   }
 
   private createStackSetExecutionRole(managementAccountId: string) {
-    Logger.info(`[operations-stack] Creating StackSet Execution Role`);
+    this.logger.info(`Creating StackSet Execution Role`);
     new cdk.aws_iam.Role(this, 'StackSetExecutionRole', {
       roleName: 'AWSCloudFormationStackSetExecutionRole',
       assumedBy: new cdk.aws_iam.AccountPrincipal(managementAccountId),
@@ -922,7 +920,7 @@ export class OperationsStack extends AcceleratorStack {
    * @param portfolioItem
    */
   private createPortfolios(portfolioItem: PortfolioConfig): cdk.aws_servicecatalog.Portfolio {
-    Logger.info(`[operations-stack] Creating Service Catalog portfolio ${portfolioItem.name}`);
+    this.logger.info(`Creating Service Catalog portfolio ${portfolioItem.name}`);
 
     // Create portfolio TagOptions
     let tagOptions: cdk.aws_servicecatalog.TagOptions | undefined = undefined;
@@ -1005,9 +1003,7 @@ export class OperationsStack extends AcceleratorStack {
       const tagOptions = this.getPortfolioProductTagOptions(productItem);
 
       //Create a Service Catalog Cloudformation Product.
-      Logger.info(
-        `[operations-stack] Creating product ${productItem.name} in Service Catalog portfolio ${portfolioItem.name}`,
-      );
+      this.logger.info(`Creating product ${productItem.name} in Service Catalog portfolio ${portfolioItem.name}`);
       const product = new cdk.aws_servicecatalog.CloudFormationProduct(
         this,
         pascalCase(`${portfolioItem.name}Portfolio${productItem.name}Product`),
@@ -1099,13 +1095,12 @@ export class OperationsStack extends AcceleratorStack {
       portfolioAssociationItem.name,
     ) as cdk.aws_iam.Group;
     if (!group) {
-      throw new Error(
-        `[operations-stack] Group ${portfolioAssociationItem.name} not found in ${portfolioItem.account} account`,
-      );
+      this.logger.error(`Group ${portfolioAssociationItem.name} not found in ${portfolioItem.account} account`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
     // Associate Portfolio with an IAM group
-    Logger.info(
-      `[operations-stack] Associating Service Catalog portfolio ${portfolioItem.name} with IAM group ${portfolioAssociationItem.name}`,
+    this.logger.info(
+      `Associating Service Catalog portfolio ${portfolioItem.name} with IAM group ${portfolioAssociationItem.name}`,
     );
     portfolio.giveAccessToGroup(group);
   }
@@ -1121,13 +1116,12 @@ export class OperationsStack extends AcceleratorStack {
       portfolioAssociationItem.name,
     ) as cdk.aws_iam.Role;
     if (!role) {
-      throw new Error(
-        `[operations-stack] Role ${portfolioAssociationItem.name} not found in ${portfolioItem.account} account`,
-      );
+      this.logger.error(`Role ${portfolioAssociationItem.name} not found in ${portfolioItem.account} account`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
     // Associate Portfolio with an IAM Role
-    Logger.info(
-      `[operations-stack] Associating Service Catalog portfolio ${portfolioItem.name} with IAM role ${portfolioAssociationItem.name}`,
+    this.logger.info(
+      `Associating Service Catalog portfolio ${portfolioItem.name} with IAM role ${portfolioAssociationItem.name}`,
     );
     portfolio.giveAccessToRole(role);
   }
@@ -1143,13 +1137,12 @@ export class OperationsStack extends AcceleratorStack {
       portfolioAssociationItem.name,
     ) as cdk.aws_iam.User;
     if (!user) {
-      throw new Error(
-        `[operations-stack] User ${portfolioAssociationItem.name} not found in ${portfolioItem.account} account`,
-      );
+      this.logger.error(`User ${portfolioAssociationItem.name} not found in ${portfolioItem.account} account`);
+      throw new Error(`Configuration validation failed at runtime.`);
     }
     // Associate Portfolio with an IAM User
-    Logger.info(
-      `[operations-stack] Associating Service Catalog portfolio ${portfolioItem.name} with IAM user ${portfolioAssociationItem.name}`,
+    this.logger.info(
+      `Associating Service Catalog portfolio ${portfolioItem.name} with IAM user ${portfolioAssociationItem.name}`,
     );
     portfolio.giveAccessToUser(user);
   }

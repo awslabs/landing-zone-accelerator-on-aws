@@ -11,6 +11,8 @@
  *  and limitations under the License.
  */
 
+/* istanbul ignore file */
+
 import { PluginHost } from 'aws-cdk/lib/api/plugin';
 import { RequireApproval } from 'aws-cdk/lib/diff';
 import { Command } from 'aws-cdk/lib/settings';
@@ -22,8 +24,15 @@ import { throttlingBackOff } from '@aws-accelerator/utils';
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
 
 import { AcceleratorStage } from './accelerator-stage';
-import { Logger } from './logger';
+import { createLogger } from './logger';
 import { AcceleratorToolkit } from './toolkit';
+
+const logger = createLogger(['accelerator']);
+
+process.on('uncaughtException', err => {
+  logger.error(err);
+  throw new Error('Synthesis failed');
+});
 
 /**
  * List of AWS ELB root account and regions mapping
@@ -154,10 +163,12 @@ export abstract class Accelerator {
     //
     if (props.account || props.region) {
       if (props.account && props.region === undefined) {
-        throw new Error(`Account set to ${props.account}, but region is undefined`);
+        logger.error(`Account set to ${props.account}, but region is undefined`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       if (props.region && props.account === undefined) {
-        throw new Error(`Region set to ${props.region}, but region is undefined`);
+        logger.error(`Region set to ${props.region}, but account is undefined`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
 
       return AcceleratorToolkit.execute({
@@ -264,8 +275,8 @@ export abstract class Accelerator {
     // (primary) account, the log archive account, and the security audit account (also referred to
     // as the audit account).
     if (props.stage === AcceleratorStage.ACCOUNTS) {
-      Logger.info(`[accelerator] Executing ${props.stage} for Management account.`);
-      await AcceleratorToolkit.execute({
+      logger.info(`Executing ${props.stage} for Management account.`);
+      return AcceleratorToolkit.execute({
         command: props.command,
         accountId: accountsConfig.getManagementAccountId(),
         region: globalRegion,
@@ -281,8 +292,8 @@ export abstract class Accelerator {
     }
 
     if (props.stage === AcceleratorStage.PREPARE) {
-      Logger.info(`[accelerator] Executing ${props.stage} for Management account.`);
-      await AcceleratorToolkit.execute({
+      logger.info(`Executing ${props.stage} for Management account.`);
+      return AcceleratorToolkit.execute({
         command: props.command,
         accountId: accountsConfig.getManagementAccountId(),
         region: globalConfig.homeRegion,
@@ -298,8 +309,8 @@ export abstract class Accelerator {
     }
 
     if (props.stage === AcceleratorStage.FINALIZE) {
-      Logger.info(`[accelerator] Executing ${props.stage} for Management account.`);
-      await AcceleratorToolkit.execute({
+      logger.info(`Executing ${props.stage} for Management account.`);
+      return AcceleratorToolkit.execute({
         command: props.command,
         accountId: accountsConfig.getManagementAccountId(),
         region: globalRegion,
@@ -313,7 +324,7 @@ export abstract class Accelerator {
 
     if (props.stage === AcceleratorStage.ORGANIZATIONS) {
       for (const region of globalConfig.enabledRegions) {
-        Logger.info(`[accelerator] Executing ${props.stage} for Management account in ${region} region.`);
+        logger.info(`Executing ${props.stage} for Management account in ${region} region.`);
         await delay(1000);
         promises.push(
           AcceleratorToolkit.execute({
@@ -338,7 +349,7 @@ export abstract class Accelerator {
 
     if (props.stage === AcceleratorStage.KEY || props.stage === AcceleratorStage.SECURITY_AUDIT) {
       for (const region of globalConfig.enabledRegions) {
-        Logger.info(`[accelerator] Executing ${props.stage} for audit account in ${region} region.`);
+        logger.info(`Executing ${props.stage} for audit account in ${region} region.`);
         await delay(1000);
         promises.push(
           AcceleratorToolkit.execute({
@@ -372,9 +383,7 @@ export abstract class Accelerator {
       const centralLogsBucketRegion = globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion;
 
       // Execute home region before other region for LogArchive account
-      Logger.info(
-        `[accelerator] Executing ${props.stage} for ${logAccountName} account in ${centralLogsBucketRegion} region.`,
-      );
+      logger.info(`Executing ${props.stage} for ${logAccountName} account in ${centralLogsBucketRegion} region.`);
       await AcceleratorToolkit.execute({
         command: props.command,
         accountId: logAccountId,
@@ -388,7 +397,7 @@ export abstract class Accelerator {
       // execute in all other regions for Logging account, except home region
       for (const region of globalConfig.enabledRegions) {
         if (region !== centralLogsBucketRegion) {
-          Logger.info(`[accelerator] Executing ${props.stage} for ${logAccountName} account in ${region} region.`);
+          logger.info(`Executing ${props.stage} for ${logAccountName} account in ${region} region.`);
           await AcceleratorToolkit.execute({
             command: props.command,
             accountId: logAccountId,
@@ -404,7 +413,7 @@ export abstract class Accelerator {
       // execute in all other regions for all accounts, except logging account home region
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
-          Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
+          logger.info(`Executing ${props.stage} for ${account.name} account in ${region} region.`);
           const accountId = accountsConfig.getAccountId(account.name);
           await delay(1000);
           if (accountId !== logAccountId) {
@@ -440,7 +449,7 @@ export abstract class Accelerator {
     ) {
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
-          Logger.info(`[accelerator] Executing ${props.stage} for ${account.name} account in ${region} region.`);
+          logger.info(`Executing ${props.stage} for ${account.name} account in ${region} region.`);
           await delay(1000);
           promises.push(
             AcceleratorToolkit.execute({
@@ -469,7 +478,7 @@ export abstract class Accelerator {
 
   static async getManagementAccountCredentials(partition: string): Promise<AWS.STS.Credentials | undefined> {
     if (process.env['CREDENTIALS_PATH'] && fs.existsSync(process.env['CREDENTIALS_PATH'])) {
-      Logger.info('Detected Debugging environment. Loading temporary credentials.');
+      logger.info('Detected Debugging environment. Loading temporary credentials.');
 
       const credentialsString = fs.readFileSync(process.env['CREDENTIALS_PATH']).toString();
       const credentials = JSON.parse(credentialsString);
@@ -486,13 +495,13 @@ export abstract class Accelerator {
       process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'] &&
       process.env['ACCOUNT_ID'] !== process.env['MANAGEMENT_ACCOUNT_ID']
     ) {
-      Logger.info('[accelerator] set management account credentials');
-      Logger.info(`[accelerator] managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
-      Logger.info(`[accelerator] management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
+      logger.info('set management account credentials');
+      logger.info(`managementAccountId => ${process.env['MANAGEMENT_ACCOUNT_ID']}`);
+      logger.info(`management account role name => ${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`);
 
       const roleArn = `arn:${partition}:iam::${process.env['MANAGEMENT_ACCOUNT_ID']}:role/${process.env['MANAGEMENT_ACCOUNT_ROLE_NAME']}`;
       const stsClient = new AWS.STS({ region: process.env['AWS_REGION'] });
-      Logger.info(`[accelerator] management account roleArn => ${roleArn}`);
+      logger.info(`management account roleArn => ${roleArn}`);
 
       const assumeRoleCredential = await throttlingBackOff(() =>
         stsClient.assumeRole({ RoleArn: roleArn, RoleSessionName: 'acceleratorAssumeRoleSession' }).promise(),

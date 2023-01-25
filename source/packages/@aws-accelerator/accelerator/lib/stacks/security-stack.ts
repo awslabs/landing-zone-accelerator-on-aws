@@ -28,7 +28,6 @@ import {
   ConfigAggregation,
 } from '@aws-accelerator/constructs';
 
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { pascalCase } from 'pascal-case';
 
@@ -117,7 +116,7 @@ export class SecurityStack extends AcceleratorStack {
       this.enableConfigAggregation();
     }
 
-    Logger.info('[security-stack] Completed stack synthesis');
+    this.logger.info('Completed stack synthesis');
   }
 
   /**
@@ -139,7 +138,8 @@ export class SecurityStack extends AcceleratorStack {
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
         });
       } else {
-        throw new Error(`Macie audit delegated admin account name "${this.auditAccountName}" not found.`);
+        this.logger.error(`Macie audit delegated admin account name "${this.auditAccountName}" not found.`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
     }
   }
@@ -167,7 +167,8 @@ export class SecurityStack extends AcceleratorStack {
             logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
           });
         } else {
-          throw new Error(`Guardduty audit delegated admin account name "${this.auditAccountName}" not found.`);
+          this.logger.error(`Guardduty audit delegated admin account name "${this.auditAccountName}" not found.`);
+          throw new Error(`Configuration validation failed at runtime.`);
         }
       }
     }
@@ -190,7 +191,8 @@ export class SecurityStack extends AcceleratorStack {
           logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
         });
       } else {
-        throw new Error(`SecurityHub audit delegated admin account name "${this.auditAccountName}" not found.`);
+        this.logger.error(`SecurityHub audit delegated admin account name "${this.auditAccountName}" not found.`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
     }
   }
@@ -331,7 +333,7 @@ export class SecurityStack extends AcceleratorStack {
    */
   private updateIamPasswordPolicy() {
     if (this.props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
-      Logger.info(`[security-stack] Setting the IAM Password policy`);
+      this.logger.info(`Setting the IAM Password policy`);
       new PasswordPolicy(this, 'IamPasswordPolicy', {
         ...this.props.securityConfig.iamPasswordPolicy,
         kmsKey: this.cloudwatchKey,
@@ -344,7 +346,7 @@ export class SecurityStack extends AcceleratorStack {
    * Function to config aggregator
    */
   private enableConfigAggregation() {
-    Logger.info('[security-stack] Enabling Config Aggregation');
+    this.logger.info('Enabling Config Aggregation');
     new ConfigAggregation(this, 'EnableConfigAggregation', {
       acceleratorPrefix: 'AWSAccelerator',
     });

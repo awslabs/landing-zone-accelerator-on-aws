@@ -26,8 +26,6 @@ import {
   MoveAccountRule,
   RevertScpChanges,
 } from '@aws-accelerator/constructs';
-
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export interface AccountsStackProps extends AcceleratorStackProps {
@@ -40,8 +38,6 @@ export class AccountsStack extends AcceleratorStack {
 
   constructor(scope: Construct, id: string, props: AccountsStackProps) {
     super(scope, id, props);
-
-    Logger.debug(`[accounts-stack] Region: ${cdk.Stack.of(this).region}`);
 
     // Use existing management account CloudWatch log key if in the home region
     // otherwise create new kms key
@@ -178,7 +174,7 @@ export class AccountsStack extends AcceleratorStack {
 
           // Deploy SCPs
           for (const serviceControlPolicy of props.organizationConfig.serviceControlPolicies) {
-            Logger.info(`[accounts-stack] Adding service control policy (${serviceControlPolicy.name})`);
+            this.logger.info(`Adding service control policy (${serviceControlPolicy.name})`);
 
             const scp = new Policy(this, serviceControlPolicy.name, {
               description: serviceControlPolicy.description,
@@ -204,8 +200,8 @@ export class AccountsStack extends AcceleratorStack {
             }
 
             for (const organizationalUnit of serviceControlPolicy.deploymentTargets.organizationalUnits ?? []) {
-              Logger.info(
-                `[accounts-stack] Attaching service control policy (${serviceControlPolicy.name}) to organizational unit (${organizationalUnit})`,
+              this.logger.info(
+                `Attaching service control policy (${serviceControlPolicy.name}) to organizational unit (${organizationalUnit})`,
               );
 
               new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${organizationalUnit}`), {
@@ -230,14 +226,14 @@ export class AccountsStack extends AcceleratorStack {
         }
 
         if (props.securityConfig.accessAnalyzer.enable) {
-          Logger.debug('[accounts-stack] Enable Service Access for access-analyzer.amazonaws.com');
+          this.logger.debug('Enable Service Access for access-analyzer.amazonaws.com');
           new iam.CfnServiceLinkedRole(this, 'AccessAnalyzerServiceLinkedRole', {
             awsServiceName: 'access-analyzer.amazonaws.com',
           });
         }
 
         if (props.securityConfig.centralSecurityServices.guardduty.enable) {
-          Logger.debug('[accounts-stack] Enable Service Access for guardduty.amazonaws.com');
+          this.logger.debug('Enable Service Access for guardduty.amazonaws.com');
           new iam.CfnServiceLinkedRole(this, 'GuardDutyServiceLinkedRole', {
             awsServiceName: 'guardduty.amazonaws.com',
             description: 'A service-linked role required for Amazon GuardDuty to access your resources. ',
@@ -245,7 +241,7 @@ export class AccountsStack extends AcceleratorStack {
         }
 
         if (props.securityConfig.centralSecurityServices.securityHub.enable) {
-          Logger.debug('[accounts-stack] Enable Service Access for securityhub.amazonaws.com');
+          this.logger.debug('Enable Service Access for securityhub.amazonaws.com');
           new iam.CfnServiceLinkedRole(this, 'SecurityHubServiceLinkedRole', {
             awsServiceName: 'securityhub.amazonaws.com',
             description: 'A service-linked role required for AWS Security Hub to access your resources.',
@@ -253,14 +249,14 @@ export class AccountsStack extends AcceleratorStack {
         }
 
         if (props.securityConfig.centralSecurityServices.macie.enable) {
-          Logger.debug('[accounts-stack] Enable Service Access for macie.amazonaws.com');
+          this.logger.debug('Enable Service Access for macie.amazonaws.com');
           new iam.CfnServiceLinkedRole(this, 'MacieServiceLinkedRole', {
             awsServiceName: 'macie.amazonaws.com',
           });
         }
 
         if (props.securityConfig.centralSecurityServices?.scpRevertChangesConfig?.enable) {
-          Logger.info(`[accounts-stack] Creating resources to revert modifications to scps`);
+          this.logger.info(`Creating resources to revert modifications to scps`);
           new RevertScpChanges(this, 'RevertScpChanges', {
             auditAccountId: props.accountsConfig.getAuditAccountId(),
             logArchiveAccountId: props.accountsConfig.getLogArchiveAccountId(),
@@ -279,7 +275,7 @@ export class AccountsStack extends AcceleratorStack {
         if (props.organizationConfig.quarantineNewAccounts?.enable === true && props.partition === 'aws') {
           // Create resources to attach quarantine scp to
           // new accounts created in organizations
-          Logger.info(`[accounts-stack] Creating resources to quarantine new accounts`);
+          this.logger.info(`Creating resources to quarantine new accounts`);
           const orgPolicyRead = new cdk.aws_iam.PolicyStatement({
             sid: 'OrgRead',
             effect: cdk.aws_iam.Effect.ALLOW,
@@ -299,7 +295,7 @@ export class AccountsStack extends AcceleratorStack {
             ],
           });
 
-          Logger.info(`[accounts-stack] Creating function to attach quarantine scp to accounts`);
+          this.logger.info(`Creating function to attach quarantine scp to accounts`);
           const attachQuarantineFunction = new cdk.aws_lambda.Function(this, 'AttachQuarantineScpFunction', {
             code: cdk.aws_lambda.Code.fromAsset(path.join(__dirname, '../lambdas/attach-quarantine-scp/dist')),
             runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
@@ -359,9 +355,7 @@ export class AccountsStack extends AcceleratorStack {
           //If any GovCloud accounts are configured also
           //watch for any GovCloudCreateAccount events
           if (props.accountsConfig.anyGovCloudAccounts()) {
-            Logger.info(
-              `[accounts-stack] Creating EventBridge rule to attach quarantine scp to accounts when GovCloud is enabled`,
-            );
+            this.logger.info(`Creating EventBridge rule to attach quarantine scp to accounts when GovCloud is enabled`);
             const createGovCloudAccountEventRule = new cdk.aws_events.Rule(this, 'CreateGovCloudAccountRule', {
               eventPattern: {
                 source: ['aws.organizations'],
@@ -397,6 +391,6 @@ export class AccountsStack extends AcceleratorStack {
     //
     this.createSsmParameters();
 
-    Logger.info('[accounts-stack] Completed stack synthesis');
+    this.logger.info('Completed stack synthesis');
   }
 }

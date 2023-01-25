@@ -60,7 +60,9 @@ import {
   STSClient,
 } from '@aws-sdk/client-sts';
 import { ECRClient, DescribeRepositoriesCommand, DeleteRepositoryCommand as DeleteEcr } from '@aws-sdk/client-ecr';
-import { Logger } from '../../../accelerator/lib/logger';
+
+import * as winston from 'winston';
+import { createLogger } from '../../../accelerator/lib/logger';
 
 /**
  * Type for pipeline stage action information with order and action name
@@ -302,8 +304,11 @@ export class AcceleratorTool {
 
   private acceleratorCodeBuildProjects: string[] = [];
 
+  private logger: winston.Logger;
+
   constructor(props: AcceleratorToolProps) {
     this.acceleratorToolProps = props;
+    this.logger = createLogger(['accelerator-tool']);
   }
 
   /**
@@ -1847,20 +1852,20 @@ export class AcceleratorTool {
   private debugLog(message: string, messageType: string) {
     switch (messageType) {
       case 'warn':
-        Logger.warn(message);
+        this.logger.warn(message);
         break;
       case 'info':
         if (this.acceleratorToolProps.debug) {
-          Logger.warn(message);
+          this.logger.warn(message);
         }
         break;
       case 'debug':
         if (this.acceleratorToolProps.debug) {
-          Logger.warn(message);
+          this.logger.warn(message);
         }
         break;
       case 'display':
-        Logger.info(message);
+        this.logger.info(message);
         break;
     }
   }

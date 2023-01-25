@@ -27,8 +27,14 @@ import * as path from 'path';
 import { AcceleratorStackNames } from './accelerator';
 import { AcceleratorStage } from './accelerator-stage';
 import { AccountsConfig, CustomizationsConfig, OrganizationConfig } from '@aws-accelerator/config';
-import { Logger } from './logger';
+import { createLogger } from './logger';
 import { isIncluded } from './stacks/custom-stack';
+
+const logger = createLogger(['toolkit']);
+process.on('unhandledRejection', err => {
+  logger.error(err);
+  throw new Error('Runtime Error');
+});
 
 /**
  *
@@ -83,19 +89,18 @@ export class AcceleratorToolkit {
     proxyAddress?: string;
     centralizeCdkBootstrap?: boolean;
   }): Promise<void> {
-    // Logger
     if (options.accountId || options.region) {
       if (options.stage) {
-        Logger.info(
-          `[toolkit] Executing cdk ${options.command} ${options.stage} for aws://${options.accountId}/${options.region}`,
+        logger.info(
+          `Executing cdk ${options.command} ${options.stage} for aws://${options.accountId}/${options.region}`,
         );
       } else {
-        Logger.info(`[toolkit] Executing cdk ${options.command} for aws://${options.accountId}/${options.region}`);
+        logger.info(`Executing cdk ${options.command} for aws://${options.accountId}/${options.region}`);
       }
     } else if (options.stage) {
-      Logger.info(`[toolkit] Executing cdk ${options.command} ${options.stage}`);
+      logger.info(`Executing cdk ${options.command} ${options.stage}`);
     } else {
-      Logger.info(`[toolkit] Executing cdk ${options.command}`);
+      logger.info(`Executing cdk ${options.command}`);
     }
 
     // build the context
@@ -199,6 +204,7 @@ export class AcceleratorToolkit {
 
       case Command.DEPLOY:
         if (options.stage === undefined) {
+          logger.error('trying to deploy with an undefined stage');
           throw new Error('trying to deploy with an undefined stage');
         }
         let stackName = [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`];
@@ -236,6 +242,7 @@ export class AcceleratorToolkit {
 
         if (options.stage === AcceleratorStage.CUSTOMIZATIONS) {
           if (options.configDirPath === undefined) {
+            logger.error('Customizations stage requires an argument for configuration directory path');
             throw new Error('Customizations stage requires an argument for configuration directory path');
           }
           if (fs.existsSync(path.join(options.configDirPath, 'customizations-config.yaml'))) {
@@ -278,12 +285,17 @@ export class AcceleratorToolkit {
 
         const changeSetName = `${stackName[0]}-change-set`;
 
-        await cli.deploy({
-          selector,
-          toolkitStackName,
-          requireApproval: options.requireApproval,
-          changeSetName: changeSetName,
-        });
+        await cli
+          .deploy({
+            selector,
+            toolkitStackName,
+            requireApproval: options.requireApproval,
+            changeSetName: changeSetName,
+          })
+          .catch(err => {
+            logger.error(err);
+            throw new Error('Deployment failed');
+          });
         break;
       case Command.SYNTHESIZE:
       case Command.SYNTH:
@@ -291,6 +303,7 @@ export class AcceleratorToolkit {
         break;
 
       default:
+        logger.error(`Unsupported command: ${options.command}`);
         throw new Error(`Unsupported command: ${options.command}`);
     }
   }

@@ -37,7 +37,6 @@ import {
 } from '@aws-accelerator/constructs';
 
 import { AcceleratorElbRootAccounts } from '../accelerator';
-import { Logger } from '../logger';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export type cloudwatchExclusionProcessedItem = {
@@ -67,12 +66,6 @@ export class LoggingStack extends AcceleratorStack {
     // Set Organization ID
     this.setOrganizationId();
 
-    Logger.debug(
-      `[logging-stack] Logging stack started for account ${cdk.Stack.of(this).account} and region ${
-        cdk.Stack.of(this).region
-      }`,
-    );
-    //
     // Create S3 Key in all account
     const s3Key = this.createS3Key();
 
@@ -280,7 +273,8 @@ export class LoggingStack extends AcceleratorStack {
         )!.accountId;
       }
       if (elbAccountId === undefined) {
-        throw new Error(`elbAccountId is not defined for region: ${cdk.Stack.of(this).region}`);
+        this.logger.error(`elbAccountId is not defined for region: ${cdk.Stack.of(this).region}`);
+        throw new Error(`Configuration validation failed at runtime.`);
       }
       // To make sure central log bucket created before elb access log bucket, this is required when logging stack executes in home region
       if (this.centralLogsBucket) {
@@ -430,7 +424,7 @@ export class LoggingStack extends AcceleratorStack {
       this.setupCertificateAssets();
     }
 
-    Logger.debug(`[logging-stack] Stack synthesis complete`);
+    this.logger.debug(`Stack synthesis complete`);
   }
 
   private setOrganizationId() {
@@ -446,7 +440,7 @@ export class LoggingStack extends AcceleratorStack {
     // Crete S3 key in every account except audit account,
     // this is required for SSM automation to get right KMS key to encrypt unencrypted bucket
     if (cdk.Stack.of(this).account !== this.props.accountsConfig.getAuditAccountId()) {
-      Logger.debug(`[Logging-stack] Create S3 Key`);
+      this.logger.debug(`Create S3 Key`);
       const s3Key = new cdk.aws_kms.Key(this, 'Accelerator3Key', {
         alias: AcceleratorStack.ACCELERATOR_S3_KEY_ALIAS,
         description: AcceleratorStack.ACCELERATOR_S3_KEY_DESCRIPTION,
@@ -504,7 +498,7 @@ export class LoggingStack extends AcceleratorStack {
    * Function to create Audit account S3 bucket
    */
   private createAuditAccountS3Key(): cdk.aws_kms.Key {
-    Logger.debug(`[key-stack] Create S3 Key`);
+    this.logger.debug(`Create S3 Key`);
     const s3Key = new cdk.aws_kms.Key(this, 'AcceleratorAuditS3Key', {
       alias: AcceleratorStack.ACCELERATOR_S3_KEY_ALIAS,
       description: AcceleratorStack.ACCELERATOR_S3_KEY_DESCRIPTION,
@@ -621,7 +615,7 @@ export class LoggingStack extends AcceleratorStack {
   ) {
     const vpcFlowLogsConfig = this.getS3FlowLogsDestinationConfig();
     if (vpcFlowLogsConfig) {
-      Logger.info(`[Logging-stack] Create S3 bucket for VPC flow logs destination`);
+      this.logger.info(`Create S3 bucket for VPC flow logs destination`);
 
       const vpcFlowLogsBucket = new Bucket(this, 'AcceleratorVpcFlowLogsBucket', {
         encryptionType: BucketEncryptionType.SSE_KMS,
@@ -806,10 +800,10 @@ export class LoggingStack extends AcceleratorStack {
         return obj.account === cdk.Stack.of(this).account && obj.region === cdk.Stack.of(this).region;
       });
       if (accountSpecificExclusion.length > 1) {
-        Logger.error(
-          `[Logging-stack] (Multiple cloudwatch exclusions ${JSON.stringify(
-            accountSpecificExclusion,
-          )} found for account: ${cdk.Stack.of(this).account} in region: ${cdk.Stack.of(this).region}`,
+        this.logger.error(
+          `(Multiple cloudwatch exclusions ${JSON.stringify(accountSpecificExclusion)} found for account: ${
+            cdk.Stack.of(this).account
+          } in region: ${cdk.Stack.of(this).region}`,
         );
       } else {
         accountRegionExclusion = exclusionAccountMap.find(obj => {
@@ -1166,10 +1160,10 @@ export class LoggingStack extends AcceleratorStack {
 
     for (const keyItem of this.props.securityConfig.keyManagementService.keySets) {
       if (!this.isIncluded(keyItem.deploymentTargets)) {
-        Logger.info(`[Logging-stack] KMS Key ${keyItem.name} excluded`);
+        this.logger.info(`KMS Key ${keyItem.name} excluded`);
         continue;
       }
-      Logger.debug(`[Logging-stack] Create KMS Key ${keyItem.name}`);
+      this.logger.debug(`Create KMS Key ${keyItem.name}`);
 
       const key = new cdk.aws_kms.Key(this, 'AcceleratorKmsKey-' + pascalCase(keyItem.name), {
         alias: keyItem.alias,
@@ -1255,7 +1249,7 @@ export class LoggingStack extends AcceleratorStack {
       }
 
       if (this.props.globalConfig.logging.sessionManager.sendToS3) {
-        Logger.debug(`[Logging-stack] Grant Session Manager access to Central Logs Bucket.`);
+        this.logger.debug(`Grant Session Manager access to Central Logs Bucket.`);
         awsPrincipalAccesses.push({
           name: 'SessionManager',
           principal: 'session-manager.amazonaws.com',
@@ -1292,7 +1286,7 @@ export class LoggingStack extends AcceleratorStack {
   }
 
   private createLoggingAccountSnsTopic(snsTopic: SnsTopicConfig, snsKey: cdk.aws_kms.IKey) {
-    Logger.info('[logging-stack] Creating SNS topic in log archive account home region.');
+    this.logger.info('Creating SNS topic in log archive account home region.');
 
     const topic = new cdk.aws_sns.Topic(this, `${pascalCase(snsTopic.name)}SNSTopic`, {
       displayName: `AWS Accelerator - ${snsTopic.name}`,
@@ -1392,7 +1386,7 @@ export class LoggingStack extends AcceleratorStack {
   }
 
   private createSnsTopic(snsTopic: SnsTopicConfig, snsKey: cdk.aws_kms.IKey) {
-    Logger.info(`[logging-stack] Creating SNS topic ${snsTopic.name} in ${cdk.Stack.of(this).account}`);
+    this.logger.info(`Creating SNS topic ${snsTopic.name} in ${cdk.Stack.of(this).account}`);
 
     const topic = new cdk.aws_sns.Topic(this, `${pascalCase(snsTopic.name)}SNSTopic`, {
       displayName: `AWS Accelerator - ${snsTopic.name}`,
@@ -1642,7 +1636,7 @@ export class LoggingStack extends AcceleratorStack {
   }
 
   private centralLogBucketAddResourcePolicies() {
-    Logger.info(`[logging-stack] Adding central log bucket resource policies to KMS`);
+    this.logger.info(`Adding central log bucket resource policies to KMS`);
 
     for (const attachment of this.props.globalConfig.logging.centralLogBucket?.kmsResourcePolicyAttachments ?? []) {
       const policyDocument = JSON.parse(
@@ -1658,7 +1652,7 @@ export class LoggingStack extends AcceleratorStack {
         }
       }
 
-      Logger.info(`[logging-stack] Adding central log bucket resource policies to S3`);
+      this.logger.info(`Adding central log bucket resource policies to S3`);
       const realCentralLogBucket = this.centralLogsBucket?.getS3Bucket().getS3Bucket();
       for (const attachment of this.props.globalConfig.logging.centralLogBucket?.s3ResourcePolicyAttachments ?? []) {
         const policyDocument = JSON.parse(
@@ -1687,7 +1681,7 @@ export class LoggingStack extends AcceleratorStack {
     const auditAccountId = this.props.accountsConfig.getAuditAccountId();
 
     //Create Role for SNS Topic access from security config and global config
-    Logger.info('[logging-stack] Creating FMS Notification Channel Role AWSAccelerator - FMS');
+    this.logger.info('Creating FMS Notification Channel Role AWSAccelerator - FMS');
     const fmsRole = new cdk.aws_iam.Role(this, `aws-accelerator-fms`, {
       roleName,
       assumedBy: new cdk.aws_iam.ServicePrincipal('fms.amazonaws.com'),
@@ -1718,7 +1712,7 @@ export class LoggingStack extends AcceleratorStack {
   }
 
   private elbLogBucketAddResourcePolicies(elbLogBucket: cdk.aws_s3.IBucket) {
-    Logger.info(`[security-resources-stack] Adding elb log bucket resource policies to S3`);
+    this.logger.info(`Adding elb log bucket resource policies to S3`);
     for (const attachment of this.props.globalConfig.logging.elbLogBucket?.s3ResourcePolicyAttachments ?? []) {
       const policyDocument = JSON.parse(
         this.generatePolicyReplacements(path.join(this.props.configDirPath, attachment.policy), false),

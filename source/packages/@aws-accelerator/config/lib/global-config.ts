@@ -20,7 +20,9 @@ import { AccountsConfig } from './accounts-config';
 import * as t from './common-types';
 import { OrganizationConfig } from './organization-config';
 import { IamConfig } from './iam-config';
+import { createLogger } from '@aws-accelerator/accelerator/lib/logger';
 
+const logger = createLogger(['global-config']);
 /**
  * Global configuration items.
  */
@@ -248,7 +250,7 @@ export class ControlTowerConfig implements t.TypeOf<typeof GlobalConfigTypes.con
  */
 export class centralizeCdkBucketsConfig implements t.TypeOf<typeof GlobalConfigTypes.centralizeCdkBucketsConfig> {
   /**
-   * Indicates whether CDK stacks in workload accounts will utilzie S3 buckets in the management account rather than within the account.
+   * Indicates whether CDK stacks in workload accounts will utilize S3 buckets in the management account rather than within the account.
    *
    * When the accelerator deploys resources using the AWS CDK, assets are first built and stored in S3. By default, the S3 bucket is
    * located within the deployment target account.
@@ -1096,7 +1098,7 @@ export class BackupConfig implements t.TypeOf<typeof GlobalConfigTypes.backupCon
  * @example
  * ```
  * snsTopics:
- *   depoymentTargets:
+ *   deploymentTargets:
  *     organizationalUnits:
  *       - Root
  *     topics:
@@ -1228,7 +1230,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   readonly cloudwatchLogRetentionInDays = 3653;
 
   /**
-   * To indicate workload accounts should utilize the cdk-assets S3 buckets in the managemenet account, you need to provide below value for this parameter.
+   * To indicate workload accounts should utilize the cdk-assets S3 buckets in the management account, you need to provide below value for this parameter.
    *
    * @example
    * ```
@@ -1369,7 +1371,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    * @example
    * ```
    * snsTopics:
-   *   depoymentTargets:
+   *   deploymentTargets:
    *     organizationalUnits:
    *       - Root
    *     topics:
@@ -1480,7 +1482,8 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     }
 
     if (errors.length) {
-      throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      logger.error(`${GlobalConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      throw new Error('configuration validation failed.');
     }
   }
 
@@ -1762,7 +1765,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   private validateSnsTopics(values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>, errors: string[]) {
     if (values.snsTopics) {
       for (const snsTopic of values.snsTopics.topics ?? []) {
-        console.log(`email count: ${snsTopic.emailAddresses.length}`);
+        logger.info(`email count: ${snsTopic.emailAddresses.length}`);
         if (snsTopic.emailAddresses.length < 1) {
           errors.push(`Must be at least one email address for the snsTopic named ${snsTopic.name}`);
         }
@@ -1913,9 +1916,9 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
       const values = t.parse(GlobalConfigTypes.globalConfig, yaml.load(content));
       return new GlobalConfig(values);
     } catch (e) {
-      console.log('[global-config] Error parsing input, global config undefined');
-      console.log(`${e}`);
-      return undefined;
+      logger.error('Error parsing input, global config undefined');
+      logger.error(`${e}`);
+      throw new Error('Could not load global configuration');
     }
   }
 }
