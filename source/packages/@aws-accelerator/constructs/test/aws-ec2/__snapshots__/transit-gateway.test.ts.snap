@@ -254,6 +254,29 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
+    "TransitGatewayAttachmentGovCloud09E6C5F1": Object {
+      "Properties": Object {
+        "Options": Object {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
+        "SubnetIds": Array [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayAttachment",
+    },
     "TransitGatewayRouteTableAssociation19E386E4": Object {
       "Properties": Object {
         "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
@@ -525,6 +548,29 @@ Object {
         "VpcId": "vpcId",
       },
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
+    },
+    "TransitGatewayAttachmentGovCloud09E6C5F1": Object {
+      "Properties": Object {
+        "Options": Object {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
+        "SubnetIds": Array [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayAttachment",
     },
     "TransitGatewayRouteTableAssociation19E386E4": Object {
       "Properties": Object {
@@ -839,6 +885,29 @@ Object {
         "VpcId": "vpcId",
       },
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
+    },
+    "TransitGatewayAttachmentGovCloud09E6C5F1": Object {
+      "Properties": Object {
+        "Options": Object {
+          "ApplianceModeSupport": "enable",
+          "DnsSupport": "enable",
+          "Ipv6Support": "disable",
+        },
+        "SubnetIds": Array [
+          "one",
+          "two",
+          "three",
+        ],
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "name",
+          },
+        ],
+        "TransitGatewayId": "transitGatewayId",
+        "VpcId": "vpcId",
+      },
+      "Type": "AWS::EC2::TransitGatewayAttachment",
     },
     "TransitGatewayRouteTableAssociation19E386E4": Object {
       "Properties": Object {

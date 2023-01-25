@@ -197,25 +197,41 @@ export class TransitGatewayAttachment extends cdk.Resource implements ITransitGa
     super(scope, id);
 
     let resource: cdk.aws_ec2.CfnTransitGatewayVpcAttachment | cdk.aws_ec2.CfnTransitGatewayAttachment;
-    if (props.partition === 'aws') {
-      resource = new cdk.aws_ec2.CfnTransitGatewayVpcAttachment(this, 'Resource', {
-        vpcId: props.vpcId,
-        transitGatewayId: props.transitGatewayId,
-        subnetIds: props.subnetIds,
-        options: {
-          ApplianceModeSupport: props.options?.applianceModeSupport ?? 'disable',
-          DnsSupport: props.options?.dnsSupport ?? 'enable',
-          Ipv6Support: props.options?.ipv6Support ?? 'disable',
-        },
-        tags: props.tags,
-      });
-    } else {
-      resource = new cdk.aws_ec2.CfnTransitGatewayAttachment(this, 'Resource', {
-        vpcId: props.vpcId,
-        transitGatewayId: props.transitGatewayId,
-        subnetIds: props.subnetIds,
-        tags: props.tags,
-      });
+    switch (props.partition) {
+      case 'aws':
+        resource = new cdk.aws_ec2.CfnTransitGatewayVpcAttachment(this, 'Resource', {
+          vpcId: props.vpcId,
+          transitGatewayId: props.transitGatewayId,
+          subnetIds: props.subnetIds,
+          options: {
+            ApplianceModeSupport: props.options?.applianceModeSupport ?? 'disable',
+            DnsSupport: props.options?.dnsSupport ?? 'enable',
+            Ipv6Support: props.options?.ipv6Support ?? 'disable',
+          },
+          tags: props.tags,
+        });
+        break;
+      case 'aws-us-gov':
+        resource = new cdk.aws_ec2.CfnTransitGatewayAttachment(this, 'Resource', {
+          vpcId: props.vpcId,
+          transitGatewayId: props.transitGatewayId,
+          subnetIds: props.subnetIds,
+          options: {
+            ApplianceModeSupport: props.options?.applianceModeSupport ?? 'disable',
+            DnsSupport: props.options?.dnsSupport ?? 'enable',
+            Ipv6Support: props.options?.ipv6Support ?? 'disable',
+          },
+          tags: props.tags,
+        });
+        break;
+      default:
+        resource = new cdk.aws_ec2.CfnTransitGatewayAttachment(this, 'Resource', {
+          vpcId: props.vpcId,
+          transitGatewayId: props.transitGatewayId,
+          subnetIds: props.subnetIds,
+          tags: props.tags,
+        });
+        break;
     }
     // Add name tag
     cdk.Tags.of(this).add('Name', props.name);
