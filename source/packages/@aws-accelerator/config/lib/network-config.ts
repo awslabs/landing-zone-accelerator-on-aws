@@ -666,6 +666,24 @@ export class NetworkConfigTypes {
     'aws:forward_to_sfe',
   ]);
 
+  static readonly nfwStatefulDefaultActionType = t.enums('NfwStatefulDefaultActionType', [
+    'aws:drop_strict',
+    'aws:drop_established',
+    'aws:alert_strict',
+    'aws:alert_established',
+  ]);
+
+  static readonly nfwStatelessRuleTcpFlagType = t.enums('NfwStatelessRuleTcpFlagType', [
+    'FIN',
+    'SYN',
+    'RST',
+    'PSH',
+    'ACK',
+    'URG',
+    'ECE',
+    'CWR',
+  ]);
+
   static readonly nfwStatefulRuleOptionsType = t.enums('NfwStatefulRuleOptionsType', [
     'DEFAULT_ACTION_ORDER',
     'STRICT_ORDER',
@@ -718,8 +736,8 @@ export class NetworkConfigTypes {
   });
 
   static readonly nfwRuleSourceStatelessTcpFlagsConfig = t.interface({
-    flags: t.array(t.string),
-    masks: t.array(t.nonEmptyString),
+    flags: t.array(this.nfwStatelessRuleTcpFlagType),
+    masks: t.array(this.nfwStatelessRuleTcpFlagType),
   });
 
   static readonly nfwRuleSourceStatelessMatchAttributesConfig = t.interface({
@@ -732,7 +750,7 @@ export class NetworkConfigTypes {
   });
 
   static readonly nfwRuleSourceStatelessRuleDefinitionConfig = t.interface({
-    actions: t.array(this.nfwStatelessRuleActionType),
+    actions: t.array(t.union([t.nonEmptyString, this.nfwStatelessRuleActionType])),
     matchAttributes: this.nfwRuleSourceStatelessMatchAttributesConfig,
   });
 
@@ -760,8 +778,8 @@ export class NetworkConfigTypes {
   });
 
   static readonly nfwRuleVariableConfig = t.interface({
-    ipSets: this.nfwRuleVariableDefinitionConfig,
-    portSets: this.nfwRuleVariableDefinitionConfig,
+    ipSets: t.union([this.nfwRuleVariableDefinitionConfig, t.array(this.nfwRuleVariableDefinitionConfig)]),
+    portSets: t.union([this.nfwRuleVariableDefinitionConfig, t.array(this.nfwRuleVariableDefinitionConfig)]),
   });
 
   static readonly nfwRuleGroupRuleConfig = t.interface({
@@ -792,7 +810,7 @@ export class NetworkConfigTypes {
   });
 
   static readonly nfwFirewallPolicyPolicyConfig = t.interface({
-    statefulDefaultActions: t.optional(t.array(t.nonEmptyString)),
+    statefulDefaultActions: t.optional(t.array(this.nfwStatefulDefaultActionType)),
     statefulEngineOptions: t.optional(this.nfwStatefulRuleOptionsType),
     statefulRuleGroups: t.optional(t.array(this.nfwStatefulRuleGroupReferenceConfig)),
     statelessCustomActions: t.optional(t.array(this.nfwRuleSourceCustomActionConfig)),
@@ -4304,7 +4322,7 @@ export class NfwRuleSourceStatelessTcpFlagsConfig
    * and flags that must not be set in order for the packet to match.
    * This setting can only specify values that are also specified in the Masks setting.
    */
-  readonly flags: string[] = [];
+  readonly flags: t.TypeOf<typeof NetworkConfigTypes.nfwStatelessRuleTcpFlagType>[] = [];
   /**
    * The set of flags to consider in the inspection.
    *
@@ -4315,7 +4333,7 @@ export class NfwRuleSourceStatelessTcpFlagsConfig
    * The ones that are not set in this flags setting must also not be set in the packet.
    * To inspect all flags in the valid values list, leave this with no setting.
    */
-  readonly masks: string[] = [];
+  readonly masks: t.TypeOf<typeof NetworkConfigTypes.nfwStatelessRuleTcpFlagType>[] = [];
 }
 
 /**
@@ -4622,8 +4640,8 @@ export class NfwRuleSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.n
  *
  * @example
  * ```
- * name: HOME_NET
- * definition: ['10.0.0.0/16']
+ * - name: HOME_NET
+ *   definition: ['10.0.0.0/16']
  * ```
  */
 export class NfwRuleVariableDefinitionConfig
@@ -4648,6 +4666,17 @@ export class NfwRuleVariableDefinitionConfig
  * @see {@link https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-networkfirewall-rulegroup-rulevariables.html}
  *
  * @example
+ * CURRENT SYNTAX: use the following syntax when defining new rule variables. The additional example underneath is for backward compatibility
+ * ```
+ * ipSets:
+ *   - name: HOME_NET
+ *     definition: ['10.0.0.0/16']
+ * portSets:
+ *   - name: HOME_NET
+ *     definition: ['80', '443']
+ * ```
+ *
+ * THE BELOW EXAMPLE SYNTAX IS DEPRECATED: use the above syntax when defining new or more than one rule variable
  * ```
  * ipSets:
  *   name: HOME_NET
@@ -4663,13 +4692,17 @@ export class NfwRuleVariableConfig implements t.TypeOf<typeof NetworkConfigTypes
    *
    * @see {@link NfwRuleVariableDefinitionConfig}
    */
-  readonly ipSets: NfwRuleVariableDefinitionConfig = new NfwRuleVariableDefinitionConfig();
+  readonly ipSets: NfwRuleVariableDefinitionConfig | NfwRuleVariableDefinitionConfig[] = [
+    new NfwRuleVariableDefinitionConfig(),
+  ];
   /**
    * A Network Firewall rule variable definition configuration.
    *
    * @see {@link NfwRuleVariableDefinitionConfig}
    */
-  readonly portSets: NfwRuleVariableDefinitionConfig = new NfwRuleVariableDefinitionConfig();
+  readonly portSets: NfwRuleVariableDefinitionConfig | NfwRuleVariableDefinitionConfig[] = [
+    new NfwRuleVariableDefinitionConfig(),
+  ];
 }
 
 /**
@@ -4686,11 +4719,11 @@ export class NfwRuleVariableConfig implements t.TypeOf<typeof NetworkConfigTypes
  *   rulesFile: path/to/rules.txt
  * ruleVariables:
  *   ipSets:
- *     name: HOME_NET
- *     definition: ['10.0.0.0/16']
+ *     - name: HOME_NET
+ *       definition: ['10.0.0.0/16']
  *   portSets:
- *     name: HOME_NET
- *     definition: ['80', '443']
+ *     - name: HOME_NET
+ *       definition: ['80', '443']
  * ```
  */
 export class NfwRuleGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTypes.nfwRuleGroupRuleConfig> {
@@ -4901,7 +4934,8 @@ export class NfwFirewallPolicyPolicyConfig
   /**
    * An array of default actions to take on packets evaluated by the stateful engine.
    */
-  readonly statefulDefaultActions: string[] | undefined = undefined;
+  readonly statefulDefaultActions: t.TypeOf<typeof NetworkConfigTypes.nfwStatefulDefaultActionType>[] | undefined =
+    undefined;
   /**
    * Define how the stateful engine will evaluate packets.
    *

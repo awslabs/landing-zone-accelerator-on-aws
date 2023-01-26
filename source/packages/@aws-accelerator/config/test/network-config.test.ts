@@ -117,7 +117,7 @@ describe('NetworkConfig', () => {
       expect(nfwRuleGroupRuleConfig.ruleVariables).toEqual(undefined);
 
       const nfwRuleVariableConfig = new NfwRuleVariableConfig();
-      expect(nfwRuleVariableConfig.ipSets.name).toEqual('');
+      expect(nfwRuleVariableConfig.ipSets).toEqual([{ name: '', definition: [] }]);
 
       const nfwRuleVariableDefinitionConfig = new NfwRuleVariableDefinitionConfig();
       expect(nfwRuleVariableDefinitionConfig.name).toEqual('');
