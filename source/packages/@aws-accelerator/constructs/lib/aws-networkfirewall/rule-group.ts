@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
-import { NfwRuleGroupRuleConfig } from '@aws-accelerator/config';
+import { NfwRuleGroupRuleConfig, NfwRuleVariableDefinitionConfig } from '@aws-accelerator/config';
 
 interface INetworkFirewallRuleGroup extends cdk.IResource {
   /**
@@ -70,10 +70,6 @@ export class NetworkFirewallRuleGroup extends cdk.Resource implements INetworkFi
   public readonly groupId: string;
   public readonly groupName: string;
   private ruleGroup?: cdk.aws_networkfirewall.CfnRuleGroup.RuleGroupProperty;
-  private statelessRules?: cdk.aws_networkfirewall.CfnRuleGroup.StatelessRuleProperty[];
-  private customActions?: cdk.aws_networkfirewall.CfnRuleGroup.CustomActionProperty[];
-  private ruleVariables?: cdk.aws_networkfirewall.CfnRuleGroup.RuleVariablesProperty;
-  private ruleOptions?: cdk.aws_networkfirewall.CfnRuleGroup.StatefulRuleOptionsProperty;
 
   constructor(scope: Construct, id: string, props: NetworkFirewallRuleGroupProps) {
     super(scope, id);
@@ -83,31 +79,16 @@ export class NetworkFirewallRuleGroup extends cdk.Resource implements INetworkFi
 
     // Transform properties as necessary
     if (props.ruleGroup) {
-      let statelessAndCustom = undefined;
-      if (props.ruleGroup.rulesSource.statelessRulesAndCustomActions) {
-        this.transformStatelessCustom(props.ruleGroup);
-        statelessAndCustom = {
-          statelessRules: this.statelessRules!,
-          customActions: this.customActions,
-        };
-      }
-      if (props.ruleGroup.ruleVariables) {
-        this.transformRuleVariables(props.ruleGroup);
-      }
-      if (props.ruleGroup.statefulRuleOptions) {
-        this.transformRuleOptions(props.ruleGroup);
-      }
-
       // Set rule group property
       this.ruleGroup = {
         rulesSource: {
           rulesSourceList: props.ruleGroup.rulesSource.rulesSourceList,
           rulesString: props.ruleGroup.rulesSource.rulesString,
           statefulRules: props.ruleGroup.rulesSource.statefulRules,
-          statelessRulesAndCustomActions: statelessAndCustom,
+          statelessRulesAndCustomActions: this.transformStatelessCustom(props.ruleGroup),
         },
-        ruleVariables: this.ruleVariables,
-        statefulRuleOptions: this.ruleOptions,
+        ruleVariables: this.transformRuleVariables(props.ruleGroup),
+        statefulRuleOptions: this.transformRuleOptions(props.ruleGroup),
       };
     }
 
@@ -134,46 +115,54 @@ export class NetworkFirewallRuleGroup extends cdk.Resource implements INetworkFi
    */
   private transformStatelessCustom(props: NfwRuleGroupRuleConfig) {
     const property = props.rulesSource.statelessRulesAndCustomActions;
-    this.statelessRules = [];
-    this.customActions = [];
+    const statelessRules = [];
+    const customActions = [];
 
-    // Push stateless rules
-    for (const rule of property?.statelessRules ?? []) {
-      this.statelessRules.push({
-        priority: rule.priority,
-        ruleDefinition: {
-          actions: rule.ruleDefinition.actions,
-          matchAttributes: {
-            destinationPorts: rule.ruleDefinition.matchAttributes?.destinationPorts ?? [],
-            destinations:
-              rule.ruleDefinition.matchAttributes?.destinations?.map(item => {
-                return { addressDefinition: item };
-              }) ?? [],
-            protocols: rule.ruleDefinition.matchAttributes?.protocols ?? [],
-            sourcePorts: rule.ruleDefinition.matchAttributes?.sourcePorts ?? [],
-            sources:
-              rule.ruleDefinition.matchAttributes?.sources?.map(item => {
-                return { addressDefinition: item };
-              }) ?? [],
-            tcpFlags: rule.ruleDefinition.matchAttributes?.tcpFlags,
+    if (property) {
+      // Push stateless rules
+      for (const rule of property.statelessRules ?? []) {
+        statelessRules.push({
+          priority: rule.priority,
+          ruleDefinition: {
+            actions: rule.ruleDefinition.actions,
+            matchAttributes: {
+              destinationPorts: rule.ruleDefinition.matchAttributes?.destinationPorts ?? [],
+              destinations:
+                rule.ruleDefinition.matchAttributes?.destinations?.map(item => {
+                  return { addressDefinition: item };
+                }) ?? [],
+              protocols: rule.ruleDefinition.matchAttributes?.protocols ?? [],
+              sourcePorts: rule.ruleDefinition.matchAttributes?.sourcePorts ?? [],
+              sources:
+                rule.ruleDefinition.matchAttributes?.sources?.map(item => {
+                  return { addressDefinition: item };
+                }) ?? [],
+              tcpFlags: rule.ruleDefinition.matchAttributes?.tcpFlags,
+            },
           },
-        },
-      });
-    }
+        });
+      }
 
-    // Push custom actions
-    for (const action of property?.customActions ?? []) {
-      this.customActions.push({
-        actionDefinition: {
-          publishMetricAction: {
-            dimensions: action.actionDefinition.publishMetricAction.dimensions.map(item => {
-              return { value: item };
-            }),
+      // Push custom actions
+      for (const action of property.customActions ?? []) {
+        customActions.push({
+          actionDefinition: {
+            publishMetricAction: {
+              dimensions: action.actionDefinition.publishMetricAction.dimensions.map(item => {
+                return { value: item };
+              }),
+            },
           },
-        },
-        actionName: action.actionName,
-      });
+          actionName: action.actionName,
+        });
+      }
+
+      return {
+        statelessRules,
+        customActions,
+      };
     }
+    return undefined;
   }
 
   /**
@@ -183,24 +172,46 @@ export class NetworkFirewallRuleGroup extends cdk.Resource implements INetworkFi
    */
   private transformRuleVariables(props: NfwRuleGroupRuleConfig) {
     const property = props.ruleVariables;
+    const ipSets: { [key: string]: { definition: string[] } } = {};
+    const portSets: { [key: string]: { definition: string[] } } = {};
 
     if (property) {
-      // Create ipset object
-      const ipSet: { [key: string]: { definition: string[] } } = {};
-      const ipSetKey = property.ipSets.name;
-      ipSet[ipSetKey] = { definition: property.ipSets.definition };
+      const ipSetDefinitions = this.getVariableDefinitions(property.ipSets);
+      const portSetDefinitions = this.getVariableDefinitions(property.portSets);
 
-      // Create portset object
-      const portSet: { [key: string]: { definition: string[] } } = {};
-      const portSetKey = property.portSets.name;
-      portSet[portSetKey] = { definition: property.portSets.definition };
+      ipSetDefinitions.forEach(ipSet => {
+        ipSets[ipSet.name] = { definition: ipSet.definition };
+      });
 
-      // Instantiate ruleVariables object
-      this.ruleVariables = {
-        ipSets: ipSet,
-        portSets: portSet,
+      portSetDefinitions.forEach(portSet => {
+        portSets[portSet.name] = { definition: portSet.definition };
+      });
+
+      return {
+        ipSets,
+        portSets,
       };
     }
+    return undefined;
+  }
+
+  /**
+   * Takes in variable definitions as a map or array and transforms them into an array
+   * @param definition
+   * @returns
+   */
+  private getVariableDefinitions(
+    definition: NfwRuleVariableDefinitionConfig | NfwRuleVariableDefinitionConfig[],
+  ): NfwRuleVariableDefinitionConfig[] {
+    const variableDefinitions: NfwRuleVariableDefinitionConfig[] = [];
+
+    if (Array.isArray(definition)) {
+      variableDefinitions.push(...definition);
+    } else {
+      variableDefinitions.push(definition);
+    }
+
+    return variableDefinitions;
   }
 
   /**
@@ -212,7 +223,8 @@ export class NetworkFirewallRuleGroup extends cdk.Resource implements INetworkFi
     const property = props.statefulRuleOptions;
 
     if (property) {
-      this.ruleOptions = { ruleOrder: property };
+      return { ruleOrder: property };
     }
+    return undefined;
   }
 }
