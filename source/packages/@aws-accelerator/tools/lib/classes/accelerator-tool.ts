@@ -1936,20 +1936,27 @@ export class AcceleratorTool {
         );
         let nextToken: string | undefined = undefined;
         const repositories: string[] = [];
-        do {
-          const page = await throttlingBackOff(() =>
-            ecrClient.send(
-              new DescribeRepositoriesCommand({
-                repositoryNames: [`cdk-accel-container-assets-${account.accountId}-${region}`],
-                nextToken: nextToken,
-              }),
-            ),
+        try {
+          do {
+            const page = await throttlingBackOff(() =>
+              ecrClient.send(
+                new DescribeRepositoriesCommand({
+                  repositoryNames: [`cdk-accel-container-assets-${account.accountId}-${region}`],
+                  nextToken: nextToken,
+                }),
+              ),
+            );
+            for (const repository of page.repositories ?? []) {
+              repositories.push(repository.repositoryName!);
+            }
+            nextToken = page.nextToken;
+          } while (nextToken);
+        } catch (RepositoryNotFoundException) {
+          this.debugLog(
+            `[accelerator-tool] Ecr delete Error, repository NOT FOUND cdk-accel-container-assets-${account.accountId}-${region} in region ${region} of account ${account.accountName}`,
+            'info',
           );
-          for (const repository of page.repositories ?? []) {
-            repositories.push(repository.repositoryName!);
-          }
-          nextToken = page.nextToken;
-        } while (nextToken);
+        }
 
         for (const repository of repositories) {
           this.debugLog(
