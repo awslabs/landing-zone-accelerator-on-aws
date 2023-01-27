@@ -1809,7 +1809,7 @@ export class NetworkVpcStack extends AcceleratorStack {
 
     if (props.networkConfig.centralNetworkServices?.ipams) {
       const delegatedAdminAccountId = this.accountsConfig.getAccountId(
-        props.networkConfig.centralNetworkServices!.delegatedAdminAccount,
+        props.networkConfig.centralNetworkServices.delegatedAdminAccount,
       );
 
       for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {

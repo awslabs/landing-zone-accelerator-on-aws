@@ -27,7 +27,7 @@ export class BootstrapStack extends AcceleratorStack {
     this.managementAccount = props.accountsConfig.getManagementAccountId();
     // Workaround to get organization Id without using Organization construct, which requires custom resource.
     this.organizationId = props.organizationConfig.enable
-      ? props.organizationConfig.organizationalUnitIds![0].arn!.split('/')[1]
+      ? props.organizationConfig.organizationalUnitIds![0].arn.split('/')[1]
       : '';
 
     const partition = cdk.Stack.of(this).partition;
