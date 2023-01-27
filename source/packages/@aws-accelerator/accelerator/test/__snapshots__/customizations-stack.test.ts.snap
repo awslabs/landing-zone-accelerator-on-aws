@@ -2,6 +2,12 @@
 
 exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 1`] = `
 Object {
+  "Parameters": Object {
+    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/cloudwatch/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
   "Resources": Object {
     "AwsAcceleratorCustomCustomS3Stackset": Object {
       "Properties": Object {
@@ -73,6 +79,304 @@ Resources:
       },
       "Type": "AWS::CloudFormation::StackSet",
     },
+    "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1": Object {
+      "DependsOn": Array [
+        "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:DescribeOrganization",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D": Object {
+      "DependsOn": Array [
+        "CustomSharePortfolioWithOrgCustomResourceProviderRoleD968FEC7",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomSharePortfolioWithOrgCustomResourceProviderRoleD968FEC7",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSharePortfolioWithOrgCustomResourceProviderRoleD968FEC7": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "servicecatalog:CreatePortfolioShare",
+                    "servicecatalog:UpdatePortfolioShare",
+                    "servicecatalog:DeletePortfolioShare",
+                    "organizations:DescribeOrganization",
+                    "organizations:ListParents",
+                    "organizations:ListChildren",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "ServiceCatalog",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "MyPortfolioPortfolio94625F45": Object {
+      "Properties": Object {
+        "DisplayName": "My-Portfolio",
+        "ProviderName": "LZA",
+      },
+      "Type": "AWS::ServiceCatalog::Portfolio",
+    },
+    "MyPortfolioPortfolioMyProductProduct084EC200": Object {
+      "Properties": Object {
+        "Description": "Sample product by lZA.",
+        "Distributor": "LZA",
+        "Name": "My-Product",
+        "Owner": "LZA",
+        "ProvisioningArtifactParameters": Array [
+          Object {
+            "Description": "product version is v1",
+            "DisableTemplateValidation": false,
+            "Info": Object {
+              "LoadTemplateFromURL": Object {
+                "Fn::Sub": "https://s3.us-east-1.\${AWS::URLSuffix}/cdk-hnb659fds-assets-111111111111-us-east-1/aceb01523a897becf844697e46e8bc7e39ca412aaea003f99d86339b3642c048.yaml",
+              },
+            },
+            "Name": "v1",
+          },
+        ],
+        "SupportDescription": "Please include account ID and provisioned product ID.",
+        "SupportEmail": "support@example.com",
+        "SupportUrl": "https://support.amazon.com",
+      },
+      "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+    },
+    "MyPortfolioPortfolioPortfolioProductAssociation72040103f9e35F6E6349": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "MyPortfolioPortfolio94625F45",
+        },
+        "ProductId": Object {
+          "Ref": "MyPortfolioPortfolioMyProductProduct084EC200",
+        },
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioProductAssociation",
+    },
+    "MyPortfolioPortfolioPortolioPrincipalAssociation014be7193f16BD1A402C": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "MyPortfolioPortfolio94625F45",
+        },
+        "PrincipalARN": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::111111111111:role/EC2-Default-SSM-AD-Role",
+            ],
+          ],
+        },
+        "PrincipalType": "IAM",
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+    },
+    "MyPortfolioPortfolioPortolioPrincipalAssociation5af47db18426657C9E99": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "MyPortfolioPortfolio94625F45",
+        },
+        "PrincipalARN": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::111111111111:user/breakGlassUser01",
+            ],
+          ],
+        },
+        "PrincipalType": "IAM",
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+    },
+    "MyPortfolioPortfolioPortolioPrincipalAssociationcc1fc2c9651e0C99AD43": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "MyPortfolioPortfolio94625F45",
+        },
+        "PrincipalARN": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::111111111111:group/Administrators",
+            ],
+          ],
+        },
+        "PrincipalType": "IAM",
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+    },
+    "MyPortfolioSharePortfolioShareouasdf11111111F53E345D": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D",
+        "MyPortfolioPortfolioPortfolioProductAssociation72040103f9e35F6E6349",
+        "MyPortfolioPortfolioPortolioPrincipalAssociation014be7193f16BD1A402C",
+        "MyPortfolioPortfolioPortolioPrincipalAssociation5af47db18426657C9E99",
+        "MyPortfolioPortfolioPortolioPrincipalAssociationcc1fc2c9651e0C99AD43",
+        "MyPortfolioPortfolio94625F45",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D",
+            "Arn",
+          ],
+        },
+        "organizationId": "",
+        "organizationalUnitId": "ou-asdf-11111111",
+        "portfolioId": Object {
+          "Ref": "MyPortfolioPortfolio94625F45",
+        },
+        "tagShareOptions": true,
+      },
+      "Type": "Custom::SharePortfolioWithOrg",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "Organization29A5FC3F": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1",
+            "Arn",
+          ],
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+      },
+      "Type": "Custom::DescribeOrganization",
+      "UpdateReplacePolicy": "Delete",
+    },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-111111111111-us-east-1/version",
@@ -84,6 +388,437 @@ Resources:
     "SsmParamStackId521A78D3": Object {
       "Properties": Object {
         "Name": "/accelerator/AWSAccelerator-CustomizationsStack-111111111111-us-east-1/stack-id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "AWS::StackId",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+  },
+}
+`;
+
+exports[`CustomizationsStack Construct(CustomizationsStack):  Snapshot Test 2`] = `
+Object {
+  "Parameters": Object {
+    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+      "Default": "/accelerator/kms/cloudwatch/key-arn",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": Object {
+    "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1": Object {
+      "DependsOn": Array [
+        "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "organizations:DescribeOrganization",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "Organization29A5FC3F": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1",
+            "Arn",
+          ],
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+      },
+      "Type": "Custom::DescribeOrganization",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "PermissionSet1444444444444PermissionSet1444444444444ProviderLambdaBF92884B": Object {
+      "DependsOn": Array [
+        "PermissionSet1444444444444PermissionSet1444444444444ProviderLambdaServiceRoleDefaultPolicyCEC90EF3",
+        "PermissionSet1444444444444PermissionSet1444444444444ProviderLambdaServiceRoleDAAABE68",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "PermissionSet1444444444444PermissionSet1444444444444ProviderLambdaServiceRoleDAAABE68",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "PermissionSet1444444444444PermissionSet1444444444444ProviderLambdaServiceRoleDAAABE68": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "PermissionSet1444444444444PermissionSet1444444444444ProviderLambdaServiceRoleDefaultPolicyCEC90EF3": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "iam:ListRoles",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "PermissionSet1444444444444PermissionSet1444444444444ProviderLambdaServiceRoleDefaultPolicyCEC90EF3",
+        "Roles": Array [
+          Object {
+            "Ref": "PermissionSet1444444444444PermissionSet1444444444444ProviderLambdaServiceRoleDAAABE68",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "PermissionSet1444444444444frameworkonEvent1B4DCD58": Object {
+      "DependsOn": Array [
+        "PermissionSet1444444444444frameworkonEventServiceRoleDefaultPolicyEFA619C2",
+        "PermissionSet1444444444444frameworkonEventServiceRole1828F318",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (AWSAccelerator-CustomizationsStack-444444444444-us-east-1/PermissionSet1_444444444444/Resource)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "PermissionSet1444444444444PermissionSet1444444444444ProviderLambdaBF92884B",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "PermissionSet1444444444444frameworkonEventServiceRole1828F318",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "PermissionSet1444444444444frameworkonEventServiceRole1828F318": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "PermissionSet1444444444444frameworkonEventServiceRoleDefaultPolicyEFA619C2": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "PermissionSet1444444444444PermissionSet1444444444444ProviderLambdaBF92884B",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "PermissionSet1444444444444PermissionSet1444444444444ProviderLambdaBF92884B",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "PermissionSet1444444444444frameworkonEventServiceRoleDefaultPolicyEFA619C2",
+        "Roles": Array [
+          Object {
+            "Ref": "PermissionSet1444444444444frameworkonEventServiceRole1828F318",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "PermissionSet1444444444444getPermissionSetRoleArn0EC766DB": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "PermissionSet1444444444444frameworkonEvent1B4DCD58",
+            "Arn",
+          ],
+        },
+        "permissionSetName": "PermissionSet1",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "Portfolio2PortfolioBCD692DB": Object {
+      "Properties": Object {
+        "DisplayName": "Portfolio-2",
+        "ProviderName": "LZA",
+      },
+      "Type": "AWS::ServiceCatalog::Portfolio",
+    },
+    "Portfolio2PortfolioPortfolioProductAssociation302916d8118a0471A6BA": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "Portfolio2PortfolioBCD692DB",
+        },
+        "ProductId": Object {
+          "Ref": "Portfolio2PortfolioProduct2Product388CC26D",
+        },
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioProductAssociation",
+    },
+    "Portfolio2PortfolioPortfolioShare0cd68f1185a6B0D46AF1": Object {
+      "Properties": Object {
+        "AccountId": "222222222222",
+        "PortfolioId": Object {
+          "Ref": "Portfolio2PortfolioBCD692DB",
+        },
+        "ShareTagOptions": false,
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioShare",
+    },
+    "Portfolio2PortfolioPortolioPrincipalAssociation6f134d37164a87488C44": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "Portfolio2PortfolioBCD692DB",
+        },
+        "PrincipalARN": Object {
+          "Fn::GetAtt": Array [
+            "PermissionSet1444444444444getPermissionSetRoleArn0EC766DB",
+            "roleArn",
+          ],
+        },
+        "PrincipalType": "IAM",
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+    },
+    "Portfolio2PortfolioPortolioPrincipalAssociation7e00512f8194196FCC98": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "Portfolio2PortfolioBCD692DB",
+        },
+        "PrincipalARN": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::444444444444:role/EC2-Default-SSM-AD-Role",
+            ],
+          ],
+        },
+        "PrincipalType": "IAM",
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+    },
+    "Portfolio2PortfolioProduct2Product388CC26D": Object {
+      "Properties": Object {
+        "Description": "Sample product by lZA.",
+        "Distributor": "LZA",
+        "Name": "Product2",
+        "Owner": "LZA",
+        "ProvisioningArtifactParameters": Array [
+          Object {
+            "Description": "product version is v1",
+            "DisableTemplateValidation": false,
+            "Info": Object {
+              "LoadTemplateFromURL": Object {
+                "Fn::Sub": "https://s3.us-east-1.\${AWS::URLSuffix}/cdk-hnb659fds-assets-444444444444-us-east-1/aceb01523a897becf844697e46e8bc7e39ca412aaea003f99d86339b3642c048.yaml",
+              },
+            },
+            "Name": "v1",
+          },
+        ],
+        "SupportDescription": "Please include account ID and provisioned product ID.",
+        "SupportEmail": "support@example.com",
+        "SupportUrl": "https://support.amazon.com",
+      },
+      "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+    },
+    "SsmParamAcceleratorVersionFF83282D": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-CustomizationsStack-444444444444-us-east-1/version",
+        "Type": "String",
+        "Value": "1.3.0",
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamStackId521A78D3": Object {
+      "Properties": Object {
+        "Name": "/accelerator/AWSAccelerator-CustomizationsStack-444444444444-us-east-1/stack-id",
         "Type": "String",
         "Value": Object {
           "Ref": "AWS::StackId",

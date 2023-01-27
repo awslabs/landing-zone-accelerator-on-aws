@@ -11,25 +11,23 @@
  *  and limitations under the License.
  */
 
-import { AcceleratorStage } from '../lib/accelerator-stage';
-import { AcceleratorSynthStacks } from './accelerator-synth-stacks';
+import * as cdk from 'aws-cdk-lib';
+import { IdentityCenterGetPermissionRoleArn } from '../../lib/aws-identity-center/identity-center-get-permission-set-role-arn';
+import { snapShotTest } from '../snapshot-test';
 import { describe } from '@jest/globals';
-import { snapShotTest } from './snapshot-test';
+const testNamePrefix = 'Construct(IdentityCenterGetPermissionRoleArn): ';
 
-const testNamePrefix = 'Construct(CustomizationsStack): ';
+//Initialize stack for snapshot test and resource configuration test
+const stack = new cdk.Stack();
 
-const acceleratorTestStacks = new AcceleratorSynthStacks(
-  AcceleratorStage.CUSTOMIZATIONS,
-  'all-enabled',
-  'aws',
-  'us-east-1',
-);
-const stack = acceleratorTestStacks.stacks.get(`Management-us-east-1`)!;
-const sharedServicesStack = acceleratorTestStacks.stacks.get(`SharedServices-us-east-1`)!;
-
-describe('CustomizationsStack', () => {
-  snapShotTest(testNamePrefix, stack);
+new IdentityCenterGetPermissionRoleArn(stack, 'IdentityCenterGetPermissionRoleArn', {
+  permissionSetName: 'Test',
+  accountId: '111111111111',
 });
-describe('CustomizationsStack', () => {
-  snapShotTest(testNamePrefix, sharedServicesStack);
+
+/**
+ * IdentityCenterOrganizationAdminAccount construct test
+ */
+describe('IdentityCenterGetPermissionRoleArn', () => {
+  snapShotTest(testNamePrefix, stack);
 });
