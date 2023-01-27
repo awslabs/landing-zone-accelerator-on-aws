@@ -352,7 +352,12 @@ export class CustomizationsConfigTypes {
   /**
    * Portfolio association type
    */
-  static readonly portfolioAssociationType = t.enums('PortfolioAssociationType', ['User', 'Group', 'Role']);
+  static readonly portfolioAssociationType = t.enums('PortfolioAssociationType', [
+    'User',
+    'Group',
+    'Role',
+    'PermissionSet',
+  ]);
 
   /**
    * Portfolio Association configuration
@@ -2171,6 +2176,8 @@ export class AppConfigItem implements t.TypeOf<typeof CustomizationsConfigTypes.
  *   name: EC2-Default-SSM-AD-Role
  * - type: User
  *   name: breakGlassUser01
+ * - type: PermissionSet
+ *   name: AWSPowerUserAccess
  * ```
  */
 export class PortfolioAssociationConfig

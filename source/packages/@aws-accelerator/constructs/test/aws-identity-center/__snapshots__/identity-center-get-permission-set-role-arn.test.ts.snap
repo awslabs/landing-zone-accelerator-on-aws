@@ -1,0 +1,247 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissionRoleArn):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambda460834BA": Object {
+      "DependsOn": Array [
+        "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleDefaultPolicy64D8678B",
+        "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleA2C9E0BD",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleA2C9E0BD",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 60,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleA2C9E0BD": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleDefaultPolicy64D8678B": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "iam:ListRoles",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleDefaultPolicy64D8678B",
+        "Roles": Array [
+          Object {
+            "Ref": "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleA2C9E0BD",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "IdentityCenterGetPermissionRoleArnframeworkonEventCA48BE05": Object {
+      "DependsOn": Array [
+        "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleDefaultPolicy80148248",
+        "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleD442AB4D",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Default/IdentityCenterGetPermissionRoleArn/Resource)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambda460834BA",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleD442AB4D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleD442AB4D": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleDefaultPolicy80148248": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambda460834BA",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambda460834BA",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleDefaultPolicy80148248",
+        "Roles": Array [
+          Object {
+            "Ref": "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleD442AB4D",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "IdentityCenterGetPermissionRoleArngetPermissionSetRoleArn5C0A4E89": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "IdentityCenterGetPermissionRoleArnframeworkonEventCA48BE05",
+            "Arn",
+          ],
+        },
+        "permissionSetName": "Test",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+  },
+}
+`;
