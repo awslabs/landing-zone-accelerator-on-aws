@@ -16,22 +16,13 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
-import {
-  IdentityCenterAssignmentConfig,
-  IdentityCenterPermissionSetConfig,
-  RoleConfig,
-  PortfolioConfig,
-  PortfolioAssociationConfig,
-  ProductConfig,
-} from '@aws-accelerator/config';
+import { IdentityCenterAssignmentConfig, IdentityCenterPermissionSetConfig, RoleConfig } from '@aws-accelerator/config';
 import {
   BudgetDefinition,
   IdentityCenterGetInstanceId,
   Inventory,
   KeyLookup,
   LimitsDefinition,
-  Organization,
-  SharePortfolioWithOrg,
 } from '@aws-accelerator/constructs';
 
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
@@ -77,11 +68,6 @@ export class OperationsStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.Key;
 
   /**
-   * AWS Organization Id
-   */
-  private organizationId: string;
-
-  /**
    * Constructor for OperationsStack
    *
    * @param scope
@@ -90,7 +76,6 @@ export class OperationsStack extends AcceleratorStack {
    */
   constructor(scope: Construct, id: string, props: OperationsStackProps) {
     super(scope, id, props);
-    this.organizationId = props.organizationConfig.enable ? new Organization(this, 'Organization').id : '';
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
@@ -143,13 +128,6 @@ export class OperationsStack extends AcceleratorStack {
       this.isIncluded(this.props.globalConfig.ssmInventory.deploymentTargets)
     ) {
       this.enableInventory();
-    }
-
-    //
-    // Create Service Catalog Portfolios
-    //
-    if (props.customizationsConfig?.customizations?.serviceCatalogPortfolios?.length > 0) {
-      this.createServiceCatalogResources();
     }
 
     //
@@ -886,264 +864,5 @@ export class OperationsStack extends AcceleratorStack {
         reason: 'IAM Role for lambda needs AWS managed policy',
       },
     ]);
-  }
-
-  /**
-   * Create Service Catalog resources
-   */
-  private createServiceCatalogResources() {
-    const serviceCatalogPortfolios = this.props.customizationsConfig?.customizations?.serviceCatalogPortfolios;
-    for (const portfolioItem of serviceCatalogPortfolios ?? []) {
-      const regions = portfolioItem.regions.map(item => {
-        return item.toString();
-      });
-      const accountId = this.props.accountsConfig.getAccountId(portfolioItem.account);
-      if (accountId === cdk.Stack.of(this).account && regions.includes(cdk.Stack.of(this).region)) {
-        // Create portfolios
-        const portfolio = this.createPortfolios(portfolioItem);
-
-        // Create portfolio shares
-        this.createPortfolioShares(portfolio, portfolioItem);
-
-        // Create products for the portfolio
-        this.createPortfolioProducts(portfolio, portfolioItem);
-
-        // Create portfolio associations
-        this.createPortfolioAssociations(portfolio, portfolioItem);
-      }
-    }
-  }
-
-  /**
-   * Create Service Catalog portfolios
-   * @param portfolio
-   * @param portfolioItem
-   */
-  private createPortfolios(portfolioItem: PortfolioConfig): cdk.aws_servicecatalog.Portfolio {
-    this.logger.info(`Creating Service Catalog portfolio ${portfolioItem.name}`);
-
-    // Create portfolio TagOptions
-    let tagOptions: cdk.aws_servicecatalog.TagOptions | undefined = undefined;
-    if (portfolioItem.tagOptions) {
-      const tagOptionsTags: { [key: string]: string[] } = {};
-      portfolioItem.tagOptions.forEach(tag => (tagOptionsTags[tag.key] = tag.values));
-      tagOptions = new cdk.aws_servicecatalog.TagOptions(this, pascalCase(`${portfolioItem.name}TagOptions`), {
-        allowedValuesForTags: tagOptionsTags,
-      });
-    }
-
-    // Create portfolio
-    const portfolio = new cdk.aws_servicecatalog.Portfolio(this, pascalCase(`${portfolioItem.name}Portfolio`), {
-      displayName: portfolioItem.name,
-      providerName: portfolioItem.provider,
-      tagOptions,
-    });
-
-    this.ssmParameters.push({
-      logicalId: pascalCase(`SsmParam${portfolioItem.name}PortfolioId`),
-      parameterName: `/accelerator/servicecatalog/portfolios/${portfolioItem.name}/id`,
-      stringValue: portfolio.portfolioId,
-    });
-    return portfolio;
-  }
-
-  /**
-   * Create account and OU-level Service Catalog portfolio shares
-   * @param portfolio
-   * @param portfolioItem
-   */
-  private createPortfolioShares(portfolio: cdk.aws_servicecatalog.Portfolio, portfolioItem: PortfolioConfig): void {
-    // Create account shares
-    if (portfolioItem.shareTargets) {
-      // share portfolio with accounts via native CDK
-      for (const account of portfolioItem?.shareTargets?.accounts ?? []) {
-        const accountId = this.props.accountsConfig.getAccountId(account);
-        if (accountId !== cdk.Stack.of(this).account) {
-          portfolio.shareWithAccount(accountId, { shareTagOptions: portfolioItem.shareTagOptions ?? false });
-        }
-      }
-
-      // share portfolio with organizational units via Custom Resource
-      const managementAccountId = this.props.accountsConfig.getManagementAccountId();
-      if (cdk.Stack.of(this).account === managementAccountId) {
-        const organizationalUnitIds: string[] = [];
-        let shareToEntireOrg = false;
-        for (const ou of portfolioItem?.shareTargets?.organizationalUnits ?? []) {
-          if (ou === 'Root') {
-            shareToEntireOrg = true;
-          } else {
-            organizationalUnitIds.push(this.props.organizationConfig.getOrganizationalUnitId(ou));
-          }
-        }
-        if (organizationalUnitIds.length > 0 || shareToEntireOrg) {
-          new SharePortfolioWithOrg(this, `${portfolioItem.name}-Share`, {
-            portfolioId: portfolio.portfolioId,
-            organizationalUnitIds: organizationalUnitIds,
-            tagShareOptions: portfolioItem.shareTagOptions ?? false,
-            organizationId: shareToEntireOrg ? this.organizationId : '',
-            kmsKey: this.cloudwatchKey,
-            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-          });
-        }
-      }
-    }
-  }
-
-  /**
-   * Create Service Catalog products
-   * @param portfolio
-   * @param portfolioItem
-   */
-  private createPortfolioProducts(portfolio: cdk.aws_servicecatalog.Portfolio, portfolioItem: PortfolioConfig): void {
-    // Get the Product Version list
-    for (const productItem of portfolioItem.products ?? []) {
-      const productVersions = this.getPortfolioProductVersions(productItem);
-
-      // Create product TagOptions
-      const tagOptions = this.getPortfolioProductTagOptions(productItem);
-
-      //Create a Service Catalog Cloudformation Product.
-      this.logger.info(`Creating product ${productItem.name} in Service Catalog portfolio ${portfolioItem.name}`);
-      const product = new cdk.aws_servicecatalog.CloudFormationProduct(
-        this,
-        pascalCase(`${portfolioItem.name}Portfolio${productItem.name}Product`),
-        {
-          productName: productItem.name,
-          owner: productItem.owner,
-          distributor: productItem.distributor,
-          productVersions,
-          description: productItem.description,
-          supportDescription: productItem.support?.description,
-          supportEmail: productItem.support?.email,
-          supportUrl: productItem.support?.url,
-          tagOptions,
-        },
-      );
-
-      //Associate Portfolio with the Product.
-      portfolio.addProduct(product);
-    }
-  }
-
-  /**
-   * Get list of Service Catalog portfolio product versions
-   * @param portfolio
-   * @param portfolioItem
-   */
-  private getPortfolioProductVersions(
-    productItem: ProductConfig,
-  ): cdk.aws_servicecatalog.CloudFormationProductVersion[] {
-    const productVersions: cdk.aws_servicecatalog.CloudFormationProductVersion[] = [];
-    for (const productVersionItem of productItem.versions ?? []) {
-      productVersions.push({
-        productVersionName: productVersionItem.name,
-        description: productVersionItem.description,
-        cloudFormationTemplate: cdk.aws_servicecatalog.CloudFormationTemplate.fromAsset(
-          path.join(this.props.configDirPath, productVersionItem.template),
-        ),
-        validateTemplate: true,
-      });
-    }
-    return productVersions;
-  }
-
-  /**
-   * Get Service Catalog tag options
-   * @param portfolio
-   * @param portfolioItem
-   */
-  private getPortfolioProductTagOptions(productItem: ProductConfig): cdk.aws_servicecatalog.TagOptions | undefined {
-    let tagOptions: cdk.aws_servicecatalog.TagOptions | undefined = undefined;
-    if (productItem.tagOptions) {
-      const tagOptionsTags: { [key: string]: string[] } = {};
-      productItem.tagOptions.forEach(tag => (tagOptionsTags[tag.key] = tag.values));
-      tagOptions = new cdk.aws_servicecatalog.TagOptions(this, pascalCase(`${productItem.name}TagOptions`), {
-        allowedValuesForTags: tagOptionsTags,
-      });
-    }
-    return tagOptions;
-  }
-
-  private createPortfolioAssociations(
-    portfolio: cdk.aws_servicecatalog.Portfolio,
-    portfolioItem: PortfolioConfig,
-  ): void {
-    // Add portfolio Associations
-    for (const portfolioAssociationItem of portfolioItem.portfolioAssociations ?? []) {
-      if (portfolioAssociationItem.type === 'Group') {
-        this.createPortfolioAssociationForGroup(portfolio, portfolioItem, portfolioAssociationItem);
-      }
-
-      if (portfolioAssociationItem.type === 'Role') {
-        this.createPortfolioAssociationForRole(portfolio, portfolioItem, portfolioAssociationItem);
-      }
-
-      if (portfolioAssociationItem.type === 'User') {
-        this.createPortfolioAssociationForUser(portfolio, portfolioItem, portfolioAssociationItem);
-      }
-    }
-  }
-
-  private createPortfolioAssociationForGroup(
-    portfolio: cdk.aws_servicecatalog.Portfolio,
-    portfolioItem: PortfolioConfig,
-    portfolioAssociationItem: PortfolioAssociationConfig,
-  ): void {
-    const group = cdk.aws_iam.Group.fromGroupName(
-      this,
-      pascalCase(`${portfolioAssociationItem.name}-${portfolioItem.name}`),
-      portfolioAssociationItem.name,
-    ) as cdk.aws_iam.Group;
-    if (!group) {
-      this.logger.error(`Group ${portfolioAssociationItem.name} not found in ${portfolioItem.account} account`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-    // Associate Portfolio with an IAM group
-    this.logger.info(
-      `Associating Service Catalog portfolio ${portfolioItem.name} with IAM group ${portfolioAssociationItem.name}`,
-    );
-    portfolio.giveAccessToGroup(group);
-  }
-
-  private createPortfolioAssociationForRole(
-    portfolio: cdk.aws_servicecatalog.Portfolio,
-    portfolioItem: PortfolioConfig,
-    portfolioAssociationItem: PortfolioAssociationConfig,
-  ): void {
-    const role = cdk.aws_iam.Role.fromRoleName(
-      this,
-      pascalCase(`${portfolioAssociationItem.name}-${portfolioItem.name}`),
-      portfolioAssociationItem.name,
-    ) as cdk.aws_iam.Role;
-    if (!role) {
-      this.logger.error(`Role ${portfolioAssociationItem.name} not found in ${portfolioItem.account} account`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-    // Associate Portfolio with an IAM Role
-    this.logger.info(
-      `Associating Service Catalog portfolio ${portfolioItem.name} with IAM role ${portfolioAssociationItem.name}`,
-    );
-    portfolio.giveAccessToRole(role);
-  }
-
-  private createPortfolioAssociationForUser(
-    portfolio: cdk.aws_servicecatalog.Portfolio,
-    portfolioItem: PortfolioConfig,
-    portfolioAssociationItem: PortfolioAssociationConfig,
-  ): void {
-    const user = cdk.aws_iam.User.fromUserName(
-      this,
-      pascalCase(`${portfolioAssociationItem.name}-${portfolioItem.name}`),
-      portfolioAssociationItem.name,
-    ) as cdk.aws_iam.User;
-    if (!user) {
-      this.logger.error(`User ${portfolioAssociationItem.name} not found in ${portfolioItem.account} account`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-    // Associate Portfolio with an IAM User
-    this.logger.info(
-      `Associating Service Catalog portfolio ${portfolioItem.name} with IAM user ${portfolioAssociationItem.name}`,
-    );
-    portfolio.giveAccessToUser(user);
   }
 }

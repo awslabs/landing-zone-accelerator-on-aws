@@ -90,6 +90,8 @@ customizations:
       portfolioAssociations:
         - type: Role
           name: EC2-Default-SSM-AD-Role
+        - type: PermissionSet
+          name: PermissionSet1
       products:
         - name: Product2
           description: Sample product by lZA.

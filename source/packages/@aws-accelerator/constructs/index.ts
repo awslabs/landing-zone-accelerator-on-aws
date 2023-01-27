@@ -128,3 +128,4 @@ export * from './lib/aws-elasticloadbalancingv2/application-load-balancer';
 export * from './lib/aws-certificate-manager/create-certificate';
 export * from './lib/aws-identity-center/identity-center-organization-admin-account';
 export * from './lib/aws-identity-center/identity-center-get-instance-id';
+export * from './lib/aws-identity-center/identity-center-get-permission-set-role-arn';
