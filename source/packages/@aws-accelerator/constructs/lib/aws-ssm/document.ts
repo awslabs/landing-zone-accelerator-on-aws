@@ -45,6 +45,7 @@ export class Document extends cdk.Resource implements IDocument {
       name: props.name,
       content: props.content,
       documentType: props.documentType,
+      updateMethod: 'NewVersion',
     });
 
     this.documentName = document.ref;
