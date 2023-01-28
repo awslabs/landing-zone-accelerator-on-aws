@@ -1,0 +1,169 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`BucketPrefix Construct(BucketPrefix):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "BucketPrefix28078755": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomS3CreateBucketPrefixCustomResourceProviderLogGroup63AD059D",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomS3CreateBucketPrefixCustomResourceProviderHandler59EF6BD6",
+            "Arn",
+          ],
+        },
+        "bucketPrefixes": Array [
+          "guardduty",
+        ],
+        "sourceBucketName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "aws-accelerator-central-logs-bucket-",
+              Object {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              Object {
+                "Ref": "AWS::Region",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "Custom::S3CreateBucketPrefix",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomKey1E6D0D07": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::",
+                      Object {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "CustomS3CreateBucketPrefixCustomResourceProviderHandler59EF6BD6": Object {
+      "DependsOn": Array [
+        "CustomS3CreateBucketPrefixCustomResourceProviderRoleFE87F141",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomS3CreateBucketPrefixCustomResourceProviderRoleFE87F141",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomS3CreateBucketPrefixCustomResourceProviderLogGroup63AD059D": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomS3CreateBucketPrefixCustomResourceProviderHandler59EF6BD6",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomS3CreateBucketPrefixCustomResourceProviderRoleFE87F141": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "iam:PassRole",
+                    "s3:ListBucket",
+                    "s3:GetObject",
+                    "s3:PutObject",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "S3PutBucketPrefixConfigurationTaskActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+  },
+}
+`;

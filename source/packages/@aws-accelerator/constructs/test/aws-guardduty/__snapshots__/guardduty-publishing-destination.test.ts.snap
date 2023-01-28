@@ -90,6 +90,55 @@ Object {
                   "Resource": "*",
                   "Sid": "GuardDutyCreatePublishingDestinationCommandTaskGuardDutyActions",
                 },
+                Object {
+                  "Action": Array [
+                    "s3:ListBucket",
+                    "s3:GetObject",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":s3:::aws-accelerator-guardduty-",
+                          Object {
+                            "Ref": "AWS::AccountId",
+                          },
+                          "-",
+                          Object {
+                            "Ref": "AWS::Region",
+                          },
+                        ],
+                      ],
+                    },
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":s3:::aws-accelerator-guardduty-",
+                          Object {
+                            "Ref": "AWS::AccountId",
+                          },
+                          "-",
+                          Object {
+                            "Ref": "AWS::Region",
+                          },
+                          "/*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "GuardDutyCreateBucketPrefix",
+                },
               ],
               "Version": "2012-10-17",
             },

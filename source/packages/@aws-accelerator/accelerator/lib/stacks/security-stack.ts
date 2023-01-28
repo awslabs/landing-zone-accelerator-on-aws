@@ -161,7 +161,7 @@ export class SecurityStack extends AcceleratorStack {
               this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.destinationType,
             exportDestinationOverride:
               this.props.securityConfig.centralSecurityServices.guardduty.exportConfiguration.overrideExisting ?? false,
-            destinationArn: `arn:${cdk.Stack.of(this).partition}:s3:::${this.centralLogsBucketName}`,
+            destinationArn: `arn:${cdk.Stack.of(this).partition}:s3:::${this.centralLogsBucketName}/guardduty`,
             destinationKmsKey: this.centralLogsBucketKey,
             logKmsKey: this.cloudwatchKey,
             logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,

@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 import { BucketAccessType, S3LifeCycleRule } from './bucket';
+import { BucketPrefixProps } from './bucket-prefix';
 
 export interface CentralLogsBucketProps {
   s3BucketName: string;
@@ -33,6 +34,7 @@ export interface CentralLogsBucketProps {
    * BucketAccessType.READWRITE
    */
   awsPrincipalAccesses?: { name: string; principal: string; accessType: string }[];
+  bucketPrefixProps?: BucketPrefixProps;
 }
 
 /**
@@ -57,6 +59,7 @@ export class CentralLogsBucket extends Construct {
       serverAccessLogsBucket: props.serverAccessLogsBucket.getS3Bucket(),
       s3LifeCycleRules: props.s3LifeCycleRules,
       awsPrincipalAccesses: awsPrincipalAccesses.filter(item => item.accessType !== BucketAccessType.NO_ACCESS),
+      bucketPrefixProps: props.bucketPrefixProps,
     });
 
     this.bucket.getKey().addToResourcePolicy(
@@ -201,7 +204,7 @@ export class CentralLogsBucket extends Construct {
       new cdk.aws_iam.PolicyStatement({
         sid: 'Allow Organization principals to use of the bucket',
         effect: cdk.aws_iam.Effect.ALLOW,
-        actions: ['s3:GetBucketLocation', 's3:PutObject'],
+        actions: ['s3:GetBucketLocation', 's3:PutObject', 's3:GetObject', 's3:ListBucket'],
         principals: [new cdk.aws_iam.AnyPrincipal()],
         resources: [this.bucket.getS3Bucket().bucketArn, `${this.bucket.getS3Bucket().bucketArn}/*`],
         conditions: {
@@ -247,6 +250,7 @@ export class CentralLogsBucket extends Construct {
           'kms:GenerateDataKeyWithoutPlaintext',
           'kms:ReEncryptFrom',
           'kms:ReEncryptTo',
+          'kms:ListAliases',
         ],
         principals: [new cdk.aws_iam.AnyPrincipal()],
         resources: ['*'],

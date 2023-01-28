@@ -247,6 +247,40 @@ Object {
                   "Resource": "*",
                   "Sid": "GuardDutyCreatePublishingDestinationCommandTaskGuardDutyActions",
                 },
+                Object {
+                  "Action": Array [
+                    "s3:ListBucket",
+                    "s3:GetObject",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/guardduty",
+                        ],
+                      ],
+                    },
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/guardduty/*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "GuardDutyCreateBucketPrefix",
+                },
               ],
               "Version": "2012-10-17",
             },
@@ -883,7 +917,7 @@ Object {
               Object {
                 "Ref": "AWS::Partition",
               },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/guardduty",
             ],
           ],
         },
@@ -1238,6 +1272,40 @@ Object {
                   "Effect": "Allow",
                   "Resource": "*",
                   "Sid": "GuardDutyCreatePublishingDestinationCommandTaskGuardDutyActions",
+                },
+                Object {
+                  "Action": Array [
+                    "s3:ListBucket",
+                    "s3:GetObject",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": Array [
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/guardduty",
+                        ],
+                      ],
+                    },
+                    Object {
+                      "Fn::Join": Array [
+                        "",
+                        Array [
+                          "arn:",
+                          Object {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/guardduty/*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "GuardDutyCreateBucketPrefix",
                 },
               ],
               "Version": "2012-10-17",
@@ -1696,7 +1764,7 @@ Object {
               Object {
                 "Ref": "AWS::Partition",
               },
-              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2",
+              ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/guardduty",
             ],
           ],
         },

@@ -25,6 +25,7 @@ import {
   BucketAccessType,
   BucketEncryptionType,
   BucketReplicationProps,
+  BucketPrefixProps,
   CentralLogsBucket,
   CloudWatchDestination,
   CloudWatchLogsSubscriptionFilter,
@@ -1223,6 +1224,7 @@ export class LoggingStack extends AcceleratorStack {
       cdk.Stack.of(this).account === this.props.accountsConfig.getLogArchiveAccountId()
     ) {
       const awsPrincipalAccesses: { name: string; principal: string; accessType: string }[] = [];
+      const bucketPrefixes: string[] = [];
 
       if (this.props.securityConfig.centralSecurityServices.macie.enable) {
         awsPrincipalAccesses.push({
@@ -1238,6 +1240,7 @@ export class LoggingStack extends AcceleratorStack {
           principal: 'guardduty.amazonaws.com',
           accessType: BucketAccessType.READWRITE,
         });
+        bucketPrefixes.push('guardduty');
       }
 
       if (this.props.securityConfig.centralSecurityServices.auditManager?.enable) {
@@ -1257,6 +1260,15 @@ export class LoggingStack extends AcceleratorStack {
         });
       }
 
+      const bucketPrefixProps: BucketPrefixProps = {
+        source: {
+          bucketName: this.centralLogsBucketName,
+        },
+        bucketPrefixes,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      };
+
       this.centralLogsBucket = new CentralLogsBucket(this, 'CentralLogsBucket', {
         s3BucketName: this.centralLogsBucketName,
         serverAccessLogsBucket: serverAccessLogsBucket,
@@ -1266,6 +1278,7 @@ export class LoggingStack extends AcceleratorStack {
         orgPrincipals: this.getOrgPrincipals(this.organizationId),
         s3LifeCycleRules: this.getS3LifeCycleRules(this.props.globalConfig.logging.centralLogBucket?.lifecycleRules),
         awsPrincipalAccesses,
+        bucketPrefixProps,
       });
 
       // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission.

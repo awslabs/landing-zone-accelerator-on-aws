@@ -17,6 +17,7 @@ import * as kms from 'aws-cdk-lib/aws-kms';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { StorageClass } from '@aws-accelerator/config/lib/common-types/types';
 import { BucketReplication, BucketReplicationProps } from './bucket-replication';
+import { BucketPrefix, BucketPrefixProps } from './bucket-prefix';
 import { Construct } from 'constructs';
 import { pascalCase } from 'change-case';
 
@@ -133,6 +134,11 @@ export interface BucketProps {
    * Optional bucket replication property
    */
   replicationProps?: BucketReplicationProps;
+
+  /**
+   * Optional bucket prefix property
+   */
+  bucketPrefixProps?: BucketPrefixProps;
 }
 
 /**
@@ -244,6 +250,16 @@ export class Bucket extends Construct {
         },
         kmsKey: props.replicationProps.kmsKey,
         logRetentionInDays: props.replicationProps.logRetentionInDays,
+      });
+    }
+
+    // Configure prefix creation
+    if (props.bucketPrefixProps) {
+      new BucketPrefix(this, id + 'Prefix', {
+        source: { bucket: this.bucket },
+        bucketPrefixes: props.bucketPrefixProps.bucketPrefixes,
+        kmsKey: props.bucketPrefixProps.kmsKey,
+        logRetentionInDays: props.bucketPrefixProps.logRetentionInDays,
       });
     }
   }
