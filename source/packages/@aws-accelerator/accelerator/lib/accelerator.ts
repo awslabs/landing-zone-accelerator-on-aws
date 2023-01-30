@@ -20,11 +20,10 @@ import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
 
 import { AccountsConfig, GlobalConfig } from '@aws-accelerator/config';
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
 import { AssumeProfilePlugin } from '@aws-cdk-extensions/cdk-plugin-assume-role';
 
 import { AcceleratorStage } from './accelerator-stage';
-import { createLogger } from './logger';
 import { AcceleratorToolkit } from './toolkit';
 
 const logger = createLogger(['accelerator']);

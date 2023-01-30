@@ -13,9 +13,10 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import * as winston from 'winston';
 
 import { GlobalConfig, SecurityConfig } from '@aws-accelerator/config';
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
 import { BackupClient, DeleteBackupVaultCommand } from '@aws-sdk/client-backup';
 import {
   CloudFormationClient,
@@ -35,6 +36,7 @@ import {
 } from '@aws-sdk/client-codebuild';
 import { CodeCommitClient, DeleteRepositoryCommand, GetFileCommand } from '@aws-sdk/client-codecommit';
 import { CodePipelineClient, GetPipelineCommand, StageDeclaration } from '@aws-sdk/client-codepipeline';
+import { DeleteRepositoryCommand as DeleteEcr, DescribeRepositoriesCommand, ECRClient } from '@aws-sdk/client-ecr';
 import { DetachRolePolicyCommand, IAMClient, ListAttachedRolePoliciesCommand } from '@aws-sdk/client-iam';
 import {
   DescribeKeyCommand,
@@ -59,10 +61,6 @@ import {
   GetCallerIdentityCommand,
   STSClient,
 } from '@aws-sdk/client-sts';
-import { ECRClient, DescribeRepositoriesCommand, DeleteRepositoryCommand as DeleteEcr } from '@aws-sdk/client-ecr';
-
-import * as winston from 'winston';
-import { createLogger } from '../../../accelerator/lib/logger';
 
 /**
  * Type for pipeline stage action information with order and action name

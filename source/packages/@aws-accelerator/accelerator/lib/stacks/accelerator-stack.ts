@@ -17,6 +17,7 @@ import { Construct } from 'constructs';
 import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import * as winston from 'winston';
 
 import {
   AccountsConfig,
@@ -51,11 +52,9 @@ import {
   ResourceShareOwner,
   S3LifeCycleRule,
 } from '@aws-accelerator/constructs';
-import { policyReplacements } from '@aws-accelerator/utils';
+import { createLogger, policyReplacements } from '@aws-accelerator/utils';
 
 import { version } from '../../../../../package.json';
-import * as winston from 'winston';
-import { createLogger } from '../logger';
 
 type ResourceShareType =
   | DnsFirewallRuleGroupConfig

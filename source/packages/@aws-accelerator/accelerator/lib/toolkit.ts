@@ -24,10 +24,11 @@ import { Command, Configuration } from 'aws-cdk/lib/settings';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { AccountsConfig, CustomizationsConfig, OrganizationConfig } from '@aws-accelerator/config';
+import { createLogger } from '@aws-accelerator/utils';
+
 import { AcceleratorStackNames } from './accelerator';
 import { AcceleratorStage } from './accelerator-stage';
-import { AccountsConfig, CustomizationsConfig, OrganizationConfig } from '@aws-accelerator/config';
-import { createLogger } from './logger';
 import { isIncluded } from './stacks/custom-stack';
 
 const logger = createLogger(['toolkit']);

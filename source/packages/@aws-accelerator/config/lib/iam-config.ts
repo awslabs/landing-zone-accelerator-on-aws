@@ -14,10 +14,11 @@
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
-import { AccountsConfig } from './accounts-config';
 
+import { createLogger } from '@aws-accelerator/utils';
+
+import { AccountsConfig } from './accounts-config';
 import * as t from './common-types';
-import { createLogger } from '@aws-accelerator/accelerator/lib/logger';
 
 const logger = createLogger(['iam-config']);
 

@@ -10,18 +10,19 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import {
-  AccountsConfig,
-  GlobalConfig,
-  OrganizationConfig,
-  SecurityConfig,
-  CustomizationsConfigValidator,
-  NetworkConfigValidator,
-  IamConfigValidator,
-} from '@aws-accelerator/config';
-import { createLogger } from './logger';
 import * as fs from 'fs';
 import * as path from 'path';
+
+import {
+  AccountsConfig,
+  CustomizationsConfigValidator,
+  GlobalConfig,
+  IamConfigValidator,
+  NetworkConfigValidator,
+  OrganizationConfig,
+  SecurityConfig,
+} from '@aws-accelerator/config';
+import { createLogger } from '@aws-accelerator/utils';
 
 const logger = createLogger(['config-validator']);
 const configDirPath = process.argv[2];

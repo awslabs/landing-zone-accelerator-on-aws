@@ -13,6 +13,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { createLogger } from '@aws-accelerator/utils';
+
 import { AccountsConfig } from '../lib/accounts-config';
 import * as t from '../lib/common-types';
 import { CustomizationsConfig, CustomizationsConfigTypes } from '../lib/customizations-config';
@@ -39,8 +41,9 @@ export class NetworkConfigValidator {
     const snsTopicNames: string[] = [];
 
     const errors: string[] = [];
+    const logger = createLogger(['network-config-validator']);
 
-    console.log(`[network-config-validator.ts]: ${NetworkConfig.FILENAME} file validation started`);
+    logger.info(`${NetworkConfig.FILENAME} file validation started`);
 
     //
     // Get list of OU ID names from organization config file

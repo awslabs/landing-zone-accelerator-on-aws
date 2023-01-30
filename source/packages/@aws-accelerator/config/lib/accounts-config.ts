@@ -17,12 +17,10 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
 
 import * as t from './common-types';
 import { OrganizationConfig } from './organization-config';
-import { DeploymentTargets } from './common-types';
-import { createLogger } from '@aws-accelerator/accelerator/lib/logger';
 
 const logger = createLogger(['accounts-config']);
 /**
@@ -487,7 +485,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     return false;
   }
 
-  public getAccountIdsFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
+  public getAccountIdsFromDeploymentTarget(deploymentTargets: t.DeploymentTargets): string[] {
     const accountIds: string[] = [];
 
     for (const ou of deploymentTargets.organizationalUnits ?? []) {
@@ -518,7 +516,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     return filteredAccountIds;
   }
 
-  public getExcludedAccountIds(deploymentTargets: DeploymentTargets): string[] {
+  public getExcludedAccountIds(deploymentTargets: t.DeploymentTargets): string[] {
     const accountIds: string[] = [];
 
     if (deploymentTargets.excludedAccounts) {
