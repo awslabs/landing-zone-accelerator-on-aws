@@ -30,13 +30,16 @@ import {
   OrganizationConfig,
   SecurityConfig,
 } from '@aws-accelerator/config';
+import { createLogger } from '@aws-accelerator/utils';
 
 import { version } from '../../../../package.json';
 import { AcceleratorStackNames } from '../lib/accelerator';
 import { AcceleratorStage } from '../lib/accelerator-stage';
-import { createLogger } from '../lib/logger';
 import { AccountsStack } from '../lib/stacks/accounts-stack';
+import { ApplicationsStack } from '../lib/stacks/applications-stack';
 import { BootstrapStack } from '../lib/stacks/bootstrap-stack';
+import { CustomStack, generateCustomStackMappings, isIncluded } from '../lib/stacks/custom-stack';
+import { CustomizationsStack } from '../lib/stacks/customizations-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
 import { KeyStack } from '../lib/stacks/key-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
@@ -54,9 +57,6 @@ import { SecurityAuditStack } from '../lib/stacks/security-audit-stack';
 import { SecurityResourcesStack } from '../lib/stacks/security-resources-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
 import { TesterPipelineStack } from '../lib/stacks/tester-pipeline-stack';
-import { CustomStack, generateCustomStackMappings, isIncluded } from '../lib/stacks/custom-stack';
-import { CustomizationsStack } from '../lib/stacks/customizations-stack';
-import { ApplicationsStack } from '../lib/stacks/applications-stack';
 
 const logger = createLogger(['app']);
 

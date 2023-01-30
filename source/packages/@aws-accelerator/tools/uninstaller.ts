@@ -10,9 +10,11 @@
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions
  *  and limitations under the License.
  */
-import { createLogger } from '../accelerator/lib/logger';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+
+import { createLogger } from '@aws-accelerator/utils';
+
 import { AcceleratorTool } from './lib/classes/accelerator-tool';
 
 /**
