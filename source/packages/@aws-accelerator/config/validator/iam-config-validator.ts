@@ -13,12 +13,14 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { IamConfig, IamConfigTypes } from '../lib/iam-config';
-import * as t from '../lib/common-types';
+import { createLogger } from '@aws-accelerator/utils';
+
 import { AccountsConfig } from '../lib/accounts-config';
+import * as t from '../lib/common-types';
+import { IamConfig, IamConfigTypes } from '../lib/iam-config';
+import { NetworkConfig } from '../lib/network-config';
 import { OrganizationConfig } from '../lib/organization-config';
 import { SecurityConfig } from '../lib/security-config';
-import { NetworkConfig } from '../lib/network-config';
 
 type VpcSubnetListsType = {
   vpcName: string;
@@ -40,8 +42,9 @@ export class IamConfigValidator {
     const vpcSubnetLists: VpcSubnetListsType[] = [];
 
     const errors: string[] = [];
+    const logger = createLogger(['iam-config-validator']);
 
-    console.log(`[iam-config-validator.ts]: ${IamConfig.FILENAME} file validation started`);
+    logger.info(`${IamConfig.FILENAME} file validation started`);
 
     //
     // Get list of OU ID names from organization config file

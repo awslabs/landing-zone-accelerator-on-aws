@@ -15,12 +15,12 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
+import { createLogger } from '@aws-accelerator/utils';
+
 import { AccountsConfig } from './accounts-config';
 import * as t from './common-types';
-import { OrganizationConfig } from './organization-config';
 import { GlobalConfig } from './global-config';
-
-import { createLogger } from '@aws-accelerator/accelerator/lib/logger';
+import { OrganizationConfig } from './organization-config';
 
 const logger = createLogger(['security-config']);
 

@@ -24,10 +24,11 @@ import {
   IamConfig,
   NetworkConfig,
   OrganizationConfig,
-  SecurityConfig,
   Region,
+  SecurityConfig,
 } from '@aws-accelerator/config';
-import { createLogger } from '../logger';
+import { createLogger } from '@aws-accelerator/utils';
+
 import { version } from '../../../../../package.json';
 
 const logger = createLogger(['custom-stack']);

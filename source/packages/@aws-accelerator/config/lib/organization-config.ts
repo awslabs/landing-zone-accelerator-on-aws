@@ -16,10 +16,9 @@ import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
 
-import { throttlingBackOff } from '@aws-accelerator/utils';
+import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
 
 import * as t from './common-types';
-import { createLogger } from '@aws-accelerator/accelerator/lib/logger';
 
 const logger = createLogger(['organization-config']);
 

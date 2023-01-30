@@ -14,6 +14,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { createLogger } from '@aws-accelerator/utils';
+
 import { AccountsConfig } from '../lib/accounts-config';
 import * as t from '../lib/common-types';
 import {
@@ -23,14 +25,11 @@ import {
   NlbTargetTypeConfig,
   PortfolioConfig,
 } from '../lib/customizations-config';
-import { OrganizationConfig } from '../lib/organization-config';
-import { NetworkConfig, NetworkConfigTypes, VpcConfig, VpcTemplatesConfig } from '../lib/network-config';
-import console from 'console';
-import { SecurityConfig } from '../lib/security-config';
-import { IamConfig } from '../lib/iam-config';
 import { GlobalConfig } from '../lib/global-config';
-import { Region } from '../lib/common-types';
-import { DeploymentTargets } from '../lib/common-types';
+import { IamConfig } from '../lib/iam-config';
+import { NetworkConfig, NetworkConfigTypes, VpcConfig, VpcTemplatesConfig } from '../lib/network-config';
+import { OrganizationConfig } from '../lib/organization-config';
+import { SecurityConfig } from '../lib/security-config';
 
 /**
  * Customizations Configuration validator.
@@ -43,8 +42,9 @@ export class CustomizationsConfigValidator {
     const accountNames: string[] = [];
 
     const errors: string[] = [];
+    const logger = createLogger(['customizations-config-validator']);
 
-    console.log(`[customizations-config-validator.ts]: ${CustomizationsConfig.FILENAME} file validation started`);
+    logger.info(`${CustomizationsConfig.FILENAME} file validation started`);
 
     //
     // Get list of OU ID names from organization config file
@@ -335,7 +335,7 @@ class CustomizationValidator {
   }
   private checkAppName(app: AppConfigItem, globalConfig: GlobalConfig, errors: string[]) {
     const allEnabledRegions = globalConfig.enabledRegions;
-    let filteredRegions: Region[];
+    let filteredRegions: t.Region[];
     if (app.deploymentTargets.excludedAccounts && app.deploymentTargets.excludedAccounts.length > 0) {
       filteredRegions = allEnabledRegions.filter(obj => !app.deploymentTargets.excludedAccounts.includes(obj));
     } else {
@@ -808,7 +808,7 @@ class CustomizationHelperMethods {
   }
 
   private getAccountNamesFromDeploymentTarget(
-    deploymentTargets: DeploymentTargets,
+    deploymentTargets: t.DeploymentTargets,
     accountsConfig: AccountsConfig,
   ): string[] {
     const accountNames: string[] = [];
