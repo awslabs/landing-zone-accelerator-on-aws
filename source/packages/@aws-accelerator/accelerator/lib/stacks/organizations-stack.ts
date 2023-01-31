@@ -693,7 +693,7 @@ export class OrganizationsStack extends AcceleratorStack {
             'CentralLogsBucket',
             `${
               AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
-            }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${cdk.Stack.of(this).region}`,
+            }-${this.stackProperties.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
           ),
           s3KeyPrefix: 'cloudtrail-organization',
           cloudWatchLogGroup: cloudTrailCloudWatchCmkLogGroup,
