@@ -303,6 +303,7 @@ export class AcceleratorSynthStacks {
             templateFile: stack.stackConfig.template,
             terminationProtection: stack.stackConfig.terminationProtection,
             ...this.props,
+            parameters: stack.stackConfig.parameters,
           });
 
           if (stack.dependsOn) {

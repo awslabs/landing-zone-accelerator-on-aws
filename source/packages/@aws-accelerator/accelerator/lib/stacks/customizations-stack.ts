@@ -88,6 +88,12 @@ export class CustomizationsStack extends AcceleratorStack {
         );
         const templateBody = fs.readFileSync(path.join(this.props.configDirPath, stackSet.template), 'utf-8');
 
+        const parameters = stackSet.parameters?.map(parameter => {
+          return new cdk.CfnParameter(this, parameter.name, {
+            default: parameter.value,
+          });
+        });
+
         new cdk.aws_cloudformation.CfnStackSet(this, pascalCase(`AWSAccelerator-Custom-${stackSet.name}`), {
           permissionModel: 'SELF_MANAGED',
           stackSetName: stackSet.name,
@@ -107,6 +113,7 @@ export class CustomizationsStack extends AcceleratorStack {
             },
           ],
           templateBody: templateBody,
+          parameters,
         });
       }
     }

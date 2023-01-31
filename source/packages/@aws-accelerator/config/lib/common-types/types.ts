@@ -333,6 +333,16 @@ export class Tag implements t.TypeOf<typeof tag> {
   readonly value: string = '';
 }
 
+export const cfnParameter = t.interface({
+  name: t.string,
+  value: t.string,
+});
+
+export class CfnParameter implements t.TypeOf<typeof cfnParameter> {
+  readonly name: string = '';
+  readonly value: string = '';
+}
+
 const trafficTypeEnum = enums(
   'Flow LogTrafficType',
   ['ALL', 'ACCEPT', 'REJECT'],
