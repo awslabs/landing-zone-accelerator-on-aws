@@ -23,12 +23,13 @@ import {
   Inventory,
   KeyLookup,
   LimitsDefinition,
+  WarmAccount,
 } from '@aws-accelerator/constructs';
 
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export interface OperationsStackProps extends AcceleratorStackProps {
-  configDirPath: string;
+  readonly accountWarming: boolean;
 }
 
 interface PermissionSetMapping {
@@ -116,6 +117,9 @@ export class OperationsStack extends AcceleratorStack {
 
       // Create Accelerator Access Role in every region
       this.createAssetAccessRole();
+
+      // warm account here
+      this.warmAccount(props.accountWarming);
     }
 
     //
@@ -864,5 +868,15 @@ export class OperationsStack extends AcceleratorStack {
         reason: 'IAM Role for lambda needs AWS managed policy',
       },
     ]);
+  }
+
+  private warmAccount(warm: boolean) {
+    if (!warm) {
+      return;
+    }
+    new WarmAccount(this, 'WarmAccount', {
+      cloudwatchKmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+    });
   }
 }

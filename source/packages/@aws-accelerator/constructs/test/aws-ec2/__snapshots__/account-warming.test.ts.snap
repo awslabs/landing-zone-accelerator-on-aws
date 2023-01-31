@@ -1,0 +1,1257 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AccountWarming Construct(WarmAccount):  Snapshot Test 1`] = `
+Object {
+  "Resources": Object {
+    "AccountWarmingWarmAccountFunctionAD0DA263": Object {
+      "DependsOn": Array [
+        "AccountWarmingWarmAccountFunctionServiceRoleDefaultPolicy7A9A020A",
+        "AccountWarmingWarmAccountFunctionServiceRoleF7AECCB8",
+      ],
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource lambda require access to other services",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policy is limited to certain tag properties",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Account warming onEvent handler",
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "AccountWarmingWarmAccountFunctionServiceRoleF7AECCB8",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AccountWarmingWarmAccountFunctionLogGroupF216C336": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "AccountWarmingWarmAccountFunctionAD0DA263",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "AccountWarmingWarmAccountFunctionServiceRoleDefaultPolicy7A9A020A": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource lambda require access to other services",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policy is limited to certain tag properties",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "ec2:DescribeVpcs",
+                "ec2:DescribeInstances",
+                "ec2:DescribeSubnets",
+                "ec2:RunInstances",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "ec2",
+            },
+            Object {
+              "Action": Array [
+                "ec2:DeleteVpc",
+                "ec2:DeleteSubnet",
+                "ec2:TerminateInstances",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:ResourceTag/Name": "accelerator-warm",
+                },
+              },
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "ec2Delete",
+            },
+            Object {
+              "Action": Array [
+                "ec2:CreateVpc",
+                "ec2:CreateSubnet",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "vpccreation",
+            },
+            Object {
+              "Action": "ec2:RunInstances",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ec2:us-east-1:333333333333:subnet/*",
+                  ],
+                ],
+              },
+              "Sid": "ec2Run",
+            },
+            Object {
+              "Action": "ec2:CreateTags",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "ec2:CreateAction": "RunInstances",
+                },
+              },
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ec2:us-east-1:333333333333:instance/*",
+                    ],
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ec2:us-east-1:333333333333:volume/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "ec2CreateTags",
+            },
+            Object {
+              "Action": "ec2:CreateTags",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "ec2:CreateAction": "CreateVpc",
+                },
+              },
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ec2:us-east-1:333333333333:vpc/*",
+                  ],
+                ],
+              },
+              "Sid": "ec2CreateVpcTags",
+            },
+            Object {
+              "Action": "ec2:CreateTags",
+              "Condition": Object {
+                "StringEquals": Object {
+                  "ec2:CreateAction": "CreateSubnet",
+                },
+              },
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ec2:us-east-1:333333333333:subnet/*",
+                  ],
+                ],
+              },
+              "Sid": "ec2CreateSubnetTags",
+            },
+            Object {
+              "Action": Array [
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+                "ssm:DeleteParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1:333333333333:parameter/accelerator/account/pre-warmed",
+                  ],
+                ],
+              },
+              "Sid": "ssm",
+            },
+            Object {
+              "Action": "ssm:GetParameter",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1::parameter/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2",
+                  ],
+                ],
+              },
+              "Sid": "ssmami",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AccountWarmingWarmAccountFunctionServiceRoleDefaultPolicy7A9A020A",
+        "Roles": Array [
+          Object {
+            "Ref": "AccountWarmingWarmAccountFunctionServiceRoleF7AECCB8",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AccountWarmingWarmAccountFunctionServiceRoleF7AECCB8": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource lambda require access to other services",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policy is limited to certain tag properties",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AccountWarmingWarmAccountProviderframeworkisComplete33FFB4AE": Object {
+      "DependsOn": Array [
+        "AccountWarmingWarmAccountProviderframeworkisCompleteServiceRoleDefaultPolicy6C15320E",
+        "AccountWarmingWarmAccountProviderframeworkisCompleteServiceRole9A7E21A7",
+      ],
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK Generated Role",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK Generated Policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - isComplete (Stack/AccountWarming/WarmAccountProvider)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_IS_COMPLETE_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "AccountWarmingWarmAccountStatusFunction25E39087",
+                "Arn",
+              ],
+            },
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "AccountWarmingWarmAccountFunctionAD0DA263",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.isComplete",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "AccountWarmingWarmAccountProviderframeworkisCompleteServiceRole9A7E21A7",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AccountWarmingWarmAccountProviderframeworkisCompleteServiceRole9A7E21A7": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK Generated Role",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK Generated Policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AccountWarmingWarmAccountProviderframeworkisCompleteServiceRoleDefaultPolicy6C15320E": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK Generated Role",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK Generated Policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AccountWarmingWarmAccountFunctionAD0DA263",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AccountWarmingWarmAccountFunctionAD0DA263",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AccountWarmingWarmAccountStatusFunction25E39087",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AccountWarmingWarmAccountStatusFunction25E39087",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AccountWarmingWarmAccountProviderframeworkisCompleteServiceRoleDefaultPolicy6C15320E",
+        "Roles": Array [
+          Object {
+            "Ref": "AccountWarmingWarmAccountProviderframeworkisCompleteServiceRole9A7E21A7",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AccountWarmingWarmAccountProviderframeworkonEvent6A404DAF": Object {
+      "DependsOn": Array [
+        "AccountWarmingWarmAccountProviderframeworkonEventServiceRoleDefaultPolicy59DF4E2B",
+        "AccountWarmingWarmAccountProviderframeworkonEventServiceRole29C5E36F",
+      ],
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK Generated Role",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK Generated Policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onEvent (Stack/AccountWarming/WarmAccountProvider)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_IS_COMPLETE_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "AccountWarmingWarmAccountStatusFunction25E39087",
+                "Arn",
+              ],
+            },
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "AccountWarmingWarmAccountFunctionAD0DA263",
+                "Arn",
+              ],
+            },
+            "WAITER_STATE_MACHINE_ARN": Object {
+              "Ref": "AccountWarmingWarmAccountProviderwaiterstatemachineAE64331A",
+            },
+          },
+        },
+        "Handler": "framework.onEvent",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "AccountWarmingWarmAccountProviderframeworkonEventServiceRole29C5E36F",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AccountWarmingWarmAccountProviderframeworkonEventServiceRole29C5E36F": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK Generated Role",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK Generated Policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AccountWarmingWarmAccountProviderframeworkonEventServiceRoleDefaultPolicy59DF4E2B": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK Generated Role",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK Generated Policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AccountWarmingWarmAccountFunctionAD0DA263",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AccountWarmingWarmAccountFunctionAD0DA263",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AccountWarmingWarmAccountStatusFunction25E39087",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AccountWarmingWarmAccountStatusFunction25E39087",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": "states:StartExecution",
+              "Effect": "Allow",
+              "Resource": Object {
+                "Ref": "AccountWarmingWarmAccountProviderwaiterstatemachineAE64331A",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AccountWarmingWarmAccountProviderframeworkonEventServiceRoleDefaultPolicy59DF4E2B",
+        "Roles": Array [
+          Object {
+            "Ref": "AccountWarmingWarmAccountProviderframeworkonEventServiceRole29C5E36F",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AccountWarmingWarmAccountProviderframeworkonTimeout9C02467A": Object {
+      "DependsOn": Array [
+        "AccountWarmingWarmAccountProviderframeworkonTimeoutServiceRoleDefaultPolicyE1E67C51",
+        "AccountWarmingWarmAccountProviderframeworkonTimeoutServiceRole43A89D84",
+      ],
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK Generated Role",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK Generated Policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "AWS CDK resource provider framework - onTimeout (Stack/AccountWarming/WarmAccountProvider)",
+        "Environment": Object {
+          "Variables": Object {
+            "USER_IS_COMPLETE_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "AccountWarmingWarmAccountStatusFunction25E39087",
+                "Arn",
+              ],
+            },
+            "USER_ON_EVENT_FUNCTION_ARN": Object {
+              "Fn::GetAtt": Array [
+                "AccountWarmingWarmAccountFunctionAD0DA263",
+                "Arn",
+              ],
+            },
+          },
+        },
+        "Handler": "framework.onTimeout",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "AccountWarmingWarmAccountProviderframeworkonTimeoutServiceRole43A89D84",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AccountWarmingWarmAccountProviderframeworkonTimeoutServiceRole43A89D84": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK Generated Role",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK Generated Policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AccountWarmingWarmAccountProviderframeworkonTimeoutServiceRoleDefaultPolicyE1E67C51": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK Generated Role",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK Generated Policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AccountWarmingWarmAccountFunctionAD0DA263",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AccountWarmingWarmAccountFunctionAD0DA263",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AccountWarmingWarmAccountStatusFunction25E39087",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AccountWarmingWarmAccountStatusFunction25E39087",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AccountWarmingWarmAccountProviderframeworkonTimeoutServiceRoleDefaultPolicyE1E67C51",
+        "Roles": Array [
+          Object {
+            "Ref": "AccountWarmingWarmAccountProviderframeworkonTimeoutServiceRole43A89D84",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AccountWarmingWarmAccountProviderwaiterstatemachineAE64331A": Object {
+      "DependsOn": Array [
+        "AccountWarmingWarmAccountProviderwaiterstatemachineRoleDefaultPolicy3DD0E902",
+        "AccountWarmingWarmAccountProviderwaiterstatemachineRole0437F7B9",
+      ],
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK Generated Role",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK Generated Policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "DefinitionString": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "{\\"StartAt\\":\\"framework-isComplete-task\\",\\"States\\":{\\"framework-isComplete-task\\":{\\"End\\":true,\\"Retry\\":[{\\"ErrorEquals\\":[\\"States.ALL\\"],\\"IntervalSeconds\\":120,\\"MaxAttempts\\":30,\\"BackoffRate\\":1}],\\"Catch\\":[{\\"ErrorEquals\\":[\\"States.ALL\\"],\\"Next\\":\\"framework-onTimeout-task\\"}],\\"Type\\":\\"Task\\",\\"Resource\\":\\"",
+              Object {
+                "Fn::GetAtt": Array [
+                  "AccountWarmingWarmAccountProviderframeworkisComplete33FFB4AE",
+                  "Arn",
+                ],
+              },
+              "\\"},\\"framework-onTimeout-task\\":{\\"End\\":true,\\"Type\\":\\"Task\\",\\"Resource\\":\\"",
+              Object {
+                "Fn::GetAtt": Array [
+                  "AccountWarmingWarmAccountProviderframeworkonTimeout9C02467A",
+                  "Arn",
+                ],
+              },
+              "\\"}}}",
+            ],
+          ],
+        },
+        "RoleArn": Object {
+          "Fn::GetAtt": Array [
+            "AccountWarmingWarmAccountProviderwaiterstatemachineRole0437F7B9",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::StepFunctions::StateMachine",
+    },
+    "AccountWarmingWarmAccountProviderwaiterstatemachineRole0437F7B9": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK Generated Role",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK Generated Policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "states.us-east-1.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AccountWarmingWarmAccountProviderwaiterstatemachineRoleDefaultPolicy3DD0E902": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "CDK Generated Role",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "CDK Generated Policy",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AccountWarmingWarmAccountProviderframeworkisComplete33FFB4AE",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AccountWarmingWarmAccountProviderframeworkisComplete33FFB4AE",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": "lambda:InvokeFunction",
+              "Effect": "Allow",
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AccountWarmingWarmAccountProviderframeworkonTimeout9C02467A",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AccountWarmingWarmAccountProviderframeworkonTimeout9C02467A",
+                          "Arn",
+                        ],
+                      },
+                      ":*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AccountWarmingWarmAccountProviderwaiterstatemachineRoleDefaultPolicy3DD0E902",
+        "Roles": Array [
+          Object {
+            "Ref": "AccountWarmingWarmAccountProviderwaiterstatemachineRole0437F7B9",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AccountWarmingWarmAccountResourceA5323DBB": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "AccountWarmingWarmAccountProviderframeworkonEvent6A404DAF",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "Custom::WarmAccount",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AccountWarmingWarmAccountStatusFunction25E39087": Object {
+      "DependsOn": Array [
+        "AccountWarmingWarmAccountStatusFunctionServiceRoleDefaultPolicy9876CE7C",
+        "AccountWarmingWarmAccountStatusFunctionServiceRole6BC3CAD6",
+      ],
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource lambda require access to other services",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policy is limited to certain tag properties",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-333333333333-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Account warming isComplete handler",
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "AccountWarmingWarmAccountStatusFunctionServiceRole6BC3CAD6",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "AccountWarmingWarmAccountStatusFunctionLogGroupBD74C59F": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Fn::GetAtt": Array [
+            "CustomKey1E6D0D07",
+            "Arn",
+          ],
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "AccountWarmingWarmAccountStatusFunction25E39087",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "AccountWarmingWarmAccountStatusFunctionServiceRole6BC3CAD6": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource lambda require access to other services",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policy is limited to certain tag properties",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Join": Array [
+              "",
+              Array [
+                "arn:",
+                Object {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AccountWarmingWarmAccountStatusFunctionServiceRoleDefaultPolicy9876CE7C": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Custom resource lambda require access to other services",
+            },
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policy is limited to certain tag properties",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "ec2:DescribeVpcs",
+                "ec2:DescribeInstances",
+                "ec2:DescribeSubnets",
+                "ec2:RunInstances",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "ec2",
+            },
+            Object {
+              "Action": Array [
+                "ec2:DeleteVpc",
+                "ec2:DeleteSubnet",
+                "ec2:TerminateInstances",
+              ],
+              "Condition": Object {
+                "StringEquals": Object {
+                  "aws:ResourceTag/Name": "accelerator-warm",
+                },
+              },
+              "Effect": "Allow",
+              "Resource": "*",
+              "Sid": "ec2Delete",
+            },
+            Object {
+              "Action": Array [
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+                "ssm:DeleteParameter",
+              ],
+              "Effect": "Allow",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ssm:us-east-1:333333333333:parameter/accelerator/account/pre-warmed",
+                  ],
+                ],
+              },
+              "Sid": "ssm",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AccountWarmingWarmAccountStatusFunctionServiceRoleDefaultPolicy9876CE7C",
+        "Roles": Array [
+          Object {
+            "Ref": "AccountWarmingWarmAccountStatusFunctionServiceRole6BC3CAD6",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "CustomKey1E6D0D07": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+  },
+}
+`;

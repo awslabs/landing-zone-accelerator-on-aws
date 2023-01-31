@@ -619,6 +619,7 @@ async function main() {
               synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
               terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
+              accountWarming: accountItem.warm ?? false,
             },
           );
           addAcceleratorTags(operationsStack, partition);
