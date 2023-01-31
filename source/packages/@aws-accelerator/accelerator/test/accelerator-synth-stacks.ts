@@ -535,6 +535,7 @@ export class AcceleratorSynthStacks {
                 region: region,
               },
               ...this.props,
+              accountWarming: account.warm ?? false,
             },
           ),
         );

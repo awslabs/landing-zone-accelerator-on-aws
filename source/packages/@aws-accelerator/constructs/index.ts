@@ -29,6 +29,7 @@ export * from './lib/aws-directory-service/active-directory-configuration';
 export * from './lib/aws-directory-service/active-directory-log-subscription';
 export * from './lib/aws-directory-service/active-directory-resolver-rule';
 export * from './lib/aws-directory-service/share-active-directory';
+export * from './lib/aws-ec2/account-warming';
 export * from './lib/aws-ec2/cross-account-route';
 export * from './lib/aws-ec2/customer-gateway';
 export * from './lib/aws-ec2/delete-default-vpc';
