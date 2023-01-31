@@ -699,6 +699,7 @@ async function main() {
                 synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
                 templateFile: stack.stackConfig.template,
                 terminationProtection: stack.stackConfig.terminationProtection,
+                parameters: stack.stackConfig.parameters,
                 ...props,
               });
 
