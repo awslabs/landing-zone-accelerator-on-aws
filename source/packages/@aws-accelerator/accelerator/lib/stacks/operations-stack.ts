@@ -242,7 +242,20 @@ export class OperationsStack extends AcceleratorStack {
       }
 
       if (assumedByItem.type === 'account') {
-        principals.push(new cdk.aws_iam.AccountPrincipal(assumedByItem.principal));
+        const partition = this.props.partition;
+        const accountIdRegex = /^\d{12}$/;
+        const accountArnRegex = new RegExp('^arn:' + partition + ':iam::(\\d{12}):root$');
+
+        if (accountIdRegex.test(assumedByItem.principal)) {
+          principals.push(new cdk.aws_iam.AccountPrincipal(assumedByItem.principal));
+        } else if (accountArnRegex.test(assumedByItem.principal)) {
+          const accountId = accountArnRegex.exec(assumedByItem.principal);
+          principals.push(new cdk.aws_iam.AccountPrincipal(accountId![1]));
+        } else {
+          principals.push(
+            new cdk.aws_iam.AccountPrincipal(this.props.accountsConfig.getAccountId(assumedByItem.principal)),
+          );
+        }
       }
 
       if (assumedByItem.type === 'provider') {

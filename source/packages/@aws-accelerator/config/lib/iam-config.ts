@@ -93,7 +93,43 @@ export class IamConfigTypes {
     /**
      * IAM principal of either service, account or provider type.
      *
-     * IAM principal of sns service type (i.e. new ServicePrincipal('sns.amazonaws.com')), which can assume this role.
+     * Service principals are defined by the service and follow the pattern service.domain for example:
+     *
+     * ```
+     * sns.amazonaws.com
+     * ```
+     * or
+     * ```
+     * sns.amazonaws.com.cn
+     * ```
+     *
+     * Account principals can be defined using either the account ID (with quotes), the account arn or the name assigned to the account in the accounts-config.yaml.
+     *
+     *
+     * @example
+     * ```
+     * assumedBy:
+     *   - type: account
+     *     principal: '111111111111'
+     * ```
+     * @example
+     * ```
+     * assumedBy:
+     *   - type: account
+     *     principal: Audit
+     * ```
+     * @example
+     * ```
+     * assumedBy:
+     *   - type: account
+     *     principal: 'arn:aws:iam::111111111111:root'
+     * ```
+     * @example
+     * ```
+     * assumedBy:
+     *   - type: service
+     *     principal: 'ssm.amazonaws.com'
+     * ```
      */
     principal: t.optional(t.nonEmptyString),
   });
