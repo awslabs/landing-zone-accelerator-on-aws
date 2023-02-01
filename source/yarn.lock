@@ -6539,11 +6539,6 @@ before-after-hook@^2.2.0:
   resolved "https://registry.yarnpkg.com/before-after-hook/-/before-after-hook-2.2.3.tgz#c51e809c81a4e354084422b9b26bad88249c517c"
   integrity sha512-NzUnlZexiaH/46WDhANlyR2bXRopNg4F/zuSA3OpZnllCUgRaOF2znDioDWrmbNVsuZk6l9pMquQB38cfBZwkQ==
 
-big-integer@^1.6.48:
-  version "1.6.51"
-  resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.51.tgz#0df92a5d9880560d3ff2d5fd20245c889d130686"
-  integrity sha512-GPEid2Y9QU1Exl1rpO9B2IPJGHPSupF5GnVIP0blYvNOMer2bTvSWs1jGOUg04hTmu67nmLsQ9TBo1puaotBHg==
-
 bin-links@^3.0.0:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/bin-links/-/bin-links-3.0.3.tgz#3842711ef3db2cd9f16a5f404a996a12db355a6e"
@@ -9026,17 +9021,15 @@ io-ts@2.2.16:
   resolved "https://registry.yarnpkg.com/io-ts/-/io-ts-2.2.16.tgz#597dffa03db1913fc318c9c6df6931cb4ed808b2"
   integrity sha512-y5TTSa6VP6le0hhmIyN0dqEXkrZeJLeC5KApJq6VLci3UEKF80lZ+KuoUs02RhBxNWlrqSNxzfI7otLX1Euv8Q==
 
-ip-num@1.3.3:
-  version "1.3.3"
-  resolved "https://registry.yarnpkg.com/ip-num/-/ip-num-1.3.3.tgz#84a4e76c9d37c3238b9bef4fa915d2192bff67af"
-  integrity sha512-1QsiMKglDaemuIktincG1ntr3DvVTV/pU++eyG7vIm4xd+gvtJ9eoB34RRbI9YTqn1U5og16n7+1RgwLhv4RmA==
-  dependencies:
-    big-integer "^1.6.48"
-
 ip-num@1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/ip-num/-/ip-num-1.4.0.tgz#2626eb39e908c4db01ca522c7a158896a8a43b08"
   integrity sha512-MP+gq4uBvrvm+G7EwP14GcJeFK49/p6sZrNOarMUoExLRodULJQM8mnkb/SbT1YKxRsZfh8rgwei2pUJIa35jA==
+
+ip-num@1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/ip-num/-/ip-num-1.5.0.tgz#b97bec67c85daaa44f9596d6cfbf77916ee7f802"
+  integrity sha512-XPStGtjDEDgaJXZhteWoIYZe2SaLWOzlpqwUmcx2W8UAA3lBY9oTyNNJ3fTnnW9Y4Px9f6Qi1mUqeFb9/dTIwQ==
 
 ip@^1.1.5:
   version "1.1.8"
