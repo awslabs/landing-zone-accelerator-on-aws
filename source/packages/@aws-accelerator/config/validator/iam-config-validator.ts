@@ -212,6 +212,47 @@ export class IamConfigValidator {
   }
 
   /**
+   * Function to validate existence of Assignment target account names exist for IAM policies or that arn or account ids match correct format
+   * Make sure deployment target accounts are part of account config file
+   * @param values
+   */
+  private validateAssignmentPrincipalsForIamRoles(
+    values: t.TypeOf<typeof IamConfigTypes.iamConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const roleSetItem of values.roleSets!) {
+      for (const roleItem of roleSetItem.roles) {
+        for (const assumedByItem of roleItem.assumedBy) {
+          if (assumedByItem.type === 'account') {
+            const accountIdRegex = /^\d{12}$/;
+            const accountArnRegex = new RegExp('^arn:.*$');
+
+            if (accountIdRegex.test(assumedByItem.principal!)) {
+              continue;
+            } else if (accountArnRegex.test(assumedByItem.principal!)) {
+              const accountArnGetIdRegex = new RegExp('^arn:.*:.*::(.*):.*$');
+              const accountId = accountArnGetIdRegex.exec(assumedByItem.principal!);
+              if (!accountIdRegex.test(accountId![1])) {
+                errors.push(`Account ID defined in arn ${assumedByItem.principal} is not a valid account ID`);
+              }
+              const accountArnRegex = new RegExp('^arn:.+:.+::\\d{12}:(root$|.*user.*(:|/).*$|.*role.*(:|/).*$)');
+              if (!accountArnRegex.test(assumedByItem.principal!)) {
+                errors.push(`The arn ${assumedByItem.principal} is not a valid arn for a trust policy`);
+              }
+            } else {
+              const account = assumedByItem.principal;
+              if (accountNames.indexOf(account!) === -1) {
+                errors.push(`Cannot find an account with the name ${account} in accounts-config.yaml`);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
    * Function to validate existence of Assignment deployment target OUs
    * Make sure deployment target OUs are part of Organization config file
    * @param values
@@ -348,6 +389,11 @@ export class IamConfigValidator {
     // Validate Identity Center assignments account name
     //
     this.validateAssignmentAccountNames(values, accountNames, errors);
+
+    //
+    // Validate IAM princiapl assignments for roles
+    //
+    this.validateAssignmentPrincipalsForIamRoles(values, accountNames, errors);
   }
 
   /**
