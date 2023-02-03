@@ -22,6 +22,7 @@ import { CustomizationsConfig, CustomizationsConfigTypes } from '../lib/customiz
 import { GlobalConfig } from '../lib/global-config';
 import {
   CustomerGatewayConfig,
+  DhcpOptsConfig,
   DnsFirewallRuleGroupConfig,
   DnsFirewallRulesConfig,
   DnsQueryLogsConfig,
@@ -89,7 +90,9 @@ export class NetworkConfigValidator {
     // Start Validation
     new CentralNetworkValidator(values, configDir, helpers, errors);
     new TransitGatewayValidator(values, helpers, errors);
+    new DhcpOptionsValidator(values, helpers, errors);
     new EndpointPoliciesValidator(values, configDir, helpers, errors);
+    new PrefixListValidator(values, helpers, errors);
     new VpcValidator(values, helpers, errors);
     new CustomerGatewaysValidator(values, helpers, errors);
     new DirectConnectGatewaysValidator(values, errors);
@@ -681,6 +684,123 @@ class TransitGatewayValidator {
 }
 
 /**
+ * Class to validate DHCP options sets
+ */
+class DhcpOptionsValidator {
+  constructor(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    //
+    // Validate DHCP options names
+    //
+    this.validateDhcpOptNames(values, helpers, errors);
+    //
+    // Validate DHCP options names
+    //
+    this.validateDhcpOptAccountNames(values, helpers, errors);
+    //
+    // Validate DHCP configuration
+    //
+    this.validateDhcpOptConfiguration(values, helpers, errors);
+  }
+
+  private validateDhcpOptNames(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    const setNames: string[] = [];
+    values.dhcpOptions?.forEach(set => setNames.push(set.name));
+
+    if (helpers.hasDuplicates(setNames)) {
+      errors.push(
+        `Duplicate DHCP options set names exist. DHCP options set names must be unique. DHCP options set names in file: ${setNames}`,
+      );
+    }
+  }
+
+  /**
+   * Validate DHCP options account names
+   * @param values
+   * @param helpers
+   * @param errors
+   */
+  private validateDhcpOptAccountNames(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    values.dhcpOptions?.forEach(set => {
+      set.accounts.forEach(account => {
+        if (!helpers.accountExists(account)) {
+          errors.push(
+            `Target account ${account} for DHCP options set ${set.name} does not exist in accounts-config.yaml file`,
+          );
+        }
+      });
+    });
+  }
+
+  private validateDhcpOptConfiguration(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    values.dhcpOptions?.forEach(set => {
+      // Validate domain name
+      this.validateDomainName(set, helpers, errors);
+      // Validate IP addresses
+      this.validateIpAddresses(set, helpers, errors);
+    });
+  }
+
+  /**
+   * Validate DHCP option set domain name
+   * @param set
+   * @param helpers
+   * @param errors
+   */
+  private validateDomainName(set: DhcpOptsConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    // Validate regex
+    if (set.domainName && !helpers.matchesRegex(set.domainName, '^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-z]{2,8}$')) {
+      errors.push(
+        `[DHCP options set ${set.name}]: domainName "${set.domainName}" is invalid. Domain names must match the pattern "^[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-z]{2,8}$"`,
+      );
+    }
+    // Validate regional domain names are not deployed to more than one region
+    const isRegionalName = set.domainName
+      ? set.domainName === 'ec2.internal' || helpers.matchesRegex(set.domainName, '^.+\\.compute\\.internal$')
+      : false;
+    if (set.regions.length > 1 && set.domainName && isRegionalName) {
+      errors.push(
+        `[DHCP options set ${set.name}]: domainName "${set.domainName}" is invalid. Domain name is deployed to multiple regions but specified Amazon-provided regional domain name`,
+      );
+    }
+  }
+
+  /**
+   * Validate IP addresses defined for DHCP options set
+   * @param set
+   * @param helpers
+   * @param errors
+   */
+  private validateIpAddresses(set: DhcpOptsConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    // Validate IP addresses are valid
+    const ips = [...(set.domainNameServers ?? []), ...(set.netbiosNameServers ?? []), ...(set.ntpServers ?? [])];
+    ips.forEach(ip => {
+      if (ip !== 'AmazonProvidedDNS' && !helpers.isValidIpv4(ip)) {
+        errors.push(
+          `[DHCP options set ${set.name}]: IP address "${ip}" is invalid. Values must be either a valid IPv4 address or AmazonProvidedDNS`,
+        );
+      }
+    });
+
+    // Validate number of servers defined
+    if (set.domainNameServers && set.domainNameServers.length > 4) {
+      errors.push(
+        `[DHCP options set ${set.name}]: domainNameServers has ${set.domainNameServers.length} servers defined. A maximum of 4 servers may be defined`,
+      );
+    }
+    if (set.netbiosNameServers && set.netbiosNameServers.length > 4) {
+      errors.push(
+        `[DHCP options set ${set.name}]: netbiosNameServers has ${set.netbiosNameServers.length} servers defined. A maximum of 4 servers may be defined`,
+      );
+    }
+    if (set.ntpServers && set.ntpServers.length > 4) {
+      errors.push(
+        `[DHCP options set ${set.name}]: ntpServers has ${set.ntpServers.length} servers defined. A maximum of 4 servers may be defined`,
+      );
+    }
+  }
+}
+
+/**
  * Class to validate endpoint policies
  */
 class EndpointPoliciesValidator {
@@ -729,6 +849,85 @@ class EndpointPoliciesValidator {
     }
   }
 }
+
+/**
+ * Class to validate customer-managed prefix lists
+ */
+class PrefixListValidator {
+  constructor(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    //
+    // Validate prefix list names
+    //
+    this.validatePrefixListNames(values, helpers, errors);
+    //
+    // Validate prefix list account names
+    //
+    this.validatePrefixListAccountNames(values, helpers, errors);
+    //
+    // Validate entries
+    //
+    this.validatePrefixListEntries(values, helpers, errors);
+  }
+
+  /**
+   * Validate prefix list names
+   * @param values
+   * @param helpers
+   * @param errors
+   */
+  private validatePrefixListNames(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    const listNames: string[] = [];
+    values.prefixLists?.forEach(list => listNames.push(list.name));
+
+    if (helpers.hasDuplicates(listNames)) {
+      errors.push(
+        `Duplicate prefix list names exist. Prefix list names must be unique. Prefix list names in file: ${listNames}`,
+      );
+    }
+  }
+
+  /**
+   * Validate prefix list account names
+   * @param values
+   * @param helpers
+   * @param errors
+   */
+  private validatePrefixListAccountNames(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    values.prefixLists?.forEach(list => {
+      list.accounts.forEach(account => {
+        if (!helpers.accountExists(account)) {
+          errors.push(
+            `Target account ${account} for prefix list ${list.name} does not exist in accounts-config.yaml file`,
+          );
+        }
+      });
+    });
+  }
+
+  /**
+   * Validate prefix list entries
+   * @param values
+   * @param helpers
+   * @param errors
+   */
+  private validatePrefixListEntries(values: NetworkConfig, helpers: NetworkValidatorFunctions, errors: string[]) {
+    values.prefixLists?.forEach(list => {
+      // Validate number of entries
+      if (list.entries.length > list.maxEntries) {
+        errors.push(
+          `[Prefix list ${list.name}]: maximum number of entries exceeded. Number of entries defined: ${list.entries.length} Max entries allowed: ${list.maxEntries}`,
+        );
+      }
+      // Validate CIDR ranges
+      list.entries.forEach(entry => {
+        if (!helpers.isValidIpv4Cidr(entry)) {
+          errors.push(`[Prefix list ${list.name}]: entry "${entry}" is invalid. Value must be a valid IPv4 CIDR range`);
+        }
+      });
+    });
+  }
+}
+
 /**
  * Class to validate Route53Resolver
  */
