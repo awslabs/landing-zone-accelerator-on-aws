@@ -59,8 +59,8 @@ centralSecurityServices:
         # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-cis-controls.html
         enable: true
         controlsToDisable:
-          - CIS.1.17
-          - CIS.1.16
+          - "1.17"
+          - "1.16"
   ssmAutomation:
     excludeRegions: []
     documentSets:
