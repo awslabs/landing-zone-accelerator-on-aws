@@ -430,6 +430,16 @@ vpcs:
               vpc: Network-Endpoints
               subnet: Network-Endpoints-B
               region: us-east-1
+          - rule: 104
+            action: allow
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-B
+              region: us-east-1
         inboundRules:
           - rule: 101
             action: allow
@@ -456,6 +466,16 @@ vpcs:
               account: Network
               vpc: Network-Endpoints
               subnet: Network-Endpoints-A
+              region: us-east-1
+          - rule: 104
+            action: allow
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-B
               region: us-east-1
     gatewayEndpoints:
       defaultPolicy: Default
