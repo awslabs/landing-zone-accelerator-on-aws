@@ -6,7 +6,7 @@ The Finance (Tax) config aims to deploy an account structure commonly used with 
 
 The config provides the capability to easily enable additional security services, such as Amazon Macie. Detective guardrails are established through the use of Security Hub and Config, which deploy managed Config rules. These rules evaluate whether the configuration settings of your AWS resources comply with common best practices, such as CIS.  As an example these align with IRS cloud computing [Computer Security Evaluation Matrix (SCSEM)]. The accelerator deploys the account structure for Tax deployments along with security controls and network configurations to secure FTI data.
 
-This project builds around best practices suitable for any organization. This LZA is not meant to be feature complete, but rather is intended to help accelerate cloud migrations and cloud refactoring efforts by organizations focused on election workloads. You will still need to tailor it to your unique business needs, however it does reduce much of the effort required to manually build a production-ready infrastrcture.
+This project builds around best practices suitable for any organization. This LZA is not meant to be feature complete, but rather is intended to help accelerate cloud migrations and cloud refactoring efforts by organizations focused on financial workloads. You will still need to tailor it to your unique business needs, however it does reduce much of the effort required to manually build a production-ready infrastrcture.
 
 ## Deployment Overview
 
