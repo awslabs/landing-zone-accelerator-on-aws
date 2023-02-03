@@ -2243,23 +2243,28 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             if (this.isCrossAccountNaclSource(inboundRuleItem.source)) {
               this.logger.info(`Checking inbound rule ${inboundRuleItem.rule} to ${naclItem.name}`);
               const inboundAclTargetProps = this.getIpamSubnetCidr(
+                vpcItem.name,
                 naclItem,
                 inboundRuleItem.source as NetworkAclSubnetSelection,
                 inboundRuleItem,
                 'Ingress',
               );
-              const aclCidr = cdk.aws_ec2.AclCidr.ipv4(inboundAclTargetProps.ipv4CidrBlock);
               const ruleAction =
                 inboundRuleItem.action === 'allow' ? cdk.aws_ec2.Action.ALLOW : cdk.aws_ec2.Action.DENY;
-              const traffic = cdk.aws_ec2.AclTraffic.tcpPortRange(inboundRuleItem.fromPort, inboundRuleItem.toPort);
-              nacl.addEntry(
+              new cdk.aws_ec2.CfnNetworkAclEntry(
+                this,
                 `${vpcItem.name}-${naclItem.name}-inbound-${naclItem.inboundRules?.indexOf(inboundRuleItem)}`,
                 {
-                  networkAclEntryName: naclItem.name,
+                  protocol: inboundRuleItem.protocol,
+                  networkAclId: nacl.networkAclId,
                   ruleAction: ruleAction,
                   ruleNumber: inboundRuleItem.rule,
-                  cidr: aclCidr,
-                  traffic: traffic,
+                  cidrBlock: inboundAclTargetProps.ipv4CidrBlock,
+                  egress: false,
+                  portRange: {
+                    from: inboundRuleItem.fromPort,
+                    to: inboundRuleItem.toPort,
+                  },
                 },
               );
               NagSuppressions.addResourceSuppressionsByPath(
@@ -2276,25 +2281,28 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             if (this.isCrossAccountNaclSource(outboundRuleItem.destination)) {
               this.logger.info(`]Checking outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`);
               const outboundAclTargetProps = this.getIpamSubnetCidr(
+                vpcItem.name,
                 naclItem,
                 outboundRuleItem.destination as NetworkAclSubnetSelection,
                 outboundRuleItem,
                 'Egress',
               );
-              const aclCidr = cdk.aws_ec2.AclCidr.ipv4(outboundAclTargetProps.ipv4CidrBlock);
               const ruleAction =
                 outboundRuleItem.action === 'allow' ? cdk.aws_ec2.Action.ALLOW : cdk.aws_ec2.Action.DENY;
-              const traffic = cdk.aws_ec2.AclTraffic.tcpPortRange(outboundRuleItem.fromPort, outboundRuleItem.toPort);
-              const egress = cdk.aws_ec2.TrafficDirection.EGRESS;
-              nacl.addEntry(
-                `${vpcItem.name}-${naclItem.name}-outboundbound-${naclItem.outboundRules?.indexOf(outboundRuleItem)}`,
+              new cdk.aws_ec2.CfnNetworkAclEntry(
+                this,
+                `${vpcItem.name}-${naclItem.name}-outbound-${naclItem.outboundRules?.indexOf(outboundRuleItem)}`,
                 {
-                  direction: egress,
-                  networkAclEntryName: naclItem.name,
+                  protocol: outboundRuleItem.protocol,
+                  networkAclId: nacl.networkAclId,
                   ruleAction: ruleAction,
                   ruleNumber: outboundRuleItem.rule,
-                  cidr: aclCidr,
-                  traffic: traffic,
+                  cidrBlock: outboundAclTargetProps.ipv4CidrBlock,
+                  egress: true,
+                  portRange: {
+                    from: outboundRuleItem.fromPort,
+                    to: outboundRuleItem.toPort,
+                  },
                 },
               );
               NagSuppressions.addResourceSuppressionsByPath(
@@ -2313,10 +2321,12 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
   /**
    * Retrieve IPAM Subnet CIDR
+   * @param vpcName
    * @param naclItem
    * @param target
    */
   private getIpamSubnetCidr(
+    vpcName: string,
     naclItem: NetworkAclConfig,
     target: NetworkAclSubnetSelection,
     naclRule: NetworkAclInboundRuleConfig | NetworkAclOutboundRuleConfig,
@@ -2326,14 +2336,18 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       `Retrieve IPAM Subnet CIDR for account:${target.account} vpc:${target.vpc} subnet:[${target.subnet}] in region:[${target.region}]`,
     );
     const accountId = this.props.accountsConfig.getAccountId(target.account);
-    return IpamSubnet.fromLookup(this, pascalCase(`${naclItem.name}${naclRule.rule}${trafficType}NaclRule`), {
-      owningAccountId: accountId,
-      ssmSubnetIdPath: `/accelerator/network/vpc/${target.vpc}/subnet/${target.subnet}/id`,
-      region: target.region,
-      roleName: `AWSAccelerator-GetIpamCidrRole-${cdk.Stack.of(this).region}`,
-      kmsKey: this.cloudwatchKey,
-      logRetentionInDays: this.logRetention,
-    });
+    return IpamSubnet.fromLookup(
+      this,
+      pascalCase(`${vpcName}-${naclItem.name}${naclRule.rule}${trafficType}NaclRule`),
+      {
+        owningAccountId: accountId,
+        ssmSubnetIdPath: `/accelerator/network/vpc/${target.vpc}/subnet/${target.subnet}/id`,
+        region: target.region,
+        roleName: `AWSAccelerator-GetIpamCidrRole-${cdk.Stack.of(this).region}`,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.logRetention,
+      },
+    );
   }
 
   private shareSubnetTags() {
