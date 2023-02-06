@@ -35,7 +35,7 @@ export class AssumeProfilePlugin implements Plugin {
       name: 'cdk-assume-role-plugin',
       assumeRoleName: this.props.assumeRoleName ?? AssumeProfilePlugin.getDefaultAssumeRoleName(),
       assumeRoleDuration: this.props.assumeRoleDuration ?? AssumeProfilePlugin.getDefaultAssumeRoleDuration(),
-      region: this.props.region ?? 'us-east-1',
+      region: this.props.region!,
       credentials: this.props.credentials,
       partition: this.props.partition,
       caBundlePath: this.props.caBundlePath,

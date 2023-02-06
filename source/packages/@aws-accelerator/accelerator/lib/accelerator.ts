@@ -136,6 +136,18 @@ export abstract class Accelerator {
     let globalConfig = undefined;
     let assumeRolePlugin = undefined;
 
+    let globalRegion = 'us-east-1';
+
+    if (props.partition === 'aws-us-gov') {
+      globalRegion = 'us-gov-west-1';
+    } else if (props.partition === 'aws-iso-b') {
+      globalRegion = 'us-isob-east-1';
+    } else if (props.partition === 'aws-iso') {
+      globalRegion = 'us-iso-east-1';
+    } else if (props.partition === 'aws-cn') {
+      globalRegion = 'cn-northwest-1';
+    }
+
     if (props.stage !== AcceleratorStage.PIPELINE && props.stage !== AcceleratorStage.TESTER_PIPELINE) {
       // Get management account credential when pipeline is executing outside of management account
       managementAccountCredentials = await this.getManagementAccountCredentials(props.partition);
@@ -147,7 +159,7 @@ export abstract class Accelerator {
       // Load Plugins
       //
       assumeRolePlugin = new AssumeProfilePlugin({
-        region: props.region,
+        region: props.region ?? globalRegion,
         assumeRoleName: globalConfig.managementAccountAccessRole,
         assumeRoleDuration: 3600,
         credentials: managementAccountCredentials,
@@ -255,18 +267,6 @@ export abstract class Accelerator {
       }
       await Promise.all(promises);
       return;
-    }
-
-    let globalRegion = 'us-east-1';
-
-    if (props.partition === 'aws-us-gov') {
-      globalRegion = 'us-gov-west-1';
-    } else if (props.partition === 'aws-iso-b') {
-      globalRegion = 'us-isob-east-1';
-    } else if (props.partition === 'aws-iso') {
-      globalRegion = 'us-iso-east-1';
-    } else if (props.partition === 'aws-cn') {
-      globalRegion = 'cn-northwest-1';
     }
 
     // Control Tower: To start a well-planned OU structure in your landing zone, AWS Control Tower
