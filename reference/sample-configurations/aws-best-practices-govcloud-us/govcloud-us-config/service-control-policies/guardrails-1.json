@@ -16,7 +16,7 @@
         "ArnNotLike": {
           "aws:PrincipalARN": [
             "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
-            "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
             "arn:${PARTITION}:iam::*:role/cdk-accel-*"
           ]
         }
@@ -43,7 +43,7 @@
         "ArnNotLike": {
           "aws:PrincipalARN": [
             "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
-            "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
             "arn:${PARTITION}:iam::*:role/cdk-accel-*"
           ]
         }
@@ -66,7 +66,7 @@
         "ArnNotLike": {
           "aws:PrincipalARN": [
             "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
-            "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
             "arn:${PARTITION}:iam::*:role/cdk-accel-*"
           ]
         }
@@ -81,7 +81,7 @@
         "ArnNotLike": {
           "aws:PrincipalARN": [
             "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
-            "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
             "arn:${PARTITION}:iam::*:role/cdk-accel-*"
           ]
         }
@@ -106,7 +106,7 @@
         "ArnNotLike": {
           "aws:PrincipalARN": [
             "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
-            "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
             "arn:${PARTITION}:iam::*:role/cdk-accel-*"
           ]
         }
@@ -124,7 +124,7 @@
         "ArnNotLike": {
           "aws:PrincipalARN": [
             "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-*",
-            "arn:${PARTITION}:iam::*:role/AWSControlTowerExecution",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
             "arn:${PARTITION}:iam::*:role/cdk-accel-*"
           ]
         }
