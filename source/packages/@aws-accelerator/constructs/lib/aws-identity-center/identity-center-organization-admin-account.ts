@@ -53,6 +53,10 @@ export class IdentityCenterOrganizationAdminAccount extends Construct {
             'organizations:DescribeOrganizationalUnit',
             'organizations:ListAccounts',
             'organizations:ListAWSServiceAccessForOrganization',
+            'sso:ListInstances',
+            'sso:ListPermissionSets',
+            'sso:ListAccountAssignments',
+            'sso:DescribePermissionSet',
           ],
           resources: ['*'],
         }),
@@ -64,6 +68,7 @@ export class IdentityCenterOrganizationAdminAccount extends Construct {
       onEventHandler: providerLambda,
     });
 
+    // Adding UUID, we need to force this to run every time in case there is problems with Deregistering.
     this.resource = new cdk.CustomResource(this, `identityCenterAdmin`, {
       serviceToken: this.provider.serviceToken,
       properties: {
