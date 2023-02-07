@@ -219,6 +219,7 @@ export class IamConfigTypes {
    */
   static readonly identityCenterConfig = t.interface({
     name: t.nonEmptyString,
+    delegatedAdminAccount: t.optional(t.nonEmptyString),
     identityCenterPermissionSets: t.optional(t.array(this.identityCenterPermissionSetConfig)),
     identityCenterAssignments: t.optional(t.array(this.identityCenterAssignmentConfig)),
   });
@@ -1021,6 +1022,7 @@ export class RoleConfig implements t.TypeOf<typeof IamConfigTypes.roleConfig> {
  * ```
  * identityCenter:
  *  name: identityCenter1
+ *  delegatedAdminAccount: Audit
  *  identityCenterPermissionSets:
  *    - name: PermissionSet1
  *      policies:
@@ -1029,7 +1031,6 @@ export class RoleConfig implements t.TypeOf<typeof IamConfigTypes.roleConfig> {
  *        customerManaged:
  *          - ResourceConfigurationCollectorPolicy
  *      sessionDuration: 60
- *
  *  identityCenterAssignments:
  *    - name: Assignment1
  *      permissionSetName: PermissionSet1
@@ -1046,6 +1047,11 @@ export class IdentityCenterConfig implements t.TypeOf<typeof IamConfigTypes.iden
    * A name for the Identity Center Configuration
    */
   readonly name: string = '';
+
+  /**
+   * Override for Delegated Admin Account
+   */
+  readonly delegatedAdminAccount: string = '';
 
   /**
    * List of PermissionSets
@@ -1349,15 +1355,25 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *
    * @example
    * ```
-   * identityCenterPermissionSets:
-   *   - deploymentTargets:
-   *       organizationalUnits:
-   *         - Root
-   *     groups:
-   *       - name: Administrators
-   *         policies:
-   *           awsManaged:
-   *             - AdministratorAccess
+   * identityCenter:
+   *  name: identityCenter1
+   *  delegatedAdminAccount: Audit
+   *  identityCenterPermissionSets:
+   *    - name: PermissionSet1
+   *      policies:
+   *        awsManaged:
+   *          - arn:aws:iam::aws:policy/AdministratorAccess
+   *        customerManaged:
+   *          - ResourceConfigurationCollectorPolicy
+   *      sessionDuration: 60
+   *  identityCenterAssignments:
+   *    - name: Assignment1
+   *      permissionSetName: PermissionSet1
+   *      principalId: "a4e81468-1001-70f0-9c12-56a6aa967ca4"
+   *      principalType: USER
+   *      deploymentTargets:
+   *        accounts:
+   *          - LogArchive
    * ```
    */
 
