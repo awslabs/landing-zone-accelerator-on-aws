@@ -614,6 +614,11 @@ export class OrganizationsStack extends AcceleratorStack {
    */
   private enableIdentityCenterDelegatedAdminAccount(adminAccountId: string) {
     const managementAccountId = this.props.accountsConfig.getManagementAccountId();
+    const identityCenterDelgatedAdminOverrideId = this.props.iamConfig.identityCenter?.delegatedAdminAccount;
+    if (identityCenterDelgatedAdminOverrideId) {
+      adminAccountId = this.props.accountsConfig.getAccountId(identityCenterDelgatedAdminOverrideId);
+    }
+
     if (
       cdk.Stack.of(this).account === managementAccountId &&
       (this.props.partition === 'aws' || this.props.partition === 'aws-us-gov')
