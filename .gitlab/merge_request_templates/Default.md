@@ -30,10 +30,17 @@
 - [ ] 30 - 60 minutes
 - [ ] > 60 minutes
 
-## Checklist:
-<!-- Go over all the following points, and put an `x` in all the boxes that apply. -->
-- [ ] My code follows the code style of this project.
+## Submitter's Checklist:
+<!-- As a submitter, put an `x` in all the boxes that apply. -->
+- [ ] I have updated the [README](https://gitlab.aws.dev/landing-zone-accelerator/landing-zone-accelerator-on-aws/-/blob/main/README.md) accordingly, if applicable.
 - [ ] I have updated the [Implementation Guide](https://quip-amazon.com/zarXA1cbqSom/Implementation-Guide-Strategy) accordingly, if applicable.
 - [ ] I have included pathing, examples, and a description to any new configuration objects. Example found [here](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.GwlbConfig.html).
 - [ ] I have added validations for any new configuration objects.
 - [ ] I have added tests to cover my changes.
+
+## Reviewer's Checklist:
+<!-- As a reviewer, put an `x` in all the boxes that apply. -->
+- [ ] Submitter has updated the Implementation Guide, README.md, and configuration TypeDocs as described in the Submitter's Checklist.
+- [ ] Submitter has properly identified, evaluated, and sufficiently mitigated any introduced security concerns. 
+- [ ] Submitter has modularized code as a [construct](https://gitlab.aws.dev/landing-zone-accelerator/landing-zone-accelerator-on-aws/-/tree/main/source/packages/%40aws-accelerator/constructs).
+- [ ] Submitter has paginated all AWS API calls that support pagination.
