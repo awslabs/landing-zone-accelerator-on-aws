@@ -4667,6 +4667,26 @@ Object {
       "Type": "Custom::EnableAwsServiceAccess",
       "UpdateReplacePolicy": "Delete",
     },
+    "EnableOrganizationsCloudTrailAC3548D9": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderLogGroupEB99134A",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderHandlerDCD56D71",
+            "Arn",
+          ],
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "servicePrincipal": "cloudtrail.amazonaws.com",
+      },
+      "Type": "Custom::EnableAwsServiceAccess",
+      "UpdateReplacePolicy": "Delete",
+    },
     "EnableOrganizationsServiceCatalog4D66D976": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [

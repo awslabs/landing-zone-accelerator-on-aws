@@ -1210,6 +1210,10 @@ export class SecurityResourcesStack extends AcceleratorStack {
   }
 
   private configureAccountCloudTrails() {
+    // Don't create any CloudTrail resources unless CloudTrail is enabled.
+    if (!this.stackProperties.globalConfig.logging.cloudtrail.enable) {
+      return;
+    }
     for (const accountTrail of this.stackProperties.globalConfig.logging.cloudtrail.accountTrails ?? []) {
       if (!accountTrail.regions?.includes(cdk.Stack.of(this).region)) {
         continue;
