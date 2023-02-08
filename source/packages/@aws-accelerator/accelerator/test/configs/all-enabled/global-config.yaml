@@ -21,7 +21,7 @@ logging:
   account: LogArchive
   centralizedLoggingRegion: us-west-2
   cloudtrail:
-    enable: false
+    enable: true
     organizationTrail: false
     accountTrails: 
       - name: AWSAccelerator-Account-CloudTrail
