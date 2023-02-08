@@ -1197,7 +1197,7 @@ Object {
       "Properties": Object {
         "ConfigRuleName": "accelerator-elb-logging-enabled",
         "InputParameters": Object {
-          "s3BucketNames": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
+          "s3BucketNames": "aws-accelerator-elb-access-logs-333333333333-us-west-2",
         },
         "Scope": Object {
           "ComplianceResourceTypes": Array [
@@ -1241,7 +1241,7 @@ Object {
           "LogDestination": Object {
             "StaticValue": Object {
               "Values": Array [
-                "aws-accelerator-elb-access-logs-333333333333-us-east-1",
+                "aws-accelerator-elb-access-logs-333333333333-us-west-2",
               ],
             },
           },
@@ -5233,7 +5233,7 @@ Object {
       "Properties": Object {
         "ConfigRuleName": "accelerator-elb-logging-enabled",
         "InputParameters": Object {
-          "s3BucketNames": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
+          "s3BucketNames": "aws-accelerator-elb-access-logs-333333333333-us-west-2",
         },
         "Scope": Object {
           "ComplianceResourceTypes": Array [
@@ -5277,7 +5277,7 @@ Object {
           "LogDestination": Object {
             "StaticValue": Object {
               "Values": Array [
-                "aws-accelerator-elb-access-logs-333333333333-us-east-1",
+                "aws-accelerator-elb-access-logs-333333333333-us-west-2",
               ],
             },
           },

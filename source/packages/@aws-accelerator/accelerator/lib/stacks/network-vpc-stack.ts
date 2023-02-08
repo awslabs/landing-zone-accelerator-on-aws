@@ -1166,9 +1166,9 @@ export class NetworkVpcStack extends AcceleratorStack {
     const principalIds = [...new Set(principalAccountIds)];
     const principals = principalIds.map(accountId => new cdk.aws_iam.AccountPrincipal(accountId)) ?? undefined;
 
-    const accessLogsBucket = `aws-accelerator-elb-access-logs-${this.props.accountsConfig.getLogArchiveAccountId()}-${
-      cdk.Stack.of(this).region
-    }`;
+    const accessLogsBucket = `${
+      AcceleratorStack.ACCELERATOR_ELB_LOGS_BUCKET_PREFIX
+    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
 
     for (const nlbItem of vpcItem.loadBalancers?.networkLoadBalancers || []) {
       const subnetLookups = nlbItem.subnets.map(subnetName => subnetMap.get(subnetName));
@@ -1237,9 +1237,9 @@ export class NetworkVpcStack extends AcceleratorStack {
     subnetMap: Map<string, Subnet>,
     securityGroupMap: Map<string, SecurityGroup>,
   ) {
-    const accessLogsBucket = `aws-accelerator-elb-access-logs-${this.props.accountsConfig.getLogArchiveAccountId()}-${
-      cdk.Stack.of(this).region
-    }`;
+    const accessLogsBucket = `${
+      AcceleratorStack.ACCELERATOR_ELB_LOGS_BUCKET_PREFIX
+    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
 
     for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers || []) {
       const subnetLookups = albItem.subnets.map(subnetName => subnetMap.get(subnetName));
