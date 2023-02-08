@@ -1026,7 +1026,9 @@ export class SecurityResourcesStack extends AcceleratorStack {
 
     if (lookupType === ACCEL_LOOKUP_TYPE.Bucket && replacementArray.length === 2) {
       if (replacementArray[1].toLowerCase() === 'elbLogs'.toLowerCase()) {
-        return `aws-accelerator-elb-access-logs-${this.logArchiveAccountId}-${cdk.Stack.of(this).region}`;
+        return `${
+          AcceleratorStack.ACCELERATOR_ELB_LOGS_BUCKET_PREFIX
+        }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
       } else {
         return cdk.aws_s3.Bucket.fromBucketName(
           this,

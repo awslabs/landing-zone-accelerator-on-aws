@@ -3186,7 +3186,7 @@ Object {
           },
           Object {
             "Key": "access_logs.s3.bucket",
-            "Value": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
+            "Value": "aws-accelerator-elb-access-logs-333333333333-us-west-2",
           },
           Object {
             "Key": "access_logs.s3.prefix",
@@ -3254,7 +3254,7 @@ Object {
           },
           Object {
             "Key": "access_logs.s3.bucket",
-            "Value": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
+            "Value": "aws-accelerator-elb-access-logs-333333333333-us-west-2",
           },
           Object {
             "Key": "access_logs.s3.prefix",

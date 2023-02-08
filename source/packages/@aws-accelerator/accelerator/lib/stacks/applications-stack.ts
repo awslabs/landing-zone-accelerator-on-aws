@@ -206,6 +206,9 @@ export class ApplicationsStack extends AcceleratorStack {
 
   private createApplicationConfigResources(props: ApplicationStackProps, appConfigItem: AppConfigItem) {
     const allVpcItems = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? [];
+    const accessLogsBucket = `${
+      AcceleratorStack.ACCELERATOR_ELB_LOGS_BUCKET_PREFIX
+    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
 
     for (const vpcItem of allVpcItems) {
       if (vpcItem.name === appConfigItem.vpc) {
@@ -216,9 +219,9 @@ export class ApplicationsStack extends AcceleratorStack {
           // Create target group resource
           const targetGroups = this.createTargetGroup(appConfigItem);
           // Create network load balancer resource
-          this.createNetworkLoadBalancer(appConfigItem, targetGroups);
+          this.createNetworkLoadBalancer(appConfigItem, targetGroups, accessLogsBucket);
           // Create application load balancer resource
-          this.createApplicationLoadBalancer(appConfigItem, targetGroups);
+          this.createApplicationLoadBalancer(appConfigItem, targetGroups, accessLogsBucket);
           // create launch template resource
           const lt = this.createLaunchTemplate(appConfigItem);
           // create autoscaling group resource
@@ -227,7 +230,11 @@ export class ApplicationsStack extends AcceleratorStack {
       }
     }
   }
-  private createApplicationLoadBalancer(appConfigItem: AppConfigItem, targetGroups: TargetGroupItem[] | undefined) {
+  private createApplicationLoadBalancer(
+    appConfigItem: AppConfigItem,
+    targetGroups: TargetGroupItem[] | undefined,
+    accessLogsBucket: string,
+  ) {
     if (appConfigItem.applicationLoadBalancer) {
       const subnets = this.getSubnets(appConfigItem.applicationLoadBalancer.subnets ?? [], appConfigItem.vpc);
       const getSecurityGroups = this.getSecurityGroups(
@@ -240,9 +247,7 @@ export class ApplicationsStack extends AcceleratorStack {
         subnets,
         securityGroups: getSecurityGroups!,
         scheme: appConfigItem.applicationLoadBalancer.scheme! ?? 'internal',
-        accessLogsBucket: `aws-accelerator-elb-access-logs-${this.props.accountsConfig.getLogArchiveAccountId()}-${
-          cdk.Stack.of(this).region
-        }`,
+        accessLogsBucket,
         attributes: appConfigItem.applicationLoadBalancer.attributes ?? undefined,
         listeners: this.getAlbListenerTargetGroupArn(
           appConfigItem.applicationLoadBalancer?.listeners ?? undefined,
@@ -397,7 +402,11 @@ export class ApplicationsStack extends AcceleratorStack {
     );
   }
 
-  private createNetworkLoadBalancer(appConfigItem: AppConfigItem, targetGroups: TargetGroupItem[] | undefined) {
+  private createNetworkLoadBalancer(
+    appConfigItem: AppConfigItem,
+    targetGroups: TargetGroupItem[] | undefined,
+    accessLogsBucket: string,
+  ) {
     if (appConfigItem.networkLoadBalancer) {
       const subnets = this.getSubnets(appConfigItem.networkLoadBalancer.subnets ?? [], appConfigItem.vpc);
       const nlb = new NetworkLoadBalancer(
@@ -411,9 +420,7 @@ export class ApplicationsStack extends AcceleratorStack {
           scheme: appConfigItem.networkLoadBalancer?.scheme ?? undefined,
           deletionProtection: appConfigItem.networkLoadBalancer.deletionProtection ?? undefined,
           crossZoneLoadBalancing: appConfigItem.networkLoadBalancer.crossZoneLoadBalancing ?? undefined,
-          accessLogsBucket: `aws-accelerator-elb-access-logs-${this.props.accountsConfig.getLogArchiveAccountId()}-${
-            cdk.Stack.of(this).region
-          }`,
+          accessLogsBucket,
         },
       );
 
