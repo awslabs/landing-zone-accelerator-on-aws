@@ -116,6 +116,8 @@ Used to manage all of the IAM resources across the AWS Organization. Defined in 
 | AWS IAM           | Policies                | [IamConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.IamConfig.html) | [PolicySetConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.PolicySetConfig.html)       | Define customer-managed IAM policies to be deployed to specified account(s) and/or organizational unit(s). |
 | AWS IAM           | Roles                   | [IamConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.IamConfig.html) | [RoleSetConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.RoleSetConfig.html)           | Define customer-managed IAM roles to be deployed to specified account(s) and/or organizational unit(s).    |
 | AWS IAM           | SAML identity providers | [IamConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.IamConfig.html) | [SamlProviderConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.SamlProviderConfig.html) | Define a SAML identity provider to allow federated IAM access to the AWS Organization.                     |
+| AWS IAM Identity Center         | Permission sets | [IamConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.IamConfig.html) | [IdentityCenterConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.IdentityCenterConfig.html) | Define IAM Identity Center (formerly AWS SSO) permission sets and assignments.                    |
+| AWS Managed Microsoft AD | Managed directory | [IamConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.IamConfig.html) | [ManagedActiveDirectoryConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.ManagedActiveDirectoryConfig.html) | Define a Managed Microsoft AD directory.                     |
 
 ### Network Configuration
 
@@ -265,7 +267,7 @@ directly via the AWS CLI or console. Below are the commands for completing the d
   
 ```
 cd <rootDir>/source
-yarn link && yarn install
+yarn install && yarn lerna link
 ```
 
 - To run the CDK synthesis
