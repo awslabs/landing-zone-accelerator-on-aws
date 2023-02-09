@@ -601,7 +601,7 @@ catch {
             },
           },
         ],
-        "DisableApiTermination": true,
+        "DisableApiTermination": false,
         "IamInstanceProfile": "instanceRoleName",
         "ImageId": Object {
           "Ref": "SsmParameterValueawsserviceamiwindowslatestWindowsServer2016EnglishFullBaseC96584B6F00A464EAD1953AFF4B05118Parameter",

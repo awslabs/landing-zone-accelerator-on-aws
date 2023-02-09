@@ -273,6 +273,7 @@ export class IamConfigTypes {
     imagePath: t.nonEmptyString,
     securityGroupInboundSources: t.array(t.nonEmptyString),
     instanceRole: t.nonEmptyString,
+    enableTerminationProtection: t.optional(t.boolean),
     subnetName: t.nonEmptyString,
     userDataScripts: t.array(this.activeDirectoryConfigurationInstanceUserDataConfig),
     adGroups: t.array(t.nonEmptyString),
@@ -494,6 +495,7 @@ export class ActiveDirectoryUserConfig implements t.TypeOf<typeof IamConfigTypes
  *      securityGroupInboundSources:
  *        - 10.0.0.0/16
  *      instanceRole: EC2-Default-SSM-AD-Role
+ *      enableTerminationProtection: false
  *      userDataScripts:
  *        - scriptName: JoinDomain
  *          scriptFilePath: ad-config-scripts/Join-Domain.ps1
@@ -579,6 +581,11 @@ export class ActiveDirectoryConfigurationInstanceConfig
    * Ec2 instance role name
    */
   readonly instanceRole = '';
+  /**
+   * Flag for Ec2 instance enable api termination protection
+   * @default false
+   */
+  readonly enableTerminationProtection: boolean | undefined = undefined;
   /**
    * Ec2 instance subnet name
    */
@@ -1422,6 +1429,7 @@ export class IamConfig implements t.TypeOf<typeof IamConfigTypes.iamConfig> {
    *      securityGroupInboundSources:
    *        - 10.0.0.0/16
    *      instanceRole: EC2-Default-SSM-AD-Role
+   *      enableTerminationProtection: false
    *      userDataScripts:
    *        - scriptName: JoinDomain
    *          scriptFilePath: ad-config-scripts/Join-Domain.ps1

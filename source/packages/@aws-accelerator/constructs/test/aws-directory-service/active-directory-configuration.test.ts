@@ -33,6 +33,7 @@ new ActiveDirectoryConfiguration(stack, 'ActiveDirectoryConfiguration', {
   subnetId: 'subnetId',
   securityGroupId: 'securityGroupId',
   instanceRoleName: 'instanceRoleName',
+  enableTerminationProtection: false,
   userDataScripts: [
     {
       name: 'JoinDomain',
