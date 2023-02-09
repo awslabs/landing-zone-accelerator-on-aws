@@ -87,6 +87,10 @@ export interface ActiveDirectoryConfigurationProps {
    */
   readonly instanceRoleName: string;
   /**
+   * Flag for AD configuration EC2 instance enable api termination protection
+   */
+  readonly enableTerminationProtection: boolean;
+  /**
    * AD configuration EC2 instance user data scripts
    */
   readonly userDataScripts: UserDataScriptsType[];
@@ -178,7 +182,7 @@ export class ActiveDirectoryConfiguration extends Construct {
         },
       ],
       tags: [{ key: 'Name', value: pascalCase(`${props.managedActiveDirectoryName}-ConfiguringInstance`) }],
-      disableApiTermination: true,
+      disableApiTermination: props.enableTerminationProtection,
     });
 
     instance.node.addDependency(keyPair);

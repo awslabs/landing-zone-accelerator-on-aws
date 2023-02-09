@@ -2897,6 +2897,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           subnetId: props.madInstanceSubnetId,
           securityGroupId: securityGroup.ref,
           instanceRoleName: adInstanceConfig.instanceRole,
+          enableTerminationProtection: adInstanceConfig.enableTerminationProtection ?? false,
           userDataScripts,
           adGroups: adInstanceConfig.adGroups,
           adPerAccountGroups: adInstanceConfig.adPerAccountGroups,

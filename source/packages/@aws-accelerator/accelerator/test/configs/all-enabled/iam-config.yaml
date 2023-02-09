@@ -138,6 +138,7 @@ managedActiveDirectories:
       #       - 10.4.0.0/16
       # securityGroupName: ActiveDirectoryConfigInstanceSG
       instanceRole: EC2-Default-SSM-AD-Role
+      enableTerminationProtection: false
       userDataScripts:
         - scriptName: JoinDomain
           scriptFilePath: ad-config-scripts/Join-Domain.ps1
