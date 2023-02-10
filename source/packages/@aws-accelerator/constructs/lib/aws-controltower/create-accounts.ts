@@ -155,7 +155,7 @@ export class CreateControlTowerAccounts extends Construct {
     this.provider = new cdk.custom_resources.Provider(this, 'CreateControlTowerAcccountsProvider', {
       onEventHandler: this.onEvent,
       isCompleteHandler: this.isComplete,
-      queryInterval: cdk.Duration.minutes(1),
+      queryInterval: cdk.Duration.seconds(30),
       totalTimeout: cdk.Duration.hours(4),
     });
 
