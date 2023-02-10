@@ -273,10 +273,6 @@ export class LoggingStack extends AcceleratorStack {
           item => item.region === cdk.Stack.of(this).region,
         )!.accountId;
       }
-      if (elbAccountId === undefined) {
-        this.logger.error(`elbAccountId is not defined for region: ${cdk.Stack.of(this).region}`);
-        throw new Error(`Configuration validation failed at runtime.`);
-      }
       // To make sure central log bucket created before elb access log bucket, this is required when logging stack executes in home region
       if (this.centralLogsBucket) {
         elbAccessLogsBucket.node.addDependency(this.centralLogsBucket);
@@ -296,6 +292,12 @@ export class LoggingStack extends AcceleratorStack {
         ],
       );
 
+      let elbPrincipal;
+      if (elbAccountId) {
+        elbPrincipal = new iam.AccountPrincipal(`${elbAccountId}`);
+      } else {
+        elbPrincipal = new iam.ServicePrincipal(`logdelivery.elasticloadbalancing.amazonaws.com`);
+      }
       const policies = [
         new cdk.aws_iam.PolicyStatement({
           sid: 'Allow get acl access for SSM principal',
@@ -308,7 +310,7 @@ export class LoggingStack extends AcceleratorStack {
           sid: 'Allow write access for ELB Account principal',
           effect: iam.Effect.ALLOW,
           actions: ['s3:PutObject'],
-          principals: [new iam.AccountPrincipal(`${elbAccountId}`)],
+          principals: [elbPrincipal],
           resources: [`${elbAccessLogsBucket.getS3Bucket().bucketArn}/*`],
         }),
         new cdk.aws_iam.PolicyStatement({
