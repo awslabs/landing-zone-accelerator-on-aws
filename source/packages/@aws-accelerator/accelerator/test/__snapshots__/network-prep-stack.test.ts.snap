@@ -298,6 +298,96 @@ Object {
       },
       "Type": "AWS::NetworkFirewall::RuleGroup",
     },
+    "AcceleratorStrictPolicyNetworkFirewallPolicyA16587CE": Object {
+      "Properties": Object {
+        "FirewallPolicy": Object {
+          "StatefulEngineOptions": Object {
+            "RuleOrder": "STRICT_ORDER",
+          },
+          "StatefulRuleGroupReferences": Array [
+            Object {
+              "Priority": 100,
+              "ResourceArn": Object {
+                "Ref": "AcceleratorStrictRuleGroupNetworkFirewallRuleGroup015E7B87",
+              },
+            },
+          ],
+          "StatelessDefaultActions": Array [
+            "aws:forward_to_sfe",
+          ],
+          "StatelessFragmentDefaultActions": Array [
+            "aws:forward_to_sfe",
+          ],
+          "StatelessRuleGroupReferences": Array [],
+        },
+        "FirewallPolicyName": "accelerator-strict-policy",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "accelerator-strict-policy",
+          },
+        ],
+      },
+      "Type": "AWS::NetworkFirewall::FirewallPolicy",
+    },
+    "AcceleratorStrictPolicyNetworkFirewallPolicyShareResourceShare63900407": Object {
+      "Properties": Object {
+        "Name": "accelerator-strict-policy_NetworkFirewallPolicyShare",
+        "Principals": Array [
+          "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222",
+        ],
+        "ResourceArns": Array [
+          Object {
+            "Ref": "AcceleratorStrictPolicyNetworkFirewallPolicyA16587CE",
+          },
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
+    },
+    "AcceleratorStrictRuleGroupNetworkFirewallRuleGroup015E7B87": Object {
+      "Properties": Object {
+        "Capacity": 100,
+        "RuleGroup": Object {
+          "RuleVariables": Object {
+            "IPSets": Object {
+              "HOME_NET": Object {
+                "Definition": Array [
+                  "10.0.0.0/16",
+                  "10.1.0.0/16",
+                ],
+              },
+            },
+            "PortSets": Object {
+              "HOME_NET": Object {
+                "Definition": Array [
+                  "80",
+                  "443",
+                ],
+              },
+            },
+          },
+          "RulesSource": Object {
+            "RulesString": "pass ip 10.1.0.0/16 any -> 10.0.0.0/16 any (sid:100;)
+drop ip any any <> any any (sid:101;)
+alert tcp any any -> 1.1.1.1/32 80 (sid:102;msg:\\"example message\\";)
+drop tls $HOME_NET any -> $EXTERNAL_NET any (tls.sni; content:\\"example.com\\"; startswith; nocase; endswith; msg:\\"matching TLS denylisted FQDNs\\"; priority:1; flow:to_server, established; sid:103; rev:1;)
+drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:\\"example.com\\"; startswith; endswith; msg:\\"matching HTTP denylisted FQDNs\\"; priority:1; flow:to_server, established; sid:104; rev:1;)",
+          },
+          "StatefulRuleOptions": Object {
+            "RuleOrder": "STRICT_ORDER",
+          },
+        },
+        "RuleGroupName": "accelerator-strict-rule-group",
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "accelerator-strict-rule-group",
+          },
+        ],
+        "Type": "STATEFUL",
+      },
+      "Type": "AWS::NetworkFirewall::RuleGroup",
+    },
     "AcceleratorSuricataRuleGroupNetworkFirewallRuleGroup7657B52C": Object {
       "Properties": Object {
         "Capacity": 100,
@@ -1327,6 +1417,26 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:\\"example.com\
         "Type": "String",
         "Value": Object {
           "Ref": "AcceleratorRuleGroupNetworkFirewallRuleGroup3B409F78",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamacceleratorStrictPolicyNetworkFirewallPolicy2C70E8B6": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/networkFirewall/policies/accelerator-strict-policy/arn",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "AcceleratorStrictPolicyNetworkFirewallPolicyA16587CE",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamacceleratorStrictRuleGroupNetworkFirewallRuleGroup315F5768": Object {
+      "Properties": Object {
+        "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-strict-rule-group/arn",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "AcceleratorStrictRuleGroupNetworkFirewallRuleGroup015E7B87",
         },
       },
       "Type": "AWS::SSM::Parameter",
