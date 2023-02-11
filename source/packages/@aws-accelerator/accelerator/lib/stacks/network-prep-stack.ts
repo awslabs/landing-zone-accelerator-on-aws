@@ -1098,7 +1098,7 @@ export class NetworkPrepStack extends AcceleratorStack {
             rulesFile: undefined,
           },
           ruleVariables: ruleItem.ruleGroup?.ruleVariables,
-          statefulRuleOptions: undefined,
+          statefulRuleOptions: ruleItem.ruleGroup.statefulRuleOptions,
         };
       } else {
         nfwRuleGroupRuleConfig = ruleItem.ruleGroup;
