@@ -403,6 +403,108 @@ endpointPolicies:
     document: vpc-endpoint-policies/ec2.json
 
 vpcs:
+  - name: SharedServices-Ipam-East
+    account: SharedServices
+    region: *HOME_REGION
+    ipamAllocations:
+      - ipamPoolName: home-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: SharedServices-A-Rt
+        routes: []
+      - name: SharedServices-B-Rt
+        routes: []
+    subnets:
+      - name: SharedServices-A
+        availabilityZone: a
+        routeTable: SharedServices-A-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+      - name: SharedServices-B
+        availabilityZone: b
+        routeTable: SharedServices-B-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-pool
+          netmaskLength: 28
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+
+  - name: SharedServices-Ipam-West
+    account: SharedServices
+    region: us-west-2
+    ipamAllocations:
+      - ipamPoolName: west-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: SharedServices-A-Rt
+        routes: []
+      - name: SharedServices-B-Rt
+        routes: []
+    subnets:
+      - name: SharedServices-A
+        availabilityZone: a
+        routeTable: SharedServices-A-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+      - name: SharedServices-B
+        availabilityZone: b
+        routeTable: SharedServices-B-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+
+  - name: Network-Ipam-West
+    account: Network
+    region: us-west-2
+    ipamAllocations:
+      - ipamPoolName: west-region-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-West-A-Rt
+        routes: []
+      - name: Network-West-B-Rt
+        routes: []
+    subnets:
+      - name: Network-West-A
+        availabilityZone: a
+        routeTable: Network-West-A-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+      - name: Network-West-B
+        availabilityZone: b
+        routeTable: Network-West-B-Rt
+        ipamAllocation:
+          ipamPoolName: west-region-pool
+          netmaskLength: 28
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+
   - name: Network-Secondary
     account: Network
     region: *HOME_REGION
@@ -914,6 +1016,7 @@ vpcs:
     cidrs:
       - 10.2.0.0/22
       - 192.168.0.0/16
+    defaultSecurityGroupRulesDeletion: true
     internetGateway: true
     natGateways:
       - name: accelerator-nat-gw-a
