@@ -105,6 +105,7 @@ export class AcceleratorSynthStacks {
       partition: this.partition,
       globalRegion: this.globalRegion,
       centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
+      configRepositoryName: 'aws-accelerator-config',
     };
 
     this.homeRegion = this.props.globalConfig.homeRegion;

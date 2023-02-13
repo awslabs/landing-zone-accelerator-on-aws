@@ -1339,6 +1339,7 @@ Object {
       "Type": "AWS::IAM::Policy",
     },
     "PipelineConfigRepositoryE5225086": Object {
+      "DeletionPolicy": "Retain",
       "Properties": Object {
         "Code": Object {
           "BranchName": "main",
@@ -1350,6 +1351,7 @@ Object {
         "RepositoryName": "aws-accelerator-config",
       },
       "Type": "AWS::CodeCommit::Repository",
+      "UpdateReplacePolicy": "Retain",
     },
     "PipelineManualApprovalActionTopicB55612D2": Object {
       "Properties": Object {

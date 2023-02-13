@@ -24,6 +24,7 @@ import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 import { AcceleratorStage } from './accelerator-stage';
 import * as config_repository from './config-repository';
 import { AcceleratorToolkitCommand } from './toolkit';
+import { Repository } from '@aws-cdk-extensions/cdk-extensions';
 
 /**
  *
@@ -48,6 +49,14 @@ export interface AcceleratorPipelineProps {
    */
   readonly approvalStageNotifyEmailList?: string;
   readonly partition: string;
+  /**
+   * User defined pre-existing config repository name
+   */
+  readonly configRepositoryName: string;
+  /**
+   * User defined pre-existing config repository branch name
+   */
+  readonly configRepositoryBranchName: string;
 }
 
 /**
@@ -120,16 +129,32 @@ export class AcceleratorPipeline extends Construct {
       serverAccessLogsBucketName: cdk.aws_ssm.StringParameter.valueForStringParameter(this, serverAccessLogsBucketName),
     });
 
-    const configRepository = new config_repository.ConfigRepository(this, 'ConfigRepository', {
-      repositoryName: configRepositoryName,
-      repositoryBranchName: 'main',
-      description:
-        'AWS Accelerator configuration repository, created and initialized with default config file by pipeline',
-      managementAccountEmail: this.props.managementAccountEmail,
-      logArchiveAccountEmail: this.props.logArchiveAccountEmail,
-      auditAccountEmail: this.props.auditAccountEmail,
-      controlTowerEnabled: this.props.controlTowerEnabled,
-    });
+    // When non default config repository name provided
+    let configRepository: cdk.aws_codecommit.IRepository | Repository;
+    let configRepositoryBranchName = 'main';
+
+    if (props.configRepositoryName !== configRepositoryName) {
+      configRepository = cdk.aws_codecommit.Repository.fromRepositoryName(
+        this,
+        'ConfigRepository',
+        props.configRepositoryName,
+      );
+      configRepositoryBranchName = props.configRepositoryBranchName ?? 'main';
+    } else {
+      configRepository = new config_repository.ConfigRepository(this, 'ConfigRepository', {
+        repositoryName: configRepositoryName,
+        repositoryBranchName: configRepositoryBranchName,
+        description:
+          'AWS Accelerator configuration repository, created and initialized with default config file by pipeline',
+        managementAccountEmail: this.props.managementAccountEmail,
+        logArchiveAccountEmail: this.props.logArchiveAccountEmail,
+        auditAccountEmail: this.props.auditAccountEmail,
+        controlTowerEnabled: this.props.controlTowerEnabled,
+      }).getRepository();
+
+      const cfnRepository = configRepository.node.defaultChild as codecommit.CfnRepository;
+      cfnRepository.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN, { applyToUpdateReplacePolicy: true });
+    }
 
     /**
      * Pipeline
@@ -177,8 +202,8 @@ export class AcceleratorPipeline extends Construct {
         sourceAction,
         new codepipeline_actions.CodeCommitSourceAction({
           actionName: 'Configuration',
-          repository: configRepository.getRepository(),
-          branch: 'main',
+          repository: configRepository,
+          branch: configRepositoryBranchName,
           output: this.configRepoArtifact,
           trigger: codepipeline_actions.CodeCommitTrigger.NONE,
           variablesNamespace: 'Config-Vars',

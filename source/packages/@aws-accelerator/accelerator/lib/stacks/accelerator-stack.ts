@@ -76,6 +76,7 @@ export interface AcceleratorStackProps extends cdk.StackProps {
   readonly securityConfig: SecurityConfig;
   readonly customizationsConfig: CustomizationsConfig;
   readonly partition: string;
+  readonly configRepositoryName: string;
   readonly qualifier?: string;
   readonly configCommitId?: string;
   readonly globalRegion?: string;
