@@ -18,6 +18,7 @@ import { Construct } from 'constructs';
 
 import {
   AccountsConfig,
+  CertificateConfig,
   GwlbConfig,
   NetworkAclSubnetSelection,
   NetworkConfigTypes,
@@ -30,7 +31,6 @@ import {
   VpcConfig,
   VpcFlowLogsConfig,
   VpcTemplatesConfig,
-  CertificateConfig,
 } from '@aws-accelerator/config';
 import {
   ApplicationLoadBalancer,
@@ -1818,13 +1818,25 @@ export class NetworkVpcStack extends AcceleratorStack {
 
         if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
           for (const alloc of vpcItem.ipamAllocations ?? []) {
+            const ipamPool = props.networkConfig.centralNetworkServices.ipams?.find(item =>
+              item.pools?.find(item => item.name === alloc.ipamPoolName),
+            );
+            if (ipamPool === undefined) {
+              this.logger.error(`Specified Ipam Pool not defined`);
+              throw new Error(`Configuration validation failed at runtime.`);
+            }
             if (!poolMap.has(alloc.ipamPoolName)) {
               let poolId: string;
-              if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
+              if (
+                delegatedAdminAccountId === cdk.Stack.of(this).account &&
+                ipamPool.region === cdk.Stack.of(this).region
+              ) {
                 poolId = cdk.aws_ssm.StringParameter.valueForStringParameter(
                   this,
                   `/accelerator/network/ipam/pools/${alloc.ipamPoolName}/id`,
                 );
+              } else if (ipamPool.region !== cdk.Stack.of(this).region) {
+                poolId = this.getCrossRegionPoolId(delegatedAdminAccountId, alloc.ipamPoolName, ipamPool.region);
               } else {
                 poolId = this.getResourceShare(
                   `${alloc.ipamPoolName}_IpamPoolShare`,
@@ -1840,6 +1852,33 @@ export class NetworkVpcStack extends AcceleratorStack {
       }
     }
     return poolMap;
+  }
+
+  /**
+   * Function to retrieve IPAM Pool ID from cross-region
+   * @param delegatedAdminAccountId
+   * @param poolName
+   * @param ipamPoolRegion
+   */
+  private getCrossRegionPoolId(delegatedAdminAccountId: string, poolName: string, ipamPoolRegion: string) {
+    let poolId: string | undefined = undefined;
+    if (delegatedAdminAccountId !== cdk.Stack.of(this).account) {
+      poolId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${poolName}`), {
+        name: `/accelerator/network/ipam/pools/${poolName}/id`,
+        accountId: delegatedAdminAccountId,
+        parameterRegion: ipamPoolRegion,
+        roleName: `AWSAccelerator-GetAcceleratorIpamSsmParamRole-${cdk.Stack.of(this).region}`,
+        kmsKey: this.cloudwatchKey,
+        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays ?? 365,
+      }).value;
+    } else {
+      poolId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${poolName}`), {
+        name: `/accelerator/network/ipam/pools/${poolName}/id`,
+        accountId: delegatedAdminAccountId,
+        parameterRegion: ipamPoolRegion,
+      }).value;
+    }
+    return poolId;
   }
 
   /**
