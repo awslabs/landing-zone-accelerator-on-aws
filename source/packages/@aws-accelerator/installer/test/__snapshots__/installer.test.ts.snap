@@ -80,6 +80,15 @@ Object {
         },
         Object {
           "Label": Object {
+            "default": "Config Repository Configuration",
+          },
+          "Parameters": Array [
+            "ConfigRepositoryName",
+            "ConfigRepositoryBranchName",
+          ],
+        },
+        Object {
+          "Label": Object {
             "default": "Pipeline Configuration",
           },
           "Parameters": Array [
@@ -112,6 +121,12 @@ Object {
         },
         "AuditAccountEmail": Object {
           "default": "Audit Account Email",
+        },
+        "ConfigRepositoryBranchName": Object {
+          "default": "Config Repository Branch Name",
+        },
+        "ConfigRepositoryName": Object {
+          "default": "Config Repository Name",
         },
         "ControlTowerEnabled": Object {
           "default": "Control Tower Environment",
@@ -149,6 +164,16 @@ Object {
       "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ConfigRepositoryBranchName": Object {
+      "Default": "main",
+      "Description": "If using a CodeCommit repository that already exists, specify the branch name to pull the accelerator configuration from. Leave the default value if using the solution-deployed repository or if using the main branch of an existing repository. Note: Updating this value after initial installation may cause adverse affects.",
+      "Type": "String",
+    },
+    "ConfigRepositoryName": Object {
+      "Default": "aws-accelerator-config",
+      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration. Leave the default value if using the solution-deployed repository, the solution will deploy a new repository (aws-accelerator-config). Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
     "ControlTowerEnabled": Object {
@@ -1430,6 +1455,20 @@ Object {
               "Type": "PLAINTEXT",
               "Value": Object {
                 "Ref": "RepositoryBranchName",
+              },
+            },
+            Object {
+              "Name": "ACCELERATOR_CONFIG_REPOSITORY_NAME",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "ConfigRepositoryName",
+              },
+            },
+            Object {
+              "Name": "ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "ConfigRepositoryBranchName",
               },
             },
             Object {
@@ -2597,6 +2636,15 @@ Object {
         },
         Object {
           "Label": Object {
+            "default": "Config Repository Configuration",
+          },
+          "Parameters": Array [
+            "ConfigRepositoryName",
+            "ConfigRepositoryBranchName",
+          ],
+        },
+        Object {
+          "Label": Object {
             "default": "Pipeline Configuration",
           },
           "Parameters": Array [
@@ -2629,6 +2677,12 @@ Object {
         },
         "AuditAccountEmail": Object {
           "default": "Audit Account Email",
+        },
+        "ConfigRepositoryBranchName": Object {
+          "default": "Config Repository Branch Name",
+        },
+        "ConfigRepositoryName": Object {
+          "default": "Config Repository Name",
         },
         "ControlTowerEnabled": Object {
           "default": "Control Tower Environment",
@@ -2666,6 +2720,16 @@ Object {
       "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ConfigRepositoryBranchName": Object {
+      "Default": "main",
+      "Description": "If using a CodeCommit repository that already exists, specify the branch name to pull the accelerator configuration from. Leave the default value if using the solution-deployed repository or if using the main branch of an existing repository. Note: Updating this value after initial installation may cause adverse affects.",
+      "Type": "String",
+    },
+    "ConfigRepositoryName": Object {
+      "Default": "aws-accelerator-config",
+      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration. Leave the default value if using the solution-deployed repository, the solution will deploy a new repository (aws-accelerator-config). Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
     "ControlTowerEnabled": Object {
@@ -3950,6 +4014,20 @@ Object {
               },
             },
             Object {
+              "Name": "ACCELERATOR_CONFIG_REPOSITORY_NAME",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "ConfigRepositoryName",
+              },
+            },
+            Object {
+              "Name": "ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "ConfigRepositoryBranchName",
+              },
+            },
+            Object {
               "Name": "ACCELERATOR_ENABLE_APPROVAL_STAGE",
               "Type": "PLAINTEXT",
               "Value": Object {
@@ -5104,6 +5182,15 @@ Object {
         },
         Object {
           "Label": Object {
+            "default": "Config Repository Configuration",
+          },
+          "Parameters": Array [
+            "ConfigRepositoryName",
+            "ConfigRepositoryBranchName",
+          ],
+        },
+        Object {
+          "Label": Object {
             "default": "Pipeline Configuration",
           },
           "Parameters": Array [
@@ -5149,6 +5236,12 @@ Object {
         },
         "AuditAccountEmail": Object {
           "default": "Audit Account Email",
+        },
+        "ConfigRepositoryBranchName": Object {
+          "default": "Config Repository Branch Name",
+        },
+        "ConfigRepositoryName": Object {
+          "default": "Config Repository Name",
         },
         "ControlTowerEnabled": Object {
           "default": "Control Tower Environment",
@@ -5197,6 +5290,16 @@ Object {
       "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ConfigRepositoryBranchName": Object {
+      "Default": "main",
+      "Description": "If using a CodeCommit repository that already exists, specify the branch name to pull the accelerator configuration from. Leave the default value if using the solution-deployed repository or if using the main branch of an existing repository. Note: Updating this value after initial installation may cause adverse affects.",
+      "Type": "String",
+    },
+    "ConfigRepositoryName": Object {
+      "Default": "aws-accelerator-config",
+      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration. Leave the default value if using the solution-deployed repository, the solution will deploy a new repository (aws-accelerator-config). Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
     "ControlTowerEnabled": Object {
@@ -6550,6 +6653,20 @@ Object {
               "Type": "PLAINTEXT",
               "Value": Object {
                 "Ref": "RepositoryBranchName",
+              },
+            },
+            Object {
+              "Name": "ACCELERATOR_CONFIG_REPOSITORY_NAME",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "ConfigRepositoryName",
+              },
+            },
+            Object {
+              "Name": "ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "ConfigRepositoryBranchName",
               },
             },
             Object {
@@ -7820,6 +7937,15 @@ Object {
         },
         Object {
           "Label": Object {
+            "default": "Config Repository Configuration",
+          },
+          "Parameters": Array [
+            "ConfigRepositoryName",
+            "ConfigRepositoryBranchName",
+          ],
+        },
+        Object {
+          "Label": Object {
             "default": "Pipeline Configuration",
           },
           "Parameters": Array [
@@ -7865,6 +7991,12 @@ Object {
         },
         "AuditAccountEmail": Object {
           "default": "Audit Account Email",
+        },
+        "ConfigRepositoryBranchName": Object {
+          "default": "Config Repository Branch Name",
+        },
+        "ConfigRepositoryName": Object {
+          "default": "Config Repository Name",
         },
         "ControlTowerEnabled": Object {
           "default": "Control Tower Environment",
@@ -7913,6 +8045,16 @@ Object {
       "AllowedPattern": "[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+",
       "ConstraintDescription": "Must be a valid email address matching \\"[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+\\"",
       "Description": "The security audit account (also referred to as the audit account)",
+      "Type": "String",
+    },
+    "ConfigRepositoryBranchName": Object {
+      "Default": "main",
+      "Description": "If using a CodeCommit repository that already exists, specify the branch name to pull the accelerator configuration from. Leave the default value if using the solution-deployed repository or if using the main branch of an existing repository. Note: Updating this value after initial installation may cause adverse affects.",
+      "Type": "String",
+    },
+    "ConfigRepositoryName": Object {
+      "Default": "aws-accelerator-config",
+      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration. Leave the default value if using the solution-deployed repository, the solution will deploy a new repository (aws-accelerator-config). Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
     "ControlTowerEnabled": Object {
@@ -9266,6 +9408,20 @@ Object {
               "Type": "PLAINTEXT",
               "Value": Object {
                 "Ref": "RepositoryBranchName",
+              },
+            },
+            Object {
+              "Name": "ACCELERATOR_CONFIG_REPOSITORY_NAME",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "ConfigRepositoryName",
+              },
+            },
+            Object {
+              "Name": "ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Type": "PLAINTEXT",
+              "Value": Object {
+                "Ref": "ConfigRepositoryBranchName",
               },
             },
             Object {
