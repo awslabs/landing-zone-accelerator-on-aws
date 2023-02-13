@@ -145,7 +145,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
   public static readonly ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX = 'aws-accelerator-central-logs';
   /**
    * Cross account IAM ROLE to read SSM parameter
-   * IAM role to access SSM parameter from different or different region
+   * IAM role to access SSM parameter from different account or different region
    * This role is created in Key stack
    */
   public static readonly ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME = 'AWSAccelerator-CrossAccount-SsmParameter-Role';

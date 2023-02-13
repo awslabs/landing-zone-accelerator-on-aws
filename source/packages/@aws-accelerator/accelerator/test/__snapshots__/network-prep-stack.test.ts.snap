@@ -988,6 +988,22 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:\\"example.com\
       },
       "Type": "AWS::EC2::IPAMPool",
     },
+    "IpamOrgID22AB3838": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1",
+            "Arn",
+          ],
+        },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+      },
+      "Type": "Custom::DescribeOrganization",
+      "UpdateReplacePolicy": "Delete",
+    },
     "MadShareAcceptRole0F055D0C": Object {
       "Metadata": Object {
         "cdk_nag": Object {
