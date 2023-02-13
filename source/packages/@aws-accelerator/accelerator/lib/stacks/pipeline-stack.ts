@@ -37,6 +37,14 @@ export interface PipelineStackProps extends cdk.StackProps {
    */
   readonly approvalStageNotifyEmailList?: string;
   readonly partition: string;
+  /**
+   * User defined pre-existing config repository name
+   */
+  readonly configRepositoryName: string;
+  /**
+   * User defined pre-existing config repository branch name
+   */
+  readonly configRepositoryBranchName: string;
 }
 
 export class PipelineStack extends cdk.Stack {

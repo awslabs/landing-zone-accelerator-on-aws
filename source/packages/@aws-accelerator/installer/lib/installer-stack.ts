@@ -113,6 +113,28 @@ export class InstallerStack extends cdk.Stack {
   });
 
   /**
+   * LZ Accelerator configuration repository name
+   * @private
+   */
+  private readonly configRepositoryName = new cdk.CfnParameter(this, 'ConfigRepositoryName', {
+    type: 'String',
+    default: 'aws-accelerator-config',
+    description:
+      'The name of an existing CodeCommit repository hosting the accelerator configuration. Leave the default value if using the solution-deployed repository, the solution will deploy a new repository (aws-accelerator-config). Note: Updating this value after initial installation may cause adverse affects.',
+  });
+
+  /**
+   * LZ Accelerator configuration repository branch name
+   * @private
+   */
+  private readonly configRepositoryBranchName = new cdk.CfnParameter(this, 'ConfigRepositoryBranchName', {
+    type: 'String',
+    description:
+      'If using a CodeCommit repository that already exists, specify the branch name to pull the accelerator configuration from. Leave the default value if using the solution-deployed repository or if using the main branch of an existing repository. Note: Updating this value after initial installation may cause adverse affects.',
+    default: 'main',
+  });
+
+  /**
    * Management Account ID Parameter
    * @private
    */
@@ -168,6 +190,10 @@ export class InstallerStack extends cdk.Stack {
         ],
       },
       {
+        Label: { default: 'Config Repository Configuration' },
+        Parameters: [this.configRepositoryName.logicalId, this.configRepositoryBranchName.logicalId],
+      },
+      {
         Label: { default: 'Pipeline Configuration' },
         Parameters: [this.enableApprovalStage.logicalId, this.approvalStageNotifyEmailList.logicalId],
       },
@@ -190,6 +216,8 @@ export class InstallerStack extends cdk.Stack {
       [this.repositoryOwner.logicalId]: { default: 'Repository Owner' },
       [this.repositoryName.logicalId]: { default: 'Repository Name' },
       [this.repositoryBranchName.logicalId]: { default: 'Branch Name' },
+      [this.configRepositoryName.logicalId]: { default: 'Config Repository Name' },
+      [this.configRepositoryBranchName.logicalId]: { default: 'Config Repository Branch Name' },
       [this.enableApprovalStage.logicalId]: { default: 'Enable Approval Stage' },
       [this.approvalStageNotifyEmailList.logicalId]: { default: 'Manual Approval Stage notification email list' },
       [this.managementAccountEmail.logicalId]: { default: 'Management Account Email' },
@@ -576,6 +604,14 @@ export class InstallerStack extends cdk.Stack {
           ACCELERATOR_REPOSITORY_BRANCH_NAME: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.repositoryBranchName.valueAsString,
+          },
+          ACCELERATOR_CONFIG_REPOSITORY_NAME: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.configRepositoryName.valueAsString,
+          },
+          ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.configRepositoryBranchName.valueAsString,
           },
           ACCELERATOR_ENABLE_APPROVAL_STAGE: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,

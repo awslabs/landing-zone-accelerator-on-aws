@@ -41,6 +41,8 @@ const stack = new PipelineStack(app, 'PipelineStack', {
     account: '000000000000',
     region: 'us-east-1',
   },
+  configRepositoryName: 'aws-accelerator-config',
+  configRepositoryBranchName: 'main',
 });
 
 describe('PipelineStack', () => {

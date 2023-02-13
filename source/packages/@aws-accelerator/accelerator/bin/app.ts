@@ -236,6 +236,9 @@ async function main() {
       ? process.env['ACCELERATOR_ENABLE_APPROVAL_STAGE'] === 'Yes'
       : true;
 
+    const configRepositoryName = process.env['ACCELERATOR_CONFIG_REPOSITORY_NAME'] ?? 'aws-accelerator-config';
+    const configRepositoryBranchName = process.env['ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME'] ?? 'main';
+
     // Verify ENV vars are set
     if (!sourceRepositoryName || !sourceBranchName) {
       throw new Error(
@@ -266,6 +269,8 @@ async function main() {
         controlTowerEnabled: process.env['CONTROL_TOWER_ENABLED']!,
         approvalStageNotifyEmailList: process.env['APPROVAL_STAGE_NOTIFY_EMAIL_LIST'],
         partition,
+        configRepositoryName,
+        configRepositoryBranchName,
       },
     );
 
@@ -312,6 +317,18 @@ async function main() {
     } else {
       customizationsConfig = new CustomizationsConfig();
     }
+
+    //
+    // Make config repository name
+    let configRepoName = 'aws-accelerator-config';
+    if (process.env['ACCELERATOR_CONFIG_REPOSITORY_NAME']) {
+      configRepoName = process.env['ACCELERATOR_CONFIG_REPOSITORY_NAME'];
+    } else {
+      if (process.env['ACCELERATOR_QUALIFIER']) {
+        configRepoName = `${process.env['ACCELERATOR_QUALIFIER']}-config`;
+      }
+    }
+
     //
     // Create properties to be used by AcceleratorStack types
     //
@@ -325,6 +342,7 @@ async function main() {
       organizationConfig: OrganizationConfig.load(configDirPath),
       securityConfig: SecurityConfig.load(configDirPath),
       partition: partition,
+      configRepositoryName: configRepoName,
       qualifier: process.env['ACCELERATOR_QUALIFIER'],
       configCommitId: process.env['CONFIG_COMMIT_ID'],
       globalRegion: globalRegion,
