@@ -116,6 +116,7 @@ export * from './lib/aws-securityhub/securityhub-region-aggregation';
 export * from './lib/aws-servicecatalog/get-portfolio-id';
 export * from './lib/aws-service-quota/limits-service-quota-definition';
 export * from './lib/aws-servicecatalog/share-portfolio-with-org';
+export * from './lib/aws-servicecatalog/propagate-portfolio-associations';
 export * from './lib/aws-ssm/document';
 export * from './lib/aws-ssm/inventory';
 export * from './lib/aws-ssm/session-manager-settings';
