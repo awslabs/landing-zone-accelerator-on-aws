@@ -23,7 +23,6 @@ import {
   CustomizationsConfig,
   CustomizationsConfigTypes,
   NlbTargetTypeConfig,
-  PortfolioConfig,
 } from '../lib/customizations-config';
 import { GlobalConfig } from '../lib/global-config';
 import { IamConfig } from '../lib/iam-config';
@@ -555,7 +554,6 @@ class CustomizationValidator {
     accountNames: string[],
     ouIdNames: string[],
   ) {
-    const iamConfig = IamConfig.load(configDir);
     const accountsConfig = AccountsConfig.load(configDir);
     const managementAccount = accountsConfig.getManagementAccount().name;
 
@@ -563,15 +561,8 @@ class CustomizationValidator {
 
     this.validateServiceCatalogShareTargetOUs(values, ouIdNames, errors, managementAccount);
 
-    for (const portfolio of values?.customizations?.serviceCatalogPortfolios ?? []) {
-      if (portfolio?.portfolioAssociations) {
-        // Validate portfolio association targets exist in iam-config.yaml and are in same account
-        this.validatePortfolioAssociations(accountsConfig, errors, iamConfig, <PortfolioConfig>portfolio);
-
-        // Validate portfolio names are unique
-        this.validatePortfolioNameForUniqueness(values, errors);
-      }
-    }
+    // Validate portfolio names are unique
+    this.validatePortfolioNameForUniqueness(values, errors);
   }
 
   /**
@@ -633,37 +624,6 @@ class CustomizationValidator {
             `Share target OU ${ou} for Service Catalog portfolio ${portfolio.name} does not exist in accounts-config.yaml file.`,
           );
         }
-      }
-    }
-  }
-
-  private validatePortfolioAssociations(
-    accountsConfig: AccountsConfig,
-    errors: string[],
-    iamConfig: IamConfig,
-    portfolio: PortfolioConfig,
-  ) {
-    const helpers = new CustomizationHelperMethods();
-
-    const iamUsers = helpers.getIamUsersDeployedToAccount(iamConfig, accountsConfig, portfolio.account);
-    const iamGroups = helpers.getIamGroupsDeployedToAccount(iamConfig, accountsConfig, portfolio.account);
-    const iamRoles = helpers.getIamRolesDeployedToAccount(iamConfig, accountsConfig, portfolio.account);
-
-    for (const portfolioAssociationItem of portfolio?.portfolioAssociations ?? []) {
-      if (portfolioAssociationItem.type === 'User' && !iamUsers.includes(portfolioAssociationItem.name)) {
-        errors.push(
-          `Portfolio ${portfolio.name} can't be associated with user ${portfolioAssociationItem.name} because that user is not deployed to account ${portfolio.account} in iam-config.yaml`,
-        );
-      }
-      if (portfolioAssociationItem.type === 'Group' && !iamGroups.includes(portfolioAssociationItem.name)) {
-        errors.push(
-          `Portfolio ${portfolio.name} can't be associated with group ${portfolioAssociationItem.name} because that group is not deployed to account ${portfolio.account} in iam-config.yaml`,
-        );
-      }
-      if (portfolioAssociationItem.type === 'Role' && !iamRoles.includes(portfolioAssociationItem.name)) {
-        errors.push(
-          `Portfolio ${portfolio.name} can't be associated with role ${portfolioAssociationItem.name} because that role is not deployed to account ${portfolio.account} in iam-config.yaml`,
-        );
       }
     }
   }
