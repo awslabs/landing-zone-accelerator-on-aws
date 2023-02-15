@@ -23,6 +23,7 @@ import {
   Inventory,
   KeyLookup,
   LimitsDefinition,
+  Organization,
   WarmAccount,
 } from '@aws-accelerator/constructs';
 
@@ -69,6 +70,11 @@ export class OperationsStack extends AcceleratorStack {
   private cloudwatchKey: cdk.aws_kms.Key;
 
   /**
+   * AWS Organizations Id
+   */
+  private organizationId: string | undefined;
+
+  /**
    * Constructor for OperationsStack
    *
    * @param scope
@@ -86,6 +92,9 @@ export class OperationsStack extends AcceleratorStack {
         AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
       ),
     ) as cdk.aws_kms.Key;
+
+    // Set Organization ID
+    this.setOrganizationId();
 
     // Security Services delegated admin account configuration
     // Global decoration for security services
@@ -117,6 +126,9 @@ export class OperationsStack extends AcceleratorStack {
 
       // Create Accelerator Access Role in every region
       this.createAssetAccessRole();
+
+      // Create Cross Account Service Catalog Role
+      this.createServiceCatalogPropagationRole();
 
       // warm account here
       this.warmAccount(props.accountWarming);
@@ -621,6 +633,48 @@ export class OperationsStack extends AcceleratorStack {
     });
   }
 
+  private createServiceCatalogPropagationRole() {
+    new cdk.aws_iam.Role(this, 'ServiceCatalogPropagationRole', {
+      roleName: AcceleratorStack.ACCELERATOR_SERVICE_CATALOG_PROPAGATION_ROLE_NAME,
+      assumedBy: this.getOrgPrincipals(this.organizationId),
+      inlinePolicies: {
+        default: new cdk.aws_iam.PolicyDocument({
+          statements: [
+            new cdk.aws_iam.PolicyStatement({
+              effect: cdk.aws_iam.Effect.ALLOW,
+              actions: [
+                'iam:GetGroup',
+                'iam:GetRole',
+                'iam:GetUser',
+                'iam:ListRoles',
+                'servicecatalog:AcceptPortfolioShare',
+                'servicecatalog:AssociatePrincipalWithPortfolio',
+                'servicecatalog:DisassociatePrincipalFromPortfolio',
+                'servicecatalog:ListAcceptedPortfolioShares',
+                'servicecatalog:ListPrincipalsForPortfolio',
+              ],
+              resources: ['*'],
+              conditions: {
+                ArnLike: {
+                  'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                },
+              },
+            }),
+          ],
+        }),
+      },
+    });
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
+    // rule suppression with evidence for this permission.
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/PropagationRole/Resource`, [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Policy must have access to all Service Catalog Portfolios and IAM Roles',
+      },
+    ]);
+  }
+
   /**
    * Custom resource to check if Identity Center Delegated Administrator
    * needs to be updated.
@@ -891,5 +945,11 @@ export class OperationsStack extends AcceleratorStack {
       cloudwatchKmsKey: this.cloudwatchKey,
       logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
     });
+  }
+
+  private setOrganizationId() {
+    if (this.props.organizationConfig.enable) {
+      this.organizationId = new Organization(this, 'Organization').id;
+    }
   }
 }

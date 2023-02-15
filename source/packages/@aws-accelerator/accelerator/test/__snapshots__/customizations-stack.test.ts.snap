@@ -140,6 +140,90 @@ Resources:
       },
       "Type": "AWS::IAM::Role",
     },
+    "CustomPropagatePortfolioAssociationsCustomResourceProviderHandler282C1D38": Object {
+      "DependsOn": Array [
+        "CustomPropagatePortfolioAssociationsCustomResourceProviderRole4C66847F",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomPropagatePortfolioAssociationsCustomResourceProviderRole4C66847F",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomPropagatePortfolioAssociationsCustomResourceProviderLogGroup44DE568D": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomPropagatePortfolioAssociationsCustomResourceProviderHandler282C1D38",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomPropagatePortfolioAssociationsCustomResourceProviderRole4C66847F": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "ServiceCatalog",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D": Object {
       "DependsOn": Array [
         "CustomSharePortfolioWithOrgCustomResourceProviderRoleD968FEC7",
@@ -229,6 +313,48 @@ Resources:
       },
       "Type": "AWS::IAM::Role",
     },
+    "MyPortfolioAdministratorsGroup": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "MyPortfolioPortfolio94625F45",
+        },
+        "PrincipalARN": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::111111111111:group/Administrators",
+            ],
+          ],
+        },
+        "PrincipalType": "IAM",
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+    },
+    "MyPortfolioEC2DefaultSSMADRoleRole": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "MyPortfolioPortfolio94625F45",
+        },
+        "PrincipalARN": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::111111111111:role/EC2-Default-SSM-AD-Role",
+            ],
+          ],
+        },
+        "PrincipalType": "IAM",
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+    },
     "MyPortfolioPortfolio94625F45": Object {
       "Properties": Object {
         "DisplayName": "My-Portfolio",
@@ -271,28 +397,59 @@ Resources:
       },
       "Type": "AWS::ServiceCatalog::PortfolioProductAssociation",
     },
-    "MyPortfolioPortfolioPortolioPrincipalAssociation014be7193f16BD1A402C": Object {
+    "MyPortfolioPropagationPropagateAssociationsDC7707C1": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomPropagatePortfolioAssociationsCustomResourceProviderLogGroup44DE568D",
+        "MyPortfolioPortfolioPortfolioProductAssociation72040103f9e35F6E6349",
+        "MyPortfolioPortfolio94625F45",
+      ],
       "Properties": Object {
-        "PortfolioId": Object {
-          "Ref": "MyPortfolioPortfolio94625F45",
-        },
-        "PrincipalARN": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "arn:",
-              Object {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::111111111111:role/EC2-Default-SSM-AD-Role",
-            ],
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomPropagatePortfolioAssociationsCustomResourceProviderHandler282C1D38",
+            "Arn",
           ],
         },
-        "PrincipalType": "IAM",
+        "crossAccountRole": "AWSAccelerator-CrossAccount-ServiceCatalog-Role",
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "portfolioDefinition": "{\\"name\\":\\"My-Portfolio\\",\\"provider\\":\\"LZA\\",\\"account\\":\\"Management\\",\\"regions\\":[\\"us-east-1\\",\\"us-west-2\\"],\\"shareTargets\\":{\\"organizationalUnits\\":[\\"Security\\"]},\\"shareTagOptions\\":true,\\"portfolioAssociations\\":[{\\"type\\":\\"Group\\",\\"name\\":\\"Administrators\\",\\"propagateAssociation\\":true},{\\"type\\":\\"Role\\",\\"name\\":\\"EC2-Default-SSM-AD-Role\\"},{\\"type\\":\\"User\\",\\"name\\":\\"breakGlassUser01\\"}],\\"products\\":[{\\"name\\":\\"My-Product\\",\\"description\\":\\"Sample product by lZA.\\",\\"owner\\":\\"LZA\\",\\"distributor\\":\\"LZA\\",\\"versions\\":[{\\"name\\":\\"v1\\",\\"description\\":\\"product version is v1\\",\\"template\\":\\"cloudformation-templates/custom-s3-bucket.yaml\\",\\"deprecated\\":false}],\\"support\\":{\\"description\\":\\"Please include account ID and provisioned product ID.\\",\\"email\\":\\"support@example.com\\",\\"url\\":\\"https://support.amazon.com\\"}}]}",
+        "portfolioId": Object {
+          "Ref": "MyPortfolioPortfolio94625F45",
+        },
+        "shareAccountIds": "333333333333,222222222222",
+        "uuid": "REPLACED-UUID",
       },
-      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+      "Type": "Custom::PropagatePortfolioAssociations",
+      "UpdateReplacePolicy": "Delete",
     },
-    "MyPortfolioPortfolioPortolioPrincipalAssociation5af47db18426657C9E99": Object {
+    "MyPortfolioSharePortfolioShareouasdf11111111F53E345D": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D",
+        "MyPortfolioPortfolioPortfolioProductAssociation72040103f9e35F6E6349",
+        "MyPortfolioPortfolio94625F45",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D",
+            "Arn",
+          ],
+        },
+        "organizationId": "",
+        "organizationalUnitId": "ou-asdf-11111111",
+        "portfolioId": Object {
+          "Ref": "MyPortfolioPortfolio94625F45",
+        },
+        "tagShareOptions": true,
+      },
+      "Type": "Custom::SharePortfolioWithOrg",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "MyPortfoliobreakGlassUser01User": Object {
       "Properties": Object {
         "PortfolioId": Object {
           "Ref": "MyPortfolioPortfolio94625F45",
@@ -312,54 +469,6 @@ Resources:
         "PrincipalType": "IAM",
       },
       "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
-    },
-    "MyPortfolioPortfolioPortolioPrincipalAssociationcc1fc2c9651e0C99AD43": Object {
-      "Properties": Object {
-        "PortfolioId": Object {
-          "Ref": "MyPortfolioPortfolio94625F45",
-        },
-        "PrincipalARN": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "arn:",
-              Object {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::111111111111:group/Administrators",
-            ],
-          ],
-        },
-        "PrincipalType": "IAM",
-      },
-      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
-    },
-    "MyPortfolioSharePortfolioShareouasdf11111111F53E345D": Object {
-      "DeletionPolicy": "Delete",
-      "DependsOn": Array [
-        "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D",
-        "MyPortfolioPortfolioPortfolioProductAssociation72040103f9e35F6E6349",
-        "MyPortfolioPortfolioPortolioPrincipalAssociation014be7193f16BD1A402C",
-        "MyPortfolioPortfolioPortolioPrincipalAssociation5af47db18426657C9E99",
-        "MyPortfolioPortfolioPortolioPrincipalAssociationcc1fc2c9651e0C99AD43",
-        "MyPortfolioPortfolio94625F45",
-      ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D",
-            "Arn",
-          ],
-        },
-        "organizationId": "",
-        "organizationalUnitId": "ou-asdf-11111111",
-        "portfolioId": Object {
-          "Ref": "MyPortfolioPortfolio94625F45",
-        },
-        "tagShareOptions": true,
-      },
-      "Type": "Custom::SharePortfolioWithOrg",
-      "UpdateReplacePolicy": "Delete",
     },
     "Organization29A5FC3F": Object {
       "DeletionPolicy": "Delete",
@@ -459,6 +568,90 @@ Object {
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "CustomPropagatePortfolioAssociationsCustomResourceProviderHandler282C1D38": Object {
+      "DependsOn": Array [
+        "CustomPropagatePortfolioAssociationsCustomResourceProviderRole4C66847F",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-444444444444-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "CustomPropagatePortfolioAssociationsCustomResourceProviderRole4C66847F",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomPropagatePortfolioAssociationsCustomResourceProviderLogGroup44DE568D": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "/aws/lambda/",
+              Object {
+                "Ref": "CustomPropagatePortfolioAssociationsCustomResourceProviderHandler282C1D38",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomPropagatePortfolioAssociationsCustomResourceProviderRole4C66847F": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": Array [
+          Object {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": Array [
+          Object {
+            "PolicyDocument": Object {
+              "Statement": Array [
+                Object {
+                  "Action": Array [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "ServiceCatalog",
                 },
               ],
               "Version": "2012-10-17",
@@ -720,6 +913,42 @@ Object {
       "Type": "AWS::CloudFormation::CustomResource",
       "UpdateReplacePolicy": "Delete",
     },
+    "Portfolio2EC2DefaultSSMADRoleRole": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "Portfolio2PortfolioBCD692DB",
+        },
+        "PrincipalARN": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::444444444444:role/EC2-Default-SSM-AD-Role",
+            ],
+          ],
+        },
+        "PrincipalType": "IAM",
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+    },
+    "Portfolio2PermissionSet1PermissionSet": Object {
+      "Properties": Object {
+        "PortfolioId": Object {
+          "Ref": "Portfolio2PortfolioBCD692DB",
+        },
+        "PrincipalARN": Object {
+          "Fn::GetAtt": Array [
+            "PermissionSet1444444444444getPermissionSetRoleArn0EC766DB",
+            "roleArn",
+          ],
+        },
+        "PrincipalType": "IAM",
+      },
+      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
+    },
     "Portfolio2PortfolioBCD692DB": Object {
       "Properties": Object {
         "DisplayName": "Portfolio-2",
@@ -748,42 +977,6 @@ Object {
       },
       "Type": "AWS::ServiceCatalog::PortfolioShare",
     },
-    "Portfolio2PortfolioPortolioPrincipalAssociation6f134d37164a87488C44": Object {
-      "Properties": Object {
-        "PortfolioId": Object {
-          "Ref": "Portfolio2PortfolioBCD692DB",
-        },
-        "PrincipalARN": Object {
-          "Fn::GetAtt": Array [
-            "PermissionSet1444444444444getPermissionSetRoleArn0EC766DB",
-            "roleArn",
-          ],
-        },
-        "PrincipalType": "IAM",
-      },
-      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
-    },
-    "Portfolio2PortfolioPortolioPrincipalAssociation7e00512f8194196FCC98": Object {
-      "Properties": Object {
-        "PortfolioId": Object {
-          "Ref": "Portfolio2PortfolioBCD692DB",
-        },
-        "PrincipalARN": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "arn:",
-              Object {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::444444444444:role/EC2-Default-SSM-AD-Role",
-            ],
-          ],
-        },
-        "PrincipalType": "IAM",
-      },
-      "Type": "AWS::ServiceCatalog::PortfolioPrincipalAssociation",
-    },
     "Portfolio2PortfolioProduct2Product388CC26D": Object {
       "Properties": Object {
         "Description": "Sample product by lZA.",
@@ -807,6 +1000,35 @@ Object {
         "SupportUrl": "https://support.amazon.com",
       },
       "Type": "AWS::ServiceCatalog::CloudFormationProduct",
+    },
+    "Portfolio2PropagationPropagateAssociationsBF7C9A38": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomPropagatePortfolioAssociationsCustomResourceProviderLogGroup44DE568D",
+        "Portfolio2PortfolioPortfolioProductAssociation302916d8118a0471A6BA",
+        "Portfolio2PortfolioPortfolioShare0cd68f1185a6B0D46AF1",
+        "Portfolio2PortfolioBCD692DB",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomPropagatePortfolioAssociationsCustomResourceProviderHandler282C1D38",
+            "Arn",
+          ],
+        },
+        "crossAccountRole": "AWSAccelerator-CrossAccount-ServiceCatalog-Role",
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
+        "portfolioDefinition": "{\\"name\\":\\"Portfolio-2\\",\\"provider\\":\\"LZA\\",\\"account\\":\\"SharedServices\\",\\"regions\\":[\\"us-east-1\\"],\\"shareTargets\\":{\\"accounts\\":[\\"Audit\\"]},\\"portfolioAssociations\\":[{\\"type\\":\\"Role\\",\\"name\\":\\"EC2-Default-SSM-AD-Role\\",\\"propagateAssociation\\":true},{\\"type\\":\\"PermissionSet\\",\\"name\\":\\"PermissionSet1\\"}],\\"products\\":[{\\"name\\":\\"Product2\\",\\"description\\":\\"Sample product by lZA.\\",\\"owner\\":\\"LZA\\",\\"distributor\\":\\"LZA\\",\\"versions\\":[{\\"name\\":\\"v1\\",\\"description\\":\\"product version is v1\\",\\"template\\":\\"cloudformation-templates/custom-s3-bucket.yaml\\",\\"deprecated\\":false}],\\"support\\":{\\"description\\":\\"Please include account ID and provisioned product ID.\\",\\"email\\":\\"support@example.com\\",\\"url\\":\\"https://support.amazon.com\\"}}]}",
+        "portfolioId": Object {
+          "Ref": "Portfolio2PortfolioBCD692DB",
+        },
+        "shareAccountIds": "222222222222",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::PropagatePortfolioAssociations",
+      "UpdateReplacePolicy": "Delete",
     },
     "SsmParamAcceleratorVersionFF83282D": Object {
       "Properties": Object {
