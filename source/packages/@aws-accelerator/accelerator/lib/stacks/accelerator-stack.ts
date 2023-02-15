@@ -354,6 +354,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
     'AWSAccelerator-AssetsBucket-KeyArnParam-Role';
 
   /**
+   * Service Catalog Principal Association Propagation Role
+   */
+  public static readonly ACCELERATOR_SERVICE_CATALOG_PROPAGATION_ROLE_NAME =
+    'AWSAccelerator-CrossAccount-ServiceCatalog-Role';
+
+  /**
    * Accelerator SSM parameters
    * This array is used to store SSM parameters that are created per-stack.
    */

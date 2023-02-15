@@ -18,7 +18,12 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { PortfolioAssociationConfig, PortfolioConfig, ProductConfig } from '@aws-accelerator/config';
-import { IdentityCenterGetPermissionRoleArn, Organization, SharePortfolioWithOrg } from '@aws-accelerator/constructs';
+import {
+  IdentityCenterGetPermissionRoleArn,
+  Organization,
+  SharePortfolioWithOrg,
+  PropagatePortfolioAssociations,
+} from '@aws-accelerator/constructs';
 
 export class CustomizationsStack extends AcceleratorStack {
   /**
@@ -296,107 +301,73 @@ export class CustomizationsStack extends AcceleratorStack {
     return tagOptions;
   }
 
+  /**
+   * Create portfolio principal associations
+   * @param portfolio
+   * @param portfolioItem
+   */
   private createPortfolioAssociations(
     portfolio: cdk.aws_servicecatalog.Portfolio,
     portfolioItem: PortfolioConfig,
   ): void {
     // Add portfolio Associations
-    for (const portfolioAssociationItem of portfolioItem.portfolioAssociations ?? []) {
-      if (portfolioAssociationItem.type === 'Group') {
-        this.createPortfolioAssociationForGroup(portfolio, portfolioItem, portfolioAssociationItem);
-      } else if (portfolioAssociationItem.type === 'Role') {
-        this.createPortfolioAssociationForRole(portfolio, portfolioItem, portfolioAssociationItem);
-      } else if (portfolioAssociationItem.type === 'User') {
-        this.createPortfolioAssociationForUser(portfolio, portfolioItem, portfolioAssociationItem);
-      } else if (portfolioAssociationItem.type === 'PermissionSet') {
-        this.createPortfolioAssociationForPermissionSet(portfolio, portfolioItem, portfolioAssociationItem);
+    let propagateAssociationsFlag = false;
+    for (const portfolioAssociation of portfolioItem.portfolioAssociations ?? []) {
+      const principalType = 'IAM';
+
+      const principalArn = this.getPrincipalArnForAssocation(portfolioAssociation, portfolioItem.name);
+      new cdk.aws_servicecatalog.CfnPortfolioPrincipalAssociation(
+        this,
+        `${portfolioItem.name}-${portfolioAssociation.name}-${portfolioAssociation.type}`,
+        {
+          portfolioId: portfolio.portfolioId,
+          principalArn: principalArn,
+          principalType: principalType,
+        },
+      );
+
+      if (portfolioAssociation.propagateAssociation) {
+        propagateAssociationsFlag = true;
       }
     }
-  }
 
-  private createPortfolioAssociationForGroup(
-    portfolio: cdk.aws_servicecatalog.Portfolio,
-    portfolioItem: PortfolioConfig,
-    portfolioAssociationItem: PortfolioAssociationConfig,
-  ): void {
-    const group = cdk.aws_iam.Group.fromGroupName(
-      this,
-      pascalCase(`${portfolioAssociationItem.name}-${portfolioItem.name}`),
-      portfolioAssociationItem.name,
-    ) as cdk.aws_iam.Group;
-    if (!group) {
-      throw new Error(`Group ${portfolioAssociationItem.name} not found in ${portfolioItem.account} account`);
+    if (propagateAssociationsFlag) {
+      this.propagatePortfolioAssociations(portfolio, portfolioItem);
     }
-    // Associate Portfolio with an IAM group
-    this.logger.info(
-      `Associating Service Catalog portfolio ${portfolioItem.name} with IAM group ${portfolioAssociationItem.name}`,
-    );
-    portfolio.giveAccessToGroup(group);
   }
 
-  private createPortfolioAssociationForRole(
-    portfolio: cdk.aws_servicecatalog.Portfolio,
-    portfolioItem: PortfolioConfig,
-    portfolioAssociationItem: PortfolioAssociationConfig,
-  ): void {
-    const role = cdk.aws_iam.Role.fromRoleName(
-      this,
-      pascalCase(`${portfolioAssociationItem.name}-${portfolioItem.name}`),
-      portfolioAssociationItem.name,
-    ) as cdk.aws_iam.Role;
-    if (!role) {
-      throw new Error(`Role ${portfolioAssociationItem.name} not found in ${portfolioItem.account} account`);
+  /**
+   * Get the IAM resource ARN to associate with a portfolio
+   * @param portfolioAssociation
+   * @param portfolioName
+   */
+  private getPrincipalArnForAssocation(
+    portfolioAssociation: PortfolioAssociationConfig,
+    portfolioName: string,
+  ): string {
+    const associationType = portfolioAssociation.type.toLowerCase();
+    const account = cdk.Stack.of(this).account;
+    const partition = cdk.Stack.of(this).partition;
+    let principalArn = '';
+
+    if (associationType === 'permissionset') {
+      principalArn = this.getPermissionSetRoleArn(portfolioAssociation.name, account);
+      if (principalArn === '') {
+        throw new Error(
+          `Role ARN for SSO Permission Set ${portfolioAssociation.name} not found for Service Catalog portfolio ${portfolioName}`,
+        );
+      }
+    } else {
+      principalArn = `arn:${partition}:iam::${account}:${associationType}/${portfolioAssociation.name}`;
     }
-    // Associate Portfolio with an IAM Role
-    this.logger.info(
-      `Associating Service Catalog portfolio ${portfolioItem.name} with IAM role ${portfolioAssociationItem.name}`,
-    );
-    portfolio.giveAccessToRole(role);
+    return principalArn;
   }
 
-  private createPortfolioAssociationForUser(
-    portfolio: cdk.aws_servicecatalog.Portfolio,
-    portfolioItem: PortfolioConfig,
-    portfolioAssociationItem: PortfolioAssociationConfig,
-  ): void {
-    const user = cdk.aws_iam.User.fromUserName(
-      this,
-      pascalCase(`${portfolioAssociationItem.name}-${portfolioItem.name}`),
-      portfolioAssociationItem.name,
-    ) as cdk.aws_iam.User;
-    if (!user) {
-      throw new Error(`User ${portfolioAssociationItem.name} not found in ${portfolioItem.account} account`);
-    }
-    // Associate Portfolio with an IAM User
-    this.logger.info(
-      `Associating Service Catalog portfolio ${portfolioItem.name} with IAM user ${portfolioAssociationItem.name}`,
-    );
-    portfolio.giveAccessToUser(user);
-  }
-
-  private createPortfolioAssociationForPermissionSet(
-    portfolio: cdk.aws_servicecatalog.Portfolio,
-    portfolioItem: PortfolioConfig,
-    portfolioAssociationItem: PortfolioAssociationConfig,
-  ): void {
-    const roleArn = this.getPermissionSetRoleArn(portfolioAssociationItem.name, cdk.Stack.of(this).account);
-    const role = cdk.aws_iam.Role.fromRoleArn(
-      this,
-      pascalCase(`${portfolioAssociationItem.name}-${portfolioItem.name}`),
-      roleArn,
-    ) as cdk.aws_iam.Role;
-    if (!role) {
-      throw new Error(
-        `Role associated with Permission Set ${portfolioAssociationItem.name} not found in ${portfolioItem.account} account`,
-      );
-    }
-    // Associate Portfolio with an IAM Role
-    this.logger.info(
-      `Associating Service Catalog portfolio ${portfolioItem.name} with IAM role linked to Permission Set ${portfolioAssociationItem.name}`,
-    );
-    portfolio.giveAccessToRole(role);
-  }
-
+  /**
+   * Retrieve the ARN of an IAM Role associated with an SSO Permission Set
+   * @param permissionSetName
+   * @param accountId
+   */
   private getPermissionSetRoleArn(permissionSetName: string, accountId: string): string {
     this.logger.info(
       `Looking up IAM Role ARN associated with AWS Identity Center Permission Set ${permissionSetName} in account ${accountId}`,
@@ -410,5 +381,34 @@ export class CustomizationsStack extends AcceleratorStack {
       },
     );
     return permissionSetRoleArn.roleArn;
+  }
+
+  /**
+   * Propagate the IAM Principal Associations to other AWS accounts the portfolio is shared with
+   * @param portfolio
+   * @param portfolioItem
+   */
+  private propagatePortfolioAssociations(
+    portfolio: cdk.aws_servicecatalog.Portfolio,
+    portfolioItem: PortfolioConfig,
+  ): void {
+    // propagate portfolio Associations
+    if (!portfolioItem.shareTargets) {
+      this.logger.warning(
+        `Cannot propagate principal associations for portfolio ${portfolioItem.name} because portfolio has no shareTargets`,
+      );
+      return;
+    }
+
+    this.logger.info(`Propagating portfolio associations for portfolio ${portfolioItem.name}`);
+    const propagateAssociations = new PropagatePortfolioAssociations(this, `${portfolioItem.name}-Propagation`, {
+      shareAccountIds: this.getAccountIdsFromShareTarget(portfolioItem.shareTargets),
+      crossAccountRole: AcceleratorStack.ACCELERATOR_SERVICE_CATALOG_PROPAGATION_ROLE_NAME,
+      portfolioId: portfolio.portfolioId,
+      portfolioDefinition: portfolioItem,
+      kmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+    });
+    propagateAssociations.node.addDependency(portfolio);
   }
 }

@@ -367,6 +367,7 @@ export class CustomizationsConfigTypes {
   static readonly portfolioAssociationConfig = t.interface({
     type: this.portfolioAssociationType,
     name: t.nonEmptyString,
+    propagateAssociation: t.optional(t.boolean),
   });
 
   /**
@@ -2189,6 +2190,7 @@ export class AppConfigItem implements t.TypeOf<typeof CustomizationsConfigTypes.
  *   name: Administrators
  * - type: Role
  *   name: EC2-Default-SSM-AD-Role
+ *   propagateAssociation: true
  * - type: User
  *   name: breakGlassUser01
  * - type: PermissionSet
@@ -2199,13 +2201,20 @@ export class PortfolioAssociationConfig
   implements t.TypeOf<typeof CustomizationsConfigTypes.portfolioAssociationConfig>
 {
   /**
-   * indicates the type of portfolio Associations
+   * Indicates the type of portfolio association, valid values are: Group, User, and Role.
    */
   readonly type: t.TypeOf<typeof CustomizationsConfigTypes.portfolioAssociationType> = 'Role';
   /**
-   * indicates the name of the portfolio Associations
+   * Indicates the name of the principal to associate the portfolio with.
    */
   readonly name: string = '';
+  /**
+   * Indicates whether the principal association should be created in accounts the portfolio is shared with. Verify the IAM principal exists in all accounts the portfolio is shared with before enabling.
+   *
+   * @remarks
+   * When you propagate a principal association, a potential privilege escalation path may occur. For a user in a recipient account who is not a Service Catalog Admin, but still has the ability to create Principals (Users/Roles), that user could create an IAM Principal that matches a principal name association for the portfolio. Although this user may not know which principal names are associated through Service Catalog, they may be able to guess the user. If this potential escalation path is a concern, then LZA recommends disabling propagation.
+   */
+  readonly propagateAssociation: boolean = false;
 }
 
 /**
@@ -2382,7 +2391,7 @@ export class PortfolioConfig implements t.TypeOf<typeof CustomizationsConfigType
    */
   readonly regions: t.Region[] = [];
   /**
-   * Configuration of portfolio associations to give access to the end users.
+   * Configuration of portfolio associations to give access to IAM principals.
    */
   readonly portfolioAssociations: PortfolioAssociationConfig[] = [];
   /**
@@ -2390,7 +2399,7 @@ export class PortfolioConfig implements t.TypeOf<typeof CustomizationsConfigType
    */
   readonly products: ProductConfig[] = [];
   /**
-   * Portfolio share target
+   * Portfolio share target. Sharing portfolios to Organizational Units is only supported for portfolios in the Management account.
    *
    * @remarks
    * Valid values are the friendly names of organizational unit(s) and/or account(s).
@@ -2418,6 +2427,8 @@ export class PortfolioConfig implements t.TypeOf<typeof CustomizationsConfigType
  * accounts and/or organizational units. These deployments can leverage independent CloudFormation stacks
  * or CloudFormation StackSets depending on the customer's deployment preference.
  *
+ * @remarks
+ * CloudFormation stacks deployed through LZA are currently limited to a size of 51200 bytes.
  */
 export class CustomizationConfig implements t.TypeOf<typeof CustomizationsConfigTypes.customizationConfig> {
   readonly cloudFormationStacks: CloudFormationStackConfig[] = [];

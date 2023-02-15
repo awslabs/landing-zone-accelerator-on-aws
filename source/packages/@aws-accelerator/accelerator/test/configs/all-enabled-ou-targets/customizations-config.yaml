@@ -61,6 +61,7 @@ customizations:
       portfolioAssociations:
         - type: Group
           name: Administrators
+          propagateAssociation: true
         - type: Role
           name: EC2-Default-SSM-AD-Role
         - type: User
@@ -90,6 +91,7 @@ customizations:
       portfolioAssociations:
         - type: Role
           name: EC2-Default-SSM-AD-Role
+          propagateAssociation: true
         - type: PermissionSet
           name: PermissionSet1
       products:
