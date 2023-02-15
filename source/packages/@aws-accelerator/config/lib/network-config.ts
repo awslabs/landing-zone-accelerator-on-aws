@@ -353,7 +353,6 @@ export class NetworkConfigTypes {
     types: t.optional(t.array(this.securityGroupRuleTypeEnum)),
     tcpPorts: t.optional(t.array(t.number)),
     udpPorts: t.optional(t.array(t.number)),
-    port: t.optional(t.number),
     fromPort: t.optional(t.number),
     toPort: t.optional(t.number),
     sources: t.array(
@@ -364,8 +363,8 @@ export class NetworkConfigTypes {
   static readonly securityGroupConfig = t.interface({
     name: t.nonEmptyString,
     description: t.optional(t.nonEmptyString),
-    inboundRules: t.optional(t.array(this.securityGroupRuleConfig)),
-    outboundRules: t.optional(t.array(this.securityGroupRuleConfig)),
+    inboundRules: t.array(this.securityGroupRuleConfig),
+    outboundRules: t.array(this.securityGroupRuleConfig),
     tags: t.optional(t.array(t.tag)),
   });
 
@@ -508,7 +507,6 @@ export class NetworkConfigTypes {
     natGateways: t.optional(t.array(this.natGatewayConfig)),
     useCentralEndpoints: t.optional(t.boolean),
     securityGroups: t.optional(t.array(this.securityGroupConfig)),
-    prefixLists: t.optional(t.array(this.prefixListConfig)),
     networkAcls: t.optional(t.array(this.networkAclConfig)),
     queryLogs: t.optional(t.array(t.nonEmptyString)),
     resolverRules: t.optional(t.array(t.nonEmptyString)),
@@ -540,7 +538,6 @@ export class NetworkConfigTypes {
     natGateways: t.optional(t.array(this.natGatewayConfig)),
     useCentralEndpoints: t.optional(t.boolean),
     securityGroups: t.optional(t.array(this.securityGroupConfig)),
-    prefixLists: t.optional(t.array(this.prefixListConfig)),
     networkAcls: t.optional(t.array(this.networkAclConfig)),
     queryLogs: t.optional(t.array(t.nonEmptyString)),
     resolverRules: t.optional(t.array(t.nonEmptyString)),
@@ -2591,27 +2588,23 @@ export class SecurityGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTyp
    *
    * @see {@link NetworkConfigTypes.securityGroupRuleTypeEnum}
    */
-  readonly types = [];
+  readonly types: t.TypeOf<typeof NetworkConfigTypes.securityGroupRuleTypeEnum>[] | undefined = undefined;
   /**
    * An array of TCP ports to include in the security group rule.
    */
-  readonly tcpPorts = [];
+  readonly tcpPorts: number[] | undefined = undefined;
   /**
    * An array of UDP ports to include in the security group rule.
    */
-  readonly udpPorts = [];
-  /**
-   * The port to include in the security group rule.
-   */
-  readonly port = undefined;
+  readonly udpPorts: number[] | undefined = undefined;
   /**
    * The port to start from in the security group rule.
    */
-  readonly fromPort = undefined;
+  readonly fromPort: number | undefined = undefined;
   /**
    * The port to end with in the security group rule.
    */
-  readonly toPort = undefined;
+  readonly toPort: number | undefined = undefined;
   /**
    * An array of sources for the security group rule.
    *
@@ -2718,7 +2711,7 @@ export class NetworkAclSubnetSelection implements t.TypeOf<typeof NetworkConfigT
  * @example
  * ```
  * - rule: 200
- *   protocol: -1
+ *   protocol: 6
  *   fromPort: 22
  *   toPort: 22
  *   action: allow
@@ -2769,7 +2762,7 @@ export class NetworkAclInboundRuleConfig implements t.TypeOf<typeof NetworkConfi
  * @example
  * ```
  * - rule: 200
- *   protocol: -1
+ *   protocol: 6
  *   fromPort: 1024
  *   toPort: 65535
  *   action: allow
@@ -2824,14 +2817,14 @@ export class NetworkAclOutboundRuleConfig implements t.TypeOf<typeof NetworkConf
  *     - Subnet-A
  *   inboundRules:
  *     - rule: 200
- *       protocol: -1
+ *       protocol: 6
  *       fromPort: 22
  *       toPort: 22
  *       action: allow
  *       source: 10.0.0.0/16
  *   outboundRules:
  *     - rule: 200
- *       protocol: -1
+ *       protocol: 6
  *       fromPort: 1024
  *       toPort: 65535
  *       action: allow
@@ -3389,13 +3382,6 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
   readonly securityGroups: SecurityGroupConfig[] | undefined = undefined;
 
   /**
-   * A list of Prefix Lists to deploy for this VPC
-   *
-   * @default undefined
-   */
-  readonly prefixLists: PrefixListConfig[] | undefined = undefined;
-
-  /**
    * A list of Network Access Control Lists (ACLs) to deploy for this VPC
    *
    * @default undefined
@@ -3596,13 +3582,6 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
    * @default undefined
    */
   readonly securityGroups: SecurityGroupConfig[] | undefined = undefined;
-
-  /**
-   * A list of Prefix Lists to deploy for this VPC
-   *
-   * @default undefined
-   */
-  readonly prefixLists: PrefixListConfig[] | undefined = undefined;
 
   /**
    * A list of Network Access Control Lists (ACLs) to deploy for this VPC
