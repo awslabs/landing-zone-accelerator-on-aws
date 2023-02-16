@@ -33,6 +33,11 @@ accelerator-test:
     - size:xlarge
   script:
     - "export NODE_OPTIONS=--max_old_space_size=16384"
+    - "wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip'"
+    - "unzip -qo viperlight.zip -d ../viperlight"
+    - "rm -r ./viperlight.zip"
+    - "../viperlight/bin/viperlight scan"
+    - "echo Temporary disabled viperlight till the issue fixed"
     - "cd source"
     - "npm install --global yarn"
     - "yarn install"
@@ -40,12 +45,6 @@ accelerator-test:
     - "yarn lerna link"
     - "yarn build"
     - "yarn test"
-    ## Temporary disabled viperlight till the issue fixed
-    # - "wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip'"
-    # - "unzip -qo viperlight.zip -d ../viperlight"
-    # - "rm -r ./viperlight.zip"
-    # - "../viperlight/bin/viperlight scan"
-    - "echo Temporary disabled viperlight till the issue fixed"
   artifacts:
     when: always
     reports:

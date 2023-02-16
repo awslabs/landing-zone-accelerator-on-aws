@@ -1,7 +1,16 @@
 #!/bin/sh
+
+# Fail if any command fails.
+set -e
+
 . "$(dirname "$0")/_/husky.sh"
 
-## Temporary disabled viperlight till the issue fixed
-aws s3 cp s3://viperlight-scanner/latest/viperlight.zip . && unzip -qo viperlight.zip -d ../viperlight && rm -r ./viperlight.zip && ../viperlight/bin/viperlight scan
+## pre-commit viper scan
+wget -v 'https://s3.amazonaws.com/viperlight-scanner/latest/viperlight.zip' 
+unzip -qo viperlight.zip -d ../viperlight
+rm -r ./viperlight.zip
+../viperlight/bin/viperlight scan
 
-cd source && yarn lerna run precommit --stream && yarn run test 
+cd source
+yarn lerna run precommit --stream
+yarn run test 

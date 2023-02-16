@@ -138,4 +138,4 @@ source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/ind
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:63
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:64
 
-.gitlab-ci.yml:61
+.gitlab-ci.yml:60
