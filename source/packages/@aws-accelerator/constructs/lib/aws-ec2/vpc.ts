@@ -12,6 +12,8 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
+import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 import { Construct } from 'constructs';
 
 import { IpamAllocationConfig, OutpostsConfig, VirtualPrivateGatewayConfig } from '@aws-accelerator/config';
@@ -523,7 +525,6 @@ export class Vpc extends cdk.Resource implements IVpc {
 
     this.vpcId = resource.ref;
     this.cidrs = [];
-
     if (props.internetGateway) {
       this.internetGateway = new cdk.aws_ec2.CfnInternetGateway(this, 'InternetGateway', {});
 
@@ -663,5 +664,76 @@ export class Vpc extends cdk.Resource implements IVpc {
         vpcId: this.vpcId,
       }),
     );
+  }
+}
+
+/**
+ * Initialized DeleteDefaultSecurityGroupRules properties
+ */
+export interface DeleteDefaultSecurityGroupRulesProps {
+  /**
+   * Take in Vpc Id as a parameter
+   */
+  readonly vpcId: string;
+
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
+}
+/**
+ * Class Delete the Default Security Group Rules for the Vpc
+ */
+export class DeleteDefaultSecurityGroupRules extends Construct {
+  readonly id: string;
+  constructor(scope: Construct, id: string, props: DeleteDefaultSecurityGroupRulesProps) {
+    super(scope, id);
+
+    const DELETE_DEFAULT_SECURITY_GROUP_RULES = 'Custom::DeleteDefaultSecurityGroupRules';
+
+    //
+    // Function definition for the custom resource
+    //
+    const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, DELETE_DEFAULT_SECURITY_GROUP_RULES, {
+      codeDirectory: path.join(__dirname, 'delete-default-security-group-rules/dist'),
+      runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+      policyStatements: [
+        {
+          Effect: 'Allow',
+          Action: ['ec2:DescribeSecurityGroups', 'ec2:RevokeSecurityGroupIngress', 'ec2:RevokeSecurityGroupEgress'],
+          Resource: '*',
+        },
+      ],
+    });
+
+    const resource = new cdk.CustomResource(this, 'Resource', {
+      resourceType: DELETE_DEFAULT_SECURITY_GROUP_RULES,
+      serviceToken: provider.serviceToken,
+      properties: {
+        vpcId: props.vpcId,
+        uuid: uuidv4(), // Generates a new UUID to force the resource to update
+      },
+    });
+
+    /**
+     * Singleton pattern to define the log group for the singleton function
+     * in the stack
+     */
+    const stack = cdk.Stack.of(scope);
+    const logGroup =
+      (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+      new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+        logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
+        retention: props.logRetentionInDays,
+        encryptionKey: props.kmsKey,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      });
+    resource.node.addDependency(logGroup);
+
+    this.id = resource.ref;
   }
 }
