@@ -495,6 +495,7 @@ export class NetworkConfigTypes {
     account: t.nonEmptyString,
     region: t.region,
     cidrs: t.optional(t.array(t.nonEmptyString)),
+    defaultSecurityGroupRulesDeletion: t.optional(t.boolean),
     dhcpOptions: t.optional(t.nonEmptyString),
     dnsFirewallRuleGroups: t.optional(t.array(this.vpcDnsFirewallAssociationConfig)),
     enableDnsHostnames: t.optional(t.boolean),
@@ -526,6 +527,7 @@ export class NetworkConfigTypes {
     region: t.region,
     deploymentTargets: t.deploymentTargets,
     cidrs: t.optional(t.array(t.nonEmptyString)),
+    defaultSecurityGroupRulesDeletion: t.optional(t.boolean),
     dhcpOptions: t.optional(t.nonEmptyString),
     dnsFirewallRuleGroups: t.optional(t.array(this.vpcDnsFirewallAssociationConfig)),
     enableDnsHostnames: t.optional(t.boolean),
@@ -3288,6 +3290,12 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
   readonly cidrs: string[] | undefined = undefined;
 
   /**
+   * Determine if the all traffic ingress and egress rules are deleted
+   * in the default security group of a VPC.
+   */
+  readonly defaultSecurityGroupRulesDeletion: boolean | undefined = false;
+
+  /**
    * The friendly name of a DHCP options set.
    */
   readonly dhcpOptions: string | undefined = undefined;
@@ -3498,6 +3506,12 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
    * @see {@link IpamAllocationConfig}
    */
   readonly ipamAllocations: IpamAllocationConfig[] | undefined = undefined;
+
+  /**
+   * Determine if the all traffic ingress and egress rules are deleted
+   * in the default security group of a VPC.
+   */
+  readonly defaultSecurityGroupRulesDeletion: boolean | undefined = false;
 
   /**
    * The friendly name of a DHCP options set.

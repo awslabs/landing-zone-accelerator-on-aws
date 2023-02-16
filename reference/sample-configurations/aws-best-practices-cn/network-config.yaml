@@ -18,10 +18,10 @@ transitGateways:
     routeTables:
       - name: Network-Main-Shared
         routes:
-        - destinationCidrBlock: 0.0.0.0/0
-          attachment:
-            vpcName: Network-Inspection
-            account: Network
+          - destinationCidrBlock: 0.0.0.0/0
+            attachment:
+              vpcName: Network-Inspection
+              account: Network
       - name: Network-Main-Inspection
         routes: []
 centralNetworkServices:
@@ -61,7 +61,7 @@ centralNetworkServices:
             domainName: .
             targetIps:
               - ip: 1.1.1.1
-                port: '5353' # only include if targeting a non-standard DNS port
+                port: "5353" # only include if targeting a non-standard DNS port
               - ip: 2.2.2.2
             shareTargets:
               organizationalUnits:
@@ -288,16 +288,16 @@ vpcs:
             target: dynamodb
       - name: Network-Inspection-Tgw-A
         routes:
-         - name: GwlbRoute
-           destination: 0.0.0.0/0
-           type: gatewayLoadBalancerEndpoint
-           target: Endpoint-A
+          - name: GwlbRoute
+            destination: 0.0.0.0/0
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-A
       - name: Network-Inspection-Tgw-B
         routes:
-         - name: GwlbRoute
-           destination: 0.0.0.0/0
-           type: gatewayLoadBalancerEndpoint
-           target: Endpoint-B
+          - name: GwlbRoute
+            destination: 0.0.0.0/0
+            type: gatewayLoadBalancerEndpoint
+            target: Endpoint-B
     subnets:
       - name: Network-Inspection-A
         availabilityZone: a

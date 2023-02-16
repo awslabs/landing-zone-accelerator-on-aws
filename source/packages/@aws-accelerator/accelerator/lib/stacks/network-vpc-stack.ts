@@ -34,6 +34,7 @@ import {
 } from '@aws-accelerator/config';
 import {
   ApplicationLoadBalancer,
+  DeleteDefaultSecurityGroupRules,
   DeleteDefaultVpc,
   DhcpOptions,
   GatewayLoadBalancer,
@@ -477,6 +478,17 @@ export class NetworkVpcStack extends AcceleratorStack {
         if (vpc.virtualPrivateGateway) {
           this.createVpnConnection(vpc);
         }
+
+        // Delete default security group ingress and egress rules
+        if (vpcItem.defaultSecurityGroupRulesDeletion) {
+          this.logger.info(`Delete default security group ingress and egress rules for ${vpcItem.name}`);
+          new DeleteDefaultSecurityGroupRules(this, pascalCase(`DeleteSecurityGroupRules-${vpcItem.name}`), {
+            vpcId: vpc.vpcId,
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          });
+        }
+
         //
         // Tag the VPC if central endpoints are enabled. These tags are used to
         // identify which VPCs in a target account to create private hosted zone
