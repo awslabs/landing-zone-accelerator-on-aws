@@ -809,8 +809,15 @@ export class VpcValidator {
     const natNames: string[] = [];
     vpcItem.natGateways?.forEach(nat => {
       natNames.push(nat.name);
+      // Validate subnet exists
       if (!helpers.getSubnet(vpcItem, nat.subnet)) {
         errors.push(`[VPC ${vpcItem.name} NAT gateway ${nat.name}]: subnet "${nat.subnet}" does not exist in the VPC`);
+      }
+      // Validate connectivity type
+      if (nat.private && nat.allocationId) {
+        errors.push(
+          `[VPC ${vpcItem.name} NAT gateway ${nat.name}]: cannot define an allocationId for a private NAT gateway`,
+        );
       }
     });
 

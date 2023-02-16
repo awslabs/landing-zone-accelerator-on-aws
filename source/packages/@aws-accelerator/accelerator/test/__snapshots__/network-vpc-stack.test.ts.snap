@@ -1746,6 +1746,21 @@ Object {
       },
       "Type": "AWS::EC2::EIP",
     },
+    "NetworkInspectionVpcAcceleratorNatGwCNatGateway484831C4": Object {
+      "Properties": Object {
+        "ConnectivityType": "private",
+        "SubnetId": Object {
+          "Ref": "NetworkInspectionVpcNetworkInspectionBSubnet064602BF",
+        },
+        "Tags": Array [
+          Object {
+            "Key": "Name",
+            "Value": "accelerator-nat-gw-c",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::NatGateway",
+    },
     "NetworkInspectionVpcCloudWatchFlowLog2C44FB5C": Object {
       "Properties": Object {
         "DeliverLogsPermissionArn": Object {
@@ -2829,7 +2844,7 @@ Object {
     },
     "SsmParamAcceleratorGwlbGwlbArn7CF5F889": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+        "SsmParamNetworkInspectionNetworkInspectionTransitGatewayAttachmentId80B7A8EF",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/arn",
@@ -2842,7 +2857,7 @@ Object {
     },
     "SsmParamAcceleratorGwlbGwlbServiceIdF93A23BF": Object {
       "DependsOn": Array [
-        "SsmParamNetworkInspectionDataSecurityGroup1FD45226",
+        "SsmParamNetworkInspectionNetworkInspectionTransitGatewayAttachmentId80B7A8EF",
       ],
       "Properties": Object {
         "Name": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
@@ -3050,7 +3065,23 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "SsmParamNetworkInspectionAcceleratorNatGwCNatGatewayId498E58EE": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionTgwAttachASubnetId90B86E86",
+      ],
+      "Properties": Object {
+        "Name": "/accelerator/network/vpc/Network-Inspection/natGateway/accelerator-nat-gw-c/id",
+        "Type": "String",
+        "Value": Object {
+          "Ref": "NetworkInspectionVpcAcceleratorNatGwCNatGateway484831C4",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
     "SsmParamNetworkInspectionDataSecurityGroup1FD45226": Object {
+      "DependsOn": Array [
+        "SsmParamNetworkInspectionNetworkInspectionTransitGatewayAttachmentId80B7A8EF",
+      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/securityGroup/Data/id",
         "Type": "String",
@@ -3172,9 +3203,6 @@ Object {
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkInspectionNetworkInspectionTransitGatewayAttachmentId80B7A8EF": Object {
-      "DependsOn": Array [
-        "SsmParamNetworkInspectionNetworkInspectionTgwAttachASubnetId90B86E86",
-      ],
       "Properties": Object {
         "Name": "/accelerator/network/vpc/Network-Inspection/transitGatewayAttachment/Network-Inspection/id",
         "Type": "String",
