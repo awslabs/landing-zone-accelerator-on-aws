@@ -244,6 +244,7 @@ export class NetworkConfigTypes {
     name: t.nonEmptyString,
     subnet: t.nonEmptyString,
     allocationId: t.optional(t.nonEmptyString),
+    private: t.optional(t.boolean),
     tags: t.optional(t.array(t.tag)),
   });
 
@@ -2092,8 +2093,25 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
  * Used to define an AWS-managed NAT Gateway.
  *
  * @example
+ * Nat gateway with accelerator-provisioned elastic IP
  * ```
  * - name: accelerator-nat-gw
+ *   subnet: accelerator-cidr-subnet-a
+ *   tags: []
+ * ```
+ *
+ * NAT gateway with user-provided elastic IP allocation ID
+ * ```
+ * - name: accelerator-nat-gw
+ *   allocationId: eipalloc-acbdefg123456
+ *   subnet: accelerator-cidr-subnet-a
+ *   tags: []
+ * ```
+ *
+ * NAT gateway with private connectivity
+ * ```
+ * - name: accelerator-nat-gw
+ *   private: true
  *   subnet: accelerator-cidr-subnet-a
  *   tags: []
  * ```
@@ -2102,16 +2120,24 @@ export class NatGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.natG
   /**
    * A friendly name for the NAT Gateway.
    */
-  readonly name = '';
+  readonly name: string = '';
   /**
    * The friendly name of the subnet for the NAT Gateway to be deployed.
    */
-  readonly subnet = '';
+  readonly subnet: string = '';
 
   /**
    * The allocation ID of the Elastic IP address that's associated with the NAT gateway.
    */
-  readonly allocationId = '';
+  readonly allocationId: string | undefined = undefined;
+
+  /**
+   * Set `true` to define a NAT gateway with private connectivity type
+   *
+   * @remarks
+   * Set to `false` or leave undefined to create a public-facing NAT gateway
+   */
+  readonly private: boolean | undefined = undefined;
 
   /**
    * An array of tag objects for the NAT Gateway.

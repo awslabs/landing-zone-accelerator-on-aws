@@ -1024,6 +1024,9 @@ vpcs:
         allocationId: eipalloc-acbdefg123456
       - name: accelerator-nat-gw-b
         subnet: Network-Inspection-B
+      - name: accelerator-nat-gw-c
+        subnet: Network-Inspection-B
+        private: true
     routeTables:
       - name: Network-Inspection-A
         routes:

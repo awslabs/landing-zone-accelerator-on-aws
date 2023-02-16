@@ -678,6 +678,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             {
               name: natGatewayItem.name,
               allocationId: natGatewayItem.allocationId,
+              private: natGatewayItem.private,
               subnet,
               tags: natGatewayItem.tags,
             },
