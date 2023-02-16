@@ -21,7 +21,7 @@ transitGateways:
       - name: Network-Main-Core
         routes: []
       - name: Network-Main-Spoke
-        routes: 
+        routes:
           - destinationCidrBlock: 0.0.0.0/0
             attachment:
               vpcName: Network-Inspection
@@ -47,8 +47,8 @@ centralNetworkServices:
         regions:
           - *HOME_REGION
         firewallPolicy:
-          statelessDefaultActions: ['aws:forward_to_sfe']
-          statelessFragmentDefaultActions: ['aws:forward_to_sfe']
+          statelessDefaultActions: ["aws:forward_to_sfe"]
+          statelessFragmentDefaultActions: ["aws:forward_to_sfe"]
           statefulRuleGroups:
             - name: accelerator-rule-group
             - name: domain-list-group
@@ -75,7 +75,7 @@ centralNetworkServices:
                   sourcePort: ANY
                 ruleOptions:
                   - keyword: sid
-                    settings: ['100']
+                    settings: ["100"]
       - name: domain-list-group
         regions:
           - *HOME_REGION
@@ -86,8 +86,8 @@ centralNetworkServices:
             rulesSourceList:
               generatedRulesType: DENYLIST
               # Add/Modify the domain list per business needs.
-              targets: ['.google.com']
-              targetTypes: ['TLS_SNI', 'HTTP_HOST']
+              targets: [".google.com"]
+              targetTypes: ["TLS_SNI", "HTTP_HOST"]
           ruleVariables:
             ipSets:
               name: HOME_NET
@@ -99,8 +99,8 @@ centralNetworkServices:
             portSets:
               name: HOME_NET
               definition:
-                - '80'
-                - '443'
+                - "80"
+                - "443"
   route53Resolver:
     endpoints: []
     queryLogs:
@@ -319,7 +319,7 @@ vpcs:
         routeTable: Network-Inspection-Nat-B
         ipv4CidrBlock: 10.2.3.192/28
     natGateways:
-      - name:  Nat-Network-Inspection-A
+      - name: Nat-Network-Inspection-A
         subnet: Network-InspectionNat-A
       - name: Nat-Network-Inspection-B
         subnet: Network-InspectionNat-B
@@ -477,7 +477,7 @@ vpcs:
     gatewayEndpoints:
       defaultPolicy: Default
       endpoints: []
-    useCentralEndpoints: true    
+    useCentralEndpoints: true
 vpcFlowLogs:
   trafficType: ALL
   maxAggregationInterval: 600
