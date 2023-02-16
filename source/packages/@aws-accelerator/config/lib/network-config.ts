@@ -322,7 +322,7 @@ export class NetworkConfigTypes {
       'SSH',
       'HTTP',
       'HTTPS',
-      'MYSQL',
+      'MSSQL',
       'MYSQL/AURORA',
       'REDSHIFT',
       'POSTGRESQL',
