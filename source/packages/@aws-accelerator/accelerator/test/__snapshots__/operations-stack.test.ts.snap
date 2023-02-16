@@ -772,6 +772,16 @@ Object {
       "UpdateReplacePolicy": "Delete",
     },
     "ServiceCatalogPropagationRole17EC5FCF": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policy must have access to all Service Catalog Portfolios and IAM Roles",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
           "Statement": Array [
@@ -1849,6 +1859,16 @@ Object {
       "UpdateReplacePolicy": "Delete",
     },
     "ServiceCatalogPropagationRole17EC5FCF": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Policy must have access to all Service Catalog Portfolios and IAM Roles",
+            },
+          ],
+        },
+      },
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
           "Statement": Array [
