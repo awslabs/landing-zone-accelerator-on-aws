@@ -178,37 +178,46 @@ export interface INatGateway extends cdk.IResource {
 }
 
 export interface NatGatewayProps {
-  readonly allocationId?: string;
   readonly name: string;
   readonly subnet: ISubnet;
+  readonly allocationId?: string;
+  readonly private?: boolean;
   readonly tags?: cdk.CfnTag[];
 }
 
 export class NatGateway extends cdk.Resource implements INatGateway {
   public readonly natGatewayId: string;
   public readonly natGatewayName: string;
-  private elasticIpAllocation?: string;
+  private natGatewayArgs?: cdk.aws_ec2.CfnNatGatewayProps;
 
   constructor(scope: Construct, id: string, props: NatGatewayProps) {
     super(scope, id);
 
-    if (props.allocationId) {
-      this.elasticIpAllocation = props.allocationId;
-    } else {
-      this.elasticIpAllocation = new cdk.aws_ec2.CfnEIP(this, 'Eip', {
-        domain: 'vpc',
-      }).attrAllocationId;
-    }
-
     this.natGatewayName = props.name;
-    const resource = new cdk.aws_ec2.CfnNatGateway(this, 'Resource', {
-      subnetId: props.subnet.subnetId,
-      allocationId: this.elasticIpAllocation,
-      tags: props.tags,
-    });
-    cdk.Tags.of(this).add('Name', props.name);
 
+    this.natGatewayArgs = {
+      subnetId: props.subnet.subnetId,
+      allocationId: props.private ? undefined : this.getAllocationId(props),
+      connectivityType: props.private ? 'private' : undefined,
+      tags: props.tags,
+    };
+
+    const resource = new cdk.aws_ec2.CfnNatGateway(this, 'Resource', this.natGatewayArgs);
+    cdk.Tags.of(this).add('Name', props.name);
     this.natGatewayId = resource.ref;
+  }
+
+  /**
+   * Return allocation ID for a public NAT gateway
+   * @param props
+   * @returns
+   */
+  private getAllocationId(props: NatGatewayProps): string {
+    return props.allocationId
+      ? props.allocationId
+      : new cdk.aws_ec2.CfnEIP(this, 'Eip', {
+          domain: 'vpc',
+        }).attrAllocationId;
   }
 }
 export interface ISecurityGroup extends cdk.IResource {
