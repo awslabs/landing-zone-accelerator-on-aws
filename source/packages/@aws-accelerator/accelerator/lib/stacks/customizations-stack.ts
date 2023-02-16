@@ -315,7 +315,7 @@ export class CustomizationsStack extends AcceleratorStack {
     for (const portfolioAssociation of portfolioItem.portfolioAssociations ?? []) {
       const principalType = 'IAM';
 
-      const principalArn = this.getPrincipalArnForAssocation(portfolioAssociation, portfolioItem.name);
+      const principalArn = this.getPrincipalArnForAssociation(portfolioAssociation, portfolioItem.name);
       new cdk.aws_servicecatalog.CfnPortfolioPrincipalAssociation(
         this,
         `${portfolioItem.name}-${portfolioAssociation.name}-${portfolioAssociation.type}`,
@@ -341,7 +341,7 @@ export class CustomizationsStack extends AcceleratorStack {
    * @param portfolioAssociation
    * @param portfolioName
    */
-  private getPrincipalArnForAssocation(
+  private getPrincipalArnForAssociation(
     portfolioAssociation: PortfolioAssociationConfig,
     portfolioName: string,
   ): string {

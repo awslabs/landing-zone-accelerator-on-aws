@@ -667,7 +667,7 @@ export class OperationsStack extends AcceleratorStack {
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission
     // rule suppression with evidence for this permission.
-    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/PropagationRole/Resource`, [
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/ServiceCatalogPropagationRole/Resource`, [
       {
         id: 'AwsSolutions-IAM5',
         reason: 'Policy must have access to all Service Catalog Portfolios and IAM Roles',
