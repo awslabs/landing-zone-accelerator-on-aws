@@ -15,7 +15,6 @@ import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 import * as path from 'path';
-import * as fs from 'fs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { PortfolioAssociationConfig, PortfolioConfig, ProductConfig } from '@aws-accelerator/config';
 import {
@@ -75,6 +74,13 @@ export class CustomizationsStack extends AcceleratorStack {
     this.logger.info('Completed stack synthesis');
   }
 
+  private getAssetUrl(stacksetName: string, localPath: string): string {
+    const asset = new cdk.aws_s3_assets.Asset(this, pascalCase(`${stacksetName}Asset`), {
+      path: path.join(this.props.configDirPath, localPath),
+    });
+    return asset.httpUrl;
+  }
+
   //
   // Create custom CloudFormation StackSets
   //
@@ -91,7 +97,7 @@ export class CustomizationsStack extends AcceleratorStack {
         const deploymentTargetAccounts: string[] | undefined = this.getAccountIdsFromDeploymentTarget(
           stackSet.deploymentTargets,
         );
-        const templateBody = fs.readFileSync(path.join(this.props.configDirPath, stackSet.template), 'utf-8');
+        const templateUrl = this.getAssetUrl(stackSet.name, stackSet.template);
 
         const parameters = stackSet.parameters?.map(parameter => {
           return new cdk.CfnParameter(this, parameter.name, {
@@ -117,7 +123,7 @@ export class CustomizationsStack extends AcceleratorStack {
               regions: stackSet.regions,
             },
           ],
-          templateBody: templateBody,
+          templateUrl: templateUrl,
           parameters,
         });
       }
