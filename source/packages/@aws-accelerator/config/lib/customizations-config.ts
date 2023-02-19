@@ -2427,8 +2427,6 @@ export class PortfolioConfig implements t.TypeOf<typeof CustomizationsConfigType
  * accounts and/or organizational units. These deployments can leverage independent CloudFormation stacks
  * or CloudFormation StackSets depending on the customer's deployment preference.
  *
- * @remarks
- * CloudFormation stacks deployed through LZA are currently limited to a size of 51200 bytes.
  */
 export class CustomizationConfig implements t.TypeOf<typeof CustomizationsConfigTypes.customizationConfig> {
   readonly cloudFormationStacks: CloudFormationStackConfig[] = [];
