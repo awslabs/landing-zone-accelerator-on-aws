@@ -426,6 +426,10 @@ export class LoggingStack extends AcceleratorStack {
     ) {
       this.setupCertificateAssets();
     }
+    //
+    // Create Metadata Bucket
+    //
+    this.createMetadataBucket(serverAccessLogsBucket);
 
     this.logger.debug(`Stack synthesis complete`);
   }
@@ -1897,5 +1901,97 @@ export class LoggingStack extends AcceleratorStack {
         },
       ],
     );
+  }
+  private createMetadataBucket(serverAccessLogsBucket: Bucket) {
+    if (this.props.globalConfig.acceleratorMetadata?.enable) {
+      if (
+        cdk.Stack.of(this).region === this.props.globalConfig.homeRegion &&
+        cdk.Stack.of(this).account ===
+          this.props.accountsConfig.getAccountId(this.props.globalConfig.acceleratorMetadata.account)
+      ) {
+        const metadataBucket = new Bucket(this, 'AcceleratorMetadataBucket', {
+          encryptionType: BucketEncryptionType.SSE_KMS,
+          kmsAliasName: AcceleratorStack.ACCELERATOR_METADATA_KEY_ALIAS,
+          kmsDescription: 'The s3 bucket key for accelerator metadata collection',
+          s3BucketName: `${AcceleratorStack.ACCELERATOR_METADATA_BUCKET_NAME_PREFIX}-${cdk.Stack.of(this).account}-${
+            cdk.Stack.of(this).region
+          }`,
+          serverAccessLogsBucket: serverAccessLogsBucket.getS3Bucket(),
+        });
+
+        const bucket = metadataBucket.getS3Bucket();
+        const key = metadataBucket.getKey();
+
+        bucket.grantReadWrite(new cdk.aws_iam.AccountPrincipal(this.props.accountsConfig.getManagementAccountId()));
+        key.grantEncryptDecrypt(new cdk.aws_iam.AccountPrincipal(this.props.accountsConfig.getManagementAccountId()));
+        bucket.addToResourcePolicy(
+          new iam.PolicyStatement({
+            actions: ['s3:Get*', 's3:List*'],
+            resources: [bucket.bucketArn, bucket.arnForObjects('*')],
+            principals: [new cdk.aws_iam.AnyPrincipal()],
+            conditions: {
+              StringEquals: {
+                ...this.getPrincipalOrgIdCondition(this.organizationId),
+              },
+              ArnLike: {
+                'aws:PrincipalARN': `arn:aws:iam::*:role/AWSAccelerator-*`,
+              },
+            },
+          }),
+        );
+        key.addToResourcePolicy(
+          new cdk.aws_iam.PolicyStatement({
+            sid: 'Allow org to perform encryption',
+            principals: [new cdk.aws_iam.AnyPrincipal()],
+            actions: ['kms:Encrypt', 'kms:Decrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey', 'kms:Describe*'],
+            resources: ['*'],
+            conditions: {
+              StringEquals: {
+                ...this.getPrincipalOrgIdCondition(this.organizationId),
+              },
+              ArnLike: {
+                'aws:PrincipalARN': `arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`,
+              },
+            },
+          }),
+        );
+        const readOnlyAccessRoleArns = this.props.globalConfig.acceleratorMetadata.readOnlyAccessRoleArns;
+        if (readOnlyAccessRoleArns && readOnlyAccessRoleArns.length > 0) {
+          const principals = readOnlyAccessRoleArns.map((roleArn: string) => new cdk.aws_iam.ArnPrincipal(roleArn));
+
+          key.addToResourcePolicy(
+            new iam.PolicyStatement({
+              actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:GenerateDataKey'],
+              principals,
+              resources: ['*'],
+            }),
+          );
+
+          bucket.addToResourcePolicy(
+            new iam.PolicyStatement({
+              actions: ['s3:GetObject', 's3:ListBucket'],
+              resources: [bucket.bucketArn, bucket.arnForObjects('*')],
+              principals,
+            }),
+          );
+        }
+        this.ssmParameters.push({
+          logicalId: 'AcceleratorS3MetadataBucket',
+          parameterName: AcceleratorStack.ACCELERATOR_METADATA_BUCKET_PARAMETER_NAME,
+          stringValue: bucket.bucketArn,
+        });
+
+        this.ssmParameters.push({
+          logicalId: 'AcceleratorKmsMetadataKey',
+          parameterName: AcceleratorStack.ACCELERATOR_METADATA_KEY_ARN,
+          stringValue: key.keyArn,
+        });
+        this.ssmParameters.push({
+          logicalId: 'AcceleratorKmsMetadataAlias',
+          parameterName: AcceleratorStack.ACCELERATOR_METADATA_KEY_ALIAS,
+          stringValue: 'accelerator/kms/metadata/key',
+        });
+      }
+    }
   }
 }

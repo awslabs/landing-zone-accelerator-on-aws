@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+export * from './lib/aws-accelerator/get-accelerator-metadata';
 export * from './lib/aws-budgets/budget-definition';
 export * from './lib/aws-cloudwatch-logs/cloudwatch-destination';
 export * from './lib/aws-cloudwatch-logs/cloudwatch-logs-subscription-filter';

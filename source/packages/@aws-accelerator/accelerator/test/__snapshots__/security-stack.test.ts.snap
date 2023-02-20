@@ -9,6 +9,18 @@ Object {
     },
   },
   "Resources": Object {
+    "AWSAcceleratormetadatacollectionLogGroup76F89C67": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": "/aws/lambda/AWSAccelerator-metadata-collection",
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
     "AwsMacieUpdateExportConfigClassification832781E3": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
@@ -1021,6 +1033,164 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "acceleratorMetadataAWSAcceleratormetadatacollectionAB357F3E": Object {
+      "DependsOn": Array [
+        "acceleratorMetadatametadatalambdaDefaultPolicy63185622",
+        "acceleratorMetadatametadatalambdaEDDEC4B9",
+        "AWSAcceleratormetadatacollectionLogGroup76F89C67",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": Object {
+          "Variables": Object {
+            "ACCELERATOR_PREFIX": "AWSAccelerator",
+            "CENTRAL_LOG_BUCKET": "aws-accelerator-central-logs-333333333333-us-west-2",
+            "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
+            "CROSS_ACCOUNT_ROLE": "AWSControlTowerExecution",
+            "ELB_LOGGING_BUCKET": "aws-accelerator-elb-access-logs-333333333333-us-west-2",
+            "LOG_ACCOUNT_ID": "333333333333",
+            "METADATA_BUCKET": "aws-accelerator-metadata-333333333333-us-west-2",
+            "ORGANIZATION_ID": "r-asdf",
+            "PARTITION": Object {
+              "Ref": "AWS::Partition",
+            },
+          },
+        },
+        "FunctionName": "AWSAccelerator-metadata-collection",
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "acceleratorMetadatametadatalambdaEDDEC4B9",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 600,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "acceleratorMetadataAWSAcceleratormetadatacollectionrule5C81AE9A": Object {
+      "Properties": Object {
+        "ScheduleExpression": "rate(1 day)",
+        "State": "ENABLED",
+        "Targets": Array [
+          Object {
+            "Arn": Object {
+              "Fn::GetAtt": Array [
+                "acceleratorMetadataAWSAcceleratormetadatacollectionAB357F3E",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "acceleratorMetadataAWSAcceleratormetadatacollectionruleAllowEventRuleAWSAcceleratorSecurityStack111111111111useast1acceleratorMetadataAWSAcceleratormetadatacollection1F7C380821AF14B7": Object {
+      "Properties": Object {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": Object {
+          "Fn::GetAtt": Array [
+            "acceleratorMetadataAWSAcceleratormetadatacollectionAB357F3E",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": Object {
+          "Fn::GetAtt": Array [
+            "acceleratorMetadataAWSAcceleratormetadatacollectionrule5C81AE9A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "acceleratorMetadatametadatalambdaDefaultPolicy63185622": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "accelerator metadata collection custom resource",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "codepipeline:GetPipelineExecution",
+                "codepipeline:ListPipelineExecutions",
+                "codecommit:GetFolder",
+                "codecommit:GetFile",
+                "kms:DescribeKey",
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:ListAliases",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "organizations:DescribeOrganizationalUnit",
+                "organizations:DescribeAccount",
+                "organizations:ListAccounts",
+                "organizations:ListChildren",
+                "organizations:ListOrganizationalUnitsForParent",
+                "organizations:ListParents",
+                "organizations:ListRoots",
+                "ssm:GetParameter",
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+                "sts:AssumeRole",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "acceleratorMetadatametadatalambdaDefaultPolicy63185622",
+        "Roles": Array [
+          Object {
+            "Ref": "acceleratorMetadatametadatalambdaEDDEC4B9",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "acceleratorMetadatametadatalambdaEDDEC4B9": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "RoleName": "AWSAccelerator-111111111111-us-east-1-metadata-lambda-role",
+      },
+      "Type": "AWS::IAM::Role",
+    },
   },
 }
 `;
@@ -1038,6 +1208,18 @@ Object {
     },
   },
   "Resources": Object {
+    "AWSAcceleratormetadatacollectionLogGroup76F89C67": Object {
+      "DeletionPolicy": "Delete",
+      "Properties": Object {
+        "KmsKeyId": Object {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": "/aws/lambda/AWSAccelerator-metadata-collection",
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
     "AwsMacieUpdateExportConfigClassification832781E3": Object {
       "DeletionPolicy": "Delete",
       "DependsOn": Array [
@@ -1867,6 +2049,164 @@ Object {
         },
       },
       "Type": "AWS::SSM::Parameter",
+    },
+    "acceleratorMetadataAWSAcceleratormetadatacollectionAB357F3E": Object {
+      "DependsOn": Array [
+        "acceleratorMetadatametadatalambdaDefaultPolicy63185622",
+        "acceleratorMetadatametadatalambdaEDDEC4B9",
+        "AWSAcceleratormetadatacollectionLogGroup76F89C67",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": Object {
+          "Variables": Object {
+            "ACCELERATOR_PREFIX": "AWSAccelerator",
+            "CENTRAL_LOG_BUCKET": "aws-accelerator-central-logs-333333333333-us-west-2",
+            "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
+            "CROSS_ACCOUNT_ROLE": "AWSControlTowerExecution",
+            "ELB_LOGGING_BUCKET": "aws-accelerator-elb-access-logs-333333333333-us-west-2",
+            "LOG_ACCOUNT_ID": "333333333333",
+            "METADATA_BUCKET": "aws-accelerator-metadata-333333333333-us-west-2",
+            "ORGANIZATION_ID": "r-asdf",
+            "PARTITION": Object {
+              "Ref": "AWS::Partition",
+            },
+          },
+        },
+        "FunctionName": "AWSAccelerator-metadata-collection",
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "acceleratorMetadatametadatalambdaEDDEC4B9",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 600,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "acceleratorMetadataAWSAcceleratormetadatacollectionrule5C81AE9A": Object {
+      "Properties": Object {
+        "ScheduleExpression": "rate(1 day)",
+        "State": "ENABLED",
+        "Targets": Array [
+          Object {
+            "Arn": Object {
+              "Fn::GetAtt": Array [
+                "acceleratorMetadataAWSAcceleratormetadatacollectionAB357F3E",
+                "Arn",
+              ],
+            },
+            "Id": "Target0",
+          },
+        ],
+      },
+      "Type": "AWS::Events::Rule",
+    },
+    "acceleratorMetadataAWSAcceleratormetadatacollectionruleAllowEventRuleAWSAcceleratorSecurityStack111111111111useast1acceleratorMetadataAWSAcceleratormetadatacollection1F7C380821AF14B7": Object {
+      "Properties": Object {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": Object {
+          "Fn::GetAtt": Array [
+            "acceleratorMetadataAWSAcceleratormetadatacollectionAB357F3E",
+            "Arn",
+          ],
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": Object {
+          "Fn::GetAtt": Array [
+            "acceleratorMetadataAWSAcceleratormetadatacollectionrule5C81AE9A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "acceleratorMetadatametadatalambdaDefaultPolicy63185622": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-IAM5",
+              "reason": "accelerator metadata collection custom resource",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": Array [
+                "codepipeline:GetPipelineExecution",
+                "codepipeline:ListPipelineExecutions",
+                "codecommit:GetFolder",
+                "codecommit:GetFile",
+                "kms:DescribeKey",
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:ListAliases",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "organizations:DescribeOrganizationalUnit",
+                "organizations:DescribeAccount",
+                "organizations:ListAccounts",
+                "organizations:ListChildren",
+                "organizations:ListOrganizationalUnitsForParent",
+                "organizations:ListParents",
+                "organizations:ListRoots",
+                "ssm:GetParameter",
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+                "sts:AssumeRole",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "acceleratorMetadatametadatalambdaDefaultPolicy63185622",
+        "Roles": Array [
+          Object {
+            "Ref": "acceleratorMetadatametadatalambdaEDDEC4B9",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "acceleratorMetadatametadatalambdaEDDEC4B9": Object {
+      "Properties": Object {
+        "AssumeRolePolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": Object {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "RoleName": "AWSAccelerator-111111111111-us-east-1-metadata-lambda-role",
+      },
+      "Type": "AWS::IAM::Role",
     },
   },
 }
