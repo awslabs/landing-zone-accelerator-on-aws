@@ -139,6 +139,26 @@ export abstract class AcceleratorStack extends cdk.Stack {
    */
   protected static readonly ACCELERATOR_VPC_FLOW_LOGS_DESTINATION_S3_BUCKET_ARN_PARAMETER_NAME =
     '/accelerator/vpc/flow-logs/destination/bucket/arn';
+  /**
+   * Accelerator Metadata bucket prefix
+   */
+  public static readonly ACCELERATOR_METADATA_BUCKET_NAME_PREFIX = 'aws-accelerator-metadata';
+  /**
+   * Accelerator Metadata bucket arn SSM parameter name
+   */
+  public static readonly ACCELERATOR_METADATA_BUCKET_PARAMETER_NAME = '/accelerator/metadata/bucket/arn';
+
+  /**
+   * Accelerator Metadata KMS key alias
+   */
+
+  public static readonly ACCELERATOR_METADATA_KEY_ALIAS = '/alias/accelerator/kms/metadata/key';
+
+  /**
+   * Accelerator Metadata KMS key alias
+   */
+
+  public static readonly ACCELERATOR_METADATA_KEY_ARN = '/accelerator/kms/metadata/key-arn';
 
   /**
    * Accelerator CentralLogs bucket name prefix

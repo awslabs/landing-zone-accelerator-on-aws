@@ -18,6 +18,7 @@ import { NagSuppressions } from 'cdk-nag';
 
 import { Region } from '@aws-accelerator/config';
 import {
+  AcceleratorMetadata,
   CentralLogsBucket,
   EbsDefaultEncryption,
   GuardDutyPublishingDestination,
@@ -42,10 +43,12 @@ export class SecurityStack extends AcceleratorStack {
   readonly centralLogsBucketName: string;
   readonly centralLogsBucketKey: cdk.aws_kms.Key;
   readonly configAggregationAccountId: string;
-
+  readonly metadataRule: AcceleratorMetadata | undefined;
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
-
+    const elbLogBucketName = `${
+      AcceleratorStack.ACCELERATOR_ELB_LOGS_BUCKET_PREFIX
+    }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`;
     this.auditAccountName = props.securityConfig.getDelegatedAccountName();
     this.auditAccountId = props.accountsConfig.getAuditAccountId();
     this.logArchiveAccountId = props.accountsConfig.getLogArchiveAccountId();
@@ -103,7 +106,16 @@ export class SecurityStack extends AcceleratorStack {
     // Update IAM Password Policy
     //
     this.updateIamPasswordPolicy();
+    //
+    // Create Accelerator Metadata Rule
+    //
 
+    this.metadataRule = this.acceleratorMetadataRule(
+      props,
+      this.centralLogsBucketName,
+      elbLogBucketName,
+      this.cloudwatchKey,
+    );
     //
     // Create SSM Parameters
     //
@@ -362,5 +374,44 @@ export class SecurityStack extends AcceleratorStack {
         },
       ],
     );
+  }
+
+  private acceleratorMetadataRule(
+    acceleratorProps: AcceleratorStackProps,
+    centralLogBucketName: string,
+    elbLogBucketName: string,
+    cloudwatchKmsKey: cdk.aws_kms.Key,
+  ): AcceleratorMetadata | undefined {
+    const isManagementAccountAndHomeRegion =
+      cdk.Stack.of(this).account === acceleratorProps.accountsConfig.getManagementAccountId() &&
+      cdk.Stack.of(this).region === acceleratorProps.globalConfig.homeRegion;
+    // if accelerator metadata is not defined in config then return
+    if (!acceleratorProps.globalConfig.acceleratorMetadata) {
+      return;
+    }
+    // if the stack is not in management account and home region then return
+    if (!isManagementAccountAndHomeRegion) {
+      return;
+    }
+    const metadataLogBucketName = `${
+      AcceleratorStack.ACCELERATOR_METADATA_BUCKET_NAME_PREFIX
+    }-${this.props.accountsConfig.getAccountId(acceleratorProps.globalConfig.acceleratorMetadata?.account)}-${
+      this.props.centralizedLoggingRegion
+    }`;
+
+    return new AcceleratorMetadata(this, 'acceleratorMetadata', {
+      acceleratorConfigRepository: acceleratorProps.configRepositoryName,
+      acceleratorPrefix: 'AWSAccelerator',
+      assumeRole: acceleratorProps.globalConfig.managementAccountAccessRole,
+      centralLogBucketName,
+      elbLogBucketName,
+      cloudwatchKmsKey,
+      loggingAccountId: acceleratorProps.accountsConfig.getAccountId(
+        acceleratorProps.globalConfig.acceleratorMetadata.account,
+      ),
+      logRetentionInDays: acceleratorProps.globalConfig.cloudwatchLogRetentionInDays,
+      metadataLogBucketName: metadataLogBucketName,
+      organizationId: acceleratorProps.organizationConfig.getOrganizationalUnitId('Root'),
+    });
   }
 }

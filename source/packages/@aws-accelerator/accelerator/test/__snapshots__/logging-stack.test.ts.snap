@@ -367,6 +367,394 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "AcceleratorMetadataBucket1A53514B": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "BucketEncryption": Object {
+          "ServerSideEncryptionConfiguration": Array [
+            Object {
+              "ServerSideEncryptionByDefault": Object {
+                "KMSMasterKeyID": Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorMetadataBucketCmkC5190F6D",
+                    "Arn",
+                  ],
+                },
+                "SSEAlgorithm": "aws:kms",
+              },
+            },
+          ],
+        },
+        "BucketName": "aws-accelerator-metadata-333333333333-us-east-1",
+        "LifecycleConfiguration": Object {
+          "Rules": Array [
+            Object {
+              "AbortIncompleteMultipartUpload": Object {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpirationInDays": 1825,
+              "ExpiredObjectDeleteMarker": false,
+              "Id": "LifecycleRuleaws-accelerator-metadata-333333333333-us-east-1",
+              "NoncurrentVersionExpiration": Object {
+                "NoncurrentDays": 1825,
+              },
+              "NoncurrentVersionTransitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 366,
+                },
+              ],
+              "Status": "Enabled",
+              "Transitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 365,
+                },
+              ],
+            },
+          ],
+        },
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": Object {
+            "Ref": "AccessLogsBucketFA218D2A",
+          },
+          "LogFilePrefix": "aws-accelerator-metadata-333333333333-us-east-1/",
+        },
+        "OwnershipControls": Object {
+          "Rules": Array [
+            Object {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": Object {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "VersioningConfiguration": Object {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "AcceleratorMetadataBucketCmkAlias81144DE6": Object {
+      "Properties": Object {
+        "AliasName": "alias//alias/accelerator/kms/metadata/key",
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorMetadataBucketCmkC5190F6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
+    "AcceleratorMetadataBucketCmkC5190F6D": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "Description": "The s3 bucket key for accelerator metadata collection",
+        "EnableKeyRotation": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey",
+                "kms:Describe*",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/AWSAccelerator-*",
+                      ],
+                    ],
+                  },
+                },
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow org to perform encryption",
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:GenerateDataKey",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "arn:aws:iam::111111111111:role/test-access-role",
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "AcceleratorMetadataBucketPolicyAE23D97C": Object {
+      "Properties": Object {
+        "Bucket": Object {
+          "Ref": "AcceleratorMetadataBucket1A53514B",
+        },
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "s3:*",
+              "Condition": Object {
+                "Bool": Object {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorMetadataBucket1A53514B",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AcceleratorMetadataBucket1A53514B",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "deny-insecure-connections",
+            },
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorMetadataBucket1A53514B",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AcceleratorMetadataBucket1A53514B",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "s3:Get*",
+                "s3:List*",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": "arn:aws:iam::*:role/AWSAccelerator-*",
+                },
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorMetadataBucket1A53514B",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AcceleratorMetadataBucket1A53514B",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "s3:GetObject",
+                "s3:ListBucket",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "arn:aws:iam::111111111111:role/test-access-role",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorMetadataBucket1A53514B",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AcceleratorMetadataBucket1A53514B",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
     "AcceleratorS3KmsArnParameter82C4C525": Object {
       "Properties": Object {
         "Name": "/accelerator/kms/s3/key-arn",
@@ -510,6 +898,7 @@ Object {
         },
       },
       "Properties": Object {
+        "AccessControl": "LogDeliveryWrite",
         "BucketEncryption": Object {
           "ServerSideEncryptionConfiguration": Array [
             Object {
@@ -3121,6 +3510,394 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "AcceleratorMetadataBucket1A53514B": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "BucketEncryption": Object {
+          "ServerSideEncryptionConfiguration": Array [
+            Object {
+              "ServerSideEncryptionByDefault": Object {
+                "KMSMasterKeyID": Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorMetadataBucketCmkC5190F6D",
+                    "Arn",
+                  ],
+                },
+                "SSEAlgorithm": "aws:kms",
+              },
+            },
+          ],
+        },
+        "BucketName": "aws-accelerator-metadata-333333333333-us-east-1",
+        "LifecycleConfiguration": Object {
+          "Rules": Array [
+            Object {
+              "AbortIncompleteMultipartUpload": Object {
+                "DaysAfterInitiation": 1,
+              },
+              "ExpirationInDays": 1825,
+              "ExpiredObjectDeleteMarker": false,
+              "Id": "LifecycleRuleaws-accelerator-metadata-333333333333-us-east-1",
+              "NoncurrentVersionExpiration": Object {
+                "NoncurrentDays": 1825,
+              },
+              "NoncurrentVersionTransitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 366,
+                },
+              ],
+              "Status": "Enabled",
+              "Transitions": Array [
+                Object {
+                  "StorageClass": "DEEP_ARCHIVE",
+                  "TransitionInDays": 365,
+                },
+              ],
+            },
+          ],
+        },
+        "LoggingConfiguration": Object {
+          "DestinationBucketName": Object {
+            "Ref": "AccessLogsBucketFA218D2A",
+          },
+          "LogFilePrefix": "aws-accelerator-metadata-333333333333-us-east-1/",
+        },
+        "OwnershipControls": Object {
+          "Rules": Array [
+            Object {
+              "ObjectOwnership": "BucketOwnerPreferred",
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": Object {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+        "VersioningConfiguration": Object {
+          "Status": "Enabled",
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "AcceleratorMetadataBucketCmkAlias81144DE6": Object {
+      "Properties": Object {
+        "AliasName": "alias//alias/accelerator/kms/metadata/key",
+        "TargetKeyId": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorMetadataBucketCmkC5190F6D",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
+    "AcceleratorMetadataBucketCmkC5190F6D": Object {
+      "DeletionPolicy": "Retain",
+      "Properties": Object {
+        "Description": "The s3 bucket key for accelerator metadata collection",
+        "EnableKeyRotation": true,
+        "KeyPolicy": Object {
+          "Statement": Array [
+            Object {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey",
+                "kms:Describe*",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/AWSAccelerator-*",
+                      ],
+                    ],
+                  },
+                },
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": "*",
+              "Sid": "Allow org to perform encryption",
+            },
+            Object {
+              "Action": Array [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:GenerateDataKey",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "arn:aws:iam::111111111111:role/test-access-role",
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "AcceleratorMetadataBucketPolicyAE23D97C": Object {
+      "Properties": Object {
+        "Bucket": Object {
+          "Ref": "AcceleratorMetadataBucket1A53514B",
+        },
+        "PolicyDocument": Object {
+          "Statement": Array [
+            Object {
+              "Action": "s3:*",
+              "Condition": Object {
+                "Bool": Object {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorMetadataBucket1A53514B",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AcceleratorMetadataBucket1A53514B",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "deny-insecure-connections",
+            },
+            Object {
+              "Action": Array [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorMetadataBucket1A53514B",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AcceleratorMetadataBucket1A53514B",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "s3:Get*",
+                "s3:List*",
+              ],
+              "Condition": Object {
+                "ArnLike": Object {
+                  "aws:PrincipalARN": "arn:aws:iam::*:role/AWSAccelerator-*",
+                },
+                "StringEquals": Object {
+                  "aws:PrincipalOrgID": Object {
+                    "Ref": "Organization29A5FC3F",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "*",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorMetadataBucket1A53514B",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AcceleratorMetadataBucket1A53514B",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            Object {
+              "Action": Array [
+                "s3:GetObject",
+                "s3:ListBucket",
+              ],
+              "Effect": "Allow",
+              "Principal": Object {
+                "AWS": "arn:aws:iam::111111111111:role/test-access-role",
+              },
+              "Resource": Array [
+                Object {
+                  "Fn::GetAtt": Array [
+                    "AcceleratorMetadataBucket1A53514B",
+                    "Arn",
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      Object {
+                        "Fn::GetAtt": Array [
+                          "AcceleratorMetadataBucket1A53514B",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
     "AcceleratorS3KmsArnParameter82C4C525": Object {
       "Properties": Object {
         "Name": "/accelerator/kms/s3/key-arn",
@@ -3264,6 +4041,7 @@ Object {
         },
       },
       "Properties": Object {
+        "AccessControl": "LogDeliveryWrite",
         "BucketEncryption": Object {
           "ServerSideEncryptionConfiguration": Array [
             Object {
