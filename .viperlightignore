@@ -32,6 +32,7 @@ error.log
 .*/attach-ec2-instance-profile.zip
 .*/ec2-instance-profile-permissions.zip
 .*/targetDocumentLambda.zip
+.*/custom-config-rules/sqs-queue-public-policy.zip
 
 #
 # Line level file ignores (keep in alphabetical order)
