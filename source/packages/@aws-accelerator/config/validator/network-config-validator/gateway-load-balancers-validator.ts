@@ -17,7 +17,14 @@ import {
   Ec2FirewallInstanceConfig,
   TargetGroupItemConfig,
 } from '../../lib/customizations-config';
-import { NetworkConfig, GwlbConfig, VpcConfig, VpcTemplatesConfig, SubnetConfig } from '../../lib/network-config';
+import {
+  GwlbConfig,
+  NetworkConfig,
+  NetworkConfigTypes,
+  SubnetConfig,
+  VpcConfig,
+  VpcTemplatesConfig,
+} from '../../lib/network-config';
 import { NetworkValidatorFunctions } from './network-validator-functions';
 
 /**
@@ -99,8 +106,9 @@ export class GatewayLoadBalancersValidator {
         errors.push(`[Gateway Load Balancer ${gwlb.name}]: VPC ${gwlb.vpc} does not exist`);
       }
 
-      // Validate subnets
+      // Validate VPC and subnets
       if (vpc) {
+        this.validateGwlbVpc(values, gwlb, vpc, errors);
         this.validateGwlbSubnets(gwlb, vpc, helpers, errors);
       }
       // Validate endpoints
@@ -108,6 +116,33 @@ export class GatewayLoadBalancersValidator {
       // Validate target groups
       if (gwlb.targetGroup) {
         this.validateGwlbTargetGroup(gwlb, configDir, errors);
+      }
+    }
+  }
+
+  /**
+   * Validate VPC is correct type and deployed to delegated admin account
+   * @param values
+   * @param gwlb
+   * @param vpc
+   * @param errors
+   */
+  private validateGwlbVpc(
+    values: NetworkConfig,
+    gwlb: GwlbConfig,
+    vpc: VpcConfig | VpcTemplatesConfig,
+    errors: string[],
+  ) {
+    if (NetworkConfigTypes.vpcTemplatesConfig.is(vpc)) {
+      errors.push(
+        `[Gateway Load Balancer ${gwlb.name}]: VPC templates are not a supported target VPC type for Gateway Load Balancer`,
+      );
+    } else {
+      const delegatedAdmin = values.centralNetworkServices!.delegatedAdminAccount;
+      if (vpc.account !== delegatedAdmin) {
+        errors.push(
+          `[Gateway Load Balancer ${gwlb.name}]: VPC "${vpc.name}" is not deployed to delegated admin account "${delegatedAdmin}". Gateway Load Balancers must be deployed to the delegated admin account`,
+        );
       }
     }
   }
@@ -164,13 +199,15 @@ export class GatewayLoadBalancersValidator {
     const autoscalingGroups = customizationsConfig.firewalls?.autoscalingGroups;
     const targetGroups = customizationsConfig.firewalls?.targetGroups;
 
+    // Fetch target group from customizations config
+    let targetGroup: TargetGroupItemConfig | undefined = undefined;
     if (!targetGroups) {
       errors.push(
         `[Gateway Load Balancer ${gwlb.name}]: target group ${gwlb.targetGroup} not found in customizations-config.yaml`,
       );
+    } else {
+      targetGroup = targetGroups.find(group => group.name === gwlb.targetGroup);
     }
-
-    const targetGroup = targetGroups!.find(group => group.name === gwlb.targetGroup);
 
     if (!targetGroup) {
       errors.push(
