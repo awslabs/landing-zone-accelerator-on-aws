@@ -363,7 +363,7 @@ export class VpcValidator {
    */
   private validateRouteTableEntries(values: NetworkConfig, vpcItem: VpcConfig | VpcTemplatesConfig, errors: string[]) {
     vpcItem.routeTables?.forEach(routeTableItem => {
-      routeTableItem.routes.forEach(entry => {
+      routeTableItem.routes?.forEach(entry => {
         // Validate destination exists
         if (entry.type && entry.type !== 'gatewayEndpoint') {
           this.validateRouteEntryDestination(entry, routeTableItem.name, vpcItem.name, values, errors);
