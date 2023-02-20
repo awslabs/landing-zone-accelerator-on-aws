@@ -199,6 +199,12 @@ export abstract class GlobalConfigTypes {
     deploymentTargets: t.deploymentTargets,
   });
 
+  static readonly acceleratorMetadataConfig = t.interface({
+    enable: t.boolean,
+    account: t.string,
+    readOnlyAccessRoleArns: t.optional(t.array(t.string)),
+  });
+
   static readonly globalConfig = t.interface({
     homeRegion: t.nonEmptyString,
     enabledRegions: t.array(t.region),
@@ -213,6 +219,7 @@ export abstract class GlobalConfigTypes {
     snsTopics: t.optional(GlobalConfigTypes.snsConfig),
     ssmInventory: t.optional(GlobalConfigTypes.ssmInventoryConfig),
     limits: t.optional(t.array(this.serviceQuotaLimitsConfig)),
+    acceleratorMetadata: t.optional(GlobalConfigTypes.acceleratorMetadataConfig),
   });
 }
 
@@ -1154,6 +1161,33 @@ export class SnsConfig implements t.TypeOf<typeof GlobalConfigTypes.snsConfig> {
 }
 
 /**
+ * *{@link globalConfig} / {@link AcceleratorMetadataConfig}*
+ *
+ * @example
+ * ```
+ * acceleratorMetadataConfig:
+ *   enable: true
+ *   account: Logging
+ *   readOnlyAccessRoleArns:
+ *     - arn:aws:iam::111111111111:role/test-access-role
+ * ```
+ */
+
+export class AcceleratorMetadataConfig implements t.TypeOf<typeof GlobalConfigTypes.acceleratorMetadataConfig> {
+  /**
+   * Accelerator Metadata
+   * Creates a new bucket in the log archive account to retrieve metadata for the accelerator environment
+   */
+
+  /**
+   * Enable Accelerator Metadata
+   */
+  readonly enable = false;
+  readonly account = '';
+  readonly readOnlyAccessRoleArns: string[] = [];
+}
+
+/**
  * *{@link globalConfig} / {@link SsmInventoryConfig}*
  *
  * @example
@@ -1402,12 +1436,27 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
   readonly ssmInventory: SsmInventoryConfig | undefined = undefined;
 
   /**
+   * Accelerator Metadata Configuration
+   * Creates a bucket in the logging account to enable accelerator metadata collection
+   *
+   * @example
+   * ```
+   * acceleratorMetadata:
+   *   enable: true
+   *   account: Logging
+   * ```
+   *
+   */
+  readonly acceleratorMetadata: AcceleratorMetadataConfig | undefined = undefined;
+
+  /**
    *
    * @param props
    * @param values
    * @param configDir
    * @param validateConfig
    */
+
   constructor(
     props: {
       homeRegion: string;

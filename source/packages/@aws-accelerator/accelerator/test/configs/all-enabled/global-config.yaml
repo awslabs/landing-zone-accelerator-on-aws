@@ -4,6 +4,11 @@ enabledRegions:
   - us-west-2
 managementAccountAccessRole: AWSControlTowerExecution
 cloudwatchLogRetentionInDays: 3653
+acceleratorMetadata:
+  enable: true
+  account: LogArchive
+  readOnlyAccessRoleArns:
+    - arn:aws:iam::111111111111:role/test-access-role
 snsTopics:
   deploymentTargets:
     organizationalUnits:
@@ -23,7 +28,7 @@ logging:
   cloudtrail:
     enable: true
     organizationTrail: false
-    accountTrails: 
+    accountTrails:
       - name: AWSAccelerator-Account-CloudTrail
         regions:
           - us-east-1
@@ -40,7 +45,6 @@ logging:
           apiErrorRateInsight: false
           apiCallRateInsight: false
 
- 
   sessionManager:
     sendToCloudWatchLogs: false
     sendToS3: true
@@ -52,7 +56,7 @@ logging:
         excludeAll: true
       - organizationalUnits:
           - Root
-        logGroupNames: 
+        logGroupNames:
           - test1/*
       - accounts:
           - Management
