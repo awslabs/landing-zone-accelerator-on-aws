@@ -9,22 +9,28 @@
   - [Solution - Architecture](#solution---architecture)
     - [What does the solution deploy?](#what-does-the-solution-deploy)
     - [What does the AWS best practices configuration deploy?](#what-does-the-aws-best-practices-configuration-deploy)
+    - [Is there a best practices configuration for my industry?](#is-there-a-best-practices-configuration-for-my-industry)
+    - [How do I customize what the solution deploys?](#how-do-i-customize-what-the-solution-deploys)
   - [Solution - Control Tower and Organizational Governance](#solution---control-tower-and-organizational-governance)
     - [How does this solution relate to AWS Control Tower?](#how-does-this-solution-relate-to-aws-control-tower)
     - [Is Landing Zone Accelerator compatible with AWS Control Tower?](#is-landing-zone-accelerator-compatible-with-aws-control-tower)
     - [AWS Control Tower just added new features that now overlap with Landing Zone Accelerator, what should I do?](#aws-control-tower-just-added-new-features-that-now-overlap-with-landing-zone-accelerator-what-should-i-do)
-    - [How do I manage my organizational units (OUs) when using CT and Landing Zone Accelerator?](#how-do-i-manage-my-organizational-units-ous-when-using-ct-and-landing-zone-accelerator)
-    - [How do I create additional accounts when using CT and Landing Zone Accelerator?](#how-do-i-create-additional-accounts-when-using-ct-and-landing-zone-accelerator)
     - [Can I create AWS GovCloud (US) accounts using Landing Zone Accelerator? What happens to the commercial account if I’m using CT?](#can-i-create-aws-govcloud-us-accounts-using-landing-zone-accelerator-what-happens-to-the-commercial-account-if-im-using-ct)
-    - [How do I manage my SCPs when using CT and Landing Zone Accelerator?](#how-do-i-manage-my-scps-when-using-ct-and-landing-zone-accelerator)
     - [If I deploy Landing Zone Accelerator now, can I enroll my environment into CT when CT become available in my region, such as AWS GovCloud (US)?](#if-i-deploy-landing-zone-accelerator-now-can-i-enroll-my-environment-into-ct-when-ct-become-available-in-my-region-such-as-aws-govcloud-us)
   - [Solution - Customizations for Control Tower (CfCT)](#solution---customizations-for-control-tower-cfct)
     - [How does Landing Zone Accelerator relate to CfCT?](#how-does-landing-zone-accelerator-relate-to-cfct)
     - [How do I choose between using Landing Zone Accelerator or CfCT?](#how-do-i-choose-between-using-landing-zone-accelerator-or-cfct)
     - [Can I use both Landing Zone Accelerator and CfCT? Are there any one-way doors?](#can-i-use-both-landing-zone-accelerator-and-cfct-are-there-any-one-way-doors)
+  - [Solution - Operations](#solution---operations)
+    - [How do I manage my organizational units (OUs) when using CT and Landing Zone Accelerator?](#how-do-i-manage-my-organizational-units-ous-when-using-ct-and-landing-zone-accelerator)
+    - [How do I create additional accounts when using CT and Landing Zone Accelerator?](#how-do-i-create-additional-accounts-when-using-ct-and-landing-zone-accelerator)
+    - [How do I add existing accounts when using CT and Landing Zone Accelerator?](#how-do-i-add-existing-accounts-when-using-ct-and-landing-zone-accelerator)
+    - [How do I manage my SCPs when using CT and Landing Zone Accelerator?](#how-do-i-manage-my-scps-when-using-ct-and-landing-zone-accelerator)
+    - [How do I troubleshoot deployment and validation errors?](#how-do-i-troubleshoot-deployment-and-validation-errors)
   - [Networking - General](#networking---general)
     - [What is the purpose of the `centralNetworkServices` configuration block?](#what-is-the-purpose-of-the-centralnetworkservices-configuration-block)
     - [What are the differences between the `vpcs` and `vpcTemplates` configuration blocks?](#what-are-the-differences-between-the-vpcs-and-vpctemplates-configuration-blocks)
+    - [How do I define a centralized interface endpoint VPC?](#how-do-i-define-a-centralized-interface-endpoint-vpc)
   - [Networking - Deep Packet Inspection Architectures](#networking---deep-packet-inspection-architectures)
     - [What architectural design patterns can I leverage with Landing Zone Accelerator?](#what-architectural-design-patterns-can-i-leverage-with-landing-zone-accelerator)
     - [How do I enable inspection at the edge of my VPC for public-facing workloads?](#how-do-i-enable-inspection-at-the-edge-of-my-vpc-for-public-facing-workloads)
@@ -34,7 +40,7 @@
     - [How do I create a Direct Connect virtual interface?](#how-do-i-create-a-direct-connect-virtual-interface)
     - [Can I create a hosted virtual interface?](#can-i-create-a-hosted-virtual-interface)
     - [How do I associate a Direct Connect Gateway with a Transit Gateway?](#how-do-i-associate-a-direct-connect-gateway-with-a-transit-gateway)
-    - [Why is my NetworkAssociations stack in UPDATE_ROLLBACK_COMPLETE status after adding a Transit Gateway Association?](#why-is-my-networkassociations-stack-in-update_rollback_complete-status-after-adding-a-transit-gateway-association)
+    - [Why is my NetworkAssociations stack in UPDATE\_ROLLBACK\_COMPLETE status after adding a Transit Gateway Association?](#why-is-my-networkassociations-stack-in-update_rollback_complete-status-after-adding-a-transit-gateway-association)
   - [Networking - AWS Network Firewall](#networking---aws-network-firewall)
     - [Can I create a Network Firewall?](#can-i-create-a-network-firewall)
     - [What is the relationship between firewalls, policies, and rule groups?](#what-is-the-relationship-between-firewalls-policies-and-rule-groups)
@@ -64,7 +70,7 @@ Landing Zone Accelerator is installed into your AWS Organizations Management acc
 ### Is this solution only applicable to government customers?
 No, Landing Zone Accelerator is applicable for all customers that need to implement an architecture based on best practice security. Deployment is supported in any of the regions where Control Tower is available, as well as AWS GovCloud (US).
 
-Landing Zone Accelerator is delivered with a [sample configuration file](reference/sample-configurations) which deploys an opinionated and prescriptive architecture designed to meet the security and operational requirements of many customers around the world. While installation of the provided prescriptive architecture is reasonably simple, deploying a customized architecture does require extensive understanding of the AWS platform.
+Landing Zone Accelerator is delivered with [sample configuration files](reference/sample-configurations) which deploy opinionated and prescriptive architectures designed to meet the security and operational requirements of many customers around the world. While installation of the provided prescriptive architectures are reasonably simple, deploying a customized architecture does require extensive understanding of the AWS platform.
 
 ### Will AWS have access to customer’s data if they use this solution?
 No, Landing Zone Accelerator resides within your Management account and is controlled by you. The Landing Zone Accelerator on AWS does not change any of the responsibilities in the [Shared Responsibility Model](https://aws.amazon.com/compliance/shared-responsibility-model/). Another benefit to having the code available as open source is the transparency it brings so customers can be certain of what is being done in their accounts.
@@ -81,6 +87,12 @@ For further details on the Landing Zone Accelerator orchestration engine, see [A
 
 ### What does the AWS best practices configuration deploy?
 The Landing Zone Accelerator provides opinionated configurations that are based on our years of building environments for customers with highly regulated workloads. By using the [aws-best-practices configuration](reference/sample-configurations/aws-best-practices), you can expect the architecture in the solution’s [Architecture overview](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/architecture-overview.html) to be deployed.
+
+### Is there a best practices configuration for my industry?
+You may find the current list of supported industry best practice configurations in the [sample configurations](reference/sample-configurations) directory of our GitHub repository. Supporting documentation for these best practice configurations can be found in the [Support for specific regions and industries](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/industry-and-regional-guidance.html) section of the solution implementation guide.
+
+### How do I customize what the solution deploys?
+The solution's [configuration files](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/configuration-files.html) are the primary interface for what the accelerator deploys. The supported services, features, and API references for these config files can be found in the [README](README.md) of our GitHub repository. You may use the configuration reference to update a best practices configuration to meet your organization's needs, or to craft your own configuration from scratch. 
 
 ## Solution - Control Tower and Organizational Governance
 
@@ -99,17 +111,8 @@ A key design principle of Landing Zone Accelerator is to evolve over time as new
 
 However, we don’t foresee Landing Zone Accelerator being completely replaced by a single AWS service such as Control Tower, as Landing Zone Accelerator orchestrates many other AWS services beyond those managed by AWS Control Tower. For example, you can use Landing Zone Accelerator to deploy networking elements (VPC, Transit Gateway, Security Groups), which is not a current capability of AWS Control Tower.
 
-### How do I manage my organizational units (OUs) when using CT and Landing Zone Accelerator?
-All OUs and accounts that you create in CT are governed automatically by CT. OUs that are generated outside of CT require you to manually enroll the OU with CT before it can be managed and governed by CT. When using CT and Landing Zone Accelerator together, Landing Zone Accelerator will not automate the creation of additional OUs, as there is currently not an automated mechanism to enroll the newly created OU with CT. This design decision minimizes opportunities for environment drift with CT.
-
-### How do I create additional accounts when using CT and Landing Zone Accelerator?
-When new account entries are added to the Landing Zone Accelerator `accounts-config.yaml` configuration file and the pipeline is released, Landing Zone Accelerator will utilize the CT Account Factory Service Catalog product to generate the new accounts. Similar to OUs, accounts that are generated outside of CT require you to enroll the account with CT before it can be managed and governed by CT. If you create an account outside of Control Tower (likely directly through the Organizations console or API), you can add the account information to the Landing Zone Accelerator configuration and the solution will automatically enroll the new account into CT using the CT Account Factory Service Catalog product.
-
 ### Can I create AWS GovCloud (US) accounts using Landing Zone Accelerator? What happens to the commercial account if I’m using CT?
 Yes. You can specify the creation of an AWS GovCloud (US) account through the Landing Zone Accelerator configuration files. This requires that your Management Root account meets the requirements for creating an AWS GovCloud (US) account. After adding the new account information to the Landing Zone Accelerator configuration and releasing the pipeline, Landing Zone Accelerator will automate the creation of a new GovCloud account through the Organizations service. Since the creation of a GovCloud account also creates a commercial pair, the Landing Zone Accelerator will then automate the enrollment of the commercial account using the CT Account Factory Service Catalog product.
-
-### How do I manage my SCPs when using CT and Landing Zone Accelerator?
-You can use Landing Zone Accelerator to deploy custom SCPs into your environment in addition to the SCPs that are deployed and managed by CT. Landing Zone Accelerator will only manage SCPs that are part of the accelerator configuration, and will not manage any SCPs that are deployed by CT. Note, Organizations sets a limit of 5 SCPs per OU and CT will consume up to 3 SCPs which will leave 2 additional SCPs that you can add. For finer grained SCPs, Landing Zone Accelerator also allows you to deploy custom SCPs to specific accounts.
 
 ### If I deploy Landing Zone Accelerator now, can I enroll my environment into CT when CT become available in my region, such as AWS GovCloud (US)?
 Yes. Landing Zone Accelerator is designed to align directly with the landing zone structure that CT provides. Landing Zone Accelerator requires the 3 mandatory accounts that are configured when you enable CT, 1/Management Root, 2/Logging, 3/Audit. When CT becomes available in your region, you will be able to configure your CT landing zone to reuse these same accounts for their specified functions. Additionally, per guidance from the CT service team, where possible, Landing Zone Accelerator will also deploy the same mandatory guardrails defined by the CT into your environment.
@@ -129,6 +132,31 @@ Customers should use Landing Zone Accelerator if they want a no-code solution wi
 ### Can I use both Landing Zone Accelerator and CfCT? Are there any one-way doors?
 Yes. You can use both Landing Zone Accelerator and CfCT to deploy additional customizations to your CT landing zone. Both Landing Zone Accelerator and CfCT support event driven architectures and post an SNS topic at the completion of their respective pipelines. Subscriptions can be set up against these SNS topics to initiate additional pipelines or custom IaC deployments. This includes having CfCT called after the completion of a Landing Zone Accelerator pipeline and vice versa. For customers that want a hybrid approach of a no-code solution to handle the orchestration and deployment of AWS security and networking services through Landing Zone Accelerator, can then use CfCT to add additional customizations directly with custom-developed CloudFormation templates. 
 
+## Solution - Operations
+
+### How do I manage my organizational units (OUs) when using CT and Landing Zone Accelerator?
+All OUs and accounts that you create in CT are governed automatically by CT. OUs that are generated outside of CT require you to manually enroll the OU with CT before it can be managed and governed by CT. When using CT and Landing Zone Accelerator together, Landing Zone Accelerator will not automate the creation of additional OUs, as there is currently not an automated mechanism to enroll the newly created OU with CT. This design decision minimizes opportunities for environment drift with CT.
+
+When using Landing Zone Accelerator without CT, this additional step is not required.
+
+For more information on enrolling OUs in Landing Zone Accelerator, please see [Adding an Organizational Unit (OU)](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/administrator-tasks.html#adding-an-organizational-unit-ou) in the solution implementation guide.
+
+### How do I create additional accounts when using CT and Landing Zone Accelerator?
+When new account entries are added to the Landing Zone Accelerator `accounts-config.yaml` configuration file and the Core pipeline is released, Landing Zone Accelerator will utilize the CT Account Factory Service Catalog product to generate the new accounts. Similar to OUs, accounts that are generated outside of CT require you to enroll the account with CT before it can be managed and governed by CT. If you create an account outside of Control Tower (likely directly through the Organizations console or API), you can add the account information to the Landing Zone Accelerator configuration and the solution will automatically enroll the new account into CT using the CT Account Factory Service Catalog product.
+
+For more information on enrolling new accounts in Landing Zone Accelerator, please see [Adding a new account](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/administrator-tasks.html#adding-a-new-account) in the solution implementation guide.
+
+### How do I add existing accounts when using CT and Landing Zone Accelerator?
+Please refer to [Adding an existing account](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/administrator-tasks.html#adding-an-existing-account) in the solution implementation guide for guidance on adding an existing account to your Landing Zone Accelerator environment. 
+
+### How do I manage my SCPs when using CT and Landing Zone Accelerator?
+You can use Landing Zone Accelerator to deploy custom SCPs into your environment in addition to the SCPs that are deployed and managed by CT. Landing Zone Accelerator will only manage SCPs that are part of the accelerator configuration, and will not manage any SCPs that are deployed by CT. Note, Organizations sets a limit of 5 SCPs per OU and CT will consume up to 3 SCPs which will leave 2 additional SCPs that you can add. For finer grained SCPs, Landing Zone Accelerator also allows you to deploy custom SCPs to specific accounts.
+
+For more information on managing SCPs in Landing Zone Accelerator, please see [Adding a Service Control Policy (SCP)](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/administrator-tasks.html#adding-a-service-control-policy-scp) in the solution implementation guide.
+
+### How do I troubleshoot deployment and validation errors?
+Common troubleshooting scenarios are documented in the [Troubleshooting](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/troubleshooting.html) section of the solution implementation guide. This section will continue to grow with additional scenarios as common deployment and environment validation error cases are reported. 
+
 ## Networking - General
 
 ### What is the purpose of the `centralNetworkServices` configuration block?
@@ -143,6 +171,18 @@ The `vpcs` block serves as a way to define VPCs that are only meant to be deploy
 
 `vpcTemplates` is useful for deploying a standard VPC size across multiple workload accounts or organizational units (OUs) in a single region. An example of this would be deploying a standard workload VPC to all accounts under a development OU. This feature utilizes VPC IPAM to ensure VPC CIDR ranges do not conflict but are provisioned with the same CIDR prefix length across all deployment target accounts. So long as the IPAM pool is not depleted, new VPCs will automatically be vended when accounts are registered to an OU and the accelerator pipeline is released, unless the account is explicitly excluded in the `deploymentTargets` configuration property. 
 
+### How do I define a centralized interface endpoint VPC?
+Landing Zone Accelerator automates the heavy lifting associated with the configuration and management of a centralized interface endpoint VPC. This is facilitated through the `central` property under the `interfaceEndpoints` configuration in a [VpcConfig](https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.VpcConfig.html). Setting `central: true` will automate the provisioning of Route 53 private hosted zones for each endpoint service defined under this `interfaceEndpoints` configuration. 
+
+Additionally, to utilize these central endpoints from other VPCs and VPC templates, you may define `useCentralEndpoints: true` in their respective configuration blocks in order to automate the necessary private hosted zone associations to those VPCs. 
+
+**Notes:** 
+1. Additional network routing, such as routes via Transit Gateway or VPC peering, must be in place so API calls from spoke VPCs can reach the central interface endpoints VPC.
+2. Only one central interface endpoint VPC may be defined per AWS region.
+3. A VPC template cannot be used as a target for central endpoints.
+
+For additional information on this design pattern, refer to [Centralized access to VPC private endpoints](https://docs.aws.amazon.com/whitepapers/latest/building-scalable-secure-multi-vpc-network-infrastructure/centralized-access-to-vpc-private-endpoints.html) from the AWS Whitepaper *Building a Scalable and Secure Multi-VPC AWS Network Infrastructure*
+
 ## Networking - Deep Packet Inspection Architectures
 
 ### What architectural design patterns can I leverage with Landing Zone Accelerator?
@@ -151,6 +191,7 @@ The accelerator network configuration offers much flexibility in terms of core n
 Using the accelerator, you can define any number of core and workload VPCs for your environment. For network security purposes, a centralized inspection or firewall VPC should be established in the delegated administrator account. This VPC is used for deploying either AWS Network Firewall or Gateway Load Balancer. You define your network boundaries and filtering rules via policies applied to the Network Firewall or third-party security appliances behind Gateway Load Balancer. You can then define a routing strategy via Transit Gateway and VPC subnet route tables to ensure your north-south and east-west traffic is inspected and filtered appropriately.
 
 [AWS Whitepaper: Building a Scalable and Secure Multi-VPC AWS Network Infrastructure](https://docs.aws.amazon.com/whitepapers/latest/building-scalable-secure-multi-vpc-network-infrastructure/welcome.html)
+
 [AWS Prescriptive Guidance: The AWS Security Reference Architecture](https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/welcome.html)
 
 ### How do I enable inspection at the edge of my VPC for public-facing workloads?
@@ -234,7 +275,9 @@ Gateway Load Balancer configuration reference: https://awslabs.github.io/landing
 More information on zonal dependencies for GWLB endpoints: https://docs.aws.amazon.com/vpc/latest/privatelink/create-gateway-load-balancer-endpoint-service.html
 
 ### Can I create a target group for my Gateway Load Balancer?
-No. At this time, creation of next-generation firewall appliances and target groups for those appliances are not supported by the accelerator. This feature is targeted for a forthcoming release. In the interim, infrastructure as code external to the accelerator codebase can be used to create target groups and appliances for accelerator-created GWLBs.
+Yes. As of v1.3.0 of the accelerator, EC2-based next-generation firewalls and target groups may be defined in the `customizations-config.yaml` accelerator configuration file. You may reference the target group name as the `targetGroup` property of a Gateway Load Balancer configuration in `network-config.yaml`, which tells the accelerator to place the configured instances/autoscaling groups into a target group for that Gateway Load Balancer.
+
+**Note:** Gateway Load Balancers only support target groups using the GENEVE protocol and port 6081. If the target group uses any other configuration, an error will be thrown during the validation. 
 
 ### How do I deploy Gateway Load Balancer endpoints?
 GWLB endpoints are configured under the `endpoints` property of the `gatewayLoadBalancers` configuration object in the `network-config.yaml` accelerator configuration file. Endpoints can be deployed to any account that the accelerator manages, enabling the concept of separate security trust zones for north-south and east-west packet flows. These endpoints are consumers of an endpoint service that is created alongside the Gateway Load Balancer. 
