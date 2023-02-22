@@ -108,6 +108,16 @@ export async function updateRetentionPolicy(logRetentionValue: string, logGroupV
     console.log(
       `Log Group: ${logGroupValue.logGroupName} retention cannot be changed as its enforced by AWS Control Tower`,
     );
+  } else if (logGroupValue.retentionInDays! > parseInt(logRetentionValue)) {
+    // log group has higher retention than LZA specified retention
+    console.log(
+      'Log Group: ' + logGroupValue.logGroupName! + ' has the higher retention period. No changes will be made.',
+    );
+  } else if (!logGroupValue.retentionInDays) {
+    // log group has infinite retention
+    console.log(
+      'Log Group: ' + logGroupValue.logGroupName! + ' has the infinite retention period. No changes will be made.',
+    );
   } else {
     console.log(`Setting retention of ${logRetentionValue} for log group ${logGroupValue.logGroupName}`);
     await throttlingBackOff(() =>
@@ -163,8 +173,8 @@ export async function processExclusion(
   logGroupName: string,
   logExclusionSetting: cloudwatchExclusionProcessedItem,
 ) {
+  const page_length: number = page.subscriptionFilters?.length || 0;
   if (logExclusionSetting.excludeAll) {
-    const page_length: number = page.subscriptionFilters?.length || 0;
     if (page_length > 0) {
       // there is a subscription filter for this log group. Find and delete the one accelerator created.
       for (const subFilter of page.subscriptionFilters ?? []) {
@@ -173,6 +183,8 @@ export async function processExclusion(
         }
       }
     }
+  } else if (page_length === 0) {
+    console.log(`There were no subscription filters found for log group ${logGroupName}`);
   } else if (!logExclusionSetting.excludeAll && (logExclusionSetting.logGroupNames ?? [])) {
     // check to see if excludeAll is not provided and logGroupNames are provided
     // logGroupNames can be empty so check length
