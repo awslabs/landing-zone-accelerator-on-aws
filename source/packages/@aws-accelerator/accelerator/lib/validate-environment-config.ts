@@ -17,7 +17,6 @@ import { Construct } from 'constructs';
 import path = require('path');
 
 export interface ValidateEnvironmentConfigProps {
-  readonly globalRegion: string;
   readonly acceleratorConfigTable: cdk.aws_dynamodb.ITable;
   readonly newOrgAccountsTable: cdk.aws_dynamodb.ITable;
   readonly newCTAccountsTable: cdk.aws_dynamodb.ITable;
@@ -30,7 +29,6 @@ export interface ValidateEnvironmentConfigProps {
   readonly partition: string;
   readonly driftDetectionParameter: cdk.aws_ssm.IParameter;
   readonly driftDetectionMessageParameter: cdk.aws_ssm.IParameter;
-  readonly numberOfAccountsInConfig: number;
   /**
    * Custom resource lambda log group encryption key
    */
@@ -73,12 +71,6 @@ export class ValidateEnvironmentConfig extends Construct {
             'organizations:ListAccountsForParent',
             'organizations:ListParents',
           ],
-          Resource: '*',
-        },
-        {
-          Effect: 'Allow',
-          Sid: 'ServiceQuotaLookup',
-          Action: ['servicequotas:ListRequestedServiceQuotaChangeHistoryByQuota'],
           Resource: '*',
         },
         {
@@ -125,7 +117,6 @@ export class ValidateEnvironmentConfig extends Construct {
       resourceType: VALIDATE_ENVIRONMENT_RESOURCE_TYPE,
       serviceToken: provider.serviceToken,
       properties: {
-        globalRegion: props.globalRegion,
         configTableName: props.acceleratorConfigTable.tableName,
         newOrgAccountsTableName: props.newOrgAccountsTable.tableName,
         newCTAccountsTableName: props.newCTAccountsTable?.tableName || '',
@@ -136,7 +127,6 @@ export class ValidateEnvironmentConfig extends Construct {
         partition: props.partition,
         driftDetectionParameterName: props.driftDetectionParameter.parameterName,
         driftDetectionMessageParameterName: props.driftDetectionMessageParameter.parameterName,
-        numberOfAccountsInConfig: props.numberOfAccountsInConfig,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });

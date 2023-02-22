@@ -3788,14 +3788,6 @@ Object {
                 },
                 Object {
                   "Action": Array [
-                    "servicequotas:ListRequestedServiceQuotaChangeHistoryByQuota",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
-                  "Sid": "ServiceQuotaLookup",
-                },
-                Object {
-                  "Action": Array [
                     "dynamodb:PutItem",
                   ],
                   "Effect": "Allow",
@@ -4414,14 +4406,12 @@ Object {
         "driftDetectionParameterName": Object {
           "Ref": "AcceleratorControlTowerDriftParameter217B3055",
         },
-        "globalRegion": "us-east-1",
         "newCTAccountsTableName": Object {
           "Ref": "NewCTAccountsE326CD07",
         },
         "newOrgAccountsTableName": Object {
           "Ref": "NewOrgAccountsE5BA262F",
         },
-        "numberOfAccountsInConfig": 6,
         "organizationsEnabled": true,
         "partition": "aws",
         "stackName": "AWSAccelerator-PrepareStack-111111111111-us-east-1",
