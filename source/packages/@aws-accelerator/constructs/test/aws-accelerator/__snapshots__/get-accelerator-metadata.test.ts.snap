@@ -3,7 +3,7 @@
 exports[`AcceleratorMetadata Construct(AcceleratorMetadata):  Snapshot Test 1`] = `
 Object {
   "Resources": Object {
-    "AcceleratorMetadatametadatalambda0523607D": Object {
+    "AcceleratorMetadataMetadataLambdaC27FFAF6": Object {
       "Properties": Object {
         "AssumeRolePolicyDocument": Object {
           "Statement": Array [
@@ -36,7 +36,7 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "AcceleratorMetadatametadatalambdaDefaultPolicy8DF80804": Object {
+    "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6": Object {
       "Metadata": Object {
         "cdk_nag": Object {
           "rules_to_suppress": Array [
@@ -73,76 +73,68 @@ Object {
                 "organizations:ListParents",
                 "organizations:ListRoots",
                 "ssm:GetParameter",
+                "sts:AssumeRole",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            Object {
+              "Action": Array [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
                 "s3:DeleteObject*",
+                "s3:PutObjectAcl",
                 "s3:PutObject",
                 "s3:PutObjectLegalHold",
                 "s3:PutObjectRetention",
                 "s3:PutObjectTagging",
                 "s3:PutObjectVersionTagging",
                 "s3:Abort*",
-                "sts:AssumeRole",
               ],
               "Effect": "Allow",
-              "Resource": "*",
+              "Resource": Array [
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::testMetadataLogBucket",
+                    ],
+                  ],
+                },
+                Object {
+                  "Fn::Join": Array [
+                    "",
+                    Array [
+                      "arn:",
+                      Object {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::testMetadataLogBucket/*",
+                    ],
+                  ],
+                },
+              ],
             },
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "AcceleratorMetadatametadatalambdaDefaultPolicy8DF80804",
+        "PolicyName": "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6",
         "Roles": Array [
           Object {
-            "Ref": "AcceleratorMetadatametadatalambda0523607D",
+            "Ref": "AcceleratorMetadataMetadataLambdaC27FFAF6",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "AcceleratorMetadatatestmetadatacollection66BD983B": Object {
-      "DependsOn": Array [
-        "AcceleratorMetadatametadatalambdaDefaultPolicy8DF80804",
-        "AcceleratorMetadatametadatalambda0523607D",
-        "testmetadatacollectionLogGroup821A8456",
-      ],
+    "AcceleratorMetadataTestMetadataCollectionRule5267BEAF": Object {
       "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
-            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
-          },
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Environment": Object {
-          "Variables": Object {
-            "ACCELERATOR_PREFIX": "test",
-            "CENTRAL_LOG_BUCKET": "centralLogBucketTest",
-            "CONFIG_REPOSITORY_NAME": "aws-config-test",
-            "CROSS_ACCOUNT_ROLE": "testRole",
-            "ELB_LOGGING_BUCKET": "elbLogBucketNameTest",
-            "LOG_ACCOUNT_ID": "111111111111",
-            "METADATA_BUCKET": "testMetadataLogBucket",
-            "ORGANIZATION_ID": "ou-test123",
-            "PARTITION": Object {
-              "Ref": "AWS::Partition",
-            },
-          },
-        },
-        "FunctionName": "test-metadata-collection",
-        "Handler": "index.handler",
-        "Role": Object {
-          "Fn::GetAtt": Array [
-            "AcceleratorMetadatametadatalambda0523607D",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs14.x",
-        "Timeout": 600,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "AcceleratorMetadatatestmetadatacollectionrule60EE51E8": Object {
-      "Properties": Object {
+        "Name": "test-metadata-collection-rule",
         "ScheduleExpression": "rate(1 day)",
         "State": "ENABLED",
         "Targets": Array [
@@ -159,7 +151,7 @@ Object {
       },
       "Type": "AWS::Events::Rule",
     },
-    "AcceleratorMetadatatestmetadatacollectionruleAllowEventRuleAcceleratorMetadatatestmetadatacollection9A57BB5A62D9A086": Object {
+    "AcceleratorMetadataTestMetadataCollectionRuleAllowEventRuleAcceleratorMetadatatestmetadatacollection9A57BB5ABC996B82": Object {
       "Properties": Object {
         "Action": "lambda:InvokeFunction",
         "FunctionName": Object {
@@ -171,12 +163,54 @@ Object {
         "Principal": "events.amazonaws.com",
         "SourceArn": Object {
           "Fn::GetAtt": Array [
-            "AcceleratorMetadatatestmetadatacollectionrule60EE51E8",
+            "AcceleratorMetadataTestMetadataCollectionRule5267BEAF",
             "Arn",
           ],
         },
       },
       "Type": "AWS::Lambda::Permission",
+    },
+    "AcceleratorMetadatatestmetadatacollection66BD983B": Object {
+      "DependsOn": Array [
+        "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6",
+        "AcceleratorMetadataMetadataLambdaC27FFAF6",
+        "testmetadatacollectionLogGroup821A8456",
+      ],
+      "Properties": Object {
+        "Code": Object {
+          "S3Bucket": Object {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Environment": Object {
+          "Variables": Object {
+            "ACCELERATOR_PREFIX": "test",
+            "CENTRAL_LOG_BUCKET": "centralLogBucketTest",
+            "CONFIG_REPOSITORY_NAME": "aws-config-test",
+            "CROSS_ACCOUNT_ROLE": "testRole",
+            "ELB_LOGGING_BUCKET": "elbLogBucketNameTest",
+            "GLOBAL_REGION": "us-east-1",
+            "LOG_ACCOUNT_ID": "111111111111",
+            "METADATA_BUCKET": "testMetadataLogBucket",
+            "ORGANIZATION_ID": "ou-test123",
+            "PARTITION": Object {
+              "Ref": "AWS::Partition",
+            },
+          },
+        },
+        "FunctionName": "test-metadata-collection",
+        "Handler": "index.handler",
+        "Role": Object {
+          "Fn::GetAtt": Array [
+            "AcceleratorMetadataMetadataLambdaC27FFAF6",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 600,
+      },
+      "Type": "AWS::Lambda::Function",
     },
     "CustomKey1E6D0D07": Object {
       "DeletionPolicy": "Retain",

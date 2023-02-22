@@ -14,7 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
-
+import { pascalCase } from 'change-case';
 const path = require('path');
 
 /**
@@ -61,10 +61,11 @@ export interface AcceleratorMetadataProps {
   /**
    * Accelerator Config Repository Name
    */
-  readonly acceleratorConfigRepository: string;
+  readonly acceleratorConfigRepositoryName: string;
   /**
-   * Central Log Bucket
+   * Global Region
    */
+  readonly globalRegion?: string;
 }
 
 /**
@@ -83,18 +84,18 @@ export class AcceleratorMetadata extends Construct {
     const functionName = `${props.acceleratorPrefix}-metadata-collection`;
 
     const lambdaCode = cdk.aws_lambda.Code.fromAsset(path.join(__dirname, 'get-accelerator-metadata/dist'));
-    this.role = this.createLambdaRole(props.acceleratorPrefix, account, region);
+    this.role = this.createLambdaRole(props.acceleratorPrefix, account, region, props.metadataLogBucketName);
     this.lambdaFunction = this.createLambdaFunction(functionName, stack, lambdaCode, this.role, props);
     this.rule = this.createMetadataCloudwatchRule(props.acceleratorPrefix, this.lambdaFunction.lambda);
     this.setCdkNagSuppressions(stack, id, this.role);
   }
 
-  private createLambdaRole(acceleratorPrefix: string, account: string, region: string) {
-    const lambdaRole = new cdk.aws_iam.Role(this, 'metadata-lambda', {
+  private createLambdaRole(acceleratorPrefix: string, account: string, region: string, metadataLogBucketName: string) {
+    const lambdaRole = new cdk.aws_iam.Role(this, 'MetadataLambda', {
       assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
       roleName: `${acceleratorPrefix}-${account}-${region}-metadata-lambda-role`,
     });
-
+    console.log(lambdaRole.node.tryGetContext('suffix'));
     lambdaRole.addToPolicy(
       new cdk.aws_iam.PolicyStatement({
         effect: cdk.aws_iam.Effect.ALLOW,
@@ -120,19 +121,31 @@ export class AcceleratorMetadata extends Construct {
           'organizations:ListParents',
           'organizations:ListRoots',
           'ssm:GetParameter',
+          'sts:AssumeRole',
+        ],
+        resources: [`*`],
+      }),
+    );
+    lambdaRole.addToPolicy(
+      new cdk.aws_iam.PolicyStatement({
+        effect: cdk.aws_iam.Effect.ALLOW,
+        actions: [
           's3:GetObject*',
           's3:GetBucket*',
           's3:List*',
           's3:DeleteObject*',
+          's3:PutObjectAcl',
           's3:PutObject',
           's3:PutObjectLegalHold',
           's3:PutObjectRetention',
           's3:PutObjectTagging',
           's3:PutObjectVersionTagging',
           's3:Abort*',
-          'sts:AssumeRole',
         ],
-        resources: ['*'],
+        resources: [
+          `arn:${cdk.Stack.of(this).partition}:s3:::${metadataLogBucketName}`,
+          `arn:${cdk.Stack.of(this).partition}:s3:::${metadataLogBucketName}/*`,
+        ],
       }),
     );
     return lambdaRole;
@@ -156,12 +169,13 @@ export class AcceleratorMetadata extends Construct {
         CROSS_ACCOUNT_ROLE: props.assumeRole,
         LOG_ACCOUNT_ID: props.loggingAccountId,
         PARTITION: cdk.Stack.of(this).partition,
-        CONFIG_REPOSITORY_NAME: props.acceleratorConfigRepository,
+        CONFIG_REPOSITORY_NAME: props.acceleratorConfigRepositoryName,
         ORGANIZATION_ID: props.organizationId,
         CENTRAL_LOG_BUCKET: props.centralLogBucketName,
         ELB_LOGGING_BUCKET: props.elbLogBucketName,
         METADATA_BUCKET: props.metadataLogBucketName,
         ACCELERATOR_PREFIX: props.acceleratorPrefix,
+        GLOBAL_REGION: props.globalRegion || 'us-east-1',
       },
     });
 
@@ -172,8 +186,9 @@ export class AcceleratorMetadata extends Construct {
     };
   }
   private createMetadataCloudwatchRule(acceleratorPrefix: string, targetFunction: cdk.aws_lambda.Function) {
-    const rule = new cdk.aws_events.Rule(this, `${acceleratorPrefix}-metadata-collection-rule`, {
+    const rule = new cdk.aws_events.Rule(this, pascalCase(`${acceleratorPrefix}MetadataCollectionRule`), {
       schedule: cdk.aws_events.Schedule.rate(cdk.Duration.days(1)),
+      ruleName: `${acceleratorPrefix}-metadata-collection-rule`,
     });
 
     rule.addTarget(new cdk.aws_events_targets.LambdaFunction(targetFunction));

@@ -682,7 +682,18 @@ Object {
               ],
               "Condition": Object {
                 "ArnLike": Object {
-                  "aws:PrincipalARN": "arn:aws:iam::*:role/AWSAccelerator-*",
+                  "aws:PrincipalARN": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/AWSAccelerator-*",
+                      ],
+                    ],
+                  },
                 },
                 "StringEquals": Object {
                   "aws:PrincipalOrgID": Object {
@@ -3825,7 +3836,18 @@ Object {
               ],
               "Condition": Object {
                 "ArnLike": Object {
-                  "aws:PrincipalARN": "arn:aws:iam::*:role/AWSAccelerator-*",
+                  "aws:PrincipalARN": Object {
+                    "Fn::Join": Array [
+                      "",
+                      Array [
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::*:role/AWSAccelerator-*",
+                      ],
+                    ],
+                  },
                 },
                 "StringEquals": Object {
                   "aws:PrincipalOrgID": Object {

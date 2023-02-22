@@ -1912,7 +1912,7 @@ export class LoggingStack extends AcceleratorStack {
         const metadataBucket = new Bucket(this, 'AcceleratorMetadataBucket', {
           encryptionType: BucketEncryptionType.SSE_KMS,
           kmsAliasName: AcceleratorStack.ACCELERATOR_METADATA_KEY_ALIAS,
-          kmsDescription: 'The s3 bucket key for accelerator metadata collection',
+          kmsDescription: AcceleratorStack.ACCELERATOR_METADATA_KEY_DESCRIPTION,
           s3BucketName: `${AcceleratorStack.ACCELERATOR_METADATA_BUCKET_NAME_PREFIX}-${cdk.Stack.of(this).account}-${
             cdk.Stack.of(this).region
           }`,
@@ -1934,7 +1934,7 @@ export class LoggingStack extends AcceleratorStack {
                 ...this.getPrincipalOrgIdCondition(this.organizationId),
               },
               ArnLike: {
-                'aws:PrincipalARN': `arn:aws:iam::*:role/AWSAccelerator-*`,
+                'aws:PrincipalARN': `arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`,
               },
             },
           }),
@@ -1989,7 +1989,7 @@ export class LoggingStack extends AcceleratorStack {
         this.ssmParameters.push({
           logicalId: 'AcceleratorKmsMetadataAlias',
           parameterName: AcceleratorStack.ACCELERATOR_METADATA_KEY_ALIAS,
-          stringValue: 'accelerator/kms/metadata/key',
+          stringValue: AcceleratorStack.ACCELERATOR_METADATA_KEY_ALIAS,
         });
       }
     }

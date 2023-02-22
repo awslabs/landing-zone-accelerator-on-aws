@@ -396,11 +396,11 @@ export class SecurityStack extends AcceleratorStack {
     const metadataLogBucketName = `${
       AcceleratorStack.ACCELERATOR_METADATA_BUCKET_NAME_PREFIX
     }-${this.props.accountsConfig.getAccountId(acceleratorProps.globalConfig.acceleratorMetadata?.account)}-${
-      this.props.centralizedLoggingRegion
+      this.props.globalConfig.homeRegion
     }`;
 
-    return new AcceleratorMetadata(this, 'acceleratorMetadata', {
-      acceleratorConfigRepository: acceleratorProps.configRepositoryName,
+    return new AcceleratorMetadata(this, 'AcceleratorMetadata', {
+      acceleratorConfigRepositoryName: acceleratorProps.configRepositoryName,
       acceleratorPrefix: 'AWSAccelerator',
       assumeRole: acceleratorProps.globalConfig.managementAccountAccessRole,
       centralLogBucketName,
@@ -412,6 +412,7 @@ export class SecurityStack extends AcceleratorStack {
       logRetentionInDays: acceleratorProps.globalConfig.cloudwatchLogRetentionInDays,
       metadataLogBucketName: metadataLogBucketName,
       organizationId: acceleratorProps.organizationConfig.getOrganizationalUnitId('Root'),
+      globalRegion: acceleratorProps.globalRegion,
     });
   }
 }

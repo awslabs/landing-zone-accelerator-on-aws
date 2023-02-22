@@ -30,6 +30,8 @@ export async function handler(_event: AWSLambda.CloudFormationCustomResourceEven
     }
   | undefined
 > {
+  const globalRegion = process.env['GLOBAL_REGION'];
+  const solutionId = process.env['SOLUTION_ID'];
   const crossAccountRole = process.env['CROSS_ACCOUNT_ROLE']!;
   const logAccountId = process.env['LOG_ACCOUNT_ID']!;
   const partition = process.env['PARTITION'] || 'aws';
@@ -42,12 +44,12 @@ export async function handler(_event: AWSLambda.CloudFormationCustomResourceEven
   const metadataBucket = process.env['METADATA_BUCKET']!;
   const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'] || 'AWSAccelerator';
   const pipelineName = `${acceleratorPrefix}-Pipeline`;
-  const codeCommitClient = new AWS.CodeCommit();
-  const s3Client = new AWS.S3();
-  const ssmClient = new AWS.SSM();
-  const organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
-  const codePipelineClient = new AWS.CodePipeline();
-  const stsClient = new AWS.STS();
+  const codeCommitClient = new AWS.CodeCommit({ customUserAgent: solutionId });
+  const s3Client = new AWS.S3({ customUserAgent: solutionId });
+  const ssmClient = new AWS.SSM({ customUserAgent: solutionId });
+  const organizationsClient = new AWS.Organizations({ customUserAgent: solutionId, region: globalRegion });
+  const codePipelineClient = new AWS.CodePipeline({ customUserAgent: solutionId });
+  const stsClient = new AWS.STS({ customUserAgent: solutionId, region: globalRegion });
   const assumeRoleCredentials = await assumeRole(stsClient, crossAccountRole, logAccountId, partition);
   const s3ClientLoggingAccount = new AWS.S3({ credentials: assumeRoleCredentials });
   const kmsClientLoggingAccount = new AWS.KMS({ credentials: assumeRoleCredentials });
@@ -99,7 +101,6 @@ export async function handler(_event: AWSLambda.CloudFormationCustomResourceEven
   const bucketItems = await listBucketObjects(s3ClientLoggingAccount, metadataBucket);
 
   for (const item of bucketItems) {
-    console.log(item);
     await s3ClientLoggingAccount.deleteObject({ Bucket: metadataBucket, Key: item.Key! }).promise();
   }
 
@@ -109,7 +110,12 @@ export async function handler(_event: AWSLambda.CloudFormationCustomResourceEven
 
   for (const file of codeCommitFiles) {
     await s3Client
-      .putObject({ Bucket: metadataBucket, Key: `config/${file.filePath}`, Body: file.fileContents })
+      .putObject({
+        Bucket: metadataBucket,
+        Key: `config/${file.filePath}`,
+        Body: file.fileContents,
+        ACL: 'bucket-owner-full-control',
+      })
       .promise();
   }
 
@@ -272,6 +278,12 @@ async function getAllOusWithPaths(organizationsClient: AWS.Organizations) {
   if (rootResponse.Roots && rootResponse.Roots.length > 0) {
     ouIds.push(rootResponse.Roots[0].Id!);
     ouIdLookups.push({ id: rootResponse.Roots[0].Id!, parentId: '' });
+    ous.push({
+      id: rootResponse.Roots[0].Id!,
+      parentId: '',
+      arn: rootResponse.Roots[0].Arn!,
+      name: rootResponse.Roots[0].Name!,
+    });
   }
 
   while (ouIds.length > 0) {
@@ -296,8 +308,12 @@ async function getAllOusWithPaths(organizationsClient: AWS.Organizations) {
     }
   }
   for (const ou of ous) {
-    const path = getOrgPath(ous, ou.id);
-    ou['path'] = path;
+    if (ou.id.startsWith('r-')) {
+      ou['path'] = '/';
+    } else {
+      const path = getOrgPath(ous, ou.id);
+      ou['path'] = path;
+    }
   }
   return ous;
 }
