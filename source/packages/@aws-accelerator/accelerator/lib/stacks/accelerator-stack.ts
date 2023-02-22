@@ -155,7 +155,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
   public static readonly ACCELERATOR_METADATA_KEY_ALIAS = '/alias/accelerator/kms/metadata/key';
 
   /**
-   * Accelerator Metadata KMS key alias
+   * Accelerator Metadata KMS key description
+   */
+  public static readonly ACCELERATOR_METADATA_KEY_DESCRIPTION = 'The s3 bucket key for accelerator metadata collection';
+
+  /**
+   * Accelerator Metadata KMS key arn
    */
 
   public static readonly ACCELERATOR_METADATA_KEY_ARN = '/accelerator/kms/metadata/key-arn';

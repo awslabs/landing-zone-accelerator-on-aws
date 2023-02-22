@@ -1523,6 +1523,9 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
         // sessionManager settings validation
         //
         this.validateSessionManager(values, configDir, errors);
+        //
+        //metadata validation
+        this.validateAcceleratorMetadata(values, accountNames, errors);
       }
     } else {
       this.homeRegion = props.homeRegion;
@@ -1927,6 +1930,20 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
     }
   }
 
+  private validateAcceleratorMetadata(
+    values: t.TypeOf<typeof GlobalConfigTypes.globalConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    if (!values.acceleratorMetadata) {
+      return;
+    }
+    if (!accountNames.find(account => account === values.acceleratorMetadata?.account)) {
+      errors.push(
+        `The account with the name ${values.acceleratorMetadata.account} defined in acceleratorMetadata does not exist in the accounts config`,
+      );
+    }
+  }
   public getSnsTopicNames(): string[] {
     return this.snsTopics?.topics.flatMap(item => item.name) ?? [];
   }

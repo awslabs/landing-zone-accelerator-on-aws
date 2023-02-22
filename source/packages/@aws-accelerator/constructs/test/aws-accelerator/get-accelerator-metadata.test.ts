@@ -21,7 +21,7 @@ const testNamePrefix = 'Construct(AcceleratorMetadata): ';
 const stack = new cdk.Stack();
 
 new AcceleratorMetadata(stack, 'AcceleratorMetadata', {
-  acceleratorConfigRepository: 'aws-config-test',
+  acceleratorConfigRepositoryName: 'aws-config-test',
   acceleratorPrefix: 'test',
   assumeRole: 'testRole',
   centralLogBucketName: 'centralLogBucketTest',
