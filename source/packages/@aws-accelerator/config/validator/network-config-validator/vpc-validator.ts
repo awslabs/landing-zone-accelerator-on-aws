@@ -193,6 +193,62 @@ export class VpcValidator {
   }
 
   /**
+   * Validate route tables for a given VPC
+   * @param values
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private validateRouteTables(
+    values: NetworkConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    // Validate route tables names
+    this.validateRouteTableNames(vpcItem, helpers, errors);
+    // Validate route entries
+    this.validateRouteTableEntries(values, vpcItem, errors);
+  }
+
+  /**
+   * Validate route table and route entry names
+   * @param vpcItem
+   * @param helpers
+   * @param errors
+   */
+  private validateRouteTableNames(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    const routeTableNames: string[] = [];
+
+    vpcItem.routeTables?.forEach(routeTable => {
+      const routeEntryNames: string[] = [];
+      routeTableNames.push(routeTable.name);
+
+      routeTable.routes.forEach(route => {
+        routeEntryNames.push(route.name);
+      });
+
+      // Check if there are duplicate route entry names
+      if (helpers.hasDuplicates(routeEntryNames)) {
+        errors.push(
+          `[VPC ${vpcItem.name} route table ${routeTable.name}]: duplicate route entry names defined. Route entry names must be unique per route table. Route entry names configured: ${routeEntryNames}`,
+        );
+      }
+    });
+
+    // Check if there are duplicate route table names
+    if (helpers.hasDuplicates(routeTableNames)) {
+      errors.push(
+        `[VPC ${vpcItem.name}]: duplicate route table names defined. Route table names must be unique per VPC. Route table names configured: ${routeTableNames}`,
+      );
+    }
+  }
+
+  /**
    * Validate route entries have a valid destination configured
    * @param routeTableEntryItem
    * @param routeTableName
@@ -499,9 +555,9 @@ export class VpcValidator {
         //
         this.validateResolverRules(values, vpcItem, helpers, errors);
         //
-        // Validate route entries
+        // Validate route tables
         //
-        this.validateRouteTableEntries(values, vpcItem, errors);
+        this.validateRouteTables(values, vpcItem, helpers, errors);
         //
         // Validate security groups
         //
