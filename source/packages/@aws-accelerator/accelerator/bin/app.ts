@@ -855,5 +855,6 @@ async function main() {
     await main();
   } catch (err) {
     logger.error(err);
+    throw new Error(`${err}`);
   }
 })();
