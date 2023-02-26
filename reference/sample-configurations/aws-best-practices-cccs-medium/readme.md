@@ -58,21 +58,26 @@ Use the following steps to deploy this solution on AWS. For detailed instruction
 
 - Await successful completion of `AWSAccelerator-Pipeline` pipeline.
 
-Step 3. Update the configuration files
+Step 3. Copy the configuration files
 
-- Navigate to the `aws-accelerator-config` AWS CodeCommit repository.
+- Clone the `aws-accelerator-config` AWS CodeCommit repository.
+- Clone the `landing-zone-accelerator-on-aws` repo
+- Copy the contents from the `aws-best-practice-cccs-medium` folder under reference/sample-configurations to your local `aws-accelerator-config` repo. You may be prompted to over-write duplicate configs, such as accounts-config.yaml.
 
-- Update the configuration files to match the desired state of your environment, including the desired home region. Look for the #UPDATE EMAIL ADDRESS comments in all files for areas requiring updates.
-- Release a change manually to the AWSAccelerator-Pipeline pipeline.
+Step 4. Update the configuration files and release a change.
+
+- Using the IDE of your choice, in your local `aws-accelerator-config` repo, update the variables at the top of each config, such as `homeRegion`, to match where you deployed the solution to.
+- Update the configuration files to match the desired state of your environment. Look for the UPDATE comments for areas requiring updates, such as e-mail addresses in your accounts-config.yaml
+- Review the contents in the Security Controls section below to understand if any changes need to be made to meet organizational requirements, such as applying SCPs to the various OUs.
+- Commit and push all your change to the `aws-accelerator-config` AWS CodeCommit repository.
+- Release a change manually to the `AWSAccelerator-Pipeline` pipeline.
 - After the **Accounts** stage completes, the **Network** account will be created. VPC service quotas need to be increased in the Network account before the Networking phase begins or the Pipeline will fail. This is approximately 20 minutes after the **Accounts** stage completes. (If it does, executing a **Retry** is the next action).
-
 - Two service limits need to be increased in the **Network** AWS Account. Follow these steps:
   - Assume the **OrganizationAccountAccessRole** role into the **Network** account. (The AWS Account ID can be determined in AWS Organizations)
   - Navigate to **Service Quotas → AWS Services**
   - Search for **VPC** and select when found
-  - Click on **Interface VPC endpoints per VPC** (Quota Code: L-29B6F2EB) and request a quota increase to 90
+  - Click on Interface **VPC endpoints per VPC** (Quota Code: L-29B6F2EB) and request a quota increase to 90
   - Click on **VPCs per Region** (Quota Code: L-F678F1CE) and request a quota increase to 8
   - (It takes approximately 15-30 minutes for the requested quota increase to apply)
 - (optional) Retry the failed Pipeline Stage if the quota increase was not completed in time.
 - Await successful completion of `AWSAccelerator-Pipeline` pipeline.
-
