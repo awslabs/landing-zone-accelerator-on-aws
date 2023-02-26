@@ -1,27 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ResourceShare Construct(ResourceShare):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomKey1E6D0D07": Object {
+{
+  "Resources": {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -38,55 +38,55 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "ResourceShareTestResourceShareResourceShare8D7B67C7": Object {
-      "Properties": Object {
+    "ResourceShareTestResourceShareResourceShare8D7B67C7": {
+      "Properties": {
         "AllowExternalPrincipals": true,
         "Name": "TestResourceShare",
-        "PermissionArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "PermissionArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":s3:::test-bucket-1-",
-                Object {
+                {
                   "Ref": "AWS::AccountId",
                 },
                 "-",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
               ],
             ],
           },
-          Object {
-            "Fn::Join": Array [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":s3:::test-bucket-2-",
-                Object {
+                {
                   "Ref": "AWS::AccountId",
                 },
                 "-",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
               ],
             ],
           },
         ],
-        "Principals": Array [
+        "Principals": [
           "accountID",
           "organizationUnitId",
         ],
-        "ResourceArns": Array [
+        "ResourceArns": [
           "ec2:TransitGateway",
         ],
       },
@@ -97,27 +97,27 @@ Object {
 `;
 
 exports[`ResourceShareItem Construct(ResourceShare):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomKey1E6D0D07": Object {
+{
+  "Resources": {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -134,55 +134,55 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "ResourceShareTestResourceShareResourceShare8D7B67C7": Object {
-      "Properties": Object {
+    "ResourceShareTestResourceShareResourceShare8D7B67C7": {
+      "Properties": {
         "AllowExternalPrincipals": true,
         "Name": "TestResourceShare",
-        "PermissionArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "PermissionArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":s3:::test-bucket-1-",
-                Object {
+                {
                   "Ref": "AWS::AccountId",
                 },
                 "-",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
               ],
             ],
           },
-          Object {
-            "Fn::Join": Array [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":s3:::test-bucket-2-",
-                Object {
+                {
                   "Ref": "AWS::AccountId",
                 },
                 "-",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
               ],
             ],
           },
         ],
-        "Principals": Array [
+        "Principals": [
           "accountID",
           "organizationUnitId",
         ],
-        "ResourceArns": Array [
+        "ResourceArns": [
           "ec2:TransitGateway",
         ],
       },

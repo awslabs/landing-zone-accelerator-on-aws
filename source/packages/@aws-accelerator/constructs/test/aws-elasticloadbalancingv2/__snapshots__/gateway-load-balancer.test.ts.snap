@@ -1,25 +1,25 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`GatewayLoadBalancer Construct(GatewayLoadBalancer):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "Test7BFAF513": Object {
-      "Properties": Object {
-        "LoadBalancerAttributes": Array [
-          Object {
+{
+  "Resources": {
+    "Test7BFAF513": {
+      "Properties": {
+        "LoadBalancerAttributes": [
+          {
             "Key": "deletion_protection.enabled",
             "Value": "true",
           },
-          Object {
+          {
             "Key": "load_balancing.cross_zone.enabled",
             "Value": "true",
           },
         ],
-        "Subnets": Array [
+        "Subnets": [
           "subnet-test123",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Test",
           },
@@ -28,26 +28,26 @@ Object {
       },
       "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
     },
-    "TestEndpointServiceDD0E3344": Object {
-      "Properties": Object {
+    "TestEndpointServiceDD0E3344": {
+      "Properties": {
         "AcceptanceRequired": false,
-        "GatewayLoadBalancerArns": Array [
-          Object {
+        "GatewayLoadBalancerArns": [
+          {
             "Ref": "Test7BFAF513",
           },
         ],
       },
       "Type": "AWS::EC2::VPCEndpointService",
     },
-    "TestEndpointServicePermissionsC0FA4150": Object {
-      "Properties": Object {
-        "AllowedPrincipals": Array [
-          Object {
-            "Fn::Join": Array [
+    "TestEndpointServicePermissionsC0FA4150": {
+      "Properties": {
+        "AllowedPrincipals": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::333333333333:root",
@@ -55,7 +55,7 @@ Object {
             ],
           },
         ],
-        "ServiceId": Object {
+        "ServiceId": {
           "Ref": "TestEndpointServiceDD0E3344",
         },
       },

@@ -1,20 +1,20 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`FinalizeStack Construct(FinalizeStack):  Snapshot Test 1`] = `
-Object {
-  "Parameters": Object {
-    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+{
+  "Parameters": {
+    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratororganizationsscpQuarantineidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratororganizationsscpQuarantineidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/organizations/scp/Quarantine/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
-  "Resources": Object {
-    "AcceleratorCommitIdParameterEF286FB9": Object {
-      "Properties": Object {
+  "Resources": {
+    "AcceleratorCommitIdParameterEF286FB9": {
+      "Properties": {
         "Description": "The commit hash of the latest aws-accelerator-config commit to deploy successfully",
         "Name": "/accelerator/configuration/configCommitId",
         "Type": "String",
@@ -22,19 +22,19 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "CustomDetachQuarantineScpCustomResourceProviderHandlerA1F1C263": Object {
-      "DependsOn": Array [
+    "CustomDetachQuarantineScpCustomResourceProviderHandlerA1F1C263": {
+      "DependsOn": [
         "CustomDetachQuarantineScpCustomResourceProviderRoleE5C433C1",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomDetachQuarantineScpCustomResourceProviderRoleE5C433C1",
             "Arn",
           ],
@@ -44,18 +44,18 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomDetachQuarantineScpCustomResourceProviderLogGroupD9E0EA42": Object {
+    "CustomDetachQuarantineScpCustomResourceProviderLogGroupD9E0EA42": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomDetachQuarantineScpCustomResourceProviderHandlerA1F1C263",
               },
             ],
@@ -66,49 +66,49 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomDetachQuarantineScpCustomResourceProviderRoleE5C433C1": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomDetachQuarantineScpCustomResourceProviderRoleE5C433C1": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "organizations:ListAccounts",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
                   "Sid": "organizations",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "organizations:DetachPolicy",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:aws:organizations::111111111111:policy/o-*/service_control_policy/",
-                          Object {
+                          {
                             "Ref": "SsmParameterValueacceleratororganizationsscpQuarantineidC96584B6F00A464EAD1953AFF4B05118Parameter",
                           },
                         ],
@@ -127,19 +127,19 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "DetachQuarantineScpD09A8004": Object {
+    "DetachQuarantineScpD09A8004": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomDetachQuarantineScpCustomResourceProviderLogGroupD9E0EA42",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomDetachQuarantineScpCustomResourceProviderHandlerA1F1C263",
             "Arn",
           ],
         },
-        "scpPolicyId": Object {
+        "scpPolicyId": {
           "Ref": "SsmParameterValueacceleratororganizationsscpQuarantineidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "uuid": "REPLACED-UUID",
@@ -147,19 +147,19 @@ Object {
       "Type": "Custom::DetachQuarantineScp",
       "UpdateReplacePolicy": "Delete",
     },
-    "SsmParamAcceleratorVersionFF83282D": Object {
-      "Properties": Object {
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-FinalizeStack-111111111111-us-east-1/version",
         "Type": "String",
         "Value": "1.3.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamStackId521A78D3": Object {
-      "Properties": Object {
+    "SsmParamStackId521A78D3": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-FinalizeStack-111111111111-us-east-1/stack-id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "AWS::StackId",
         },
       },

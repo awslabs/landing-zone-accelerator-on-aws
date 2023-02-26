@@ -1,23 +1,23 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`SharePortfolioWithOrg Construct(SharePortfolioWithOrg):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D": {
+      "DependsOn": [
         "CustomSharePortfolioWithOrgCustomResourceProviderRoleD968FEC7",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomSharePortfolioWithOrgCustomResourceProviderRoleD968FEC7",
             "Arn",
           ],
@@ -27,21 +27,21 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D": Object {
+    "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D",
               },
             ],
@@ -52,31 +52,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomSharePortfolioWithOrgCustomResourceProviderRoleD968FEC7": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomSharePortfolioWithOrgCustomResourceProviderRoleD968FEC7": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "servicecatalog:CreatePortfolioShare",
                     "servicecatalog:UpdatePortfolioShare",
                     "servicecatalog:DeletePortfolioShare",
@@ -97,25 +97,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "Key961B73FD": Object {
+    "Key961B73FD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -132,14 +132,14 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "SharePortfolioWithOrgPortfolioShareRoot6FBF67ED": Object {
+    "SharePortfolioWithOrgPortfolioShareRoot6FBF67ED": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D",
             "Arn",
           ],
@@ -152,14 +152,14 @@ Object {
       "Type": "Custom::SharePortfolioWithOrg",
       "UpdateReplacePolicy": "Delete",
     },
-    "SharePortfolioWithOrgPortfolioShareorg10340D408": Object {
+    "SharePortfolioWithOrgPortfolioShareorg10340D408": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D",
             "Arn",
           ],
@@ -172,14 +172,14 @@ Object {
       "Type": "Custom::SharePortfolioWithOrg",
       "UpdateReplacePolicy": "Delete",
     },
-    "SharePortfolioWithOrgPortfolioShareorg285669DB9": Object {
+    "SharePortfolioWithOrgPortfolioShareorg285669DB9": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomSharePortfolioWithOrgCustomResourceProviderLogGroup3D78DA1D",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomSharePortfolioWithOrgCustomResourceProviderHandler4644676D",
             "Arn",
           ],

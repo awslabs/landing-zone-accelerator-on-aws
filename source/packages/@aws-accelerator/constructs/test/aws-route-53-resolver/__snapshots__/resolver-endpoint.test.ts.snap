@@ -1,25 +1,25 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ResolverEndpoint Construct(ResolverEndpoint):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestEndpoint4E197ABD": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestEndpoint4E197ABD": {
+      "Properties": {
         "Direction": "OUTBOUND",
-        "IpAddresses": Array [
-          Object {
+        "IpAddresses": [
+          {
             "SubnetId": "subnet-1",
           },
-          Object {
+          {
             "SubnetId": "subnet-2",
           },
         ],
         "Name": "TestEndpoint",
-        "SecurityGroupIds": Array [
+        "SecurityGroupIds": [
           "sg-123test",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestEndpoint",
           },

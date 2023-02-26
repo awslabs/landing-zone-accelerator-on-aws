@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`KeyStack Construct(KeyStack):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "AcceleratorKeyAlias692B87F4": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "AcceleratorKeyAlias692B87F4": {
+      "Properties": {
         "AliasName": "alias/accelerator/kms/key",
-        "TargetKeyId": Object {
-          "Fn::GetAtt": Array [
+        "TargetKeyId": {
+          "Fn::GetAtt": [
             "AcceleratorKeyF6E5723B",
             "Arn",
           ],
@@ -15,23 +15,23 @@ Object {
       },
       "Type": "AWS::KMS::Alias",
     },
-    "AcceleratorKeyF6E5723B": Object {
+    "AcceleratorKeyF6E5723B": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
+      "Properties": {
         "Description": "AWS Accelerator Kms Key",
         "EnableKeyRotation": true,
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::222222222222:root",
@@ -41,23 +41,23 @@ Object {
               },
               "Resource": "*",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
                 "kms:GenerateDataKey*",
                 "kms:DescribeKey",
               ],
-              "Condition": Object {
-                "ArnLike": Object {
-                  "aws:PrincipalARN": Array [
-                    Object {
-                      "Fn::Join": Array [
+              "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalARN": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":iam::*:role/AWSAccelerator-*",
@@ -66,35 +66,35 @@ Object {
                     },
                   ],
                 },
-                "StringEquals": Object {
-                  "aws:PrincipalOrgID": Object {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": {
                     "Ref": "Organization29A5FC3F",
                   },
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
               "Resource": "*",
               "Sid": "Allow Accelerator Role to use the encryption key",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt*",
                 "kms:Decrypt*",
                 "kms:ReEncrypt*",
                 "kms:GenerateDataKey*",
                 "kms:Describe*",
               ],
-              "Condition": Object {
-                "ArnLike": Object {
-                  "kms:EncryptionContext:aws:logs:arn": Object {
-                    "Fn::Join": Array [
+              "Condition": {
+                "ArnLike": {
+                  "kms:EncryptionContext:aws:logs:arn": {
+                    "Fn::Join": [
                       "",
-                      Array [
+                      [
                         "arn:",
-                        Object {
+                        {
                           "Ref": "AWS::Partition",
                         },
                         ":logs:us-east-1:*:log-group:*",
@@ -104,13 +104,13 @@ Object {
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
-                "Service": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "Service": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "logs.us-east-1.",
-                      Object {
+                      {
                         "Ref": "AWS::URLSuffix",
                       },
                     ],
@@ -120,28 +120,28 @@ Object {
               "Resource": "*",
               "Sid": "Allow Cloudwatch logs to use the encryption key",
             },
-            Object {
+            {
               "Action": "kms:CreateGrant",
-              "Condition": Object {
-                "Bool": Object {
+              "Condition": {
+                "Bool": {
                   "kms:GrantIsForAWSResource": "true",
                 },
-                "StringLike": Object {
-                  "aws:PrincipalOrgID": Object {
+                "StringLike": {
+                  "aws:PrincipalOrgID": {
                     "Ref": "Organization29A5FC3F",
                   },
                   "kms:ViaService": "auditmanager.*.amazonaws.com",
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
               "Resource": "*",
               "Sid": "Allow Audit Manager service to provision encryption key grants",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -149,14 +149,14 @@ Object {
                 "kms:DescribeKey",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "sns.amazonaws.com",
               },
               "Resource": "*",
               "Sid": "Allow Sns service to use the encryption key",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -164,14 +164,14 @@ Object {
                 "kms:DescribeKey",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
               "Resource": "*",
               "Sid": "Allow Lambda service to use the encryption key",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -179,14 +179,14 @@ Object {
                 "kms:DescribeKey",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "cloudwatch.amazonaws.com",
               },
               "Resource": "*",
               "Sid": "Allow Cloudwatch service to use the encryption key",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -194,14 +194,14 @@ Object {
                 "kms:DescribeKey",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "sqs.amazonaws.com",
               },
               "Resource": "*",
               "Sid": "Allow Sqs service to use the encryption key",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -209,14 +209,14 @@ Object {
                 "kms:DescribeKey",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "macie.amazonaws.com",
               },
               "Resource": "*",
               "Sid": "Allow Macie service to use the encryption key",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -224,14 +224,14 @@ Object {
                 "kms:DescribeKey",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "guardduty.amazonaws.com",
               },
               "Resource": "*",
               "Sid": "Allow Guardduty service to use the encryption key",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
@@ -239,7 +239,7 @@ Object {
                 "kms:DescribeKey",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "auditmanager.amazonaws.com",
               },
               "Resource": "*",
@@ -252,12 +252,12 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "AcceleratorKmsArnParameter5898E452": Object {
-      "Properties": Object {
+    "AcceleratorKmsArnParameter5898E452": {
+      "Properties": {
         "Name": "/accelerator/kms/key-arn",
         "Type": "String",
-        "Value": Object {
-          "Fn::GetAtt": Array [
+        "Value": {
+          "Fn::GetAtt": [
             "AcceleratorKeyF6E5723B",
             "Arn",
           ],
@@ -265,55 +265,55 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "CrossAccountAcceleratorSsmParamAccessRoleEC51D0AC": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "CrossAccountAcceleratorSsmParamAccessRoleEC51D0AC": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "This policy is required to give access to ssm parameters in every region where accelerator deployed. Various accelerator roles need permission to describe SSM parameters.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
-              "Condition": Object {
-                "StringEquals": Object {
-                  "aws:PrincipalOrgID": Object {
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": {
                     "Ref": "Organization29A5FC3F",
                   },
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ssm:GetParameters",
                     "ssm:GetParameter",
                   ],
-                  "Condition": Object {
-                    "ArnLike": Object {
-                      "aws:PrincipalARN": Array [
-                        Object {
-                          "Fn::Join": Array [
+                  "Condition": {
+                    "ArnLike": {
+                      "aws:PrincipalARN": [
+                        {
+                          "Fn::Join": [
                             "",
-                            Array [
+                            [
                               "arn:",
-                              Object {
+                              {
                                 "Ref": "AWS::Partition",
                               },
                               ":iam::*:role/AWSAccelerator-*",
@@ -322,32 +322,32 @@ Object {
                         },
                       ],
                     },
-                    "StringEquals": Object {
-                      "aws:PrincipalOrgID": Object {
+                    "StringEquals": {
+                      "aws:PrincipalOrgID": {
                         "Ref": "Organization29A5FC3F",
                       },
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":ssm:*:222222222222:parameter/accelerator/kms/key-arn",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":ssm:*:222222222222:parameter/accelerator/kms/s3/key-arn",
@@ -356,17 +356,17 @@ Object {
                     },
                   ],
                 },
-                Object {
+                {
                   "Action": "ssm:DescribeParameters",
-                  "Condition": Object {
-                    "ArnLike": Object {
-                      "aws:PrincipalARN": Array [
-                        Object {
-                          "Fn::Join": Array [
+                  "Condition": {
+                    "ArnLike": {
+                      "aws:PrincipalARN": [
+                        {
+                          "Fn::Join": [
                             "",
-                            Array [
+                            [
                               "arn:",
-                              Object {
+                              {
                                 "Ref": "AWS::Partition",
                               },
                               ":iam::*:role/AWSAccelerator-*",
@@ -375,8 +375,8 @@ Object {
                         },
                       ],
                     },
-                    "StringEquals": Object {
-                      "aws:PrincipalOrgID": Object {
+                    "StringEquals": {
+                      "aws:PrincipalOrgID": {
                         "Ref": "Organization29A5FC3F",
                       },
                     },
@@ -394,19 +394,19 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1": Object {
-      "DependsOn": Array [
+    "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1": {
+      "DependsOn": [
         "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-222222222222-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5",
             "Arn",
           ],
@@ -416,31 +416,31 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomOrganizationsDescribeOrganizationCustomResourceProviderRole775854D5": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "organizations:DescribeOrganization",
                   ],
                   "Effect": "Allow",
@@ -455,35 +455,35 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "Organization29A5FC3F": Object {
+    "Organization29A5FC3F": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomOrganizationsDescribeOrganizationCustomResourceProviderHandler4C6F49D1",
             "Arn",
           ],
         },
-        "partition": Object {
+        "partition": {
           "Ref": "AWS::Partition",
         },
       },
       "Type": "Custom::DescribeOrganization",
       "UpdateReplacePolicy": "Delete",
     },
-    "SsmParamAcceleratorVersionFF83282D": Object {
-      "Properties": Object {
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-KeyStack-222222222222-us-east-1/version",
         "Type": "String",
         "Value": "1.3.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamStackId521A78D3": Object {
-      "Properties": Object {
+    "SsmParamStackId521A78D3": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-KeyStack-222222222222-us-east-1/stack-id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "AWS::StackId",
         },
       },

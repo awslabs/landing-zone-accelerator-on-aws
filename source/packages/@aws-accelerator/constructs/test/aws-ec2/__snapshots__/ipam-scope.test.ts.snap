@@ -1,14 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`IpamScope Construct(IpamScope):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestIpamScope20AAB890": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestIpamScope20AAB890": {
+      "Properties": {
         "Description": "Test IPAM scope",
         "IpamId": "test-ipam",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Test",
           },

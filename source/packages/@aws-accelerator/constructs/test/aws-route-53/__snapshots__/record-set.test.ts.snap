@@ -1,15 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`RecordSet Construct(RecordSet):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestHostedZone68F306E4": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestHostedZone68F306E4": {
+      "Properties": {
         "Name": "s3-global.accesspoint.aws.com",
-        "VPCs": Array [
-          Object {
+        "VPCs": [
+          {
             "VPCId": "Test",
-            "VPCRegion": Object {
+            "VPCRegion": {
               "Ref": "AWS::Region",
             },
           },
@@ -17,13 +17,13 @@ Object {
       },
       "Type": "AWS::Route53::HostedZone",
     },
-    "TestRecordSet11EBF57EA": Object {
-      "Properties": Object {
-        "AliasTarget": Object {
+    "TestRecordSet11EBF57EA": {
+      "Properties": {
+        "AliasTarget": {
           "DNSName": "",
           "HostedZoneId": "",
         },
-        "HostedZoneId": Object {
+        "HostedZoneId": {
           "Ref": "TestHostedZone68F306E4",
         },
         "Name": "s3-global.accesspoint.aws.com",
@@ -31,20 +31,20 @@ Object {
       },
       "Type": "AWS::Route53::RecordSet",
     },
-    "TestRecordSetED81F5C1": Object {
-      "Properties": Object {
-        "AliasTarget": Object {
-          "DNSName": Object {
-            "Fn::Select": Array [
+    "TestRecordSetED81F5C1": {
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
+            "Fn::Select": [
               1,
-              Object {
-                "Fn::Split": Array [
+              {
+                "Fn::Split": [
                   ":",
-                  Object {
-                    "Fn::Select": Array [
+                  {
+                    "Fn::Select": [
                       0,
-                      Object {
-                        "Fn::GetAtt": Array [
+                      {
+                        "Fn::GetAtt": [
                           "TestVpcEndpointF7CADE71",
                           "DnsEntries",
                         ],
@@ -55,17 +55,17 @@ Object {
               },
             ],
           },
-          "HostedZoneId": Object {
-            "Fn::Select": Array [
+          "HostedZoneId": {
+            "Fn::Select": [
               0,
-              Object {
-                "Fn::Split": Array [
+              {
+                "Fn::Split": [
                   ":",
-                  Object {
-                    "Fn::Select": Array [
+                  {
+                    "Fn::Select": [
                       0,
-                      Object {
-                        "Fn::GetAtt": Array [
+                      {
+                        "Fn::GetAtt": [
                           "TestVpcEndpointF7CADE71",
                           "DnsEntries",
                         ],
@@ -77,7 +77,7 @@ Object {
             ],
           },
         },
-        "HostedZoneId": Object {
+        "HostedZoneId": {
           "Ref": "TestHostedZone68F306E4",
         },
         "Name": "s3-global.accesspoint.aws.com",
@@ -85,12 +85,12 @@ Object {
       },
       "Type": "AWS::Route53::RecordSet",
     },
-    "TestSecurityGroupDA4B5F83": Object {
-      "Properties": Object {
+    "TestSecurityGroupDA4B5F83": {
+      "Properties": {
         "GroupDescription": "AWS Private Endpoint Zone",
         "GroupName": "TestSecurityGroup",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestSecurityGroup",
           },
@@ -99,21 +99,21 @@ Object {
       },
       "Type": "AWS::EC2::SecurityGroup",
     },
-    "TestVpcEndpointF7CADE71": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "TestVpcEndpointF7CADE71": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "*",
-              "Condition": Object {
-                "StringEquals": Object {
-                  "aws:PrincipalOrgID": Array [
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalOrgID": [
                     "organizationId",
                   ],
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
               "Resource": "*",
@@ -123,24 +123,24 @@ Object {
           "Version": "2012-10-17",
         },
         "PrivateDnsEnabled": false,
-        "SecurityGroupIds": Array [
-          Object {
+        "SecurityGroupIds": [
+          {
             "Ref": "TestSecurityGroupDA4B5F83",
           },
         ],
-        "ServiceName": Object {
-          "Fn::Join": Array [
+        "ServiceName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "com.amazonaws.",
-              Object {
+              {
                 "Ref": "AWS::Region",
               },
               ".ec2",
             ],
           ],
         },
-        "SubnetIds": Array [
+        "SubnetIds": [
           "Test1",
           "Test2",
         ],

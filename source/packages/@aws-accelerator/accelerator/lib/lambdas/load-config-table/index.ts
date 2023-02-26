@@ -29,10 +29,6 @@ import * as t from '@aws-accelerator/config/';
 import { Readable } from 'stream';
 
 export {};
-declare global {
-  type File = unknown;
-  type ReadableStream = unknown;
-}
 
 let dynamodbClient: DynamoDBClient;
 let documentClient: DynamoDBDocumentClient;

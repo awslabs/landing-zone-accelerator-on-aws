@@ -1,124 +1,124 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`NetworkVpcDnsStack Construct(NetworkVpcDnsStack):  Snapshot Test 1`] = `
-Object {
-  "Parameters": Object {
-    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+{
+  "Parameters": {
+    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratorinboundidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratorinboundidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/route53Resolver/endpoints/accelerator-inbound/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratoroutboundidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratoroutboundidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/route53Resolver/endpoints/accelerator-outbound/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsec2dnsC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsec2dnsC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/ec2/dns",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsec2hostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsec2hostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/ec2/hostedZoneId",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsec2messagesdnsC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsec2messagesdnsC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/ec2messages/dns",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsec2messageshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsec2messageshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/ec2messages/hostedZoneId",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointskmsdnsC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointskmsdnsC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/kms/dns",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointskmshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointskmshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/kms/hostedZoneId",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointslogsdnsC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointslogsdnsC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/logs/dns",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointslogshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointslogshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/logs/hostedZoneId",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsssmdnsC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsssmdnsC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/ssm/dns",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsssmhostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsssmhostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/ssm/hostedZoneId",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsssmmessagesdnsC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsssmmessagesdnsC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/ssmmessages/dns",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsssmmessageshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsssmmessageshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/endpoints/ssmmessages/hostedZoneId",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Inspection/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
-  "Resources": Object {
-    "AcceleratorOutboundResolverRuleExampleRule8B329125": Object {
-      "Properties": Object {
+  "Resources": {
+    "AcceleratorOutboundResolverRuleExampleRule8B329125": {
+      "Properties": {
         "DomainName": "example.com",
         "Name": "example-rule",
-        "ResolverEndpointId": Object {
+        "ResolverEndpointId": {
           "Ref": "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratoroutboundidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "RuleType": "FORWARD",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "example-rule",
           },
         ],
-        "TargetIps": Array [
-          Object {
+        "TargetIps": [
+          {
             "Ip": "1.1.1.1",
             "Port": "5353",
           },
-          Object {
+          {
             "Ip": "2.2.2.2",
           },
         ],
       },
       "Type": "AWS::Route53Resolver::ResolverRule",
     },
-    "AcceleratorOutboundResolverRuleInboundTargetRule35E9CFD7": Object {
-      "Properties": Object {
+    "AcceleratorOutboundResolverRuleInboundTargetRule35E9CFD7": {
+      "Properties": {
         "DomainName": "aws.internal.domain",
         "Name": "inbound-target-rule",
-        "ResolverEndpointId": Object {
+        "ResolverEndpointId": {
           "Ref": "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratoroutboundidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "RuleType": "FORWARD",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "inbound-target-rule",
           },
         ],
-        "TargetIps": Object {
-          "Fn::GetAtt": Array [
+        "TargetIps": {
+          "Fn::GetAtt": [
             "AcceleratorOutboundResolverRuleInboundTargetRuleLookupInbound44F7FDD0",
             "ipAddresses",
           ],
@@ -126,19 +126,19 @@ Object {
       },
       "Type": "AWS::Route53Resolver::ResolverRule",
     },
-    "AcceleratorOutboundResolverRuleInboundTargetRuleLookupInbound44F7FDD0": Object {
+    "AcceleratorOutboundResolverRuleInboundTargetRuleLookupInbound44F7FDD0": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomResolverEndpointAddressesCustomResourceProviderLogGroup70A41B6B",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomResolverEndpointAddressesCustomResourceProviderHandler09D4123E",
             "Arn",
           ],
         },
-        "endpointId": Object {
+        "endpointId": {
           "Ref": "SsmParameterValueacceleratornetworkroute53ResolverendpointsacceleratorinboundidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "region": "us-east-1",
@@ -146,19 +146,19 @@ Object {
       "Type": "Custom::ResolverEndpointAddresses",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomResolverEndpointAddressesCustomResourceProviderHandler09D4123E": Object {
-      "DependsOn": Array [
+    "CustomResolverEndpointAddressesCustomResourceProviderHandler09D4123E": {
+      "DependsOn": [
         "CustomResolverEndpointAddressesCustomResourceProviderRoleA94B4F27",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomResolverEndpointAddressesCustomResourceProviderRoleA94B4F27",
             "Arn",
           ],
@@ -168,18 +168,18 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomResolverEndpointAddressesCustomResourceProviderLogGroup70A41B6B": Object {
+    "CustomResolverEndpointAddressesCustomResourceProviderLogGroup70A41B6B": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomResolverEndpointAddressesCustomResourceProviderHandler09D4123E",
               },
             ],
@@ -190,31 +190,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomResolverEndpointAddressesCustomResourceProviderRoleA94B4F27": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomResolverEndpointAddressesCustomResourceProviderRoleA94B4F27": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "route53resolver:ListResolverEndpointIpAddresses",
                   ],
                   "Effect": "Allow",
@@ -229,15 +229,15 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "ExampleRuleResolverRuleResourceShare18E76E24": Object {
-      "Properties": Object {
+    "ExampleRuleResolverRuleResourceShare18E76E24": {
+      "Properties": {
         "Name": "example-rule_ResolverRule",
-        "Principals": Array [
+        "Principals": [
           "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222",
         ],
-        "ResourceArns": Array [
-          Object {
-            "Fn::GetAtt": Array [
+        "ResourceArns": [
+          {
+            "Fn::GetAtt": [
               "AcceleratorOutboundResolverRuleExampleRule8B329125",
               "Arn",
             ],
@@ -246,12 +246,12 @@ Object {
       },
       "Type": "AWS::RAM::ResourceShare",
     },
-    "NetworkEndpointsVpcEc2EpHostedZone3457AFDE": Object {
-      "Properties": Object {
+    "NetworkEndpointsVpcEc2EpHostedZone3457AFDE": {
+      "Properties": {
         "Name": "ec2.us-east-1.amazonaws.com",
-        "VPCs": Array [
-          Object {
-            "VPCId": Object {
+        "VPCs": [
+          {
+            "VPCId": {
               "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
             },
             "VPCRegion": "us-east-1",
@@ -260,17 +260,17 @@ Object {
       },
       "Type": "AWS::Route53::HostedZone",
     },
-    "NetworkEndpointsVpcEc2EpRecordSetB8C5464A": Object {
-      "Properties": Object {
-        "AliasTarget": Object {
-          "DNSName": Object {
+    "NetworkEndpointsVpcEc2EpRecordSetB8C5464A": {
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsec2dnsC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
-          "HostedZoneId": Object {
+          "HostedZoneId": {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsec2hostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
         },
-        "HostedZoneId": Object {
+        "HostedZoneId": {
           "Ref": "NetworkEndpointsVpcEc2EpHostedZone3457AFDE",
         },
         "Name": "ec2.us-east-1.amazonaws.com",
@@ -278,12 +278,12 @@ Object {
       },
       "Type": "AWS::Route53::RecordSet",
     },
-    "NetworkEndpointsVpcEc2messagesEpHostedZoneD74E6E18": Object {
-      "Properties": Object {
+    "NetworkEndpointsVpcEc2messagesEpHostedZoneD74E6E18": {
+      "Properties": {
         "Name": "ec2messages.us-east-1.amazonaws.com",
-        "VPCs": Array [
-          Object {
-            "VPCId": Object {
+        "VPCs": [
+          {
+            "VPCId": {
               "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
             },
             "VPCRegion": "us-east-1",
@@ -292,17 +292,17 @@ Object {
       },
       "Type": "AWS::Route53::HostedZone",
     },
-    "NetworkEndpointsVpcEc2messagesEpRecordSet605BEA6A": Object {
-      "Properties": Object {
-        "AliasTarget": Object {
-          "DNSName": Object {
+    "NetworkEndpointsVpcEc2messagesEpRecordSet605BEA6A": {
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsec2messagesdnsC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
-          "HostedZoneId": Object {
+          "HostedZoneId": {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsec2messageshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
         },
-        "HostedZoneId": Object {
+        "HostedZoneId": {
           "Ref": "NetworkEndpointsVpcEc2messagesEpHostedZoneD74E6E18",
         },
         "Name": "ec2messages.us-east-1.amazonaws.com",
@@ -310,12 +310,12 @@ Object {
       },
       "Type": "AWS::Route53::RecordSet",
     },
-    "NetworkEndpointsVpcKmsEpHostedZoneC9CFEF9D": Object {
-      "Properties": Object {
+    "NetworkEndpointsVpcKmsEpHostedZoneC9CFEF9D": {
+      "Properties": {
         "Name": "kms.us-east-1.amazonaws.com",
-        "VPCs": Array [
-          Object {
-            "VPCId": Object {
+        "VPCs": [
+          {
+            "VPCId": {
               "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
             },
             "VPCRegion": "us-east-1",
@@ -324,17 +324,17 @@ Object {
       },
       "Type": "AWS::Route53::HostedZone",
     },
-    "NetworkEndpointsVpcKmsEpRecordSet5C869506": Object {
-      "Properties": Object {
-        "AliasTarget": Object {
-          "DNSName": Object {
+    "NetworkEndpointsVpcKmsEpRecordSet5C869506": {
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointskmsdnsC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
-          "HostedZoneId": Object {
+          "HostedZoneId": {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointskmshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
         },
-        "HostedZoneId": Object {
+        "HostedZoneId": {
           "Ref": "NetworkEndpointsVpcKmsEpHostedZoneC9CFEF9D",
         },
         "Name": "kms.us-east-1.amazonaws.com",
@@ -342,12 +342,12 @@ Object {
       },
       "Type": "AWS::Route53::RecordSet",
     },
-    "NetworkEndpointsVpcLogsEpHostedZoneDBA51FD8": Object {
-      "Properties": Object {
+    "NetworkEndpointsVpcLogsEpHostedZoneDBA51FD8": {
+      "Properties": {
         "Name": "logs.us-east-1.amazonaws.com",
-        "VPCs": Array [
-          Object {
-            "VPCId": Object {
+        "VPCs": [
+          {
+            "VPCId": {
               "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
             },
             "VPCRegion": "us-east-1",
@@ -356,17 +356,17 @@ Object {
       },
       "Type": "AWS::Route53::HostedZone",
     },
-    "NetworkEndpointsVpcLogsEpRecordSet0B536BC1": Object {
-      "Properties": Object {
-        "AliasTarget": Object {
-          "DNSName": Object {
+    "NetworkEndpointsVpcLogsEpRecordSet0B536BC1": {
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointslogsdnsC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
-          "HostedZoneId": Object {
+          "HostedZoneId": {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointslogshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
         },
-        "HostedZoneId": Object {
+        "HostedZoneId": {
           "Ref": "NetworkEndpointsVpcLogsEpHostedZoneDBA51FD8",
         },
         "Name": "logs.us-east-1.amazonaws.com",
@@ -374,12 +374,12 @@ Object {
       },
       "Type": "AWS::Route53::RecordSet",
     },
-    "NetworkEndpointsVpcSsmEpHostedZoneE400276D": Object {
-      "Properties": Object {
+    "NetworkEndpointsVpcSsmEpHostedZoneE400276D": {
+      "Properties": {
         "Name": "ssm.us-east-1.amazonaws.com",
-        "VPCs": Array [
-          Object {
-            "VPCId": Object {
+        "VPCs": [
+          {
+            "VPCId": {
               "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
             },
             "VPCRegion": "us-east-1",
@@ -388,17 +388,17 @@ Object {
       },
       "Type": "AWS::Route53::HostedZone",
     },
-    "NetworkEndpointsVpcSsmEpRecordSetE72544F4": Object {
-      "Properties": Object {
-        "AliasTarget": Object {
-          "DNSName": Object {
+    "NetworkEndpointsVpcSsmEpRecordSetE72544F4": {
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsssmdnsC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
-          "HostedZoneId": Object {
+          "HostedZoneId": {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsssmhostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
         },
-        "HostedZoneId": Object {
+        "HostedZoneId": {
           "Ref": "NetworkEndpointsVpcSsmEpHostedZoneE400276D",
         },
         "Name": "ssm.us-east-1.amazonaws.com",
@@ -406,12 +406,12 @@ Object {
       },
       "Type": "AWS::Route53::RecordSet",
     },
-    "NetworkEndpointsVpcSsmmessagesEpHostedZone19BD15F2": Object {
-      "Properties": Object {
+    "NetworkEndpointsVpcSsmmessagesEpHostedZone19BD15F2": {
+      "Properties": {
         "Name": "ssmmessages.us-east-1.amazonaws.com",
-        "VPCs": Array [
-          Object {
-            "VPCId": Object {
+        "VPCs": [
+          {
+            "VPCId": {
               "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter",
             },
             "VPCRegion": "us-east-1",
@@ -420,17 +420,17 @@ Object {
       },
       "Type": "AWS::Route53::HostedZone",
     },
-    "NetworkEndpointsVpcSsmmessagesEpRecordSet491A807C": Object {
-      "Properties": Object {
-        "AliasTarget": Object {
-          "DNSName": Object {
+    "NetworkEndpointsVpcSsmmessagesEpRecordSet491A807C": {
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsssmmessagesdnsC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
-          "HostedZoneId": Object {
+          "HostedZoneId": {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsendpointsssmmessageshostedZoneIdC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
         },
-        "HostedZoneId": Object {
+        "HostedZoneId": {
           "Ref": "NetworkEndpointsVpcSsmmessagesEpHostedZone19BD15F2",
         },
         "Name": "ssmmessages.us-east-1.amazonaws.com",
@@ -438,96 +438,96 @@ Object {
       },
       "Type": "AWS::Route53::RecordSet",
     },
-    "SsmParamAcceleratorVersionFF83282D": Object {
-      "Properties": Object {
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkVpcDnsStack-555555555555-us-east-1/version",
         "Type": "String",
         "Value": "1.3.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamNetworkEndpointsVpcEc2EpHostedZone303E2193": Object {
-      "Properties": Object {
+    "SsmParamNetworkEndpointsVpcEc2EpHostedZone303E2193": {
+      "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/ec2/id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "NetworkEndpointsVpcEc2EpHostedZone3457AFDE",
         },
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamNetworkEndpointsVpcEc2messagesEpHostedZoneFD9B43A2": Object {
-      "Properties": Object {
+    "SsmParamNetworkEndpointsVpcEc2messagesEpHostedZoneFD9B43A2": {
+      "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/ec2messages/id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "NetworkEndpointsVpcEc2messagesEpHostedZoneD74E6E18",
         },
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamNetworkEndpointsVpcKmsEpHostedZoneFA42C849": Object {
-      "Properties": Object {
+    "SsmParamNetworkEndpointsVpcKmsEpHostedZoneFA42C849": {
+      "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/kms/id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "NetworkEndpointsVpcKmsEpHostedZoneC9CFEF9D",
         },
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamNetworkEndpointsVpcLogsEpHostedZoneCE810EE0": Object {
-      "DependsOn": Array [
+    "SsmParamNetworkEndpointsVpcLogsEpHostedZoneCE810EE0": {
+      "DependsOn": [
         "SsmParamNetworkEndpointsVpcKmsEpHostedZoneFA42C849",
       ],
-      "Properties": Object {
+      "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/logs/id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "NetworkEndpointsVpcLogsEpHostedZoneDBA51FD8",
         },
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamNetworkEndpointsVpcSsmEpHostedZone52E166EC": Object {
-      "Properties": Object {
+    "SsmParamNetworkEndpointsVpcSsmEpHostedZone52E166EC": {
+      "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/ssm/id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "NetworkEndpointsVpcSsmEpHostedZoneE400276D",
         },
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamNetworkEndpointsVpcSsmmessagesEpHostedZoneE3AF7882": Object {
-      "Properties": Object {
+    "SsmParamNetworkEndpointsVpcSsmmessagesEpHostedZoneE3AF7882": {
+      "Properties": {
         "Name": "/accelerator/network/vpc/Network-Endpoints/route53/hostedZone/ssmmessages/id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "NetworkEndpointsVpcSsmmessagesEpHostedZone19BD15F2",
         },
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamStackId521A78D3": Object {
-      "Properties": Object {
+    "SsmParamStackId521A78D3": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkVpcDnsStack-555555555555-us-east-1/stack-id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "AWS::StackId",
         },
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamexampleRuleResolverRuleE76DD02F": Object {
-      "DependsOn": Array [
+    "SsmParamexampleRuleResolverRuleE76DD02F": {
+      "DependsOn": [
         "SsmParamNetworkEndpointsVpcKmsEpHostedZoneFA42C849",
       ],
-      "Properties": Object {
+      "Properties": {
         "Name": "/accelerator/network/route53Resolver/rules/example-rule/id",
         "Type": "String",
-        "Value": Object {
-          "Fn::GetAtt": Array [
+        "Value": {
+          "Fn::GetAtt": [
             "AcceleratorOutboundResolverRuleExampleRule8B329125",
             "ResolverRuleId",
           ],
@@ -535,15 +535,15 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParaminboundTargetRuleResolverRule19318804": Object {
-      "DependsOn": Array [
+    "SsmParaminboundTargetRuleResolverRule19318804": {
+      "DependsOn": [
         "SsmParamNetworkEndpointsVpcKmsEpHostedZoneFA42C849",
       ],
-      "Properties": Object {
+      "Properties": {
         "Name": "/accelerator/network/route53Resolver/rules/inbound-target-rule/id",
         "Type": "String",
-        "Value": Object {
-          "Fn::GetAtt": Array [
+        "Value": {
+          "Fn::GetAtt": [
             "AcceleratorOutboundResolverRuleInboundTargetRule35E9CFD7",
             "ResolverRuleId",
           ],

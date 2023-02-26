@@ -1,40 +1,40 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`VpnConnection Construct(VpnConnection):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestVpnVpnConnection655CF32D": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestVpnVpnConnection655CF32D": {
+      "Properties": {
         "CustomerGatewayId": "Test-Cgw",
         "StaticRoutesOnly": true,
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Test-Vpn",
           },
-          Object {
+          {
             "Key": "Test-Key",
             "Value": "Test-Value",
           },
         ],
         "TransitGatewayId": "Test-tgw",
         "Type": "ipsec.1",
-        "VpnTunnelOptionsSpecifications": Array [
-          Object {
-            "PreSharedKey": Object {
-              "Fn::Join": Array [
+        "VpnTunnelOptionsSpecifications": [
+          {
+            "PreSharedKey": {
+              "Fn::Join": [
                 "",
-                Array [
+                [
                   "{{resolve:secretsmanager:arn:",
-                  Object {
+                  {
                     "Ref": "AWS::Partition",
                   },
                   ":secretsmanager:",
-                  Object {
+                  {
                     "Ref": "AWS::Region",
                   },
                   ":",
-                  Object {
+                  {
                     "Ref": "AWS::AccountId",
                   },
                   ":secret:test-key-1:SecretString:::}}",
@@ -43,21 +43,21 @@ Object {
             },
             "TunnelInsideCidr": "169.254.200.0/30",
           },
-          Object {
-            "PreSharedKey": Object {
-              "Fn::Join": Array [
+          {
+            "PreSharedKey": {
+              "Fn::Join": [
                 "",
-                Array [
+                [
                   "{{resolve:secretsmanager:arn:",
-                  Object {
+                  {
                     "Ref": "AWS::Partition",
                   },
                   ":secretsmanager:",
-                  Object {
+                  {
                     "Ref": "AWS::Region",
                   },
                   ":",
-                  Object {
+                  {
                     "Ref": "AWS::AccountId",
                   },
                   ":secret:test-key-1:SecretString:::}}",

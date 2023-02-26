@@ -1,21 +1,21 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`CloudWatchToS3Firehose Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
-Object {
-  "Conditions": Object {
-    "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": Object {
-      "Fn::Or": Array [
-        Object {
-          "Fn::Equals": Array [
-            Object {
+{
+  "Conditions": {
+    "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": {
+      "Fn::Or": [
+        {
+          "Fn::Equals": [
+            {
               "Ref": "AWS::Region",
             },
             "cn-north-1",
           ],
         },
-        Object {
-          "Fn::Equals": Array [
-            Object {
+        {
+          "Fn::Equals": [
+            {
               "Ref": "AWS::Region",
             },
             "cn-northwest-1",
@@ -24,62 +24,62 @@ Object {
       ],
     },
   },
-  "Resources": Object {
-    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522": Object {
-      "Properties": Object {
-        "CatalogId": Object {
+  "Resources": {
+    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522": {
+      "Properties": {
+        "CatalogId": {
           "Ref": "AWS::AccountId",
         },
-        "DatabaseInput": Object {
+        "DatabaseInput": {
           "Description": "Glue database to store AWS Accelerator CloudWatch logs",
         },
       },
       "Type": "AWS::Glue::Database",
     },
-    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB": Object {
-      "Properties": Object {
-        "CatalogId": Object {
+    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB": {
+      "Properties": {
+        "CatalogId": {
           "Ref": "AWS::AccountId",
         },
-        "DatabaseName": Object {
+        "DatabaseName": {
           "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
         },
-        "TableInput": Object {
+        "TableInput": {
           "Description": "Glue table to store AWS Accelerator CloudWatch logs",
           "Name": "aws-accelerator-firehose-transformation-table",
-          "StorageDescriptor": Object {
-            "Columns": Array [
-              Object {
-                "Comment": "Data messages use the \\"DATA_MESSAGE\\" type. Sometimes CloudWatch Logs may emit Kinesis records with a \\"CONTROL_MESSAGE\\" type, mainly for checking if the destination is reachable.",
+          "StorageDescriptor": {
+            "Columns": [
+              {
+                "Comment": "Data messages use the "DATA_MESSAGE" type. Sometimes CloudWatch Logs may emit Kinesis records with a "CONTROL_MESSAGE" type, mainly for checking if the destination is reachable.",
                 "Name": "messagetype",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The AWS Account ID of the originating log data",
                 "Name": "owner",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The log group name of the originating log data.",
                 "Name": "loggroup",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The list of comma delimited subscription filter names that matched with the originating log data.",
                 "Name": "subscriptionfilters",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The ID property is a unique identifier for every log event.",
                 "Name": "logeventsid",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "Timestamp of the log event",
                 "Name": "logeventstimestamp",
                 "Type": "timestamp",
               },
-              Object {
+              {
                 "Comment": "Actual message of the log event which is in json string",
                 "Name": "logeventsmessage",
                 "Type": "string",
@@ -91,14 +91,14 @@ Object {
       },
       "Type": "AWS::Glue::Table",
     },
-    "CloudWatchToS3FirehoseBucketNameFirehoseKinesisStreamServiceRole9577C2D5": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchToS3FirehoseBucketNameFirehoseKinesisStreamServiceRole9577C2D5": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "firehose.amazonaws.com",
               },
             },
@@ -106,27 +106,27 @@ Object {
           "Version": "2012-10-17",
         },
         "Description": "Role used by Kinesis Firehose to get records from Kinesis.",
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "kinesis:DescribeStream",
                     "kinesis:GetShardIterator",
                     "kinesis:GetRecords",
                     "kinesis:ListShards",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomStreamBucketName9F2BF3F7",
                       "Arn",
                     ],
                   },
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "kms:Decrypt",
                     "kms:Encrypt",
                     "kms:GenerateDataKey",
@@ -137,8 +137,8 @@ Object {
                     "kms:ReEncryptFrom",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomKinesisKeyBucketNameFF6F8D94",
                       "Arn",
                     ],
@@ -153,33 +153,33 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambda2F1022EF": Object {
-      "DependsOn": Array [
+    "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambda2F1022EF": {
+      "DependsOn": [
         "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Environment": Object {
-          "Variables": Object {
+        "Environment": {
+          "Variables": {
             "DynamicS3LogPartitioningMapping": "dynamic-partitioning/log-filters.json",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
         "Handler": "index.handler",
-        "KmsKeyArn": Object {
-          "Fn::GetAtt": Array [
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
             "CustomLambdaKeyBucketNameF1E215CD",
             "Arn",
           ],
         },
         "MemorySize": 2048,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB",
             "Arn",
           ],
@@ -189,27 +189,27 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -220,14 +220,14 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "firehose.amazonaws.com",
               },
             },
@@ -235,26 +235,26 @@ Object {
           "Version": "2012-10-17",
         },
         "Description": "Role used by Kinesis Firehose to place Kinesis records in the central bucket.",
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "kms:Decrypt",
                     "kms:GenerateDataKey",
                   ],
-                  "Condition": Object {
-                    "StringEquals": Object {
+                  "Condition": {
+                    "StringEquals": {
                       "kms:ViaService": "s3.someregion.amazonaws.com",
                     },
-                    "StringLike": Object {
-                      "kms:EncryptionContext:aws:s3:arn": Object {
-                        "Fn::Join": Array [
+                    "StringLike": {
+                      "kms:EncryptionContext:aws:s3:arn": {
+                        "Fn::Join": [
                           "",
-                          Array [
+                          [
                             "arn:",
-                            Object {
+                            {
                               "Ref": "AWS::Partition",
                             },
                             ":s3:::somebucket/*",
@@ -264,15 +264,15 @@ Object {
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomKeyBucketName4DE2ADC8",
                       "Arn",
                     ],
                   },
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "s3:AbortMultipartUpload",
                     "s3:GetBucketLocation",
                     "s3:GetObject",
@@ -281,25 +281,25 @@ Object {
                     "s3:PutObject",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::somebucket",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::somebucket/*",
@@ -308,19 +308,19 @@ Object {
                     },
                   ],
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "lambda:InvokeFunction",
                     "lambda:GetFunctionConfiguration",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
-                          Object {
-                            "Fn::GetAtt": Array [
+                        [
+                          {
+                            "Fn::GetAtt": [
                               "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambda2F1022EF",
                               "Arn",
                             ],
@@ -329,87 +329,87 @@ Object {
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::GetAtt": Array [
+                    {
+                      "Fn::GetAtt": [
                         "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambda2F1022EF",
                         "Arn",
                       ],
                     },
                   ],
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "glue:GetTable",
                     "glue:GetTableVersion",
                     "glue:GetTableVersions",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":glue:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":catalog",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":glue:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":database/",
-                          Object {
+                          {
                             "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
                           },
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":glue:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":table/",
-                          Object {
+                          {
                             "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
                           },
                           "/",
-                          Object {
+                          {
                             "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB",
                           },
                         ],
@@ -426,65 +426,65 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseBucketNameKinesisFirehoseStreamDynamicPartitioningCD958E16": Object {
-      "Properties": Object {
+    "CloudWatchToS3FirehoseBucketNameKinesisFirehoseStreamDynamicPartitioningCD958E16": {
+      "Properties": {
         "DeliveryStreamType": "KinesisStreamAsSource",
-        "ExtendedS3DestinationConfiguration": Object {
-          "BucketARN": Object {
-            "Fn::Join": Array [
+        "ExtendedS3DestinationConfiguration": {
+          "BucketARN": {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":s3:::somebucket",
               ],
             ],
           },
-          "BufferingHints": Object {
+          "BufferingHints": {
             "IntervalInSeconds": 60,
             "SizeInMBs": 128,
           },
           "CompressionFormat": "UNCOMPRESSED",
-          "DataFormatConversionConfiguration": Object {
+          "DataFormatConversionConfiguration": {
             "Enabled": true,
-            "InputFormatConfiguration": Object {
-              "Deserializer": Object {
-                "OpenXJsonSerDe": Object {
+            "InputFormatConfiguration": {
+              "Deserializer": {
+                "OpenXJsonSerDe": {
                   "CaseInsensitive": true,
                 },
               },
             },
-            "OutputFormatConfiguration": Object {
-              "Serializer": Object {
-                "ParquetSerDe": Object {
+            "OutputFormatConfiguration": {
+              "Serializer": {
+                "ParquetSerDe": {
                   "Compression": "SNAPPY",
                 },
               },
             },
-            "SchemaConfiguration": Object {
-              "DatabaseName": Object {
+            "SchemaConfiguration": {
+              "DatabaseName": {
                 "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
               },
-              "RoleARN": Object {
-                "Fn::GetAtt": Array [
+              "RoleARN": {
+                "Fn::GetAtt": [
                   "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103",
                   "Arn",
                 ],
               },
-              "TableName": Object {
+              "TableName": {
                 "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB",
               },
             },
           },
-          "DynamicPartitioningConfiguration": Object {
+          "DynamicPartitioningConfiguration": {
             "Enabled": true,
           },
-          "EncryptionConfiguration": Object {
-            "KMSEncryptionConfig": Object {
-              "AWSKMSKeyARN": Object {
-                "Fn::GetAtt": Array [
+          "EncryptionConfiguration": {
+            "KMSEncryptionConfig": {
+              "AWSKMSKeyARN": {
+                "Fn::GetAtt": [
                   "CustomKeyBucketName4DE2ADC8",
                   "Arn",
                 ],
@@ -493,21 +493,21 @@ Object {
           },
           "ErrorOutputPrefix": "CloudWatchLogs/processing-failed",
           "Prefix": "!{partitionKeyFromLambda:dynamicPrefix}",
-          "ProcessingConfiguration": Object {
+          "ProcessingConfiguration": {
             "Enabled": true,
-            "Processors": Array [
-              Object {
-                "Parameters": Array [
-                  Object {
+            "Processors": [
+              {
+                "Parameters": [
+                  {
                     "ParameterName": "LambdaArn",
-                    "ParameterValue": Object {
-                      "Fn::GetAtt": Array [
+                    "ParameterValue": {
+                      "Fn::GetAtt": [
                         "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambda2F1022EF",
                         "Arn",
                       ],
                     },
                   },
-                  Object {
+                  {
                     "ParameterName": "NumberOfRetries",
                     "ParameterValue": "3",
                   },
@@ -516,22 +516,22 @@ Object {
               },
             ],
           },
-          "RoleARN": Object {
-            "Fn::GetAtt": Array [
+          "RoleARN": {
+            "Fn::GetAtt": [
               "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103",
               "Arn",
             ],
           },
         },
-        "KinesisStreamSourceConfiguration": Object {
-          "KinesisStreamARN": Object {
-            "Fn::GetAtt": Array [
+        "KinesisStreamSourceConfiguration": {
+          "KinesisStreamARN": {
+            "Fn::GetAtt": [
               "CustomStreamBucketName9F2BF3F7",
               "Arn",
             ],
           },
-          "RoleARN": Object {
-            "Fn::GetAtt": Array [
+          "RoleARN": {
+            "Fn::GetAtt": [
               "CloudWatchToS3FirehoseBucketNameFirehoseKinesisStreamServiceRole9577C2D5",
               "Arn",
             ],
@@ -540,61 +540,61 @@ Object {
       },
       "Type": "AWS::KinesisFirehose::DeliveryStream",
     },
-    "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9": Object {
-      "Properties": Object {
-        "CatalogId": Object {
+    "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9": {
+      "Properties": {
+        "CatalogId": {
           "Ref": "AWS::AccountId",
         },
-        "DatabaseInput": Object {
+        "DatabaseInput": {
           "Description": "Glue database to store AWS Accelerator CloudWatch logs",
         },
       },
       "Type": "AWS::Glue::Database",
     },
-    "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48": Object {
-      "Properties": Object {
-        "CatalogId": Object {
+    "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48": {
+      "Properties": {
+        "CatalogId": {
           "Ref": "AWS::AccountId",
         },
-        "DatabaseName": Object {
+        "DatabaseName": {
           "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
         },
-        "TableInput": Object {
+        "TableInput": {
           "Description": "Glue table to store AWS Accelerator CloudWatch logs",
           "Name": "aws-accelerator-firehose-transformation-table",
-          "StorageDescriptor": Object {
-            "Columns": Array [
-              Object {
-                "Comment": "Data messages use the \\"DATA_MESSAGE\\" type. Sometimes CloudWatch Logs may emit Kinesis records with a \\"CONTROL_MESSAGE\\" type, mainly for checking if the destination is reachable.",
+          "StorageDescriptor": {
+            "Columns": [
+              {
+                "Comment": "Data messages use the "DATA_MESSAGE" type. Sometimes CloudWatch Logs may emit Kinesis records with a "CONTROL_MESSAGE" type, mainly for checking if the destination is reachable.",
                 "Name": "messagetype",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The AWS Account ID of the originating log data",
                 "Name": "owner",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The log group name of the originating log data.",
                 "Name": "loggroup",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The list of comma delimited subscription filter names that matched with the originating log data.",
                 "Name": "subscriptionfilters",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The ID property is a unique identifier for every log event.",
                 "Name": "logeventsid",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "Timestamp of the log event",
                 "Name": "logeventstimestamp",
                 "Type": "timestamp",
               },
-              Object {
+              {
                 "Comment": "Actual message of the log event which is in json string",
                 "Name": "logeventsmessage",
                 "Type": "string",
@@ -606,14 +606,14 @@ Object {
       },
       "Type": "AWS::Glue::Table",
     },
-    "CloudWatchToS3FirehoseFirehoseKinesisStreamServiceRole80E25BD8": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchToS3FirehoseFirehoseKinesisStreamServiceRole80E25BD8": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "firehose.amazonaws.com",
               },
             },
@@ -621,27 +621,27 @@ Object {
           "Version": "2012-10-17",
         },
         "Description": "Role used by Kinesis Firehose to get records from Kinesis.",
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "kinesis:DescribeStream",
                     "kinesis:GetShardIterator",
                     "kinesis:GetRecords",
                     "kinesis:ListShards",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomStreamE8E9158E",
                       "Arn",
                     ],
                   },
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "kms:Decrypt",
                     "kms:Encrypt",
                     "kms:GenerateDataKey",
@@ -652,8 +652,8 @@ Object {
                     "kms:ReEncryptFrom",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomKinesisKey1382C574",
                       "Arn",
                     ],
@@ -668,33 +668,33 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603": Object {
-      "DependsOn": Array [
+    "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603": {
+      "DependsOn": [
         "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Environment": Object {
-          "Variables": Object {
+        "Environment": {
+          "Variables": {
             "DynamicS3LogPartitioningMapping": "dynamic-partitioning/log-filters.json",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
         "Handler": "index.handler",
-        "KmsKeyArn": Object {
-          "Fn::GetAtt": Array [
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
             "CustomLambdaKey2287F5A9",
             "Arn",
           ],
         },
         "MemorySize": 2048,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167",
             "Arn",
           ],
@@ -704,27 +704,27 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -735,14 +735,14 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "firehose.amazonaws.com",
               },
             },
@@ -750,26 +750,26 @@ Object {
           "Version": "2012-10-17",
         },
         "Description": "Role used by Kinesis Firehose to place Kinesis records in the central bucket.",
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "kms:Decrypt",
                     "kms:GenerateDataKey",
                   ],
-                  "Condition": Object {
-                    "StringEquals": Object {
+                  "Condition": {
+                    "StringEquals": {
                       "kms:ViaService": "s3.someregion.amazonaws.com",
                     },
-                    "StringLike": Object {
-                      "kms:EncryptionContext:aws:s3:arn": Object {
-                        "Fn::Join": Array [
+                    "StringLike": {
+                      "kms:EncryptionContext:aws:s3:arn": {
+                        "Fn::Join": [
                           "",
-                          Array [
-                            Object {
-                              "Fn::GetAtt": Array [
+                          [
+                            {
+                              "Fn::GetAtt": [
                                 "CustomBucketF81FA714",
                                 "Arn",
                               ],
@@ -781,15 +781,15 @@ Object {
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomKey1E6D0D07",
                       "Arn",
                     ],
                   },
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "s3:AbortMultipartUpload",
                     "s3:GetBucketLocation",
                     "s3:GetObject",
@@ -798,19 +798,19 @@ Object {
                     "s3:PutObject",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::GetAtt": Array [
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
                         "CustomBucketF81FA714",
                         "Arn",
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
-                          Object {
-                            "Fn::GetAtt": Array [
+                        [
+                          {
+                            "Fn::GetAtt": [
                               "CustomBucketF81FA714",
                               "Arn",
                             ],
@@ -821,19 +821,19 @@ Object {
                     },
                   ],
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "lambda:InvokeFunction",
                     "lambda:GetFunctionConfiguration",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
-                          Object {
-                            "Fn::GetAtt": Array [
+                        [
+                          {
+                            "Fn::GetAtt": [
                               "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603",
                               "Arn",
                             ],
@@ -842,87 +842,87 @@ Object {
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::GetAtt": Array [
+                    {
+                      "Fn::GetAtt": [
                         "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603",
                         "Arn",
                       ],
                     },
                   ],
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "glue:GetTable",
                     "glue:GetTableVersion",
                     "glue:GetTableVersions",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":glue:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":catalog",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":glue:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":database/",
-                          Object {
+                          {
                             "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
                           },
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":glue:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":table/",
-                          Object {
+                          {
                             "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
                           },
                           "/",
-                          Object {
+                          {
                             "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48",
                           },
                         ],
@@ -939,59 +939,59 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseKinesisFirehoseStreamDynamicPartitioning03389B0D": Object {
-      "Properties": Object {
+    "CloudWatchToS3FirehoseKinesisFirehoseStreamDynamicPartitioning03389B0D": {
+      "Properties": {
         "DeliveryStreamType": "KinesisStreamAsSource",
-        "ExtendedS3DestinationConfiguration": Object {
-          "BucketARN": Object {
-            "Fn::GetAtt": Array [
+        "ExtendedS3DestinationConfiguration": {
+          "BucketARN": {
+            "Fn::GetAtt": [
               "CustomBucketF81FA714",
               "Arn",
             ],
           },
-          "BufferingHints": Object {
+          "BufferingHints": {
             "IntervalInSeconds": 60,
             "SizeInMBs": 128,
           },
           "CompressionFormat": "UNCOMPRESSED",
-          "DataFormatConversionConfiguration": Object {
+          "DataFormatConversionConfiguration": {
             "Enabled": true,
-            "InputFormatConfiguration": Object {
-              "Deserializer": Object {
-                "OpenXJsonSerDe": Object {
+            "InputFormatConfiguration": {
+              "Deserializer": {
+                "OpenXJsonSerDe": {
                   "CaseInsensitive": true,
                 },
               },
             },
-            "OutputFormatConfiguration": Object {
-              "Serializer": Object {
-                "ParquetSerDe": Object {
+            "OutputFormatConfiguration": {
+              "Serializer": {
+                "ParquetSerDe": {
                   "Compression": "SNAPPY",
                 },
               },
             },
-            "SchemaConfiguration": Object {
-              "DatabaseName": Object {
+            "SchemaConfiguration": {
+              "DatabaseName": {
                 "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
               },
-              "RoleARN": Object {
-                "Fn::GetAtt": Array [
+              "RoleARN": {
+                "Fn::GetAtt": [
                   "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338",
                   "Arn",
                 ],
               },
-              "TableName": Object {
+              "TableName": {
                 "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48",
               },
             },
           },
-          "DynamicPartitioningConfiguration": Object {
+          "DynamicPartitioningConfiguration": {
             "Enabled": true,
           },
-          "EncryptionConfiguration": Object {
-            "KMSEncryptionConfig": Object {
-              "AWSKMSKeyARN": Object {
-                "Fn::GetAtt": Array [
+          "EncryptionConfiguration": {
+            "KMSEncryptionConfig": {
+              "AWSKMSKeyARN": {
+                "Fn::GetAtt": [
                   "CustomKey1E6D0D07",
                   "Arn",
                 ],
@@ -1000,21 +1000,21 @@ Object {
           },
           "ErrorOutputPrefix": "CloudWatchLogs/processing-failed",
           "Prefix": "!{partitionKeyFromLambda:dynamicPrefix}",
-          "ProcessingConfiguration": Object {
+          "ProcessingConfiguration": {
             "Enabled": true,
-            "Processors": Array [
-              Object {
-                "Parameters": Array [
-                  Object {
+            "Processors": [
+              {
+                "Parameters": [
+                  {
                     "ParameterName": "LambdaArn",
-                    "ParameterValue": Object {
-                      "Fn::GetAtt": Array [
+                    "ParameterValue": {
+                      "Fn::GetAtt": [
                         "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603",
                         "Arn",
                       ],
                     },
                   },
-                  Object {
+                  {
                     "ParameterName": "NumberOfRetries",
                     "ParameterValue": "3",
                   },
@@ -1023,22 +1023,22 @@ Object {
               },
             ],
           },
-          "RoleARN": Object {
-            "Fn::GetAtt": Array [
+          "RoleARN": {
+            "Fn::GetAtt": [
               "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338",
               "Arn",
             ],
           },
         },
-        "KinesisStreamSourceConfiguration": Object {
-          "KinesisStreamARN": Object {
-            "Fn::GetAtt": Array [
+        "KinesisStreamSourceConfiguration": {
+          "KinesisStreamARN": {
+            "Fn::GetAtt": [
               "CustomStreamE8E9158E",
               "Arn",
             ],
           },
-          "RoleARN": Object {
-            "Fn::GetAtt": Array [
+          "RoleARN": {
+            "Fn::GetAtt": [
               "CloudWatchToS3FirehoseFirehoseKinesisStreamServiceRole80E25BD8",
               "Arn",
             ],
@@ -1047,30 +1047,30 @@ Object {
       },
       "Type": "AWS::KinesisFirehose::DeliveryStream",
     },
-    "CustomBucketF81FA714": Object {
+    "CustomBucketF81FA714": {
       "DeletionPolicy": "Retain",
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomKey1E6D0D07": Object {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -1087,25 +1087,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomKeyBucketName4DE2ADC8": Object {
+    "CustomKeyBucketName4DE2ADC8": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -1122,25 +1122,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomKinesisKey1382C574": Object {
+    "CustomKinesisKey1382C574": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -1157,25 +1157,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomKinesisKeyBucketNameFF6F8D94": Object {
+    "CustomKinesisKeyBucketNameFF6F8D94": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -1192,25 +1192,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomLambdaKey2287F5A9": Object {
+    "CustomLambdaKey2287F5A9": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -1227,25 +1227,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomLambdaKeyBucketNameF1E215CD": Object {
+    "CustomLambdaKeyBucketNameF1E215CD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -1262,45 +1262,45 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomStreamBucketName9F2BF3F7": Object {
-      "Properties": Object {
+    "CustomStreamBucketName9F2BF3F7": {
+      "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
-        "StreamEncryption": Object {
-          "Fn::If": Array [
+        "StreamEncryption": {
+          "Fn::If": [
             "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
-            Object {
+            {
               "Ref": "AWS::NoValue",
             },
-            Object {
+            {
               "EncryptionType": "KMS",
               "KeyId": "alias/aws/kinesis",
             },
           ],
         },
-        "StreamModeDetails": Object {
+        "StreamModeDetails": {
           "StreamMode": "PROVISIONED",
         },
       },
       "Type": "AWS::Kinesis::Stream",
     },
-    "CustomStreamE8E9158E": Object {
-      "Properties": Object {
+    "CustomStreamE8E9158E": {
+      "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
-        "StreamEncryption": Object {
-          "Fn::If": Array [
+        "StreamEncryption": {
+          "Fn::If": [
             "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
-            Object {
+            {
               "Ref": "AWS::NoValue",
             },
-            Object {
+            {
               "EncryptionType": "KMS",
               "KeyId": "alias/aws/kinesis",
             },
           ],
         },
-        "StreamModeDetails": Object {
+        "StreamModeDetails": {
           "StreamMode": "PROVISIONED",
         },
       },
@@ -1311,21 +1311,21 @@ Object {
 `;
 
 exports[`CloudWatchToS3FirehoseBucketName Construct(CloudWatchToS3Firehose):  Snapshot Test 1`] = `
-Object {
-  "Conditions": Object {
-    "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": Object {
-      "Fn::Or": Array [
-        Object {
-          "Fn::Equals": Array [
-            Object {
+{
+  "Conditions": {
+    "AwsCdkKinesisEncryptedStreamsUnsupportedRegions": {
+      "Fn::Or": [
+        {
+          "Fn::Equals": [
+            {
               "Ref": "AWS::Region",
             },
             "cn-north-1",
           ],
         },
-        Object {
-          "Fn::Equals": Array [
-            Object {
+        {
+          "Fn::Equals": [
+            {
               "Ref": "AWS::Region",
             },
             "cn-northwest-1",
@@ -1334,62 +1334,62 @@ Object {
       ],
     },
   },
-  "Resources": Object {
-    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522": Object {
-      "Properties": Object {
-        "CatalogId": Object {
+  "Resources": {
+    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522": {
+      "Properties": {
+        "CatalogId": {
           "Ref": "AWS::AccountId",
         },
-        "DatabaseInput": Object {
+        "DatabaseInput": {
           "Description": "Glue database to store AWS Accelerator CloudWatch logs",
         },
       },
       "Type": "AWS::Glue::Database",
     },
-    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB": Object {
-      "Properties": Object {
-        "CatalogId": Object {
+    "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB": {
+      "Properties": {
+        "CatalogId": {
           "Ref": "AWS::AccountId",
         },
-        "DatabaseName": Object {
+        "DatabaseName": {
           "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
         },
-        "TableInput": Object {
+        "TableInput": {
           "Description": "Glue table to store AWS Accelerator CloudWatch logs",
           "Name": "aws-accelerator-firehose-transformation-table",
-          "StorageDescriptor": Object {
-            "Columns": Array [
-              Object {
-                "Comment": "Data messages use the \\"DATA_MESSAGE\\" type. Sometimes CloudWatch Logs may emit Kinesis records with a \\"CONTROL_MESSAGE\\" type, mainly for checking if the destination is reachable.",
+          "StorageDescriptor": {
+            "Columns": [
+              {
+                "Comment": "Data messages use the "DATA_MESSAGE" type. Sometimes CloudWatch Logs may emit Kinesis records with a "CONTROL_MESSAGE" type, mainly for checking if the destination is reachable.",
                 "Name": "messagetype",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The AWS Account ID of the originating log data",
                 "Name": "owner",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The log group name of the originating log data.",
                 "Name": "loggroup",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The list of comma delimited subscription filter names that matched with the originating log data.",
                 "Name": "subscriptionfilters",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The ID property is a unique identifier for every log event.",
                 "Name": "logeventsid",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "Timestamp of the log event",
                 "Name": "logeventstimestamp",
                 "Type": "timestamp",
               },
-              Object {
+              {
                 "Comment": "Actual message of the log event which is in json string",
                 "Name": "logeventsmessage",
                 "Type": "string",
@@ -1401,14 +1401,14 @@ Object {
       },
       "Type": "AWS::Glue::Table",
     },
-    "CloudWatchToS3FirehoseBucketNameFirehoseKinesisStreamServiceRole9577C2D5": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchToS3FirehoseBucketNameFirehoseKinesisStreamServiceRole9577C2D5": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "firehose.amazonaws.com",
               },
             },
@@ -1416,27 +1416,27 @@ Object {
           "Version": "2012-10-17",
         },
         "Description": "Role used by Kinesis Firehose to get records from Kinesis.",
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "kinesis:DescribeStream",
                     "kinesis:GetShardIterator",
                     "kinesis:GetRecords",
                     "kinesis:ListShards",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomStreamBucketName9F2BF3F7",
                       "Arn",
                     ],
                   },
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "kms:Decrypt",
                     "kms:Encrypt",
                     "kms:GenerateDataKey",
@@ -1447,8 +1447,8 @@ Object {
                     "kms:ReEncryptFrom",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomKinesisKeyBucketNameFF6F8D94",
                       "Arn",
                     ],
@@ -1463,33 +1463,33 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambda2F1022EF": Object {
-      "DependsOn": Array [
+    "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambda2F1022EF": {
+      "DependsOn": [
         "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Environment": Object {
-          "Variables": Object {
+        "Environment": {
+          "Variables": {
             "DynamicS3LogPartitioningMapping": "dynamic-partitioning/log-filters.json",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
         "Handler": "index.handler",
-        "KmsKeyArn": Object {
-          "Fn::GetAtt": Array [
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
             "CustomLambdaKeyBucketNameF1E215CD",
             "Arn",
           ],
         },
         "MemorySize": 2048,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB",
             "Arn",
           ],
@@ -1499,27 +1499,27 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambdaServiceRoleFA79B6BB": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -1530,14 +1530,14 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "firehose.amazonaws.com",
               },
             },
@@ -1545,26 +1545,26 @@ Object {
           "Version": "2012-10-17",
         },
         "Description": "Role used by Kinesis Firehose to place Kinesis records in the central bucket.",
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "kms:Decrypt",
                     "kms:GenerateDataKey",
                   ],
-                  "Condition": Object {
-                    "StringEquals": Object {
+                  "Condition": {
+                    "StringEquals": {
                       "kms:ViaService": "s3.someregion.amazonaws.com",
                     },
-                    "StringLike": Object {
-                      "kms:EncryptionContext:aws:s3:arn": Object {
-                        "Fn::Join": Array [
+                    "StringLike": {
+                      "kms:EncryptionContext:aws:s3:arn": {
+                        "Fn::Join": [
                           "",
-                          Array [
+                          [
                             "arn:",
-                            Object {
+                            {
                               "Ref": "AWS::Partition",
                             },
                             ":s3:::somebucket/*",
@@ -1574,15 +1574,15 @@ Object {
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomKeyBucketName4DE2ADC8",
                       "Arn",
                     ],
                   },
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "s3:AbortMultipartUpload",
                     "s3:GetBucketLocation",
                     "s3:GetObject",
@@ -1591,25 +1591,25 @@ Object {
                     "s3:PutObject",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::somebucket",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::somebucket/*",
@@ -1618,19 +1618,19 @@ Object {
                     },
                   ],
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "lambda:InvokeFunction",
                     "lambda:GetFunctionConfiguration",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
-                          Object {
-                            "Fn::GetAtt": Array [
+                        [
+                          {
+                            "Fn::GetAtt": [
                               "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambda2F1022EF",
                               "Arn",
                             ],
@@ -1639,87 +1639,87 @@ Object {
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::GetAtt": Array [
+                    {
+                      "Fn::GetAtt": [
                         "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambda2F1022EF",
                         "Arn",
                       ],
                     },
                   ],
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "glue:GetTable",
                     "glue:GetTableVersion",
                     "glue:GetTableVersions",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":glue:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":catalog",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":glue:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":database/",
-                          Object {
+                          {
                             "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
                           },
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":glue:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":table/",
-                          Object {
+                          {
                             "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
                           },
                           "/",
-                          Object {
+                          {
                             "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB",
                           },
                         ],
@@ -1736,65 +1736,65 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseBucketNameKinesisFirehoseStreamDynamicPartitioningCD958E16": Object {
-      "Properties": Object {
+    "CloudWatchToS3FirehoseBucketNameKinesisFirehoseStreamDynamicPartitioningCD958E16": {
+      "Properties": {
         "DeliveryStreamType": "KinesisStreamAsSource",
-        "ExtendedS3DestinationConfiguration": Object {
-          "BucketARN": Object {
-            "Fn::Join": Array [
+        "ExtendedS3DestinationConfiguration": {
+          "BucketARN": {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":s3:::somebucket",
               ],
             ],
           },
-          "BufferingHints": Object {
+          "BufferingHints": {
             "IntervalInSeconds": 60,
             "SizeInMBs": 128,
           },
           "CompressionFormat": "UNCOMPRESSED",
-          "DataFormatConversionConfiguration": Object {
+          "DataFormatConversionConfiguration": {
             "Enabled": true,
-            "InputFormatConfiguration": Object {
-              "Deserializer": Object {
-                "OpenXJsonSerDe": Object {
+            "InputFormatConfiguration": {
+              "Deserializer": {
+                "OpenXJsonSerDe": {
                   "CaseInsensitive": true,
                 },
               },
             },
-            "OutputFormatConfiguration": Object {
-              "Serializer": Object {
-                "ParquetSerDe": Object {
+            "OutputFormatConfiguration": {
+              "Serializer": {
+                "ParquetSerDe": {
                   "Compression": "SNAPPY",
                 },
               },
             },
-            "SchemaConfiguration": Object {
-              "DatabaseName": Object {
+            "SchemaConfiguration": {
+              "DatabaseName": {
                 "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchDbCAE69522",
               },
-              "RoleARN": Object {
-                "Fn::GetAtt": Array [
+              "RoleARN": {
+                "Fn::GetAtt": [
                   "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103",
                   "Arn",
                 ],
               },
-              "TableName": Object {
+              "TableName": {
                 "Ref": "CloudWatchToS3FirehoseBucketNameFirehoseCloudWatchTable1D7675CB",
               },
             },
           },
-          "DynamicPartitioningConfiguration": Object {
+          "DynamicPartitioningConfiguration": {
             "Enabled": true,
           },
-          "EncryptionConfiguration": Object {
-            "KMSEncryptionConfig": Object {
-              "AWSKMSKeyARN": Object {
-                "Fn::GetAtt": Array [
+          "EncryptionConfiguration": {
+            "KMSEncryptionConfig": {
+              "AWSKMSKeyARN": {
+                "Fn::GetAtt": [
                   "CustomKeyBucketName4DE2ADC8",
                   "Arn",
                 ],
@@ -1803,21 +1803,21 @@ Object {
           },
           "ErrorOutputPrefix": "CloudWatchLogs/processing-failed",
           "Prefix": "!{partitionKeyFromLambda:dynamicPrefix}",
-          "ProcessingConfiguration": Object {
+          "ProcessingConfiguration": {
             "Enabled": true,
-            "Processors": Array [
-              Object {
-                "Parameters": Array [
-                  Object {
+            "Processors": [
+              {
+                "Parameters": [
+                  {
                     "ParameterName": "LambdaArn",
-                    "ParameterValue": Object {
-                      "Fn::GetAtt": Array [
+                    "ParameterValue": {
+                      "Fn::GetAtt": [
                         "CloudWatchToS3FirehoseBucketNameFirehosePrefixProcessingLambda2F1022EF",
                         "Arn",
                       ],
                     },
                   },
-                  Object {
+                  {
                     "ParameterName": "NumberOfRetries",
                     "ParameterValue": "3",
                   },
@@ -1826,22 +1826,22 @@ Object {
               },
             ],
           },
-          "RoleARN": Object {
-            "Fn::GetAtt": Array [
+          "RoleARN": {
+            "Fn::GetAtt": [
               "CloudWatchToS3FirehoseBucketNameFirehoseS3ServiceRole1B034103",
               "Arn",
             ],
           },
         },
-        "KinesisStreamSourceConfiguration": Object {
-          "KinesisStreamARN": Object {
-            "Fn::GetAtt": Array [
+        "KinesisStreamSourceConfiguration": {
+          "KinesisStreamARN": {
+            "Fn::GetAtt": [
               "CustomStreamBucketName9F2BF3F7",
               "Arn",
             ],
           },
-          "RoleARN": Object {
-            "Fn::GetAtt": Array [
+          "RoleARN": {
+            "Fn::GetAtt": [
               "CloudWatchToS3FirehoseBucketNameFirehoseKinesisStreamServiceRole9577C2D5",
               "Arn",
             ],
@@ -1850,61 +1850,61 @@ Object {
       },
       "Type": "AWS::KinesisFirehose::DeliveryStream",
     },
-    "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9": Object {
-      "Properties": Object {
-        "CatalogId": Object {
+    "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9": {
+      "Properties": {
+        "CatalogId": {
           "Ref": "AWS::AccountId",
         },
-        "DatabaseInput": Object {
+        "DatabaseInput": {
           "Description": "Glue database to store AWS Accelerator CloudWatch logs",
         },
       },
       "Type": "AWS::Glue::Database",
     },
-    "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48": Object {
-      "Properties": Object {
-        "CatalogId": Object {
+    "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48": {
+      "Properties": {
+        "CatalogId": {
           "Ref": "AWS::AccountId",
         },
-        "DatabaseName": Object {
+        "DatabaseName": {
           "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
         },
-        "TableInput": Object {
+        "TableInput": {
           "Description": "Glue table to store AWS Accelerator CloudWatch logs",
           "Name": "aws-accelerator-firehose-transformation-table",
-          "StorageDescriptor": Object {
-            "Columns": Array [
-              Object {
-                "Comment": "Data messages use the \\"DATA_MESSAGE\\" type. Sometimes CloudWatch Logs may emit Kinesis records with a \\"CONTROL_MESSAGE\\" type, mainly for checking if the destination is reachable.",
+          "StorageDescriptor": {
+            "Columns": [
+              {
+                "Comment": "Data messages use the "DATA_MESSAGE" type. Sometimes CloudWatch Logs may emit Kinesis records with a "CONTROL_MESSAGE" type, mainly for checking if the destination is reachable.",
                 "Name": "messagetype",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The AWS Account ID of the originating log data",
                 "Name": "owner",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The log group name of the originating log data.",
                 "Name": "loggroup",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The list of comma delimited subscription filter names that matched with the originating log data.",
                 "Name": "subscriptionfilters",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "The ID property is a unique identifier for every log event.",
                 "Name": "logeventsid",
                 "Type": "string",
               },
-              Object {
+              {
                 "Comment": "Timestamp of the log event",
                 "Name": "logeventstimestamp",
                 "Type": "timestamp",
               },
-              Object {
+              {
                 "Comment": "Actual message of the log event which is in json string",
                 "Name": "logeventsmessage",
                 "Type": "string",
@@ -1916,14 +1916,14 @@ Object {
       },
       "Type": "AWS::Glue::Table",
     },
-    "CloudWatchToS3FirehoseFirehoseKinesisStreamServiceRole80E25BD8": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchToS3FirehoseFirehoseKinesisStreamServiceRole80E25BD8": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "firehose.amazonaws.com",
               },
             },
@@ -1931,27 +1931,27 @@ Object {
           "Version": "2012-10-17",
         },
         "Description": "Role used by Kinesis Firehose to get records from Kinesis.",
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "kinesis:DescribeStream",
                     "kinesis:GetShardIterator",
                     "kinesis:GetRecords",
                     "kinesis:ListShards",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomStreamE8E9158E",
                       "Arn",
                     ],
                   },
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "kms:Decrypt",
                     "kms:Encrypt",
                     "kms:GenerateDataKey",
@@ -1962,8 +1962,8 @@ Object {
                     "kms:ReEncryptFrom",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomKinesisKey1382C574",
                       "Arn",
                     ],
@@ -1978,33 +1978,33 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603": Object {
-      "DependsOn": Array [
+    "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603": {
+      "DependsOn": [
         "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Environment": Object {
-          "Variables": Object {
+        "Environment": {
+          "Variables": {
             "DynamicS3LogPartitioningMapping": "dynamic-partitioning/log-filters.json",
           },
         },
         "FunctionName": "AWSAccelerator-FirehoseRecordsProcessor",
         "Handler": "index.handler",
-        "KmsKeyArn": Object {
-          "Fn::GetAtt": Array [
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
             "CustomLambdaKey2287F5A9",
             "Arn",
           ],
         },
         "MemorySize": 2048,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167",
             "Arn",
           ],
@@ -2014,27 +2014,27 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaServiceRole405E5167": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -2045,14 +2045,14 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "firehose.amazonaws.com",
               },
             },
@@ -2060,26 +2060,26 @@ Object {
           "Version": "2012-10-17",
         },
         "Description": "Role used by Kinesis Firehose to place Kinesis records in the central bucket.",
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "kms:Decrypt",
                     "kms:GenerateDataKey",
                   ],
-                  "Condition": Object {
-                    "StringEquals": Object {
+                  "Condition": {
+                    "StringEquals": {
                       "kms:ViaService": "s3.someregion.amazonaws.com",
                     },
-                    "StringLike": Object {
-                      "kms:EncryptionContext:aws:s3:arn": Object {
-                        "Fn::Join": Array [
+                    "StringLike": {
+                      "kms:EncryptionContext:aws:s3:arn": {
+                        "Fn::Join": [
                           "",
-                          Array [
-                            Object {
-                              "Fn::GetAtt": Array [
+                          [
+                            {
+                              "Fn::GetAtt": [
                                 "CustomBucketF81FA714",
                                 "Arn",
                               ],
@@ -2091,15 +2091,15 @@ Object {
                     },
                   },
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CustomKey1E6D0D07",
                       "Arn",
                     ],
                   },
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "s3:AbortMultipartUpload",
                     "s3:GetBucketLocation",
                     "s3:GetObject",
@@ -2108,19 +2108,19 @@ Object {
                     "s3:PutObject",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::GetAtt": Array [
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
                         "CustomBucketF81FA714",
                         "Arn",
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
-                          Object {
-                            "Fn::GetAtt": Array [
+                        [
+                          {
+                            "Fn::GetAtt": [
                               "CustomBucketF81FA714",
                               "Arn",
                             ],
@@ -2131,19 +2131,19 @@ Object {
                     },
                   ],
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "lambda:InvokeFunction",
                     "lambda:GetFunctionConfiguration",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
-                          Object {
-                            "Fn::GetAtt": Array [
+                        [
+                          {
+                            "Fn::GetAtt": [
                               "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603",
                               "Arn",
                             ],
@@ -2152,87 +2152,87 @@ Object {
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::GetAtt": Array [
+                    {
+                      "Fn::GetAtt": [
                         "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603",
                         "Arn",
                       ],
                     },
                   ],
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "glue:GetTable",
                     "glue:GetTableVersion",
                     "glue:GetTableVersions",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":glue:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":catalog",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":glue:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":database/",
-                          Object {
+                          {
                             "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
                           },
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":glue:",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           ":",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           ":table/",
-                          Object {
+                          {
                             "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
                           },
                           "/",
-                          Object {
+                          {
                             "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48",
                           },
                         ],
@@ -2249,59 +2249,59 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CloudWatchToS3FirehoseKinesisFirehoseStreamDynamicPartitioning03389B0D": Object {
-      "Properties": Object {
+    "CloudWatchToS3FirehoseKinesisFirehoseStreamDynamicPartitioning03389B0D": {
+      "Properties": {
         "DeliveryStreamType": "KinesisStreamAsSource",
-        "ExtendedS3DestinationConfiguration": Object {
-          "BucketARN": Object {
-            "Fn::GetAtt": Array [
+        "ExtendedS3DestinationConfiguration": {
+          "BucketARN": {
+            "Fn::GetAtt": [
               "CustomBucketF81FA714",
               "Arn",
             ],
           },
-          "BufferingHints": Object {
+          "BufferingHints": {
             "IntervalInSeconds": 60,
             "SizeInMBs": 128,
           },
           "CompressionFormat": "UNCOMPRESSED",
-          "DataFormatConversionConfiguration": Object {
+          "DataFormatConversionConfiguration": {
             "Enabled": true,
-            "InputFormatConfiguration": Object {
-              "Deserializer": Object {
-                "OpenXJsonSerDe": Object {
+            "InputFormatConfiguration": {
+              "Deserializer": {
+                "OpenXJsonSerDe": {
                   "CaseInsensitive": true,
                 },
               },
             },
-            "OutputFormatConfiguration": Object {
-              "Serializer": Object {
-                "ParquetSerDe": Object {
+            "OutputFormatConfiguration": {
+              "Serializer": {
+                "ParquetSerDe": {
                   "Compression": "SNAPPY",
                 },
               },
             },
-            "SchemaConfiguration": Object {
-              "DatabaseName": Object {
+            "SchemaConfiguration": {
+              "DatabaseName": {
                 "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchDb1916F9D9",
               },
-              "RoleARN": Object {
-                "Fn::GetAtt": Array [
+              "RoleARN": {
+                "Fn::GetAtt": [
                   "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338",
                   "Arn",
                 ],
               },
-              "TableName": Object {
+              "TableName": {
                 "Ref": "CloudWatchToS3FirehoseFirehoseCloudWatchTableB4DADD48",
               },
             },
           },
-          "DynamicPartitioningConfiguration": Object {
+          "DynamicPartitioningConfiguration": {
             "Enabled": true,
           },
-          "EncryptionConfiguration": Object {
-            "KMSEncryptionConfig": Object {
-              "AWSKMSKeyARN": Object {
-                "Fn::GetAtt": Array [
+          "EncryptionConfiguration": {
+            "KMSEncryptionConfig": {
+              "AWSKMSKeyARN": {
+                "Fn::GetAtt": [
                   "CustomKey1E6D0D07",
                   "Arn",
                 ],
@@ -2310,21 +2310,21 @@ Object {
           },
           "ErrorOutputPrefix": "CloudWatchLogs/processing-failed",
           "Prefix": "!{partitionKeyFromLambda:dynamicPrefix}",
-          "ProcessingConfiguration": Object {
+          "ProcessingConfiguration": {
             "Enabled": true,
-            "Processors": Array [
-              Object {
-                "Parameters": Array [
-                  Object {
+            "Processors": [
+              {
+                "Parameters": [
+                  {
                     "ParameterName": "LambdaArn",
-                    "ParameterValue": Object {
-                      "Fn::GetAtt": Array [
+                    "ParameterValue": {
+                      "Fn::GetAtt": [
                         "CloudWatchToS3FirehoseFirehosePrefixProcessingLambdaE5E42603",
                         "Arn",
                       ],
                     },
                   },
-                  Object {
+                  {
                     "ParameterName": "NumberOfRetries",
                     "ParameterValue": "3",
                   },
@@ -2333,22 +2333,22 @@ Object {
               },
             ],
           },
-          "RoleARN": Object {
-            "Fn::GetAtt": Array [
+          "RoleARN": {
+            "Fn::GetAtt": [
               "CloudWatchToS3FirehoseFirehoseS3ServiceRole8EEB3338",
               "Arn",
             ],
           },
         },
-        "KinesisStreamSourceConfiguration": Object {
-          "KinesisStreamARN": Object {
-            "Fn::GetAtt": Array [
+        "KinesisStreamSourceConfiguration": {
+          "KinesisStreamARN": {
+            "Fn::GetAtt": [
               "CustomStreamE8E9158E",
               "Arn",
             ],
           },
-          "RoleARN": Object {
-            "Fn::GetAtt": Array [
+          "RoleARN": {
+            "Fn::GetAtt": [
               "CloudWatchToS3FirehoseFirehoseKinesisStreamServiceRole80E25BD8",
               "Arn",
             ],
@@ -2357,30 +2357,30 @@ Object {
       },
       "Type": "AWS::KinesisFirehose::DeliveryStream",
     },
-    "CustomBucketF81FA714": Object {
+    "CustomBucketF81FA714": {
       "DeletionPolicy": "Retain",
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomKey1E6D0D07": Object {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2397,25 +2397,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomKeyBucketName4DE2ADC8": Object {
+    "CustomKeyBucketName4DE2ADC8": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2432,25 +2432,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomKinesisKey1382C574": Object {
+    "CustomKinesisKey1382C574": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2467,25 +2467,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomKinesisKeyBucketNameFF6F8D94": Object {
+    "CustomKinesisKeyBucketNameFF6F8D94": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2502,25 +2502,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomLambdaKey2287F5A9": Object {
+    "CustomLambdaKey2287F5A9": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2537,25 +2537,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomLambdaKeyBucketNameF1E215CD": Object {
+    "CustomLambdaKeyBucketNameF1E215CD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2572,45 +2572,45 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomStreamBucketName9F2BF3F7": Object {
-      "Properties": Object {
+    "CustomStreamBucketName9F2BF3F7": {
+      "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
-        "StreamEncryption": Object {
-          "Fn::If": Array [
+        "StreamEncryption": {
+          "Fn::If": [
             "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
-            Object {
+            {
               "Ref": "AWS::NoValue",
             },
-            Object {
+            {
               "EncryptionType": "KMS",
               "KeyId": "alias/aws/kinesis",
             },
           ],
         },
-        "StreamModeDetails": Object {
+        "StreamModeDetails": {
           "StreamMode": "PROVISIONED",
         },
       },
       "Type": "AWS::Kinesis::Stream",
     },
-    "CustomStreamE8E9158E": Object {
-      "Properties": Object {
+    "CustomStreamE8E9158E": {
+      "Properties": {
         "RetentionPeriodHours": 24,
         "ShardCount": 1,
-        "StreamEncryption": Object {
-          "Fn::If": Array [
+        "StreamEncryption": {
+          "Fn::If": [
             "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
-            Object {
+            {
               "Ref": "AWS::NoValue",
             },
-            Object {
+            {
               "EncryptionType": "KMS",
               "KeyId": "alias/aws/kinesis",
             },
           ],
         },
-        "StreamModeDetails": Object {
+        "StreamModeDetails": {
           "StreamMode": "PROVISIONED",
         },
       },

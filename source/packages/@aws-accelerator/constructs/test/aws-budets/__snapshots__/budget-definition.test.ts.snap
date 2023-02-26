@@ -1,18 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`BudgetDefinition Construct(BudgetDefinition):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestBudgetDefinitionaccelbudgetBE1AA96C": Object {
-      "Properties": Object {
-        "Budget": Object {
-          "BudgetLimit": Object {
+{
+  "Resources": {
+    "TestBudgetDefinitionaccelbudgetBE1AA96C": {
+      "Properties": {
+        "Budget": {
+          "BudgetLimit": {
             "Amount": 2000,
             "Unit": "USD",
           },
           "BudgetName": "accel-budget",
           "BudgetType": "COST",
-          "CostTypes": Object {
+          "CostTypes": {
             "IncludeCredit": false,
             "IncludeDiscount": true,
             "IncludeOtherSubscription": true,
@@ -27,16 +27,16 @@ Object {
           },
           "TimeUnit": "MONTHLY",
         },
-        "NotificationsWithSubscribers": Array [
-          Object {
-            "Notification": Object {
+        "NotificationsWithSubscribers": [
+          {
+            "Notification": {
               "ComparisonOperator": "GREATER_THAN",
               "NotificationType": "ACTUAL",
               "Threshold": 100,
               "ThresholdType": "PERCENTAGE",
             },
-            "Subscribers": Array [
-              Object {
+            "Subscribers": [
+              {
                 "Address": "myemail+pa-budg@example.com",
                 "SubscriptionType": "EMAIL",
               },

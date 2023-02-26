@@ -1,27 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`RevertScpChanges Construct(RevertScpChanges):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomCloudWatchKey720588E1": Object {
+{
+  "Resources": {
+    "CustomCloudWatchKey720588E1": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -38,25 +38,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomLambdaKey2287F5A9": Object {
+    "CustomLambdaKey2287F5A9": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -73,38 +73,38 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "RevertScpChangesModifyScpRule4ECCD6B5": Object {
-      "Properties": Object {
+    "RevertScpChangesModifyScpRule4ECCD6B5": {
+      "Properties": {
         "Description": "Rule to notify when an LZA-managed SCP is modified or detatched.",
-        "EventPattern": Object {
-          "detail": Object {
-            "eventName": Array [
+        "EventPattern": {
+          "detail": {
+            "eventName": [
               "AttachPolicy",
               "DetachPolicy",
               "UpdatePolicy",
             ],
-            "eventSource": Array [
+            "eventSource": [
               "organizations.amazonaws.com",
             ],
           },
-          "detail-type": Array [
+          "detail-type": [
             "AWS API Call via CloudTrail",
           ],
-          "source": Array [
+          "source": [
             "aws.organizations",
           ],
         },
         "State": "ENABLED",
-        "Targets": Array [
-          Object {
-            "Arn": Object {
-              "Fn::GetAtt": Array [
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
                 "RevertScpChangesRevertScpChangesFunction5EF82185",
                 "Arn",
               ],
             },
             "Id": "Target0",
-            "RetryPolicy": Object {
+            "RetryPolicy": {
               "MaximumEventAgeInSeconds": 14400,
               "MaximumRetryAttempts": 2,
             },
@@ -113,18 +113,18 @@ Object {
       },
       "Type": "AWS::Events::Rule",
     },
-    "RevertScpChangesModifyScpRuleAllowEventRuleRevertScpChangesRevertScpChangesFunction5DC45CB429E5A89B": Object {
-      "Properties": Object {
+    "RevertScpChangesModifyScpRuleAllowEventRuleRevertScpChangesRevertScpChangesFunction5DC45CB429E5A89B": {
+      "Properties": {
         "Action": "lambda:InvokeFunction",
-        "FunctionName": Object {
-          "Fn::GetAtt": Array [
+        "FunctionName": {
+          "Fn::GetAtt": [
             "RevertScpChangesRevertScpChangesFunction5EF82185",
             "Arn",
           ],
         },
         "Principal": "events.amazonaws.com",
-        "SourceArn": Object {
-          "Fn::GetAtt": Array [
+        "SourceArn": {
+          "Fn::GetAtt": [
             "RevertScpChangesModifyScpRule4ECCD6B5",
             "Arn",
           ],
@@ -132,39 +132,39 @@ Object {
       },
       "Type": "AWS::Lambda::Permission",
     },
-    "RevertScpChangesRevertScpChangesFunction5EF82185": Object {
-      "DependsOn": Array [
+    "RevertScpChangesRevertScpChangesFunction5EF82185": {
+      "DependsOn": [
         "RevertScpChangesRevertScpChangesFunctionServiceRoleDefaultPolicyF3C3ECD9",
         "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Description": "Lambda function to revert changes made to LZA-controlled service control policies",
-        "Environment": Object {
-          "Variables": Object {
+        "Environment": {
+          "Variables": {
             "AUDIT_ACCOUNT_ID": "111111111111",
-            "AWS_PARTITION": Object {
+            "AWS_PARTITION": {
               "Ref": "AWS::Partition",
             },
             "HOME_REGION": "us-west-2",
             "LOG_ARCHIVE_ACCOUNT_ID": "222222222222",
             "MANAGEMENT_ACCOUNT_ACCESS_ROLE": "LZARole",
             "MANAGEMENT_ACCOUNT_ID": "333333333333",
-            "SNS_TOPIC_ARN": Object {
-              "Fn::Join": Array [
+            "SNS_TOPIC_ARN": {
+              "Fn::Join": [
                 "",
-                Array [
+                [
                   "arn:",
-                  Object {
+                  {
                     "Ref": "AWS::Partition",
                   },
                   ":sns:us-west-2:",
-                  Object {
+                  {
                     "Ref": "AWS::AccountId",
                   },
                   ":aws-accelerator-Security",
@@ -174,14 +174,14 @@ Object {
           },
         },
         "Handler": "index.handler",
-        "KmsKeyArn": Object {
-          "Fn::GetAtt": Array [
+        "KmsKeyArn": {
+          "Fn::GetAtt": [
             "CustomLambdaKey2287F5A9",
             "Arn",
           ],
         },
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613",
             "Arn",
           ],
@@ -191,21 +191,21 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "RevertScpChangesRevertScpChangesFunctionLogGroup92A9E8AA": Object {
+    "RevertScpChangesRevertScpChangesFunctionLogGroup92A9E8AA": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CustomCloudWatchKey720588E1",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "RevertScpChangesRevertScpChangesFunction5EF82185",
               },
             ],
@@ -216,41 +216,41 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM4",
               "reason": "AWS Custom resource provider framework-role created by cdk.",
             },
-            Object {
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "Allows only specific policy.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -261,22 +261,22 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "RevertScpChangesRevertScpChangesFunctionServiceRoleDefaultPolicyF3C3ECD9": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "RevertScpChangesRevertScpChangesFunctionServiceRoleDefaultPolicyF3C3ECD9": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "Allows only specific policy.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:GenerateDataKey",
               ],
@@ -284,8 +284,8 @@ Object {
               "Resource": "*",
               "Sid": "kmsEncryptMessage",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "organizations:AttachPolicy",
                 "organizations:DetachPolicy",
                 "organizations:DescribePolicy",
@@ -298,19 +298,19 @@ Object {
               "Resource": "*",
               "Sid": "OrgPolicyUpdate",
             },
-            Object {
+            {
               "Action": "sns:Publish",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
                     ":sns:us-west-2:",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     ":aws-accelerator-Security",
@@ -323,8 +323,8 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "RevertScpChangesRevertScpChangesFunctionServiceRoleDefaultPolicyF3C3ECD9",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "RevertScpChangesRevertScpChangesFunctionServiceRole4F571613",
           },
         ],

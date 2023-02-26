@@ -1,27 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ResolverRule Construct(ResolverRule):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomKey1E6D0D07": Object {
+{
+  "Resources": {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -38,33 +38,33 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "TestResolverRule183FBE0C": Object {
-      "Properties": Object {
+    "TestResolverRule183FBE0C": {
+      "Properties": {
         "DomainName": "test.com",
         "Name": "TestResolverRule",
         "ResolverEndpointId": "TestEndpoint",
         "RuleType": "FORWARD",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestResolverRule",
           },
         ],
-        "TargetIps": Array [
-          Object {
+        "TargetIps": [
+          {
             "Ip": "1.1.1.1",
           },
-          Object {
+          {
             "Ip": "2.2.2.2",
           },
         ],
       },
       "Type": "AWS::Route53Resolver::ResolverRule",
     },
-    "TestResolverRuleAssoc7E0DCDC2": Object {
-      "Properties": Object {
-        "ResolverRuleId": Object {
-          "Fn::GetAtt": Array [
+    "TestResolverRuleAssoc7E0DCDC2": {
+      "Properties": {
+        "ResolverRuleId": {
+          "Fn::GetAtt": [
             "TestResolverRule183FBE0C",
             "ResolverRuleId",
           ],
@@ -78,27 +78,27 @@ Object {
 `;
 
 exports[`ResolverRule Construct(ResolverRule):  Snapshot Test 2`] = `
-Object {
-  "Resources": Object {
-    "CustomKey1E6D0D07": Object {
+{
+  "Resources": {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -115,32 +115,32 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "TestResolverRule183FBE0C": Object {
-      "Properties": Object {
+    "TestResolverRule183FBE0C": {
+      "Properties": {
         "DomainName": "test.com",
         "Name": "TestResolverRule",
         "RuleType": "SYSTEM",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestResolverRule",
           },
         ],
-        "TargetIps": Array [
-          Object {
+        "TargetIps": [
+          {
             "Ip": "1.1.1.1",
           },
-          Object {
+          {
             "Ip": "2.2.2.2",
           },
         ],
       },
       "Type": "AWS::Route53Resolver::ResolverRule",
     },
-    "TestResolverRuleAssoc7E0DCDC2": Object {
-      "Properties": Object {
-        "ResolverRuleId": Object {
-          "Fn::GetAtt": Array [
+    "TestResolverRuleAssoc7E0DCDC2": {
+      "Properties": {
+        "ResolverRuleId": {
+          "Fn::GetAtt": [
             "TestResolverRule183FBE0C",
             "ResolverRuleId",
           ],

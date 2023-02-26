@@ -1,17 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Network Firewall Rule Group Construct(NetworkFirewallPolicy):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestGroupAF88660E": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestGroupAF88660E": {
+      "Properties": {
         "Capacity": 100,
-        "RuleGroup": Object {
-          "RulesSource": Object {
-            "StatefulRules": Array [
-              Object {
+        "RuleGroup": {
+          "RulesSource": {
+            "StatefulRules": [
+              {
                 "Action": "PASS",
-                "Header": Object {
+                "Header": {
                   "Destination": "10.0.0.0/16",
                   "DestinationPort": "ANY",
                   "Direction": "FORWARD",
@@ -19,10 +19,10 @@ Object {
                   "Source": "10.1.0.0/16",
                   "SourcePort": "ANY",
                 },
-                "RuleOptions": Array [
-                  Object {
+                "RuleOptions": [
+                  {
                     "Keyword": "sid",
-                    "Settings": Array [
+                    "Settings": [
                       "100",
                     ],
                   },
@@ -30,13 +30,13 @@ Object {
               },
             ],
           },
-          "StatefulRuleOptions": Object {
+          "StatefulRuleOptions": {
             "RuleOrder": "STRICT_ORDER",
           },
         },
         "RuleGroupName": "TestGroup",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestGroup",
           },
@@ -45,35 +45,35 @@ Object {
       },
       "Type": "AWS::NetworkFirewall::RuleGroup",
     },
-    "TestGroupStatelessB53F2424": Object {
-      "Properties": Object {
+    "TestGroupStatelessB53F2424": {
+      "Properties": {
         "Capacity": 100,
-        "RuleGroup": Object {
-          "RuleVariables": Object {
-            "IPSets": Object {
-              "HOME_NET": Object {
-                "Definition": Array [
+        "RuleGroup": {
+          "RuleVariables": {
+            "IPSets": {
+              "HOME_NET": {
+                "Definition": [
                   "10.0.0.0/16",
                 ],
               },
             },
-            "PortSets": Object {
-              "HOME_NET": Object {
-                "Definition": Array [
+            "PortSets": {
+              "HOME_NET": {
+                "Definition": [
                   "80",
                   "443",
                 ],
               },
             },
           },
-          "RulesSource": Object {
-            "StatelessRulesAndCustomActions": Object {
-              "CustomActions": Array [
-                Object {
-                  "ActionDefinition": Object {
-                    "PublishMetricAction": Object {
-                      "Dimensions": Array [
-                        Object {
+          "RulesSource": {
+            "StatelessRulesAndCustomActions": {
+              "CustomActions": [
+                {
+                  "ActionDefinition": {
+                    "PublishMetricAction": {
+                      "Dimensions": [
+                        {
                           "Value": "CustomValue",
                         },
                       ],
@@ -82,34 +82,34 @@ Object {
                   "ActionName": "CustomAction",
                 },
               ],
-              "StatelessRules": Array [
-                Object {
+              "StatelessRules": [
+                {
                   "Priority": 100,
-                  "RuleDefinition": Object {
-                    "Actions": Array [
+                  "RuleDefinition": {
+                    "Actions": [
                       "aws:pass",
                     ],
-                    "MatchAttributes": Object {
-                      "DestinationPorts": Array [
-                        Object {
+                    "MatchAttributes": {
+                      "DestinationPorts": [
+                        {
                           "FromPort": 22,
                           "ToPort": 22,
                         },
                       ],
-                      "Destinations": Array [
-                        Object {
+                      "Destinations": [
+                        {
                           "AddressDefinition": "10.0.0.0/16",
                         },
                       ],
-                      "Protocols": Array [],
-                      "SourcePorts": Array [
-                        Object {
+                      "Protocols": [],
+                      "SourcePorts": [
+                        {
                           "FromPort": 1024,
                           "ToPort": 65535,
                         },
                       ],
-                      "Sources": Array [
-                        Object {
+                      "Sources": [
+                        {
                           "AddressDefinition": "10.1.0.0/16",
                         },
                       ],
@@ -119,17 +119,17 @@ Object {
               ],
             },
           },
-          "StatefulRuleOptions": Object {
+          "StatefulRuleOptions": {
             "RuleOrder": "STRICT_ORDER",
           },
         },
         "RuleGroupName": "TestGroupStateless",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestGroupStateless",
           },
-          Object {
+          {
             "Key": "someKey",
             "Value": "someValue",
           },
@@ -143,17 +143,17 @@ Object {
 `;
 
 exports[`Network Firewall Rule Group Stateless Construct(NetworkFirewallPolicy):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestGroupAF88660E": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestGroupAF88660E": {
+      "Properties": {
         "Capacity": 100,
-        "RuleGroup": Object {
-          "RulesSource": Object {
-            "StatefulRules": Array [
-              Object {
+        "RuleGroup": {
+          "RulesSource": {
+            "StatefulRules": [
+              {
                 "Action": "PASS",
-                "Header": Object {
+                "Header": {
                   "Destination": "10.0.0.0/16",
                   "DestinationPort": "ANY",
                   "Direction": "FORWARD",
@@ -161,10 +161,10 @@ Object {
                   "Source": "10.1.0.0/16",
                   "SourcePort": "ANY",
                 },
-                "RuleOptions": Array [
-                  Object {
+                "RuleOptions": [
+                  {
                     "Keyword": "sid",
-                    "Settings": Array [
+                    "Settings": [
                       "100",
                     ],
                   },
@@ -172,13 +172,13 @@ Object {
               },
             ],
           },
-          "StatefulRuleOptions": Object {
+          "StatefulRuleOptions": {
             "RuleOrder": "STRICT_ORDER",
           },
         },
         "RuleGroupName": "TestGroup",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestGroup",
           },
@@ -187,35 +187,35 @@ Object {
       },
       "Type": "AWS::NetworkFirewall::RuleGroup",
     },
-    "TestGroupStatelessB53F2424": Object {
-      "Properties": Object {
+    "TestGroupStatelessB53F2424": {
+      "Properties": {
         "Capacity": 100,
-        "RuleGroup": Object {
-          "RuleVariables": Object {
-            "IPSets": Object {
-              "HOME_NET": Object {
-                "Definition": Array [
+        "RuleGroup": {
+          "RuleVariables": {
+            "IPSets": {
+              "HOME_NET": {
+                "Definition": [
                   "10.0.0.0/16",
                 ],
               },
             },
-            "PortSets": Object {
-              "HOME_NET": Object {
-                "Definition": Array [
+            "PortSets": {
+              "HOME_NET": {
+                "Definition": [
                   "80",
                   "443",
                 ],
               },
             },
           },
-          "RulesSource": Object {
-            "StatelessRulesAndCustomActions": Object {
-              "CustomActions": Array [
-                Object {
-                  "ActionDefinition": Object {
-                    "PublishMetricAction": Object {
-                      "Dimensions": Array [
-                        Object {
+          "RulesSource": {
+            "StatelessRulesAndCustomActions": {
+              "CustomActions": [
+                {
+                  "ActionDefinition": {
+                    "PublishMetricAction": {
+                      "Dimensions": [
+                        {
                           "Value": "CustomValue",
                         },
                       ],
@@ -224,34 +224,34 @@ Object {
                   "ActionName": "CustomAction",
                 },
               ],
-              "StatelessRules": Array [
-                Object {
+              "StatelessRules": [
+                {
                   "Priority": 100,
-                  "RuleDefinition": Object {
-                    "Actions": Array [
+                  "RuleDefinition": {
+                    "Actions": [
                       "aws:pass",
                     ],
-                    "MatchAttributes": Object {
-                      "DestinationPorts": Array [
-                        Object {
+                    "MatchAttributes": {
+                      "DestinationPorts": [
+                        {
                           "FromPort": 22,
                           "ToPort": 22,
                         },
                       ],
-                      "Destinations": Array [
-                        Object {
+                      "Destinations": [
+                        {
                           "AddressDefinition": "10.0.0.0/16",
                         },
                       ],
-                      "Protocols": Array [],
-                      "SourcePorts": Array [
-                        Object {
+                      "Protocols": [],
+                      "SourcePorts": [
+                        {
                           "FromPort": 1024,
                           "ToPort": 65535,
                         },
                       ],
-                      "Sources": Array [
-                        Object {
+                      "Sources": [
+                        {
                           "AddressDefinition": "10.1.0.0/16",
                         },
                       ],
@@ -261,17 +261,17 @@ Object {
               ],
             },
           },
-          "StatefulRuleOptions": Object {
+          "StatefulRuleOptions": {
             "RuleOrder": "STRICT_ORDER",
           },
         },
         "RuleGroupName": "TestGroupStateless",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestGroupStateless",
           },
-          Object {
+          {
             "Key": "someKey",
             "Value": "someValue",
           },

@@ -1,23 +1,23 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`GuardDutyPublishingDestination Construct(GuardDutyPublishingDestination):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8": {
+      "DependsOn": [
         "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderRoleD01DD26B",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderRoleD01DD26B",
             "Arn",
           ],
@@ -27,21 +27,21 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderLogGroup118A06DB": Object {
+    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderLogGroup118A06DB": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "LogKeyE83D0C1B",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8",
               },
             ],
@@ -52,31 +52,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderRoleD01DD26B": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderRoleD01DD26B": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "guardDuty:CreateDetector",
                     "guardDuty:CreatePublishingDestination",
                     "guardDuty:DeletePublishingDestination",
@@ -90,46 +90,46 @@ Object {
                   "Resource": "*",
                   "Sid": "GuardDutyCreatePublishingDestinationCommandTaskGuardDutyActions",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "s3:ListBucket",
                     "s3:GetObject",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::aws-accelerator-guardduty-",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           "-",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::aws-accelerator-guardduty-",
-                          Object {
+                          {
                             "Ref": "AWS::AccountId",
                           },
                           "-",
-                          Object {
+                          {
                             "Ref": "AWS::Region",
                           },
                           "/*",
@@ -148,25 +148,25 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "DestinationKeyEE1EE37E": Object {
+    "DestinationKeyEE1EE37E": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -183,32 +183,32 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "GuardDutyPublishingDestination52AE4412": Object {
+    "GuardDutyPublishingDestination52AE4412": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderLogGroup118A06DB",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8",
             "Arn",
           ],
         },
-        "destinationArn": Object {
-          "Fn::Join": Array [
+        "destinationArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":s3:::aws-accelerator-guardduty-",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
               "-",
-              Object {
+              {
                 "Ref": "AWS::Region",
               },
             ],
@@ -216,38 +216,38 @@ Object {
         },
         "exportDestinationOverride": true,
         "exportDestinationType": "S3",
-        "kmsKeyArn": Object {
-          "Fn::GetAtt": Array [
+        "kmsKeyArn": {
+          "Fn::GetAtt": [
             "DestinationKeyEE1EE37E",
             "Arn",
           ],
         },
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
       },
       "Type": "Custom::GuardDutyCreatePublishingDestinationCommand",
       "UpdateReplacePolicy": "Delete",
     },
-    "LogKeyE83D0C1B": Object {
+    "LogKeyE83D0C1B": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",

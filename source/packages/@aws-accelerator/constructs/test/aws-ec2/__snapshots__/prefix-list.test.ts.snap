@@ -1,20 +1,20 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`PrefixList Construct(PrefixList):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestPrefixListF3A076C9": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestPrefixListF3A076C9": {
+      "Properties": {
         "AddressFamily": "IPv4",
-        "Entries": Array [
-          Object {
+        "Entries": [
+          {
             "Cidr": "1.1.1.1/32",
           },
         ],
         "MaxEntries": 1,
         "PrefixListName": "Test",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Test-Key",
             "Value": "Test-Value",
           },

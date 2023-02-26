@@ -1,26 +1,26 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`LaunchTemplate Construct(FirewallAutoScalingGroup):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestFirewallAutoScalingServiceLinkedRoleD2FFF275": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestFirewallAutoScalingServiceLinkedRoleD2FFF275": {
+      "Properties": {
         "AWSServiceName": "autoscaling.amazonaws.com",
         "Description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
       },
       "Type": "AWS::IAM::ServiceLinkedRole",
     },
-    "TestFirewallF12A004C": Object {
-      "Properties": Object {
+    "TestFirewallF12A004C": {
+      "Properties": {
         "DesiredCapacity": "2",
         "HealthCheckGracePeriod": 300,
         "HealthCheckType": "ELB",
-        "LaunchTemplate": Object {
-          "LaunchTemplateId": Object {
+        "LaunchTemplate": {
+          "LaunchTemplateId": {
             "Ref": "TestFirewallLaunchTemplateFF1988AF",
           },
-          "Version": Object {
-            "Fn::GetAtt": Array [
+          "Version": {
+            "Fn::GetAtt": [
               "TestFirewallLaunchTemplateFF1988AF",
               "LatestVersionNumber",
             ],
@@ -28,48 +28,48 @@ Object {
         },
         "MaxSize": "4",
         "MinSize": "1",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "PropagateAtLaunch": true,
             "Value": "Test",
           },
         ],
-        "TargetGroupARNs": Array [],
-        "VPCZoneIdentifier": Array [
+        "TargetGroupARNs": [],
+        "VPCZoneIdentifier": [
           "subnet-123xyz",
           "subnet-456abc",
         ],
       },
       "Type": "AWS::AutoScaling::AutoScalingGroup",
     },
-    "TestFirewallLaunchTemplateFF1988AF": Object {
-      "Properties": Object {
-        "LaunchTemplateData": Object {
-          "BlockDeviceMappings": Array [
-            Object {
+    "TestFirewallLaunchTemplateFF1988AF": {
+      "Properties": {
+        "LaunchTemplateData": {
+          "BlockDeviceMappings": [
+            {
               "DeviceName": "dev/xvda",
-              "Ebs": Object {
+              "Ebs": {
                 "Encrypted": true,
               },
             },
           ],
-          "IamInstanceProfile": Object {},
+          "IamInstanceProfile": {},
           "ImageId": "ami-123xyz",
           "InstanceType": "t3.large",
-          "MetadataOptions": Object {
+          "MetadataOptions": {
             "HttpTokens": "required",
           },
-          "NetworkInterfaces": Array [
-            Object {
+          "NetworkInterfaces": [
+            {
               "DeviceIndex": 0,
-              "Groups": Array [
+              "Groups": [
                 "Test",
               ],
               "SubnetId": "subnet-123xyz",
             },
           ],
-          "SecurityGroupIds": Array [],
+          "SecurityGroupIds": [],
         },
         "LaunchTemplateName": "test-firewall",
       },

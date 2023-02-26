@@ -1,253 +1,253 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`NetworkAssociationsGwlbStack Construct(NetworkAssociationsGwlbStack):  Snapshot Test 1`] = `
-Object {
-  "Parameters": Object {
-    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+{
+  "Parameters": {
+    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/gwlb/Accelerator-GWLB/arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/gwlb/Accelerator-GWLB/endpointService/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-A/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-B/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-A/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsTgwBidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsTgwBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-B/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointssecurityGroupManagementidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointssecurityGroupManagementidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/securityGroup/Management/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-B/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsTgwAttachAidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsTgwAttachAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-A/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsTgwAttachBidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointssubnetNetworkEndpointsTgwAttachBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-EndpointsTgwAttach-B/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Inspection/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-A/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionBidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-B/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionGatewayidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Gateway/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-A/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwBidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Inspection/routeTable/Network-Inspection-Tgw-B/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Inspection/securityGroup/Data/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-A/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionBidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Inspection/subnet/Network-Inspection-B/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionTgwAttachAidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionTgwAttachAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-A/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionTgwAttachBidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionTgwAttachBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Inspection/subnet/Network-InspectionTgwAttach-B/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryARtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-A-Rt/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondaryrouteTableNetworkSecondaryBRtidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/routeTable/Network-Secondary-B-Rt/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryAidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryAidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-A/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryBidC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratornetworkvpcNetworkSecondarysubnetNetworkSecondaryBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Secondary/subnet/Network-Secondary-B/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/security-stack/ebsDefaultVolumeEncryptionKeyArn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amihvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amihvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
-  "Resources": Object {
-    "NetworkInspectionAcceleratorGwlbListener": Object {
-      "Properties": Object {
-        "DefaultActions": Array [
-          Object {
-            "TargetGroupArn": Object {
+  "Resources": {
+    "NetworkInspectionAcceleratorGwlbListener": {
+      "Properties": {
+        "DefaultActions": [
+          {
+            "TargetGroupArn": {
               "Ref": "NetworkInspectioninstancetargetFirewallTargetGroupBF1E619D",
             },
             "Type": "forward",
           },
         ],
-        "LoadBalancerArn": Object {
+        "LoadBalancerArn": {
           "Ref": "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::ElasticLoadBalancingV2::Listener",
     },
-    "NetworkInspectionVpcEndpointAGwlbEpB5238F8C": Object {
-      "Properties": Object {
-        "ServiceName": Object {
-          "Fn::Join": Array [
+    "NetworkInspectionVpcEndpointAGwlbEpB5238F8C": {
+      "Properties": {
+        "ServiceName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "com.amazonaws.vpce.us-east-1.",
-              Object {
+              {
                 "Ref": "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             ],
           ],
         },
-        "SubnetIds": Array [
-          Object {
+        "SubnetIds": [
+          {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
         ],
         "VpcEndpointType": "GatewayLoadBalancer",
-        "VpcId": Object {
+        "VpcId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::EC2::VPCEndpoint",
     },
-    "NetworkInspectionVpcEndpointAGwlbEpNetworkInspectionVpcNetworkInspectionTgwARouteTableGwlbRoute2D6CF39B": Object {
-      "Properties": Object {
+    "NetworkInspectionVpcEndpointAGwlbEpNetworkInspectionVpcNetworkInspectionTgwARouteTableGwlbRoute2D6CF39B": {
+      "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
-        "RouteTableId": Object {
+        "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwAidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "VpcEndpointId": Object {
+        "VpcEndpointId": {
           "Ref": "NetworkInspectionVpcEndpointAGwlbEpB5238F8C",
         },
       },
       "Type": "AWS::EC2::Route",
     },
-    "NetworkInspectionVpcEndpointBGwlbEpEF9CAE4C": Object {
-      "Properties": Object {
-        "ServiceName": Object {
-          "Fn::Join": Array [
+    "NetworkInspectionVpcEndpointBGwlbEpEF9CAE4C": {
+      "Properties": {
+        "ServiceName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "com.amazonaws.vpce.us-east-1.",
-              Object {
+              {
                 "Ref": "SsmParameterValueacceleratornetworkgwlbAcceleratorGWLBendpointServiceidC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             ],
           ],
         },
-        "SubnetIds": Array [
-          Object {
+        "SubnetIds": [
+          {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionBidC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
         ],
         "VpcEndpointType": "GatewayLoadBalancer",
-        "VpcId": Object {
+        "VpcId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::EC2::VPCEndpoint",
     },
-    "NetworkInspectionVpcEndpointBGwlbEpNetworkInspectionVpcNetworkInspectionTgwBRouteTableGwlbRoute2B7C4C2E": Object {
-      "Properties": Object {
+    "NetworkInspectionVpcEndpointBGwlbEpNetworkInspectionVpcNetworkInspectionTgwBRouteTableGwlbRoute2B7C4C2E": {
+      "Properties": {
         "DestinationCidrBlock": "0.0.0.0/0",
-        "RouteTableId": Object {
+        "RouteTableId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionrouteTableNetworkInspectionTgwBidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "VpcEndpointId": Object {
+        "VpcEndpointId": {
           "Ref": "NetworkInspectionVpcEndpointBGwlbEpEF9CAE4C",
         },
       },
       "Type": "AWS::EC2::Route",
     },
-    "NetworkInspectionacceleratorFirewallFirewall23AAB613": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "NetworkInspectionacceleratorFirewallFirewall23AAB613": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-EC28",
               "reason": "Detailed monitoring not enabled by configuration.",
             },
-            Object {
+            {
               "id": "AwsSolutions-EC29",
               "reason": "Termination protection not enabled by configuration.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "LaunchTemplate": Object {
-          "LaunchTemplateId": Object {
+      "Properties": {
+        "LaunchTemplate": {
+          "LaunchTemplateId": {
             "Ref": "NetworkInspectionacceleratorFirewallFirewallLaunchTemplate74BB830F",
           },
-          "Version": Object {
-            "Fn::GetAtt": Array [
+          "Version": {
+            "Fn::GetAtt": [
               "NetworkInspectionacceleratorFirewallFirewallLaunchTemplate74BB830F",
               "LatestVersionNumber",
             ],
           },
         },
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "accelerator-firewall",
           },
@@ -255,27 +255,27 @@ Object {
       },
       "Type": "AWS::EC2::Instance",
     },
-    "NetworkInspectionacceleratorFirewallFirewallLaunchTemplate74BB830F": Object {
-      "Properties": Object {
-        "LaunchTemplateData": Object {
-          "BlockDeviceMappings": Array [
-            Object {
+    "NetworkInspectionacceleratorFirewallFirewallLaunchTemplate74BB830F": {
+      "Properties": {
+        "LaunchTemplateData": {
+          "BlockDeviceMappings": [
+            {
               "DeviceName": "/dev/xvda",
-              "Ebs": Object {
+              "Ebs": {
                 "Encrypted": true,
-                "KmsKeyId": Object {
-                  "Fn::Select": Array [
+                "KmsKeyId": {
+                  "Fn::Select": [
                     1,
-                    Object {
-                      "Fn::Split": Array [
+                    {
+                      "Fn::Split": [
                         "/",
-                        Object {
-                          "Fn::Select": Array [
+                        {
+                          "Fn::Select": [
                             5,
-                            Object {
-                              "Fn::Split": Array [
+                            {
+                              "Fn::Split": [
                                 ":",
-                                Object {
+                                {
                                   "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
                                 },
                               ],
@@ -289,23 +289,23 @@ Object {
                 "VolumeSize": 20,
               },
             },
-            Object {
+            {
               "DeviceName": "/dev/xvdb",
-              "Ebs": Object {
+              "Ebs": {
                 "Encrypted": true,
-                "KmsKeyId": Object {
-                  "Fn::Select": Array [
+                "KmsKeyId": {
+                  "Fn::Select": [
                     1,
-                    Object {
-                      "Fn::Split": Array [
+                    {
+                      "Fn::Split": [
                         "/",
-                        Object {
-                          "Fn::Select": Array [
+                        {
+                          "Fn::Select": [
                             5,
-                            Object {
-                              "Fn::Split": Array [
+                            {
+                              "Fn::Split": [
                                 ":",
-                                Object {
+                                {
                                   "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
                                 },
                               ],
@@ -320,75 +320,75 @@ Object {
               },
             },
           ],
-          "IamInstanceProfile": Object {},
-          "ImageId": Object {
+          "IamInstanceProfile": {},
+          "ImageId": {
             "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amihvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter",
           },
           "InstanceType": "t3.large",
-          "MetadataOptions": Object {
+          "MetadataOptions": {
             "HttpTokens": "required",
           },
-          "NetworkInterfaces": Array [
-            Object {
+          "NetworkInterfaces": [
+            {
               "Description": "Primary interface",
               "DeviceIndex": 0,
-              "Groups": Array [
-                Object {
+              "Groups": [
+                {
                   "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
                 },
               ],
-              "SubnetId": Object {
+              "SubnetId": {
                 "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
-            Object {
+            {
               "Description": "Secondary",
               "DeviceIndex": 1,
-              "Groups": Array [
-                Object {
+              "Groups": [
+                {
                   "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
                 },
               ],
-              "SubnetId": Object {
+              "SubnetId": {
                 "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
           ],
-          "SecurityGroupIds": Array [],
+          "SecurityGroupIds": [],
         },
         "LaunchTemplateName": "firewall-lt",
       },
       "Type": "AWS::EC2::LaunchTemplate",
     },
-    "NetworkInspectionacceleratorManagerFirewallB809D98F": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "NetworkInspectionacceleratorManagerFirewallB809D98F": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-EC28",
               "reason": "Detailed monitoring not enabled by configuration.",
             },
-            Object {
+            {
               "id": "AwsSolutions-EC29",
               "reason": "Termination protection not enabled by configuration.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "LaunchTemplate": Object {
-          "LaunchTemplateId": Object {
+      "Properties": {
+        "LaunchTemplate": {
+          "LaunchTemplateId": {
             "Ref": "NetworkInspectionacceleratorManagerFirewallLaunchTemplate2623D086",
           },
-          "Version": Object {
-            "Fn::GetAtt": Array [
+          "Version": {
+            "Fn::GetAtt": [
               "NetworkInspectionacceleratorManagerFirewallLaunchTemplate2623D086",
               "LatestVersionNumber",
             ],
           },
         },
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "accelerator-manager",
           },
@@ -396,27 +396,27 @@ Object {
       },
       "Type": "AWS::EC2::Instance",
     },
-    "NetworkInspectionacceleratorManagerFirewallLaunchTemplate2623D086": Object {
-      "Properties": Object {
-        "LaunchTemplateData": Object {
-          "BlockDeviceMappings": Array [
-            Object {
+    "NetworkInspectionacceleratorManagerFirewallLaunchTemplate2623D086": {
+      "Properties": {
+        "LaunchTemplateData": {
+          "BlockDeviceMappings": [
+            {
               "DeviceName": "/dev/xvda",
-              "Ebs": Object {
+              "Ebs": {
                 "Encrypted": true,
-                "KmsKeyId": Object {
-                  "Fn::Select": Array [
+                "KmsKeyId": {
+                  "Fn::Select": [
                     1,
-                    Object {
-                      "Fn::Split": Array [
+                    {
+                      "Fn::Split": [
                         "/",
-                        Object {
-                          "Fn::Select": Array [
+                        {
+                          "Fn::Select": [
                             5,
-                            Object {
-                              "Fn::Split": Array [
+                            {
+                              "Fn::Split": [
                                 ":",
-                                Object {
+                                {
                                   "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
                                 },
                               ],
@@ -430,23 +430,23 @@ Object {
                 "VolumeSize": 20,
               },
             },
-            Object {
+            {
               "DeviceName": "/dev/xvdb",
-              "Ebs": Object {
+              "Ebs": {
                 "Encrypted": true,
-                "KmsKeyId": Object {
-                  "Fn::Select": Array [
+                "KmsKeyId": {
+                  "Fn::Select": [
                     1,
-                    Object {
-                      "Fn::Split": Array [
+                    {
+                      "Fn::Split": [
                         "/",
-                        Object {
-                          "Fn::Select": Array [
+                        {
+                          "Fn::Select": [
                             5,
-                            Object {
-                              "Fn::Split": Array [
+                            {
+                              "Fn::Split": [
                                 ":",
-                                Object {
+                                {
                                   "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
                                 },
                               ],
@@ -461,124 +461,124 @@ Object {
               },
             },
           ],
-          "IamInstanceProfile": Object {},
-          "ImageId": Object {
+          "IamInstanceProfile": {},
+          "ImageId": {
             "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amihvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter",
           },
           "InstanceType": "t3.large",
-          "MetadataOptions": Object {
+          "MetadataOptions": {
             "HttpTokens": "required",
           },
-          "NetworkInterfaces": Array [
-            Object {
+          "NetworkInterfaces": [
+            {
               "Description": "Primary interface",
               "DeviceIndex": 0,
-              "Groups": Array [
-                Object {
+              "Groups": [
+                {
                   "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
                 },
               ],
-              "SubnetId": Object {
+              "SubnetId": {
                 "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
-            Object {
+            {
               "Description": "Secondary",
               "DeviceIndex": 1,
-              "Groups": Array [
-                Object {
+              "Groups": [
+                {
                   "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
                 },
               ],
-              "SubnetId": Object {
+              "SubnetId": {
                 "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
               },
             },
           ],
-          "SecurityGroupIds": Array [],
+          "SecurityGroupIds": [],
         },
         "LaunchTemplateName": "manager-lt",
       },
       "Type": "AWS::EC2::LaunchTemplate",
     },
-    "NetworkInspectionasgtargetFirewallTargetGroupC774988D": Object {
-      "Properties": Object {
+    "NetworkInspectionasgtargetFirewallTargetGroupC774988D": {
+      "Properties": {
         "HealthCheckEnabled": true,
-        "Matcher": Object {},
+        "Matcher": {},
         "Name": "asg-target",
         "Port": 6081,
         "Protocol": "GENEVE",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "asg-target",
           },
         ],
         "TargetType": "instance",
-        "VpcId": Object {
+        "VpcId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
     },
-    "NetworkInspectioninstancetargetFirewallTargetGroupBF1E619D": Object {
-      "Properties": Object {
+    "NetworkInspectioninstancetargetFirewallTargetGroupBF1E619D": {
+      "Properties": {
         "HealthCheckEnabled": true,
-        "Matcher": Object {},
+        "Matcher": {},
         "Name": "instance-target",
         "Port": 6081,
         "Protocol": "GENEVE",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "instance-target",
           },
         ],
-        "TargetGroupAttributes": Array [
-          Object {
+        "TargetGroupAttributes": [
+          {
             "Key": "target_failover.on_deregistration",
             "Value": "rebalance",
           },
-          Object {
+          {
             "Key": "target_failover.on_unhealthy",
             "Value": "rebalance",
           },
         ],
         "TargetType": "instance",
-        "Targets": Array [
-          Object {
-            "Id": Object {
+        "Targets": [
+          {
+            "Id": {
               "Ref": "NetworkInspectionacceleratorFirewallFirewall23AAB613",
             },
           },
         ],
-        "VpcId": Object {
+        "VpcId": {
           "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionidC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
     },
-    "NetworkInspectiontestAsgFirewallAsg1343090A": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "NetworkInspectiontestAsgFirewallAsg1343090A": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-AS3",
               "reason": "Scaling policies are not offered as a part of this solution.",
             },
           ],
         },
       },
-      "Properties": Object {
+      "Properties": {
         "DesiredCapacity": "2",
         "HealthCheckGracePeriod": 300,
         "HealthCheckType": "EC2",
-        "LaunchTemplate": Object {
-          "LaunchTemplateId": Object {
+        "LaunchTemplate": {
+          "LaunchTemplateId": {
             "Ref": "NetworkInspectiontestAsgFirewallAsgLaunchTemplate333DF543",
           },
-          "Version": Object {
-            "Fn::GetAtt": Array [
+          "Version": {
+            "Fn::GetAtt": [
               "NetworkInspectiontestAsgFirewallAsgLaunchTemplate333DF543",
               "LatestVersionNumber",
             ],
@@ -586,57 +586,57 @@ Object {
         },
         "MaxSize": "4",
         "MinSize": "1",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "PropagateAtLaunch": true,
             "Value": "test-asg",
           },
         ],
-        "TargetGroupARNs": Array [
-          Object {
+        "TargetGroupARNs": [
+          {
             "Ref": "NetworkInspectionasgtargetFirewallTargetGroupC774988D",
           },
         ],
-        "VPCZoneIdentifier": Array [
-          Object {
+        "VPCZoneIdentifier": [
+          {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionAidC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
-          Object {
+          {
             "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsubnetNetworkInspectionBidC96584B6F00A464EAD1953AFF4B05118Parameter",
           },
         ],
       },
       "Type": "AWS::AutoScaling::AutoScalingGroup",
     },
-    "NetworkInspectiontestAsgFirewallAsgAutoScalingServiceLinkedRole826FF3B8": Object {
-      "Properties": Object {
+    "NetworkInspectiontestAsgFirewallAsgAutoScalingServiceLinkedRole826FF3B8": {
+      "Properties": {
         "AWSServiceName": "autoscaling.amazonaws.com",
         "Description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
       },
       "Type": "AWS::IAM::ServiceLinkedRole",
     },
-    "NetworkInspectiontestAsgFirewallAsgLaunchTemplate333DF543": Object {
-      "Properties": Object {
-        "LaunchTemplateData": Object {
-          "BlockDeviceMappings": Array [
-            Object {
+    "NetworkInspectiontestAsgFirewallAsgLaunchTemplate333DF543": {
+      "Properties": {
+        "LaunchTemplateData": {
+          "BlockDeviceMappings": [
+            {
               "DeviceName": "/dev/xvda",
-              "Ebs": Object {
+              "Ebs": {
                 "Encrypted": true,
-                "KmsKeyId": Object {
-                  "Fn::Select": Array [
+                "KmsKeyId": {
+                  "Fn::Select": [
                     1,
-                    Object {
-                      "Fn::Split": Array [
+                    {
+                      "Fn::Split": [
                         "/",
-                        Object {
-                          "Fn::Select": Array [
+                        {
+                          "Fn::Select": [
                             5,
-                            Object {
-                              "Fn::Split": Array [
+                            {
+                              "Fn::Split": [
                                 ":",
-                                Object {
+                                {
                                   "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
                                 },
                               ],
@@ -650,23 +650,23 @@ Object {
                 "VolumeSize": 20,
               },
             },
-            Object {
+            {
               "DeviceName": "/dev/xvdb",
-              "Ebs": Object {
+              "Ebs": {
                 "Encrypted": true,
-                "KmsKeyId": Object {
-                  "Fn::Select": Array [
+                "KmsKeyId": {
+                  "Fn::Select": [
                     1,
-                    Object {
-                      "Fn::Split": Array [
+                    {
+                      "Fn::Split": [
                         "/",
-                        Object {
-                          "Fn::Select": Array [
+                        {
+                          "Fn::Select": [
                             5,
-                            Object {
-                              "Fn::Split": Array [
+                            {
+                              "Fn::Split": [
                                 ":",
-                                Object {
+                                {
                                   "Ref": "SsmParameterValueacceleratorsecuritystackebsDefaultVolumeEncryptionKeyArnC96584B6F00A464EAD1953AFF4B05118Parameter",
                                 },
                               ],
@@ -681,53 +681,53 @@ Object {
               },
             },
           ],
-          "IamInstanceProfile": Object {},
-          "ImageId": Object {
+          "IamInstanceProfile": {},
+          "ImageId": {
             "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amihvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter",
           },
           "InstanceType": "t3.large",
-          "MetadataOptions": Object {
+          "MetadataOptions": {
             "HttpTokens": "required",
           },
-          "NetworkInterfaces": Array [
-            Object {
+          "NetworkInterfaces": [
+            {
               "Description": "Primary interface",
               "DeviceIndex": 0,
-              "Groups": Array [
-                Object {
+              "Groups": [
+                {
                   "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
                 },
               ],
             },
-            Object {
+            {
               "Description": "Secondary",
               "DeviceIndex": 1,
-              "Groups": Array [
-                Object {
+              "Groups": [
+                {
                   "Ref": "SsmParameterValueacceleratornetworkvpcNetworkInspectionsecurityGroupDataidC96584B6F00A464EAD1953AFF4B05118Parameter",
                 },
               ],
             },
           ],
-          "SecurityGroupIds": Array [],
+          "SecurityGroupIds": [],
         },
         "LaunchTemplateName": "asg",
       },
       "Type": "AWS::EC2::LaunchTemplate",
     },
-    "SsmParamAcceleratorVersionFF83282D": Object {
-      "Properties": Object {
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsGwlbStack-555555555555-us-east-1/version",
         "Type": "String",
         "Value": "1.3.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamStackId521A78D3": Object {
-      "Properties": Object {
+    "SsmParamStackId521A78D3": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-NetworkAssociationsGwlbStack-555555555555-us-east-1/stack-id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "AWS::StackId",
         },
       },
