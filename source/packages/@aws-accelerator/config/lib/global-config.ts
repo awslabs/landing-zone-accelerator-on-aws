@@ -1109,10 +1109,10 @@ export class BackupConfig implements t.TypeOf<typeof GlobalConfigTypes.backupCon
  *   deploymentTargets:
  *     organizationalUnits:
  *       - Root
- *     topics:
- *       - name: Security
- *         emailAddresses:
- *           - SecurityNotifications@example.com
+ *   topics:
+ *     - name: Security
+ *       emailAddresses:
+ *         - SecurityNotifications@example.com
  * ```
  */
 export class SnsTopicConfig implements t.TypeOf<typeof GlobalConfigTypes.snsTopicConfig> {
@@ -1409,10 +1409,10 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *   deploymentTargets:
    *     organizationalUnits:
    *       - Root
-   *     topics:
-   *       - name: Security
-   *         emailAddresses:
-   *           - SecurityNotifications@example.com
+   *   topics:
+   *     - name: Security
+   *       emailAddresses:
+   *         - SecurityNotifications@example.com
    * ```
    */
   readonly snsTopics: SnsConfig | undefined = undefined;
