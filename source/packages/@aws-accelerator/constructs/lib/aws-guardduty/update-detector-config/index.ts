@@ -60,27 +60,73 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       dataSourcesToUpdate.S3Logs = { Enable: enableS3Protection };
       dataSourcesToUpdate.Kubernetes = { AuditLogs: { Enable: enableEksProtection } };
       console.log('starting - UpdateMembersCommand');
-      await throttlingBackOff(() =>
-        guardDutyClient
-          .updateMemberDetectors({
-            DetectorId: detectorId,
-            AccountIds: existingMemberAccountIds,
-            DataSources: dataSourcesToUpdate,
-          })
-          .promise(),
-      );
-
+      try {
+        await throttlingBackOff(() =>
+          guardDutyClient
+            .updateMemberDetectors({
+              DetectorId: detectorId,
+              AccountIds: existingMemberAccountIds,
+              DataSources: dataSourcesToUpdate,
+            })
+            .promise(),
+        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        if (
+          e.statusCode == 400 &&
+          e.message.startsWith('The request is rejected because an invalid or out-of-range value')
+        ) {
+          const dataSourcesToUpdate: AWS.GuardDuty.DataSourceConfigurations = {};
+          dataSourcesToUpdate.S3Logs = { Enable: enableS3Protection };
+          await throttlingBackOff(() =>
+            guardDutyClient
+              .updateMemberDetectors({
+                DetectorId: detectorId,
+                AccountIds: existingMemberAccountIds,
+                DataSources: dataSourcesToUpdate,
+              })
+              .promise(),
+          );
+        } else {
+          console.log(`Error: ${JSON.stringify(e)}`);
+          return { Status: 'Failure', StatusCode: e.statuCode };
+        }
+      }
       console.log('starting - UpdateDetectorCommand');
-      await throttlingBackOff(() =>
-        guardDutyClient
-          .updateDetector({
-            DetectorId: detectorId,
-            Enable: true,
-            FindingPublishingFrequency: exportFrequency,
-            DataSources: dataSourcesToUpdate,
-          })
-          .promise(),
-      );
+      try {
+        await throttlingBackOff(() =>
+          guardDutyClient
+            .updateDetector({
+              DetectorId: detectorId,
+              Enable: true,
+              FindingPublishingFrequency: exportFrequency,
+              DataSources: dataSourcesToUpdate,
+            })
+            .promise(),
+        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        if (
+          e.statusCode == 400 &&
+          e.message.startsWith('The request is rejected because an invalid or out-of-range value')
+        ) {
+          const dataSourcesToUpdate: AWS.GuardDuty.DataSourceConfigurations = {};
+          dataSourcesToUpdate.S3Logs = { Enable: enableS3Protection };
+          await throttlingBackOff(() =>
+            guardDutyClient
+              .updateDetector({
+                DetectorId: detectorId,
+                Enable: true,
+                FindingPublishingFrequency: exportFrequency,
+                DataSources: dataSourcesToUpdate,
+              })
+              .promise(),
+          );
+        } else {
+          console.log(`Error: ${JSON.stringify(e)}`);
+          return { Status: 'Failure', StatusCode: e.statuCode };
+        }
+      }
 
       return { Status: 'Success', StatusCode: 200 };
 

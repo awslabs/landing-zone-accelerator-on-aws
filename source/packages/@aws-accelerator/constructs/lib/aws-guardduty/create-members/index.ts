@@ -78,16 +78,37 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       dataSources.Kubernetes = { AuditLogs: { AutoEnable: enableEksProtection } };
 
       console.log('starting - UpdateOrganizationConfiguration');
-      await throttlingBackOff(() =>
-        guardDutyClient
+      try {
+        await guardDutyClient
           .updateOrganizationConfiguration({
             AutoEnable: true,
             DetectorId: detectorId!,
             DataSources: dataSources,
           })
-          .promise(),
-      );
+          .promise();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        if (
+          e.statusCode == 400 &&
+          e.message.startsWith('The request is rejected because an invalid or out-of-range value')
+        ) {
+          console.log('Retrying with only S3 protection');
+          const dataSources: GuardDuty.OrganizationDataSourceConfigurations = {};
+          dataSources.S3Logs = { AutoEnable: enableS3Protection };
+          await guardDutyClient
+            .updateOrganizationConfiguration({
+              AutoEnable: true,
+              DetectorId: detectorId!,
+              DataSources: dataSources,
+            })
+            .promise();
+        } else {
+          console.log(`Error: ${JSON.stringify(e)}`);
+          return { Status: 'Failure', StatusCode: e.statuCode };
+        }
+      }
 
+      console.log('Returning Success');
       return { Status: 'Success', StatusCode: 200 };
 
     case 'Delete':

@@ -37,7 +37,7 @@ import {
   SsmParameterLookup,
 } from '@aws-accelerator/constructs';
 
-import { AcceleratorElbRootAccounts } from '../accelerator';
+import { AcceleratorElbRootAccounts, OptInRegions } from '../accelerator';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 
 export type cloudwatchExclusionProcessedItem = {
@@ -1247,6 +1247,17 @@ export class LoggingStack extends AcceleratorStack {
           accessType: BucketAccessType.READWRITE,
         });
         bucketPrefixes.push('guardduty');
+
+        for (const region of this.props.globalConfig.enabledRegions) {
+          if (OptInRegions.includes(region)) {
+            awsPrincipalAccesses.push({
+              name: `Guardduty-${region}`,
+              principal: `guardduty.${region}.amazonaws.com`,
+              accessType: BucketAccessType.READWRITE,
+            });
+            bucketPrefixes.push('guardduty');
+          }
+        }
       }
 
       if (this.props.securityConfig.centralSecurityServices.auditManager?.enable) {

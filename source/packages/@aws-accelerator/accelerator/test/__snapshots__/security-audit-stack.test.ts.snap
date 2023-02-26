@@ -1341,9 +1341,7 @@ def script_handler(events, context):
                     "iam:CreateServiceLinkedRole",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    "*",
-                  ],
+                  "Resource": "*",
                   "Sid": "ServiceLinkedRoleSecurityHub",
                 },
               ],
@@ -4028,9 +4026,7 @@ def script_handler(events, context):
                     "iam:CreateServiceLinkedRole",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    "*",
-                  ],
+                  "Resource": "*",
                   "Sid": "ServiceLinkedRoleSecurityHub",
                 },
               ],

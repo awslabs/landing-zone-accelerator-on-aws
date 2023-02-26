@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+//import { OptInRegions } from '../../../accelerator/lib/accelerator';
 
 const path = require('path');
 
@@ -50,6 +51,11 @@ export class GuardDutyMembers extends Construct {
 
     const RESOURCE_TYPE = 'Custom::GuardDutyCreateMembers';
 
+    const servicePrincipal = 'guardduty.amazonaws.com';
+    //if (OptInRegions.includes(cdk.Stack.of(this).region)) {
+    //  servicePrincipal = `guardduty.${cdk.Stack.of(this).region}.amazonaws.com`;
+    //}
+    console.log('Create provider');
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'create-members/dist'),
       runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
@@ -61,7 +67,7 @@ export class GuardDutyMembers extends Construct {
           Resource: '*',
           Condition: {
             StringLikeIfExists: {
-              'organizations:ListAccounts': ['guardduty.amazonaws.com'],
+              'organizations:ListAccounts': [servicePrincipal],
             },
           },
         },
@@ -84,11 +90,12 @@ export class GuardDutyMembers extends Construct {
           Sid: 'ServiceLinkedRoleSecurityHub',
           Effect: 'Allow',
           Action: ['iam:CreateServiceLinkedRole'],
-          Resource: ['*'],
+          Resource: '*',
         },
       ],
     });
 
+    console.log('Create resource');
     const resource = new cdk.CustomResource(this, 'Resource', {
       resourceType: RESOURCE_TYPE,
       serviceToken: provider.serviceToken,
@@ -105,6 +112,7 @@ export class GuardDutyMembers extends Construct {
      * in the stack
      */
     const stack = cdk.Stack.of(scope);
+    console.log('Update log group');
     const logGroup =
       (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
       new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
