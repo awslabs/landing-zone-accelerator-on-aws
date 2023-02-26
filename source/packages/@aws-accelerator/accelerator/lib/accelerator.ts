@@ -65,6 +65,19 @@ export const AcceleratorElbRootAccounts: Record<string, string> = {
   'cn-northwest-1': '037604701340',
 };
 
+export const OptInRegions = [
+  'af-south-1',
+  'ap-east-1',
+  'ap-south-2',
+  'ap-southeast-3',
+  'ap-southeast-4',
+  'eu-central-2',
+  'eu-south-1',
+  'eu-south-2',
+  'me-central-1',
+  'me-south-1',
+];
+
 /**
  * constant maintaining cloudformation stack names
  */

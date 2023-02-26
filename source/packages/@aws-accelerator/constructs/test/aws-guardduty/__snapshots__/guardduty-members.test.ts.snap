@@ -110,9 +110,7 @@ Object {
                     "iam:CreateServiceLinkedRole",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    "*",
-                  ],
+                  "Resource": "*",
                   "Sid": "ServiceLinkedRoleSecurityHub",
                 },
               ],

@@ -76,8 +76,8 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:64
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:65
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:66
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:517
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:518
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:519
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:530
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:531
 
 source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:143
 source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:144

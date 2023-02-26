@@ -66,3 +66,5 @@ viperlight*.zip
 
 ### Sonarqube
 .scannerwork
+
+*.js.map
