@@ -38,14 +38,7 @@ error.log
 # Line level file ignores (keep in alphabetical order)
 #
 
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:32
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:33
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:34
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:35
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:36
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:37
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:38
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:39
+# ELB Root Account References https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html#attach-bucket-policy
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:40
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:41
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:42
@@ -64,8 +57,6 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:54
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:55
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:56
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:57
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:508
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:509
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:58
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:59
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:60
@@ -74,53 +65,72 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:62
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:63
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:64
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:65
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:66
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:517
+
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:530
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:531
 
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:143
 source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:144
 
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts:71
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/cross-account-route/index.ts:72
 
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:57
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:58
 
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:56
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:57
 
-
-
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:518
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:519
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1220
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1221
+
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1229
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1230
+
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1239
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1240
+
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1248
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1249
+
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1257
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1258
+
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1266
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1267
+
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1902
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1903
+
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1982
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1983
 
-
-
 reference/sample-configurations/aws-best-practices-us-slg-central-it/README.md:102
 
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:46
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:47
+
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:56
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:57
+
+# Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:63
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:64
 
+# Internal Test file and Account. Not to be published.
 .gitlab-ci.yml:60
