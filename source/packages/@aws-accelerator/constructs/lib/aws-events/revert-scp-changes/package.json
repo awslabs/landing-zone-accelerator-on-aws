@@ -2,9 +2,10 @@
   "name": "@aws-accelerator/constructs-aws-events-revert-scp-changes",
   "version": "0.0.0",
   "license": "Apache-2.0",
+  "description": "Custom resource to revert non-accelerator scp changes.",
   "author": {
     "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com"
+    "url": "https://aws.amazon.com/solutions"
   },
   "private": true,
   "main": "dist/index.js",

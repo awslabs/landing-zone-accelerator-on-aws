@@ -2,6 +2,7 @@
   "name": "@aws-accelerator/utils",
   "version": "0.0.0",
   "license": "Apache-2.0",
+  "description": "Accelerator utilities",
   "author": {
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"

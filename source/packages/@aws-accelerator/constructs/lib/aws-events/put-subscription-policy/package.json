@@ -2,9 +2,10 @@
   "name": "@aws-accelerator/constructs-aws-events-put-subscription-policy",
   "version": "0.0.0",
   "license": "Apache-2.0",
+  "description": "custom resource to add a subscription policy",
   "author": {
     "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com"
+    "url": "https://aws.amazon.com/solutions"
   },
   "private": true,
   "main": "dist/index.js",
