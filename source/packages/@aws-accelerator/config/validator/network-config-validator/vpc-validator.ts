@@ -228,7 +228,7 @@ export class VpcValidator {
       const routeEntryNames: string[] = [];
       routeTableNames.push(routeTable.name);
 
-      routeTable.routes.forEach(route => {
+      routeTable.routes?.forEach(route => {
         routeEntryNames.push(route.name);
       });
 
