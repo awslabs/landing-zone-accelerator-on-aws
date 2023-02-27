@@ -2,9 +2,10 @@
   "name": "@aws-accelerator/constructs-aws-cloudwatch-logs-update-subscription-filter",
   "version": "0.0.0",
   "license": "Apache-2.0",
+  "description": "custom resource to update CWL subscriptions",
   "author": {
     "name": "Amazon Web Services",
-    "url": "https://aws.amazon.com"
+    "url": "https://aws.amazon.com/solutions"
   },
   "private": true,
   "main": "dist/index.js",

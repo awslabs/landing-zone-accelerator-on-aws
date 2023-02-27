@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "license": "Apache-2.0",
+  "description": "Assume role plugin",
   "author": {
     "name": "Amazon Web Services",
     "url": "https://aws.amazon.com/solutions"
