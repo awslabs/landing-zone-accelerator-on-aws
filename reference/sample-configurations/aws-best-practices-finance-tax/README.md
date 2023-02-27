@@ -6,7 +6,7 @@ The Finance (Tax) config aims to deploy an account structure commonly used with 
 
 The config provides the capability to easily enable additional security services, such as Amazon Macie. Detective guardrails are established through the use of Security Hub and Config, which deploy managed Config rules. These rules evaluate whether the configuration settings of your AWS resources comply with common best practices, such as CIS.  As an example these align with IRS cloud computing [Computer Security Evaluation Matrix (SCSEM)]. The accelerator deploys the account structure for Tax deployments along with security controls and network configurations to secure FTI data.
 
-This project builds around best practices suitable for any organization. This LZA is not meant to be feature complete, but rather is intended to help accelerate cloud migrations and cloud refactoring efforts by organizations focused on election workloads. You will still need to tailor it to your unique business needs, however it does reduce much of the effort required to manually build a production-ready infrastrcture.
+This project builds around best practices suitable for any organization. This LZA is not meant to be feature complete, but rather is intended to help accelerate cloud migrations and cloud refactoring efforts by organizations focused on tax workloads. You will still need to tailor it to your unique business needs, however it does reduce much of the effort required to manually build a production-ready infrastrcture.
 
 ## Deployment Overview
 
@@ -25,11 +25,13 @@ Step 3. Copy the configuration files
 
 * Clone the `aws-accelerator-config` AWS CodeCommit repository.
 * Clone the [landing-zone-accelerator-on-aws](https://github.com/awslabs/landing-zone-accelerator-on-aws) repo
+* Copy the configs and all the contents from the `aws-best-practices` folder under `reference/sample-configurations` to your local `aws-accelerator-config` repo.
 * Copy the contents from the `aws-best-practices-finance-tax` folder under `reference/sample-configurations` to your local `aws-accelerator-config` repo.  You may be prompted to over-write duplicate configs, such as `accounts-config.yaml`.
 
 Step 4. Update the configuration files and release a change.
 
 * Using the IDE of your choice.  Update the variables at the top of each config, such as `homeRegion`, to match where you deployed the solution to.
+* Add another region under the `enabledRegions` secion of the `global-config.yaml`, besides the `homeRegion`, that will be used for disaster recovery.
 * Update the configuration files to match the desired state of your environment. Look for the `UPDATE` comments for areas requiring updates, such as e-mail addresses in your `accounts-config.yaml`
 * Review the contents in the `Security Controls` section below to understand if any changes need to be made to meet organizational requirements, such as applying SCPs to the various OUs.
 * Commit and push all your change to the `aws-accelerator-config` AWS CodeCommit repository.

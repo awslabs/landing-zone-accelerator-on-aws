@@ -18,7 +18,15 @@ serviceControlPolicies:
     type: customerManaged
     deploymentTargets:
       organizationalUnits:
-        - Root
+        - Infrastructure
+  - name: AcceleratorGuardrails2
+    description: >
+      Accelerator GuardRails 2
+    policy: service-control-policies/guardrails-2.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
   - name: SCP-base-root
     description: >
       baseline SCP for Tax customers
@@ -44,11 +52,16 @@ serviceControlPolicies:
     type: customerManaged
     deploymentTargets:
       organizationalUnits: []
+ # https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html
 taggingPolicies: 
   - name: fti-tag-policy
     description: Organization Tagging Policy
     policy: tagging-policies/tax-org-tag-policy.json
     deploymentTargets:
       organizationalUnits:
-        - Tax  
+        - Tax
+# https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup.html
+# backup policies contain a `delete_after_days` value of 1095 days, or 3 years.  Before
+# enabling this policy, ensure that `delete_after_days` meets your organization's records retention
+# policies.  Similarly, ensure that `move_to_cold_storage_after_days` meets business requirements.
 backupPolicies: []
