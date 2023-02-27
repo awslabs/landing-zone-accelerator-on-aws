@@ -33,7 +33,6 @@ This software includes third party software subject to the following copyrights:
 @aws-sdk/client-kms - Apache-2.0
 @aws-sdk/client-organizations - Apache-2.0
 @aws-sdk/client-s3 - Apache-2.0
-@aws-sdk/client-s3 - Apache-2.0
 @aws-sdk/client-sns - Apache-2.0
 @aws-sdk/client-ssm - - Apache-2.0
 @aws-sdk/client-sts - Apache-2.0
@@ -41,6 +40,11 @@ This software includes third party software subject to the following copyrights:
 @aws-sdk/types - Apache-2.0
 @aws-sdk/util-retry - Apache-2.0
 @types/aws-lambda - MIT
+@aws-accelerator/accelerator - Apache-2.0
+@aws-cdk-extensions/cdk-extensions - Apache-2.0
+@aws-cdk/cloud-assembly - Apache-2.0
+@aws-sdk/client-iam - Apache-2.0
+@aws-sdk/smithy-client - Apache-2.0
 @types/fs-extra - MIT
 @types/jest - MIT
 @types/js-yaml - MIT
@@ -74,6 +78,7 @@ eslint-plugin-jest - MIT
 eslint-plugin-license-header - MIT
 eslint-plugin-node - MIT
 eslint-plugin-prettier - MIT
+eslint-plugin-promise - ISC
 exponential-backoff - Apache-2.0
 fp-ts - MIT
 fs-extra - MIT
@@ -91,7 +96,9 @@ jsii - Apache-2.0
 jsii-pacmak - Apache-2.0
 lerna - MIT
 lint-staged - MIT
+monocle-ts - MIT
 mri - MIT
+newtype-ts - MIT
 node - MIT
 pascal-case - MIT
 prettier - MIT
