@@ -166,7 +166,7 @@ export class TesterPipeline extends Construct {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 14,
+              nodejs: 16,
             },
           },
           build: {
@@ -183,7 +183,7 @@ export class TesterPipeline extends Construct {
         },
       }),
       environment: {
-        buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
+        buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
         privileged: true, // Allow access to the Docker daemon
         computeType: codebuild.ComputeType.MEDIUM,
         environmentVariables: {

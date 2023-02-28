@@ -487,7 +487,7 @@ export class InstallerStack extends cdk.Stack {
         phases: {
           install: {
             'runtime-versions': {
-              nodejs: 14,
+              nodejs: 16,
             },
           },
           pre_build: {
@@ -549,7 +549,7 @@ export class InstallerStack extends cdk.Stack {
         },
       }),
       environment: {
-        buildImage: cdk.aws_codebuild.LinuxBuildImage.STANDARD_5_0,
+        buildImage: cdk.aws_codebuild.LinuxBuildImage.STANDARD_6_0,
         privileged: true, // Allow access to the Docker daemon
         computeType: cdk.aws_codebuild.ComputeType.MEDIUM,
         environmentVariables: {

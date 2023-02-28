@@ -947,7 +947,7 @@ Object {
               "Value": "--max_old_space_size=8192",
             },
           ],
-          "Image": "aws/codebuild/standard:5.0",
+          "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": true,
           "Type": "LINUX_CONTAINER",
@@ -969,7 +969,7 @@ Object {
   \\"phases\\": {
     \\"install\\": {
       \\"runtime-versions\\": {
-        \\"nodejs\\": 14
+        \\"nodejs\\": 16
       }
     },
     \\"build\\": {
@@ -1895,7 +1895,7 @@ Object {
               "Value": "aws-accelerator",
             },
           ],
-          "Image": "aws/codebuild/standard:5.0",
+          "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": true,
           "Type": "LINUX_CONTAINER",
@@ -1917,7 +1917,7 @@ Object {
   \\"phases\\": {
     \\"install\\": {
       \\"runtime-versions\\": {
-        \\"nodejs\\": 14
+        \\"nodejs\\": 16
       }
     },
     \\"build\\": {
