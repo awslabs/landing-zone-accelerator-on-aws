@@ -42,7 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - enhancement(network): update NFW config objects for enhanced error checking
 - enhancement(network): allow specification of TGW attachment options in GovCloud
 - enhancement(cloudformation): upload StackSet template as asset before deployment
-- enhancement(accounts): validate account limit before creating new account
 - enhancement(builds): disable privileged mode in Code Build
 - chore(logger): move logger to accelerator utils
 - chore(logger): improved logger usage
