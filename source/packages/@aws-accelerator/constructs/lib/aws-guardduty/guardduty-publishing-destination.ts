@@ -76,6 +76,12 @@ export class GuardDutyPublishingDestination extends Construct {
           ],
           Resource: '*',
         },
+        {
+          Sid: 'GuardDutyCreateBucketPrefix',
+          Effect: 'Allow',
+          Action: ['s3:ListBucket', 's3:GetObject'],
+          Resource: [props.destinationArn, `${props.destinationArn}/*`],
+        },
       ],
     });
 

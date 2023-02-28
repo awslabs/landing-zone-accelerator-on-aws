@@ -117,6 +117,7 @@ Object {
         "Content": Object {},
         "DocumentType": "Automation",
         "Name": "DocumentName",
+        "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
     },

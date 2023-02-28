@@ -439,6 +439,7 @@ Object {
                 "kms:GenerateDataKeyWithoutPlaintext",
                 "kms:ReEncryptFrom",
                 "kms:ReEncryptTo",
+                "kms:ListAliases",
               ],
               "Condition": Object {
                 "StringEquals": Object {
@@ -660,6 +661,8 @@ Object {
               "Action": Array [
                 "s3:GetBucketLocation",
                 "s3:PutObject",
+                "s3:GetObject",
+                "s3:ListBucket",
               ],
               "Condition": Object {
                 "StringEquals": Object {
