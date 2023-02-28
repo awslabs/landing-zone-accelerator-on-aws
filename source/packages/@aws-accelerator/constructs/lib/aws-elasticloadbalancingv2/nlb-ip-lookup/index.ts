@@ -103,7 +103,7 @@ async function getEniIpAddresses(ec2ClientMap: Map<string, AWS.EC2>, targets: (s
           .promise();
         const ips =
           enis.NetworkInterfaces?.map(eni => {
-            return { Id: eni.PrivateIpAddress };
+            return { Id: eni.PrivateIpAddress, AvailabilityZone: 'all'  };
           }) ?? [];
         ipAddresses.push(...ips);
       }
