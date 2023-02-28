@@ -48,13 +48,14 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   let ec2: AWS.EC2;
   const props: RouteProps = event.ResourceProperties['routeDefinition'];
   const region: string = event.ResourceProperties['region'];
+  const solutionId = process.env['SOLUTION_ID'];
   const resourceId = props.DestinationCidrBlock
     ? `${props.DestinationCidrBlock}${props.RouteTableId}`
     : `${props.DestinationPrefixListId}${props.RouteTableId}`;
   const roleArn: string | undefined = event.ResourceProperties['roleArn'];
 
   if (roleArn) {
-    const stsClient = new AWS.STS({ region });
+    const stsClient = new AWS.STS({ customUserAgent: solutionId, region });
     const assumeRoleCredential = await throttlingBackOff(() =>
       stsClient
         .assumeRole({
@@ -64,6 +65,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         .promise(),
     );
     ec2 = new AWS.EC2({
+      customUserAgent: solutionId,
       region,
       credentials: {
         accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId,
@@ -73,7 +75,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       },
     });
   } else {
-    ec2 = new AWS.EC2({ region });
+    ec2 = new AWS.EC2({ customUserAgent: solutionId, region });
   }
 
   switch (event.RequestType) {

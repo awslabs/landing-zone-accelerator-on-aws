@@ -30,6 +30,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 > {
   console.log(event);
   const region = event.ResourceProperties['region'];
+  const partition = event.ResourceProperties['partition'];
   const madAccountId = event.ResourceProperties['madAccountId'];
   const directoryId = event.ResourceProperties['directoryId'];
   const newTargetAccountIds: string[] = event.ResourceProperties['shareTargetAccountIds'];
@@ -73,6 +74,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         await acceptShare(
           directoryServiceClient,
           region,
+          partition,
           directoryId,
           targetDirectoryId,
           account,
@@ -112,6 +114,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 async function acceptShare(
   sourceDirectoryServiceClient: AWS.DirectoryService,
   region: string,
+  partition: string,
   sourceDirectoryId: string,
   targetDirectoryId: string,
   accountId: string,
@@ -121,7 +124,7 @@ async function acceptShare(
   const shareStatus = await getSharedAccountStatus(sourceDirectoryServiceClient, sourceDirectoryId, accountId);
 
   if (shareStatus === 'PendingAcceptance') {
-    const roleArn = `arn:aws:iam::${accountId}:role/${assumeRoleName}`;
+    const roleArn = `arn:${partition}:iam::${accountId}:role/${assumeRoleName}`;
     console.log(`Role arn : ${roleArn}`);
     const stsClient = new AWS.STS({ region: region, customUserAgent: solutionId });
     console.log(`Assume role in target account ${accountId}, role arn is ${roleArn}`);

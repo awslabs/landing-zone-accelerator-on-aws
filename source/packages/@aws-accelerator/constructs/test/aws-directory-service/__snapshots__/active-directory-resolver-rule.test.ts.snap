@@ -18,6 +18,9 @@ Object {
         "partition": Object {
           "Ref": "AWS::Partition",
         },
+        "region": Object {
+          "Ref": "AWS::Region",
+        },
         "roleName": "AWSAccelerator-MAD-example-com-rule",
         "route53ResolverRuleName": "example-com-rule",
         "targetIps": Array [

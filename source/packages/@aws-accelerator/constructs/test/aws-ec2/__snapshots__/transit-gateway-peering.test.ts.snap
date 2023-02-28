@@ -90,7 +90,11 @@ Object {
                     "Fn::Join": Array [
                       "",
                       Array [
-                        "arn:aws:iam::",
+                        "arn:",
+                        Object {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":iam::",
                         Object {
                           "Ref": "AWS::AccountId",
                         },

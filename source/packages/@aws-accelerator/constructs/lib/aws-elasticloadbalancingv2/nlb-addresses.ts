@@ -88,6 +88,7 @@ export class NLBAddresses extends cdk.Resource implements INLBAddresses {
     const resource = new cdk.CustomResource(this, `Resource`, {
       serviceToken: provider.serviceToken,
       properties: {
+        region: cdk.Stack.of(this).region,
         targets: props.targets,
         assumeRoleName: props.assumeRoleName,
         partition: cdk.Stack.of(scope).partition,

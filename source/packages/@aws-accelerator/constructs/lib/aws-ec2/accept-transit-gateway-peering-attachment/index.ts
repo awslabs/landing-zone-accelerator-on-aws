@@ -43,9 +43,15 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
   const requesterTransitGatewayAttachmentId = event.ResourceProperties['requesterTransitGatewayAttachmentId'];
 
+  const solutionId = process.env['SOLUTION_ID'];
+
   const requesterEc2Client = new AWS.EC2({ region: requesterRegion });
 
-  const accepterEc2Client = await getAccepterEc2Client(accepterRegion, event.ResourceProperties['accepterRoleArn']);
+  const accepterEc2Client = await getAccepterEc2Client(
+    accepterRegion,
+    event.ResourceProperties['accepterRoleArn'],
+    solutionId,
+  );
 
   switch (event.RequestType) {
     case 'Create':
@@ -486,8 +492,12 @@ async function createAccepterAttachmentTags(
  * @param accepterRoleArn
  * @returns
  */
-async function getAccepterEc2Client(accepterRegion: string, accepterRoleArn: string): Promise<AWS.EC2> {
-  const stsClient = new AWS.STS({ region: accepterRegion });
+async function getAccepterEc2Client(
+  accepterRegion: string,
+  accepterRoleArn: string,
+  solutionId?: string,
+): Promise<AWS.EC2> {
+  const stsClient = new AWS.STS({ customUserAgent: solutionId, region: accepterRegion });
 
   const assumeRoleResponse = await throttlingBackOff(() =>
     stsClient

@@ -394,7 +394,9 @@ export class ActiveDirectoryConfiguration extends Construct {
     const adUsersCommand: string[] = [];
     for (const adUser of this.activeDirectoryConfigurationProps.adUsers ?? []) {
       const secretName = `/accelerator/ad-user/${this.activeDirectoryConfigurationProps.managedActiveDirectoryName}/${adUser.name}`;
-      const secretArn = `arn:aws:secretsmanager:${this.activeDirectoryConfigurationProps.managedActiveDirectorySecretRegion}:${this.activeDirectoryConfigurationProps.managedActiveDirectorySecretAccountId}:secret:${secretName}`;
+      const secretArn = `arn:${cdk.Stack.of(this).partition}:secretsmanager:${
+        this.activeDirectoryConfigurationProps.managedActiveDirectorySecretRegion
+      }:${this.activeDirectoryConfigurationProps.managedActiveDirectorySecretAccountId}:secret:${secretName}`;
 
       adUsersCommand.push(
         `C:\\cfn\\scripts\\${adUserSetupScriptName} -UserName ${adUser.name} -Password ((Get-SECSecretValue -SecretId ${secretArn}).SecretString) -DomainAdminUser ${this.activeDirectoryConfigurationProps.netBiosDomainName}\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId ${this.activeDirectoryConfigurationProps.adminPwdSecretArn}).SecretString) -PasswordNeverExpires Yes -UserEmailAddress ${adUser.email}`,

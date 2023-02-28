@@ -160,6 +160,7 @@ export class TransitGatewayAttachment extends cdk.Resource implements ITransitGa
           resourceType: GET_TRANSIT_GATEWAY_ATTACHMENT,
           serviceToken: provider.serviceToken,
           properties: {
+            region: cdk.Stack.of(this).region,
             name: options.name,
             transitGatewayId: options.transitGatewayId,
             type: options.type,

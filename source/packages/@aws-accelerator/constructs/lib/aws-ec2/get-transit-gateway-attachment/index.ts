@@ -30,6 +30,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
+  const region = event.ResourceProperties['region'];
   const attachmentType = event.ResourceProperties['type'];
   const name = event.ResourceProperties['name'];
   const transitGatewayId = event.ResourceProperties['transitGatewayId'];
@@ -41,7 +42,7 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Update':
       let ec2Client: AWS.EC2;
       if (roleArn) {
-        const stsClient = new AWS.STS({});
+        const stsClient = new AWS.STS({ customUserAgent: solutionId, region: region });
 
         const assumeRoleResponse = await throttlingBackOff(() =>
           stsClient

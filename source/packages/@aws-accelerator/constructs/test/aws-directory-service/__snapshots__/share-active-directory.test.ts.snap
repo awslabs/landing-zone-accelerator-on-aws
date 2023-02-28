@@ -87,6 +87,9 @@ Object {
         "madAccountId": Object {
           "Ref": "AWS::AccountId",
         },
+        "partition": Object {
+          "Ref": "AWS::Partition",
+        },
         "region": Object {
           "Ref": "AWS::Region",
         },
@@ -203,7 +206,18 @@ Object {
             Object {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Resource": "arn:aws:iam::*:role/AWSAccelerator-MadAccept-Role",
+              "Resource": Object {
+                "Fn::Join": Array [
+                  "",
+                  Array [
+                    "arn:",
+                    Object {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":iam::*:role/AWSAccelerator-MadAccept-Role",
+                  ],
+                ],
+              },
               "Sid": "StsAssumeRoleActions",
             },
           ],

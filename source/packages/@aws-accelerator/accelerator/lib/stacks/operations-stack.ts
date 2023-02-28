@@ -394,7 +394,11 @@ export class OperationsStack extends AcceleratorStack {
             managedActiveDirectory.name,
           );
 
-          const secretArn = `arn:aws:secretsmanager:${madAdminSecretRegion}:${madAdminSecretAccountId}:secret:/accelerator/ad-user/${managedActiveDirectory.name}/*`;
+          const secretArn = `arn:${
+            cdk.Stack.of(this).partition
+          }:secretsmanager:${madAdminSecretRegion}:${madAdminSecretAccountId}:secret:/accelerator/ad-user/${
+            managedActiveDirectory.name
+          }/*`;
           // Attach MAD instance role access to MAD secrets
           Logger.info(`[operations-stack] Granting mad secret access to ${roleName}`);
           role.attachInlinePolicy(

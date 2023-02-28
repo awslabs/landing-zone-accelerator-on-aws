@@ -92,6 +92,7 @@ export class FMSOrganizationAdminAccount extends Construct {
         adminAccountId: props.adminAccountId,
         assumeRoleName: props.assumeRole,
         partition: cdk.Stack.of(scope).partition,
+        region: cdk.Stack.of(this).region,
       },
     });
 
