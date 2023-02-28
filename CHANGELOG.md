@@ -4,12 +4,81 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.3.0.1] - 2023-02-10
+
+## [1.3.1] - 2023-02-28
 
 ### Added
-- feat(config): add support for regions me-central-1, ap-south-2,
-  ap-southeast-3, ap-southeast-4, eu-central-2, eu-south-2
+
+- feat: add region support for me-central-1
+- feat: add region support for ap-south-2, ap-southeast-3, ap-southeast-4
+- feat: add region support for eu-central-2, eu-south-2
+- feat(controltower): create up to 5 ControlTower accounts accounts concurrently
+- feat(servicecatalog): add ability to define Service Catalog portfolios and products
+- feat(servicecatalog): enable principal association with existing IAM resources
+- feat(servicecatalog): add option to propagate principal associations for Service Catalog portfolios
+- feat(servicecatalog): add support for AWS Identity Center (formerly SSO) principal associations with Service Catalog portfolios
+- feat(installer): allow installer stack to use an existing config repository
+- feat(network): remove default Security Group ingress and egress rules of VPC
+- feat(network): elastic IP address allocation for NAT gateway
+- feat(network): add support for referencing cross-account and cross-region subnets in network ACLs
+- feat(iam): allow account lookups for IAM trust policies
+- feat(identitycenter): add support for overriding delegated admin in Identity Center
+- feat(account): add account warming
+- feat(logs): add S3 prefixes for GuardDuty, Config and ELB
+- feat(customizations): add capability to pass parameters to Stacks and StackSets
+- feat(config): add support to enable config aggregation
+- feat(docs): added FAQ
+
+### Changed
+
+- enhancement(network): add validation for route table names
+- enhancement(network): GWLB VPC type and delegated admin account validation checks
+- enhancement(network): add ability to define private NAT gateway connectivity type
+- enhancement(network): modularize network validation classes
+- enhancement(network): improve VPC validation
+- enhancement(network): improve transitGateways validation
+- enhancement(network): add validation for dhcpOptions and prefixLists
+- enhancement(network): improve centralNetworkServices validation
+- enhancement(network): update NFW config objects for enhanced error checking
+- enhancement(network): allow specification of TGW attachment options in GovCloud
+- enhancement(cloudformation): upload StackSet template as asset before deployment
+- enhancement(accounts): validate account limit before creating new account
+- enhancement(builds): disable privileged mode in Code Build
+- chore(logger): move logger to accelerator utils
+- chore(logger): improved logger usage
+- fix(app): throw error at app-level try/catch
+- fix(installer): github token not properly updating in Code Pipeline
+- fix(sts): assume role plugin uses regional sts endpoints
 - fix(logging): use correct region for organization trail centralized logging
+- fix(network): allow TGW route table associations/propagations for separate attachments to the same VPC
+- fix(network): cannot create a STRICT_ORDER rule group when using rulesFile
+- fix(network): ALB/NLB bucket region correction for accessLogs
+- fix(network): fix cross-account nacl entry construct name
+- fix(network): fix IPAM CIDR Role
+- fix(network): fix security group enum typo from MYSQL to MSSQL
+- fix(network): VPC using IPAM not creating cross-region
+- fix(network): S2S VPN resource reference fails in GovCloud
+- fix(network): inter-region tgw peering unable to find SSM parameter in second region
+- fix(securityhub): failure disabling SecurityHub standards
+- fix:(guardduty): issue configuring GuardDuty for opt-in regions
+- fix(uninstaller): delete termination protected config repo
+- fix(uninstaller): ecr delete error handling
+- fix(uninstaller): ecr cleanups with full uninstall option
+- fix(logging): ignore CloudWatch logs retention when existing log retention is higher than specified in global config
+- fix(logging): fix organization trail centralized logging region parameter
+- fix(config): VPC route validation fails when no route specified
+- fix(cloudtrail): check for cloudtrail.enable property before creating account trails
+
+### Configuration Changes
+
+- chore: consolidate finance configs to best-practices
+- chore: remove default limits increase from aws-best-practices config
+- chore: update education config
+- chore: add lifecycle rules to aws-best-practices
+- fix: update the readme file name in AWS GovCloud (US) configurations
+- fix: update lock down scp with control tower role
+- enhancement: enabled versioning on sample template s3 buckets
+
 ## [1.3.0] - 2022-12-21
 
 ### Added
@@ -29,8 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(organizations): add functionality to move accounts between ous (orgs-only install)
 - feat(security): add centralized and configurable sns topics
 - feat(security): add ability to create ACM from s3 and integrate that with ELBv2
-- feat(guardDuty): enable S3 export config override
-- feat(guardDuty): provide functionality to enable EKS protection
+- feat(guardduty): enable S3 export config override
+- feat(guardduty): provide functionality to enable EKS protection
 - feat(ssm): enable SSM Inventory
 - feat(securityhub): add support for CIS 1.4.0 controls in SecurityHub
 - feat(cloudformation): Create custom CloudFormation stacks
