@@ -2328,11 +2328,11 @@ export class TransitGatewayAttachmentConfig
   /**
    * An array of friendly names of Transit Gateway route tables to associate the attachment.
    */
-  readonly routeTableAssociations: string[] = [];
+  readonly routeTableAssociations: string[] | undefined = undefined;
   /**
    * An array of friendly names of Transit Gateway route tables to propagate the attachment.
    */
-  readonly routeTablePropagations: string[] = [];
+  readonly routeTablePropagations: string[] | undefined = undefined;
   /**
    * A Transit Gateway attachment options configuration.
    *

@@ -1122,6 +1122,105 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "Custom::DirectConnectGateway",
       "UpdateReplacePolicy": "Delete",
     },
+    "NetworkMain2CoreTransitGatewayRouteTableA0D16E8B": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-Main-2-Core",
+          },
+        ],
+        "TransitGatewayId": {
+          "Ref": "NetworkMain2TransitGateway9D65305C",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTable",
+    },
+    "NetworkMain2SegregatedTransitGatewayRouteTable189150BD": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-Main-2-Segregated",
+          },
+        ],
+        "TransitGatewayId": {
+          "Ref": "NetworkMain2TransitGateway9D65305C",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTable",
+    },
+    "NetworkMain2SharedTransitGatewayRouteTable99DD8F5E": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-Main-2-Shared",
+          },
+        ],
+        "TransitGatewayId": {
+          "Ref": "NetworkMain2TransitGateway9D65305C",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTable",
+    },
+    "NetworkMain2StandaloneTransitGatewayRouteTableA7C72B59": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-Main-2-Standalone",
+          },
+        ],
+        "TransitGatewayId": {
+          "Ref": "NetworkMain2TransitGateway9D65305C",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTable",
+    },
+    "NetworkMain2TransitGateway9D65305C": {
+      "Properties": {
+        "AmazonSideAsn": 65521,
+        "AutoAcceptSharedAttachments": "enable",
+        "DefaultRouteTableAssociation": "disable",
+        "DefaultRouteTablePropagation": "disable",
+        "DnsSupport": "enable",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Network-Main-2",
+          },
+        ],
+        "VpnEcmpSupport": "enable",
+      },
+      "Type": "AWS::EC2::TransitGateway",
+    },
+    "NetworkMain2TransitGatewayShareResourceShareAA3E1526": {
+      "Properties": {
+        "Name": "Network-Main-2_TransitGatewayShare",
+        "Principals": [
+          "arn:aws:organizations::111111111111:ou/o-asdf123456/ou-asdf-22222222",
+        ],
+        "ResourceArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":ec2:us-east-1:555555555555:transit-gateway/",
+                {
+                  "Ref": "NetworkMain2TransitGateway9D65305C",
+                },
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RAM::ResourceShare",
+    },
     "NetworkMainCoreTransitGatewayRouteTableE04FCA1B": {
       "Properties": {
         "Tags": [
@@ -1297,6 +1396,56 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
         "Type": "String",
         "Value": {
           "Ref": "NetworkDxgwDxGatewayB600DBBE",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkMain2NetworkMain2CoreTransitGatewayRouteTableIdC5E730F7": {
+      "Properties": {
+        "Name": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Core/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkMain2CoreTransitGatewayRouteTableA0D16E8B",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkMain2NetworkMain2SegregatedTransitGatewayRouteTableId8571D494": {
+      "Properties": {
+        "Name": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Segregated/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkMain2SegregatedTransitGatewayRouteTable189150BD",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkMain2NetworkMain2SharedTransitGatewayRouteTableIdE9E46782": {
+      "Properties": {
+        "Name": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Shared/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkMain2SharedTransitGatewayRouteTable99DD8F5E",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1": {
+      "Properties": {
+        "Name": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Standalone/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkMain2StandaloneTransitGatewayRouteTableA7C72B59",
+        },
+      },
+      "Type": "AWS::SSM::Parameter",
+    },
+    "SsmParamNetworkMain2TransitGatewayId3D6B0437": {
+      "Properties": {
+        "Name": "/accelerator/network/transitGateways/Network-Main-2/id",
+        "Type": "String",
+        "Value": {
+          "Ref": "NetworkMain2TransitGateway9D65305C",
         },
       },
       "Type": "AWS::SSM::Parameter",

@@ -882,7 +882,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           for (const owningAccount of accountNames) {
             let transitGatewayAttachmentId;
             const owningAccountId = this.accountsConfig.getAccountId(owningAccount);
-            const attachmentKey = `${owningAccount}_${vpcItem.name}`;
+            const attachmentKey = `${tgwAttachmentItem.transitGateway.name}_${owningAccount}_${vpcItem.name}`;
             // Skip iteration if account is excluded
             if (excludedAccountIds.includes(owningAccountId)) {
               continue;
@@ -940,7 +940,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           // Get the Transit Gateway Attachment ID
           for (const owningAccount of accountNames) {
             const owningAccountId = this.accountsConfig.getAccountId(owningAccount);
-            const attachmentKey = `${owningAccount}_${vpcItem.name}`;
+            const attachmentKey = `${tgwAttachmentItem.transitGateway.name}_${owningAccount}_${vpcItem.name}`;
             // Skip iteration if account is excluded
             if (excludedAccountIds.includes(owningAccountId)) {
               continue;
@@ -996,7 +996,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           // Loop through attachment owner accounts
           for (const owningAccount of accountNames) {
             const owningAccountId = this.accountsConfig.getAccountId(owningAccount);
-            const attachmentKey = `${owningAccount}_${vpcItem.name}`;
+            const attachmentKey = `${tgwAttachmentItem.transitGateway.name}_${owningAccount}_${vpcItem.name}`;
             // Skip iteration if account is excluded
             if (excludedAccountIds.includes(owningAccountId)) {
               continue;
@@ -1982,7 +1982,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
         // Get TGW attachment ID
         transitGatewayAttachmentId = this.transitGatewayAttachments.get(
-          `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
+          `${tgwItem.name}_${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
         );
       }
 
@@ -2077,7 +2077,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
         // Get TGW attachment ID
         transitGatewayAttachmentId = this.transitGatewayAttachments.get(
-          `${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
+          `${tgwItem.name}_${routeItem.attachment.account}_${routeItem.attachment.vpcName}`,
         );
       }
 
