@@ -68,7 +68,7 @@ transitGateways:
       - name: SharedServices-Main-Standalone
         routes: []
       - name: SharedServices-Main-Test01
-        routes: 
+        routes:
           - destinationPrefixList: accelerator-prefix-list-001
             blackhole: true
 transitGatewayPeering:
@@ -370,6 +370,99 @@ endpointPolicies:
     document: vpc-endpoint-policies/ec2.json
 
 vpcs:
+  - name: Network-Secondary
+    account: Network
+    region: *HOME_REGION
+    ipamAllocations:
+      - ipamPoolName: home-region-prod-pool
+        netmaskLength: 25
+    internetGateway: false
+    enableDnsHostnames: true
+    enableDnsSupport: true
+    instanceTenancy: default
+    routeTables:
+      - name: Network-Secondary-A-Rt
+        routes: []
+      - name: Network-Secondary-B-Rt
+        routes: []
+    subnets:
+      - name: Network-Secondary-A
+        availabilityZone: a
+        routeTable: Network-Secondary-A-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+      - name: Network-Secondary-B
+        availabilityZone: b
+        routeTable: Network-Secondary-B-Rt
+        ipamAllocation:
+          ipamPoolName: home-region-prod-pool
+          netmaskLength: 28
+    networkAcls:
+      - name: TestNacl
+        subnetAssociations:
+          - Network-Secondary-A
+          - Network-Secondary-B
+        outboundRules:
+          - rule: 101
+            action: allow
+            fromPort: 80
+            toPort: 80
+            protocol: -1
+            destination: 172.16.0.0/12
+          - rule: 102
+            action: allow
+            fromPort: 443
+            toPort: 443
+            protocol: -1
+            destination:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-A
+              region: us-east-1
+          - rule: 103
+            action: allow
+            fromPort: 80
+            toPort: 80
+            protocol: -1
+            destination:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-B
+              region: us-east-1
+        inboundRules:
+          - rule: 101
+            action: allow
+            fromPort: 22
+            toPort: 22
+            protocol: 22
+            source: 10.0.0.0/24
+          - rule: 102
+            action: deny
+            fromPort: 443
+            toPort: 443
+            protocol: -1
+            source:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-B
+              region: us-east-1
+          - rule: 103
+            action: allow
+            fromPort: 80
+            toPort: 80
+            protocol: -1
+            source:
+              account: Network
+              vpc: Network-Endpoints
+              subnet: Network-Endpoints-A
+              region: us-east-1
+    gatewayEndpoints:
+      defaultPolicy: Default
+      endpoints:
+        - service: s3
+        - service: dynamodb
+
   - name: Network-Endpoints
     account: Network
     region: *HOME_REGION
@@ -447,7 +540,7 @@ vpcs:
             - Infrastructure
           accounts:
             - Network
-        tags: 
+        tags:
           - key: exampleKey
             value: exampleValue
       - name: Network-Endpoints-B
@@ -750,7 +843,7 @@ vpcs:
         port: 80
         protocol: TCP
         type: ip
-        targets: 
+        targets:
           - account: Network
             region: *HOME_REGION
             nlbName: appA-nlb-01

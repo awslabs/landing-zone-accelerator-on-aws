@@ -24,6 +24,10 @@ import {
   DxGatewayConfig,
   DxTransitGatewayAssociationConfig,
   ManagedActiveDirectoryConfig,
+  NetworkAclConfig,
+  NetworkAclInboundRuleConfig,
+  NetworkAclOutboundRuleConfig,
+  NetworkAclSubnetSelection,
   NetworkConfigTypes,
   NlbTargetTypeConfig,
   ShareTargets,
@@ -43,6 +47,7 @@ import {
   CrossAccountRouteFramework,
   DirectConnectGatewayAssociation,
   DirectConnectGatewayAssociationProps,
+  IpamSubnet,
   NLBAddresses,
   PutSsmParameter,
   QueryLoggingConfigAssociation,
@@ -177,6 +182,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       // routes, and prefix list references
       //
       this.createTransitGatewayStaticRoutes(props);
+
+      //
+      // Create cross-account NACL Rules for IPAM Subnets
+      //
+      this.createCrossAccountNaclRules();
 
       //
       // Creates target groups for ALBs and NLBs
@@ -2201,6 +2211,121 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     included = this.isAccountIncluded(shareTargets.accounts);
 
     return included;
+  }
+
+  /**
+   * Function to retrieve cross-account NACLs
+   * @returns
+   */
+  private createCrossAccountNaclRules() {
+    for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+        for (const naclItem of vpcItem.networkAcls ?? []) {
+          const naclId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            `/accelerator/network/vpc/${vpcItem.name}/networkAcl/${naclItem.name}/id`,
+          ).toString();
+          const nacl = cdk.aws_ec2.NetworkAcl.fromNetworkAclId(this, `${naclItem.name}-${vpcItem.name}`, naclId);
+          for (const inboundRuleItem of naclItem.inboundRules ?? []) {
+            if (this.isCrossAccountNaclSource(inboundRuleItem.source)) {
+              Logger.info(
+                `[network-associations-stack] Checking inbound rule ${inboundRuleItem.rule} to ${naclItem.name}`,
+              );
+              const inboundAclTargetProps = this.getIpamSubnetCidr(
+                naclItem,
+                inboundRuleItem.source as NetworkAclSubnetSelection,
+                inboundRuleItem,
+                'Ingress',
+              );
+              const aclCidr = cdk.aws_ec2.AclCidr.ipv4(inboundAclTargetProps.ipv4CidrBlock);
+              const ruleAction =
+                inboundRuleItem.action === 'allow' ? cdk.aws_ec2.Action.ALLOW : cdk.aws_ec2.Action.DENY;
+              const traffic = cdk.aws_ec2.AclTraffic.tcpPortRange(inboundRuleItem.fromPort, inboundRuleItem.toPort);
+              nacl.addEntry(
+                `${vpcItem.name}-${naclItem.name}-inbound-${naclItem.inboundRules?.indexOf(inboundRuleItem)}`,
+                {
+                  networkAclEntryName: naclItem.name,
+                  ruleAction: ruleAction,
+                  ruleNumber: inboundRuleItem.rule,
+                  cidr: aclCidr,
+                  traffic: traffic,
+                },
+              );
+              NagSuppressions.addResourceSuppressionsByPath(
+                this,
+                `${this.stackName}/${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}Nacl/${pascalCase(
+                  vpcItem.name,
+                )}Vpc${pascalCase(naclItem.name)}-Inbound-${inboundRuleItem.rule}`,
+                [{ id: 'AwsSolutions-VPC3', reason: 'NACL added to VPC' }],
+              );
+            }
+          }
+
+          for (const outboundRuleItem of naclItem.outboundRules ?? []) {
+            if (this.isCrossAccountNaclSource(outboundRuleItem.destination)) {
+              Logger.info(
+                `[network-associations-stack] Checking outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`,
+              );
+              const outboundAclTargetProps = this.getIpamSubnetCidr(
+                naclItem,
+                outboundRuleItem.destination as NetworkAclSubnetSelection,
+                outboundRuleItem,
+                'Egress',
+              );
+              const aclCidr = cdk.aws_ec2.AclCidr.ipv4(outboundAclTargetProps.ipv4CidrBlock);
+              const ruleAction =
+                outboundRuleItem.action === 'allow' ? cdk.aws_ec2.Action.ALLOW : cdk.aws_ec2.Action.DENY;
+              const traffic = cdk.aws_ec2.AclTraffic.tcpPortRange(outboundRuleItem.fromPort, outboundRuleItem.toPort);
+              const egress = cdk.aws_ec2.TrafficDirection.EGRESS;
+              nacl.addEntry(
+                `${vpcItem.name}-${naclItem.name}-outboundbound-${naclItem.outboundRules?.indexOf(outboundRuleItem)}`,
+                {
+                  direction: egress,
+                  networkAclEntryName: naclItem.name,
+                  ruleAction: ruleAction,
+                  ruleNumber: outboundRuleItem.rule,
+                  cidr: aclCidr,
+                  traffic: traffic,
+                },
+              );
+              NagSuppressions.addResourceSuppressionsByPath(
+                this,
+                `${this.stackName}/${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}Nacl/${pascalCase(
+                  vpcItem.name,
+                )}Vpc${pascalCase(naclItem.name)}-Outbound-${outboundRuleItem.rule}`,
+                [{ id: 'AwsSolutions-VPC3', reason: 'NACL added to VPC' }],
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Retrieve IPAM Subnet CIDR
+   * @param naclItem
+   * @param target
+   */
+  private getIpamSubnetCidr(
+    naclItem: NetworkAclConfig,
+    target: NetworkAclSubnetSelection,
+    naclRule: NetworkAclInboundRuleConfig | NetworkAclOutboundRuleConfig,
+    trafficType: string,
+  ) {
+    Logger.info(
+      `[network-associations-stack] Retrieve IPAM Subnet CIDR for account:${target.account} vpc:${target.vpc} subnet:[${target.subnet}] in region:[${target.region}]`,
+    );
+    const accountId = this.props.accountsConfig.getAccountId(target.account);
+    return IpamSubnet.fromLookup(this, pascalCase(`${naclItem.name}${naclRule.rule}${trafficType}NaclRule`), {
+      owningAccountId: accountId,
+      ssmSubnetIdPath: `/accelerator/network/vpc/${target.vpc}/subnet/${target.subnet}/id`,
+      region: target.region,
+      roleName: `AWSAccelerator-GetIpamCidrRole-${cdk.Stack.of(this).region}`,
+      kmsKey: this.cloudwatchKey,
+      logRetentionInDays: this.logRetention,
+    });
   }
 
   private shareSubnetTags() {
