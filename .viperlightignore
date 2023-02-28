@@ -1,9 +1,6 @@
-# Ignore Config used with code.amazon.com
-
 Config
 
 # Use of opensource-codeofconduct email for amazon is expected
-
 CODE_OF_CONDUCT.md:4
 
 ^cdk.out/
@@ -16,7 +13,6 @@ node_modules/
 .snap
 
 yarn.lock
-
 
 # Ignore typescript documentation
 docs
@@ -131,6 +127,3 @@ source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/ind
 # Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:63
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:64
-
-# Internal Test file and Account. Not to be published.
-.gitlab-ci.yml:60
