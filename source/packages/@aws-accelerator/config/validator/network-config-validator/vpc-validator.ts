@@ -17,6 +17,7 @@ import {
   RouteTableEntryConfig,
   SecurityGroupConfig,
   SecurityGroupRuleConfig,
+  TransitGatewayAttachmentConfig,
   TransitGatewayConfig,
   VpcConfig,
   VpcTemplatesConfig,
@@ -569,7 +570,7 @@ export class VpcValidator {
         //
         // Validate transit gateway attachments
         //
-        this.validateTgwAttachments(values, vpcItem, errors);
+        this.validateTgwAttachments(values, vpcItem, helpers, errors);
       }
     });
   }
@@ -1994,14 +1995,30 @@ export class VpcValidator {
    * @param vpcItem
    * @param errors
    */
-  private validateTgwAttachments(values: NetworkConfig, vpcItem: VpcConfig | VpcTemplatesConfig, errors: string[]) {
+  private validateTgwAttachments(
+    values: NetworkConfig,
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    const attachNames: string[] = [];
+    const tgwNames: string[] = [];
+
     vpcItem.transitGatewayAttachments?.forEach(attach => {
+      attachNames.push(attach.name);
+      tgwNames.push(attach.transitGateway.name);
       const tgw = this.getTransitGateway(values, attach.transitGateway.name, attach.transitGateway.account);
       if (!tgw) {
         errors.push(
           `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: TGW "${attach.transitGateway.name}" in account "${attach.transitGateway.account}" does not exist`,
         );
       } else {
+        // Validate associations and propagations
+        this.validateTgwRouteTableAssociations(vpcItem, attach, tgw, errors);
+        this.validateTgwRouteTablePropagations(vpcItem, attach, tgw, helpers, errors);
+        // Validate subnets
+        this.validateTgwAttachmentSubnets(vpcItem, attach, helpers, errors);
+        // Validate TGW region
         if (tgw.region !== vpcItem.region) {
           errors.push(
             `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: TGW "${attach.transitGateway.name}" is not deployed to the same region as the VPC`,
@@ -2009,6 +2026,124 @@ export class VpcValidator {
         }
       }
     });
+
+    // Check for duplicate attachment names
+    if (helpers.hasDuplicates(attachNames)) {
+      errors.push(
+        `[VPC ${vpcItem.name}]: duplicate TGW attachment names defined. Attachment names must be unique. Attachment names configured: ${attachNames}`,
+      );
+    }
+    // Check for duplicate TGW attachments
+    if (helpers.hasDuplicates(tgwNames)) {
+      errors.push(
+        `[VPC ${vpcItem.name}]: duplicate TGW attachment targets defined. Target TGWs must be unique. Attachment target TGWs configured: ${tgwNames}`,
+      );
+    }
+  }
+
+  /**
+   * Validate TGW route table associations for a given VPC TGW attachment
+   * @param vpcItem
+   * @param attach
+   * @param tgw
+   * @param errors
+   */
+  private validateTgwRouteTableAssociations(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    attach: TransitGatewayAttachmentConfig,
+    tgw: TransitGatewayConfig,
+    errors: string[],
+  ) {
+    // Check number of associations
+    if (attach.routeTableAssociations && attach.routeTableAssociations.length > 1) {
+      errors.push(
+        `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: cannot define more than one TGW route table association`,
+      );
+    }
+    // Validate route table exists
+    if (
+      attach.routeTableAssociations &&
+      !tgw.routeTables.find(table => table.name === attach.routeTableAssociations![0])
+    ) {
+      errors.push(
+        `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: route table "${attach.routeTableAssociations[0]}" does not exist on TGW "${tgw.name}"`,
+      );
+    }
+  }
+
+  /**
+   * Validate TGW route table propagations for a given VPC TGW attachment
+   * @param vpcItem
+   * @param attach
+   * @param tgw
+   * @param helpers
+   * @param errors
+   */
+  private validateTgwRouteTablePropagations(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    attach: TransitGatewayAttachmentConfig,
+    tgw: TransitGatewayConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    const tableNames: string[] = [];
+    attach.routeTablePropagations?.forEach(propagation => {
+      tableNames.push(propagation);
+      if (!tgw.routeTables.find(table => table.name === propagation)) {
+        errors.push(
+          `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: route table "${propagation}" does not exist on TGW "${tgw.name}"`,
+        );
+      }
+    });
+
+    // Check for duplicate route table names
+    if (helpers.hasDuplicates(tableNames)) {
+      errors.push(
+        `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: duplicate TGW route table propagations defined. Propagations must be unique. Propagations configured: ${tableNames}`,
+      );
+    }
+  }
+
+  /**
+   * Validate TGW attachment target subnets
+   * @param vpcItem
+   * @param attach
+   * @param helpers
+   * @param errors
+   */
+  private validateTgwAttachmentSubnets(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    attach: TransitGatewayAttachmentConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+  ) {
+    const subnetAzs: string[] = [];
+    const subnetNames: string[] = [];
+
+    attach.subnets.forEach(subnetName => {
+      subnetNames.push(subnetName);
+      const subnet = helpers.getSubnet(vpcItem, subnetName);
+      if (!subnet) {
+        errors.push(
+          `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: target subnet "${subnetName}" does not exist in VPC "${vpcItem.name}"`,
+        );
+      } else {
+        subnetAzs.push(subnet.availabilityZone);
+      }
+    });
+
+    // Check for duplicate subnet names
+    if (helpers.hasDuplicates(subnetNames)) {
+      errors.push(
+        `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: duplicate TGW attachment subnets defined. Subnets must be unique. Subnets configured: ${subnetNames}`,
+      );
+    }
+    // Check for duplicate subnet AZs
+    if (helpers.hasDuplicates(subnetAzs)) {
+      errors.push(
+        `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: duplicate TGW attachment subnet AZs defined. Subnet AZs must be unique. AZs configured: ${subnetAzs}`,
+      );
+    }
   }
 
   /**

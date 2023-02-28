@@ -35,6 +35,26 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Default": "/accelerator/network/route53Resolver/rules/example-rule/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Main-2/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2routeTablesNetworkMain2CoreidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Core/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2routeTablesNetworkMain2SegregatedidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Segregated/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2routeTablesNetworkMain2SharedidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Shared/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2routeTablesNetworkMain2StandaloneidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Standalone/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
     "SsmParameterValueacceleratornetworktransitGatewaysNetworkMainidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/transitGateways/Network-Main/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
@@ -109,6 +129,10 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointsrouteTableNetworkEndpointsTgwBidC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/network/vpc/Network-Endpoints/routeTable/Network-Endpoints-Tgw-B/id",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpoints2idC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/accelerator/network/vpc/Network-Endpoints/transitGatewayAttachment/Network-Endpoints-2/id",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
     "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpointsidC96584B6F00A464EAD1953AFF4B05118Parameter": {
@@ -1491,6 +1515,50 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       "Type": "Custom::DirectConnectGatewayAssociation",
       "UpdateReplacePolicy": "Delete",
     },
+    "NetworkEndpoints2NetworkMain2CorePropagationD9285528": {
+      "Properties": {
+        "TransitGatewayAttachmentId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpoints2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2routeTablesNetworkMain2CoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "NetworkEndpoints2NetworkMain2SegregatedPropagationD38531F3": {
+      "Properties": {
+        "TransitGatewayAttachmentId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpoints2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2routeTablesNetworkMain2SegregatedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "NetworkEndpoints2NetworkMain2SharedAssociation8D643CD4": {
+      "Properties": {
+        "TransitGatewayAttachmentId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpoints2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2routeTablesNetworkMain2SharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
+    },
+    "NetworkEndpoints2NetworkMain2SharedPropagationE3803FF5": {
+      "Properties": {
+        "TransitGatewayAttachmentId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpoints2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2routeTablesNetworkMain2SharedidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
     "NetworkEndpointsNetworkMainCorePropagationB71504FB": {
       "Properties": {
         "TransitGatewayAttachmentId": {
@@ -1818,6 +1886,55 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
         },
       },
       "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
+    },
+    "NetworkMain2Core101000016NetworkEndpointsNetworkStaticRouteE97CED2D": {
+      "Properties": {
+        "DestinationCidrBlock": "10.100.0.0/16",
+        "TransitGatewayAttachmentId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpoints2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2routeTablesNetworkMain2CoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
+    },
+    "NetworkMain2Core111132blackholeStaticRoute0ADA733D": {
+      "Properties": {
+        "Blackhole": true,
+        "DestinationCidrBlock": "1.1.1.1/32",
+        "TransitGatewayRouteTableId": {
+          "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2routeTablesNetworkMain2CoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+      },
+      "Type": "AWS::EC2::TransitGatewayRoute",
+    },
+    "NetworkMain2CoreacceleratorPrefixListNetworkEndpointsNetworkBB01BDA8": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomTransitGatewayPrefixListReferenceCustomResourceProviderLogGroupBC9F3669",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomTransitGatewayPrefixListReferenceCustomResourceProviderHandler9BAD63E3",
+            "Arn",
+          ],
+        },
+        "prefixListReference": {
+          "PrefixListId": {
+            "Ref": "SsmParameterValueacceleratornetworkprefixListacceleratorprefixlistidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          "TransitGatewayAttachmentId": {
+            "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointstransitGatewayAttachmentNetworkEndpoints2idC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+          "TransitGatewayRouteTableId": {
+            "Ref": "SsmParameterValueacceleratornetworktransitGatewaysNetworkMain2routeTablesNetworkMain2CoreidC96584B6F00A464EAD1953AFF4B05118Parameter",
+          },
+        },
+      },
+      "Type": "Custom::TransitGatewayPrefixListReference",
+      "UpdateReplacePolicy": "Delete",
     },
     "NetworkMainCore101000016NetworkEndpointsNetworkStaticRouteEC325B8C": {
       "Properties": {

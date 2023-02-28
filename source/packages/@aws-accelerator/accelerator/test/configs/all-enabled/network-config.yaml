@@ -43,6 +43,37 @@ transitGateways:
               transitGatewayPeeringName: Network-Main-And-SharedServices-Main-Peering
       - name: Network-Main-Standalone
         routes: []
+  - name: Network-Main-2
+    account: Network
+    region: *HOME_REGION
+    shareTargets:
+      organizationalUnits:
+        - Infrastructure
+    asn: 65521
+    dnsSupport: enable
+    vpnEcmpSupport: enable
+    defaultRouteTableAssociation: disable
+    defaultRouteTablePropagation: disable
+    autoAcceptSharingAttachments: enable
+    routeTables:
+      - name: Network-Main-2-Core
+        routes:
+          - destinationCidrBlock: 10.100.0.0/16
+            attachment:
+              vpcName: Network-Endpoints
+              account: Network
+          - destinationCidrBlock: 1.1.1.1/32
+            blackhole: true
+          - destinationPrefixList: accelerator-prefix-list
+            attachment:
+              vpcName: Network-Endpoints
+              account: Network
+      - name: Network-Main-2-Segregated
+        routes: []
+      - name: Network-Main-2-Shared
+        routes: []
+      - name: Network-Main-2-Standalone
+        routes: []
   - name: SharedServices-Main
     account: SharedServices
     region: *HOME_REGION
@@ -727,6 +758,19 @@ vpcs:
           - Network-Main-Core
           - Network-Main-Shared
           - Network-Main-Segregated
+        subnets:
+          - Network-EndpointsTgwAttach-A
+          - Network-EndpointsTgwAttach-B
+      - name: Network-Endpoints-2
+        transitGateway:
+          name: Network-Main-2
+          account: Network
+        routeTableAssociations:
+          - Network-Main-2-Shared
+        routeTablePropagations:
+          - Network-Main-2-Core
+          - Network-Main-2-Shared
+          - Network-Main-2-Segregated
         subnets:
           - Network-EndpointsTgwAttach-A
           - Network-EndpointsTgwAttach-B
