@@ -13,7 +13,6 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-//import { OptInRegions } from '../../../accelerator/lib/accelerator';
 
 const path = require('path');
 
@@ -52,9 +51,7 @@ export class GuardDutyMembers extends Construct {
     const RESOURCE_TYPE = 'Custom::GuardDutyCreateMembers';
 
     const servicePrincipal = 'guardduty.amazonaws.com';
-    //if (OptInRegions.includes(cdk.Stack.of(this).region)) {
-    //  servicePrincipal = `guardduty.${cdk.Stack.of(this).region}.amazonaws.com`;
-    //}
+
     console.log('Create provider');
     const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, RESOURCE_TYPE, {
       codeDirectory: path.join(__dirname, 'create-members/dist'),
