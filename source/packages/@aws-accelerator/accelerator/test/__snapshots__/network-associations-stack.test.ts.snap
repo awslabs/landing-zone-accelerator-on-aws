@@ -1535,6 +1535,110 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
     },
+    "NetworkEndpointsTestNACLinbound1": Object {
+      "Properties": Object {
+        "CidrBlock": Object {
+          "Fn::GetAtt": Array [
+            "NetworkEndpointsTestNacl20IngressNaclRule139869A8",
+            "ipv4CidrBlock",
+          ],
+        },
+        "Egress": false,
+        "NetworkAclId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsnetworkAclTestNACLidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "PortRange": Object {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 20,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkEndpointsTestNACLoutbound1": Object {
+      "Properties": Object {
+        "CidrBlock": Object {
+          "Fn::GetAtt": Array [
+            "NetworkEndpointsTestNacl20EgressNaclRuleDD93F104",
+            "ipv4CidrBlock",
+          ],
+        },
+        "Egress": true,
+        "NetworkAclId": Object {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsnetworkAclTestNACLidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "PortRange": Object {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 20,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkEndpointsTestNacl20EgressNaclRuleDD93F104": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
+            "Arn",
+          ],
+        },
+        "roleArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::555555555555:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
+            ],
+          ],
+        },
+        "ssmSubnetIdPath": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetIpamSubnetCidr",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkEndpointsTestNacl20IngressNaclRule139869A8": Object {
+      "DeletionPolicy": "Delete",
+      "DependsOn": Array [
+        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
+      ],
+      "Properties": Object {
+        "ServiceToken": Object {
+          "Fn::GetAtt": Array [
+            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
+            "Arn",
+          ],
+        },
+        "roleArn": Object {
+          "Fn::Join": Array [
+            "",
+            Array [
+              "arn:",
+              Object {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::555555555555:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
+            ],
+          ],
+        },
+        "ssmSubnetIdPath": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetIpamSubnetCidr",
+      "UpdateReplacePolicy": "Delete",
+    },
     "NetworkEndpointsToInspectionVpcPeeringE81AF602": Object {
       "Properties": Object {
         "PeerOwnerId": "555555555555",
@@ -2044,109 +2148,6 @@ Object {
         },
       },
       "Type": "AWS::SSM::Parameter",
-    },
-    "TestNACLNetworkEndpointsNetworkEndpointsTestNACLinbound1466D28CE": Object {
-      "Properties": Object {
-        "CidrBlock": Object {
-          "Fn::GetAtt": Array [
-            "TestNacl20IngressNaclRule81242BEA",
-            "ipv4CidrBlock",
-          ],
-        },
-        "NetworkAclId": Object {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsnetworkAclTestNACLidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "PortRange": Object {
-          "From": -1,
-          "To": -1,
-        },
-        "Protocol": 6,
-        "RuleAction": "allow",
-        "RuleNumber": 20,
-      },
-      "Type": "AWS::EC2::NetworkAclEntry",
-    },
-    "TestNACLNetworkEndpointsNetworkEndpointsTestNACLoutboundbound1B9268E96": Object {
-      "Properties": Object {
-        "CidrBlock": Object {
-          "Fn::GetAtt": Array [
-            "TestNacl20EgressNaclRuleD5ABEDDA",
-            "ipv4CidrBlock",
-          ],
-        },
-        "Egress": true,
-        "NetworkAclId": Object {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsnetworkAclTestNACLidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "PortRange": Object {
-          "From": -1,
-          "To": -1,
-        },
-        "Protocol": 6,
-        "RuleAction": "allow",
-        "RuleNumber": 20,
-      },
-      "Type": "AWS::EC2::NetworkAclEntry",
-    },
-    "TestNacl20EgressNaclRuleD5ABEDDA": Object {
-      "DeletionPolicy": "Delete",
-      "DependsOn": Array [
-        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
-      ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
-            "Arn",
-          ],
-        },
-        "roleArn": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "arn:",
-              Object {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::555555555555:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
-            ],
-          ],
-        },
-        "ssmSubnetIdPath": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetIpamSubnetCidr",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "TestNacl20IngressNaclRule81242BEA": Object {
-      "DeletionPolicy": "Delete",
-      "DependsOn": Array [
-        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
-      ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
-            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
-            "Arn",
-          ],
-        },
-        "roleArn": Object {
-          "Fn::Join": Array [
-            "",
-            Array [
-              "arn:",
-              Object {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::555555555555:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
-            ],
-          ],
-        },
-        "ssmSubnetIdPath": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetIpamSubnetCidr",
-      "UpdateReplacePolicy": "Delete",
     },
     "appAnlbtg2ipLookupB24081DE": Object {
       "DeletionPolicy": "Delete",

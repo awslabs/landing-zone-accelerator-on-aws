@@ -2553,6 +2553,32 @@ Object {
       },
       "Type": "AWS::EC2::NetworkAclEntry",
     },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclInbound104FB92CA9E": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Egress": false,
+        "NetworkAclId": Object {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": Object {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 104,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
     "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclNaclAssociateNetworkSecondaryA052E10A4": Object {
       "Properties": Object {
         "NetworkAclId": Object {
@@ -2651,6 +2677,32 @@ Object {
         "Protocol": -1,
         "RuleAction": "allow",
         "RuleNumber": 103,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryVpcTestNaclNaclNetworkSecondaryVpcTestNaclOutbound104CA731485": Object {
+      "Metadata": Object {
+        "cdk_nag": Object {
+          "rules_to_suppress": Array [
+            Object {
+              "id": "AwsSolutions-VPC3",
+              "reason": "NACL added to VPC",
+            },
+          ],
+        },
+      },
+      "Properties": Object {
+        "Egress": true,
+        "NetworkAclId": Object {
+          "Ref": "NetworkSecondaryVpcTestNaclNacl63646F9E",
+        },
+        "PortRange": Object {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 104,
       },
       "Type": "AWS::EC2::NetworkAclEntry",
     },
