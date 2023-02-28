@@ -23,6 +23,7 @@ const accountsConfigObject = {
         'The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
       email: 'some-management-account@example.com',
       organizationalUnit: 'Root',
+      warm: false,
     },
     {
       name: 'LogArchive',
@@ -30,6 +31,7 @@ const accountsConfigObject = {
         'The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
       email: 'some-logarchive-account@example.com',
       organizationalUnit: 'Security',
+      warm: false,
     },
     {
       name: 'Audit',
@@ -37,6 +39,7 @@ const accountsConfigObject = {
         'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
       email: 'some-audit-account@example.com',
       organizationalUnit: 'Security',
+      warm: false,
     },
   ],
   workloadAccounts: [
@@ -45,12 +48,14 @@ const accountsConfigObject = {
       description: 'The SharedServices account',
       email: 'shared-services@example.com',
       organizationalUnit: 'Infrastructure',
+      warm: false,
     },
     {
       name: 'Network',
       description: 'The Network account',
       email: 'network@example.com',
       organizationalUnit: 'Infrastructure',
+      warm: false,
     },
   ],
   accountIds: [
@@ -113,7 +118,13 @@ describe('accounts-config', () => {
       },
       {
         mandatoryAccounts: [
-          { name: 'hello', email: 'world@example.com', description: undefined, organizationalUnit: undefined },
+          {
+            name: 'hello',
+            email: 'world@example.com',
+            description: undefined,
+            organizationalUnit: undefined,
+            warm: undefined,
+          },
         ],
         workloadAccounts: [govCloudAccountConfig],
         accountIds: [],
@@ -149,6 +160,7 @@ describe('accounts-config', () => {
         email: 'some-management-account@example.com',
         name: 'Management',
         organizationalUnit: 'Root',
+        warm: false,
       });
 
       expect(configC.getLogArchiveAccountId()).toBe('333333333333');
@@ -158,6 +170,7 @@ describe('accounts-config', () => {
           'The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
         email: 'some-logarchive-account@example.com',
         organizationalUnit: 'Security',
+        warm: false,
       });
 
       expect(configC.getAuditAccount()).toStrictEqual({
@@ -166,6 +179,7 @@ describe('accounts-config', () => {
           'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
         email: 'some-audit-account@example.com',
         organizationalUnit: 'Security',
+        warm: false,
       });
       expect(configC.getAuditAccountId()).toBe('222222222222');
     });
@@ -182,6 +196,7 @@ describe('accounts-config', () => {
           'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
         email: 'some-audit-account@example.com',
         organizationalUnit: 'Security',
+        warm: false,
       });
       expect(() => {
         configC.getAccount('notpresent');

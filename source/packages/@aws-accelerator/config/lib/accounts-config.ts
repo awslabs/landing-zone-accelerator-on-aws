@@ -32,6 +32,7 @@ export class AccountsConfigTypes {
     description: t.optional(t.nonEmptyString),
     email: t.nonEmptyString,
     organizationalUnit: t.optional(t.nonEmptyString),
+    warm: t.optional(t.boolean),
   });
 
   static readonly govCloudAccountConfig = t.interface({
@@ -70,6 +71,7 @@ export class AccountIdConfig implements t.TypeOf<typeof AccountsConfigTypes.acco
  *   description: Workload account 01
  *   email: example-email+workload01@example.com
  *   organizationalUnit: Workloads
+ *   warm: true
  * ```
  */
 export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accountConfig> {
@@ -109,6 +111,16 @@ export class AccountConfig implements t.TypeOf<typeof AccountsConfigTypes.accoun
    * This Organizational Unit must exist in the organization-config.yaml file.
    */
   readonly organizationalUnit: string = '';
+  /**
+   * 'Warm' the account by creating an EC2 instance
+   * that runs for 15 minutes
+   * Use for new accounts that will need to have
+   * ec2 instance provisioned as part of the solution
+   * The 'warming' will take place in the operations stack
+   * This property may be removed after the account has
+   * been provisioned
+   */
+  readonly warm: boolean | undefined = undefined;
 }
 
 /**
@@ -163,6 +175,16 @@ export class GovCloudAccountConfig implements t.TypeOf<typeof AccountsConfigType
    * This Organizational Unit must exist in the organization-config.yaml file.
    */
   readonly organizationalUnit: string = '';
+  /**
+   * 'Warm' the account by creating an EC2 instance
+   * that runs for 15 minutes
+   * Use for new accounts that will need to have
+   * ec2 instance provisioned as part of the solution
+   * The 'warming' will take place in the operations stack
+   * This property may be removed after the account has
+   * been provisioned
+   */
+  readonly warm: boolean | undefined = undefined;
   /**
    * Indicates whether or not a GovCloud partition account
    * should be created.
@@ -258,6 +280,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
             'The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
           email: props.managementAccountEmail,
           organizationalUnit: 'Root',
+          warm: false,
         },
         {
           name: AccountsConfig.LOG_ARCHIVE_ACCOUNT,
@@ -265,6 +288,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
             'The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
           email: props.logArchiveAccountEmail,
           organizationalUnit: 'Security',
+          warm: false,
         },
         {
           name: AccountsConfig.AUDIT_ACCOUNT,
@@ -272,6 +296,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
             'The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.',
           email: props.auditAccountEmail,
           organizationalUnit: 'Security',
+          warm: false,
         },
       ];
     }
