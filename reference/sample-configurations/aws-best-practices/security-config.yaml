@@ -179,7 +179,7 @@ awsConfig:
               # - name: CustomerManagedPolicies
               #   value: ${ACCEL_LOOKUP::CustomerManagedPolicy:AWSAccelerator-SessionManagerLogging-us-east-1}
               #   type: StringList
-        # Note, included in Security Hub AFBP but this one has an automated remediation    
+        # Note, included in Security Hub AFBP but this one has an automated remediation
         - name: accelerator-s3-bucket-server-side-encryption-enabled
           identifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
           complianceResourceTypes:
@@ -393,40 +393,40 @@ awsConfig:
         - name: accelerator-dynamodb-throughput-limit-check
           identifier: DYNAMODB_THROUGHPUT_LIMIT_CHECK
         - name: accelerator-ebs-in-backup-plan
-          identifier: EBS_IN_BACKUP_PLAN      
+          identifier: EBS_IN_BACKUP_PLAN
         - name: accelerator-ebs-optimized-instance
           complianceResourceTypes:
             - AWS::EC2::Instance
-          identifier: EBS_OPTIMIZED_INSTANCE    
+          identifier: EBS_OPTIMIZED_INSTANCE
         - name: accelerator-elbv2-acm-certificate-required
-          identifier: ELBV2_ACM_CERTIFICATE_REQUIRED     
+          identifier: ELBV2_ACM_CERTIFICATE_REQUIRED
         - name: accelerator-lambda-dlq-check
           complianceResourceTypes:
             - AWS::Lambda::Function
-          identifier: LAMBDA_DLQ_CHECK     
+          identifier: LAMBDA_DLQ_CHECK
         - name: accelerator-no-unrestricted-route-to-igw
           complianceResourceTypes:
             - AWS::EC2::RouteTable
-          identifier: NO_UNRESTRICTED_ROUTE_TO_IGW    
+          identifier: NO_UNRESTRICTED_ROUTE_TO_IGW
         - name: accelerator-rds-snapshot-encrypted
           complianceResourceTypes:
             - AWS::RDS::DBSnapshot
             - AWS::RDS::DBClusterSnapshot
-          identifier: RDS_SNAPSHOT_ENCRYPTED   
+          identifier: RDS_SNAPSHOT_ENCRYPTED
         - name: accelerator-redshift-cluster-kms-enabled
           complianceResourceTypes:
             - AWS::Redshift::Cluster
-          identifier: REDSHIFT_CLUSTER_KMS_ENABLED        
+          identifier: REDSHIFT_CLUSTER_KMS_ENABLED
         - name: accelerator-s3-default-encryption-kms
           complianceResourceTypes:
             - AWS::S3::Bucket
-          identifier: S3_DEFAULT_ENCRYPTION_KMS 
+          identifier: S3_DEFAULT_ENCRYPTION_KMS
         - name: accelerator-secretsmanager-using-cmk
           complianceResourceTypes:
             - AWS::SecretsManager::Secret
-          identifier: SECRETSMANAGER_USING_CMK  
+          identifier: SECRETSMANAGER_USING_CMK
         - name: accelerator-wafv2-logging-enabled
-          identifier: WAFV2_LOGGING_ENABLED   
+          identifier: WAFV2_LOGGING_ENABLED
 
     # Optional Config rules to check for resources protected by backups.
     - deploymentTargets:

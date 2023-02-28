@@ -1375,7 +1375,7 @@ export class GlobalConfig implements t.TypeOf<typeof GlobalConfigTypes.globalCon
    *           - organizationalUnits: root
    *             accounts:
    */
-  readonly limits: ServiceQuotaLimitsConfig[] = [];
+  readonly limits: ServiceQuotaLimitsConfig[] | undefined = undefined;
 
   /**
    * Backup Vaults Configuration

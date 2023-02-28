@@ -35,7 +35,7 @@ serviceControlPolicies:
     type: customerManaged
     deploymentTargets:
       organizationalUnits: []
- # https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html
+# https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_tag-policies.html
 taggingPolicies:
   - name: TagPolicy
     description: Organization Tagging Policy

@@ -39,4 +39,3 @@ logging:
     excludeAccounts: []
     lifecycleRules: []
     attachPolicyToIamRoles: []
-limits: []

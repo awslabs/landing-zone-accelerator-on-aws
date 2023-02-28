@@ -16,19 +16,6 @@ snsTopics:
         - <security-notifications>@example.com  <----- UPDATE EMAIL ADDRESS
 controlTower:
   enable: true
-limits:
-  - serviceCode: lambda
-    quotaCode: L-B99A9384
-    desiredValue: 2000
-    deploymentTargets:
-      organizationalUnits:
-        - Root
-  - serviceCode: ebs
-    quotaCode: L-E20676C1
-    desiredValue: 30
-    deploymentTargets:
-      organizationalUnits:
-        - Root
 logging:
   account: LogArchive
   cloudtrail:
@@ -86,10 +73,10 @@ logging:
         noncurrentVersionExpiration: 730
   elbLogBucket:
     lifecycleRules:
-        - enabled: true
-          abortIncompleteMultipartUpload: 7
-          expiration: 730
-          noncurrentVersionExpiration: 730
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
 reports:
   costAndUsageReport:
     compression: Parquet
