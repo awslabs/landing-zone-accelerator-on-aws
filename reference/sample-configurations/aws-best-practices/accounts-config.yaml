@@ -1,5 +1,5 @@
 mandatoryAccounts:
-  # We recommend you do not change mandatory account names. These are used within Landing Zone Accelerator to reference the accounts from other config files. 
+  # We recommend you do not change mandatory account names. These are used within Landing Zone Accelerator to reference the accounts from other config files.
   # The "name" value does not currently support spaces
   # The "name" value DOES NOT need to match the account name
   - name: Management

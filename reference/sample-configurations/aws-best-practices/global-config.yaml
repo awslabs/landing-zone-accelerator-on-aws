@@ -73,10 +73,10 @@ logging:
         noncurrentVersionExpiration: 730
   elbLogBucket:
     lifecycleRules:
-        - enabled: true
-          abortIncompleteMultipartUpload: 7
-          expiration: 730
-          noncurrentVersionExpiration: 730
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
 reports:
   costAndUsageReport:
     compression: Parquet
