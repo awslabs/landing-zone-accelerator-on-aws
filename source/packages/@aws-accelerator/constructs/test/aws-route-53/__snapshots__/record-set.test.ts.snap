@@ -17,6 +17,20 @@ Object {
       },
       "Type": "AWS::Route53::HostedZone",
     },
+    "TestRecordSet11EBF57EA": Object {
+      "Properties": Object {
+        "AliasTarget": Object {
+          "DNSName": "",
+          "HostedZoneId": "",
+        },
+        "HostedZoneId": Object {
+          "Ref": "TestHostedZone68F306E4",
+        },
+        "Name": "s3-global.accesspoint.aws.com",
+        "Type": "A",
+      },
+      "Type": "AWS::Route53::RecordSet",
+    },
     "TestRecordSetED81F5C1": Object {
       "Properties": Object {
         "AliasTarget": Object {

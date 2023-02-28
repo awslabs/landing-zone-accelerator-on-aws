@@ -106,6 +106,14 @@ centralSecurityServices:
           # Attaches Aws IAM Managed Policy to IAM Role
           - name: Attach-IAM-Role-Policy
             template: ssm-documents/attach-iam-role-policy.yaml
+  snsSubscriptions:
+    - level: High
+      email: notify-high@example.com
+    - level: Medium
+      email: notify-medium@example.com
+    - level: Low
+      email: notify-low@example.com
+
 accessAnalyzer:
   enable: true
 iamPasswordPolicy:
@@ -126,6 +134,45 @@ awsConfig:
         organizationalUnits:
           - Root
       rules:
+        - name: accelerator-target-document-01
+          type: Custom
+          description: Custom rule for testing target document remediation
+          inputParameters:
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/attach-ec2-instance-profile.zip
+              handler: index.handler
+              runtime: nodejs14.x
+              rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-detection-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: true
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::EC2::Instance
+          remediation:
+            rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-remediation-role.json
+            automatic: true
+            targetId: Attach-IAM-Instance-Profile
+            targetDocumentLambda: 
+              sourceFilePath: custom-config-rules/targetDocumentLambda.zip
+              handler: index.handler
+              runtime: nodejs14.x
+              rolePolicyFile: custom-config-rules/attach-ec2-instance-profile-remediation-role.json
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+            parameters:
+              - name: InstanceId
+                value: RESOURCE_ID
+                type: String
+              - name: IamInstanceProfile
+                value: ${ACCEL_LOOKUP::InstanceProfile:EC2-Default-SSM-AD-Role}
+                type: StringList
+          tags: 
+            - key: key
+              value: value
         - name: accelerator-attach-ec2-instance-profile
           type: Custom
           description: Custom rule for checking EC2 instance IAM profile attachment
@@ -502,6 +549,72 @@ cloudWatch:
           metricNamespace: LogMetrics
           metricName: VPCChanges
           metricValue: "1"
+        # greater than threshold test
+        - filterName: GenericMetricFilterGreaterThanThreshold
+          logGroupName: /generic/log/group
+          filterPattern: '{$.eventType !="AwsServiceEvent"}'
+          metricNamespace: LzaMetrics
+          metricName: GenericMetricForTestingGreaterThanThreshold
+          metricValue: "1"
+        # less than threshold test
+        - filterName: GenericMetricFilterLessThanThreshold
+          logGroupName: /generic/log/group
+          filterPattern: '{$.eventType !="AwsServiceEvent"}'
+          metricNamespace: LzaMetrics
+          metricName: GenericMetricForTestingLessThanThreshold
+          metricValue: "1"
+        # less than or equal to threshold test
+        - filterName: GenericMetricFilterLessThanOrEqualToThreshold
+          logGroupName: /generic/log/group
+          filterPattern: '{$.eventType !="AwsServiceEvent"}'
+          metricNamespace: LzaMetrics
+          metricName: GenericMetricForTestingLessThanOrEqualToThreshold
+          metricValue: "1"
+        # less than lower or greater than upper threshold test
+        - filterName: GenericMetricFilterLessThanLowerOrGreaterThanUpperThreshold
+          logGroupName: /generic/log/group
+          filterPattern: '{$.eventType !="AwsServiceEvent"}'
+          metricNamespace: LzaMetrics
+          metricName: GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold
+          metricValue: "1"
+        # greater than upper threshold test
+        - filterName: GenericMetricFilterGreaterThanUpperThreshold
+          logGroupName: /generic/log/group
+          filterPattern: '{$.eventType !="AwsServiceEvent"}'
+          metricNamespace: LzaMetrics
+          metricName: GenericMetricForTestingGreaterThanUpperThreshold
+          metricValue: "1"
+        # less than lower threshold test
+        - filterName: GenericMetricFilterLessThanLowerThreshold
+          logGroupName: /generic/log/group
+          filterPattern: '{$.eventType !="AwsServiceEvent"}'
+          metricNamespace: LzaMetrics
+          metricName: GenericMetricForTestingLessThanLowerThreshold
+          metricValue: "1"
+    - regions:
+        - *HOME_REGION
+      deploymentTargets:
+        account:
+          - SharedServices
+      metrics:
+        - filterName: GenericMetricFilterGreaterThanOrEqualToThreshold
+          logGroupName: /generic/log/group
+          filterPattern: '{$.eventType !="AwsServiceEvent"}'
+          metricNamespace: LzaMetrics
+          metricName: GenericMetricForTestingGreaterThanOrEqualToThreshold
+          metricValue: "1"
+        - filterName: GenericMetricFilterGreaterThanThreshold
+          logGroupName: /generic/log/group
+          filterPattern: '{$.eventType !="AwsServiceEvent"}'
+          metricNamespace: LzaMetrics
+          metricName: GenericMetricForTestingGreaterThanThreshold
+          metricValue: "1"
+        - filterName: GenericMetricFilterLessThanThreshold
+          logGroupName: /generic/log/group
+          filterPattern: '{$.eventType !="AwsServiceEvent"}'
+          metricNamespace: LzaMetrics
+          metricName: GenericMetricForTestingLessThanThreshold
+          metricValue: "1"
   alarmSets:
     - regions:
         - *HOME_REGION
@@ -684,6 +797,78 @@ cloudWatch:
           metricName: VPCChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        # greater than threshold test
+        - alarmName: GenericMetricGreaterThanThreshold
+          alarmDescription: Alarm to test GenericMetric GreaterThanThreshold
+          snsTopicName: Security
+          metricName: GenericMetricForTestingGreaterThanThreshold
+          namespace: LzaMetrics
+          comparisonOperator: GreaterThanThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: ignore
+        # less than threshold testing
+        - alarmName: GenericMetricLessThanThreshold
+          alarmDescription: Alarm to test GenericMetric LessThanThreshold
+          snsTopicName: Security
+          metricName: GenericMetricForTestingLessThanThreshold
+          namespace: LzaMetrics
+          comparisonOperator: LessThanThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: missing
+        # less than or equal to threshold test
+        - alarmName: GenericMetricLessThanOrEqualToThreshold
+          alarmDescription: Alarm to test GenericMetric LessThanOrEqualToThreshold
+          snsTopicName: Security
+          metricName: GenericMetricForTestingLessThanOrEqualToThreshold
+          namespace: LzaMetrics
+          comparisonOperator: LessThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        # less than lower or greater than upper threshold test
+        - alarmName: GenericMetricLessThanLowerOrGreaterThanUpperThreshold
+          alarmDescription: Alarm to test GenericMetric LessThanLowerOrGreaterThanUpperThreshold
+          snsTopicName: Security
+          metricName: GenericMetricForTestingLessThanLowerOrGreaterThanUpperThreshold
+          namespace: LzaMetrics
+          comparisonOperator: LessThanLowerOrGreaterThanUpperThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        # greater than upper threshold test
+        - alarmName: GenericMetricGreaterThanUpperThreshold
+          alarmDescription: Alarm to test GenericMetric GreaterThanUpperThreshold
+          snsTopicName: Security
+          metricName: GenericMetricForTestingGreaterThanUpperThreshold
+          namespace: LzaMetrics
+          comparisonOperator: GreaterThanUpperThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        # less than lower threshold test
+        - alarmName: GenericMetricLessThanLowerThreshold
+          alarmDescription: Alarm to test GenericMetric LessThanLowerThreshold
+          snsTopicName: Security
+          metricName: GenericMetricForTestingLessThanLowerThreshold
+          namespace: LzaMetrics
+          comparisonOperator: LessThanLowerThreshold
           evaluationPeriods: 1
           period: 300
           statistic: Sum

@@ -14,6 +14,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { AuditManagerOrganizationAdminAccount } from '../../lib/aws-auditmanager/auditmanager-organization-admin-account';
 import { snapShotTest } from '../snapshot-test';
+import { describe } from '@jest/globals';
 
 const testNamePrefix = 'Construct(AuditManagerOrganizationAdminAccount): ';
 

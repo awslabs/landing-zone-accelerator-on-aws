@@ -23,6 +23,24 @@ logging:
   cloudtrail:
     enable: false
     organizationTrail: false
+    accountTrails: 
+      - name: AWSAccelerator-Account-CloudTrail
+        regions:
+          - us-east-1
+        deploymentTargets:
+          organizationalUnits:
+            - Root
+        settings:
+          multiRegionTrail: true
+          globalServiceEvents: true
+          managementEvents: true
+          s3DataEvents: true
+          lambdaDataEvents: true
+          sendToCloudWatchLogs: true
+          apiErrorRateInsight: false
+          apiCallRateInsight: false
+
+ 
   sessionManager:
     sendToCloudWatchLogs: false
     sendToS3: true
@@ -32,6 +50,10 @@ logging:
       - organizationalUnits:
           - Infrastructure
         excludeAll: true
+      - organizationalUnits:
+          - Root
+        logGroupNames: 
+          - test1/*
       - accounts:
           - Management
         regions:
