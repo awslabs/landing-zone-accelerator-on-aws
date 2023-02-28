@@ -1,69 +1,69 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`CloudTrailExtension Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "SnapshotTest4B1F0CC8": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "SnapshotTest4B1F0CC8": {
+      "DependsOn": [
         "SnapshotTestS3Policy98BCFC00",
       ],
-      "Properties": Object {
+      "Properties": {
         "EnableLogFileValidation": true,
-        "EventSelectors": Array [],
+        "EventSelectors": [],
         "IncludeGlobalServiceEvents": true,
-        "InsightSelectors": Array [
-          Object {
+        "InsightSelectors": [
+          {
             "InsightType": "ApiCallRateInsight",
           },
-          Object {
+          {
             "InsightType": "ApiErrorRateInsight",
           },
         ],
         "IsLogging": true,
         "IsMultiRegionTrail": true,
         "IsOrganizationTrail": true,
-        "S3BucketName": Object {
+        "S3BucketName": {
           "Ref": "SnapshotTestS30107570F",
         },
       },
       "Type": "AWS::CloudTrail::Trail",
     },
-    "SnapshotTestS30107570F": Object {
+    "SnapshotTestS30107570F": {
       "DeletionPolicy": "Retain",
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "SnapshotTestS3Policy98BCFC00": Object {
-      "Properties": Object {
-        "Bucket": Object {
+    "SnapshotTestS3Policy98BCFC00": {
+      "Properties": {
+        "Bucket": {
           "Ref": "SnapshotTestS30107570F",
         },
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "s3:*",
-              "Condition": Object {
-                "Bool": Object {
+              "Condition": {
+                "Bool": {
                   "aws:SecureTransport": "false",
                 },
               },
               "Effect": "Deny",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "SnapshotTestS30107570F",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "SnapshotTestS30107570F",
                           "Arn",
                         ],
@@ -74,42 +74,42 @@ Object {
                 },
               ],
             },
-            Object {
+            {
               "Action": "s3:GetBucketAcl",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "cloudtrail.amazonaws.com",
               },
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "SnapshotTestS30107570F",
                   "Arn",
                 ],
               },
             },
-            Object {
+            {
               "Action": "s3:PutObject",
-              "Condition": Object {
-                "StringEquals": Object {
+              "Condition": {
+                "StringEquals": {
                   "s3:x-amz-acl": "bucket-owner-full-control",
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "cloudtrail.amazonaws.com",
               },
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
-                    Object {
-                      "Fn::GetAtt": Array [
+                  [
+                    {
+                      "Fn::GetAtt": [
                         "SnapshotTestS30107570F",
                         "Arn",
                       ],
                     },
                     "/AWSLogs/",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     "/*",

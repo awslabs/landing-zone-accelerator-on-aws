@@ -11,7 +11,6 @@
  *  and limitations under the License.
  */
 import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
 
 import { createLogger } from '@aws-accelerator/utils';
 
@@ -51,18 +50,29 @@ const scriptUsage =
 async function main(): Promise<string> {
   const usage = `** Script Usage ** ${scriptUsage}`;
 
-  const argv = yargs(hideBin(process.argv)).argv;
-  const installerStackName = argv['installerStackName'] as string;
+  const argv = yargs(process.argv.slice(2))
+    .options({
+      installerStackName: { type: 'string', default: 'AWSAccelerator-InstallerStack' },
+      partition: { type: 'string', default: 'aws' },
+      debug: { type: 'boolean', default: false },
+      fullDestroy: { type: 'boolean', default: false },
+      deleteAccelerator: { type: 'boolean', default: false },
+      stageName: { type: 'string', default: 'all' },
+      actionName: { type: 'string', default: 'all' },
+    })
+    .parseSync();
 
-  const partition = (argv['partition'] as string) ?? 'aws';
-  const debug = (argv['debug'] as boolean) ?? false;
+  const installerStackName = argv.installerStackName;
+
+  const partition = argv.partition;
+  const debug = argv.debug;
   const ignoreTerminationProtection = true;
 
-  const fullDestroy = (argv['fullDestroy'] as boolean) ?? false;
-  const deleteAccelerator = (argv['deleteAccelerator'] as boolean) ?? false;
+  const fullDestroy = argv.fullDestroy;
+  const deleteAccelerator = argv.deleteAccelerator;
 
-  let stageName = (argv['stageName'] as string) ?? 'all';
-  let actionName = (argv['actionName'] as string) ?? 'all';
+  let stageName = argv.stageName;
+  let actionName = argv.actionName;
 
   let keepPipelineAndConfig = false;
   let keepData = false;

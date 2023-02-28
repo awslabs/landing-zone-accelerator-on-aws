@@ -1,29 +1,29 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Network Firewall Policy Construct(NetworkFirewallPolicy):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestPolicy14DF854C3": Object {
-      "Properties": Object {
-        "FirewallPolicy": Object {
-          "StatefulDefaultActions": Array [
+{
+  "Resources": {
+    "TestPolicy14DF854C3": {
+      "Properties": {
+        "FirewallPolicy": {
+          "StatefulDefaultActions": [
             "statefulDefaultActions",
           ],
-          "StatefulEngineOptions": Object {
+          "StatefulEngineOptions": {
             "RuleOrder": "statefulEngineOptions",
           },
-          "StatefulRuleGroupReferences": Array [
-            Object {
+          "StatefulRuleGroupReferences": [
+            {
               "Priority": 123,
               "ResourceArn": "resourceArn",
             },
           ],
-          "StatelessCustomActions": Array [
-            Object {
-              "ActionDefinition": Object {
-                "PublishMetricAction": Object {
-                  "Dimensions": Array [
-                    Object {
+          "StatelessCustomActions": [
+            {
+              "ActionDefinition": {
+                "PublishMetricAction": {
+                  "Dimensions": [
+                    {
                       "Value": "CustomValue",
                     },
                   ],
@@ -32,22 +32,22 @@ Object {
               "ActionName": "actionName",
             },
           ],
-          "StatelessDefaultActions": Array [
+          "StatelessDefaultActions": [
             "statelessDefaultActions",
           ],
-          "StatelessFragmentDefaultActions": Array [
+          "StatelessFragmentDefaultActions": [
             "statelessFragmentDefaultActions",
           ],
-          "StatelessRuleGroupReferences": Array [
-            Object {
+          "StatelessRuleGroupReferences": [
+            {
               "Priority": 123,
               "ResourceArn": "resourceArn",
             },
           ],
         },
         "FirewallPolicyName": "TestFirewallPolicy1",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestFirewallPolicy1",
           },
@@ -55,28 +55,28 @@ Object {
       },
       "Type": "AWS::NetworkFirewall::FirewallPolicy",
     },
-    "TestPolicyCC05E598": Object {
-      "Properties": Object {
-        "FirewallPolicy": Object {
-          "StatefulEngineOptions": Object {
+    "TestPolicyCC05E598": {
+      "Properties": {
+        "FirewallPolicy": {
+          "StatefulEngineOptions": {
             "RuleOrder": "STRICT_ORDER",
           },
-          "StatefulRuleGroupReferences": Array [
-            Object {
+          "StatefulRuleGroupReferences": [
+            {
               "Priority": 123,
               "ResourceArn": "arn:aws:network-firewall:us-east-1:222222222222:stateful-rulegroup/TestGroup",
             },
           ],
-          "StatelessDefaultActions": Array [
+          "StatelessDefaultActions": [
             "aws:forward_to_sfe",
           ],
-          "StatelessFragmentDefaultActions": Array [
+          "StatelessFragmentDefaultActions": [
             "aws:forward_to_sfe",
           ],
         },
         "FirewallPolicyName": "TestFirewallPolicy",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "TestFirewallPolicy",
           },

@@ -1,30 +1,30 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`AutoscalingGroup Construct(AutoscalingGroup):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "Test7BFAF513": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "Test7BFAF513": {
+      "Properties": {
         "DesiredCapacity": "2",
         "HealthCheckGracePeriod": 300,
         "HealthCheckType": "ELB",
-        "LaunchTemplate": Object {
+        "LaunchTemplate": {
           "LaunchTemplateId": "string",
           "Version": "string",
         },
         "MaxSize": "4",
         "MinSize": "1",
-        "TargetGroupARNs": Array [
+        "TargetGroupARNs": [
           "string",
         ],
-        "VPCZoneIdentifier": Array [
+        "VPCZoneIdentifier": [
           "string",
         ],
       },
       "Type": "AWS::AutoScaling::AutoScalingGroup",
     },
-    "TestAutoScalingServiceLinkedRole68DA9D39": Object {
-      "Properties": Object {
+    "TestAutoScalingServiceLinkedRole68DA9D39": {
+      "Properties": {
         "AWSServiceName": "autoscaling.amazonaws.com",
         "Description": "Default Service-Linked Role enables access to AWS Services and Resources used or managed by Auto Scaling",
       },

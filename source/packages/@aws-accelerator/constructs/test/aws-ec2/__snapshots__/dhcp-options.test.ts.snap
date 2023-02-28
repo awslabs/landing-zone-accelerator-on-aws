@@ -1,23 +1,23 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`DhcpOptions Construct(DhcpOptions):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestDhcpOpts22CADF8A": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestDhcpOpts22CADF8A": {
+      "Properties": {
         "DomainName": "test.com",
-        "DomainNameServers": Array [
+        "DomainNameServers": [
           "1.1.1.1",
         ],
-        "NetbiosNameServers": Array [
+        "NetbiosNameServers": [
           "1.1.1.1",
         ],
         "NetbiosNodeType": 2,
-        "NtpServers": Array [
+        "NtpServers": [
           "1.1.1.1",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Test",
           },

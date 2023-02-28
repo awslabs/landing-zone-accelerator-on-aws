@@ -1,64 +1,64 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`TargetGroup Construct(TargetGroup):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "Test19A2804E9": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "Test19A2804E9": {
+      "Properties": {
         "HealthCheckEnabled": true,
-        "Matcher": Object {},
+        "Matcher": {},
         "Name": "Test",
         "Port": 80,
         "Protocol": "HTTP",
         "ProtocolVersion": "HTTP1",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Test",
           },
         ],
-        "TargetGroupAttributes": Array [
-          Object {
+        "TargetGroupAttributes": [
+          {
             "Key": "deregistration_delay.timeout_seconds",
             "Value": "123",
           },
-          Object {
+          {
             "Key": "stickiness.enabled",
             "Value": "true",
           },
-          Object {
+          {
             "Key": "stickiness.type",
             "Value": "stickinessType",
           },
-          Object {
+          {
             "Key": "load_balancing.algorithm.type",
             "Value": "algorithm",
           },
-          Object {
+          {
             "Key": "slow_start.duration_seconds",
             "Value": "123",
           },
-          Object {
+          {
             "Key": "stickiness.app_cookie.cookie_name",
             "Value": "appCookieName",
           },
-          Object {
+          {
             "Key": "stickiness.app_cookie.duration_seconds",
             "Value": "123",
           },
-          Object {
+          {
             "Key": "stickiness.lb_cookie.duration_seconds",
             "Value": "123",
           },
-          Object {
+          {
             "Key": "deregistration_delay.connection_termination.enabled",
             "Value": "true",
           },
-          Object {
+          {
             "Key": "preserve_client_ip.enabled",
             "Value": "true",
           },
-          Object {
+          {
             "Key": "proxy_protocol_v2.enabled",
             "Value": "true",
           },

@@ -1,23 +1,23 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Document Construct(Document):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87": {
+      "DependsOn": [
         "CustomSSMShareDocumentCustomResourceProviderRole53A2A3EC",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomSSMShareDocumentCustomResourceProviderRole53A2A3EC",
             "Arn",
           ],
@@ -27,21 +27,21 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B": Object {
+    "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "Key961B73FD",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87",
               },
             ],
@@ -52,49 +52,49 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomSSMShareDocumentCustomResourceProviderRole53A2A3EC": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomSSMShareDocumentCustomResourceProviderRole53A2A3EC": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ssm:DescribeDocumentPermission",
                     "ssm:ModifyDocumentPermission",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::Join": Array [
+                  "Resource": {
+                    "Fn::Join": [
                       "",
-                      Array [
+                      [
                         "arn:",
-                        Object {
+                        {
                           "Ref": "AWS::Partition",
                         },
                         ":ssm:",
-                        Object {
+                        {
                           "Ref": "AWS::Region",
                         },
                         ":",
-                        Object {
+                        {
                           "Ref": "AWS::AccountId",
                         },
                         ":document/*",
@@ -112,56 +112,56 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "Document7E43FA9A": Object {
-      "Properties": Object {
-        "Content": Object {},
+    "Document7E43FA9A": {
+      "Properties": {
+        "Content": {},
         "DocumentType": "Automation",
         "Name": "DocumentName",
         "UpdateMethod": "NewVersion",
       },
       "Type": "AWS::SSM::Document",
     },
-    "DocumentShareDocument572E9653": Object {
+    "DocumentShareDocument572E9653": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomSSMShareDocumentCustomResourceProviderLogGroup11AEA42B",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomSSMShareDocumentCustomResourceProviderHandler02D98C87",
             "Arn",
           ],
         },
-        "accountIds": Array [
+        "accountIds": [
           "accountA",
         ],
-        "name": Object {
+        "name": {
           "Ref": "Document7E43FA9A",
         },
       },
       "Type": "Custom::SSMShareDocument",
       "UpdateReplacePolicy": "Delete",
     },
-    "Key961B73FD": Object {
+    "Key961B73FD": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",

@@ -1,17 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Bucket Construct(Bucket):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "BucketAwsPrincipalAccess2BA6D9C4": Object {
+{
+  "Resources": {
+    "BucketAwsPrincipalAccess2BA6D9C4": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "BucketEncryption": Object {
-          "ServerSideEncryptionConfiguration": Array [
-            Object {
-              "ServerSideEncryptionByDefault": Object {
-                "KMSMasterKeyID": Object {
-                  "Fn::GetAtt": Array [
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "KMSMasterKeyID": {
+                  "Fn::GetAtt": [
                     "CustomKey1EF07F540",
                     "Arn",
                   ],
@@ -21,56 +21,56 @@ Object {
             },
           ],
         },
-        "BucketName": Object {
-          "Fn::Join": Array [
+        "BucketName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "aws-accelerator-macie-",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
               "-",
-              Object {
+              {
                 "Ref": "AWS::Region",
               },
             ],
           ],
         },
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "AbortIncompleteMultipartUpload": {
                 "DaysAfterInitiation": 1,
               },
               "ExpirationInDays": 1825,
               "ExpiredObjectDeleteMarker": false,
-              "Id": Object {
-                "Fn::Join": Array [
+              "Id": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "LifecycleRuleaws-accelerator-macie-",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     "-",
-                    Object {
+                    {
                       "Ref": "AWS::Region",
                     },
                   ],
                 ],
               },
-              "NoncurrentVersionExpiration": Object {
+              "NoncurrentVersionExpiration": {
                 "NoncurrentDays": 1825,
               },
-              "NoncurrentVersionTransitions": Array [
-                Object {
+              "NoncurrentVersionTransitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 366,
                 },
               ],
               "Status": "Enabled",
-              "Transitions": Array [
-                Object {
+              "Transitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 365,
                 },
@@ -78,90 +78,90 @@ Object {
             },
           ],
         },
-        "LoggingConfiguration": Object {
-          "DestinationBucketName": Object {
-            "Fn::Join": Array [
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "aws-accelerator-s3-access-logs-",
-                Object {
+                {
                   "Ref": "AWS::AccountId",
                 },
                 "-",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
               ],
             ],
           },
         },
-        "OwnershipControls": Object {
-          "Rules": Array [
-            Object {
+        "OwnershipControls": {
+          "Rules": [
+            {
               "ObjectOwnership": "BucketOwnerPreferred",
             },
           ],
         },
-        "PublicAccessBlockConfiguration": Object {
+        "PublicAccessBlockConfiguration": {
           "BlockPublicAcls": true,
           "BlockPublicPolicy": true,
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "aws-cdk:auto-somename1-access-bucket",
             "Value": "true",
           },
-          Object {
+          {
             "Key": "aws-cdk:auto-somename2-access-bucket",
             "Value": "true",
           },
-          Object {
+          {
             "Key": "aws-cdk:auto-somename3-access-bucket",
             "Value": "true",
           },
         ],
-        "VersioningConfiguration": Object {
+        "VersioningConfiguration": {
           "Status": "Enabled",
         },
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "BucketAwsPrincipalAccessBucketAwsPrincipalAccessReplication7C3AB1E2": Object {
+    "BucketAwsPrincipalAccessBucketAwsPrincipalAccessReplication7C3AB1E2": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
             "Arn",
           ],
         },
-        "destinationAccountId": Object {
+        "destinationAccountId": {
           "Ref": "AWS::AccountId",
         },
-        "destinationBucketArn": Object {
-          "Fn::Join": Array [
+        "destinationBucketArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":s3:::aws-accelerator-central-logs-bucket",
             ],
           ],
         },
-        "destinationBucketKeyArn": Object {
-          "Fn::Join": Array [
+        "destinationBucketKeyArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:aws:kms:us-east-1:",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
               ":key/ksm-key-arn",
@@ -169,27 +169,27 @@ Object {
           ],
         },
         "prefix": "",
-        "replicationRoleArn": Object {
-          "Fn::GetAtt": Array [
+        "replicationRoleArn": {
+          "Fn::GetAtt": [
             "BucketAwsPrincipalAccessBucketAwsPrincipalAccessReplicationAwsAcceleratorCentralLogsBucketReplicationRole1A806901",
             "Arn",
           ],
         },
-        "sourceBucketName": Object {
+        "sourceBucketName": {
           "Ref": "BucketAwsPrincipalAccess2BA6D9C4",
         },
       },
       "Type": "Custom::S3PutBucketReplication",
       "UpdateReplacePolicy": "Delete",
     },
-    "BucketAwsPrincipalAccessBucketAwsPrincipalAccessReplicationAwsAcceleratorCentralLogsBucketReplicationRole1A806901": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "BucketAwsPrincipalAccessBucketAwsPrincipalAccessReplicationAwsAcceleratorCentralLogsBucketReplicationRole1A806901": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "s3.amazonaws.com",
               },
             },
@@ -200,12 +200,12 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "BucketAwsPrincipalAccessBucketAwsPrincipalAccessReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicy8CCC5B66": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+    "BucketAwsPrincipalAccessBucketAwsPrincipalAccessReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicy8CCC5B66": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "s3:GetObjectLegalHold",
                 "s3:GetObjectRetention",
                 "s3:GetObjectVersion",
@@ -219,19 +219,19 @@ Object {
                 "s3:ReplicateTags",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketAwsPrincipalAccess2BA6D9C4",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketAwsPrincipalAccess2BA6D9C4",
                           "Arn",
                         ],
@@ -242,8 +242,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:GetBucketVersioning",
                 "s3:GetObjectVersionTagging",
                 "s3:ObjectOwnerOverrideToBucketOwner",
@@ -253,12 +253,12 @@ Object {
                 "s3:ReplicateTags",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
                     ":s3:::aws-accelerator-central-logs-bucket/*",
@@ -266,25 +266,25 @@ Object {
                 ],
               },
             },
-            Object {
+            {
               "Action": "kms:Decrypt",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "CustomKey1EF07F540",
                   "Arn",
                 ],
               },
             },
-            Object {
+            {
               "Action": "kms:Encrypt",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:aws:kms:us-east-1:",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     ":key/ksm-key-arn",
@@ -296,45 +296,45 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "BucketAwsPrincipalAccessBucketAwsPrincipalAccessReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicy8CCC5B66",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "BucketAwsPrincipalAccessBucketAwsPrincipalAccessReplicationAwsAcceleratorCentralLogsBucketReplicationRole1A806901",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "BucketAwsPrincipalAccessPolicy62349E94": Object {
-      "Properties": Object {
-        "Bucket": Object {
+    "BucketAwsPrincipalAccessPolicy62349E94": {
+      "Properties": {
+        "Bucket": {
           "Ref": "BucketAwsPrincipalAccess2BA6D9C4",
         },
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "s3:*",
-              "Condition": Object {
-                "Bool": Object {
+              "Condition": {
+                "Bool": {
                   "aws:SecureTransport": "false",
                 },
               },
               "Effect": "Deny",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketAwsPrincipalAccess2BA6D9C4",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketAwsPrincipalAccess2BA6D9C4",
                           "Arn",
                         ],
@@ -346,29 +346,29 @@ Object {
               ],
               "Sid": "deny-insecure-connections",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "principal1.amazonaws.com",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketAwsPrincipalAccess2BA6D9C4",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketAwsPrincipalAccess2BA6D9C4",
                           "Arn",
                         ],
@@ -379,8 +379,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:DeleteObject*",
                 "s3:PutObject",
                 "s3:PutObjectLegalHold",
@@ -390,22 +390,22 @@ Object {
                 "s3:Abort*",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "principal2.amazonaws.com",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketAwsPrincipalAccess2BA6D9C4",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketAwsPrincipalAccess2BA6D9C4",
                           "Arn",
                         ],
@@ -416,8 +416,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -430,22 +430,22 @@ Object {
                 "s3:Abort*",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "principal3.amazonaws.com",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketAwsPrincipalAccess2BA6D9C4",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketAwsPrincipalAccess2BA6D9C4",
                           "Arn",
                         ],
@@ -462,39 +462,39 @@ Object {
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "BucketBucketReplication33A48F83": Object {
+    "BucketBucketReplication33A48F83": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
             "Arn",
           ],
         },
-        "destinationAccountId": Object {
+        "destinationAccountId": {
           "Ref": "AWS::AccountId",
         },
-        "destinationBucketArn": Object {
-          "Fn::Join": Array [
+        "destinationBucketArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":s3:::aws-accelerator-central-logs-bucket",
             ],
           ],
         },
-        "destinationBucketKeyArn": Object {
-          "Fn::Join": Array [
+        "destinationBucketKeyArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:aws:kms:us-east-1:",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
               ":key/ksm-key-arn",
@@ -502,27 +502,27 @@ Object {
           ],
         },
         "prefix": "",
-        "replicationRoleArn": Object {
-          "Fn::GetAtt": Array [
+        "replicationRoleArn": {
+          "Fn::GetAtt": [
             "BucketBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleC235BD7C",
             "Arn",
           ],
         },
-        "sourceBucketName": Object {
+        "sourceBucketName": {
           "Ref": "BucketE75EA64C",
         },
       },
       "Type": "Custom::S3PutBucketReplication",
       "UpdateReplacePolicy": "Delete",
     },
-    "BucketBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleC235BD7C": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "BucketBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleC235BD7C": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "s3.amazonaws.com",
               },
             },
@@ -533,12 +533,12 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "BucketBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicy15E626E1": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+    "BucketBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicy15E626E1": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "s3:GetObjectLegalHold",
                 "s3:GetObjectRetention",
                 "s3:GetObjectVersion",
@@ -552,19 +552,19 @@ Object {
                 "s3:ReplicateTags",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketE75EA64C",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketE75EA64C",
                           "Arn",
                         ],
@@ -575,8 +575,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:GetBucketVersioning",
                 "s3:GetObjectVersionTagging",
                 "s3:ObjectOwnerOverrideToBucketOwner",
@@ -586,12 +586,12 @@ Object {
                 "s3:ReplicateTags",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
                     ":s3:::aws-accelerator-central-logs-bucket/*",
@@ -599,25 +599,25 @@ Object {
                 ],
               },
             },
-            Object {
+            {
               "Action": "kms:Decrypt",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "CustomKey1E6D0D07",
                   "Arn",
                 ],
               },
             },
-            Object {
+            {
               "Action": "kms:Encrypt",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:aws:kms:us-east-1:",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     ":key/ksm-key-arn",
@@ -629,23 +629,23 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "BucketBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicy15E626E1",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "BucketBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleC235BD7C",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "BucketE75EA64C": Object {
+    "BucketE75EA64C": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "BucketEncryption": Object {
-          "ServerSideEncryptionConfiguration": Array [
-            Object {
-              "ServerSideEncryptionByDefault": Object {
-                "KMSMasterKeyID": Object {
-                  "Fn::GetAtt": Array [
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "KMSMasterKeyID": {
+                  "Fn::GetAtt": [
                     "CustomKey1E6D0D07",
                     "Arn",
                   ],
@@ -655,56 +655,56 @@ Object {
             },
           ],
         },
-        "BucketName": Object {
-          "Fn::Join": Array [
+        "BucketName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "aws-accelerator-macie-",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
               "-",
-              Object {
+              {
                 "Ref": "AWS::Region",
               },
             ],
           ],
         },
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "AbortIncompleteMultipartUpload": {
                 "DaysAfterInitiation": 1,
               },
               "ExpirationInDays": 1825,
               "ExpiredObjectDeleteMarker": false,
-              "Id": Object {
-                "Fn::Join": Array [
+              "Id": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "LifecycleRuleaws-accelerator-macie-",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     "-",
-                    Object {
+                    {
                       "Ref": "AWS::Region",
                     },
                   ],
                 ],
               },
-              "NoncurrentVersionExpiration": Object {
+              "NoncurrentVersionExpiration": {
                 "NoncurrentDays": 1825,
               },
-              "NoncurrentVersionTransitions": Array [
-                Object {
+              "NoncurrentVersionTransitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 366,
                 },
               ],
               "Status": "Enabled",
-              "Transitions": Array [
-                Object {
+              "Transitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 365,
                 },
@@ -712,52 +712,52 @@ Object {
             },
           ],
         },
-        "LoggingConfiguration": Object {
-          "DestinationBucketName": Object {
-            "Fn::Join": Array [
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "aws-accelerator-s3-access-logs-",
-                Object {
+                {
                   "Ref": "AWS::AccountId",
                 },
                 "-",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
               ],
             ],
           },
         },
-        "OwnershipControls": Object {
-          "Rules": Array [
-            Object {
+        "OwnershipControls": {
+          "Rules": [
+            {
               "ObjectOwnership": "BucketOwnerPreferred",
             },
           ],
         },
-        "PublicAccessBlockConfiguration": Object {
+        "PublicAccessBlockConfiguration": {
           "BlockPublicAcls": true,
           "BlockPublicPolicy": true,
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
-        "VersioningConfiguration": Object {
+        "VersioningConfiguration": {
           "Status": "Enabled",
         },
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "BucketLifeCycleProvidedBC4D367D": Object {
+    "BucketLifeCycleProvidedBC4D367D": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "BucketEncryption": Object {
-          "ServerSideEncryptionConfiguration": Array [
-            Object {
-              "ServerSideEncryptionByDefault": Object {
-                "KMSMasterKeyID": Object {
-                  "Fn::GetAtt": Array [
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "KMSMasterKeyID": {
+                  "Fn::GetAtt": [
                     "CustomKeyLifeCycleProvided39D4346A",
                     "Arn",
                   ],
@@ -767,56 +767,56 @@ Object {
             },
           ],
         },
-        "BucketName": Object {
-          "Fn::Join": Array [
+        "BucketName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "aws-accelerator-macie-",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
               "-",
-              Object {
+              {
                 "Ref": "AWS::Region",
               },
             ],
           ],
         },
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "AbortIncompleteMultipartUpload": {
                 "DaysAfterInitiation": 1,
               },
               "ExpirationInDays": 24,
               "ExpiredObjectDeleteMarker": true,
-              "Id": Object {
-                "Fn::Join": Array [
+              "Id": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "LifecycleRuleaws-accelerator-macie-",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     "-",
-                    Object {
+                    {
                       "Ref": "AWS::Region",
                     },
                   ],
                 ],
               },
-              "NoncurrentVersionExpiration": Object {
+              "NoncurrentVersionExpiration": {
                 "NoncurrentDays": 12,
               },
-              "NoncurrentVersionTransitions": Array [
-                Object {
+              "NoncurrentVersionTransitions": [
+                {
                   "StorageClass": "GLACIER",
                   "TransitionInDays": 365,
                 },
               ],
               "Status": "Enabled",
-              "Transitions": Array [
-                Object {
+              "Transitions": [
+                {
                   "StorageClass": "STANDARD_IA",
                   "TransitionInDays": 7,
                 },
@@ -824,74 +824,74 @@ Object {
             },
           ],
         },
-        "LoggingConfiguration": Object {
-          "DestinationBucketName": Object {
-            "Fn::Join": Array [
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "aws-accelerator-s3-access-logs-",
-                Object {
+                {
                   "Ref": "AWS::AccountId",
                 },
                 "-",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
               ],
             ],
           },
         },
-        "OwnershipControls": Object {
-          "Rules": Array [
-            Object {
+        "OwnershipControls": {
+          "Rules": [
+            {
               "ObjectOwnership": "BucketOwnerPreferred",
             },
           ],
         },
-        "PublicAccessBlockConfiguration": Object {
+        "PublicAccessBlockConfiguration": {
           "BlockPublicAcls": true,
           "BlockPublicPolicy": true,
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
-        "VersioningConfiguration": Object {
+        "VersioningConfiguration": {
           "Status": "Enabled",
         },
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "BucketLifeCycleProvidedPolicy6ED87BA2": Object {
-      "Properties": Object {
-        "Bucket": Object {
+    "BucketLifeCycleProvidedPolicy6ED87BA2": {
+      "Properties": {
+        "Bucket": {
           "Ref": "BucketLifeCycleProvidedBC4D367D",
         },
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "s3:*",
-              "Condition": Object {
-                "Bool": Object {
+              "Condition": {
+                "Bool": {
                   "aws:SecureTransport": "false",
                 },
               },
               "Effect": "Deny",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketLifeCycleProvidedBC4D367D",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketLifeCycleProvidedBC4D367D",
                           "Arn",
                         ],
@@ -909,15 +909,15 @@ Object {
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "BucketNoBucketAccessToAwsPrincipal0B01FBF6": Object {
+    "BucketNoBucketAccessToAwsPrincipal0B01FBF6": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "BucketEncryption": Object {
-          "ServerSideEncryptionConfiguration": Array [
-            Object {
-              "ServerSideEncryptionByDefault": Object {
-                "KMSMasterKeyID": Object {
-                  "Fn::GetAtt": Array [
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "KMSMasterKeyID": {
+                  "Fn::GetAtt": [
                     "CustomKeyNoBucketAccessToAwsPrincipal67B73EC6",
                     "Arn",
                   ],
@@ -927,56 +927,56 @@ Object {
             },
           ],
         },
-        "BucketName": Object {
-          "Fn::Join": Array [
+        "BucketName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "aws-accelerator-macie-",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
               "-",
-              Object {
+              {
                 "Ref": "AWS::Region",
               },
             ],
           ],
         },
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "AbortIncompleteMultipartUpload": {
                 "DaysAfterInitiation": 1,
               },
               "ExpirationInDays": 1825,
               "ExpiredObjectDeleteMarker": false,
-              "Id": Object {
-                "Fn::Join": Array [
+              "Id": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "LifecycleRuleaws-accelerator-macie-",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     "-",
-                    Object {
+                    {
                       "Ref": "AWS::Region",
                     },
                   ],
                 ],
               },
-              "NoncurrentVersionExpiration": Object {
+              "NoncurrentVersionExpiration": {
                 "NoncurrentDays": 1825,
               },
-              "NoncurrentVersionTransitions": Array [
-                Object {
+              "NoncurrentVersionTransitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 366,
                 },
               ],
               "Status": "Enabled",
-              "Transitions": Array [
-                Object {
+              "Transitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 365,
                 },
@@ -984,74 +984,74 @@ Object {
             },
           ],
         },
-        "LoggingConfiguration": Object {
-          "DestinationBucketName": Object {
-            "Fn::Join": Array [
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "aws-accelerator-s3-access-logs-",
-                Object {
+                {
                   "Ref": "AWS::AccountId",
                 },
                 "-",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
               ],
             ],
           },
         },
-        "OwnershipControls": Object {
-          "Rules": Array [
-            Object {
+        "OwnershipControls": {
+          "Rules": [
+            {
               "ObjectOwnership": "BucketOwnerPreferred",
             },
           ],
         },
-        "PublicAccessBlockConfiguration": Object {
+        "PublicAccessBlockConfiguration": {
           "BlockPublicAcls": true,
           "BlockPublicPolicy": true,
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
-        "VersioningConfiguration": Object {
+        "VersioningConfiguration": {
           "Status": "Enabled",
         },
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "BucketNoBucketAccessToAwsPrincipalPolicy464C23FC": Object {
-      "Properties": Object {
-        "Bucket": Object {
+    "BucketNoBucketAccessToAwsPrincipalPolicy464C23FC": {
+      "Properties": {
+        "Bucket": {
           "Ref": "BucketNoBucketAccessToAwsPrincipal0B01FBF6",
         },
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "s3:*",
-              "Condition": Object {
-                "Bool": Object {
+              "Condition": {
+                "Bool": {
                   "aws:SecureTransport": "false",
                 },
               },
               "Effect": "Deny",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketNoBucketAccessToAwsPrincipal0B01FBF6",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketNoBucketAccessToAwsPrincipal0B01FBF6",
                           "Arn",
                         ],
@@ -1069,37 +1069,37 @@ Object {
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "BucketPolicy8005AAB0": Object {
-      "Properties": Object {
-        "Bucket": Object {
+    "BucketPolicy8005AAB0": {
+      "Properties": {
+        "Bucket": {
           "Ref": "BucketE75EA64C",
         },
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "s3:*",
-              "Condition": Object {
-                "Bool": Object {
+              "Condition": {
+                "Bool": {
                   "aws:SecureTransport": "false",
                 },
               },
               "Effect": "Deny",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketE75EA64C",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketE75EA64C",
                           "Arn",
                         ],
@@ -1117,39 +1117,39 @@ Object {
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "BucketServerAccessBucketBucketServerAccessBucketReplication84477944": Object {
+    "BucketServerAccessBucketBucketServerAccessBucketReplication84477944": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
             "Arn",
           ],
         },
-        "destinationAccountId": Object {
+        "destinationAccountId": {
           "Ref": "AWS::AccountId",
         },
-        "destinationBucketArn": Object {
-          "Fn::Join": Array [
+        "destinationBucketArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":s3:::aws-accelerator-central-logs-bucket",
             ],
           ],
         },
-        "destinationBucketKeyArn": Object {
-          "Fn::Join": Array [
+        "destinationBucketKeyArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:aws:kms:us-east-1:",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
               ":key/ksm-key-arn",
@@ -1157,27 +1157,27 @@ Object {
           ],
         },
         "prefix": "",
-        "replicationRoleArn": Object {
-          "Fn::GetAtt": Array [
+        "replicationRoleArn": {
+          "Fn::GetAtt": [
             "BucketServerAccessBucketBucketServerAccessBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleB51CBDB4",
             "Arn",
           ],
         },
-        "sourceBucketName": Object {
+        "sourceBucketName": {
           "Ref": "BucketServerAccessBucketFC17BBE8",
         },
       },
       "Type": "Custom::S3PutBucketReplication",
       "UpdateReplacePolicy": "Delete",
     },
-    "BucketServerAccessBucketBucketServerAccessBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleB51CBDB4": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "BucketServerAccessBucketBucketServerAccessBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleB51CBDB4": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "s3.amazonaws.com",
               },
             },
@@ -1188,12 +1188,12 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "BucketServerAccessBucketBucketServerAccessBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicy618A8344": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+    "BucketServerAccessBucketBucketServerAccessBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicy618A8344": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "s3:GetObjectLegalHold",
                 "s3:GetObjectRetention",
                 "s3:GetObjectVersion",
@@ -1207,19 +1207,19 @@ Object {
                 "s3:ReplicateTags",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketServerAccessBucketFC17BBE8",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketServerAccessBucketFC17BBE8",
                           "Arn",
                         ],
@@ -1230,8 +1230,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:GetBucketVersioning",
                 "s3:GetObjectVersionTagging",
                 "s3:ObjectOwnerOverrideToBucketOwner",
@@ -1241,12 +1241,12 @@ Object {
                 "s3:ReplicateTags",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
                     ":s3:::aws-accelerator-central-logs-bucket/*",
@@ -1254,15 +1254,15 @@ Object {
                 ],
               },
             },
-            Object {
+            {
               "Action": "kms:Encrypt",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:aws:kms:us-east-1:",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     ":key/ksm-key-arn",
@@ -1274,48 +1274,48 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "BucketServerAccessBucketBucketServerAccessBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicy618A8344",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "BucketServerAccessBucketBucketServerAccessBucketReplicationAwsAcceleratorCentralLogsBucketReplicationRoleB51CBDB4",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "BucketServerAccessBucketFC17BBE8": Object {
+    "BucketServerAccessBucketFC17BBE8": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "BucketEncryption": Object {
-          "ServerSideEncryptionConfiguration": Array [
-            Object {
-              "ServerSideEncryptionByDefault": Object {
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
                 "SSEAlgorithm": "AES256",
               },
             },
           ],
         },
         "BucketName": "testbucket",
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "AbortIncompleteMultipartUpload": {
                 "DaysAfterInitiation": 1,
               },
               "ExpirationInDays": 1825,
               "ExpiredObjectDeleteMarker": false,
               "Id": "LifecycleRuletestbucket",
-              "NoncurrentVersionExpiration": Object {
+              "NoncurrentVersionExpiration": {
                 "NoncurrentDays": 1825,
               },
-              "NoncurrentVersionTransitions": Array [
-                Object {
+              "NoncurrentVersionTransitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 366,
                 },
               ],
               "Status": "Enabled",
-              "Transitions": Array [
-                Object {
+              "Transitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 365,
                 },
@@ -1323,63 +1323,63 @@ Object {
             },
           ],
         },
-        "LoggingConfiguration": Object {
-          "DestinationBucketName": Object {
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
             "Ref": "serverAccessLogsBucket384F7E6F",
           },
           "LogFilePrefix": "testbucket/",
         },
-        "OwnershipControls": Object {
-          "Rules": Array [
-            Object {
+        "OwnershipControls": {
+          "Rules": [
+            {
               "ObjectOwnership": "BucketOwnerPreferred",
             },
           ],
         },
-        "PublicAccessBlockConfiguration": Object {
+        "PublicAccessBlockConfiguration": {
           "BlockPublicAcls": true,
           "BlockPublicPolicy": true,
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
-        "VersioningConfiguration": Object {
+        "VersioningConfiguration": {
           "Status": "Enabled",
         },
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "BucketServerAccessBucketPolicyD3D884B3": Object {
-      "Properties": Object {
-        "Bucket": Object {
+    "BucketServerAccessBucketPolicyD3D884B3": {
+      "Properties": {
+        "Bucket": {
           "Ref": "BucketServerAccessBucketFC17BBE8",
         },
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "s3:*",
-              "Condition": Object {
-                "Bool": Object {
+              "Condition": {
+                "Bool": {
                   "aws:SecureTransport": "false",
                 },
               },
               "Effect": "Deny",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketServerAccessBucketFC17BBE8",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketServerAccessBucketFC17BBE8",
                           "Arn",
                         ],
@@ -1397,15 +1397,15 @@ Object {
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "BucketSseNoKms034DA0EB": Object {
+    "BucketSseNoKms034DA0EB": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "BucketEncryption": Object {
-          "ServerSideEncryptionConfiguration": Array [
-            Object {
-              "ServerSideEncryptionByDefault": Object {
-                "KMSMasterKeyID": Object {
-                  "Fn::GetAtt": Array [
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "KMSMasterKeyID": {
+                  "Fn::GetAtt": [
                     "BucketSseNoKmsCmkBDD78E94",
                     "Arn",
                   ],
@@ -1415,56 +1415,56 @@ Object {
             },
           ],
         },
-        "BucketName": Object {
-          "Fn::Join": Array [
+        "BucketName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "aws-accelerator-macie-",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
               "-",
-              Object {
+              {
                 "Ref": "AWS::Region",
               },
             ],
           ],
         },
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "AbortIncompleteMultipartUpload": {
                 "DaysAfterInitiation": 1,
               },
               "ExpirationInDays": 1825,
               "ExpiredObjectDeleteMarker": false,
-              "Id": Object {
-                "Fn::Join": Array [
+              "Id": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "LifecycleRuleaws-accelerator-macie-",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     "-",
-                    Object {
+                    {
                       "Ref": "AWS::Region",
                     },
                   ],
                 ],
               },
-              "NoncurrentVersionExpiration": Object {
+              "NoncurrentVersionExpiration": {
                 "NoncurrentDays": 1825,
               },
-              "NoncurrentVersionTransitions": Array [
-                Object {
+              "NoncurrentVersionTransitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 366,
                 },
               ],
               "Status": "Enabled",
-              "Transitions": Array [
-                Object {
+              "Transitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 365,
                 },
@@ -1472,49 +1472,49 @@ Object {
             },
           ],
         },
-        "LoggingConfiguration": Object {
-          "DestinationBucketName": Object {
-            "Fn::Join": Array [
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "aws-accelerator-s3-access-logs-",
-                Object {
+                {
                   "Ref": "AWS::AccountId",
                 },
                 "-",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
               ],
             ],
           },
         },
-        "OwnershipControls": Object {
-          "Rules": Array [
-            Object {
+        "OwnershipControls": {
+          "Rules": [
+            {
               "ObjectOwnership": "BucketOwnerPreferred",
             },
           ],
         },
-        "PublicAccessBlockConfiguration": Object {
+        "PublicAccessBlockConfiguration": {
           "BlockPublicAcls": true,
           "BlockPublicPolicy": true,
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
-        "VersioningConfiguration": Object {
+        "VersioningConfiguration": {
           "Status": "Enabled",
         },
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "BucketSseNoKmsBucketSseNoKmsReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicy67755573": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+    "BucketSseNoKmsBucketSseNoKmsReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicy67755573": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "s3:GetObjectLegalHold",
                 "s3:GetObjectRetention",
                 "s3:GetObjectVersion",
@@ -1528,19 +1528,19 @@ Object {
                 "s3:ReplicateTags",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketSseNoKms034DA0EB",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketSseNoKms034DA0EB",
                           "Arn",
                         ],
@@ -1551,8 +1551,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:GetBucketVersioning",
                 "s3:GetObjectVersionTagging",
                 "s3:ObjectOwnerOverrideToBucketOwner",
@@ -1562,12 +1562,12 @@ Object {
                 "s3:ReplicateTags",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
                     ":s3:::aws-accelerator-central-logs-bucket/*",
@@ -1575,25 +1575,25 @@ Object {
                 ],
               },
             },
-            Object {
+            {
               "Action": "kms:Decrypt",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::GetAtt": Array [
+              "Resource": {
+                "Fn::GetAtt": [
                   "BucketSseNoKmsCmkBDD78E94",
                   "Arn",
                 ],
               },
             },
-            Object {
+            {
               "Action": "kms:Encrypt",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:aws:kms:us-east-1:",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     ":key/ksm-key-arn",
@@ -1605,22 +1605,22 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "BucketSseNoKmsBucketSseNoKmsReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicy67755573",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "BucketSseNoKmsBucketSseNoKmsReplicationAwsAcceleratorCentralLogsBucketReplicationRoleE74AE850",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "BucketSseNoKmsBucketSseNoKmsReplicationAwsAcceleratorCentralLogsBucketReplicationRoleE74AE850": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "BucketSseNoKmsBucketSseNoKmsReplicationAwsAcceleratorCentralLogsBucketReplicationRoleE74AE850": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "s3.amazonaws.com",
               },
             },
@@ -1631,39 +1631,39 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "BucketSseNoKmsBucketSseNoKmsReplicationF3996D6E": Object {
+    "BucketSseNoKmsBucketSseNoKmsReplicationF3996D6E": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
             "Arn",
           ],
         },
-        "destinationAccountId": Object {
+        "destinationAccountId": {
           "Ref": "AWS::AccountId",
         },
-        "destinationBucketArn": Object {
-          "Fn::Join": Array [
+        "destinationBucketArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":s3:::aws-accelerator-central-logs-bucket",
             ],
           ],
         },
-        "destinationBucketKeyArn": Object {
-          "Fn::Join": Array [
+        "destinationBucketKeyArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:aws:kms:us-east-1:",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
               ":key/ksm-key-arn",
@@ -1671,24 +1671,24 @@ Object {
           ],
         },
         "prefix": "",
-        "replicationRoleArn": Object {
-          "Fn::GetAtt": Array [
+        "replicationRoleArn": {
+          "Fn::GetAtt": [
             "BucketSseNoKmsBucketSseNoKmsReplicationAwsAcceleratorCentralLogsBucketReplicationRoleE74AE850",
             "Arn",
           ],
         },
-        "sourceBucketName": Object {
+        "sourceBucketName": {
           "Ref": "BucketSseNoKms034DA0EB",
         },
       },
       "Type": "Custom::S3PutBucketReplication",
       "UpdateReplacePolicy": "Delete",
     },
-    "BucketSseNoKmsCmkAlias910EEA0F": Object {
-      "Properties": Object {
+    "BucketSseNoKmsCmkAlias910EEA0F": {
+      "Properties": {
         "AliasName": "alias/kmsAliasName",
-        "TargetKeyId": Object {
-          "Fn::GetAtt": Array [
+        "TargetKeyId": {
+          "Fn::GetAtt": [
             "BucketSseNoKmsCmkBDD78E94",
             "Arn",
           ],
@@ -1696,26 +1696,26 @@ Object {
       },
       "Type": "AWS::KMS::Alias",
     },
-    "BucketSseNoKmsCmkBDD78E94": Object {
+    "BucketSseNoKmsCmkBDD78E94": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
+      "Properties": {
         "EnableKeyRotation": true,
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -1732,37 +1732,37 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "BucketSseNoKmsPolicyBBB4A613": Object {
-      "Properties": Object {
-        "Bucket": Object {
+    "BucketSseNoKmsPolicyBBB4A613": {
+      "Properties": {
+        "Bucket": {
           "Ref": "BucketSseNoKms034DA0EB",
         },
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "s3:*",
-              "Condition": Object {
-                "Bool": Object {
+              "Condition": {
+                "Bool": {
                   "aws:SecureTransport": "false",
                 },
               },
               "Effect": "Deny",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketSseNoKms034DA0EB",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketSseNoKms034DA0EB",
                           "Arn",
                         ],
@@ -1780,39 +1780,39 @@ Object {
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "BucketSseS3BucketSseS3Replication4E9D4F48": Object {
+    "BucketSseS3BucketSseS3Replication4E9D4F48": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
             "Arn",
           ],
         },
-        "destinationAccountId": Object {
+        "destinationAccountId": {
           "Ref": "AWS::AccountId",
         },
-        "destinationBucketArn": Object {
-          "Fn::Join": Array [
+        "destinationBucketArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":s3:::aws-accelerator-central-logs-bucket",
             ],
           ],
         },
-        "destinationBucketKeyArn": Object {
-          "Fn::Join": Array [
+        "destinationBucketKeyArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:aws:kms:us-east-1:",
-              Object {
+              {
                 "Ref": "AWS::AccountId",
               },
               ":key/ksm-key-arn",
@@ -1820,27 +1820,27 @@ Object {
           ],
         },
         "prefix": "",
-        "replicationRoleArn": Object {
-          "Fn::GetAtt": Array [
+        "replicationRoleArn": {
+          "Fn::GetAtt": [
             "BucketSseS3BucketSseS3ReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDB03BBA9",
             "Arn",
           ],
         },
-        "sourceBucketName": Object {
+        "sourceBucketName": {
           "Ref": "BucketSseS3ECFEB958",
         },
       },
       "Type": "Custom::S3PutBucketReplication",
       "UpdateReplacePolicy": "Delete",
     },
-    "BucketSseS3BucketSseS3ReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDB03BBA9": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "BucketSseS3BucketSseS3ReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDB03BBA9": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "s3.amazonaws.com",
               },
             },
@@ -1851,12 +1851,12 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "BucketSseS3BucketSseS3ReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicyC0704764": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+    "BucketSseS3BucketSseS3ReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicyC0704764": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "s3:GetObjectLegalHold",
                 "s3:GetObjectRetention",
                 "s3:GetObjectVersion",
@@ -1870,19 +1870,19 @@ Object {
                 "s3:ReplicateTags",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketSseS3ECFEB958",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketSseS3ECFEB958",
                           "Arn",
                         ],
@@ -1893,8 +1893,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:GetBucketVersioning",
                 "s3:GetObjectVersionTagging",
                 "s3:ObjectOwnerOverrideToBucketOwner",
@@ -1904,12 +1904,12 @@ Object {
                 "s3:ReplicateTags",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
                     ":s3:::aws-accelerator-central-logs-bucket/*",
@@ -1917,15 +1917,15 @@ Object {
                 ],
               },
             },
-            Object {
+            {
               "Action": "kms:Encrypt",
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:aws:kms:us-east-1:",
-                    Object {
+                    {
                       "Ref": "AWS::AccountId",
                     },
                     ":key/ksm-key-arn",
@@ -1937,48 +1937,48 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "BucketSseS3BucketSseS3ReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDefaultPolicyC0704764",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "BucketSseS3BucketSseS3ReplicationAwsAcceleratorCentralLogsBucketReplicationRoleDB03BBA9",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "BucketSseS3ECFEB958": Object {
+    "BucketSseS3ECFEB958": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "BucketEncryption": Object {
-          "ServerSideEncryptionConfiguration": Array [
-            Object {
-              "ServerSideEncryptionByDefault": Object {
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
                 "SSEAlgorithm": "AES256",
               },
             },
           ],
         },
         "BucketName": "testbucket",
-        "LifecycleConfiguration": Object {
-          "Rules": Array [
-            Object {
-              "AbortIncompleteMultipartUpload": Object {
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "AbortIncompleteMultipartUpload": {
                 "DaysAfterInitiation": 1,
               },
               "ExpirationInDays": 1825,
               "ExpiredObjectDeleteMarker": false,
               "Id": "LifecycleRuletestbucket",
-              "NoncurrentVersionExpiration": Object {
+              "NoncurrentVersionExpiration": {
                 "NoncurrentDays": 1825,
               },
-              "NoncurrentVersionTransitions": Array [
-                Object {
+              "NoncurrentVersionTransitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 366,
                 },
               ],
               "Status": "Enabled",
-              "Transitions": Array [
-                Object {
+              "Transitions": [
+                {
                   "StorageClass": "DEEP_ARCHIVE",
                   "TransitionInDays": 365,
                 },
@@ -1986,74 +1986,74 @@ Object {
             },
           ],
         },
-        "LoggingConfiguration": Object {
-          "DestinationBucketName": Object {
-            "Fn::Join": Array [
+        "LoggingConfiguration": {
+          "DestinationBucketName": {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "aws-accelerator-s3-access-logs-",
-                Object {
+                {
                   "Ref": "AWS::AccountId",
                 },
                 "-",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
               ],
             ],
           },
         },
-        "OwnershipControls": Object {
-          "Rules": Array [
-            Object {
+        "OwnershipControls": {
+          "Rules": [
+            {
               "ObjectOwnership": "BucketOwnerPreferred",
             },
           ],
         },
-        "PublicAccessBlockConfiguration": Object {
+        "PublicAccessBlockConfiguration": {
           "BlockPublicAcls": true,
           "BlockPublicPolicy": true,
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
-        "VersioningConfiguration": Object {
+        "VersioningConfiguration": {
           "Status": "Enabled",
         },
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "BucketSseS3Policy60624C99": Object {
-      "Properties": Object {
-        "Bucket": Object {
+    "BucketSseS3Policy60624C99": {
+      "Properties": {
+        "Bucket": {
           "Ref": "BucketSseS3ECFEB958",
         },
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "s3:*",
-              "Condition": Object {
-                "Bool": Object {
+              "Condition": {
+                "Bool": {
                   "aws:SecureTransport": "false",
                 },
               },
               "Effect": "Deny",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "BucketSseS3ECFEB958",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "BucketSseS3ECFEB958",
                           "Arn",
                         ],
@@ -2071,25 +2071,25 @@ Object {
       },
       "Type": "AWS::S3::BucketPolicy",
     },
-    "CWLKey1A5231300": Object {
+    "CWLKey1A5231300": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2106,25 +2106,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CWLKey237475AFB": Object {
+    "CWLKey237475AFB": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2141,25 +2141,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CWLKey4F8144065": Object {
+    "CWLKey4F8144065": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2176,25 +2176,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CWLKey527D84753": Object {
+    "CWLKey527D84753": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2211,25 +2211,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CWLKey6989841D1": Object {
+    "CWLKey6989841D1": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2246,25 +2246,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CWLKeyB9201973": Object {
+    "CWLKeyB9201973": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2281,25 +2281,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CWLKeyNoBucketAccessToAwsPrincipal32572324": Object {
+    "CWLKeyNoBucketAccessToAwsPrincipal32572324": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2316,25 +2316,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CWLKeyTooMuchServerAccessDFA642F4": Object {
+    "CWLKeyTooMuchServerAccessDFA642F4": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2351,25 +2351,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomKey1E6D0D07": Object {
+    "CustomKey1E6D0D07": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2386,25 +2386,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomKey1EF07F540": Object {
+    "CustomKey1EF07F540": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2414,32 +2414,32 @@ Object {
               },
               "Resource": "*",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:DescribeKey",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "principal1.amazonaws.com",
               },
               "Resource": "*",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:ReEncrypt*",
                 "kms:GenerateDataKey*",
                 "kms:Decrypt",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "principal2.amazonaws.com",
               },
               "Resource": "*",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:DescribeKey",
                 "kms:Encrypt",
@@ -2447,7 +2447,7 @@ Object {
                 "kms:GenerateDataKey*",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "principal3.amazonaws.com",
               },
               "Resource": "*",
@@ -2459,25 +2459,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomKeyLifeCycleProvided39D4346A": Object {
+    "CustomKeyLifeCycleProvided39D4346A": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2494,25 +2494,25 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomKeyNoBucketAccessToAwsPrincipal67B73EC6": Object {
+    "CustomKeyNoBucketAccessToAwsPrincipal67B73EC6": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -2529,21 +2529,21 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C": Object {
-      "DependsOn": Array [
+    "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C": {
+      "DependsOn": [
         "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488",
             "Arn",
           ],
@@ -2553,21 +2553,21 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E": Object {
+    "CustomS3PutBucketReplicationCustomResourceProviderLogGroup6A67905E": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "CWLKeyB9201973",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomS3PutBucketReplicationCustomResourceProviderHandler1D75398C",
               },
             ],
@@ -2578,31 +2578,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomS3PutBucketReplicationCustomResourceProviderRole1C378488": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "iam:PassRole",
                     "s3:PutLifecycleConfiguration",
                     "s3:PutReplicationConfiguration",
@@ -2621,20 +2621,20 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "serverAccessLogsBucket1EADBEB64": Object {
+    "serverAccessLogsBucket1EADBEB64": {
       "DeletionPolicy": "Retain",
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "serverAccessLogsBucket384F7E6F": Object {
+    "serverAccessLogsBucket384F7E6F": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
+      "Properties": {
         "AccessControl": "LogDeliveryWrite",
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "serverAccessLogsBucketTooMuchServerAccessD7A30F75": Object {
+    "serverAccessLogsBucketTooMuchServerAccessD7A30F75": {
       "DeletionPolicy": "Retain",
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",

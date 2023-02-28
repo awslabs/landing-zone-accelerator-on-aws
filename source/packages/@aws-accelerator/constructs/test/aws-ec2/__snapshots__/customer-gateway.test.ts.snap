@@ -1,18 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`CustomerGateway Construct(CustomerGateway):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestCgwCustomerGateway795D02C0": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestCgwCustomerGateway795D02C0": {
+      "Properties": {
         "BgpAsn": 65000,
         "IpAddress": "1.1.1.1",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Test-CGW",
           },
-          Object {
+          {
             "Key": "Test-Key",
             "Value": "Test-Value",
           },

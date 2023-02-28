@@ -1,28 +1,28 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ActiveDirectoryConfiguration Construct(ActiveDirectoryConfiguration):  Snapshot Test 1`] = `
-Object {
-  "Parameters": Object {
-    "SsmParameterValueawsserviceamiwindowslatestWindowsServer2016EnglishFullBaseC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+{
+  "Parameters": {
+    "SsmParameterValueawsserviceamiwindowslatestWindowsServer2016EnglishFullBaseC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/aws/service/ami-windows-latest/Windows_Server-2016-English-Full-Base",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
-  "Resources": Object {
-    "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceCDCB7E02": Object {
-      "CreationPolicy": Object {
-        "ResourceSignal": Object {
+  "Resources": {
+    "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceCDCB7E02": {
+      "CreationPolicy": {
+        "ResourceSignal": {
           "Count": 1,
           "Timeout": "PT30M",
         },
       },
-      "DependsOn": Array [
+      "DependsOn": [
         "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceKeyPairE9E46E76",
       ],
-      "Metadata": Object {
-        "AWS::CloudFormation::Init": Object {
-          "configSets": Object {
-            "config": Array [
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "configSets": {
+            "config": [
               "setup",
               "join",
               "installRDS",
@@ -31,97 +31,97 @@ Object {
               "finalize",
             ],
           },
-          "configurePasswordPolicy": Object {
-            "commands": Object {
-              "a-set-password-policy": Object {
-                "command": "powershell.exe -ExecutionPolicy RemoteSigned C:\\\\cfn\\\\scripts\\\\Configure-password-policy.ps1 -DomainAdminUser admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -ComplexityEnabled:$True -LockoutDuration 00:30:00 -LockoutObservationWindow 00:30:00 -LockoutThreshold 6 -MaxPasswordAge:90.00:00:00 -MinPasswordAge:1.00:00:00 -MinPasswordLength:14 -PasswordHistoryCount:24 -ReversibleEncryptionEnabled:$false",
+          "configurePasswordPolicy": {
+            "commands": {
+              "a-set-password-policy": {
+                "command": "powershell.exe -ExecutionPolicy RemoteSigned C:\\cfn\\scripts\\Configure-password-policy.ps1 -DomainAdminUser admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -ComplexityEnabled:$True -LockoutDuration 00:30:00 -LockoutObservationWindow 00:30:00 -LockoutThreshold 6 -MaxPasswordAge:90.00:00:00 -MinPasswordAge:1.00:00:00 -MinPasswordLength:14 -PasswordHistoryCount:24 -ReversibleEncryptionEnabled:$false",
                 "waitAfterCompletion": "0",
               },
             },
           },
-          "createADConnectorUser": Object {
-            "commands": Object {
-              "a-create-ad-users": Object {
-                "command": Object {
-                  "Fn::Join": Array [
+          "createADConnectorUser": {
+            "commands": {
+              "a-create-ad-users": {
+                "command": {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      "powershell.exe -ExecutionPolicy RemoteSigned C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName user1 -Password ((Get-SECSecretValue -SecretId arn:",
-                      Object {
+                    [
+                      "powershell.exe -ExecutionPolicy RemoteSigned C:\\cfn\\scripts\\AD-user-setup.ps1 -UserName user1 -Password ((Get-SECSecretValue -SecretId arn:",
+                      {
                         "Ref": "AWS::Partition",
                       },
-                      ":secretsmanager:us-east-1:111111111111:secret:/accelerator/ad-user/AcceleratorManagedActiveDirectory/user1).SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes -UserEmailAddress example-user1@example.com; C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName user2 -Password ((Get-SECSecretValue -SecretId arn:",
-                      Object {
+                      ":secretsmanager:us-east-1:111111111111:secret:/accelerator/ad-user/AcceleratorManagedActiveDirectory/user1).SecretString) -DomainAdminUser example\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes -UserEmailAddress example-user1@example.com; C:\\cfn\\scripts\\AD-user-setup.ps1 -UserName user2 -Password ((Get-SECSecretValue -SecretId arn:",
+                      {
                         "Ref": "AWS::Partition",
                       },
-                      ":secretsmanager:us-east-1:111111111111:secret:/accelerator/ad-user/AcceleratorManagedActiveDirectory/user2).SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes -UserEmailAddress example-user2@example.com; C:\\\\cfn\\\\scripts\\\\AD-user-setup.ps1 -UserName admin -Password ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes",
+                      ":secretsmanager:us-east-1:111111111111:secret:/accelerator/ad-user/AcceleratorManagedActiveDirectory/user2).SecretString) -DomainAdminUser example\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes -UserEmailAddress example-user2@example.com; C:\\cfn\\scripts\\AD-user-setup.ps1 -UserName admin -Password ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -DomainAdminUser example\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString) -PasswordNeverExpires Yes",
                     ],
                   ],
                 },
                 "waitAfterCompletion": "0",
               },
-              "b-create-ad-groups": Object {
-                "command": "powershell.exe -ExecutionPolicy RemoteSigned C:\\\\cfn\\\\scripts\\\\AD-group-setup.ps1 -GroupNames 'aws-Provisioning,aws-Billing,aws-Management-Admin,aws-Audit-Admin,aws-LogArchive-Admin,aws-Management-PowerUser,aws-Audit-PowerUser,aws-LogArchive-PowerUser,aws-Management-View,aws-Audit-View,aws-LogArchive-View,ADConnector-grp' -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString)",
+              "b-create-ad-groups": {
+                "command": "powershell.exe -ExecutionPolicy RemoteSigned C:\\cfn\\scripts\\AD-group-setup.ps1 -GroupNames 'aws-Provisioning,aws-Billing,aws-Management-Admin,aws-Audit-Admin,aws-LogArchive-Admin,aws-Management-PowerUser,aws-Audit-PowerUser,aws-LogArchive-PowerUser,aws-Management-View,aws-Audit-View,aws-LogArchive-View,ADConnector-grp' -DomainAdminUser example\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString)",
                 "waitAfterCompletion": "0",
               },
-              "c-configure-ad-users-groups": Object {
-                "command": "powershell.exe -ExecutionPolicy RemoteSigned C:\\\\cfn\\\\scripts\\\\AD-user-group-setup.ps1 -GroupNames 'aws-Provisioning,aws-Management-PowerUser,aws-Audit-PowerUser,aws-LogArchive-PowerUser' -UserName user1 -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString); C:\\\\cfn\\\\scripts\\\\AD-user-group-setup.ps1 -GroupNames 'aws-Provisioning,aws-Management-PowerUser,aws-Audit-PowerUser,aws-LogArchive-PowerUser,AWS Delegated Administrators' -UserName user2 -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString)",
+              "c-configure-ad-users-groups": {
+                "command": "powershell.exe -ExecutionPolicy RemoteSigned C:\\cfn\\scripts\\AD-user-group-setup.ps1 -GroupNames 'aws-Provisioning,aws-Management-PowerUser,aws-Audit-PowerUser,aws-LogArchive-PowerUser' -UserName user1 -DomainAdminUser example\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString); C:\\cfn\\scripts\\AD-user-group-setup.ps1 -GroupNames 'aws-Provisioning,aws-Management-PowerUser,aws-Audit-PowerUser,aws-LogArchive-PowerUser,AWS Delegated Administrators' -UserName user2 -DomainAdminUser example\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString)",
                 "waitAfterCompletion": "0",
               },
-              "d-configure-ad-group-permissions": Object {
-                "command": "powershell.exe -ExecutionPolicy RemoteSigned C:\\\\cfn\\\\scripts\\\\AD-connector-permissions-setup.ps1 -GroupName ADConnector-grp -DomainAdminUser example\\\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString)",
-                "waitAfterCompletion": "0",
-              },
-            },
-          },
-          "finalize": Object {
-            "commands": Object {
-              "1-signal-success": Object {
-                "command": "powershell.exe -Command \\"Write-AWSQuickStartStatus\\"",
+              "d-configure-ad-group-permissions": {
+                "command": "powershell.exe -ExecutionPolicy RemoteSigned C:\\cfn\\scripts\\AD-connector-permissions-setup.ps1 -GroupName ADConnector-grp -DomainAdminUser example\\admin -DomainAdminPassword ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString)",
                 "waitAfterCompletion": "0",
               },
             },
           },
-          "installRDS": Object {
-            "commands": Object {
-              "a-install-rds": Object {
-                "command": "powershell.exe -Command \\"Install-WindowsFeature RSAT-RDS-Gateway,RSAT-AD-Tools\\"",
+          "finalize": {
+            "commands": {
+              "1-signal-success": {
+                "command": "powershell.exe -Command "Write-AWSQuickStartStatus"",
                 "waitAfterCompletion": "0",
               },
             },
           },
-          "join": Object {
-            "commands": Object {
-              "a-join-domain": Object {
-                "command": "powershell.exe -Command \\"C:\\\\cfn\\\\scripts\\\\Join-Domain.ps1 -DomainName example.com -UserName example\\\\admin -Password ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString)\\"",
+          "installRDS": {
+            "commands": {
+              "a-install-rds": {
+                "command": "powershell.exe -Command "Install-WindowsFeature RSAT-RDS-Gateway,RSAT-AD-Tools"",
+                "waitAfterCompletion": "0",
+              },
+            },
+          },
+          "join": {
+            "commands": {
+              "a-join-domain": {
+                "command": "powershell.exe -Command "C:\\cfn\\scripts\\Join-Domain.ps1 -DomainName example.com -UserName example\\admin -Password ((Get-SECSecretValue -SecretId adminPwdSecretArn).SecretString)"",
                 "waitAfterCompletion": "forever",
               },
             },
           },
-          "setup": Object {
-            "commands": Object {
-              "a-set-execution-policy": Object {
-                "command": "powershell.exe -Command \\"Set-ExecutionPolicy RemoteSigned -Force\\"",
+          "setup": {
+            "commands": {
+              "a-set-execution-policy": {
+                "command": "powershell.exe -Command "Set-ExecutionPolicy RemoteSigned -Force"",
                 "waitAfterCompletion": "0",
               },
-              "b-init-quickstart-module": Object {
-                "command": Object {
-                  "Fn::Join": Array [
+              "b-init-quickstart-module": {
+                "command": {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      "powershell.exe -Command \\"New-AWSQuickStartResourceSignal -Stack Default  -Resource ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceCDCB7E02 -Region ",
-                      Object {
+                    [
+                      "powershell.exe -Command "New-AWSQuickStartResourceSignal -Stack Default  -Resource ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceCDCB7E02 -Region ",
+                      {
                         "Ref": "AWS::Region",
                       },
-                      "\\"",
+                      """,
                     ],
                   ],
                 },
                 "waitAfterCompletion": "0",
               },
             },
-            "files": Object {
-              "C:\\\\Windows\\\\system32\\\\WindowsPowerShell\\\\v1.0\\\\Modules\\\\AWSQuickStart\\\\AWSQuickStart.psm1": Object {
+            "files": {
+              "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\AWSQuickStart\\AWSQuickStart.psm1": {
                 "content": "function New-AWSQuickStartWaitHandle {
     [CmdletBinding()]
     Param(
@@ -131,7 +131,7 @@ Object {
 
         [Parameter(Mandatory=$false)]
         [string]
-        $Path = 'HKLM:\\\\SOFTWARE\\\\AWSQuickStart\\\\',
+        $Path = 'HKLM:\\SOFTWARE\\AWSQuickStart\\',
 
         [Parameter(Mandatory=$false)]
         [switch]
@@ -139,26 +139,26 @@ Object {
     )
 
     try {
-        $ErrorActionPreference = \\"Stop\\"
+        $ErrorActionPreference = "Stop"
 
-        Write-Verbose \\"Creating $Path\\"
+        Write-Verbose "Creating $Path"
         New-Item $Path -Force
 
         if ($Base64Handle) {
-            Write-Verbose \\"Trying to decode handle Base64 string as UTF8 string\\"
+            Write-Verbose "Trying to decode handle Base64 string as UTF8 string"
             $decodedHandle = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($Handle))
-            if ($decodedHandle -notlike \\"http*\\") {
-                Write-Verbose \\"Now trying to decode handle Base64 string as Unicode string\\"
+            if ($decodedHandle -notlike "http*") {
+                Write-Verbose "Now trying to decode handle Base64 string as Unicode string"
                 $decodedHandle = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($Handle))
             }
-            Write-Verbose \\"Decoded handle string: $decodedHandle\\"
+            Write-Verbose "Decoded handle string: $decodedHandle"
             $Handle = $decodedHandle
         }
 
-        Write-Verbose \\"Creating Handle Registry Key\\"
+        Write-Verbose "Creating Handle Registry Key"
         New-ItemProperty -Path $Path -Name Handle -Value $Handle -Force
 
-        Write-Verbose \\"Creating ErrorCount Registry Key\\"
+        Write-Verbose "Creating ErrorCount Registry Key"
         New-ItemProperty -Path $Path -Name ErrorCount -Value 0 -PropertyType dword -Force
     }
     catch {
@@ -183,25 +183,25 @@ function New-AWSQuickStartResourceSignal {
 
         [Parameter(Mandatory=$false)]
         [string]
-        $Path = 'HKLM:\\\\SOFTWARE\\\\AWSQuickStart\\\\'
+        $Path = 'HKLM:\\SOFTWARE\\AWSQuickStart\\'
     )
 
     try {
-        $ErrorActionPreference = \\"Stop\\"
+        $ErrorActionPreference = "Stop"
 
-        Write-Verbose \\"Creating $Path\\"
+        Write-Verbose "Creating $Path"
         New-Item $Path -Force
 
-        Write-Verbose \\"Creating Stack Registry Key\\"
+        Write-Verbose "Creating Stack Registry Key"
         New-ItemProperty -Path $Path -Name Stack -Value $Stack -Force
 
-        Write-Verbose \\"Creating Resource Registry Key\\"
+        Write-Verbose "Creating Resource Registry Key"
         New-ItemProperty -Path $Path -Name Resource -Value $Resource -Force
 
-        Write-Verbose \\"Creating Region Registry Key\\"
+        Write-Verbose "Creating Region Registry Key"
         New-ItemProperty -Path $Path -Name Region -Value $Region -Force
 
-        Write-Verbose \\"Creating ErrorCount Registry Key\\"
+        Write-Verbose "Creating ErrorCount Registry Key"
         New-ItemProperty -Path $Path -Name ErrorCount -Value 0 -PropertyType dword -Force
     }
     catch {
@@ -215,12 +215,12 @@ function Get-AWSQuickStartErrorCount {
     Param(
         [Parameter(Mandatory=$false)]
         [string]
-        $Path = 'HKLM:\\\\SOFTWARE\\\\AWSQuickStart\\\\'
+        $Path = 'HKLM:\\SOFTWARE\\AWSQuickStart\\'
     )
 
     process {
         try {
-            Write-Verbose \\"Getting ErrorCount Registry Key\\"
+            Write-Verbose "Getting ErrorCount Registry Key"
             Get-ItemProperty -Path $Path -Name ErrorCount -ErrorAction Stop | Select-Object -ExpandProperty ErrorCount
         }
         catch {
@@ -238,7 +238,7 @@ function Set-AWSQuickStartErrorCount {
 
         [Parameter(Mandatory=$false)]
         [string]
-        $Path = 'HKLM:\\\\SOFTWARE\\\\AWSQuickStart\\\\'
+        $Path = 'HKLM:\\SOFTWARE\\AWSQuickStart\\'
     )
 
     process {
@@ -246,7 +246,7 @@ function Set-AWSQuickStartErrorCount {
             $currentCount = Get-AWSQuickStartErrorCount
             $currentCount += $Count
 
-            Write-Verbose \\"Creating ErrorCount Registry Key\\"
+            Write-Verbose "Creating ErrorCount Registry Key"
             Set-ItemProperty -Path $Path -Name ErrorCount -Value $currentCount -ErrorAction Stop
         }
         catch {
@@ -260,14 +260,14 @@ function Get-AWSQuickStartWaitHandle {
     Param(
         [Parameter(Mandatory=$false, ValueFromPipeline=$true)]
         [string]
-        $Path = 'HKLM:\\\\SOFTWARE\\\\AWSQuickStart\\\\'
+        $Path = 'HKLM:\\SOFTWARE\\AWSQuickStart\\'
     )
 
     process {
         try {
-            $ErrorActionPreference = \\"Stop\\"
+            $ErrorActionPreference = "Stop"
 
-            Write-Verbose \\"Getting Handle key value from $Path\\"
+            Write-Verbose "Getting Handle key value from $Path"
             $key = Get-ItemProperty $Path
 
             return $key.Handle
@@ -283,13 +283,13 @@ function Get-AWSQuickStartResourceSignal {
     Param(
         [Parameter(Mandatory=$false)]
         [string]
-        $Path = 'HKLM:\\\\SOFTWARE\\\\AWSQuickStart\\\\'
+        $Path = 'HKLM:\\SOFTWARE\\AWSQuickStart\\'
     )
 
     try {
-        $ErrorActionPreference = \\"Stop\\"
+        $ErrorActionPreference = "Stop"
 
-        Write-Verbose \\"Getting Stack, Resource, and Region key values from $Path\\"
+        Write-Verbose "Getting Stack, Resource, and Region key values from $Path"
         $key = Get-ItemProperty $Path
         $resourceSignal = @{
             Stack = $key.Stack
@@ -314,18 +314,18 @@ function Remove-AWSQuickStartWaitHandle {
     Param(
         [Parameter(Mandatory=$false, ValueFromPipeline=$true)]
         [string]
-        $Path = 'HKLM:\\\\SOFTWARE\\\\AWSQuickStart\\\\'
+        $Path = 'HKLM:\\SOFTWARE\\AWSQuickStart\\'
     )
 
     process {
         try {
-            $ErrorActionPreference = \\"Stop\\"
+            $ErrorActionPreference = "Stop"
 
-            Write-Verbose \\"Getting Handle key value from $Path\\"
+            Write-Verbose "Getting Handle key value from $Path"
             $key = Get-ItemProperty -Path $Path -Name Handle -ErrorAction SilentlyContinue
 
             if ($key) {
-                Write-Verbose \\"Removing Handle key value from $Path\\"
+                Write-Verbose "Removing Handle key value from $Path"
                 Remove-ItemProperty -Path $Path -Name Handle
             }
         }
@@ -340,18 +340,18 @@ function Remove-AWSQuickStartResourceSignal {
     Param(
         [Parameter(Mandatory=$false)]
         [string]
-        $Path = 'HKLM:\\\\SOFTWARE\\\\AWSQuickStart\\\\'
+        $Path = 'HKLM:\\SOFTWARE\\AWSQuickStart\\'
     )
 
     try {
-        $ErrorActionPreference = \\"Stop\\"
+        $ErrorActionPreference = "Stop"
 
         foreach ($keyName in @('Stack','Resource','Region')) {
-            Write-Verbose \\"Getting Stack, Resource, and Region key values from $Path\\"
+            Write-Verbose "Getting Stack, Resource, and Region key values from $Path"
             $key = Get-ItemProperty -Path $Path -Name $keyName -ErrorAction SilentlyContinue
 
             if ($key) {
-                Write-Verbose \\"Removing $keyName key value from $Path\\"
+                Write-Verbose "Removing $keyName key value from $Path"
                 Remove-ItemProperty -Path $Path -Name $keyName
             }
         }
@@ -374,15 +374,15 @@ function Write-AWSQuickStartEvent {
     )
 
     process {
-        Write-Verbose \\"Checking for AWSQuickStart Eventlog Source\\"
+        Write-Verbose "Checking for AWSQuickStart Eventlog Source"
         if(![System.Diagnostics.EventLog]::SourceExists('AWSQuickStart')) {
             New-EventLog -LogName Application -Source AWSQuickStart -ErrorAction SilentlyContinue
         }
         else {
-            Write-Verbose \\"AWSQuickStart Eventlog Source exists\\"
+            Write-Verbose "AWSQuickStart Eventlog Source exists"
         }
 
-        Write-Verbose \\"Writing message to application log\\"
+        Write-Verbose "Writing message to application log"
 
         try {
             Write-EventLog -LogName Application -Source AWSQuickStart -EntryType $EntryType -EventId 1001 -Message $Message
@@ -403,29 +403,29 @@ function Write-AWSQuickStartException {
 
     process {
         try {
-            Write-Verbose \\"Incrementing error count\\"
+            Write-Verbose "Incrementing error count"
             Set-AWSQuickStartErrorCount -Count 1
 
-            Write-Verbose \\"Getting total error count\\"
+            Write-Verbose "Getting total error count"
             $errorTotal = Get-AWSQuickStartErrorCount
 
-            $errorMessage = \\"Command failure in {0} {1} on line {2} \`nException: {3}\\" -f $ErrorRecord.InvocationInfo.MyCommand.name,
+            $errorMessage = "Command failure in {0} {1} on line {2} \`nException: {3}" -f $ErrorRecord.InvocationInfo.MyCommand.name,
                                                         $ErrorRecord.InvocationInfo.ScriptName, $ErrorRecord.InvocationInfo.ScriptLineNumber, $ErrorRecord.Exception.ToString()
 
-            $CmdSafeErrorMessage = $errorMessage -replace '[^a-zA-Z0-9\\\\s\\\\.\\\\[\\\\]\\\\-,:_\\\\\\\\\\\\/\\\\(\\\\)]', ''
+            $CmdSafeErrorMessage = $errorMessage -replace '[^a-zA-Z0-9\\s\\.\\[\\]\\-,:_\\\\\\/\\(\\)]', ''
             if ($CmdSafeErrorMessage.length -gt 255) {
                 $CmdSafeErrorMessage = $CmdSafeErrorMessage.substring(0,252) + '...'
             }
 
             $handle = Get-AWSQuickStartWaitHandle -ErrorAction SilentlyContinue
             if ($handle) {
-                Invoke-Expression \\"cfn-signal.exe -e 1 --reason='$CmdSafeErrorMessage' '$handle'\\"
+                Invoke-Expression "cfn-signal.exe -e 1 --reason='$CmdSafeErrorMessage' '$handle'"
             } else {
                 $resourceSignal = Get-AWSQuickStartResourceSignal -ErrorAction SilentlyContinue
                 if ($resourceSignal) {
-                    Invoke-Expression \\"cfn-signal.exe -e 1 --stack '$($resourceSignal.Stack)' --resource '$($resourceSignal.Resource)' --region '$($resourceSignal.Region)'\\"
+                    Invoke-Expression "cfn-signal.exe -e 1 --stack '$($resourceSignal.Stack)' --resource '$($resourceSignal.Resource)' --region '$($resourceSignal.Region)'"
                 } else {
-                    throw \\"No handle or stack/resource/region found in registry\\"
+                    throw "No handle or stack/resource/region found in registry"
                 }
             }
         }
@@ -446,18 +446,18 @@ function Write-AWSQuickStartStatus {
 
     process {
         try {
-            Write-Verbose \\"Checking error count\\"
+            Write-Verbose "Checking error count"
             if((Get-AWSQuickStartErrorCount) -eq 0) {
-                Write-Verbose \\"Getting Handle\\"
+                Write-Verbose "Getting Handle"
                 $handle = Get-AWSQuickStartWaitHandle -ErrorAction SilentlyContinue
                 if ($handle) {
-                    Invoke-Expression \\"cfn-signal.exe -e 0 '$handle'\\"
+                    Invoke-Expression "cfn-signal.exe -e 0 '$handle'"
                 } else {
                     $resourceSignal = Get-AWSQuickStartResourceSignal -ErrorAction SilentlyContinue
                     if ($resourceSignal) {
-                        Invoke-Expression \\"cfn-signal.exe -e 0 --stack '$($resourceSignal.Stack)' --resource '$($resourceSignal.Resource)' --region '$($resourceSignal.Region)'\\"
+                        Invoke-Expression "cfn-signal.exe -e 0 --stack '$($resourceSignal.Stack)' --resource '$($resourceSignal.Resource)' --region '$($resourceSignal.Region)'"
                     } else {
-                        throw \\"No handle or stack/resource/region found in registry\\"
+                        throw "No handle or stack/resource/region found in registry"
                     }
                 }
             }
@@ -469,15 +469,15 @@ function Write-AWSQuickStartStatus {
 }
 ",
               },
-              "c:\\\\cfn\\\\cfn-hup.conf": Object {
-                "content": Object {
-                  "Fn::Join": Array [
+              "c:\\cfn\\cfn-hup.conf": {
+                "content": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "[main]
  stack=Default
  region=",
-                      Object {
+                      {
                         "Ref": "AWS::Region",
                       },
                       "
@@ -486,20 +486,20 @@ function Write-AWSQuickStartStatus {
                   ],
                 },
               },
-              "c:\\\\cfn\\\\hooks.d\\\\cfn-auto-reloader.conf": Object {
-                "content": Object {
-                  "Fn::Join": Array [
+              "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf": {
+                "content": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "[cfn-auto-reloader-hook]
  triggers=post.update
  path=Resources.ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceCDCB7E02.Metadata.AWS::CloudFormation::Init
  action=cfn-init.exe -v -c config -s ",
-                      Object {
+                      {
                         "Ref": "AWS::StackId",
                       },
                       " -r ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceCDCB7E02 --region ",
-                      Object {
+                      {
                         "Ref": "AWS::Region",
                       },
                       "
@@ -508,7 +508,7 @@ function Write-AWSQuickStartStatus {
                   ],
                 },
               },
-              "c:\\\\cfn\\\\scripts\\\\AD-group-setup.ps1": Object {
+              "c:\\cfn\\scripts\\AD-group-setup.ps1": {
                 "content": "[CmdletBinding()]
 param(
     [string]
@@ -522,7 +522,7 @@ param(
 )
 
 # Turned off logging;
-# Start-Transcript -Path C:\\\\cfn\\\\log\\\\AD-connector-setup.txt
+# Start-Transcript -Path C:\\cfn\\log\\AD-connector-setup.txt
 
 #This part of the code gets the domain name and splits it
 $fdn=(Get-WmiObject Win32_ComputerSystem).Domain
@@ -542,7 +542,7 @@ for ($i=0; $i -lt $groupsArray.Length; $i++) {
     }
 }",
               },
-              "c:\\\\cfn\\\\scripts\\\\Join-Domain.ps1": Object {
+              "c:\\cfn\\scripts\\Join-Domain.ps1": {
                 "content": "[CmdletBinding()]
 param(
     [string]
@@ -556,7 +556,7 @@ param(
 )
 
 try {
-    $ErrorActionPreference = \\"Stop\\"
+    $ErrorActionPreference = "Stop"
 
     $pass = ConvertTo-SecureString $Password -AsPlainText -Force
     $cred = New-Object System.Management.Automation.PSCredential -ArgumentList $UserName,$pass
@@ -564,9 +564,9 @@ try {
     Add-Computer -DomainName $DomainName -Credential $cred -ErrorAction Stop
 
     # Execute restart after script exit and allow time for external services
-    $shutdown = Start-Process -FilePath \\"shutdown.exe\\" -ArgumentList @(\\"/r\\", \\"/t 10\\") -Wait -NoNewWindow -PassThru
+    $shutdown = Start-Process -FilePath "shutdown.exe" -ArgumentList @("/r", "/t 10") -Wait -NoNewWindow -PassThru
     if ($shutdown.ExitCode -ne 0) {
-        throw \\"[ERROR] shutdown.exe exit code was not 0. It was actually $($shutdown.ExitCode).\\"
+        throw "[ERROR] shutdown.exe exit code was not 0. It was actually $($shutdown.ExitCode)."
     }
 }
 catch {
@@ -575,14 +575,14 @@ catch {
 ",
               },
             },
-            "services": Object {
-              "windows": Object {
-                "cfn-hup": Object {
+            "services": {
+              "windows": {
+                "cfn-hup": {
                   "enabled": "true",
                   "ensureRunning": "true",
-                  "files": Array [
-                    "c:\\\\cfn\\\\cfn-hup.conf",
-                    "c:\\\\cfn\\\\hooks.d\\\\cfn-auto-reloader.conf",
+                  "files": [
+                    "c:\\cfn\\cfn-hup.conf",
+                    "c:\\cfn\\hooks.d\\cfn-auto-reloader.conf",
                   ],
                 },
               },
@@ -590,11 +590,11 @@ catch {
           },
         },
       },
-      "Properties": Object {
-        "BlockDeviceMappings": Array [
-          Object {
+      "Properties": {
+        "BlockDeviceMappings": [
+          {
             "DeviceName": "/dev/sda1",
-            "Ebs": Object {
+            "Ebs": {
               "Encrypted": true,
               "VolumeSize": 50,
               "VolumeType": "gp2",
@@ -603,39 +603,39 @@ catch {
         ],
         "DisableApiTermination": false,
         "IamInstanceProfile": "instanceRoleName",
-        "ImageId": Object {
+        "ImageId": {
           "Ref": "SsmParameterValueawsserviceamiwindowslatestWindowsServer2016EnglishFullBaseC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "InstanceType": "t3.large",
         "KeyName": "AcceleratorManagedActiveDirectoryInstanceKeyPair",
-        "SecurityGroupIds": Array [
+        "SecurityGroupIds": [
           "securityGroupId",
         ],
         "SubnetId": "subnetId",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "AcceleratorManagedActiveDirectoryConfiguringInstance",
           },
         ],
-        "UserData": Object {
-          "Fn::Base64": Object {
-            "Fn::Join": Array [
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "<script>
  cfn-init.exe -v -c config -s ",
-                Object {
+                {
                   "Ref": "AWS::StackId",
                 },
                 " -r ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceCDCB7E02 --region ",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
                 " 
  # Signal the status from cfn-init
  cfn-signal -e $? --stack Default --resource ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceCDCB7E02 --region ",
-                Object {
+                {
                   "Ref": "AWS::Region",
                 },
                 "
@@ -648,17 +648,17 @@ catch {
       },
       "Type": "AWS::EC2::Instance",
     },
-    "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceKeyPairE9E46E76": Object {
-      "Properties": Object {
+    "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryInstanceKeyPairE9E46E76": {
+      "Properties": {
         "KeyName": "AcceleratorManagedActiveDirectoryInstanceKeyPair",
       },
       "Type": "AWS::EC2::KeyPair",
     },
-    "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryKmsPolicy4922950D": Object {
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryKmsPolicy4922950D": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
               "Action": "kms:Decrypt",
               "Effect": "Allow",
               "Resource": "secretKeyArn",
@@ -667,7 +667,7 @@ catch {
           "Version": "2012-10-17",
         },
         "PolicyName": "ActiveDirectoryConfigurationAcceleratorManagedActiveDirectoryKmsPolicy4922950D",
-        "Roles": Array [
+        "Roles": [
           "instanceRoleName",
         ],
       },

@@ -1,84 +1,84 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
-Object {
-  "Outputs": Object {
-    "BootstrapVersion": Object {
+{
+  "Outputs": {
+    "BootstrapVersion": {
       "Description": "The version of the bootstrap resources that are currently mastered in this stack",
       "Value": "14",
     },
-    "BucketDomainName": Object {
+    "BucketDomainName": {
       "Description": "The domain name of the S3 bucket owned by the CDK toolkit stack",
       "Value": "cdk-accel-assets-111111111111-us-east-1.s3.us-east-1.amazonaws.com",
     },
-    "BucketName": Object {
+    "BucketName": {
       "Description": "The name of the S3 bucket owned by the CDK toolkit stack",
       "Value": "cdk-accel-assets-111111111111-us-east-1",
     },
-    "FileAssetKeyArn": Object {
+    "FileAssetKeyArn": {
       "Description": "The ARN of the KMS key used to encrypt the asset bucket ",
-      "Export": Object {
+      "Export": {
         "Name": "CdkBootstrap-accel-FileAssetKeyArn",
       },
-      "Value": Object {
-        "Fn::GetAtt": Array [
+      "Value": {
+        "Fn::GetAtt": [
           "AssetEncryptionKey49BA7B12",
           "Arn",
         ],
       },
     },
-    "ImageRepositoryName": Object {
+    "ImageRepositoryName": {
       "Description": "The name of the ECR repository which hosts docker image assets ",
       "Value": "cdk-accel-container-assets-111111111111-us-east-1",
     },
   },
-  "Parameters": Object {
-    "CloudFormationExecutionPolicies": Object {
+  "Parameters": {
+    "CloudFormationExecutionPolicies": {
       "Type": "String",
     },
-    "ContainerAssetsRepositoryName": Object {
+    "ContainerAssetsRepositoryName": {
       "Default": "",
       "Type": "String",
     },
-    "FileAssetsBucketKmsKeyId": Object {
+    "FileAssetsBucketKmsKeyId": {
       "Default": "",
       "Type": "String",
     },
-    "FileAssetsBucketName": Object {
+    "FileAssetsBucketName": {
       "Default": "",
       "Type": "String",
     },
-    "PublicAccessBlockConfiguration": Object {
+    "PublicAccessBlockConfiguration": {
       "Type": "String",
     },
-    "Qualifier": Object {
+    "Qualifier": {
       "Type": "String",
     },
-    "TrustedAccounts": Object {
+    "TrustedAccounts": {
       "Type": "String",
     },
-    "TrustedAccountsForLookup": Object {
+    "TrustedAccountsForLookup": {
       "Type": "String",
     },
   },
-  "Resources": Object {
-    "AssetEncryptionKey49BA7B12": Object {
+  "Resources": {
+    "AssetEncryptionKey49BA7B12": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
+      "Properties": {
         "Description": "Key used to encrypt centralized CDK assets",
         "EnableKeyRotation": true,
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::111111111111:root",
@@ -88,8 +88,8 @@ Object {
               },
               "Resource": "*",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Create*",
                 "kms:Describe*",
                 "kms:Enable*",
@@ -105,13 +105,13 @@ Object {
                 "kms:GenerateDataKey",
               ],
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::111111111111:root",
@@ -122,43 +122,43 @@ Object {
               "Resource": "*",
               "Sid": "Management Actions",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
                 "kms:GenerateDataKey",
                 "kms:Describe*",
               ],
-              "Condition": Object {
-                "StringEquals": Object {
+              "Condition": {
+                "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",
                   "kms:ViaService": "s3.us-east-1.amazonaws.com",
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
               "Resource": "*",
               "Sid": "Allow S3 to use the encryption key",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Encrypt",
                 "kms:Decrypt",
                 "kms:ReEncrypt*",
                 "kms:GenerateDataKey",
                 "kms:Describe*",
               ],
-              "Condition": Object {
-                "ArnLike": Object {
-                  "aws:PrincipalARN": Object {
-                    "Fn::Join": Array [
+              "Condition": {
+                "ArnLike": {
+                  "aws:PrincipalARN": {
+                    "Fn::Join": [
                       "",
-                      Array [
+                      [
                         "arn:",
-                        Object {
+                        {
                           "Ref": "AWS::Partition",
                         },
                         ":iam::*:role/AWSAccelerator-*",
@@ -166,38 +166,38 @@ Object {
                     ],
                   },
                 },
-                "StringEquals": Object {
+                "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
               "Resource": "*",
               "Sid": "Allow org to perform encryption",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:DescribeKey",
                 "kms:Encrypt",
                 "kms:ReEncrypt*",
                 "kms:GenerateDataKey*",
               ],
-              "Condition": Object {
-                "StringEquals": Object {
+              "Condition": {
+                "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
               "Resource": "*",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:DescribeKey",
                 "kms:Encrypt",
@@ -205,13 +205,13 @@ Object {
                 "kms:GenerateDataKey*",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "cloudformation.amazonaws.com",
               },
               "Resource": "*",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:DescribeKey",
                 "kms:Encrypt",
@@ -219,7 +219,7 @@ Object {
                 "kms:GenerateDataKey*",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
               "Resource": "*",
@@ -231,11 +231,11 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "AssetEncryptionKeyAliasF99A8AC7": Object {
-      "Properties": Object {
+    "AssetEncryptionKeyAliasF99A8AC7": {
+      "Properties": {
         "AliasName": "alias/accelerator/kms/cdk/key",
-        "TargetKeyId": Object {
-          "Fn::GetAtt": Array [
+        "TargetKeyId": {
+          "Fn::GetAtt": [
             "AssetEncryptionKey49BA7B12",
             "Arn",
           ],
@@ -243,45 +243,45 @@ Object {
       },
       "Type": "AWS::KMS::Alias",
     },
-    "CdkBootstrapVersion": Object {
-      "Properties": Object {
+    "CdkBootstrapVersion": {
+      "Properties": {
         "Name": "/cdk-bootstrap/accel/version",
         "Type": "String",
         "Value": "14",
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "CloudFormationExecutionRole": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "CloudFormationExecutionRole": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM4",
               "reason": "AWS Custom resource provider framework-role created by cdk.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "cloudformation.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/AdministratorAccess",
@@ -293,26 +293,26 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "ContainerAssetsRepository": Object {
+    "ContainerAssetsRepository": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
+      "Properties": {
         "ImageTagMutability": "IMMUTABLE",
         "RepositoryName": "cdk-accel-container-assets-111111111111-us-east-1",
-        "RepositoryPolicyText": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+        "RepositoryPolicyText": {
+          "Statement": [
+            {
+              "Action": [
                 "ecr:BatchGetImage",
                 "ecr:GetDownloadUrlForLayer",
               ],
-              "Condition": Object {
-                "StringLike": Object {
-                  "aws:sourceArn": Object {
-                    "Fn::Join": Array [
+              "Condition": {
+                "StringLike": {
+                  "aws:sourceArn": {
+                    "Fn::Join": [
                       "",
-                      Array [
+                      [
                         "arn:",
-                        Object {
+                        {
                           "Ref": "AWS::Partition",
                         },
                         ":lambda:us-east-1:111111111111:function:*",
@@ -322,7 +322,7 @@ Object {
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
               "Sid": "LambdaECRImageRetrievalPolicy-insecure-connections",
@@ -334,30 +334,30 @@ Object {
       "Type": "AWS::ECR::Repository",
       "UpdateReplacePolicy": "Retain",
     },
-    "DeploymentActionRole": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "DeploymentActionRole": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "Allows only specific policy.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::111111111111:root",
@@ -369,12 +369,12 @@ Object {
           ],
           "Version": "2012-10-17",
         },
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "cloudformation:CreateChangeSet",
                     "cloudformation:DeleteChangeSet",
                     "cloudformation:DescribeChangeSet",
@@ -387,8 +387,8 @@ Object {
                   "Resource": "*",
                   "Sid": "CloudFormationPermissions",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "s3:GetObject*",
                     "s3:GetBucket*",
                     "s3:List*",
@@ -397,25 +397,25 @@ Object {
                     "s3:PutObject*",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::cdk-accel-assets-111111111111-us-east-1",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::cdk-accel-assets-111111111111-us-east-1/*",
@@ -425,16 +425,16 @@ Object {
                   ],
                   "Sid": "PipelineCrossAccountArtifactsBucket",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "kms:Decrypt",
                     "kms:DescribeKey",
                     "kms:Encrypt",
                     "kms:ReEncrypt*",
                     "kms:GenerateDataKey*",
                   ],
-                  "Condition": Object {
-                    "StringEquals": Object {
+                  "Condition": {
+                    "StringEquals": {
                       "kms:ViaService": "s3.us-east-1.amazonaws.com",
                     },
                   },
@@ -442,19 +442,19 @@ Object {
                   "Resource": "*",
                   "Sid": "PipelineCrossAccountArtifactsKey",
                 },
-                Object {
+                {
                   "Action": "iam:PassRole",
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "CloudFormationExecutionRole",
                       "Arn",
                     ],
                   },
                   "Sid": "CliPermissions",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "cloudformation:DescribeStackEvents",
                     "cloudformation:GetTemplate",
                     "cloudformation:DeleteStack",
@@ -465,32 +465,32 @@ Object {
                   "Resource": "*",
                   "Sid": "CfnPermissions",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "s3:GetObject*",
                     "s3:GetBucket*",
                     "s3:List*",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::cdk-accel-assets-111111111111-us-east-1",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::cdk-accel-assets-111111111111-us-east-1/*",
@@ -500,19 +500,19 @@ Object {
                   ],
                   "Sid": "CliStagingBucket",
                 },
-                Object {
+                {
                   "Action": "ssm:GetParameter",
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::Join": Array [
+                  "Resource": {
+                    "Fn::Join": [
                       "",
-                      Array [
+                      [
                         "arn:",
-                        Object {
+                        {
                           "Ref": "AWS::Partition",
                         },
                         ":ssm:us-east-1:111111111111:parameter",
-                        Object {
+                        {
                           "Ref": "CdkBootstrapVersion",
                         },
                       ],
@@ -530,20 +530,20 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "FilePublishingRole": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "FilePublishingRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::111111111111:root",
@@ -559,22 +559,22 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "FilePublishingRoleDefaultPolicy": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "FilePublishingRoleDefaultPolicy": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "Allows only specific policy.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:GetEncryptionConfiguration",
@@ -584,25 +584,25 @@ Object {
                 "s3:Abort*",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::Join": Array [
+              "Resource": [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":s3:::cdk-accel-assets-111111111111-us-east-1",
                     ],
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":s3:::cdk-accel-assets-111111111111-us-east-1/*",
@@ -611,8 +611,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:DescribeKey",
                 "kms:Encrypt",
@@ -626,28 +626,28 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "cdk-accel-file-publishing-role-default-policy-111111111111-us-east-1",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "FilePublishingRole",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "ImagePublishingRole": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "ImagePublishingRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::111111111111:root",
@@ -663,22 +663,22 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "ImagePublishingRoleDefaultPolicy": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "ImagePublishingRoleDefaultPolicy": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "Allows only specific policy.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "ecr:PutImage",
                 "ecr:InitiateLayerUpload",
                 "ecr:UploadLayerPart",
@@ -690,12 +690,12 @@ Object {
                 "ecr:GetDownloadUrlForLayer",
               ],
               "Effect": "Allow",
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
+                  [
                     "arn:",
-                    Object {
+                    {
                       "Ref": "AWS::Partition",
                     },
                     ":ecr:us-east-1:111111111111:repository/cdk-accel-container-assets-111111111111-us-east-1",
@@ -703,7 +703,7 @@ Object {
                 ],
               },
             },
-            Object {
+            {
               "Action": "ecr:GetAuthorizationToken",
               "Effect": "Allow",
               "Resource": "*",
@@ -712,42 +712,42 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "cdk-accel-image-publishing-role-default-policy-111111111111-us-east-1",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "ImagePublishingRole",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "LookupRole": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "LookupRole": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM4",
               "reason": "AWS Custom resource provider framework-role created by cdk.",
             },
-            Object {
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "Allows only specific policy.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::111111111111:root",
@@ -759,13 +759,13 @@ Object {
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/ReadOnlyAccess",
@@ -773,11 +773,11 @@ Object {
             ],
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
                   "Action": "kms:Decrypt",
                   "Effect": "Deny",
                   "Resource": "*",
@@ -793,47 +793,47 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "SsmParamAcceleratorVersionFF83282D": Object {
-      "Properties": Object {
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-BootstrapStack-111111111111-us-east-1/version",
         "Type": "String",
         "Value": "1.3.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamStackId521A78D3": Object {
-      "Properties": Object {
+    "SsmParamStackId521A78D3": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-BootstrapStack-111111111111-us-east-1/stack-id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "AWS::StackId",
         },
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "StagingBucket": Object {
+    "StagingBucket": {
       "DeletionPolicy": "Retain",
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-S1",
               "reason": "StagingBucket has server access logs disabled until the task for access logging completed.",
             },
-            Object {
+            {
               "id": "AwsSolutions-S10",
               "reason": "StagingBucket denies insecure requests via the bucket policy.",
             },
           ],
         },
       },
-      "Properties": Object {
-        "BucketEncryption": Object {
-          "ServerSideEncryptionConfiguration": Array [
-            Object {
-              "ServerSideEncryptionByDefault": Object {
-                "KMSMasterKeyID": Object {
-                  "Fn::GetAtt": Array [
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "KMSMasterKeyID": {
+                  "Fn::GetAtt": [
                     "AssetEncryptionKey49BA7B12",
                     "Arn",
                   ],
@@ -844,35 +844,35 @@ Object {
           ],
         },
         "BucketName": "cdk-accel-assets-111111111111-us-east-1",
-        "OwnershipControls": Object {
-          "Rules": Array [
-            Object {
+        "OwnershipControls": {
+          "Rules": [
+            {
               "ObjectOwnership": "BucketOwnerPreferred",
             },
           ],
         },
-        "PublicAccessBlockConfiguration": Object {
+        "PublicAccessBlockConfiguration": {
           "BlockPublicAcls": true,
           "BlockPublicPolicy": true,
           "IgnorePublicAcls": true,
           "RestrictPublicBuckets": true,
         },
-        "VersioningConfiguration": Object {
+        "VersioningConfiguration": {
           "Status": "Enabled",
         },
       },
       "Type": "AWS::S3::Bucket",
       "UpdateReplacePolicy": "Retain",
     },
-    "StagingBucketPolicy83BEDEEE": Object {
-      "Properties": Object {
-        "Bucket": Object {
+    "StagingBucketPolicy83BEDEEE": {
+      "Properties": {
+        "Bucket": {
           "Ref": "StagingBucket",
         },
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -884,28 +884,28 @@ Object {
                 "s3:PutObjectVersionTagging",
                 "s3:Abort*",
               ],
-              "Condition": Object {
-                "StringEquals": Object {
+              "Condition": {
+                "StringEquals": {
                   "aws:PrincipalOrgID": "o-asdf123456",
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "StagingBucket",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "StagingBucket",
                           "Arn",
                         ],
@@ -916,8 +916,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -930,22 +930,22 @@ Object {
                 "s3:Abort*",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "cloudformation.amazonaws.com",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "StagingBucket",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "StagingBucket",
                           "Arn",
                         ],
@@ -956,8 +956,8 @@ Object {
                 },
               ],
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -970,22 +970,22 @@ Object {
                 "s3:Abort*",
               ],
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
-              "Resource": Array [
-                Object {
-                  "Fn::GetAtt": Array [
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
                     "StagingBucket",
                     "Arn",
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
-                      Object {
-                        "Fn::GetAtt": Array [
+                    [
+                      {
+                        "Fn::GetAtt": [
                           "StagingBucket",
                           "Arn",
                         ],
@@ -996,23 +996,23 @@ Object {
                 },
               ],
             },
-            Object {
+            {
               "Action": "s3:*",
-              "Condition": Object {
-                "Bool": Object {
+              "Condition": {
+                "Bool": {
                   "aws:SecureTransport": "false",
                 },
               },
               "Effect": "Deny",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
-              "Resource": Object {
-                "Fn::Join": Array [
+              "Resource": {
+                "Fn::Join": [
                   "",
-                  Array [
-                    Object {
-                      "Fn::GetAtt": Array [
+                  [
+                    {
+                      "Fn::GetAtt": [
                         "StagingBucket",
                         "Arn",
                       ],

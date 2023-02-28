@@ -1,23 +1,23 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`TransitGateway Construct(TransitGateway):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354": {
+      "DependsOn": [
         "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
             "Arn",
           ],
@@ -27,21 +27,21 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3": Object {
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "TgwAttachLookupKms4975C754",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
               },
             ],
@@ -52,38 +52,38 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "sts:AssumeRole",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "ec2:DescribeTransitGatewayAttachments",
                     "ec2:DescribeVpnConnections",
                   ],
@@ -99,28 +99,28 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "TgwAttachLookupC88D0DA8": Object {
+    "TgwAttachLookupC88D0DA8": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
             "Arn",
           ],
         },
         "name": "name",
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
-        "roleArn": Object {
-          "Fn::Join": Array [
+        "roleArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":iam::owningAccountId:role/roleName",
@@ -134,25 +134,25 @@ Object {
       "Type": "Custom::GetTransitGatewayAttachment",
       "UpdateReplacePolicy": "Delete",
     },
-    "TgwAttachLookupKms4975C754": Object {
+    "TgwAttachLookupKms4975C754": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -169,19 +169,19 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "TransitGateway888C3350": Object {
-      "Properties": Object {
+    "TransitGateway888C3350": {
+      "Properties": {
         "AmazonSideAsn": 1234,
         "AutoAcceptSharedAttachments": "enable",
         "DefaultRouteTableAssociation": "enable",
         "DefaultRouteTablePropagation": "enable",
         "DnsSupport": "enable",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "key",
             "Value": "value",
           },
-          Object {
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -190,15 +190,15 @@ Object {
       },
       "Type": "AWS::EC2::TransitGateway",
     },
-    "TransitGatewayAttachment610A3027": Object {
-      "Properties": Object {
-        "SubnetIds": Array [
+    "TransitGatewayAttachment610A3027": {
+      "Properties": {
+        "SubnetIds": [
           "one",
           "two",
           "three",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -208,20 +208,20 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayAttachment",
     },
-    "TransitGatewayAttachmentAwsPartition24B0B378": Object {
-      "Properties": Object {
-        "Options": Object {
+    "TransitGatewayAttachmentAwsPartition24B0B378": {
+      "Properties": {
+        "Options": {
           "ApplianceModeSupport": "enable",
           "DnsSupport": "disable",
           "Ipv6Support": "enable",
         },
-        "SubnetIds": Array [
+        "SubnetIds": [
           "one",
           "two",
           "three",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -231,20 +231,20 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
-    "TransitGatewayAttachmentAwsPartitionOptions0EBDAD23": Object {
-      "Properties": Object {
-        "Options": Object {
+    "TransitGatewayAttachmentAwsPartitionOptions0EBDAD23": {
+      "Properties": {
+        "Options": {
           "ApplianceModeSupport": "disable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
         },
-        "SubnetIds": Array [
+        "SubnetIds": [
           "one",
           "two",
           "three",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -254,20 +254,20 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
-    "TransitGatewayAttachmentGovCloud09E6C5F1": Object {
-      "Properties": Object {
-        "Options": Object {
+    "TransitGatewayAttachmentGovCloud09E6C5F1": {
+      "Properties": {
+        "Options": {
           "ApplianceModeSupport": "enable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
         },
-        "SubnetIds": Array [
+        "SubnetIds": [
           "one",
           "two",
           "three",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -277,15 +277,15 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayAttachment",
     },
-    "TransitGatewayRouteTableAssociation19E386E4": Object {
-      "Properties": Object {
+    "TransitGatewayRouteTableAssociation19E386E4": {
+      "Properties": {
         "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
         "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
       },
       "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
     },
-    "TransitGatewayRouteTablePropagationBC0F0909": Object {
-      "Properties": Object {
+    "TransitGatewayRouteTablePropagationBC0F0909": {
+      "Properties": {
         "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
         "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
       },
@@ -296,23 +296,23 @@ Object {
 `;
 
 exports[`TransitGatewayAttachment Construct(TransitGatewayAttachment):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354": {
+      "DependsOn": [
         "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
             "Arn",
           ],
@@ -322,21 +322,21 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3": Object {
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "TgwAttachLookupKms4975C754",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
               },
             ],
@@ -347,38 +347,38 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "sts:AssumeRole",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "ec2:DescribeTransitGatewayAttachments",
                     "ec2:DescribeVpnConnections",
                   ],
@@ -394,28 +394,28 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "TgwAttachLookupC88D0DA8": Object {
+    "TgwAttachLookupC88D0DA8": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
             "Arn",
           ],
         },
         "name": "name",
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
-        "roleArn": Object {
-          "Fn::Join": Array [
+        "roleArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":iam::owningAccountId:role/roleName",
@@ -429,25 +429,25 @@ Object {
       "Type": "Custom::GetTransitGatewayAttachment",
       "UpdateReplacePolicy": "Delete",
     },
-    "TgwAttachLookupKms4975C754": Object {
+    "TgwAttachLookupKms4975C754": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -464,19 +464,19 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "TransitGateway888C3350": Object {
-      "Properties": Object {
+    "TransitGateway888C3350": {
+      "Properties": {
         "AmazonSideAsn": 1234,
         "AutoAcceptSharedAttachments": "enable",
         "DefaultRouteTableAssociation": "enable",
         "DefaultRouteTablePropagation": "enable",
         "DnsSupport": "enable",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "key",
             "Value": "value",
           },
-          Object {
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -485,15 +485,15 @@ Object {
       },
       "Type": "AWS::EC2::TransitGateway",
     },
-    "TransitGatewayAttachment610A3027": Object {
-      "Properties": Object {
-        "SubnetIds": Array [
+    "TransitGatewayAttachment610A3027": {
+      "Properties": {
+        "SubnetIds": [
           "one",
           "two",
           "three",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -503,20 +503,20 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayAttachment",
     },
-    "TransitGatewayAttachmentAwsPartition24B0B378": Object {
-      "Properties": Object {
-        "Options": Object {
+    "TransitGatewayAttachmentAwsPartition24B0B378": {
+      "Properties": {
+        "Options": {
           "ApplianceModeSupport": "enable",
           "DnsSupport": "disable",
           "Ipv6Support": "enable",
         },
-        "SubnetIds": Array [
+        "SubnetIds": [
           "one",
           "two",
           "three",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -526,20 +526,20 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
-    "TransitGatewayAttachmentAwsPartitionOptions0EBDAD23": Object {
-      "Properties": Object {
-        "Options": Object {
+    "TransitGatewayAttachmentAwsPartitionOptions0EBDAD23": {
+      "Properties": {
+        "Options": {
           "ApplianceModeSupport": "disable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
         },
-        "SubnetIds": Array [
+        "SubnetIds": [
           "one",
           "two",
           "three",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -549,20 +549,20 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
-    "TransitGatewayAttachmentGovCloud09E6C5F1": Object {
-      "Properties": Object {
-        "Options": Object {
+    "TransitGatewayAttachmentGovCloud09E6C5F1": {
+      "Properties": {
+        "Options": {
           "ApplianceModeSupport": "enable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
         },
-        "SubnetIds": Array [
+        "SubnetIds": [
           "one",
           "two",
           "three",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -572,15 +572,15 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayAttachment",
     },
-    "TransitGatewayRouteTableAssociation19E386E4": Object {
-      "Properties": Object {
+    "TransitGatewayRouteTableAssociation19E386E4": {
+      "Properties": {
         "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
         "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
       },
       "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
     },
-    "TransitGatewayRouteTablePropagationBC0F0909": Object {
-      "Properties": Object {
+    "TransitGatewayRouteTablePropagationBC0F0909": {
+      "Properties": {
         "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
         "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
       },
@@ -591,21 +591,21 @@ Object {
 `;
 
 exports[`TransitGatewayRouteTableAssociation Construct(TransitGatewayRouteTableAssociation):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TransitGateway888C3350": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TransitGateway888C3350": {
+      "Properties": {
         "AmazonSideAsn": 1234,
         "AutoAcceptSharedAttachments": "enable",
         "DefaultRouteTableAssociation": "enable",
         "DefaultRouteTablePropagation": "enable",
         "DnsSupport": "enable",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "key",
             "Value": "value",
           },
-          Object {
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -614,15 +614,15 @@ Object {
       },
       "Type": "AWS::EC2::TransitGateway",
     },
-    "TransitGatewayRouteTableAssociation19E386E4": Object {
-      "Properties": Object {
+    "TransitGatewayRouteTableAssociation19E386E4": {
+      "Properties": {
         "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
         "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
       },
       "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
     },
-    "TransitGatewayRouteTablePropagationBC0F0909": Object {
-      "Properties": Object {
+    "TransitGatewayRouteTablePropagationBC0F0909": {
+      "Properties": {
         "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
         "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
       },
@@ -633,23 +633,23 @@ Object {
 `;
 
 exports[`TransitGatewayRouteTablePropagation Construct(TransitGatewayRouteTablePropagation):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354": Object {
-      "DependsOn": Array [
+{
+  "Resources": {
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354": {
+      "DependsOn": [
         "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
       ],
-      "Properties": Object {
-        "Code": Object {
-          "S3Bucket": Object {
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D",
             "Arn",
           ],
@@ -659,21 +659,21 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3": Object {
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "KmsKeyId": {
+          "Fn::GetAtt": [
             "TgwAttachLookupKms4975C754",
             "Arn",
           ],
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
               },
             ],
@@ -684,38 +684,38 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomGetTransitGatewayAttachmentCustomResourceProviderRoleA6A22C3D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "sts:AssumeRole",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "ec2:DescribeTransitGatewayAttachments",
                     "ec2:DescribeVpnConnections",
                   ],
@@ -731,28 +731,28 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "TgwAttachLookupC88D0DA8": Object {
+    "TgwAttachLookupC88D0DA8": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomGetTransitGatewayAttachmentCustomResourceProviderLogGroup41699CF3",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomGetTransitGatewayAttachmentCustomResourceProviderHandler7E079354",
             "Arn",
           ],
         },
         "name": "name",
-        "region": Object {
+        "region": {
           "Ref": "AWS::Region",
         },
-        "roleArn": Object {
-          "Fn::Join": Array [
+        "roleArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":iam::owningAccountId:role/roleName",
@@ -766,25 +766,25 @@ Object {
       "Type": "Custom::GetTransitGatewayAttachment",
       "UpdateReplacePolicy": "Delete",
     },
-    "TgwAttachLookupKms4975C754": Object {
+    "TgwAttachLookupKms4975C754": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+      "Properties": {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::",
-                      Object {
+                      {
                         "Ref": "AWS::AccountId",
                       },
                       ":root",
@@ -801,19 +801,19 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "TransitGateway888C3350": Object {
-      "Properties": Object {
+    "TransitGateway888C3350": {
+      "Properties": {
         "AmazonSideAsn": 1234,
         "AutoAcceptSharedAttachments": "enable",
         "DefaultRouteTableAssociation": "enable",
         "DefaultRouteTablePropagation": "enable",
         "DnsSupport": "enable",
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "key",
             "Value": "value",
           },
-          Object {
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -822,15 +822,15 @@ Object {
       },
       "Type": "AWS::EC2::TransitGateway",
     },
-    "TransitGatewayAttachment610A3027": Object {
-      "Properties": Object {
-        "SubnetIds": Array [
+    "TransitGatewayAttachment610A3027": {
+      "Properties": {
+        "SubnetIds": [
           "one",
           "two",
           "three",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -840,20 +840,20 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayAttachment",
     },
-    "TransitGatewayAttachmentAwsPartition24B0B378": Object {
-      "Properties": Object {
-        "Options": Object {
+    "TransitGatewayAttachmentAwsPartition24B0B378": {
+      "Properties": {
+        "Options": {
           "ApplianceModeSupport": "enable",
           "DnsSupport": "disable",
           "Ipv6Support": "enable",
         },
-        "SubnetIds": Array [
+        "SubnetIds": [
           "one",
           "two",
           "three",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -863,20 +863,20 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
-    "TransitGatewayAttachmentAwsPartitionOptions0EBDAD23": Object {
-      "Properties": Object {
-        "Options": Object {
+    "TransitGatewayAttachmentAwsPartitionOptions0EBDAD23": {
+      "Properties": {
+        "Options": {
           "ApplianceModeSupport": "disable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
         },
-        "SubnetIds": Array [
+        "SubnetIds": [
           "one",
           "two",
           "three",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -886,20 +886,20 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayVpcAttachment",
     },
-    "TransitGatewayAttachmentGovCloud09E6C5F1": Object {
-      "Properties": Object {
-        "Options": Object {
+    "TransitGatewayAttachmentGovCloud09E6C5F1": {
+      "Properties": {
+        "Options": {
           "ApplianceModeSupport": "enable",
           "DnsSupport": "enable",
           "Ipv6Support": "disable",
         },
-        "SubnetIds": Array [
+        "SubnetIds": [
           "one",
           "two",
           "three",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "name",
           },
@@ -909,15 +909,15 @@ Object {
       },
       "Type": "AWS::EC2::TransitGatewayAttachment",
     },
-    "TransitGatewayRouteTableAssociation19E386E4": Object {
-      "Properties": Object {
+    "TransitGatewayRouteTableAssociation19E386E4": {
+      "Properties": {
         "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
         "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
       },
       "Type": "AWS::EC2::TransitGatewayRouteTableAssociation",
     },
-    "TransitGatewayRouteTablePropagationBC0F0909": Object {
-      "Properties": Object {
+    "TransitGatewayRouteTablePropagationBC0F0909": {
+      "Properties": {
         "TransitGatewayAttachmentId": "transitGatewayAttachmentId",
         "TransitGatewayRouteTableId": "transitGatewayRouteTableId",
       },

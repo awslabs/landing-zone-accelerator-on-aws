@@ -1,30 +1,30 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ApplicationLoadBalancer Construct(ApplicationLoadBalancer):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "Test7BFAF513": Object {
-      "Properties": Object {
-        "LoadBalancerAttributes": Array [
-          Object {
+{
+  "Resources": {
+    "Test7BFAF513": {
+      "Properties": {
+        "LoadBalancerAttributes": [
+          {
             "Key": "access_logs.s3.enabled",
             "Value": "true",
           },
-          Object {
+          {
             "Key": "access_logs.s3.bucket",
             "Value": "test-bucket",
           },
-          Object {
+          {
             "Key": "access_logs.s3.prefix",
-            "Value": Object {
-              "Fn::Join": Array [
+            "Value": {
+              "Fn::Join": [
                 "",
-                Array [
-                  Object {
+                [
+                  {
                     "Ref": "AWS::AccountId",
                   },
                   "/",
-                  Object {
+                  {
                     "Ref": "AWS::Region",
                   },
                   "/Test",
@@ -32,51 +32,51 @@ Object {
               ],
             },
           },
-          Object {
+          {
             "Key": "deletion_protection.enabled",
             "Value": "true",
           },
-          Object {
+          {
             "Key": "idle_timeout.timeout_seconds",
             "Value": "60",
           },
-          Object {
+          {
             "Key": "routing.http.drop_invalid_header_fields.enabled",
             "Value": "true",
           },
-          Object {
+          {
             "Key": "routing.http.x_amzn_tls_version_and_cipher_suite.enabled",
             "Value": "true",
           },
-          Object {
+          {
             "Key": "routing.http.xff_client_port.enabled",
             "Value": "true",
           },
-          Object {
+          {
             "Key": "routing.http.xff_header_processing.mode",
             "Value": "append",
           },
-          Object {
+          {
             "Key": "routing.http2.enabled",
             "Value": "true",
           },
-          Object {
+          {
             "Key": "waf.fail_open.enabled",
             "Value": "true",
           },
         ],
         "Name": "Test",
         "Scheme": "internal",
-        "SecurityGroups": Array [
+        "SecurityGroups": [
           "sg-test123",
           "sg-test456",
         ],
-        "Subnets": Array [
+        "Subnets": [
           "subnet-test123",
           "subnet-test456",
         ],
-        "Tags": Array [
-          Object {
+        "Tags": [
+          {
             "Key": "Name",
             "Value": "Test",
           },
@@ -85,16 +85,16 @@ Object {
       },
       "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
     },
-    "TestListenerstring15C484455": Object {
-      "Properties": Object {
-        "Certificates": Array [
-          Object {
+    "TestListenerstring15C484455": {
+      "Properties": {
+        "Certificates": [
+          {
             "CertificateArn": "fully-qualified-arn-acm",
           },
         ],
-        "DefaultActions": Array [
-          Object {
-            "FixedResponseConfig": Object {
+        "DefaultActions": [
+          {
+            "FixedResponseConfig": {
               "ContentType": "contentType",
               "MessageBody": "messageBody",
               "StatusCode": "statusCode",
@@ -104,7 +104,7 @@ Object {
             "Type": "fixed-response",
           },
         ],
-        "LoadBalancerArn": Object {
+        "LoadBalancerArn": {
           "Ref": "Test7BFAF513",
         },
         "Port": 81,
@@ -113,17 +113,17 @@ Object {
       },
       "Type": "AWS::ElasticLoadBalancingV2::Listener",
     },
-    "TestListenerstring20A24AB7B": Object {
-      "Properties": Object {
-        "Certificates": Array [
-          Object {
+    "TestListenerstring20A24AB7B": {
+      "Properties": {
+        "Certificates": [
+          {
             "CertificateArn": "fully-qualified-arn-acm",
           },
         ],
-        "DefaultActions": Array [
-          Object {
+        "DefaultActions": [
+          {
             "Order": 3,
-            "RedirectConfig": Object {
+            "RedirectConfig": {
               "Host": "host",
               "Path": "path",
               "Port": "82",
@@ -135,7 +135,7 @@ Object {
             "Type": "redirect",
           },
         ],
-        "LoadBalancerArn": Object {
+        "LoadBalancerArn": {
           "Ref": "Test7BFAF513",
         },
         "Port": 82,
@@ -144,22 +144,22 @@ Object {
       },
       "Type": "AWS::ElasticLoadBalancingV2::Listener",
     },
-    "TestListenerstring7A65A381": Object {
-      "Properties": Object {
-        "Certificates": Array [
-          Object {
+    "TestListenerstring7A65A381": {
+      "Properties": {
+        "Certificates": [
+          {
             "CertificateArn": "fully-qualified-arn-acm",
           },
         ],
-        "DefaultActions": Array [
-          Object {
-            "ForwardConfig": Object {
-              "TargetGroupStickinessConfig": Object {
+        "DefaultActions": [
+          {
+            "ForwardConfig": {
+              "TargetGroupStickinessConfig": {
                 "DurationSeconds": 1000,
                 "Enabled": true,
               },
-              "TargetGroups": Array [
-                Object {
+              "TargetGroups": [
+                {
                   "TargetGroupArn": "\${ACCEL_LOOKUP::TargetGroup:target-group-test}",
                 },
               ],
@@ -169,7 +169,7 @@ Object {
             "Type": "forward",
           },
         ],
-        "LoadBalancerArn": Object {
+        "LoadBalancerArn": {
           "Ref": "Test7BFAF513",
         },
         "Port": 80,

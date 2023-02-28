@@ -1,18 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
-Object {
-  "Parameters": Object {
-    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+{
+  "Parameters": {
+    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
-  "Resources": Object {
-    "AWSAcceleratormetadatacollectionLogGroup76F89C67": Object {
+  "Resources": {
+    "AWSAcceleratormetadatacollectionLogGroup76F89C67": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": "/aws/lambda/AWSAccelerator-metadata-collection",
@@ -21,19 +21,19 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "AcceleratorMetadataAWSAcceleratormetadatacollectionEBD85CF6": Object {
-      "DependsOn": Array [
+    "AcceleratorMetadataAWSAcceleratormetadatacollectionEBD85CF6": {
+      "DependsOn": [
         "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6",
         "AcceleratorMetadataMetadataLambdaC27FFAF6",
         "AWSAcceleratormetadatacollectionLogGroup76F89C67",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Environment": Object {
-          "Variables": Object {
+        "Environment": {
+          "Variables": {
             "ACCELERATOR_PREFIX": "AWSAccelerator",
             "CENTRAL_LOG_BUCKET": "aws-accelerator-central-logs-333333333333-us-west-2",
             "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
@@ -43,15 +43,15 @@ Object {
             "LOG_ACCOUNT_ID": "333333333333",
             "METADATA_BUCKET": "aws-accelerator-metadata-333333333333-us-east-1",
             "ORGANIZATION_ID": "r-asdf",
-            "PARTITION": Object {
+            "PARTITION": {
               "Ref": "AWS::Partition",
             },
           },
         },
         "FunctionName": "AWSAccelerator-metadata-collection",
         "Handler": "index.handler",
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "AcceleratorMetadataMetadataLambdaC27FFAF6",
             "Arn",
           ],
@@ -61,15 +61,15 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AcceleratorMetadataAwsAcceleratorMetadataCollectionRule1FFE12D2": Object {
-      "Properties": Object {
+    "AcceleratorMetadataAwsAcceleratorMetadataCollectionRule1FFE12D2": {
+      "Properties": {
         "Name": "AWSAccelerator-metadata-collection-rule",
         "ScheduleExpression": "rate(1 day)",
         "State": "ENABLED",
-        "Targets": Array [
-          Object {
-            "Arn": Object {
-              "Fn::GetAtt": Array [
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
                 "AcceleratorMetadataAWSAcceleratormetadatacollectionEBD85CF6",
                 "Arn",
               ],
@@ -80,18 +80,18 @@ Object {
       },
       "Type": "AWS::Events::Rule",
     },
-    "AcceleratorMetadataAwsAcceleratorMetadataCollectionRuleAllowEventRuleAWSAcceleratorSecurityStack111111111111useast1AcceleratorMetadataAWSAcceleratormetadatacollection72A1EADD690CC386": Object {
-      "Properties": Object {
+    "AcceleratorMetadataAwsAcceleratorMetadataCollectionRuleAllowEventRuleAWSAcceleratorSecurityStack111111111111useast1AcceleratorMetadataAWSAcceleratormetadatacollection72A1EADD690CC386": {
+      "Properties": {
         "Action": "lambda:InvokeFunction",
-        "FunctionName": Object {
-          "Fn::GetAtt": Array [
+        "FunctionName": {
+          "Fn::GetAtt": [
             "AcceleratorMetadataAWSAcceleratormetadatacollectionEBD85CF6",
             "Arn",
           ],
         },
         "Principal": "events.amazonaws.com",
-        "SourceArn": Object {
-          "Fn::GetAtt": Array [
+        "SourceArn": {
+          "Fn::GetAtt": [
             "AcceleratorMetadataAwsAcceleratorMetadataCollectionRule1FFE12D2",
             "Arn",
           ],
@@ -99,14 +99,14 @@ Object {
       },
       "Type": "AWS::Lambda::Permission",
     },
-    "AcceleratorMetadataMetadataLambdaC27FFAF6": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "AcceleratorMetadataMetadataLambdaC27FFAF6": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
@@ -117,22 +117,22 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "accelerator metadata collection custom resource",
             },
           ],
         },
       },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "codepipeline:GetPipelineExecution",
                 "codepipeline:ListPipelineExecutions",
                 "codecommit:GetFolder",
@@ -159,8 +159,8 @@ Object {
               "Effect": "Allow",
               "Resource": "*",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -174,25 +174,25 @@ Object {
                 "s3:Abort*",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::Join": Array [
+              "Resource": [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":s3:::aws-accelerator-metadata-333333333333-us-east-1",
                     ],
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":s3:::aws-accelerator-metadata-333333333333-us-east-1/*",
@@ -205,29 +205,29 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "AcceleratorMetadataMetadataLambdaC27FFAF6",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "AwsMacieUpdateExportConfigClassification832781E3": Object {
+    "AwsMacieUpdateExportConfigClassification832781E3": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomMaciePutClassificationExportConfigurationCustomResourceProviderLogGroup727354F4",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC",
             "Arn",
           ],
         },
         "bucketName": "aws-accelerator-central-logs-333333333333-us-west-2",
         "keyPrefix": "macie/111111111111/",
-        "kmsKeyArn": Object {
+        "kmsKeyArn": {
           "Ref": "CentralLogsBucketKeyLookup52CD8A37",
         },
         "region": "us-east-1",
@@ -235,24 +235,24 @@ Object {
       "Type": "Custom::MaciePutClassificationExportConfiguration",
       "UpdateReplacePolicy": "Delete",
     },
-    "CentralLogsBucketKeyLookup52CD8A37": Object {
+    "CentralLogsBucketKeyLookup52CD8A37": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
             "Arn",
           ],
         },
-        "assumeRoleArn": Object {
-          "Fn::Join": Array [
+        "assumeRoleArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
@@ -269,19 +269,19 @@ Object {
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B": Object {
-      "DependsOn": Array [
+    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B": {
+      "DependsOn": [
         "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8",
             "Arn",
           ],
@@ -291,18 +291,18 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderLogGroupB7212213": Object {
+    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderLogGroupB7212213": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B",
               },
             ],
@@ -313,31 +313,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ec2:DisableEbsEncryptionByDefault",
                     "ec2:EnableEbsEncryptionByDefault",
                     "ec2:ModifyEbsDefaultKmsKeyId",
@@ -347,13 +347,13 @@ Object {
                   "Resource": "*",
                   "Sid": "EC2",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "kms:DescribeKey",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
-                    "Fn::GetAtt": Array [
+                  "Resource": {
+                    "Fn::GetAtt": [
                       "EbsEncryptionKey9149E0DA",
                       "Arn",
                     ],
@@ -369,19 +369,19 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8": Object {
-      "DependsOn": Array [
+    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8": {
+      "DependsOn": [
         "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderRoleD01DD26B",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderRoleD01DD26B",
             "Arn",
           ],
@@ -391,18 +391,18 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderLogGroup118A06DB": Object {
+    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderLogGroup118A06DB": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8",
               },
             ],
@@ -413,31 +413,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderRoleD01DD26B": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderRoleD01DD26B": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "guardDuty:CreateDetector",
                     "guardDuty:CreatePublishingDestination",
                     "guardDuty:DeletePublishingDestination",
@@ -451,31 +451,31 @@ Object {
                   "Resource": "*",
                   "Sid": "GuardDutyCreatePublishingDestinationCommandTaskGuardDutyActions",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "s3:ListBucket",
                     "s3:GetObject",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/guardduty",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/guardduty/*",
@@ -494,19 +494,19 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderHandler63EDC7F4": Object {
-      "DependsOn": Array [
+    "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderHandler63EDC7F4": {
+      "DependsOn": [
         "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderRoleC4ECAFE0",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderRoleC4ECAFE0",
             "Arn",
           ],
@@ -516,18 +516,18 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderLogGroup69C2279A": Object {
+    "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderLogGroup69C2279A": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderHandler63EDC7F4",
               },
             ],
@@ -538,31 +538,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderRoleC4ECAFE0": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderRoleC4ECAFE0": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "iam:UpdateAccountPasswordPolicy",
                   ],
                   "Effect": "Allow",
@@ -577,19 +577,19 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC": Object {
-      "DependsOn": Array [
+    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC": {
+      "DependsOn": [
         "CustomMaciePutClassificationExportConfigurationCustomResourceProviderRoleEB42D531",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomMaciePutClassificationExportConfigurationCustomResourceProviderRoleEB42D531",
             "Arn",
           ],
@@ -599,18 +599,18 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderLogGroup727354F4": Object {
+    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderLogGroup727354F4": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC",
               },
             ],
@@ -621,31 +621,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderRoleEB42D531": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderRoleEB42D531": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "macie2:EnableMacie",
                     "macie2:GetClassificationExportConfiguration",
                     "macie2:GetMacieSession",
@@ -664,19 +664,19 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderHandler4BE622C1": Object {
-      "DependsOn": Array [
+    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderHandler4BE622C1": {
+      "DependsOn": [
         "CustomSecurityHubBatchEnableStandardsCustomResourceProviderRole1ABC8ED2",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomSecurityHubBatchEnableStandardsCustomResourceProviderRole1ABC8ED2",
             "Arn",
           ],
@@ -686,18 +686,18 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderLogGroup51D3B0EA": Object {
+    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderLogGroup51D3B0EA": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomSecurityHubBatchEnableStandardsCustomResourceProviderHandler4BE622C1",
               },
             ],
@@ -708,31 +708,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderRole1ABC8ED2": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderRole1ABC8ED2": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "securityhub:BatchDisableStandards",
                     "securityhub:BatchEnableStandards",
                     "securityhub:DescribeStandards",
@@ -745,12 +745,12 @@ Object {
                   "Resource": "*",
                   "Sid": "SecurityHubCreateMembersTaskSecurityHubActions",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "iam:CreateServiceLinkedRole",
                   ],
-                  "Condition": Object {
-                    "StringLike": Object {
+                  "Condition": {
+                    "StringLike": {
                       "iam:AWSServiceName": "securityhub.amazonaws.com",
                     },
                   },
@@ -767,19 +767,19 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE": Object {
-      "DependsOn": Array [
+    "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE": {
+      "DependsOn": [
         "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
             "Arn",
           ],
@@ -789,15 +789,15 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": Object {
+    "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
               },
             ],
@@ -808,53 +808,53 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ssm:GetParameters",
                     "ssm:GetParameter",
                     "ssm:DescribeParameters",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
+                  "Resource": [
                     "*",
                   ],
                   "Sid": "SsmGetParameterActions",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "sts:AssumeRole",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":iam::*:role/AWSAccelerator*",
@@ -873,31 +873,31 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "EbsDefaultVolumeEncryption55012F7A": Object {
+    "EbsDefaultVolumeEncryption55012F7A": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomEbsDefaultVolumeEncryptionCustomResourceProviderLogGroupB7212213",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B",
             "Arn",
           ],
         },
-        "kmsKeyId": Object {
+        "kmsKeyId": {
           "Ref": "EbsEncryptionKey9149E0DA",
         },
       },
       "Type": "Custom::EbsDefaultVolumeEncryption",
       "UpdateReplacePolicy": "Delete",
     },
-    "EbsDefaultVolumeEncryptionParameter61CF6625": Object {
-      "Properties": Object {
+    "EbsDefaultVolumeEncryptionParameter61CF6625": {
+      "Properties": {
         "Name": "/accelerator/security-stack/ebsDefaultVolumeEncryptionKeyArn",
         "Type": "String",
-        "Value": Object {
-          "Fn::GetAtt": Array [
+        "Value": {
+          "Fn::GetAtt": [
             "EbsEncryptionKey9149E0DA",
             "Arn",
           ],
@@ -905,23 +905,23 @@ Object {
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "EbsEncryptionKey9149E0DA": Object {
+    "EbsEncryptionKey9149E0DA": {
       "DeletionPolicy": "Retain",
-      "Properties": Object {
+      "Properties": {
         "Description": "AWS Accelerator default EBS Volume Encryption key",
         "EnableKeyRotation": true,
-        "KeyPolicy": Object {
-          "Statement": Array [
-            Object {
+        "KeyPolicy": {
+          "Statement": [
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::111111111111:root",
@@ -931,8 +931,8 @@ Object {
               },
               "Resource": "*",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:DescribeKey",
                 "kms:Encrypt",
@@ -940,13 +940,13 @@ Object {
                 "kms:ReEncrypt*",
               ],
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::111111111111:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",
@@ -957,21 +957,21 @@ Object {
               "Resource": "*",
               "Sid": "Allow service-linked role use",
             },
-            Object {
+            {
               "Action": "kms:CreateGrant",
-              "Condition": Object {
-                "Bool": Object {
+              "Condition": {
+                "Bool": {
                   "kms:GrantIsForAWSResource": "true",
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::111111111111:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling",
@@ -982,16 +982,16 @@ Object {
               "Resource": "*",
               "Sid": "Allow Autoscaling to create grant",
             },
-            Object {
+            {
               "Action": "kms:*",
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::111111111111:root",
@@ -1002,17 +1002,17 @@ Object {
               "Resource": "*",
               "Sid": "Account Access",
             },
-            Object {
+            {
               "Action": "kms:*",
-              "Condition": Object {
-                "StringEquals": Object {
+              "Condition": {
+                "StringEquals": {
                   "kms:CallerAccount": "111111111111",
-                  "kms:ViaService": Object {
-                    "Fn::Join": Array [
+                  "kms:ViaService": {
+                    "Fn::Join": [
                       "",
-                      Array [
+                      [
                         "ec2.111111111111.",
-                        Object {
+                        {
                           "Ref": "AWS::URLSuffix",
                         },
                       ],
@@ -1021,14 +1021,14 @@ Object {
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "AWS": "*",
               },
               "Resource": "*",
               "Sid": "ec2",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:Decrypt",
                 "kms:DescribeKey",
                 "kms:Encrypt",
@@ -1036,13 +1036,13 @@ Object {
                 "kms:ReEncrypt*",
               ],
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::111111111111:role/aws-service-role/cloud9.amazonaws.com/AWSServiceRoleForAWSCloud9",
@@ -1053,25 +1053,25 @@ Object {
               "Resource": "*",
               "Sid": "Allow cloud9 service-linked role use",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "kms:CreateGrant",
                 "kms:ListGrants",
                 "kms:RevokeGrant",
               ],
-              "Condition": Object {
-                "Bool": Object {
+              "Condition": {
+                "Bool": {
                   "kms:GrantIsForAWSResource": "true",
                 },
               },
               "Effect": "Allow",
-              "Principal": Object {
-                "AWS": Object {
-                  "Fn::Join": Array [
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":iam::111111111111:role/aws-service-role/cloud9.amazonaws.com/AWSServiceRoleForAWSCloud9",
@@ -1089,11 +1089,11 @@ Object {
       "Type": "AWS::KMS::Key",
       "UpdateReplacePolicy": "Retain",
     },
-    "EbsEncryptionKeyAlias4A392FEE": Object {
-      "Properties": Object {
+    "EbsEncryptionKeyAlias4A392FEE": {
+      "Properties": {
         "AliasName": "alias/accelerator/ebs/default-encryption/key",
-        "TargetKeyId": Object {
-          "Fn::GetAtt": Array [
+        "TargetKeyId": {
+          "Fn::GetAtt": [
             "EbsEncryptionKey9149E0DA",
             "Arn",
           ],
@@ -1101,24 +1101,24 @@ Object {
       },
       "Type": "AWS::KMS::Alias",
     },
-    "GuardDutyPublishingDestination52AE4412": Object {
+    "GuardDutyPublishingDestination52AE4412": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderLogGroup118A06DB",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8",
             "Arn",
           ],
         },
-        "destinationArn": Object {
-          "Fn::Join": Array [
+        "destinationArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/guardduty",
@@ -1127,7 +1127,7 @@ Object {
         },
         "exportDestinationOverride": true,
         "exportDestinationType": "S3",
-        "kmsKeyArn": Object {
+        "kmsKeyArn": {
           "Ref": "CentralLogsBucketKeyLookup52CD8A37",
         },
         "region": "us-east-1",
@@ -1135,14 +1135,14 @@ Object {
       "Type": "Custom::GuardDutyCreatePublishingDestinationCommand",
       "UpdateReplacePolicy": "Delete",
     },
-    "IamPasswordPolicy7117FCDB": Object {
+    "IamPasswordPolicy7117FCDB": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderLogGroup69C2279A",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderHandler63EDC7F4",
             "Arn",
           ],
@@ -1160,22 +1160,22 @@ Object {
       "Type": "Custom::IamUpdateAccountPasswordPolicy",
       "UpdateReplacePolicy": "Delete",
     },
-    "SecurityHubStandards294083BB": Object {
+    "SecurityHubStandards294083BB": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomSecurityHubBatchEnableStandardsCustomResourceProviderLogGroup51D3B0EA",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomSecurityHubBatchEnableStandardsCustomResourceProviderHandler4BE622C1",
             "Arn",
           ],
         },
         "region": "us-east-1",
-        "standards": Array [
-          Object {
-            "controlsToDisable": Array [
+        "standards": [
+          {
+            "controlsToDisable": [
               "IAM.1",
               "EC2.10",
               "Lambda.4",
@@ -1183,8 +1183,8 @@ Object {
             "enable": true,
             "name": "AWS Foundational Security Best Practices v1.0.0",
           },
-          Object {
-            "controlsToDisable": Array [
+          {
+            "controlsToDisable": [
               "PCI.IAM.3",
               "PCI.S3.3",
               "PCI.EC2.3",
@@ -1193,8 +1193,8 @@ Object {
             "enable": true,
             "name": "PCI DSS v3.2.1",
           },
-          Object {
-            "controlsToDisable": Array [
+          {
+            "controlsToDisable": [
               "CIS.1.20",
               "CIS.1.22",
               "CIS.2.6",
@@ -1207,19 +1207,19 @@ Object {
       "Type": "Custom::SecurityHubBatchEnableStandards",
       "UpdateReplacePolicy": "Delete",
     },
-    "SsmParamAcceleratorVersionFF83282D": Object {
-      "Properties": Object {
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityStack-111111111111-us-east-1/version",
         "Type": "String",
         "Value": "1.3.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamStackId521A78D3": Object {
-      "Properties": Object {
+    "SsmParamStackId521A78D3": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityStack-111111111111-us-east-1/stack-id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "AWS::StackId",
         },
       },
@@ -1230,22 +1230,22 @@ Object {
 `;
 
 exports[`delegatedAdminStack Construct(SecurityStack):  Snapshot Test 1`] = `
-Object {
-  "Parameters": Object {
-    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+{
+  "Parameters": {
+    "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/cloudwatch/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
-    "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter": Object {
+    "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter": {
       "Default": "/accelerator/kms/key1/key-arn",
       "Type": "AWS::SSM::Parameter::Value<String>",
     },
   },
-  "Resources": Object {
-    "AWSAcceleratormetadatacollectionLogGroup76F89C67": Object {
+  "Resources": {
+    "AWSAcceleratormetadatacollectionLogGroup76F89C67": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
         "LogGroupName": "/aws/lambda/AWSAccelerator-metadata-collection",
@@ -1254,19 +1254,19 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "AcceleratorMetadataAWSAcceleratormetadatacollectionEBD85CF6": Object {
-      "DependsOn": Array [
+    "AcceleratorMetadataAWSAcceleratormetadatacollectionEBD85CF6": {
+      "DependsOn": [
         "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6",
         "AcceleratorMetadataMetadataLambdaC27FFAF6",
         "AWSAcceleratormetadatacollectionLogGroup76F89C67",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Environment": Object {
-          "Variables": Object {
+        "Environment": {
+          "Variables": {
             "ACCELERATOR_PREFIX": "AWSAccelerator",
             "CENTRAL_LOG_BUCKET": "aws-accelerator-central-logs-333333333333-us-west-2",
             "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
@@ -1276,15 +1276,15 @@ Object {
             "LOG_ACCOUNT_ID": "333333333333",
             "METADATA_BUCKET": "aws-accelerator-metadata-333333333333-us-east-1",
             "ORGANIZATION_ID": "r-asdf",
-            "PARTITION": Object {
+            "PARTITION": {
               "Ref": "AWS::Partition",
             },
           },
         },
         "FunctionName": "AWSAccelerator-metadata-collection",
         "Handler": "index.handler",
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "AcceleratorMetadataMetadataLambdaC27FFAF6",
             "Arn",
           ],
@@ -1294,15 +1294,15 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AcceleratorMetadataAwsAcceleratorMetadataCollectionRule1FFE12D2": Object {
-      "Properties": Object {
+    "AcceleratorMetadataAwsAcceleratorMetadataCollectionRule1FFE12D2": {
+      "Properties": {
         "Name": "AWSAccelerator-metadata-collection-rule",
         "ScheduleExpression": "rate(1 day)",
         "State": "ENABLED",
-        "Targets": Array [
-          Object {
-            "Arn": Object {
-              "Fn::GetAtt": Array [
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
                 "AcceleratorMetadataAWSAcceleratormetadatacollectionEBD85CF6",
                 "Arn",
               ],
@@ -1313,18 +1313,18 @@ Object {
       },
       "Type": "AWS::Events::Rule",
     },
-    "AcceleratorMetadataAwsAcceleratorMetadataCollectionRuleAllowEventRuleAWSAcceleratorSecurityStack111111111111useast1AcceleratorMetadataAWSAcceleratormetadatacollection72A1EADD690CC386": Object {
-      "Properties": Object {
+    "AcceleratorMetadataAwsAcceleratorMetadataCollectionRuleAllowEventRuleAWSAcceleratorSecurityStack111111111111useast1AcceleratorMetadataAWSAcceleratormetadatacollection72A1EADD690CC386": {
+      "Properties": {
         "Action": "lambda:InvokeFunction",
-        "FunctionName": Object {
-          "Fn::GetAtt": Array [
+        "FunctionName": {
+          "Fn::GetAtt": [
             "AcceleratorMetadataAWSAcceleratormetadatacollectionEBD85CF6",
             "Arn",
           ],
         },
         "Principal": "events.amazonaws.com",
-        "SourceArn": Object {
-          "Fn::GetAtt": Array [
+        "SourceArn": {
+          "Fn::GetAtt": [
             "AcceleratorMetadataAwsAcceleratorMetadataCollectionRule1FFE12D2",
             "Arn",
           ],
@@ -1332,14 +1332,14 @@ Object {
       },
       "Type": "AWS::Lambda::Permission",
     },
-    "AcceleratorMetadataMetadataLambdaC27FFAF6": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "AcceleratorMetadataMetadataLambdaC27FFAF6": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
@@ -1350,22 +1350,22 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6": Object {
-      "Metadata": Object {
-        "cdk_nag": Object {
-          "rules_to_suppress": Array [
-            Object {
+    "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
               "id": "AwsSolutions-IAM5",
               "reason": "accelerator metadata collection custom resource",
             },
           ],
         },
       },
-      "Properties": Object {
-        "PolicyDocument": Object {
-          "Statement": Array [
-            Object {
-              "Action": Array [
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
                 "codepipeline:GetPipelineExecution",
                 "codepipeline:ListPipelineExecutions",
                 "codecommit:GetFolder",
@@ -1392,8 +1392,8 @@ Object {
               "Effect": "Allow",
               "Resource": "*",
             },
-            Object {
-              "Action": Array [
+            {
+              "Action": [
                 "s3:GetObject*",
                 "s3:GetBucket*",
                 "s3:List*",
@@ -1407,25 +1407,25 @@ Object {
                 "s3:Abort*",
               ],
               "Effect": "Allow",
-              "Resource": Array [
-                Object {
-                  "Fn::Join": Array [
+              "Resource": [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":s3:::aws-accelerator-metadata-333333333333-us-east-1",
                     ],
                   ],
                 },
-                Object {
-                  "Fn::Join": Array [
+                {
+                  "Fn::Join": [
                     "",
-                    Array [
+                    [
                       "arn:",
-                      Object {
+                      {
                         "Ref": "AWS::Partition",
                       },
                       ":s3:::aws-accelerator-metadata-333333333333-us-east-1/*",
@@ -1438,29 +1438,29 @@ Object {
           "Version": "2012-10-17",
         },
         "PolicyName": "AcceleratorMetadataMetadataLambdaDefaultPolicy03C222B6",
-        "Roles": Array [
-          Object {
+        "Roles": [
+          {
             "Ref": "AcceleratorMetadataMetadataLambdaC27FFAF6",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "AwsMacieUpdateExportConfigClassification832781E3": Object {
+    "AwsMacieUpdateExportConfigClassification832781E3": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomMaciePutClassificationExportConfigurationCustomResourceProviderLogGroup727354F4",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC",
             "Arn",
           ],
         },
         "bucketName": "aws-accelerator-central-logs-333333333333-us-west-2",
         "keyPrefix": "macie/111111111111/",
-        "kmsKeyArn": Object {
+        "kmsKeyArn": {
           "Ref": "CentralLogsBucketKeyLookup52CD8A37",
         },
         "region": "us-east-1",
@@ -1468,24 +1468,24 @@ Object {
       "Type": "Custom::MaciePutClassificationExportConfiguration",
       "UpdateReplacePolicy": "Delete",
     },
-    "CentralLogsBucketKeyLookup52CD8A37": Object {
+    "CentralLogsBucketKeyLookup52CD8A37": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
             "Arn",
           ],
         },
-        "assumeRoleArn": Object {
-          "Fn::Join": Array [
+        "assumeRoleArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":iam::333333333333:role/AWSAccelerator-CentralBucket-KeyArnParam-Role",
@@ -1502,19 +1502,19 @@ Object {
       "Type": "Custom::SsmGetParameterValue",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B": Object {
-      "DependsOn": Array [
+    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B": {
+      "DependsOn": [
         "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8",
             "Arn",
           ],
@@ -1524,18 +1524,18 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderLogGroupB7212213": Object {
+    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderLogGroupB7212213": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B",
               },
             ],
@@ -1546,31 +1546,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomEbsDefaultVolumeEncryptionCustomResourceProviderRole7A4FA6A8": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ec2:DisableEbsEncryptionByDefault",
                     "ec2:EnableEbsEncryptionByDefault",
                     "ec2:ModifyEbsDefaultKmsKeyId",
@@ -1580,12 +1580,12 @@ Object {
                   "Resource": "*",
                   "Sid": "EC2",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "kms:DescribeKey",
                   ],
                   "Effect": "Allow",
-                  "Resource": Object {
+                  "Resource": {
                     "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
                   },
                   "Sid": "KMS",
@@ -1599,19 +1599,19 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8": Object {
-      "DependsOn": Array [
+    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8": {
+      "DependsOn": [
         "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderRoleD01DD26B",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderRoleD01DD26B",
             "Arn",
           ],
@@ -1621,18 +1621,18 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderLogGroup118A06DB": Object {
+    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderLogGroup118A06DB": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8",
               },
             ],
@@ -1643,31 +1643,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderRoleD01DD26B": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderRoleD01DD26B": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "guardDuty:CreateDetector",
                     "guardDuty:CreatePublishingDestination",
                     "guardDuty:DeletePublishingDestination",
@@ -1681,31 +1681,31 @@ Object {
                   "Resource": "*",
                   "Sid": "GuardDutyCreatePublishingDestinationCommandTaskGuardDutyActions",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "s3:ListBucket",
                     "s3:GetObject",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/guardduty",
                         ],
                       ],
                     },
-                    Object {
-                      "Fn::Join": Array [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/guardduty/*",
@@ -1724,19 +1724,19 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderHandler63EDC7F4": Object {
-      "DependsOn": Array [
+    "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderHandler63EDC7F4": {
+      "DependsOn": [
         "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderRoleC4ECAFE0",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderRoleC4ECAFE0",
             "Arn",
           ],
@@ -1746,18 +1746,18 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderLogGroup69C2279A": Object {
+    "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderLogGroup69C2279A": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderHandler63EDC7F4",
               },
             ],
@@ -1768,31 +1768,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderRoleC4ECAFE0": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderRoleC4ECAFE0": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "iam:UpdateAccountPasswordPolicy",
                   ],
                   "Effect": "Allow",
@@ -1807,19 +1807,19 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC": Object {
-      "DependsOn": Array [
+    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC": {
+      "DependsOn": [
         "CustomMaciePutClassificationExportConfigurationCustomResourceProviderRoleEB42D531",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomMaciePutClassificationExportConfigurationCustomResourceProviderRoleEB42D531",
             "Arn",
           ],
@@ -1829,18 +1829,18 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderLogGroup727354F4": Object {
+    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderLogGroup727354F4": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomMaciePutClassificationExportConfigurationCustomResourceProviderHandlerC53E2FCC",
               },
             ],
@@ -1851,31 +1851,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderRoleEB42D531": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomMaciePutClassificationExportConfigurationCustomResourceProviderRoleEB42D531": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "macie2:EnableMacie",
                     "macie2:GetClassificationExportConfiguration",
                     "macie2:GetMacieSession",
@@ -1894,19 +1894,19 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderHandler4BE622C1": Object {
-      "DependsOn": Array [
+    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderHandler4BE622C1": {
+      "DependsOn": [
         "CustomSecurityHubBatchEnableStandardsCustomResourceProviderRole1ABC8ED2",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomSecurityHubBatchEnableStandardsCustomResourceProviderRole1ABC8ED2",
             "Arn",
           ],
@@ -1916,18 +1916,18 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderLogGroup51D3B0EA": Object {
+    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderLogGroup51D3B0EA": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "KmsKeyId": Object {
+      "Properties": {
+        "KmsKeyId": {
           "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomSecurityHubBatchEnableStandardsCustomResourceProviderHandler4BE622C1",
               },
             ],
@@ -1938,31 +1938,31 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderRole1ABC8ED2": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomSecurityHubBatchEnableStandardsCustomResourceProviderRole1ABC8ED2": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "securityhub:BatchDisableStandards",
                     "securityhub:BatchEnableStandards",
                     "securityhub:DescribeStandards",
@@ -1975,12 +1975,12 @@ Object {
                   "Resource": "*",
                   "Sid": "SecurityHubCreateMembersTaskSecurityHubActions",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "iam:CreateServiceLinkedRole",
                   ],
-                  "Condition": Object {
-                    "StringLike": Object {
+                  "Condition": {
+                    "StringLike": {
                       "iam:AWSServiceName": "securityhub.amazonaws.com",
                     },
                   },
@@ -1997,19 +1997,19 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE": Object {
-      "DependsOn": Array [
+    "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE": {
+      "DependsOn": [
         "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
       ],
-      "Properties": Object {
-        "Code": Object {
+      "Properties": {
+        "Code": {
           "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
         "Handler": "__entrypoint__.handler",
         "MemorySize": 128,
-        "Role": Object {
-          "Fn::GetAtt": Array [
+        "Role": {
+          "Fn::GetAtt": [
             "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2",
             "Arn",
           ],
@@ -2019,15 +2019,15 @@ Object {
       },
       "Type": "AWS::Lambda::Function",
     },
-    "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": Object {
+    "CustomSsmGetParameterValueCustomResourceProviderLogGroup780D220D": {
       "DeletionPolicy": "Delete",
-      "Properties": Object {
-        "LogGroupName": Object {
-          "Fn::Join": Array [
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "/aws/lambda/",
-              Object {
+              {
                 "Ref": "CustomSsmGetParameterValueCustomResourceProviderHandlerAAD0E7EE",
               },
             ],
@@ -2038,53 +2038,53 @@ Object {
       "Type": "AWS::Logs::LogGroup",
       "UpdateReplacePolicy": "Delete",
     },
-    "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "CustomSsmGetParameterValueCustomResourceProviderRoleB3AFDDB2": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "lambda.amazonaws.com",
               },
             },
           ],
           "Version": "2012-10-17",
         },
-        "ManagedPolicyArns": Array [
-          Object {
+        "ManagedPolicyArns": [
+          {
             "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
           },
         ],
-        "Policies": Array [
-          Object {
-            "PolicyDocument": Object {
-              "Statement": Array [
-                Object {
-                  "Action": Array [
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
                     "ssm:GetParameters",
                     "ssm:GetParameter",
                     "ssm:DescribeParameters",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
+                  "Resource": [
                     "*",
                   ],
                   "Sid": "SsmGetParameterActions",
                 },
-                Object {
-                  "Action": Array [
+                {
+                  "Action": [
                     "sts:AssumeRole",
                   ],
                   "Effect": "Allow",
-                  "Resource": Array [
-                    Object {
-                      "Fn::Join": Array [
+                  "Resource": [
+                    {
+                      "Fn::Join": [
                         "",
-                        Array [
+                        [
                           "arn:",
-                          Object {
+                          {
                             "Ref": "AWS::Partition",
                           },
                           ":iam::*:role/AWSAccelerator*",
@@ -2103,31 +2103,31 @@ Object {
       },
       "Type": "AWS::IAM::Role",
     },
-    "EbsDefaultVolumeEncryption55012F7A": Object {
+    "EbsDefaultVolumeEncryption55012F7A": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomEbsDefaultVolumeEncryptionCustomResourceProviderLogGroupB7212213",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomEbsDefaultVolumeEncryptionCustomResourceProviderHandler6551B35B",
             "Arn",
           ],
         },
-        "kmsKeyId": Object {
-          "Fn::Select": Array [
+        "kmsKeyId": {
+          "Fn::Select": [
             1,
-            Object {
-              "Fn::Split": Array [
+            {
+              "Fn::Split": [
                 "/",
-                Object {
-                  "Fn::Select": Array [
+                {
+                  "Fn::Select": [
                     5,
-                    Object {
-                      "Fn::Split": Array [
+                    {
+                      "Fn::Split": [
                         ":",
-                        Object {
+                        {
                           "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
                         },
                       ],
@@ -2142,34 +2142,34 @@ Object {
       "Type": "Custom::EbsDefaultVolumeEncryption",
       "UpdateReplacePolicy": "Delete",
     },
-    "EbsDefaultVolumeEncryptionParameter61CF6625": Object {
-      "Properties": Object {
+    "EbsDefaultVolumeEncryptionParameter61CF6625": {
+      "Properties": {
         "Name": "/accelerator/security-stack/ebsDefaultVolumeEncryptionKeyArn",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "SsmParameterValueacceleratorkmskey1keyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
         },
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "GuardDutyPublishingDestination52AE4412": Object {
+    "GuardDutyPublishingDestination52AE4412": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderLogGroup118A06DB",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomGuardDutyCreatePublishingDestinationCommandCustomResourceProviderHandlerB3AE4CE8",
             "Arn",
           ],
         },
-        "destinationArn": Object {
-          "Fn::Join": Array [
+        "destinationArn": {
+          "Fn::Join": [
             "",
-            Array [
+            [
               "arn:",
-              Object {
+              {
                 "Ref": "AWS::Partition",
               },
               ":s3:::aws-accelerator-central-logs-333333333333-us-west-2/guardduty",
@@ -2178,7 +2178,7 @@ Object {
         },
         "exportDestinationOverride": true,
         "exportDestinationType": "S3",
-        "kmsKeyArn": Object {
+        "kmsKeyArn": {
           "Ref": "CentralLogsBucketKeyLookup52CD8A37",
         },
         "region": "us-east-1",
@@ -2186,14 +2186,14 @@ Object {
       "Type": "Custom::GuardDutyCreatePublishingDestinationCommand",
       "UpdateReplacePolicy": "Delete",
     },
-    "IamPasswordPolicy7117FCDB": Object {
+    "IamPasswordPolicy7117FCDB": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderLogGroup69C2279A",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomIamUpdateAccountPasswordPolicyCustomResourceProviderHandler63EDC7F4",
             "Arn",
           ],
@@ -2211,22 +2211,22 @@ Object {
       "Type": "Custom::IamUpdateAccountPasswordPolicy",
       "UpdateReplacePolicy": "Delete",
     },
-    "SecurityHubStandards294083BB": Object {
+    "SecurityHubStandards294083BB": {
       "DeletionPolicy": "Delete",
-      "DependsOn": Array [
+      "DependsOn": [
         "CustomSecurityHubBatchEnableStandardsCustomResourceProviderLogGroup51D3B0EA",
       ],
-      "Properties": Object {
-        "ServiceToken": Object {
-          "Fn::GetAtt": Array [
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
             "CustomSecurityHubBatchEnableStandardsCustomResourceProviderHandler4BE622C1",
             "Arn",
           ],
         },
         "region": "us-east-1",
-        "standards": Array [
-          Object {
-            "controlsToDisable": Array [
+        "standards": [
+          {
+            "controlsToDisable": [
               "IAM.1",
               "EC2.10",
               "Lambda.4",
@@ -2234,8 +2234,8 @@ Object {
             "enable": true,
             "name": "AWS Foundational Security Best Practices v1.0.0",
           },
-          Object {
-            "controlsToDisable": Array [
+          {
+            "controlsToDisable": [
               "PCI.IAM.3",
               "PCI.S3.3",
               "PCI.EC2.3",
@@ -2244,8 +2244,8 @@ Object {
             "enable": true,
             "name": "PCI DSS v3.2.1",
           },
-          Object {
-            "controlsToDisable": Array [
+          {
+            "controlsToDisable": [
               "CIS.1.20",
               "CIS.1.22",
               "CIS.2.6",
@@ -2258,19 +2258,19 @@ Object {
       "Type": "Custom::SecurityHubBatchEnableStandards",
       "UpdateReplacePolicy": "Delete",
     },
-    "SsmParamAcceleratorVersionFF83282D": Object {
-      "Properties": Object {
+    "SsmParamAcceleratorVersionFF83282D": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityStack-111111111111-us-east-1/version",
         "Type": "String",
         "Value": "1.3.0",
       },
       "Type": "AWS::SSM::Parameter",
     },
-    "SsmParamStackId521A78D3": Object {
-      "Properties": Object {
+    "SsmParamStackId521A78D3": {
+      "Properties": {
         "Name": "/accelerator/AWSAccelerator-SecurityStack-111111111111-us-east-1/stack-id",
         "Type": "String",
-        "Value": Object {
+        "Value": {
           "Ref": "AWS::StackId",
         },
       },

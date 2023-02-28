@@ -149,7 +149,7 @@ export interface EnumTypeProps {
 }
 
 export class EnumType<T extends string | number> extends t.Type<T> {
-  readonly _tag: 'EnumType' = 'EnumType';
+  readonly _tag = 'EnumType' as const;
 
   constructor(readonly values: ReadonlyArray<T>, props: EnumTypeProps) {
     super(

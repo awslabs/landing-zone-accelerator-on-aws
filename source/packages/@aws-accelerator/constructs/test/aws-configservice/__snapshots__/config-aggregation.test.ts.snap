@@ -1,15 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ConfigAggregation Construct(ConfigAggregation):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestConfigAggregationConfigAggregatorE086B6C8": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TestConfigAggregationConfigAggregatorE086B6C8": {
+      "Properties": {
         "ConfigurationAggregatorName": "AWSAccelerator-Aggregator",
-        "OrganizationAggregationSource": Object {
+        "OrganizationAggregationSource": {
           "AllAwsRegions": true,
-          "RoleArn": Object {
-            "Fn::GetAtt": Array [
+          "RoleArn": {
+            "Fn::GetAtt": [
               "TestConfigAggregationConfigAggregatorRole43BBA16A",
               "Arn",
             ],
@@ -18,14 +18,14 @@ Object {
       },
       "Type": "AWS::Config::ConfigurationAggregator",
     },
-    "TestConfigAggregationConfigAggregatorRole43BBA16A": Object {
-      "Properties": Object {
-        "AssumeRolePolicyDocument": Object {
-          "Statement": Array [
-            Object {
+    "TestConfigAggregationConfigAggregatorRole43BBA16A": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
               "Action": "sts:AssumeRole",
               "Effect": "Allow",
-              "Principal": Object {
+              "Principal": {
                 "Service": "config.amazonaws.com",
               },
             },
@@ -33,13 +33,13 @@ Object {
           "Version": "2012-10-17",
         },
         "Description": "Role used by the AWS Config Service aggregation to use organization resources",
-        "ManagedPolicyArns": Array [
-          Object {
-            "Fn::Join": Array [
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
               "",
-              Array [
+              [
                 "arn:",
-                Object {
+                {
                   "Ref": "AWS::Partition",
                 },
                 ":iam::aws:policy/service-role/AWSConfigRoleForOrganizations",

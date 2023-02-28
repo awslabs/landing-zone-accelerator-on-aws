@@ -1,15 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`LaunchTemplate Construct(LaunchTemplate):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TestLaunchTemplateAC264C67": Object {
-      "Properties": Object {
-        "LaunchTemplateData": Object {
-          "BlockDeviceMappings": Array [
-            Object {
+{
+  "Resources": {
+    "TestLaunchTemplateAC264C67": {
+      "Properties": {
+        "LaunchTemplateData": {
+          "BlockDeviceMappings": [
+            {
               "DeviceName": "test",
-              "Ebs": Object {
+              "Ebs": {
                 "DeleteOnTermination": true,
                 "Encrypted": true,
                 "Iops": 300,
@@ -18,16 +18,16 @@ Object {
               },
             },
           ],
-          "IamInstanceProfile": Object {},
+          "IamInstanceProfile": {},
           "ImageId": "ami-1234",
           "InstanceType": "t3.micro",
-          "MetadataOptions": Object {
+          "MetadataOptions": {
             "HttpTokens": "required",
           },
-          "SecurityGroupIds": Array [
+          "SecurityGroupIds": [
             "sg-1234",
           ],
-          "UserData": Object {
+          "UserData": {
             "Fn::Base64": "#!/bin/bash
 yum update -y
 yum install -y httpd 
@@ -36,8 +36,8 @@ systemctl enable httpd
 usermod -a -G apache ec2-user
 chown -R ec2-user:apache /var/www
 chmod 2775 /var/www
-find /var/www -type d -exec chmod 2775 {} \\\\;
-find /var/www -type f -exec chmod 0664 {} \\\\;",
+find /var/www -type d -exec chmod 2775 {} \\;
+find /var/www -type f -exec chmod 0664 {} \\;",
           },
         },
         "LaunchTemplateName": "Test",

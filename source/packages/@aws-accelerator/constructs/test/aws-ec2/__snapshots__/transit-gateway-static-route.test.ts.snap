@@ -1,10 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`TransitGatewayStaticRoute Construct(TransitGatewayStaticRoute):  Snapshot Test 1`] = `
-Object {
-  "Resources": Object {
-    "TransitGatewayStaticRoute761B0FE9": Object {
-      "Properties": Object {
+{
+  "Resources": {
+    "TransitGatewayStaticRoute761B0FE9": {
+      "Properties": {
         "Blackhole": false,
         "DestinationCidrBlock": "10.0.0.0/16",
         "TransitGatewayAttachmentId": "tgw-123123",
