@@ -480,15 +480,6 @@ async function main() {
       }
     }
     const auditAccountId = props.accountsConfig.getAuditAccountId();
-    // let auditAccountId: string | undefined;
-    // try {
-    //   auditAccountId = props.accountsConfig.getAuditAccountId();
-    // } catch (error) {
-    //   const auditAccountConfig = props.accountsConfig.getAuditAccount();
-    //   logger.error('Audit Account not found. Is the account configuration correct?');
-    //   logger.warn(JSON.stringify(auditAccountConfig, null, 4));
-    //   throw new Error('Audit Account not found');
-    // }
 
     // If audit account doesn't exist cannot run the
     // other stacks
