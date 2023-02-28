@@ -59,7 +59,7 @@ import {
   GetCallerIdentityCommand,
   STSClient,
 } from '@aws-sdk/client-sts';
-
+import { ECRClient, DescribeRepositoriesCommand, DeleteRepositoryCommand as DeleteEcr } from '@aws-sdk/client-ecr';
 import { Logger } from '../../../accelerator/lib/logger';
 
 /**
@@ -1885,7 +1885,87 @@ export class AcceleratorTool {
   private async finalCleanup(acceleratorQualifier: string): Promise<void> {
     //cleanup CWL logs
     await this.deleteAllRemainingCloudWatchLogGroups(acceleratorQualifier);
+
+    await this.deleteAllEcrs();
     return;
+  }
+
+  private async deleteAllEcrs(): Promise<void> {
+    const assumeRoleName = this.globalConfig?.managementAccountAccessRole || 'AWSControlTowerExecution';
+    let ecrClient: ECRClient;
+
+    // Make list of regions for cleanup of stacks, this is required because some stack goes to global region
+    const cleanupRegions: string[] = [];
+    for (const region of this.globalConfig?.enabledRegions || []) {
+      cleanupRegions.push(region);
+    }
+
+    if (cleanupRegions.indexOf(this.globalRegion) === -1) {
+      cleanupRegions.push(this.globalRegion);
+    }
+
+    //Use a loop for all regions
+    for (const region of cleanupRegions) {
+      for (const account of this.organizationAccounts) {
+        if (account.accountId !== this.pipelineManagementAccount?.accountId) {
+          const roleArn = `arn:${this.acceleratorToolProps.partition}:iam::${account.accountId}:role/${assumeRoleName}`;
+          const stsClient = new STSClient({ region: region });
+          const assumeRoleCredential = await this.assumeRole(stsClient, roleArn);
+
+          ecrClient = new ECRClient({
+            region: region,
+            credentials: {
+              accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
+              secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
+              sessionToken: assumeRoleCredential.Credentials!.SessionToken,
+              expiration: assumeRoleCredential.Credentials!.Expiration,
+            },
+          });
+        } else {
+          ecrClient = new ECRClient({ region: region });
+        }
+
+        this.debugLog(
+          `[accelerator-tool] Final Ecrs cleanup started in region ${region} of account ${account.accountName}`,
+          'display',
+        );
+        let nextToken: string | undefined = undefined;
+        const repositories: string[] = [];
+        do {
+          const page = await throttlingBackOff(() =>
+            ecrClient.send(
+              new DescribeRepositoriesCommand({
+                repositoryNames: [`cdk-accel-container-assets-${account.accountId}-${region}`],
+                nextToken: nextToken,
+              }),
+            ),
+          );
+          for (const repository of page.repositories ?? []) {
+            repositories.push(repository.repositoryName!);
+          }
+          nextToken = page.nextToken;
+        } while (nextToken);
+
+        for (const repository of repositories) {
+          this.debugLog(
+            `[accelerator-tool] Deleting Ecr ${repository} in region ${region} of account ${account.accountName}`,
+            'info',
+          );
+          try {
+            await throttlingBackOff(() => ecrClient.send(new DeleteEcr({ repositoryName: repository })));
+            this.debugLog(
+              `[accelerator-tool] Ecr ${repository} in region ${region} of account ${account.accountName} deleted successfully`,
+              'info',
+            );
+          } catch (ResourceNotFoundException) {
+            this.debugLog(
+              `[accelerator-tool] Ecr delete Error, repository NOT FOUND ${repository} in region ${region} of account ${account.accountName}`,
+              'info',
+            );
+          }
+        }
+      }
+    }
   }
 
   private async deleteAllRemainingCloudWatchLogGroups(acceleratorQualifier: string): Promise<void> {
