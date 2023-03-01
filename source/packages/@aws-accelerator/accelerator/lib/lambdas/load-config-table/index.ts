@@ -343,7 +343,7 @@ async function putAllOrganizationConfigInTable(
       if (error instanceof Error) message = error.message;
       else message = String(error);
 
-      if (message.startsWith('Organizations not enabled or')) awsKey = '';
+      if (message.startsWith('configuration validation failed')) awsKey = '';
       else throw error;
     }
     await putOrganizationConfigInTable(organizationalUnit, configTableName, awsKey, commitId);
