@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2023-03-02
+
+### Changed
+
+- enhancement(securityhub): enable nist 800-53 rev5 standard
+- fix(network): allow -1:-1 port range in NACL config
+- fix(validation): fix OU validation
+- fix: conflicting logical id for org lookup in createIpamSsmRole
+
+### Configuration Changes
+
+- chore: update best practices config to use nist 800-53 security hub standard
+
 ## [1.3.1] - 2023-02-28
 
 ### Added
