@@ -601,8 +601,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     }
   }
 
-  private createIpamSsmRole(ipamItem: IpamConfig, delegatedAdminAccountId: string): void {
-    const organizationId = new Organization(this, 'IpamOrgID').id;
+  private createIpamSsmRole(ipamItem: IpamConfig, delegatedAdminAccountId: string, organizationId: string): void {
     if (ipamItem.region !== cdk.Stack.of(this).region && cdk.Stack.of(this).account === delegatedAdminAccountId) {
       this.logger.info(`IPAM Pool: Create IAM role for SSM Parameter pulls`);
       const role = new cdk.aws_iam.Role(this, `Get${pascalCase(ipamItem.name)}SsmParamRole`, {
@@ -636,13 +635,14 @@ export class NetworkPrepStack extends AcceleratorStack {
     if (props.networkConfig.centralNetworkServices) {
       const centralConfig = props.networkConfig.centralNetworkServices;
       const delegatedAdminAccountId = this.accountsConfig.getAccountId(centralConfig.delegatedAdminAccount);
+      const organizationId = new Organization(this, 'IpamOrgID').id;
 
       //
       // Generate IPAMs
       //
       for (const ipamItem of centralConfig.ipams ?? []) {
         this.createIpam(delegatedAdminAccountId, ipamItem);
-        this.createIpamSsmRole(ipamItem, delegatedAdminAccountId);
+        this.createIpamSsmRole(ipamItem, delegatedAdminAccountId, organizationId);
       }
 
       //
