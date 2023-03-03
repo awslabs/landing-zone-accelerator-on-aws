@@ -760,7 +760,7 @@ export class PrepareStack extends AcceleratorStack {
               if (error instanceof Error) message = error.message;
               else message = String(error);
 
-              if (message.startsWith('Organizations not enabled or')) continue;
+              if (message.startsWith('configuration validation failed')) continue;
               else throw error;
             }
             validateScpCountForOrg.push({

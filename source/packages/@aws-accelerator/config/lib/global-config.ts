@@ -1144,7 +1144,7 @@ export class SnsTopicConfig implements t.TypeOf<typeof GlobalConfigTypes.snsTopi
 }
 
 /**
- * *{@link globalConfig} / {@link SnsConfig}*
+ * *{@link GlobalConfig} / {@link SnsConfig}*
  */
 export class SnsConfig implements t.TypeOf<typeof GlobalConfigTypes.snsConfig> {
   /**
@@ -1161,7 +1161,7 @@ export class SnsConfig implements t.TypeOf<typeof GlobalConfigTypes.snsConfig> {
 }
 
 /**
- * *{@link globalConfig} / {@link AcceleratorMetadataConfig}*
+ * *{@link GlobalConfig} / {@link AcceleratorMetadataConfig}*
  *
  * @example
  * ```
@@ -1188,7 +1188,7 @@ export class AcceleratorMetadataConfig implements t.TypeOf<typeof GlobalConfigTy
 }
 
 /**
- * *{@link globalConfig} / {@link SsmInventoryConfig}*
+ * *{@link GlobalConfig} / {@link SsmInventoryConfig}*
  *
  * @example
  * ```
