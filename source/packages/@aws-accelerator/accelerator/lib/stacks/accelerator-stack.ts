@@ -114,6 +114,11 @@ export abstract class AcceleratorStack extends cdk.Stack {
   public static readonly ACCELERATOR_S3_ACCESS_LOGS_BUCKET_NAME_PREFIX = 'aws-accelerator-s3-access-logs';
 
   /**
+   * Accelerator Role Name for IPAM SSM Parameter Access
+   */
+  public static readonly ACCELERATOR_IPAM_SSM_PARAM_ROLE_NAME = 'AWSAccelerator-Ipam-GetSsmParamRole';
+
+  /**
    * Accelerator Audit Manager bucket name prefix
    */
   public static readonly ACCELERATOR_AUDIT_MANAGER_BUCKET_NAME_PREFIX = 'aws-accelerator-auditmgr';

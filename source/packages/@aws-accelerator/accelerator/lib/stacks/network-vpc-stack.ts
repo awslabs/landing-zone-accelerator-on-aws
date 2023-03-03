@@ -1880,7 +1880,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         name: `/accelerator/network/ipam/pools/${poolName}/id`,
         accountId: delegatedAdminAccountId,
         parameterRegion: ipamPoolRegion,
-        roleName: `AWSAccelerator-GetAcceleratorIpamSsmParamRole-${cdk.Stack.of(this).region}`,
+        roleName: AcceleratorStack.ACCELERATOR_IPAM_SSM_PARAM_ROLE_NAME,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays ?? 365,
       }).value;

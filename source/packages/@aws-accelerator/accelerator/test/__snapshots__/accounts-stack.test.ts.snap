@@ -983,7 +983,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-AccountsStack-111111111111-us-east-1/version",
         "Type": "String",
-        "Value": "1.3.1",
+        "Value": "1.3.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -1195,7 +1195,7 @@ exports[`AccountsStack us-west-2 Construct(AccountsStackUsWest2):  Snapshot Test
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-AccountsStack-111111111111-us-west-2/version",
         "Type": "String",
-        "Value": "1.3.1",
+        "Value": "1.3.2",
       },
       "Type": "AWS::SSM::Parameter",
     },
