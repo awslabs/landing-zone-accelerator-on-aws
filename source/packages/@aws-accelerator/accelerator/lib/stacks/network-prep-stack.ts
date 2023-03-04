@@ -601,11 +601,14 @@ export class NetworkPrepStack extends AcceleratorStack {
     }
   }
 
-  private createIpamSsmRole(ipamItem: IpamConfig, delegatedAdminAccountId: string, organizationId: string): void {
-    if (ipamItem.region !== cdk.Stack.of(this).region && cdk.Stack.of(this).account === delegatedAdminAccountId) {
+  private createIpamSsmRole(delegatedAdminAccountId: string, organizationId: string): void {
+    if (
+      this.props.globalConfig.homeRegion === cdk.Stack.of(this).region &&
+      cdk.Stack.of(this).account === delegatedAdminAccountId
+    ) {
       this.logger.info(`IPAM Pool: Create IAM role for SSM Parameter pulls`);
-      const role = new cdk.aws_iam.Role(this, `Get${pascalCase(ipamItem.name)}SsmParamRole`, {
-        roleName: `AWSAccelerator-GetAcceleratorIpamSsmParamRole-${cdk.Stack.of(this).region}`,
+      const role = new cdk.aws_iam.Role(this, `GetIpamSsmParamRole`, {
+        roleName: AcceleratorStack.ACCELERATOR_IPAM_SSM_PARAM_ROLE_NAME,
         assumedBy: this.getOrgPrincipals(organizationId),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
@@ -614,7 +617,7 @@ export class NetworkPrepStack extends AcceleratorStack {
                 effect: cdk.aws_iam.Effect.ALLOW,
                 actions: ['ssm:GetParameter', 'ssm:GetParameters'],
                 resources: [
-                  `arn:${cdk.Aws.PARTITION}:ssm:${ipamItem.region}:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/network/ipam/pools/*/id`,
+                  `arn:${cdk.Aws.PARTITION}:ssm:*:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/network/ipam/pools/*/id`,
                 ],
               }),
             ],
@@ -640,9 +643,13 @@ export class NetworkPrepStack extends AcceleratorStack {
       //
       // Generate IPAMs
       //
-      for (const ipamItem of centralConfig.ipams ?? []) {
-        this.createIpam(delegatedAdminAccountId, ipamItem);
-        this.createIpamSsmRole(ipamItem, delegatedAdminAccountId, organizationId);
+      if (centralConfig.ipams) {
+        for (const ipamItem of centralConfig.ipams) {
+          this.createIpam(delegatedAdminAccountId, ipamItem);
+        }
+        if (centralConfig.ipams?.length > 0) {
+          this.createIpamSsmRole(delegatedAdminAccountId, organizationId);
+        }
       }
 
       //
