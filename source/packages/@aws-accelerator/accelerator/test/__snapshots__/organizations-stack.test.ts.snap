@@ -4667,26 +4667,6 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       "Type": "Custom::EnableAwsServiceAccess",
       "UpdateReplacePolicy": "Delete",
     },
-    "EnableOrganizationsCloudTrailAC3548D9": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderLogGroupEB99134A",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomOrganizationsEnableAwsServiceAccessCustomResourceProviderHandlerDCD56D71",
-            "Arn",
-          ],
-        },
-        "partition": {
-          "Ref": "AWS::Partition",
-        },
-        "servicePrincipal": "cloudtrail.amazonaws.com",
-      },
-      "Type": "Custom::EnableAwsServiceAccess",
-      "UpdateReplacePolicy": "Delete",
-    },
     "EnableOrganizationsServiceCatalog4D66D976": {
       "DeletionPolicy": "Delete",
       "DependsOn": [

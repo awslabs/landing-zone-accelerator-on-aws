@@ -5,6 +5,25 @@
       "Effect": "Allow",
       "Action": "*",
       "Resource": "*"
+    },
+    {
+      "Effect": "Deny",
+      "NotAction": [
+        "iam:ChangePassword",
+        "iam:Getuser",
+        "iam:ListMFADevices",
+        "iam:CreateVirtualMFADevice",
+        "iam:EnableMFADevice",
+        "iam:ResyncMFADevice",
+        "iam:DeactivateMFADevice",
+        "iam:ListUsers"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "aws:MultiFactorAuthPresent": "false"
+        }
+      }
     }
   ]
 }
