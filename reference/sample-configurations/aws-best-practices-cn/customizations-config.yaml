@@ -1,0 +1,14 @@
+customizations:
+  cloudFormationStackSets: []
+  cloudFormationStacks:
+    - name: IAM-Access-Analyzer
+      description: Enables IAM Access Analyzer
+      regions:
+        - cn-north-1
+        - cn-northwest-1
+      deploymentTargets:
+        organizationalUnits:
+          - Root
+      runOrder: 1
+      template: ./cfn-templates/iam-analyzer.yaml
+      terminationProtection: true

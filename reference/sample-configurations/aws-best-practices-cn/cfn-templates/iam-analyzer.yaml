@@ -1,0 +1,9 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: Enable IAM Access Analyzer
+Resources:
+  Analyzer:
+    Type: 'AWS::AccessAnalyzer::Analyzer'
+    Properties:
+      AnalyzerName: IAM-Access-Analyzer
+      Type: ACCOUNT

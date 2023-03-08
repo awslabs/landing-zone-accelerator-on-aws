@@ -7,13 +7,6 @@ centralSecurityServices:
   s3PublicAccessBlock:
     enable: true
     excludeAccounts: []
-  snsSubscriptions:
-    - level: High
-      email: no-reply@example.com
-    - level: Medium
-      email: no-reply@example.com
-    - level: Low
-      email: no-reply@example.com
   # Must be false since Macie is not available in China region
   macie:
     enable: false
@@ -59,12 +52,11 @@ centralSecurityServices:
           - PCI.S3.3
           - PCI.EC2.3
           - PCI.Lambda.2
-      - name: CIS AWS Foundations Benchmark v1.2.0
+      - name: CIS AWS Foundations Benchmark v1.4.0
         enable: true
         controlsToDisable:
-          - CIS.1.20
-          - CIS.1.22
-          - CIS.2.6
+          - CIS.1.17
+          - CIS.1.16
   ssmAutomation:
     documentSets:
       - shareTargets:
@@ -345,91 +337,77 @@ cloudWatch:
         organizationalUnits:
           - Root
       metrics:
-        # CIS 3.1 – Ensure a log metric filter and alarm exist for unauthorized API calls
-        - filterName: UnauthorizedAPICallsMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-AccountTrail
-          filterPattern: '{($.errorCode="*UnauthorizedOperation") || ($.errorCode="AccessDenied*")}'
-          metricNamespace: LogMetrics
-          metricName: UnauthorizedAPICalls
-          metricValue: "1"
-        # CIS 3.2 – Ensure a log metric filter and alarm exist for AWS Management Console sign-in without MFA
-        - filterName: ConsoleSigninWithoutMFAMetricFilter
-          logGroupName: aws-accelerator-cloudtrail-AccountTrail
-          filterPattern: '{($.eventName="ConsoleLogin") && ($.additionalEventData.MFAUsed !="Yes")}'
-          metricNamespace: LogMetrics
-          metricName: ConsoleSigninWithoutMFA
-          metricValue: "1"
-        # CIS 3.4 – Ensure a log metric filter and alarm exist for IAM policy changes
+        # CIS 4.4 – Ensure a log metric filter and alarm exist for IAM policy changes
         - filterName: IAMPolicyChangesMetricFilter
           logGroupName: aws-accelerator-cloudtrail-AccountTrail
           filterPattern: "{($.eventName=DeleteGroupPolicy) || ($.eventName=DeleteRolePolicy) || ($.eventName=DeleteUserPolicy) || ($.eventName=PutGroupPolicy) || ($.eventName=PutRolePolicy) || ($.eventName=PutUserPolicy) || ($.eventName=CreatePolicy) || ($.eventName=DeletePolicy) || ($.eventName=CreatePolicyVersion) || ($.eventName=DeletePolicyVersion) || ($.eventName=AttachRolePolicy) || ($.eventName=DetachRolePolicy) || ($.eventName=AttachUserPolicy) || ($.eventName=DetachUserPolicy) || ($.eventName=AttachGroupPolicy) || ($.eventName=DetachGroupPolicy)}"
           metricNamespace: LogMetrics
           metricName: IAMPolicyChanges
           metricValue: "1"
-        # CIS 3.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
+        # CIS 4.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
         - filterName: CloudTrailChangesMetricFilter
           logGroupName: aws-accelerator-cloudtrail-AccountTrail
           filterPattern: "{($.eventName=CreateTrail) || ($.eventName=UpdateTrail) || ($.eventName=DeleteTrail) || ($.eventName=StartLogging) || ($.eventName=StopLogging)}"
           metricNamespace: LogMetrics
           metricName: CloudTrailChanges
           metricValue: "1"
-        # CIS 3.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
+        # CIS 4.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
         - filterName: ConsoleAuthenticationFailureMetricFilter
           logGroupName: aws-accelerator-cloudtrail-AccountTrail
           filterPattern: '{($.eventName=ConsoleLogin) && ($.errorMessage="Failed authentication")}'
           metricNamespace: LogMetrics
           metricName: ConsoleAuthenticationFailure
           metricValue: "1"
-        # CIS 3.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
+        # CIS 4.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
         - filterName: DisableOrDeleteCMKMetricFilter
           logGroupName: aws-accelerator-cloudtrail-AccountTrail
           filterPattern: "{($.eventSource=kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}"
           metricNamespace: LogMetrics
           metricName: DisableOrDeleteCMK
           metricValue: "1"
-        # CIS 3.8 – Ensure a log metric filter and alarm exist for S3 bucket policy changes
+        # CIS 4.8 – Ensure a log metric filter and alarm exist for S3 bucket policy changes
         - filterName: S3BucketPolicyChangesMetricFilter
           logGroupName: aws-accelerator-cloudtrail-AccountTrail
           filterPattern: "{($.eventSource=s3.amazonaws.com) && (($.eventName=PutBucketAcl) || ($.eventName=PutBucketPolicy) || ($.eventName=PutBucketCors) || ($.eventName=PutBucketLifecycle) || ($.eventName=PutBucketReplication) || ($.eventName=DeleteBucketPolicy) || ($.eventName=DeleteBucketCors) || ($.eventName=DeleteBucketLifecycle) || ($.eventName=DeleteBucketReplication))}"
           metricNamespace: LogMetrics
           metricName: S3BucketPolicyChanges
           metricValue: "1"
-        # CIS 3.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
+        # CIS 4.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
         - filterName: AWSConfigChangesMetricFilter
           logGroupName: aws-accelerator-cloudtrail-AccountTrail
           filterPattern: "{($.eventSource=config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}"
           metricNamespace: LogMetrics
           metricName: AWSConfigChanges
           metricValue: "1"
-        # CIS 3.10 – Ensure a log metric filter and alarm exist for security group changes
+        # CIS 4.10 – Ensure a log metric filter and alarm exist for security group changes
         - filterName: SecurityGroupChangesMetricFilter
           logGroupName: aws-accelerator-cloudtrail-AccountTrail
           filterPattern: "{($.eventName=AuthorizeSecurityGroupIngress) || ($.eventName=AuthorizeSecurityGroupEgress) || ($.eventName=RevokeSecurityGroupIngress) || ($.eventName=RevokeSecurityGroupEgress) || ($.eventName=CreateSecurityGroup) || ($.eventName=DeleteSecurityGroup)}"
           metricNamespace: LogMetrics
           metricName: SecurityGroupChanges
           metricValue: "1"
-        # CIS 3.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
+        # CIS 4.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
         - filterName: NetworkACLChangesMetricFilter
           logGroupName: aws-accelerator-cloudtrail-AccountTrail
           filterPattern: "{($.eventName=CreateNetworkAcl) || ($.eventName=CreateNetworkAclEntry) || ($.eventName=DeleteNetworkAcl) || ($.eventName=DeleteNetworkAclEntry) || ($.eventName=ReplaceNetworkAclEntry) || ($.eventName=ReplaceNetworkAclAssociation)}"
           metricNamespace: LogMetrics
           metricName: NetworkACLChanges
           metricValue: "1"
-        # CIS 3.12 – Ensure a log metric filter and alarm exist for changes to network gateways
+        # CIS 4.12 – Ensure a log metric filter and alarm exist for changes to network gateways
         - filterName: NetworkGatewayChangesMetricFilter
           logGroupName: aws-accelerator-cloudtrail-AccountTrail
           filterPattern: "{($.eventName=CreateCustomerGateway) || ($.eventName=DeleteCustomerGateway) || ($.eventName=AttachInternetGateway) || ($.eventName=CreateInternetGateway) || ($.eventName=DeleteInternetGateway) || ($.eventName=DetachInternetGateway)}"
           metricNamespace: LogMetrics
           metricName: NetworkGatewayChanges
           metricValue: "1"
-        # CIS 3.13 – Ensure a log metric filter and alarm exist for route table changes
+        # CIS 4.13 – Ensure a log metric filter and alarm exist for route table changes
         - filterName: RouteTableChangesMetricFilter
           logGroupName: aws-accelerator-cloudtrail-AccountTrail
           filterPattern: "{($.eventName=CreateRoute) || ($.eventName=CreateRouteTable) || ($.eventName=ReplaceRoute) || ($.eventName=ReplaceRouteTableAssociation) || ($.eventName=DeleteRouteTable) || ($.eventName=DeleteRoute) || ($.eventName=DisassociateRouteTable)}"
           metricNamespace: LogMetrics
           metricName: RouteTableChanges
           metricValue: "1"
-        # CIS 3.14 – Ensure a log metric filter and alarm exist for VPC changes
+        # CIS 4.14 – Ensure a log metric filter and alarm exist for VPC changes
         - filterName: VPCChangesMetricFilter
           logGroupName: aws-accelerator-cloudtrail-AccountTrail
           filterPattern: "{($.eventName=CreateVpc) || ($.eventName=DeleteVpc) || ($.eventName=ModifyVpcAttribute) || ($.eventName=AcceptVpcPeeringConnection) || ($.eventName=CreateVpcPeeringConnection) || ($.eventName=DeleteVpcPeeringConnection) || ($.eventName=RejectVpcPeeringConnection) || ($.eventName=AttachClassicLinkVpc) || ($.eventName=DetachClassicLinkVpc) || ($.eventName=DisableVpcClassicLink) || ($.eventName=EnableVpcClassicLink)}"
@@ -443,34 +421,10 @@ cloudWatch:
         organizationalUnits:
           - Root
       alarms:
-        # CIS 3.1 – Ensure a log metric filter and alarm exist for unauthorized API calls
-        - alarmName: CIS-3.1-UnauthorizedAPICalls
-          alarmDescription: Alarm for unauthorized API calls
-          snsAlertLevel: Low
-          metricName: UnauthorizedAPICalls
-          namespace: LogMetrics
-          comparisonOperator: GreaterThanOrEqualToThreshold
-          evaluationPeriods: 1
-          period: 300
-          statistic: Average
-          threshold: 5
-          treatMissingData: notBreaching
-        # CIS 3.2 – Ensure a log metric filter and alarm exist for AWS Management Console sign-in without MFA
-        - alarmName: CIS-3.2-ConsoleSigninWithoutMFA
-          alarmDescription: Alarm for AWS Management Console sign-in without MFA
-          snsAlertLevel: Low
-          metricName: ConsoleSigninWithoutMFA
-          namespace: LogMetrics
-          comparisonOperator: GreaterThanOrEqualToThreshold
-          evaluationPeriods: 1
-          period: 300
-          statistic: Sum
-          threshold: 1
-          treatMissingData: notBreaching
-        # CIS 3.4 – Ensure a log metric filter and alarm exist for IAM policy changes
-        - alarmName: CIS-3.4-IAMPolicyChanges
+        # CIS 4.4 – Ensure a log metric filter and alarm exist for IAM policy changes
+        - alarmName: CIS-4.4-IAMPolicyChanges
           alarmDescription: Alarm for IAM policy changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: IAMPolicyChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -479,10 +433,10 @@ cloudWatch:
           statistic: Average
           threshold: 1
           treatMissingData: notBreaching
-        # CIS 3.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
-        - alarmName: CIS-3.5-CloudTrailChanges
+        # CIS 4.5 – Ensure a log metric filter and alarm exist for CloudTrail configuration changes
+        - alarmName: CIS-4.5-CloudTrailChanges
           alarmDescription: Alarm for CloudTrail configuration changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: CloudTrailChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -491,10 +445,10 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        # CIS 3.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
-        - alarmName: CIS-3.6-ConsoleAuthenticationFailure
+        # CIS 4.6 – Ensure a log metric filter and alarm exist for AWS Management Console authentication failures
+        - alarmName: CIS-4.6-ConsoleAuthenticationFailure
           alarmDescription: Alarm exist for AWS Management Console authentication failures
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: ConsoleAuthenticationFailure
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -503,10 +457,10 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        # CIS 3.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
-        - alarmName: CIS-3.7-DisableOrDeleteCMK
+        # CIS 4.7 – Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs
+        - alarmName: CIS-4.7-DisableOrDeleteCMK
           alarmDescription: Alarm for disabling or scheduled deletion of customer created CMKs
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: DisableOrDeleteCMK
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -515,10 +469,10 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        # CIS 3.8 – Ensure a log metric filter and alarm exist for S3 bucket policy changes
-        - alarmName: CIS-3.8-S3BucketPolicyChanges.
+        # CIS 4.8 – Ensure a log metric filter and alarm exist for S3 bucket policy changes
+        - alarmName: CIS-4.8-S3BucketPolicyChanges.
           alarmDescription: Alarm for S3 bucket policy changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: S3BucketPolicyChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -527,10 +481,10 @@ cloudWatch:
           statistic: Average
           threshold: 1
           treatMissingData: notBreaching
-        # CIS 3.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
-        - alarmName: CIS-3.9-AWSConfigChanges
+        # CIS 4.9 – Ensure a log metric filter and alarm exist for AWS Config configuration changes
+        - alarmName: CIS-4.9-AWSConfigChanges
           alarmDescription: Alarm for AWS Config configuration changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: AWSConfigChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -539,10 +493,10 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        # CIS 3.10 – Ensure a log metric filter and alarm exist for security group changes
-        - alarmName: CIS-3.10-SecurityGroupChanges
+        # CIS 4.10 – Ensure a log metric filter and alarm exist for security group changes
+        - alarmName: CIS-4.10-SecurityGroupChanges
           alarmDescription: Alarm for security group changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: SecurityGroupChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -551,10 +505,10 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        # CIS 3.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
-        - alarmName: CIS-3.11-NetworkACLChanges
+        # CIS 4.11 – Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)
+        - alarmName: CIS-4.11-NetworkACLChanges
           alarmDescription: Alarm for changes to Network Access Control Lists (NACL)
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: NetworkACLChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -563,10 +517,10 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        # CIS 3.12 – Ensure a log metric filter and alarm exist for changes to network gateways
-        - alarmName: CIS-3.12-NetworkGatewayChanges
+        # CIS 4.12 – Ensure a log metric filter and alarm exist for changes to network gateways
+        - alarmName: CIS-4.12-NetworkGatewayChanges
           alarmDescription: Alarm for changes to network gateways
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: NetworkGatewayChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -575,10 +529,10 @@ cloudWatch:
           statistic: Sum
           threshold: 1
           treatMissingData: notBreaching
-        # CIS 3.13 – Ensure a log metric filter and alarm exist for route table changes
-        - alarmName: CIS-3.13-RouteTableChanges
+        # CIS 4.13 – Ensure a log metric filter and alarm exist for route table changes
+        - alarmName: CIS-4.13-RouteTableChanges
           alarmDescription: Alarm for route table changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: RouteTableChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
@@ -587,10 +541,10 @@ cloudWatch:
           statistic: Average
           threshold: 1
           treatMissingData: notBreaching
-        # CIS 3.14 – Ensure a log metric filter and alarm exist for VPC changes
+        # CIS 4.14 – Ensure a log metric filter and alarm exist for VPC changes
         - alarmName: CIS-3.14-VPCChanges
           alarmDescription: Alarm for VPC changes
-          snsAlertLevel: Low
+          snsTopicName: Security
           metricName: VPCChanges
           namespace: LogMetrics
           comparisonOperator: GreaterThanOrEqualToThreshold
