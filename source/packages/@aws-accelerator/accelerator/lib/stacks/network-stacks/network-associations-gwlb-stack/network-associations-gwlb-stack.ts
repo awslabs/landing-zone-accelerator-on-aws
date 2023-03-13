@@ -39,8 +39,8 @@ import {
 } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 
-import { AcceleratorStackProps } from './accelerator-stack';
-import { NetworkStack } from './network-stack';
+import { AcceleratorStackProps } from '../../accelerator-stack';
+import { NetworkStack } from '../network-stack';
 
 export class NetworkAssociationsGwlbStack extends NetworkStack {
   private gwlbMap: Map<string, string>;

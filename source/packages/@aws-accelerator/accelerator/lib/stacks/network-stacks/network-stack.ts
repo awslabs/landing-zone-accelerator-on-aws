@@ -35,7 +35,7 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { AcceleratorStack, AcceleratorStackProps } from '../accelerator-stack';
 
 // Resource share type for RAM resource shares
 type ResourceShareType =
@@ -48,13 +48,20 @@ type ResourceShareType =
   | ResolverRuleConfig
   | TransitGatewayConfig;
 
+// Enum for log levle
+export enum LogLevel {
+  INFO = 'info',
+  WARN = 'warn',
+  ERROR = 'error',
+}
+
 /**
  * Abstract class definition and methods for network stacks
  */
 export abstract class NetworkStack extends AcceleratorStack {
-  protected cloudwatchKey: cdk.aws_kms.Key;
-  protected logRetention: number;
-  protected vpcResources: (VpcConfig | VpcTemplatesConfig)[];
+  public readonly cloudwatchKey: cdk.aws_kms.Key;
+  public readonly logRetention: number;
+  public readonly vpcResources: (VpcConfig | VpcTemplatesConfig)[];
 
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -79,8 +86,41 @@ export abstract class NetworkStack extends AcceleratorStack {
    * @param regions
    * @returns
    */
-  protected isTargetStack(accountIds: string[], regions: string[]): boolean {
+  public isTargetStack(accountIds: string[], regions: string[]): boolean {
     return accountIds.includes(cdk.Stack.of(this).account) && regions.includes(cdk.Stack.of(this).region);
+  }
+
+  /**
+   * Public accessor method to add SSM parameters
+   * @param props
+   */
+  public addSsmParameter(props: { logicalId: string; parameterName: string; stringValue: string }) {
+    this.ssmParameters.push({
+      logicalId: props.logicalId,
+      parameterName: props.parameterName,
+      stringValue: props.stringValue,
+    });
+  }
+
+  /**
+   * Public accessor method to add logs to logger
+   * @param logLevel
+   * @param message
+   */
+  public addLogs(logLevel: LogLevel, message: string) {
+    switch (logLevel) {
+      case 'info':
+        this.logger.info(message);
+        break;
+
+      case 'warn':
+        this.logger.warn(message);
+        break;
+
+      case 'error':
+        this.logger.error(message);
+        break;
+    }
   }
 
   /**
@@ -328,7 +368,7 @@ export abstract class NetworkStack extends AcceleratorStack {
    * @param resourceShareName
    * @param resourceArns
    */
-  protected addResourceShare(item: ResourceShareType, resourceShareName: string, resourceArns: string[]) {
+  public addResourceShare(item: ResourceShareType, resourceShareName: string, resourceArns: string[]) {
     // Build a list of principals to share to
     const principals: string[] = [];
 
