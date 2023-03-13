@@ -19,7 +19,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import {
-  AccountsConfig,
   GatewayEndpointServiceConfig,
   InterfaceEndpointServiceConfig,
   NfwFirewallConfig,
@@ -36,73 +35,26 @@ import {
   VpcEndpoint,
   VpcEndpointType,
 } from '@aws-accelerator/constructs';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { NetworkStack } from './network-stack';
 
-export class NetworkVpcEndpointsStack extends AcceleratorStack {
-  private cloudwatchKey: cdk.aws_kms.Key;
-  private accountsConfig: AccountsConfig;
-  private logRetention: number;
+export class NetworkVpcEndpointsStack extends NetworkStack {
   private nfwPolicyMap: Map<string, string>;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
-    // Set private properties
-    this.accountsConfig = props.accountsConfig;
-    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
-
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
-      ),
-    ) as cdk.aws_kms.Key;
-
     //
     // Store VPC, subnet, and route table IDs
     //
-    const vpcMap = new Map<string, string>();
-    const subnetMap = new Map<string, string>();
-    const routeTableMap = new Map<string, string>();
-    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
-      // Get account IDs
-      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
-        // Set VPC ID
-        const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          `/accelerator/network/vpc/${vpcItem.name}/id`,
-        );
-        vpcMap.set(vpcItem.name, vpcId);
-
-        // Set subnet IDs
-        for (const subnetItem of vpcItem.subnets ?? []) {
-          const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            `/accelerator/network/vpc/${vpcItem.name}/subnet/${subnetItem.name}/id`,
-          );
-          subnetMap.set(`${vpcItem.name}_${subnetItem.name}`, subnetId);
-        }
-
-        // Set route table IDs
-        for (const routeTableItem of vpcItem.routeTables ?? []) {
-          const routeTableId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            `/accelerator/network/vpc/${vpcItem.name}/routeTable/${routeTableItem.name}/id`,
-          );
-          routeTableMap.set(`${vpcItem.name}_${routeTableItem.name}`, routeTableId);
-        }
-      }
-    }
-
+    const vpcMap = this.setVpcMap(this.vpcResources);
+    const subnetMap = this.setSubnetMap(this.vpcResources);
+    const routeTableMap = this.setRouteTableMap(this.vpcResources);
     //
     // Set Network Firewall policy map
     //
     this.nfwPolicyMap = this.setNfwPolicyMap(props);
-
     //
     // Iterate through VPCs in this account and region
     //
@@ -112,13 +64,13 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       'FirewallLogsBucket',
       `${
         AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
-      }-${this.accountsConfig.getLogArchiveAccountId()}-${props.centralizedLoggingRegion}`,
+      }-${this.props.accountsConfig.getLogArchiveAccountId()}-${props.centralizedLoggingRegion}`,
     );
-    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+    for (const vpcItem of this.vpcResources) {
       // Get account IDs
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
-      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
         const vpcId = vpcMap.get(vpcItem.name);
         if (!vpcId) {
           this.logger.error(`Unable to locate VPC ${vpcItem.name}`);
@@ -214,7 +166,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
         // Create Route 53 Resolver Endpoints
         //
         if (props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints) {
-          const delegatedAdminAccountId = this.accountsConfig.getAccountId(
+          const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
             props.networkConfig.centralNetworkServices.delegatedAdminAccount,
           );
           const endpoints = props.networkConfig.centralNetworkServices?.route53Resolver?.endpoints;
@@ -298,7 +250,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     // Create SSM parameters
     this.ssmParameters.push({
       logicalId: pascalCase(`SsmParam${pascalCase(firewallItem.vpc) + pascalCase(firewallItem.name)}FirewallArn`),
-      parameterName: `/accelerator/network/vpc/${firewallItem.vpc}/networkFirewall/${firewallItem.name}/arn`,
+      parameterName: this.getSsmPath(SsmResourceType.NFW, [firewallItem.vpc, firewallItem.name]),
       stringValue: nfw.firewallArn,
     });
 
@@ -535,12 +487,12 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
       });
       this.ssmParameters.push({
         logicalId: pascalCase(`SsmParam${vpcItem.name}${endpointItem.service}Dns`),
-        parameterName: `/accelerator/network/vpc/${vpcItem.name}/endpoints/${endpointItem.service}/dns`,
+        parameterName: this.getSsmPath(SsmResourceType.ENDPOINT_DNS, [vpcItem.name, endpointItem.service]),
         stringValue: endpoint.dnsName!,
       });
       this.ssmParameters.push({
         logicalId: pascalCase(`SsmParam${vpcItem.name}${endpointItem.service}Phz`),
-        parameterName: `/accelerator/network/vpc/${vpcItem.name}/endpoints/${endpointItem.service}/hostedZoneId`,
+        parameterName: this.getSsmPath(SsmResourceType.ENDPOINT_ZONE_ID, [vpcItem.name, endpointItem.service]),
         stringValue: endpoint.hostedZoneId!,
       });
     }
@@ -667,7 +619,7 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     });
     this.ssmParameters.push({
       logicalId: pascalCase(`SsmParam${endpointItem.name}ResolverEndpoint`),
-      parameterName: `/accelerator/network/route53Resolver/endpoints/${endpointItem.name}/id`,
+      parameterName: this.getSsmPath(SsmResourceType.RESOLVER_ENDPOINT, [endpointItem.name]),
       stringValue: endpoint.endpointId,
     });
   }
@@ -756,51 +708,5 @@ export class NetworkVpcEndpointsStack extends AcceleratorStack {
     // Set and return policy document
     policyDocument = cdk.aws_iam.PolicyDocument.fromJson(JSON.parse(document));
     return policyDocument;
-  }
-
-  /**
-   * Set Network Firewall policy map
-   * @param props
-   * @returns
-   */
-  private setNfwPolicyMap(props: AcceleratorStackProps): Map<string, string> {
-    const policyMap = new Map<string, string>();
-
-    if (props.networkConfig.centralNetworkServices?.networkFirewall?.firewalls) {
-      const delegatedAdminAccountId = this.accountsConfig.getAccountId(
-        props.networkConfig.centralNetworkServices.delegatedAdminAccount,
-      );
-      const firewalls = props.networkConfig.centralNetworkServices?.networkFirewall?.firewalls;
-
-      for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
-        // Get account IDs
-        const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-        if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
-          for (const firewallItem of firewalls ?? []) {
-            if (firewallItem.vpc === vpcItem.name && !policyMap.has(firewallItem.firewallPolicy)) {
-              // Get firewall policy ARN
-              let policyArn: string;
-
-              if (delegatedAdminAccountId === cdk.Stack.of(this).account) {
-                policyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                  this,
-                  `/accelerator/network/networkFirewall/policies/${firewallItem.firewallPolicy}/arn`,
-                );
-              } else {
-                policyArn = this.getResourceShare(
-                  `${firewallItem.firewallPolicy}_NetworkFirewallPolicyShare`,
-                  'network-firewall:FirewallPolicy',
-                  delegatedAdminAccountId,
-                  this.cloudwatchKey,
-                ).resourceShareItemArn;
-              }
-              policyMap.set(firewallItem.firewallPolicy, policyArn);
-            }
-          }
-        }
-      }
-    }
-    return policyMap;
   }
 }
