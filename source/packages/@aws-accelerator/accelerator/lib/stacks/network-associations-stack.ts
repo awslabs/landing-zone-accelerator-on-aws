@@ -18,7 +18,6 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
 import {
-  AccountsConfig,
   ApplicationLoadBalancerListenerConfig,
   CustomerGatewayConfig,
   DxGatewayConfig,
@@ -41,13 +40,15 @@ import {
 } from '@aws-accelerator/config';
 import {
   ActiveDirectory,
-  ActiveDirectoryResolverRule,
   ActiveDirectoryConfiguration,
+  ActiveDirectoryResolverRule,
+  albListenerActionProperty,
   AssociateHostedZones,
   CrossAccountRouteFramework,
   DirectConnectGatewayAssociation,
   DirectConnectGatewayAssociationProps,
   IpamSubnet,
+  KeyLookup,
   NLBAddresses,
   PutSsmParameter,
   QueryLoggingConfigAssociation,
@@ -64,15 +65,15 @@ import {
   TransitGatewayRouteTableAssociation,
   TransitGatewayRouteTablePropagation,
   TransitGatewayStaticRoute,
-  VpcPeering,
-  VpcIdLookup,
   UserDataScriptsType,
-  KeyLookup,
-  albListenerActionProperty,
+  VpcIdLookup,
+  VpcPeering,
 } from '@aws-accelerator/constructs';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import path from 'path';
+import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { NetworkStack } from './network-stack';
 
 interface Peering {
   name: string;
@@ -81,11 +82,8 @@ interface Peering {
   tags: cdk.CfnTag[] | undefined;
 }
 
-export class NetworkAssociationsStack extends AcceleratorStack {
-  private accountsConfig: AccountsConfig;
-  private cloudwatchKey: cdk.aws_kms.Key;
+export class NetworkAssociationsStack extends NetworkStack {
   private lambdaKey: cdk.aws_kms.IKey;
-  private logRetention: number;
   private dnsFirewallMap: Map<string, string>;
   private dxGatewayMap: Map<string, string>;
   private peeringList: Peering[];
@@ -103,8 +101,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
     try {
       // Set private properties
-      this.accountsConfig = props.accountsConfig;
-      this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
       this.dnsFirewallMap = new Map<string, string>();
       this.dxGatewayMap = new Map<string, string>();
       this.queryLogMap = new Map<string, string>();
@@ -112,15 +108,6 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       this.transitGateways = new Map<string, string>();
       this.transitGatewayAttachments = new Map<string, string>();
       this.transitGatewayRouteTables = new Map<string, string>();
-
-      this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-        this,
-        'AcceleratorGetCloudWatchKey',
-        cdk.aws_ssm.StringParameter.valueForStringParameter(
-          this,
-          AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
-        ),
-      ) as cdk.aws_kms.Key;
 
       this.lambdaKey = cdk.aws_kms.Key.fromKeyArn(
         this,
@@ -149,7 +136,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       //
       // Build route table map
       //
-      this.routeTableMap = this.setRouteTableMap(props);
+      this.routeTableMap = this.setRouteTableMap(this.vpcResources);
+      // Get cross-account prefix list IDs as needed
+      const crossAcctRouteTables = this.setCrossAcctRouteTables();
+      crossAcctRouteTables.forEach((value, key) => this.routeTableMap.set(key, value));
 
       //
       // Create transit gateway route table associations, propagations,
@@ -230,13 +220,13 @@ export class NetworkAssociationsStack extends AcceleratorStack {
   }
 
   private createNlbListeners(targetGroupMap: Map<string, TargetGroup>) {
-    for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ?? []) {
+    for (const vpcItem of this.vpcResources) {
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
         for (const nlbItem of vpcItem.loadBalancers?.networkLoadBalancers ?? []) {
           const nlbId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
-            `/accelerator/network/vpc/${vpcItem.name}/nlb/${nlbItem.name}/id`,
+            this.getSsmPath(SsmResourceType.NLB, [vpcItem.name, nlbItem.name]),
           );
           for (const listener of nlbItem.listeners ?? []) {
             const targetGroup = targetGroupMap.get(`${vpcItem.name}-${listener.targetGroup}`);
@@ -279,12 +269,12 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
   private createAlbTargetGroups(albListenerMap: Map<string, cdk.aws_elasticloadbalancingv2.CfnListener>) {
     const targetGroupMap = new Map<string, TargetGroup>();
-    for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ?? []) {
+    for (const vpcItem of this.vpcResources) {
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
         const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/network/vpc/${vpcItem.name}/id`,
+          this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
         );
         const albTargetGroups = vpcItem.targetGroups?.filter(targetGroup => targetGroup.type === 'alb') ?? [];
         const albNames = vpcItem.loadBalancers?.applicationLoadBalancers?.map(alb => alb.name) ?? [];
@@ -294,7 +284,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             if (albNames.includes(target as string)) {
               return cdk.aws_ssm.StringParameter.valueForStringParameter(
                 this,
-                `/accelerator/network/vpc/${vpcItem.name}/alb/${target}/id`,
+                this.getSsmPath(SsmResourceType.ALB, [vpcItem.name, target as string]),
               );
             }
             return target;
@@ -328,15 +318,14 @@ export class NetworkAssociationsStack extends AcceleratorStack {
   private createAlbListeners(targetGroupMap: Map<string, TargetGroup>) {
     try {
       const listenerMap = new Map<string, cdk.aws_elasticloadbalancingv2.CfnListener>();
-      for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ??
-        []) {
+      for (const vpcItem of this.vpcResources) {
         const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
-        if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+        if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
           for (const albItem of vpcItem.loadBalancers?.applicationLoadBalancers ?? []) {
             const albArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
               this,
-              `/accelerator/network/vpc/${vpcItem.name}/alb/${albItem.name}/id`,
+              this.getSsmPath(SsmResourceType.ALB, [vpcItem.name, albItem.name]),
             );
             for (const listener of albItem.listeners ?? []) {
               const targetGroup = targetGroupMap.get(`${vpcItem.name}-${listener.targetGroup}`);
@@ -379,7 +368,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       if (certificate.match('\\arn:*')) {
         return certificate;
       } else {
-        return cdk.aws_ssm.StringParameter.valueForStringParameter(this, `/accelerator/acm/${certificate}/arn`);
+        return cdk.aws_ssm.StringParameter.valueForStringParameter(
+          this,
+          this.getSsmPath(SsmResourceType.ACM_CERT, [certificate]),
+        );
       }
     }
     return undefined;
@@ -528,14 +520,13 @@ export class NetworkAssociationsStack extends AcceleratorStack {
   private createIpAndInstanceTargetGroups() {
     try {
       const targetGroupMap = new Map<string, TargetGroup>();
-      for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ??
-        []) {
+      for (const vpcItem of this.vpcResources) {
         const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
-        if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+        if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
           const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
-            `/accelerator/network/vpc/${vpcItem.name}/id`,
+            this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
           );
           for (const targetGroupItem of vpcItem.targetGroups ?? []) {
             if (targetGroupItem.type === 'ip') {
@@ -564,10 +555,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       // Get requester and accepter VPC configurations
       const requesterVpc = this.props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[0]);
       const accepterVpc = this.props.networkConfig.vpcs.filter(item => item.name === peering.vpcs[1]);
-      const requesterAccountId = this.accountsConfig.getAccountId(requesterVpc[0].account);
+      const requesterAccountId = this.props.accountsConfig.getAccountId(requesterVpc[0].account);
 
       // Check if requester VPC is in this account and region
-      if (cdk.Stack.of(this).account === requesterAccountId && cdk.Stack.of(this).region === requesterVpc[0].region) {
+      if (this.isTargetStack([requesterAccountId], [requesterVpc[0].region])) {
         peeringList.push({
           name: peering.name,
           requester: requesterVpc[0],
@@ -643,16 +634,16 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     for (const prefixListItem of props.networkConfig.prefixLists ?? []) {
       // Check if the set belongs in this account/region
       const accountIds = prefixListItem.accounts.map(item => {
-        return this.accountsConfig.getAccountId(item);
+        return this.props.accountsConfig.getAccountId(item);
       });
       const regions = prefixListItem.regions.map(item => {
         return item.toString();
       });
 
-      if (accountIds.includes(cdk.Stack.of(this).account) && regions.includes(cdk.Stack.of(this).region)) {
+      if (this.isTargetStack(accountIds, regions)) {
         const prefixListId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/network/prefixList/${prefixListItem.name}/id`,
+          this.getSsmPath(SsmResourceType.PREFIX_LIST, [prefixListItem.name]),
         );
         prefixListMap.set(prefixListItem.name, prefixListId);
       }
@@ -671,8 +662,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     const prefixListMap = new Map<string, string>();
     for (const peering of this.peeringList) {
       // Get account IDs
-      const requesterAccountId = this.accountsConfig.getAccountId(peering.requester.account);
-      const accepterAccountId = this.accountsConfig.getAccountId(peering.accepter.account);
+      const requesterAccountId = this.props.accountsConfig.getAccountId(peering.requester.account);
+      const accepterAccountId = this.props.accountsConfig.getAccountId(peering.accepter.account);
       const crossAccountCondition =
         accepterAccountId !== requesterAccountId || peering.accepter.region !== peering.requester.region;
 
@@ -691,7 +682,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               this,
               pascalCase(`SsmParamLookup${routeTableEntry.destinationPrefixList}`),
               {
-                name: `/accelerator/network/prefixList/${routeTableEntry.destinationPrefixList}/id`,
+                name: this.getSsmPath(SsmResourceType.PREFIX_LIST, [routeTableEntry.destinationPrefixList]),
                 accountId: accepterAccountId,
                 parameterRegion: peering.accepter.region,
                 roleName: `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`,
@@ -708,42 +699,14 @@ export class NetworkAssociationsStack extends AcceleratorStack {
   }
 
   /**
-   * Create a map of route table IDs
-   * @param props
-   */
-  private setRouteTableMap(props: AcceleratorStackProps): Map<string, string> {
-    const routeTableMap = new Map<string, string>();
-    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
-      // Get account IDs
-      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
-        // Set route table IDs
-        for (const routeTableItem of vpcItem.routeTables ?? []) {
-          const routeTableId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-            this,
-            `/accelerator/network/vpc/${vpcItem.name}/routeTable/${routeTableItem.name}/id`,
-          );
-          routeTableMap.set(`${vpcItem.name}_${routeTableItem.name}`, routeTableId);
-        }
-      }
-    }
-
-    // Get cross-account prefix list IDs as needed
-    const crossAcctRouteTables = this.setCrossAcctRouteTables();
-    crossAcctRouteTables.forEach((value, key) => routeTableMap.set(key, value));
-    return routeTableMap;
-  }
-
-  /**
    * Get cross-account route tables
    */
   private setCrossAcctRouteTables(): Map<string, string> {
     const routeTableMap = new Map<string, string>();
     for (const peering of this.peeringList) {
       // Get account IDs
-      const requesterAccountId = this.accountsConfig.getAccountId(peering.requester.account);
-      const accepterAccountId = this.accountsConfig.getAccountId(peering.accepter.account);
+      const requesterAccountId = this.props.accountsConfig.getAccountId(peering.requester.account);
+      const accepterAccountId = this.props.accountsConfig.getAccountId(peering.accepter.account);
       const crossAccountCondition =
         accepterAccountId !== requesterAccountId || peering.accepter.region !== peering.requester.region;
 
@@ -757,7 +720,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
             !routeTableMap.has(`${peering.accepter.name}_${routeTable.name}`)
           ) {
             const routeTableId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${routeTable.name}`), {
-              name: `/accelerator/network/vpc/${peering.accepter.name}/routeTable/${routeTable.name}/id`,
+              name: this.getSsmPath(SsmResourceType.ROUTE_TABLE, [peering.accepter.name, routeTable.name]),
               accountId: accepterAccountId,
               parameterRegion: peering.accepter.region,
               roleName: `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`,
@@ -789,7 +752,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     // Create Transit Gateway route table associations and propagations
     // for VPC attachments
     //
-    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+    for (const vpcItem of this.vpcResources) {
       this.setTransitGatewayVpcAttachmentsMap(vpcItem);
       this.createVpcTransitGatewayAssociations(vpcItem);
       this.createVpcTransitGatewayPropagations(vpcItem);
@@ -813,11 +776,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
    * @param tgwItem
    */
   private setTransitGatewayMap(tgwItem: TransitGatewayConfig): void {
-    const accountId = this.accountsConfig.getAccountId(tgwItem.account);
-    if (accountId === cdk.Stack.of(this).account && tgwItem.region == cdk.Stack.of(this).region) {
+    const accountId = this.props.accountsConfig.getAccountId(tgwItem.account);
+    if (this.isTargetStack([accountId], [tgwItem.region])) {
       const transitGatewayId = ssm.StringParameter.valueForStringParameter(
         this,
-        `/accelerator/network/transitGateways/${tgwItem.name}/id`,
+        this.getSsmPath(SsmResourceType.TGW, [tgwItem.name]),
       );
       this.transitGateways.set(tgwItem.name, transitGatewayId);
     }
@@ -828,12 +791,12 @@ export class NetworkAssociationsStack extends AcceleratorStack {
    * @param tgwItem
    */
   private setTransitGatewayRouteTableMap(tgwItem: TransitGatewayConfig): void {
-    const accountId = this.accountsConfig.getAccountId(tgwItem.account);
-    if (accountId === cdk.Stack.of(this).account && tgwItem.region == cdk.Stack.of(this).region) {
+    const accountId = this.props.accountsConfig.getAccountId(tgwItem.account);
+    if (this.isTargetStack([accountId], [tgwItem.region])) {
       for (const routeTableItem of tgwItem.routeTables ?? []) {
         const transitGatewayRouteTableId = ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/network/transitGateways/${tgwItem.name}/routeTables/${routeTableItem.name}/id`,
+          this.getSsmPath(SsmResourceType.TGW_ROUTE_TABLE, [tgwItem.name, routeTableItem.name]),
         );
         const key = `${tgwItem.name}_${routeTableItem.name}`;
         this.transitGatewayRouteTables.set(key, transitGatewayRouteTableId);
@@ -868,7 +831,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
     if (vpcItem.region === cdk.Stack.of(this).region) {
       for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
-        const accountId = this.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
+        const accountId = this.props.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
 
         if (accountId === cdk.Stack.of(this).account) {
           // Get the Transit Gateway ID
@@ -881,7 +844,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           // Get the Transit Gateway Attachment ID
           for (const owningAccount of accountNames) {
             let transitGatewayAttachmentId;
-            const owningAccountId = this.accountsConfig.getAccountId(owningAccount);
+            const owningAccountId = this.props.accountsConfig.getAccountId(owningAccount);
             const attachmentKey = `${tgwAttachmentItem.transitGateway.name}_${owningAccount}_${vpcItem.name}`;
             // Skip iteration if account is excluded
             if (excludedAccountIds.includes(owningAccountId)) {
@@ -894,7 +857,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
               );
               transitGatewayAttachmentId = ssm.StringParameter.valueForStringParameter(
                 this,
-                `/accelerator/network/vpc/${vpcItem.name}/transitGatewayAttachment/${tgwAttachmentItem.name}/id`,
+                this.getSsmPath(SsmResourceType.TGW_ATTACHMENT, [vpcItem.name, tgwAttachmentItem.name]),
               );
               this.transitGatewayAttachments.set(attachmentKey, transitGatewayAttachmentId);
             } else {
@@ -935,11 +898,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
     if (vpcItem.region === cdk.Stack.of(this).region) {
       for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
-        const accountId = this.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
+        const accountId = this.props.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
         if (accountId === cdk.Stack.of(this).account) {
           // Get the Transit Gateway Attachment ID
           for (const owningAccount of accountNames) {
-            const owningAccountId = this.accountsConfig.getAccountId(owningAccount);
+            const owningAccountId = this.props.accountsConfig.getAccountId(owningAccount);
             const attachmentKey = `${tgwAttachmentItem.transitGateway.name}_${owningAccount}_${vpcItem.name}`;
             // Skip iteration if account is excluded
             if (excludedAccountIds.includes(owningAccountId)) {
@@ -991,11 +954,11 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
     if (vpcItem.region === cdk.Stack.of(this).region) {
       for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
-        const accountId = this.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
+        const accountId = this.props.accountsConfig.getAccountId(tgwAttachmentItem.transitGateway.account);
         if (accountId === cdk.Stack.of(this).account) {
           // Loop through attachment owner accounts
           for (const owningAccount of accountNames) {
-            const owningAccountId = this.accountsConfig.getAccountId(owningAccount);
+            const owningAccountId = this.props.accountsConfig.getAccountId(owningAccount);
             const attachmentKey = `${tgwAttachmentItem.transitGateway.name}_${owningAccount}_${vpcItem.name}`;
             // Skip iteration if account is excluded
             if (excludedAccountIds.includes(owningAccountId)) {
@@ -1194,8 +1157,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
       // Generate list of accounts with VPCs that needed to set up share
       const zoneAssociationAccountIds: string[] = [];
-      for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ??
-        []) {
+      for (const vpcItem of this.vpcResources) {
         // Get account IDs
         const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
@@ -1213,7 +1175,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       for (const endpointItem of centralEndpointVpc.interfaceEndpoints?.endpoints ?? []) {
         const hostedZoneId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/network/vpc/${centralEndpointVpc.name}/route53/hostedZone/${endpointItem.service}/id`,
+          this.getSsmPath(SsmResourceType.PHZ_ID, [centralEndpointVpc.name, endpointItem.service]),
         );
         hostedZoneIds.push(hostedZoneId);
       }
@@ -1249,13 +1211,13 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     // Create Route 53 Resolver VPC associations
     //
     if (props.networkConfig.centralNetworkServices) {
-      for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+      for (const vpcItem of this.vpcResources) {
         // Get account IDs
         const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-        const delegatedAdminAccountId = this.accountsConfig.getAccountId(
+        const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
           props.networkConfig.centralNetworkServices.delegatedAdminAccount,
         );
-        if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+        if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
           this.createDnsFirewallAssociations(vpcItem, delegatedAdminAccountId);
           this.createQueryLogConfigAssociations(vpcItem, delegatedAdminAccountId);
           this.createResolverRuleAssociations(vpcItem, delegatedAdminAccountId);
@@ -1274,7 +1236,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       // Get VPC ID
       const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        `/accelerator/network/vpc/${vpcItem.name}/id`,
+        this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
       );
 
       // Skip lookup if already added to map
@@ -1283,7 +1245,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         if (owningAccountId === cdk.Stack.of(this).account) {
           const ruleId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
-            `/accelerator/network/route53Resolver/firewall/ruleGroups/${firewallItem.name}/id`,
+            this.getSsmPath(SsmResourceType.DNS_RULE_GROUP, [firewallItem.name]),
           );
           this.dnsFirewallMap.set(firewallItem.name, ruleId);
         } else {
@@ -1329,7 +1291,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       // Get VPC ID
       const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        `/accelerator/network/vpc/${vpcItem.name}/id`,
+        this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
       );
 
       // Determine query log destination(s)
@@ -1349,7 +1311,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           if (owningAccountId === cdk.Stack.of(this).account) {
             const configId = cdk.aws_ssm.StringParameter.valueForStringParameter(
               this,
-              `/accelerator/network/route53Resolver/queryLogConfigs/${nameItem}/id`,
+              this.getSsmPath(SsmResourceType.QUERY_LOGS, [nameItem]),
             );
             this.queryLogMap.set(nameItem, configId);
           } else {
@@ -1393,7 +1355,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       // Get VPC ID
       const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        `/accelerator/network/vpc/${vpcItem.name}/id`,
+        this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
       );
 
       // Skip lookup if already added to map
@@ -1402,7 +1364,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
         if (owningAccountId === cdk.Stack.of(this).account) {
           const ruleId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
-            `/accelerator/network/route53Resolver/rules/${ruleItem}/id`,
+            this.getSsmPath(SsmResourceType.RESOLVER_RULE, [ruleItem]),
           );
           this.resolverRuleMap.set(ruleItem, ruleId);
         } else {
@@ -1437,22 +1399,22 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     // Create VPC peering connections
     for (const peering of this.peeringList) {
       // Get account IDs
-      const requesterAccountId = this.accountsConfig.getAccountId(peering.requester.account);
-      const accepterAccountId = this.accountsConfig.getAccountId(peering.accepter.account);
+      const requesterAccountId = this.props.accountsConfig.getAccountId(peering.requester.account);
+      const accepterAccountId = this.props.accountsConfig.getAccountId(peering.accepter.account);
       const crossAccountCondition =
         accepterAccountId !== requesterAccountId || peering.accepter.region !== peering.requester.region;
 
       // Get SSM parameters
       const requesterVpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        `/accelerator/network/vpc/${peering.requester.name}/id`,
+        this.getSsmPath(SsmResourceType.VPC, [peering.requester.name]),
       );
 
       let accepterVpcId: string;
       let accepterRoleName: string | undefined = undefined;
       if (crossAccountCondition) {
         accepterVpcId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${peering.name}`), {
-          name: `/accelerator/network/vpc/${peering.accepter.name}/id`,
+          name: this.getSsmPath(SsmResourceType.VPC, [peering.accepter.name]),
           accountId: accepterAccountId,
           parameterRegion: peering.accepter.region,
           roleName: `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`,
@@ -1464,7 +1426,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       } else {
         accepterVpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/network/vpc/${peering.accepter.name}/id`,
+          this.getSsmPath(SsmResourceType.VPC, [peering.accepter.name]),
         );
       }
 
@@ -1483,7 +1445,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       });
       this.ssmParameters.push({
         logicalId: pascalCase(`SsmParam${pascalCase(peering.name)}VpcPeering`),
-        parameterName: `/accelerator/network/vpcPeering/${peering.name}/id`,
+        parameterName: this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
         stringValue: vpcPeering.peeringId,
       });
 
@@ -1495,7 +1457,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
           parameter: {
-            name: `/accelerator/network/vpcPeering/${peering.name}/id`,
+            name: this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
             accountId: accepterAccountId,
             roleName: `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`,
             value: vpcPeering.peeringId,
@@ -1671,7 +1633,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
           this.logger.error(`Unable to locate transit gateway ${associationItem.name}`);
           throw new Error(`Configuration validation failed at runtime.`);
         }
-        const tgwAccountId = this.accountsConfig.getAccountId(tgw.account);
+        const tgwAccountId = this.props.accountsConfig.getAccountId(tgw.account);
         //
         // Set DX Gateway ID map
         //
@@ -1700,14 +1662,10 @@ export class NetworkAssociationsStack extends AcceleratorStack {
    */
   private setDxGatewayMap(dxgwItem: DxGatewayConfig, tgw: TransitGatewayConfig, tgwAccountId: string): void {
     // If DX gateway and transit gateway accounts differ, get cross-account SSM parameter
-    if (
-      dxgwItem.account !== tgw.account &&
-      tgwAccountId === cdk.Stack.of(this).account &&
-      tgw.region === cdk.Stack.of(this).region
-    ) {
-      const directConnectGatewayOwnerAccount = this.accountsConfig.getAccountId(dxgwItem.account);
+    if (dxgwItem.account !== tgw.account && this.isTargetStack([tgwAccountId], [tgw.region])) {
+      const directConnectGatewayOwnerAccount = this.props.accountsConfig.getAccountId(dxgwItem.account);
       const dxgwId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${dxgwItem.name}`), {
-        name: `/accelerator/network/directConnectGateways/${dxgwItem.name}/id`,
+        name: this.getSsmPath(SsmResourceType.DXGW, [dxgwItem.name]),
         accountId: directConnectGatewayOwnerAccount,
         parameterRegion: this.props.globalConfig.homeRegion,
         roleName: `AWSAccelerator-Get${pascalCase(dxgwItem.name)}SsmParamRole-${this.props.globalConfig.homeRegion}`,
@@ -1718,20 +1676,16 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     }
 
     // If DX gateway and transit gateway accounts match, get local SSM parameter
-    if (
-      dxgwItem.account === tgw.account &&
-      tgwAccountId === cdk.Stack.of(this).account &&
-      tgw.region === cdk.Stack.of(this).region
-    ) {
+    if (dxgwItem.account === tgw.account && this.isTargetStack([tgwAccountId], [tgw.region])) {
       if (tgw.region === this.props.globalConfig.homeRegion) {
         const dxgwId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/network/directConnectGateways/${dxgwItem.name}/id`,
+          this.getSsmPath(SsmResourceType.DXGW, [dxgwItem.name]),
         );
         this.dxGatewayMap.set(dxgwItem.name, dxgwId);
       } else {
         const dxgwId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${dxgwItem.name}`), {
-          name: `/accelerator/network/directConnectGateways/${dxgwItem.name}/id`,
+          name: this.getSsmPath(SsmResourceType.DXGW, [dxgwItem.name]),
           accountId: cdk.Stack.of(this).account,
           parameterRegion: this.props.globalConfig.homeRegion,
           roleName: `AWSAccelerator-Get${pascalCase(dxgwItem.name)}SsmParamRole-${this.props.globalConfig.homeRegion}`,
@@ -1762,17 +1716,13 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     let associationProps: DirectConnectGatewayAssociationProps | undefined = undefined;
 
     // If DX gateway and transit gateway accounts differ, create association proposal
-    if (
-      dxgwItem.account !== tgw.account &&
-      tgwAccountId === cdk.Stack.of(this).account &&
-      tgw.region === cdk.Stack.of(this).region
-    ) {
+    if (dxgwItem.account !== tgw.account && this.isTargetStack([tgwAccountId], [tgw.region])) {
       this.logger.info(
         `Creating association proposal between DX Gateway ${dxgwItem.name} and transit gateway ${tgw.name}`,
       );
       createAssociation = true;
       const directConnectGatewayId = this.dxGatewayMap.get(dxgwItem.name);
-      const directConnectGatewayOwnerAccount = this.accountsConfig.getAccountId(dxgwItem.account);
+      const directConnectGatewayOwnerAccount = this.props.accountsConfig.getAccountId(dxgwItem.account);
       associationLogicalId = pascalCase(`${dxgwItem.name}${tgw.name}DxGatewayAssociationProposal`);
       const gatewayId = this.transitGateways.get(tgw.name);
 
@@ -1796,11 +1746,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     }
 
     // If DX gateway and transit gateway accounts match, create association
-    if (
-      dxgwItem.account === tgw.account &&
-      tgwAccountId === cdk.Stack.of(this).account &&
-      tgw.region === cdk.Stack.of(this).region
-    ) {
+    if (dxgwItem.account === tgw.account && this.isTargetStack([tgwAccountId], [tgw.region])) {
       this.logger.info(`Creating association between DX Gateway ${dxgwItem.name} and transit gateway ${tgw.name}`);
       createAssociation = true;
       const directConnectGatewayId = this.dxGatewayMap.get(dxgwItem.name);
@@ -1853,7 +1799,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     tgwRouteTableName: string,
     tgwAccountId: string,
   ): void {
-    if (tgwAccountId === cdk.Stack.of(this).account && tgw.region === cdk.Stack.of(this).region) {
+    if (this.isTargetStack([tgwAccountId], [tgw.region])) {
       const transitGatewayAttachmentId = this.transitGatewayAttachments.get(`${dxgwItem.name}_${tgw.name}`);
       const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(`${tgw.name}_${tgwRouteTableName}`);
 
@@ -1892,7 +1838,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     tgwRouteTableName: string,
     tgwAccountId: string,
   ): void {
-    if (tgwAccountId === cdk.Stack.of(this).account && tgw.region === cdk.Stack.of(this).region) {
+    if (this.isTargetStack([tgwAccountId], [tgw.region])) {
       const transitGatewayAttachmentId = this.transitGatewayAttachments.get(`${dxgwItem.name}_${tgw.name}`);
       const transitGatewayRouteTableId = this.transitGatewayRouteTables.get(`${tgw.name}_${tgwRouteTableName}`);
 
@@ -1927,8 +1873,8 @@ export class NetworkAssociationsStack extends AcceleratorStack {
    */
   private createTransitGatewayStaticRoutes(props: AcceleratorStackProps) {
     for (const tgwItem of props.networkConfig.transitGateways ?? []) {
-      const accountId = this.accountsConfig.getAccountId(tgwItem.account);
-      if (accountId === cdk.Stack.of(this).account && tgwItem.region === cdk.Stack.of(this).region) {
+      const accountId = this.props.accountsConfig.getAccountId(tgwItem.account);
+      if (this.isTargetStack([accountId], [tgwItem.region])) {
         for (const routeTableItem of tgwItem.routeTables ?? []) {
           // Get TGW route table ID
           const routeTableKey = `${tgwItem.name}_${routeTableItem.name}`;
@@ -2175,7 +2121,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     if (this.props.accountsConfig.getAccountId(requesterConfig.account) === cdk.Stack.of(this).account) {
       return cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        `/accelerator/network/transitGateways/${tgwItem.name}/peering/${transitGatewayPeeringName}/id`,
+        this.getSsmPath(SsmResourceType.TGW_PEERING, [tgwItem.name, transitGatewayPeeringName]),
       );
     }
 
@@ -2230,14 +2176,14 @@ export class NetworkAssociationsStack extends AcceleratorStack {
    * @returns
    */
   private createCrossAccountNaclRules() {
-    for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ?? []) {
+    for (const vpcItem of this.vpcResources) {
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
         for (const naclItem of vpcItem.networkAcls ?? []) {
           const naclId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
-            `/accelerator/network/vpc/${vpcItem.name}/networkAcl/${naclItem.name}/id`,
-          ).toString();
+            this.getSsmPath(SsmResourceType.NACL, [vpcItem.name, naclItem.name]),
+          );
           const nacl = cdk.aws_ec2.NetworkAcl.fromNetworkAclId(this, `${naclItem.name}-${vpcItem.name}`, naclId);
           for (const inboundRuleItem of naclItem.inboundRules ?? []) {
             if (this.isCrossAccountNaclSource(inboundRuleItem.source)) {
@@ -2341,7 +2287,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
       pascalCase(`${vpcName}-${naclItem.name}${naclRule.rule}${trafficType}NaclRule`),
       {
         owningAccountId: accountId,
-        ssmSubnetIdPath: `/accelerator/network/vpc/${target.vpc}/subnet/${target.subnet}/id`,
+        ssmSubnetIdPath: this.getSsmPath(SsmResourceType.SUBNET, [target.vpc, target.subnet]),
         region: target.region,
         roleName: `AWSAccelerator-GetIpamCidrRole-${cdk.Stack.of(this).region}`,
         kmsKey: this.cloudwatchKey,
@@ -2352,7 +2298,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
 
   private shareSubnetTags() {
     for (const vpc of this.props.networkConfig.vpcs) {
-      const owningAccountId = this.accountsConfig.getAccountId(vpc.account);
+      const owningAccountId = this.props.accountsConfig.getAccountId(vpc.account);
       if (owningAccountId !== cdk.Stack.of(this).account && vpc.region === cdk.Stack.of(this).region) {
         for (const subnet of vpc.subnets ?? []) {
           //only get the shared subnets that have tags configured
@@ -2394,7 +2340,7 @@ export class NetworkAssociationsStack extends AcceleratorStack {
     for (const managedActiveDirectory of this.props.iamConfig.managedActiveDirectories ?? []) {
       const madAccountId = this.props.accountsConfig.getAccountId(managedActiveDirectory.account);
 
-      if (madAccountId === cdk.Stack.of(this).account && managedActiveDirectory.region === cdk.Stack.of(this).region) {
+      if (this.isTargetStack([madAccountId], [managedActiveDirectory.region])) {
         this.logger.info(`Creating Managed active directory ${managedActiveDirectory.name}`);
 
         const madVpcLookup = new VpcIdLookup(this, `${pascalCase(managedActiveDirectory.name)}VpcLookup`, {

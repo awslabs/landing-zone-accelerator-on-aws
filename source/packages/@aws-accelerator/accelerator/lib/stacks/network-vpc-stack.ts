@@ -17,7 +17,6 @@ import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
 
 import {
-  AccountsConfig,
   CertificateConfig,
   GwlbConfig,
   NetworkAclSubnetSelection,
@@ -34,6 +33,7 @@ import {
 } from '@aws-accelerator/config';
 import {
   ApplicationLoadBalancer,
+  CreateCertificate,
   DeleteDefaultSecurityGroupRules,
   DeleteDefaultVpc,
   DhcpOptions,
@@ -41,8 +41,8 @@ import {
   NatGateway,
   NetworkAcl,
   NetworkLoadBalancer,
-  Organization,
   PrefixList,
+  PutSsmParameter,
   RouteTable,
   SecurityGroup,
   SecurityGroupEgressRuleProps,
@@ -53,11 +53,11 @@ import {
   TransitGatewayPeering,
   Vpc,
   VpnConnection,
-  CreateCertificate,
-  PutSsmParameter,
 } from '@aws-accelerator/constructs';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { NetworkStack } from './network-stack';
 
 export interface SecurityGroupRuleProps {
   ipProtocol: string;
@@ -82,29 +82,11 @@ const TCP_PROTOCOLS_PORT: { [key: string]: number } = {
   'ORACLE-RDS': 1521,
 };
 
-export class NetworkVpcStack extends AcceleratorStack {
-  private accountsConfig: AccountsConfig;
+export class NetworkVpcStack extends NetworkStack {
   private ipamPoolMap: Map<string, string>;
-  private logRetention: number;
-  readonly cloudwatchKey: cdk.aws_kms.Key;
-  organizationId: string | undefined;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
-
-    // Set private properties
-    this.accountsConfig = props.accountsConfig;
-    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
-    this.organizationId = this.setOrganizationId();
-
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
-      ),
-    ) as cdk.aws_kms.Key;
     //
     // Create ACM Certificates
     //
@@ -143,11 +125,11 @@ export class NetworkVpcStack extends AcceleratorStack {
     // Keep track of all the external accounts that will need to be able to list
     // the generated transit gateway attachments
     const transitGatewayAccountIds: string[] = [];
-    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+    for (const vpcItem of this.vpcResources) {
       // Get account IDs
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
-      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
         for (const attachment of vpcItem.transitGatewayAttachments ?? []) {
           this.logger.info(`Evaluating Transit Gateway key ${attachment.transitGateway.name}`);
 
@@ -160,14 +142,14 @@ export class NetworkVpcStack extends AcceleratorStack {
           this.logger.info(
             `Transit Gateway key ${attachment.transitGateway.name} is not in map, add resources to look up`,
           );
-          const owningAccountId = this.accountsConfig.getAccountId(attachment.transitGateway.account);
+          const owningAccountId = this.props.accountsConfig.getAccountId(attachment.transitGateway.account);
 
           // If owning account is this account, transit gateway id can be
           // retrieved from ssm parameter store
           if (owningAccountId === cdk.Stack.of(this).account) {
             const transitGatewayId = cdk.aws_ssm.StringParameter.valueForStringParameter(
               this,
-              `/accelerator/network/transitGateways/${attachment.transitGateway.name}/id`,
+              this.getSsmPath(SsmResourceType.TGW, [attachment.transitGateway.name]),
             );
 
             this.logger.info(
@@ -239,11 +221,11 @@ export class NetworkVpcStack extends AcceleratorStack {
     // access role (if we're in a different account)
     //
     let useCentralEndpoints = false;
-    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+    for (const vpcItem of this.vpcResources) {
       // Get account IDs
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
-      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
         if (vpcItem.useCentralEndpoints) {
           if (props.partition !== 'aws' && props.partition !== 'aws-cn') {
             this.logger.error(
@@ -288,7 +270,7 @@ export class NetworkVpcStack extends AcceleratorStack {
     // external account
     //
     if (centralEndpointVpc) {
-      const centralEndpointVpcAccountId = this.accountsConfig.getAccountId(centralEndpointVpc.account);
+      const centralEndpointVpcAccountId = this.props.accountsConfig.getAccountId(centralEndpointVpc.account);
       if (centralEndpointVpcAccountId !== cdk.Stack.of(this).account) {
         this.logger.info('Central Endpoints VPC is in an external account, create a role to enable central endpoints');
         new cdk.aws_iam.Role(this, 'EnableCentralEndpointsRole', {
@@ -341,13 +323,13 @@ export class NetworkVpcStack extends AcceleratorStack {
     for (const dhcpItem of props.networkConfig.dhcpOptions ?? []) {
       // Check if the set belongs in this account/region
       const accountIds = dhcpItem.accounts.map(item => {
-        return this.accountsConfig.getAccountId(item);
+        return this.props.accountsConfig.getAccountId(item);
       });
       const regions = dhcpItem.regions.map(item => {
         return item.toString();
       });
 
-      if (accountIds.includes(cdk.Stack.of(this).account) && regions.includes(cdk.Stack.of(this).region)) {
+      if (this.isTargetStack(accountIds, regions)) {
         this.logger.info(`Adding DHCP options set ${dhcpItem.name}`);
 
         const optionSet = new DhcpOptions(this, pascalCase(`${dhcpItem.name}DhcpOpts`), {
@@ -372,13 +354,13 @@ export class NetworkVpcStack extends AcceleratorStack {
     for (const prefixListItem of props.networkConfig.prefixLists ?? []) {
       // Check if the set belongs in this account/region
       const accountIds = prefixListItem.accounts.map(item => {
-        return this.accountsConfig.getAccountId(item);
+        return this.props.accountsConfig.getAccountId(item);
       });
       const regions = prefixListItem.regions.map(item => {
         return item.toString();
       });
 
-      if (accountIds.includes(cdk.Stack.of(this).account) && regions.includes(cdk.Stack.of(this).region)) {
+      if (this.isTargetStack(accountIds, regions)) {
         this.logger.info(`Adding Prefix List ${prefixListItem.name}`);
 
         const prefixList = new PrefixList(this, pascalCase(`${prefixListItem.name}PrefixList`), {
@@ -393,7 +375,7 @@ export class NetworkVpcStack extends AcceleratorStack {
 
         this.ssmParameters.push({
           logicalId: pascalCase(`SsmParam${pascalCase(prefixListItem.name)}PrefixList`),
-          parameterName: `/accelerator/network/prefixList/${prefixListItem.name}/id`,
+          parameterName: this.getSsmPath(SsmResourceType.PREFIX_LIST, [prefixListItem.name]),
           stringValue: prefixList.prefixListId,
         });
       }
@@ -402,11 +384,11 @@ export class NetworkVpcStack extends AcceleratorStack {
     //
     // Evaluate VPC entries
     //
-    for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
+    for (const vpcItem of this.vpcResources) {
       // Get account IDs
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
-      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
         this.logger.info(`Adding VPC ${vpcItem.name}`);
 
         //
@@ -449,7 +431,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         });
         this.ssmParameters.push({
           logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name)}VpcId`),
-          parameterName: `/accelerator/network/vpc/${vpcItem.name}/id`,
+          parameterName: this.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
           stringValue: vpc.vpcId,
         });
 
@@ -510,7 +492,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           cdk.Tags.of(vpc).add('accelerator:use-central-endpoints', 'true');
           cdk.Tags.of(vpc).add(
             'accelerator:central-endpoints-account-id',
-            this.accountsConfig.getAccountId(centralEndpointVpc.account),
+            this.props.accountsConfig.getAccountId(centralEndpointVpc.account),
           );
         }
 
@@ -549,7 +531,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         for (const [routeTableName, routeTableInfo] of routeTableMap) {
           this.ssmParameters.push({
             logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name)}${pascalCase(routeTableName)}RouteTableId`),
-            parameterName: `/accelerator/network/vpc/${vpcItem.name}/routeTable/${routeTableName}/id`,
+            parameterName: this.getSsmPath(SsmResourceType.ROUTE_TABLE, [vpcItem.name, routeTableName]),
             stringValue: routeTableInfo.routeTableId,
           });
         }
@@ -629,7 +611,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           subnetMap.set(subnetItem.name, subnet);
           this.ssmParameters.push({
             logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(subnetItem.name)}SubnetId`),
-            parameterName: `/accelerator/network/vpc/${vpcItem.name}/subnet/${subnetItem.name}/id`,
+            parameterName: this.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
             stringValue: subnet.subnetId,
           });
 
@@ -687,7 +669,7 @@ export class NetworkVpcStack extends AcceleratorStack {
           natGatewayMap.set(natGatewayItem.name, natGateway);
           this.ssmParameters.push({
             logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name) + pascalCase(natGatewayItem.name)}NatGatewayId`),
-            parameterName: `/accelerator/network/vpc/${vpcItem.name}/natGateway/${natGatewayItem.name}/id`,
+            parameterName: this.getSsmPath(SsmResourceType.NAT_GW, [vpcItem.name, natGatewayItem.name]),
             stringValue: natGateway.natGatewayId,
           });
         }
@@ -733,7 +715,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             logicalId: pascalCase(
               `SsmParam${pascalCase(vpcItem.name) + pascalCase(tgwAttachmentItem.name)}TransitGatewayAttachmentId`,
             ),
-            parameterName: `/accelerator/network/vpc/${vpcItem.name}/transitGatewayAttachment/${tgwAttachmentItem.name}/id`,
+            parameterName: this.getSsmPath(SsmResourceType.TGW_ATTACHMENT, [vpcItem.name, tgwAttachmentItem.name]),
             stringValue: attachment.transitGatewayAttachmentId,
           });
         }
@@ -930,7 +912,7 @@ export class NetworkVpcStack extends AcceleratorStack {
             logicalId: pascalCase(
               `SsmParam${pascalCase(vpcItem.name) + pascalCase(securityGroupItem.name)}SecurityGroup`,
             ),
-            parameterName: `/accelerator/network/vpc/${vpcItem.name}/securityGroup/${securityGroupItem.name}/id`,
+            parameterName: this.getSsmPath(SsmResourceType.SECURITY_GROUP, [vpcItem.name, securityGroupItem.name]),
             stringValue: securityGroup.securityGroupId,
           });
 
@@ -1034,7 +1016,7 @@ export class NetworkVpcStack extends AcceleratorStack {
 
           this.ssmParameters.push({
             logicalId: pascalCase(`SsmParam${pascalCase(vpcItem.name)}${pascalCase(naclItem.name)}Nacl`),
-            parameterName: `/accelerator/network/vpc/${vpcItem.name}/networkAcl/${naclItem.name}/id`,
+            parameterName: this.getSsmPath(SsmResourceType.NACL, [vpcItem.name, naclItem.name]),
             stringValue: networkAcl.networkAclId,
           });
 
@@ -1125,7 +1107,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         //
         for (const loadBalancerItem of props.networkConfig.centralNetworkServices?.gatewayLoadBalancers ?? []) {
           if (vpcItem.name === loadBalancerItem.vpc) {
-            const delegatedAdminAccountId = this.accountsConfig.getAccountId(
+            const delegatedAdminAccountId = this.props.accountsConfig.getAccountId(
               props.networkConfig.centralNetworkServices!.delegatedAdminAccount,
             );
             if (cdk.Stack.of(this).account !== delegatedAdminAccountId) {
@@ -1211,7 +1193,7 @@ export class NetworkVpcStack extends AcceleratorStack {
 
       this.ssmParameters.push({
         logicalId: `${nlbItem.name}-${vpcItem.name}-ssm`,
-        parameterName: `/accelerator/network/vpc/${vpcItem.name}/nlb/${nlbItem.name}/id`,
+        parameterName: this.getSsmPath(SsmResourceType.NLB, [vpcItem.name, nlbItem.name]),
         stringValue: nlb.networkLoadBalancerArn,
       });
     }
@@ -1296,7 +1278,7 @@ export class NetworkVpcStack extends AcceleratorStack {
 
       this.ssmParameters.push({
         logicalId: `${albItem.name}-${vpcItem.name}-ssm`,
-        parameterName: `/accelerator/network/vpc/${vpcItem.name}/alb/${albItem.name}/id`,
+        parameterName: this.getSsmPath(SsmResourceType.ALB, [vpcItem.name, albItem.name]),
         stringValue: alb.applicationLoadBalancerArn,
       });
     }
@@ -1572,7 +1554,7 @@ export class NetworkVpcStack extends AcceleratorStack {
       if (cdk.Stack.of(this).region === this.props.globalConfig.homeRegion && cdk.Stack.of(this).account === account) {
         const role = new cdk.aws_iam.Role(this, `Get${pascalCase(account)}IpamCidrRole`, {
           roleName: `AWSAccelerator-GetIpamCidrRole-${cdk.Stack.of(this).region}`,
-          assumedBy: this.getOrgPrincipals(this.organizationId),
+          assumedBy: this.getOrgPrincipals(this.getOrganizationId()),
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({
               statements: [
@@ -1593,20 +1575,13 @@ export class NetworkVpcStack extends AcceleratorStack {
     }
   }
 
-  private setOrganizationId() {
-    if (this.props.organizationConfig.enable) {
-      return new Organization(this, 'Organization').id;
-    }
-    return undefined;
-  }
-
   private createGatewayLoadBalancer(loadBalancerItem: GwlbConfig, subnetMap: Map<string, Subnet>): void {
     const allowedPrincipals: string[] = [];
     const subnets: string[] = [];
 
     // Set account principals
     for (const endpointItem of loadBalancerItem.endpoints) {
-      const accountId = this.accountsConfig.getAccountId(endpointItem.account);
+      const accountId = this.props.accountsConfig.getAccountId(endpointItem.account);
       if (!allowedPrincipals.includes(accountId)) {
         allowedPrincipals.push(accountId);
       }
@@ -1670,12 +1645,12 @@ export class NetworkVpcStack extends AcceleratorStack {
     this.ssmParameters.push(
       {
         logicalId: pascalCase(`SsmParam${pascalCase(loadBalancerItem.name)}GwlbServiceId`),
-        parameterName: `/accelerator/network/gwlb/${loadBalancerItem.name}/endpointService/id`,
+        parameterName: this.getSsmPath(SsmResourceType.GWLB_SERVICE, [loadBalancerItem.name]),
         stringValue: loadBalancer.endpointServiceId,
       },
       {
         logicalId: pascalCase(`SsmParam${pascalCase(loadBalancerItem.name)}GwlbArn`),
-        parameterName: `/accelerator/network/gwlb/${loadBalancerItem.name}/arn`,
+        parameterName: this.getSsmPath(SsmResourceType.GWLB_ARN, [loadBalancerItem.name]),
         stringValue: loadBalancer.loadBalancerArn,
       },
     );
@@ -1797,7 +1772,7 @@ export class NetworkVpcStack extends AcceleratorStack {
         if (vpnConnection.vpc === vpc.name) {
           const customerGatewayId = cdk.aws_ssm.StringParameter.valueForStringParameter(
             this,
-            `/accelerator/network/customerGateways/${cgw.name}/id`,
+            this.getSsmPath(SsmResourceType.CGW, [cgw.name]),
           );
           const virtualPrivateGatewayId = vpc.virtualPrivateGateway!.gatewayId;
           this.logger.info(`Creating Vpn Connection with Customer Gateway ${cgw.name} to the VPC ${vpnConnection.vpc}`);
@@ -1813,87 +1788,6 @@ export class NetworkVpcStack extends AcceleratorStack {
       }
     }
   }
-  /**
-   * Set IPAM pool map
-   * @param props
-   * @returns
-   */
-  private setIpamPoolMap(props: AcceleratorStackProps) {
-    const poolMap = new Map<string, string>();
-
-    if (props.networkConfig.centralNetworkServices?.ipams) {
-      const delegatedAdminAccountId = this.accountsConfig.getAccountId(
-        props.networkConfig.centralNetworkServices.delegatedAdminAccount,
-      );
-
-      for (const vpcItem of [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])] ?? []) {
-        // Get account IDs
-        const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-        if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
-          for (const alloc of vpcItem.ipamAllocations ?? []) {
-            const ipamPool = props.networkConfig.centralNetworkServices.ipams?.find(item =>
-              item.pools?.find(item => item.name === alloc.ipamPoolName),
-            );
-            if (ipamPool === undefined) {
-              this.logger.error(`Specified Ipam Pool not defined`);
-              throw new Error(`Configuration validation failed at runtime.`);
-            }
-            if (!poolMap.has(alloc.ipamPoolName)) {
-              let poolId: string;
-              if (
-                delegatedAdminAccountId === cdk.Stack.of(this).account &&
-                ipamPool.region === cdk.Stack.of(this).region
-              ) {
-                poolId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                  this,
-                  `/accelerator/network/ipam/pools/${alloc.ipamPoolName}/id`,
-                );
-              } else if (ipamPool.region !== cdk.Stack.of(this).region) {
-                poolId = this.getCrossRegionPoolId(delegatedAdminAccountId, alloc.ipamPoolName, ipamPool.region);
-              } else {
-                poolId = this.getResourceShare(
-                  `${alloc.ipamPoolName}_IpamPoolShare`,
-                  'ec2:IpamPool',
-                  delegatedAdminAccountId,
-                  this.cloudwatchKey,
-                ).resourceShareItemId;
-              }
-              poolMap.set(alloc.ipamPoolName, poolId);
-            }
-          }
-        }
-      }
-    }
-    return poolMap;
-  }
-
-  /**
-   * Function to retrieve IPAM Pool ID from cross-region
-   * @param delegatedAdminAccountId
-   * @param poolName
-   * @param ipamPoolRegion
-   */
-  private getCrossRegionPoolId(delegatedAdminAccountId: string, poolName: string, ipamPoolRegion: string) {
-    let poolId: string | undefined = undefined;
-    if (delegatedAdminAccountId !== cdk.Stack.of(this).account) {
-      poolId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${poolName}`), {
-        name: `/accelerator/network/ipam/pools/${poolName}/id`,
-        accountId: delegatedAdminAccountId,
-        parameterRegion: ipamPoolRegion,
-        roleName: AcceleratorStack.ACCELERATOR_IPAM_SSM_PARAM_ROLE_NAME,
-        kmsKey: this.cloudwatchKey,
-        logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays ?? 365,
-      }).value;
-    } else {
-      poolId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${poolName}`), {
-        name: `/accelerator/network/ipam/pools/${poolName}/id`,
-        accountId: delegatedAdminAccountId,
-        parameterRegion: ipamPoolRegion,
-      }).value;
-    }
-    return poolId;
-  }
 
   /**
    * Function to create TGW peering
@@ -1901,8 +1795,8 @@ export class NetworkVpcStack extends AcceleratorStack {
   private createTransitGatewayPeering() {
     for (const transitGatewayPeeringItem of this.props.networkConfig.transitGatewayPeering ?? []) {
       // Get account IDs
-      const requesterAccountId = this.accountsConfig.getAccountId(transitGatewayPeeringItem.requester.account);
-      const accepterAccountId = this.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account);
+      const requesterAccountId = this.props.accountsConfig.getAccountId(transitGatewayPeeringItem.requester.account);
+      const accepterAccountId = this.props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account);
       const crossAccountCondition =
         accepterAccountId !== requesterAccountId ||
         transitGatewayPeeringItem.accepter.region !== transitGatewayPeeringItem.requester.region;
@@ -1917,11 +1811,14 @@ export class NetworkVpcStack extends AcceleratorStack {
 
         const requesterTransitGatewayRouteTableId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/network/transitGateways/${transitGatewayPeeringItem.requester.transitGatewayName}/routeTables/${transitGatewayPeeringItem.requester.routeTableAssociations}/id`,
+          this.getSsmPath(SsmResourceType.TGW_ROUTE_TABLE, [
+            transitGatewayPeeringItem.requester.transitGatewayName,
+            transitGatewayPeeringItem.requester.routeTableAssociations,
+          ]),
         );
 
         const accepterTransitGatewayId = new SsmParameterLookup(this, 'AccepterTransitGatewayIdLookup', {
-          name: `/accelerator/network/transitGateways/${transitGatewayPeeringItem.accepter.transitGatewayName}/id`,
+          name: this.getSsmPath(SsmResourceType.TGW, [transitGatewayPeeringItem.accepter.transitGatewayName]),
           accountId: this.props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
           parameterRegion: transitGatewayPeeringItem.accepter.region,
           roleName: AcceleratorStack.ACCELERATOR_TGW_PEERING_ROLE_NAME,
@@ -1933,7 +1830,10 @@ export class NetworkVpcStack extends AcceleratorStack {
           this,
           'AccepterTransitGatewayRouteTableIdLookup',
           {
-            name: `/accelerator/network/transitGateways/${transitGatewayPeeringItem.accepter.transitGatewayName}/routeTables/${transitGatewayPeeringItem.accepter.routeTableAssociations}/id`,
+            name: this.getSsmPath(SsmResourceType.TGW_ROUTE_TABLE, [
+              transitGatewayPeeringItem.accepter.transitGatewayName,
+              transitGatewayPeeringItem.accepter.routeTableAssociations,
+            ]),
             accountId: this.props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
             parameterRegion: transitGatewayPeeringItem.accepter.region,
             roleName: AcceleratorStack.ACCELERATOR_TGW_PEERING_ROLE_NAME,
@@ -1982,7 +1882,10 @@ export class NetworkVpcStack extends AcceleratorStack {
           logicalId: pascalCase(
             `SsmParam${transitGatewayPeeringItem.requester.transitGatewayName}${transitGatewayPeeringItem.name}PeeringAttachmentId`,
           ),
-          parameterName: `/accelerator/network/transitGateways/${transitGatewayPeeringItem.requester.transitGatewayName}/peering/${transitGatewayPeeringItem.name}/id`,
+          parameterName: this.getSsmPath(SsmResourceType.TGW_PEERING, [
+            transitGatewayPeeringItem.requester.transitGatewayName,
+            transitGatewayPeeringItem.name,
+          ]),
           stringValue: peeringAttachmentId,
         });
 
@@ -1999,7 +1902,10 @@ export class NetworkVpcStack extends AcceleratorStack {
               kmsKey: this.cloudwatchKey,
               logRetentionInDays: this.logRetention,
               parameter: {
-                name: `/accelerator/network/transitGateways/${transitGatewayPeeringItem.accepter.transitGatewayName}/peering/${transitGatewayPeeringItem.name}/id`,
+                name: this.getSsmPath(SsmResourceType.TGW_PEERING, [
+                  transitGatewayPeeringItem.accepter.transitGatewayName,
+                  transitGatewayPeeringItem.name,
+                ]),
                 accountId: this.props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
                 roleName: AcceleratorStack.ACCELERATOR_TGW_PEERING_ROLE_NAME,
                 value: peeringAttachmentId,
@@ -2013,7 +1919,10 @@ export class NetworkVpcStack extends AcceleratorStack {
             logicalId: pascalCase(
               `SsmParam${transitGatewayPeeringItem.accepter.transitGatewayName}${transitGatewayPeeringItem.name}PeeringAttachmentId`,
             ),
-            parameterName: `/accelerator/network/transitGateways/${transitGatewayPeeringItem.accepter.transitGatewayName}/peering/${transitGatewayPeeringItem.name}/id`,
+            parameterName: this.getSsmPath(SsmResourceType.TGW_PEERING, [
+              transitGatewayPeeringItem.accepter.transitGatewayName,
+              transitGatewayPeeringItem.name,
+            ]),
             stringValue: peeringAttachmentId,
           });
         }
