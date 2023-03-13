@@ -175,7 +175,7 @@ export class GatewayLoadBalancersValidator {
     // Validate subnets are in different AZs
     if (validSubnets.length === gwlb.subnets.length) {
       const azs = validSubnets.map(item => {
-        return item.availabilityZone;
+        return item.availabilityZone ? item.availabilityZone : '';
       });
 
       if (helpers.hasDuplicates(azs)) {

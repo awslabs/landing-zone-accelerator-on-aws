@@ -1337,7 +1337,7 @@ export class NetworkFirewallValidator {
       const azs: string[] = [];
       const subnetNames: string[] = [];
       subnets.forEach(item => {
-        azs.push(item.availabilityZone);
+        azs.push(item.availabilityZone ? item.availabilityZone : '');
         subnetNames.push(item.name);
       });
       if (helpers.hasDuplicates(azs)) {
