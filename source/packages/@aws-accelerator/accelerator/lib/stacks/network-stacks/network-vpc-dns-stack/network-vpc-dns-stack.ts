@@ -26,8 +26,8 @@ import {
 import { HostedZone, RecordSet, ResolverRule } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 
-import { AcceleratorStackProps } from './accelerator-stack';
-import { NetworkStack } from './network-stack';
+import { AcceleratorStackProps } from '../../accelerator-stack';
+import { NetworkStack } from '../network-stack';
 
 export class NetworkVpcDnsStack extends NetworkStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {

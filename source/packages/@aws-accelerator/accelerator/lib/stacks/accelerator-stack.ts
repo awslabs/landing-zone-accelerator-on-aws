@@ -687,7 +687,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
    * @param replacements
    * @returns
    */
-  protected getSsmPath(resourceType: SsmResourceType, replacements: string[]) {
+  public getSsmPath(resourceType: SsmResourceType, replacements: string[]) {
     // Prefix applied to all SSM parameters
     // Static for now, but leaving option to modify for future iterations
     const ssmPrefix = '/accelerator';
@@ -718,7 +718,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
   /**
    * Get the IAM principals for the organization.
    */
-  protected getOrgPrincipals(organizationId: string | undefined): cdk.aws_iam.IPrincipal {
+  public getOrgPrincipals(organizationId: string | undefined): cdk.aws_iam.IPrincipal {
     if (this.props.partition === 'aws-cn' || !this.props.organizationConfig.enable) {
       const accountIds = this.props.accountsConfig.getAccountIds();
       if (accountIds) {

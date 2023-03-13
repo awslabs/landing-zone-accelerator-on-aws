@@ -1433,6 +1433,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkDxgwAccelratorVifVirtualInterface811176E7": {
+      "DependsOn": [
+        "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
+      ],
       "Properties": {
         "Name": "/accelerator/network/directConnectGateways/Network-DXGW/virtualInterfaces/Accelrator-VIF/id",
         "Type": "String",
@@ -1443,6 +1446,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkDxgwDirectConnectGatewayC782B366": {
+      "DependsOn": [
+        "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
+      ],
       "Properties": {
         "Name": "/accelerator/network/directConnectGateways/Network-DXGW/id",
         "Type": "String",
@@ -1453,6 +1459,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkMain2NetworkMain2CoreTransitGatewayRouteTableIdC5E730F7": {
+      "DependsOn": [
+        "SsmParamNetworkMainNetworkMainStandaloneTransitGatewayRouteTableId81A119C5",
+      ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Core/id",
         "Type": "String",
@@ -1463,6 +1472,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkMain2NetworkMain2SegregatedTransitGatewayRouteTableId8571D494": {
+      "DependsOn": [
+        "SsmParamNetworkMainNetworkMainStandaloneTransitGatewayRouteTableId81A119C5",
+      ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Segregated/id",
         "Type": "String",
@@ -1473,6 +1485,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkMain2NetworkMain2SharedTransitGatewayRouteTableIdE9E46782": {
+      "DependsOn": [
+        "SsmParamNetworkMainNetworkMainStandaloneTransitGatewayRouteTableId81A119C5",
+      ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main-2/routeTables/Network-Main-2-Shared/id",
         "Type": "String",
@@ -1493,6 +1508,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamNetworkMain2TransitGatewayId3D6B0437": {
+      "DependsOn": [
+        "SsmParamNetworkMainNetworkMainStandaloneTransitGatewayRouteTableId81A119C5",
+      ],
       "Properties": {
         "Name": "/accelerator/network/transitGateways/Network-Main-2/id",
         "Type": "String",
@@ -1573,6 +1591,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorCgwCustomerGateway984E0261": {
+      "DependsOn": [
+        "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
+      ],
       "Properties": {
         "Name": "/accelerator/network/customerGateways/accelerator-cgw/id",
         "Type": "String",
@@ -1593,6 +1614,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorPolicyNetworkFirewallPolicy68E9C1A5": {
+      "DependsOn": [
+        "SsmParamacceleratorRuleGroupNetworkFirewallRuleGroup28931513",
+      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/policies/accelerator-policy/arn",
         "Type": "String",
@@ -1603,6 +1627,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorQueryLogsCwlQueryLogConfig0E6CC558": {
+      "DependsOn": [
+        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
+      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/queryLogConfigs/accelerator-query-logs-cwl/id",
         "Type": "String",
@@ -1616,6 +1643,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorQueryLogsS3QueryLogConfig0B1FF32F": {
+      "DependsOn": [
+        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
+      ],
       "Properties": {
         "Name": "/accelerator/network/route53Resolver/queryLogConfigs/accelerator-query-logs-s3/id",
         "Type": "String",
@@ -1639,6 +1669,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorStrictPolicyNetworkFirewallPolicy2C70E8B6": {
+      "DependsOn": [
+        "SsmParamacceleratorRuleGroupNetworkFirewallRuleGroup28931513",
+      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/policies/accelerator-strict-policy/arn",
         "Type": "String",
@@ -1649,6 +1682,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorStrictRuleGroupNetworkFirewallRuleGroup315F5768": {
+      "DependsOn": [
+        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
+      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-strict-rule-group/arn",
         "Type": "String",
@@ -1659,6 +1695,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorSuricataRuleGroupNetworkFirewallRuleGroup5707985D": {
+      "DependsOn": [
+        "SsmParamacceleratorBlockGroupRuleGroupEA562A3B",
+      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/accelerator-suricata-rule-group/arn",
         "Type": "String",
@@ -1669,6 +1708,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamacceleratorVpnVpnConnection261CAE04": {
+      "DependsOn": [
+        "SsmParamNetworkMain2NetworkMain2StandaloneTransitGatewayRouteTableIdF641FDF1",
+      ],
       "Properties": {
         "Name": "/accelerator/network/vpnConnection/accelerator-vpn/id",
         "Type": "String",
@@ -1679,6 +1721,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParambasePoolPoolId86A35FFC": {
+      "DependsOn": [
+        "SsmParamacceleratorIpamIpamId271C0A36",
+      ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/base-pool/id",
         "Type": "String",
@@ -1689,6 +1734,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamdomainListGroupNetworkFirewallRuleGroupC2BC037A": {
+      "DependsOn": [
+        "SsmParamacceleratorRuleGroupNetworkFirewallRuleGroup28931513",
+      ],
       "Properties": {
         "Name": "/accelerator/network/networkFirewall/ruleGroups/domain-list-group/arn",
         "Type": "String",
@@ -1699,6 +1747,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamhomeRegionPoolPoolId475D7271": {
+      "DependsOn": [
+        "SsmParamacceleratorIpamIpamId271C0A36",
+      ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/home-region-pool/id",
         "Type": "String",
@@ -1709,6 +1760,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamhomeRegionProdPoolPoolId5672D6D3": {
+      "DependsOn": [
+        "SsmParamacceleratorIpamIpamId271C0A36",
+      ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/home-region-prod-pool/id",
         "Type": "String",
@@ -1719,6 +1773,9 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
       "Type": "AWS::SSM::Parameter",
     },
     "SsmParamwestRegionPoolPoolId673ACD76": {
+      "DependsOn": [
+        "SsmParamacceleratorIpamIpamId271C0A36",
+      ],
       "Properties": {
         "Name": "/accelerator/network/ipam/pools/west-region-pool/id",
         "Type": "String",
