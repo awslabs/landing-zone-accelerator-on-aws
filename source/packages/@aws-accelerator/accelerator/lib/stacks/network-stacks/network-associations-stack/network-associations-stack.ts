@@ -72,8 +72,8 @@ import {
 import { SsmResourceType } from '@aws-accelerator/utils';
 
 import path from 'path';
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { NetworkStack } from './network-stack';
+import { AcceleratorStack, AcceleratorStackProps } from '../../accelerator-stack';
+import { NetworkStack } from '../network-stack';
 
 interface Peering {
   name: string;

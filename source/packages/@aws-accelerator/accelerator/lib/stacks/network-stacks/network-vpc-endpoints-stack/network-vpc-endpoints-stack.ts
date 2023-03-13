@@ -37,8 +37,8 @@ import {
 } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { NetworkStack } from './network-stack';
+import { AcceleratorStack, AcceleratorStackProps } from '../../accelerator-stack';
+import { NetworkStack } from '../network-stack';
 
 export class NetworkVpcEndpointsStack extends NetworkStack {
   private nfwPolicyMap: Map<string, string>;
