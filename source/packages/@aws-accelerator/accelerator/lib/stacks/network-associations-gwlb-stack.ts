@@ -37,12 +37,12 @@ import {
   VpcEndpoint,
   VpcEndpointType,
 } from '@aws-accelerator/constructs';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
-import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { AcceleratorStackProps } from './accelerator-stack';
+import { NetworkStack } from './network-stack';
 
-export class NetworkAssociationsGwlbStack extends AcceleratorStack {
-  private cloudwatchKey: cdk.aws_kms.Key;
-  private logRetention: number;
+export class NetworkAssociationsGwlbStack extends NetworkStack {
   private gwlbMap: Map<string, string>;
   private routeTableMap: Map<string, string>;
   private securityGroupMap: Map<string, string>;
@@ -54,17 +54,11 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
     super(scope, id, props);
 
     // Set initial private properties
-    [this.gwlbMap, this.routeTableMap, this.securityGroupMap, this.subnetMap, this.vpcMap] = this.setInitialMaps();
-    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
-
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
-      ),
-    ) as cdk.aws_kms.Key;
+    this.vpcMap = this.setVpcMap(this.vpcResources);
+    this.subnetMap = this.setSubnetMap(this.vpcResources);
+    this.routeTableMap = this.setRouteTableMap(this.vpcResources);
+    this.securityGroupMap = this.setSecurityGroupMap(this.vpcResources);
+    this.gwlbMap = this.setInitialMaps(this.vpcResources);
 
     //
     // Create firewall instances and target groups
@@ -88,79 +82,20 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
    * Set route table, subnet, and VPC maps for this stack's account and region
    * @returns
    */
-  private setInitialMaps(): Map<string, string>[] {
+  private setInitialMaps(vpcResources: (VpcConfig | VpcTemplatesConfig)[]): Map<string, string> {
     const gwlbMap = new Map<string, string>();
-    const routeTableMap = new Map<string, string>();
-    const securityGroupMap = new Map<string, string>();
-    const subnetMap = new Map<string, string>();
-    const vpcMap = new Map<string, string>();
 
-    for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ?? []) {
+    for (const vpcItem of vpcResources) {
       // Get account IDs
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
-      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
-        // Retrieve VPC resource maps
-        const [routeTableItemMap, securityGroupItemMap, subnetItemMap, vpcItemMap] = this.setVpcResourceMaps(vpcItem);
-
-        // Add items to initial maps
-        routeTableItemMap.forEach((value, key) => routeTableMap.set(key, value));
-        securityGroupItemMap.forEach((value, key) => securityGroupMap.set(key, value));
-        subnetItemMap.forEach((value, key) => subnetMap.set(key, value));
-        vpcItemMap.forEach((value, key) => vpcMap.set(key, value));
-
+      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
         // Retrieve Gateway Load balancers
         const gwlbItemMap = this.setGwlbMap(vpcItem);
         gwlbItemMap.forEach((value, key) => gwlbMap.set(key, value));
       }
     }
-    return [gwlbMap, routeTableMap, securityGroupMap, subnetMap, vpcMap];
-  }
-
-  /**
-   * Set maps for an individual VPC config item
-   * @param vpcItem
-   * @returns
-   */
-  private setVpcResourceMaps(vpcItem: VpcConfig | VpcTemplatesConfig): Map<string, string>[] {
-    const routeTableMap = new Map<string, string>();
-    const securityGroupMap = new Map<string, string>();
-    const subnetMap = new Map<string, string>();
-    const vpcMap = new Map<string, string>();
-    // Set VPC ID
-    const vpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-      this,
-      `/accelerator/network/vpc/${vpcItem.name}/id`,
-    );
-    vpcMap.set(vpcItem.name, vpcId);
-
-    // Set subnet IDs
-    for (const subnetItem of vpcItem.subnets ?? []) {
-      const subnetId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        `/accelerator/network/vpc/${vpcItem.name}/subnet/${subnetItem.name}/id`,
-      );
-      subnetMap.set(`${vpcItem.name}_${subnetItem.name}`, subnetId);
-    }
-
-    // Set security group IDs
-    for (const securityGroupItem of vpcItem.securityGroups ?? []) {
-      const securityGroupId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        `/accelerator/network/vpc/${vpcItem.name}/securityGroup/${securityGroupItem.name}/id`,
-      );
-      securityGroupMap.set(`${vpcItem.name}_${securityGroupItem.name}`, securityGroupId);
-    }
-
-    // Set route table IDs
-    for (const routeTableItem of vpcItem.routeTables ?? []) {
-      const routeTableId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        `/accelerator/network/vpc/${vpcItem.name}/routeTable/${routeTableItem.name}/id`,
-      );
-      routeTableMap.set(`${vpcItem.name}_${routeTableItem.name}`, routeTableId);
-    }
-    return [routeTableMap, securityGroupMap, subnetMap, vpcMap];
+    return gwlbMap;
   }
 
   /**
@@ -174,7 +109,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
       if (gwlbItem.vpc === vpcItem.name) {
         const gwlbArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/network/gwlb/${gwlbItem.name}/arn`,
+          this.getSsmPath(SsmResourceType.GWLB_ARN, [gwlbItem.name]),
         );
         gwlbMap.set(gwlbItem.name, gwlbArn);
       }
@@ -604,11 +539,11 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
    * Create Gateway Load Balancer endpoint resources
    */
   private createGwlbEndpointResources() {
-    for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ?? []) {
+    for (const vpcItem of this.vpcResources) {
       // Get account IDs
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
 
-      if (vpcAccountIds.includes(cdk.Stack.of(this).account) && vpcItem.region === cdk.Stack.of(this).region) {
+      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
         const vpcId = this.vpcMap.get(vpcItem.name);
         if (!vpcId) {
           this.logger.error(`Unable to locate VPC ${vpcItem.name}`);
@@ -675,7 +610,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
         if (!endpointServiceId) {
           if (delegatedAdminAccountId !== cdk.Stack.of(this).account) {
             endpointServiceId = new SsmParameterLookup(this, pascalCase(`SsmParamLookup${loadBalancerItem.name}`), {
-              name: `/accelerator/network/gwlb/${loadBalancerItem.name}/endpointService/id`,
+              name: this.getSsmPath(SsmResourceType.GWLB_SERVICE, [loadBalancerItem.name]),
               accountId: delegatedAdminAccountId,
               parameterRegion: cdk.Stack.of(this).region,
               roleName: `AWSAccelerator-Get${pascalCase(loadBalancerItem.name)}SsmParamRole-${
@@ -687,7 +622,7 @@ export class NetworkAssociationsGwlbStack extends AcceleratorStack {
           } else {
             endpointServiceId = cdk.aws_ssm.StringParameter.valueForStringParameter(
               this,
-              `/accelerator/network/gwlb/${loadBalancerItem.name}/endpointService/id`,
+              this.getSsmPath(SsmResourceType.GWLB_SERVICE, [loadBalancerItem.name]),
             );
           }
         }

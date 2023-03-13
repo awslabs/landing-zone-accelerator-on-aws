@@ -16,11 +16,10 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'change-case';
 import { Construct } from 'constructs';
-import * as path from 'path';
 import * as fs from 'fs';
+import * as path from 'path';
 
 import {
-  AccountsConfig,
   CustomerGatewayConfig,
   DnsFirewallRuleGroupConfig,
   DnsQueryLogsConfig,
@@ -42,7 +41,6 @@ import {
   IpamScope,
   NetworkFirewallPolicy,
   NetworkFirewallRuleGroup,
-  Organization,
   QueryLoggingConfig,
   ResolverFirewallDomainList,
   ResolverFirewallDomainListType,
@@ -53,8 +51,10 @@ import {
   VirtualInterfaceProps,
   VpnConnection,
 } from '@aws-accelerator/constructs';
+import { SsmResourceType } from '@aws-accelerator/utils';
 
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { NetworkStack } from './network-stack';
 
 interface ResolverFirewallRuleProps {
   action: string;
@@ -66,33 +66,20 @@ interface ResolverFirewallRuleProps {
   blockResponse?: string;
 }
 
-export class NetworkPrepStack extends AcceleratorStack {
-  private accountsConfig: AccountsConfig;
+export class NetworkPrepStack extends NetworkStack {
   private domainMap: Map<string, string>;
   private dxGatewayMap: Map<string, string>;
   private nfwRuleMap: Map<string, string>;
   private transitGatewayMap: Map<string, string>;
-  private cloudwatchKey: cdk.aws_kms.Key;
-  private logRetention: number;
-  organizationId: string | undefined;
+  private organizationId: string | undefined;
 
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
     // Set private properties
-    this.accountsConfig = props.accountsConfig;
     this.domainMap = new Map<string, string>();
     this.dxGatewayMap = new Map<string, string>();
     this.nfwRuleMap = new Map<string, string>();
-    this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
-
-    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
-      this,
-      'AcceleratorGetCloudWatchKey',
-      cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
-      ),
-    ) as cdk.aws_kms.Key;
+    this.organizationId = this.getOrganizationId();
 
     //
     // Generate Transit Gateways
@@ -142,9 +129,9 @@ export class NetworkPrepStack extends AcceleratorStack {
   private createTransitGateways(props: AcceleratorStackProps): Map<string, string> {
     const transitGatewayMap = new Map<string, string>();
     for (const tgwItem of props.networkConfig.transitGateways ?? []) {
-      const accountId = this.accountsConfig.getAccountId(tgwItem.account);
+      const accountId = this.props.accountsConfig.getAccountId(tgwItem.account);
 
-      if (accountId === cdk.Stack.of(this).account && tgwItem.region == cdk.Stack.of(this).region) {
+      if (this.isTargetStack([accountId], [tgwItem.region])) {
         const tgw = this.createTransitGatewayItem(tgwItem);
         transitGatewayMap.set(tgwItem.name, tgw.transitGatewayId);
       }
@@ -171,7 +158,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     });
 
     new ssm.StringParameter(this, pascalCase(`SsmParam${tgwItem.name}TransitGatewayId`), {
-      parameterName: `/accelerator/network/transitGateways/${tgwItem.name}/id`,
+      parameterName: this.getSsmPath(SsmResourceType.TGW, [tgwItem.name]),
       stringValue: tgw.transitGatewayId,
     });
 
@@ -192,7 +179,7 @@ export class NetworkPrepStack extends AcceleratorStack {
         this,
         pascalCase(`SsmParam${tgwItem.name}${routeTableItem.name}TransitGatewayRouteTableId`),
         {
-          parameterName: `/accelerator/network/transitGateways/${tgwItem.name}/routeTables/${routeTableItem.name}/id`,
+          parameterName: this.getSsmPath(SsmResourceType.TGW_ROUTE_TABLE, [tgwItem.name, routeTableItem.name]),
           stringValue: routeTable.id,
         },
       );
@@ -216,10 +203,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     for (const transitGatewayPeeringItem of this.props.networkConfig.transitGatewayPeering ?? []) {
       const accepterAccountId = this.props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account);
 
-      if (
-        accepterAccountId === cdk.Stack.of(this).account &&
-        this.props.globalConfig.homeRegion === cdk.Stack.of(this).region
-      ) {
+      if (this.isTargetStack([accepterAccountId], [this.props.globalConfig.homeRegion])) {
         const principals: cdk.aws_iam.PrincipalBase[] = [];
 
         const requestorAccounts = this.props.networkConfig.getTgwRequestorAccountNames(
@@ -294,10 +278,7 @@ export class NetworkPrepStack extends AcceleratorStack {
       }
 
       // Create role in shared account home region only
-      if (
-        sharedAccountIds.includes(cdk.Stack.of(this).account) &&
-        cdk.Stack.of(this).region === this.props.globalConfig.homeRegion
-      ) {
+      if (this.isTargetStack(sharedAccountIds, [this.props.globalConfig.homeRegion])) {
         new cdk.aws_iam.Role(this, 'MadShareAcceptRole', {
           roleName: AcceleratorStack.ACCELERATOR_MAD_SHARE_ACCEPT_ROLE_NAME,
           assumedBy: new cdk.aws_iam.PrincipalWithConditions(new cdk.aws_iam.AccountPrincipal(madAccountId), {
@@ -339,8 +320,8 @@ export class NetworkPrepStack extends AcceleratorStack {
     // Generate Customer Gateways
     //
     for (const cgwItem of props.networkConfig.customerGateways ?? []) {
-      const accountId = this.accountsConfig.getAccountId(cgwItem.account);
-      if (accountId === cdk.Stack.of(this).account && cgwItem.region == cdk.Stack.of(this).region) {
+      const accountId = this.props.accountsConfig.getAccountId(cgwItem.account);
+      if (this.isTargetStack([accountId], [cgwItem.region])) {
         this.logger.info(`Add Customer Gateway ${cgwItem.name} in ${cgwItem.region}`);
         const cgw = new CustomerGateway(this, pascalCase(`${cgwItem.name}CustomerGateway`), {
           name: cgwItem.name,
@@ -350,7 +331,7 @@ export class NetworkPrepStack extends AcceleratorStack {
         });
 
         new ssm.StringParameter(this, pascalCase(`SsmParam${cgwItem.name}CustomerGateway`), {
-          parameterName: `/accelerator/network/customerGateways/${cgwItem.name}/id`,
+          parameterName: this.getSsmPath(SsmResourceType.CGW, [cgwItem.name]),
           stringValue: cgw.customerGatewayId,
         });
 
@@ -395,7 +376,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     });
 
     new ssm.StringParameter(this, pascalCase(`SsmParam${vpnConnectItem.name}VpnConnection`), {
-      parameterName: `/accelerator/network/vpnConnection/${vpnConnectItem.name}/id`,
+      parameterName: this.getSsmPath(SsmResourceType.TGW_VPN, [vpnConnectItem.name]),
       stringValue: vpnConnection.vpnConnectionId,
     });
   }
@@ -417,10 +398,10 @@ export class NetworkPrepStack extends AcceleratorStack {
    * @param dxgwItem
    */
   private createDirectConnectGatewayItem(dxgwItem: DxGatewayConfig): void {
-    const accountId = this.accountsConfig.getAccountId(dxgwItem.account);
+    const accountId = this.props.accountsConfig.getAccountId(dxgwItem.account);
 
     // DXGW is a global object -- only create in home region
-    if (accountId === cdk.Stack.of(this).account && this.props.globalConfig.homeRegion === cdk.Stack.of(this).region) {
+    if (this.isTargetStack([accountId], [this.props.globalConfig.homeRegion])) {
       this.logger.info(`Creating Direct Connect Gateway ${dxgwItem.name}`);
       const dxGateway = new DirectConnectGateway(this, pascalCase(`${dxgwItem.name}DxGateway`), {
         gatewayName: dxgwItem.gatewayName,
@@ -430,7 +411,7 @@ export class NetworkPrepStack extends AcceleratorStack {
       });
       this.ssmParameters.push({
         logicalId: pascalCase(`SsmParam${dxgwItem.name}DirectConnectGateway`),
-        parameterName: `/accelerator/network/directConnectGateways/${dxgwItem.name}/id`,
+        parameterName: this.getSsmPath(SsmResourceType.DXGW, [dxgwItem.name]),
         stringValue: dxGateway.directConnectGatewayId,
       });
       this.dxGatewayMap.set(dxgwItem.name, dxGateway.directConnectGatewayId);
@@ -444,7 +425,7 @@ export class NetworkPrepStack extends AcceleratorStack {
    */
   private validateVirtualInterfaceProps(dxgwItem: DxGatewayConfig): void {
     for (const vifItem of dxgwItem.virtualInterfaces ?? []) {
-      const connectionOwnerAccountId = this.accountsConfig.getAccountId(vifItem.ownerAccount);
+      const connectionOwnerAccountId = this.props.accountsConfig.getAccountId(vifItem.ownerAccount);
       let createVif = false;
       let vifLogicalId: string | undefined = undefined;
       let vifProps: VirtualInterfaceProps | undefined = undefined;
@@ -452,15 +433,14 @@ export class NetworkPrepStack extends AcceleratorStack {
       // If DXGW and connection owner account do not match, create a VIF allocation
       if (
         dxgwItem.account !== vifItem.ownerAccount &&
-        connectionOwnerAccountId === cdk.Stack.of(this).account &&
-        this.props.globalConfig.homeRegion === cdk.Stack.of(this).region
+        this.isTargetStack([connectionOwnerAccountId], [this.props.globalConfig.homeRegion])
       ) {
         this.logger.info(
           `Creating virtual interface allocation ${vifItem.name} to Direct Connect Gateway ${dxgwItem.name}`,
         );
         createVif = true;
         vifLogicalId = pascalCase(`${dxgwItem.name}${vifItem.name}VirtualInterfaceAllocation`);
-        const vifOwnerAccountId = this.accountsConfig.getAccountId(dxgwItem.account);
+        const vifOwnerAccountId = this.props.accountsConfig.getAccountId(dxgwItem.account);
         vifProps = {
           connectionId: vifItem.connectionId,
           customerAsn: vifItem.customerAsn,
@@ -483,8 +463,7 @@ export class NetworkPrepStack extends AcceleratorStack {
       // If DXGW and connection owner account do match, create a VIF
       if (
         dxgwItem.account === vifItem.ownerAccount &&
-        connectionOwnerAccountId === cdk.Stack.of(this).account &&
-        this.props.globalConfig.homeRegion === cdk.Stack.of(this).region
+        this.isTargetStack([connectionOwnerAccountId], [this.props.globalConfig.homeRegion])
       ) {
         this.logger.info(`Creating virtual interface ${vifItem.name} to Direct Connect Gateway ${dxgwItem.name}`);
         createVif = true;
@@ -540,7 +519,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     const virtualInterface = new VirtualInterface(this, vifLogicalId, vifProps);
     this.ssmParameters.push({
       logicalId: pascalCase(`SsmParam${dxgwName}${vifName}VirtualInterface`),
-      parameterName: `/accelerator/network/directConnectGateways/${dxgwName}/virtualInterfaces/${vifName}/id`,
+      parameterName: this.getSsmPath(SsmResourceType.DXVIF, [dxgwName, vifName]),
       stringValue: virtualInterface.virtualInterfaceId,
     });
   }
@@ -557,7 +536,7 @@ export class NetworkPrepStack extends AcceleratorStack {
           this.logger.error(`Unable to locate transit gateway ${associationItem.name}`);
           throw new Error(`Configuration validation failed at runtime.`);
         }
-        const tgwAccountId = this.accountsConfig.getAccountId(tgw.account);
+        const tgwAccountId = this.props.accountsConfig.getAccountId(tgw.account);
 
         // Add to accountIds if accounts do not match
         if (dxgwItem.account !== tgw.account && !accountIds.includes(tgwAccountId)) {
@@ -601,7 +580,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     }
   }
 
-  private createIpamSsmRole(delegatedAdminAccountId: string, organizationId: string): void {
+  private createIpamSsmRole(delegatedAdminAccountId: string): void {
     if (
       this.props.globalConfig.homeRegion === cdk.Stack.of(this).region &&
       cdk.Stack.of(this).account === delegatedAdminAccountId
@@ -609,7 +588,7 @@ export class NetworkPrepStack extends AcceleratorStack {
       this.logger.info(`IPAM Pool: Create IAM role for SSM Parameter pulls`);
       const role = new cdk.aws_iam.Role(this, `GetIpamSsmParamRole`, {
         roleName: AcceleratorStack.ACCELERATOR_IPAM_SSM_PARAM_ROLE_NAME,
-        assumedBy: this.getOrgPrincipals(organizationId),
+        assumedBy: this.getOrgPrincipals(this.organizationId),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
             statements: [
@@ -637,8 +616,7 @@ export class NetworkPrepStack extends AcceleratorStack {
   private createCentralNetworkResources(props: AcceleratorStackProps) {
     if (props.networkConfig.centralNetworkServices) {
       const centralConfig = props.networkConfig.centralNetworkServices;
-      const delegatedAdminAccountId = this.accountsConfig.getAccountId(centralConfig.delegatedAdminAccount);
-      const organizationId = new Organization(this, 'IpamOrgID').id;
+      const delegatedAdminAccountId = props.accountsConfig.getAccountId(centralConfig.delegatedAdminAccount);
 
       //
       // Generate IPAMs
@@ -648,7 +626,7 @@ export class NetworkPrepStack extends AcceleratorStack {
           this.createIpam(delegatedAdminAccountId, ipamItem);
         }
         if (centralConfig.ipams?.length > 0) {
-          this.createIpamSsmRole(delegatedAdminAccountId, organizationId);
+          this.createIpamSsmRole(delegatedAdminAccountId);
         }
       }
 
@@ -694,7 +672,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     if (!fmsConfiguration?.notificationChannels || fmsConfiguration.notificationChannels.length === 0) {
       return;
     }
-    const accountId = this.accountsConfig.getAccountId(fmsConfiguration.delegatedAdminAccount);
+    const accountId = this.props.accountsConfig.getAccountId(fmsConfiguration.delegatedAdminAccount);
     const auditAccountId = this.props.accountsConfig.getAuditAccountId();
     const roleArn = `arn:${cdk.Stack.of(this).partition}:iam::${
       cdk.Stack.of(this).account
@@ -702,7 +680,7 @@ export class NetworkPrepStack extends AcceleratorStack {
 
     for (const notificationChannel of fmsConfiguration.notificationChannels) {
       const snsTopicName = notificationChannel.snsTopic;
-      if (accountId === cdk.Stack.of(this).account && notificationChannel.region === cdk.Stack.of(this).region) {
+      if (this.isTargetStack([accountId], [notificationChannel.region])) {
         const snsTopicsSecurity =
           this.props.securityConfig.centralSecurityServices.snsSubscriptions?.map(
             snsSubscription => snsSubscription.level,
@@ -745,7 +723,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     const poolMap = new Map<string, IpamPool>();
     const scopeMap = new Map<string, IpamScope>();
 
-    if (accountId === cdk.Stack.of(this).account && ipamItem.region === cdk.Stack.of(this).region) {
+    if (this.isTargetStack([accountId], [ipamItem.region])) {
       this.logger.info(`Add IPAM ${ipamItem.name}`);
 
       // Create IPAM
@@ -756,7 +734,7 @@ export class NetworkPrepStack extends AcceleratorStack {
         tags: ipamItem.tags,
       });
       new ssm.StringParameter(this, pascalCase(`SsmParam${ipamItem.name}IpamId`), {
-        parameterName: `/accelerator/network/ipam/${ipamItem.name}/id`,
+        parameterName: this.getSsmPath(SsmResourceType.IPAM, [ipamItem.name]),
         stringValue: ipam.ipamId,
       });
 
@@ -771,7 +749,7 @@ export class NetworkPrepStack extends AcceleratorStack {
         });
         scopeMap.set(scopeItem.name, ipamScope);
         new ssm.StringParameter(this, pascalCase(`SsmParam${scopeItem.name}ScopeId`), {
-          parameterName: `/accelerator/network/ipam/scopes/${scopeItem.name}/id`,
+          parameterName: this.getSsmPath(SsmResourceType.IPAM_SCOPE, [scopeItem.name]),
           stringValue: ipamScope.ipamScopeId,
         });
       }
@@ -812,7 +790,7 @@ export class NetworkPrepStack extends AcceleratorStack {
           });
           poolMap.set(poolItem.name, pool);
           new ssm.StringParameter(this, pascalCase(`SsmParam${poolItem.name}PoolId`), {
-            parameterName: `/accelerator/network/ipam/pools/${poolItem.name}/id`,
+            parameterName: this.getSsmPath(SsmResourceType.IPAM_POOL, [poolItem.name]),
             stringValue: pool.ipamPoolId,
           });
 
@@ -881,7 +859,7 @@ export class NetworkPrepStack extends AcceleratorStack {
               // Record item in pool map
               poolMap.set(poolItem.name, pool);
               new ssm.StringParameter(this, pascalCase(`SsmParam${poolItem.name}PoolId`), {
-                parameterName: `/accelerator/network/ipam/pools/${poolItem.name}/id`,
+                parameterName: this.getSsmPath(SsmResourceType.IPAM_POOL, [poolItem.name]),
                 stringValue: pool.ipamPoolId,
               });
 
@@ -908,7 +886,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     });
 
     // Create regional rule groups in the delegated admin account
-    if (accountId === cdk.Stack.of(this).account && regions.includes(cdk.Stack.of(this).region)) {
+    if (this.isTargetStack([accountId], regions)) {
       for (const ruleItem of firewallItem.rules) {
         let domainListType: ResolverFirewallDomainListType;
         let filePath: string | undefined = undefined;
@@ -1004,7 +982,7 @@ export class NetworkPrepStack extends AcceleratorStack {
         tags: firewallItem.tags ?? [],
       });
       new ssm.StringParameter(this, pascalCase(`SsmParam${firewallItem.name}RuleGroup`), {
-        parameterName: `/accelerator/network/route53Resolver/firewall/ruleGroups/${firewallItem.name}/id`,
+        parameterName: this.getSsmPath(SsmResourceType.DNS_RULE_GROUP, [firewallItem.name]),
         stringValue: ruleGroup.groupId,
       });
 
@@ -1029,7 +1007,7 @@ export class NetworkPrepStack extends AcceleratorStack {
         'CentralLogsBucket',
         `${
           AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
-        }-${this.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
+        }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
       );
 
       const s3QueryLogConfig = new QueryLoggingConfig(this, pascalCase(`${logItem.name}S3QueryLogConfig`), {
@@ -1040,7 +1018,7 @@ export class NetworkPrepStack extends AcceleratorStack {
         kmsKey: this.cloudwatchKey,
       });
       new ssm.StringParameter(this, pascalCase(`SsmParam${logItem.name}S3QueryLogConfig`), {
-        parameterName: `/accelerator/network/route53Resolver/queryLogConfigs/${logItem.name}-s3/id`,
+        parameterName: this.getSsmPath(SsmResourceType.QUERY_LOGS, [`${logItem.name}-s3`]),
         stringValue: s3QueryLogConfig.logId,
       });
 
@@ -1052,7 +1030,6 @@ export class NetworkPrepStack extends AcceleratorStack {
 
     if (logItem.destinations.includes('cloud-watch-logs')) {
       this.logger.info(`Create DNS query log ${logItem.name}-cwl for central CloudWatch logs destination`);
-      const organization = new Organization(this, 'Organization');
 
       const logGroup = new cdk.aws_logs.LogGroup(this, 'QueryLogsLogGroup', {
         encryptionKey: this.cloudwatchKey,
@@ -1062,13 +1039,13 @@ export class NetworkPrepStack extends AcceleratorStack {
       const cwlQueryLogConfig = new QueryLoggingConfig(this, pascalCase(`${logItem.name}CwlQueryLogConfig`), {
         destination: logGroup,
         name: `${logItem.name}-cwl`,
-        organizationId: organization.id,
+        organizationId: this.organizationId,
         partition: this.props.partition,
         logRetentionInDays: this.logRetention,
         kmsKey: this.cloudwatchKey,
       });
       new ssm.StringParameter(this, pascalCase(`SsmParam${logItem.name}CwlQueryLogConfig`), {
-        parameterName: `/accelerator/network/route53Resolver/queryLogConfigs/${logItem.name}-cwl/id`,
+        parameterName: this.getSsmPath(SsmResourceType.QUERY_LOGS, [`${logItem.name}-cwl`]),
         stringValue: cwlQueryLogConfig.logId,
       });
 
@@ -1116,7 +1093,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     });
 
     // Create regional rule groups in the delegated admin account
-    if (accountId === cdk.Stack.of(this).account && regions.includes(cdk.Stack.of(this).region)) {
+    if (this.isTargetStack([accountId], regions)) {
       this.logger.info(`Create network firewall rule group ${ruleItem.name}`);
       let nfwRuleGroupRuleConfig: NfwRuleGroupRuleConfig | undefined;
 
@@ -1150,7 +1127,7 @@ export class NetworkPrepStack extends AcceleratorStack {
       });
       this.nfwRuleMap.set(ruleItem.name, rule.groupArn);
       new ssm.StringParameter(this, pascalCase(`SsmParam${ruleItem.name}NetworkFirewallRuleGroup`), {
-        parameterName: `/accelerator/network/networkFirewall/ruleGroups/${ruleItem.name}/arn`,
+        parameterName: this.getSsmPath(SsmResourceType.NFW_RULE_GROUP, [ruleItem.name]),
         stringValue: rule.groupArn,
       });
 
@@ -1172,7 +1149,7 @@ export class NetworkPrepStack extends AcceleratorStack {
     });
 
     // Create regional rule groups in the delegated admin account
-    if (accountId === cdk.Stack.of(this).account && regions.includes(cdk.Stack.of(this).region)) {
+    if (this.isTargetStack([accountId], regions)) {
       // Store rule group references to associate with policy
       const statefulGroups = [];
       const statelessGroups = [];
@@ -1215,7 +1192,7 @@ export class NetworkPrepStack extends AcceleratorStack {
         tags: policyItem.tags ?? [],
       });
       new ssm.StringParameter(this, pascalCase(`SsmParam${policyItem.name}NetworkFirewallPolicy`), {
-        parameterName: `/accelerator/network/networkFirewall/policies/${policyItem.name}/arn`,
+        parameterName: this.getSsmPath(SsmResourceType.NFW_POLICY, [policyItem.name]),
         stringValue: policy.policyArn,
       });
 

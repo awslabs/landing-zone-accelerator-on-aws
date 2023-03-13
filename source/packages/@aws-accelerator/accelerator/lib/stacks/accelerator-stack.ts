@@ -24,47 +24,22 @@ import {
   BlockDeviceMappingItem,
   CustomizationsConfig,
   DeploymentTargets,
-  DnsFirewallRuleGroupConfig,
-  DnsQueryLogsConfig,
   EbsItemConfig,
   GlobalConfig,
   IamConfig,
-  IpamPoolConfig,
   LifeCycleRule,
-  NetworkAclSubnetSelection,
   NetworkConfig,
   NetworkConfigTypes,
-  NfwFirewallPolicyConfig,
-  NfwRuleGroupConfig,
   OrganizationConfig,
-  ResolverRuleConfig,
   SecurityConfig,
   ShareTargets,
-  SubnetConfig,
-  TransitGatewayConfig,
   VpcConfig,
   VpcTemplatesConfig,
 } from '@aws-accelerator/config';
-import {
-  IResourceShareItem,
-  ResourceShare,
-  ResourceShareItem,
-  ResourceShareOwner,
-  S3LifeCycleRule,
-} from '@aws-accelerator/constructs';
-import { createLogger, policyReplacements } from '@aws-accelerator/utils';
+import { Organization, S3LifeCycleRule } from '@aws-accelerator/constructs';
+import { createLogger, policyReplacements, SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils';
 
 import { version } from '../../../../../package.json';
-
-type ResourceShareType =
-  | DnsFirewallRuleGroupConfig
-  | DnsQueryLogsConfig
-  | IpamPoolConfig
-  | NfwRuleGroupConfig
-  | NfwFirewallPolicyConfig
-  | SubnetConfig
-  | ResolverRuleConfig
-  | TransitGatewayConfig;
 
 export interface AcceleratorStackProps extends cdk.StackProps {
   readonly configDirPath: string;
@@ -403,12 +378,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
     this.ssmParameters = [];
 
     new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
-      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`,
+      parameterName: this.getSsmPath(SsmResourceType.STACK_ID, [cdk.Stack.of(this).stackName]),
       stringValue: cdk.Stack.of(this).stackId,
     });
 
     new cdk.aws_ssm.StringParameter(this, 'SsmParamAcceleratorVersion', {
-      parameterName: `/accelerator/${cdk.Stack.of(this).stackName}/version`,
+      parameterName: this.getSsmPath(SsmResourceType.VERSION, [cdk.Stack.of(this).stackName]),
       stringValue: version,
     });
   }
@@ -694,77 +669,29 @@ export abstract class AcceleratorStack extends cdk.Stack {
   }
 
   /**
-   * Add RAM resource shares to the stack.
-   *
-   * @param item
-   * @param resourceShareName
-   * @param resourceArns
+   * Returns the ID of the AWS Organization, if enabled
+   * @returns
    */
-  protected addResourceShare(item: ResourceShareType, resourceShareName: string, resourceArns: string[]) {
-    // Build a list of principals to share to
-    const principals: string[] = [];
-
-    // Loop through all the defined OUs
-    for (const ouItem of item.shareTargets?.organizationalUnits ?? []) {
-      let ouArn = this.props.organizationConfig.getOrganizationalUnitArn(ouItem);
-      // AWS::RAM::ResourceShare expects the organizations ARN if
-      // sharing with the entire org (Root)
-      if (ouItem === 'Root') {
-        ouArn = ouArn.substring(0, ouArn.lastIndexOf('/')).replace('root', 'organization');
-      }
-      this.logger.info(`Share ${resourceShareName} with Organizational Unit ${ouItem}: ${ouArn}`);
-      principals.push(ouArn);
+  protected getOrganizationId(): string | undefined {
+    if (this.props.organizationConfig.enable) {
+      return new Organization(this, 'Organization').id;
     }
-
-    // Loop through all the defined accounts
-    for (const account of item.shareTargets?.accounts ?? []) {
-      const accountId = this.props.accountsConfig.getAccountId(account);
-      this.logger.info(`Share ${resourceShareName} with Account ${account}: ${accountId}`);
-      principals.push(accountId);
-    }
-
-    // Create the Resource Share
-    new ResourceShare(this, `${pascalCase(resourceShareName)}ResourceShare`, {
-      name: resourceShareName,
-      principals,
-      resourceArns: resourceArns,
-    });
+    return undefined;
   }
 
   /**
-   * Get the resource ID from a RAM share.
+   * Returns the SSM parameter path for the given resource type and replacement strings.
+   * @see {@link SsmParameterPath} for resource type schema
    *
-   * @param resourceShareName
-   * @param itemType
-   * @param owningAccountId
+   * @param resourceType
+   * @param replacements
+   * @returns
    */
-  protected getResourceShare(
-    resourceShareName: string,
-    itemType: string,
-    owningAccountId: string,
-    kmsKey: cdk.aws_kms.Key,
-    vpcName?: string,
-  ): IResourceShareItem {
-    // Generate a logical ID
-    const resourceName = resourceShareName.split('_')[0];
-    const logicalId = vpcName
-      ? `${vpcName}${resourceName}${itemType.split(':')[1]}`
-      : `${resourceName}${itemType.split(':')[1]}`;
-
-    // Lookup resource share
-    const resourceShare = ResourceShare.fromLookup(this, pascalCase(`${logicalId}Share`), {
-      resourceShareOwner: ResourceShareOwner.OTHER_ACCOUNTS,
-      resourceShareName: resourceShareName,
-      owningAccountId,
-    });
-
-    // Represents the item shared by RAM
-    return ResourceShareItem.fromLookup(this, pascalCase(`${logicalId}`), {
-      resourceShare,
-      resourceShareItemType: itemType,
-      kmsKey,
-      logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
-    });
+  protected getSsmPath(resourceType: SsmResourceType, replacements: string[]) {
+    // Prefix applied to all SSM parameters
+    // Static for now, but leaving option to modify for future iterations
+    const ssmPrefix = '/accelerator';
+    return new SsmParameterPath(ssmPrefix, resourceType, replacements).parameterPath;
   }
 
   /**
@@ -1013,22 +940,6 @@ export abstract class AcceleratorStack extends cdk.Stack {
       return cdk.aws_ssm.StringParameter.valueForStringParameter(this, imageIdMatch![1]);
     } else {
       return imageId;
-    }
-  }
-
-  protected isCrossAccountNaclSource(naclItem: string | NetworkAclSubnetSelection): boolean {
-    if (typeof naclItem === 'string') {
-      return false;
-    }
-    const accountId = cdk.Stack.of(this).account;
-    const naclAccount = this.props.accountsConfig.getAccountId(naclItem.account);
-    const region = cdk.Stack.of(this).region;
-    const naclRegion = naclItem.region;
-
-    if (naclRegion && accountId === naclAccount && region === naclRegion) {
-      return false;
-    } else {
-      return true;
     }
   }
 }
