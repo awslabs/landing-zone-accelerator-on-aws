@@ -336,7 +336,7 @@ export class NetworkConfigTypes {
   );
 
   static readonly subnetSourceConfig = t.interface({
-    account: t.optional(t.nonEmptyString),
+    account: t.nonEmptyString,
     vpc: t.nonEmptyString,
     subnets: t.array(t.nonEmptyString),
   });
@@ -376,7 +376,7 @@ export class NetworkConfigTypes {
   );
 
   static readonly networkAclSubnetSelection = t.interface({
-    account: t.optional(t.nonEmptyString),
+    account: t.nonEmptyString,
     vpc: t.nonEmptyString,
     subnet: t.nonEmptyString,
     region: t.optional(t.region),
@@ -481,7 +481,7 @@ export class NetworkConfigTypes {
   });
 
   static readonly virtualPrivateGatewayConfig = t.interface({
-    asn: t.optional(t.number),
+    asn: t.number,
   });
 
   static readonly loadBalancersConfig = t.interface({
@@ -957,7 +957,7 @@ export class DefaultVpcsConfig implements t.TypeOf<typeof NetworkConfigTypes.def
    * Include an array of friendly account names
    * to exclude from default VPC deletion.
    */
-  readonly excludeAccounts = [];
+  readonly excludeAccounts: string[] | undefined = [];
 }
 
 /**
@@ -978,11 +978,11 @@ export class TransitGatewayRouteTableVpcEntryConfig
   /**
    * The friendly name of the account where the VPC resides.
    */
-  readonly account = '';
+  readonly account: string = '';
   /**
    * The friendly name of the VPC.
    */
-  readonly vpcName = '';
+  readonly vpcName: string = '';
 }
 
 /**
@@ -1134,7 +1134,7 @@ export class TransitGatewayRouteTableConfig
   /**
    * A friendly name for the Transit Gateway route table.
    */
-  readonly name = '';
+  readonly name: string = '';
   /**
    * An array of tag objects for the Transit Gateway. route table.
    */
@@ -1169,11 +1169,11 @@ export class TransitGatewayPeeringRequesterConfig
   /**
    * Accepter transit gateway name
    */
-  readonly transitGatewayName = '';
+  readonly transitGatewayName: string = '';
   /**
    * Accepter transit gateway account name
    */
-  readonly account = '';
+  readonly account: string = '';
   /**
    * Accepter transit gateway region name
    */
@@ -1181,7 +1181,7 @@ export class TransitGatewayPeeringRequesterConfig
   /**
    * The friendly name of TGW route table to associate with this attachment.
    */
-  readonly routeTableAssociations = '';
+  readonly routeTableAssociations: string = '';
   /**
    * An array of tag objects for the Transit Gateway Peering.
    */
@@ -1209,11 +1209,11 @@ export class TransitGatewayPeeringAccepterConfig
   /**
    * Accepter transit gateway name
    */
-  readonly transitGatewayName = '';
+  readonly transitGatewayName: string = '';
   /**
    * Accepter transit gateway account name
    */
-  readonly account = '';
+  readonly account: string = '';
   /**
    * Accepter transit gateway region name
    */
@@ -1221,18 +1221,18 @@ export class TransitGatewayPeeringAccepterConfig
   /**
    * The friendly name of TGW route table to associate with this attachment.
    */
-  readonly routeTableAssociations = '';
+  readonly routeTableAssociations: string = '';
   /**
    * Peering request auto accept flag.
    * When this flag is on, peering request will be accepted by LZA
    */
-  readonly autoAccept = true;
+  readonly autoAccept: boolean | undefined = undefined;
   /**
    * Peering request apply tags flag.
    * When this flag is on, requester attachment tags will be applied to peer or accepter attachment also.
    * In peer or accepter attachment existing tags can't be changed, only given tags will be added or modified.
    */
-  readonly applyTags = false;
+  readonly applyTags: boolean | undefined = undefined;
 }
 
 /**
@@ -1273,11 +1273,7 @@ export class TransitGatewayPeeringConfig implements t.TypeOf<typeof NetworkConfi
   /**
    * The friendly name of TGW peering.
    */
-  readonly name = '';
-  /**
-   * Auto accept of transit gateway peering.
-   */
-  readonly autoAccept = true;
+  readonly name: string = '';
   /**
    * Peering attachment requester configuration.
    *
@@ -1320,15 +1316,15 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
   /**
    * A friendly name for the Transit Gateway.
    */
-  readonly name = '';
+  readonly name: string = '';
   /**
    * The friendly name of the account to deploy the Transit Gateway.
    */
-  readonly account = '';
+  readonly account: string = '';
   /**
    * The region name to deploy the Transit Gateway.
    */
-  readonly region = 'us-east-1';
+  readonly region: t.Region = 'us-east-1';
   /**
    * Resource Access Manager (RAM) share targets.
    *
@@ -1337,7 +1333,7 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
    *
    * @see {@link t.ShareTargets}
    */
-  readonly shareTargets: t.ShareTargets = new t.ShareTargets();
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
   /**
    * A Border Gateway Protocol (BGP) Autonomous System Number (ASN).
    *
@@ -1346,7 +1342,7 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
    *
    * The range is 4200000000 to 4294967294 for 32-bit ASNs.
    */
-  readonly asn = 65521;
+  readonly asn: number = 65521;
   /**
    * Configure DNS support between VPCs.
    *
@@ -1355,7 +1351,7 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
    * to private IPv4 addresses when queried from instances in another VPC attached
    * to the transit gateway.
    */
-  readonly dnsSupport = 'enable';
+  readonly dnsSupport: t.EnableDisable = 'enable';
   /**
    * Equal Cost Multipath (ECMP) routing support between VPN tunnels.
    *
@@ -1363,7 +1359,7 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
    * Enable this option if you need Equal Cost Multipath (ECMP) routing support between VPN tunnels.
    * If connections advertise the same CIDRs, the traffic is distributed equally between them.
    */
-  readonly vpnEcmpSupport = 'enable';
+  readonly vpnEcmpSupport: t.EnableDisable = 'enable';
   /**
    * Configure default route table association.
    *
@@ -1371,7 +1367,7 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
    * Enable this option to automatically associate transit gateway attachments with the default
    * route table for the transit gateway.
    */
-  readonly defaultRouteTableAssociation = 'enable';
+  readonly defaultRouteTableAssociation: t.EnableDisable = 'enable';
   /**
    * Configure default route table propagation.
    *
@@ -1379,11 +1375,11 @@ export class TransitGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.
    * Enable this option to automatically propagate transit gateway attachments to the default
    * route table for the transit gateway.
    */
-  readonly defaultRouteTablePropagation = 'enable';
+  readonly defaultRouteTablePropagation: t.EnableDisable = 'enable';
   /**
    * Enable this option to automatically accept cross-account attachments.
    */
-  readonly autoAcceptSharingAttachments = 'disable';
+  readonly autoAcceptSharingAttachments: t.EnableDisable = 'disable';
   /**
    * An array of Transit Gateway route table configuration objects.
    *
@@ -1979,7 +1975,7 @@ export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.rout
   /**
    * A friendly name for the VPC route table.
    */
-  readonly name = '';
+  readonly name: string = '';
   /**
    * Designate a gateway to associate this route table with.
    *
@@ -1992,11 +1988,11 @@ export class RouteTableConfig implements t.TypeOf<typeof NetworkConfigTypes.rout
    *
    * @see {@link RouteTableEntryConfig}
    */
-  readonly routes: RouteTableEntryConfig[] = [];
+  readonly routes: RouteTableEntryConfig[] | undefined = undefined;
   /**
    * An array of tag objects for the VPC route table.
    */
-  readonly tags: t.Tag[] = [];
+  readonly tags: t.Tag[] | undefined = undefined;
 }
 
 /**
@@ -2029,19 +2025,19 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
   /**
    * A friendly name for the VPC subnet.
    */
-  readonly name = '';
+  readonly name: string = '';
   /**
    * The Availability Zone (AZ) the subnet resides in.
    *
    * @remarks
    * Include only the letter of the AZ name (i.e. 'a' for 'us-east-1a').
-   * Not needed if providing an outpost
+   * Not needed if providing an outpost, otherwise required
    */
-  readonly availabilityZone = '';
+  readonly availabilityZone: string | undefined = undefined;
   /**
    * The friendly name of the route table to associate with the subnet.
    */
-  readonly routeTable = '';
+  readonly routeTable: string = '';
   /**
    * The IPAM pool configuration for the subnet.
    *
@@ -2075,7 +2071,7 @@ export class SubnetConfig implements t.TypeOf<typeof NetworkConfigTypes.subnetCo
    *
    * @see {@link t.ShareTargets}
    */
-  readonly shareTargets: t.ShareTargets = new t.ShareTargets();
+  readonly shareTargets: t.ShareTargets | undefined = undefined;
   /**
    * An array of tag objects for the VPC subnet.
    */
@@ -2163,11 +2159,11 @@ export class TransitGatewayAttachmentTargetConfig
   /**
    * A friendly name for the attachment target.
    */
-  readonly name = '';
+  readonly name: string = '';
   /**
    * The friendly name of the account for the attachment target.
    */
-  readonly account = '';
+  readonly account: string = '';
 }
 
 /**
@@ -2219,11 +2215,11 @@ export class LocalGatewayRouteTableConfig implements t.TypeOf<typeof NetworkConf
   /**
    * A friendly name for the Route Table
    */
-  readonly name = '';
+  readonly name: string = '';
   /**
    * The id for the Route Table
    */
-  readonly id = '';
+  readonly id: string = '';
 }
 /**
  * *{@link NetworkConfig} / {@link VpcConfig} / {@link OutpostsConfig} / {@link LocalGatewayConfig}*
@@ -2241,11 +2237,11 @@ export class LocalGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.lo
   /**
    * A friendly name for the Local Gateway
    */
-  readonly name = '';
+  readonly name: string = '';
   /**
    * The id for the Local Gateway
    */
-  readonly id = '';
+  readonly id: string = '';
   /**
    * The route tables for the Local Gateway
    */
@@ -2273,15 +2269,15 @@ export class OutpostsConfig implements t.TypeOf<typeof NetworkConfigTypes.outpos
   /**
    * A friendly name for the Outpost
    */
-  readonly name = '';
+  readonly name: string = '';
   /**
    * The ARN for the Outpost
    */
-  readonly arn = '';
+  readonly arn: string = '';
   /**
    * The availability zone for the Outpost
    */
-  readonly availabilityZone = '';
+  readonly availabilityZone: string = '';
   /**
    * The Local Gateway for the Outpost
    */
@@ -2314,7 +2310,7 @@ export class TransitGatewayAttachmentConfig
   /**
    * A friendly name for the Transit Gateway attachment.
    */
-  readonly name = '';
+  readonly name: string = '';
   /**
    * A Transit Gateway attachment target configuration object.
    *
@@ -2485,11 +2481,11 @@ export class SubnetSourceConfig implements t.TypeOf<typeof NetworkConfigTypes.su
   /**
    * The friendly name of the account in which the VPC subnet resides.
    */
-  readonly account = '';
+  readonly account: string = '';
   /**
    * The friendly name of the VPC in which the subnet resides.
    */
-  readonly vpc = '';
+  readonly vpc: string = '';
   /**
    * An array of the friendly names of subnets to reference.
    */
@@ -2559,7 +2555,7 @@ export class PrefixListConfig implements t.TypeOf<typeof NetworkConfigTypes.pref
   /**
    * A friendly name for the prefix list.
    */
-  readonly name = '';
+  readonly name: string = '';
   /**
    * An array of friendly names for the accounts the prefix list is deployed.
    */
@@ -2573,11 +2569,11 @@ export class PrefixListConfig implements t.TypeOf<typeof NetworkConfigTypes.pref
   /**
    * The IP address family of the prefix list.
    */
-  readonly addressFamily = 'IPv4';
+  readonly addressFamily: t.TypeOf<typeof NetworkConfigTypes.ipAddressFamilyEnum> = 'IPv4';
   /**
    * The maximum allowed entries in the prefix list.
    */
-  readonly maxEntries = 1;
+  readonly maxEntries: number = 1;
   /**
    * An array of CIDR entries for the prefix list.
    *
@@ -2610,7 +2606,7 @@ export class SecurityGroupRuleConfig implements t.TypeOf<typeof NetworkConfigTyp
   /**
    * A Description for the security group rule.
    */
-  readonly description = '';
+  readonly description: string = '';
   /**
    * An array of protocol types to include in the security group rule.
    *
@@ -2674,11 +2670,11 @@ export class SecurityGroupConfig implements t.TypeOf<typeof NetworkConfigTypes.s
   /**
    * The friendly name of the security group.
    */
-  readonly name = '';
+  readonly name: string = '';
   /**
    * A description for the security group.
    */
-  readonly description = '';
+  readonly description: string | undefined = undefined;
   /**
    * An array of security group rule configurations for ingress rules.
    *
@@ -2714,15 +2710,15 @@ export class NetworkAclSubnetSelection implements t.TypeOf<typeof NetworkConfigT
   /**
    * The friendly name of the account of the subnet.
    */
-  readonly account = '';
+  readonly account: string = '';
   /**
    * The friendly name of the VPC of the subnet.
    */
-  readonly vpc = '';
+  readonly vpc: string = '';
   /**
    * The friendly name of the subnet.
    */
-  readonly subnet = '';
+  readonly subnet: string = '';
 
   /**
    * The region that the subnet is located in.
@@ -2753,23 +2749,23 @@ export class NetworkAclInboundRuleConfig implements t.TypeOf<typeof NetworkConfi
    * @remarks
    * Rules are evaluated in order from low to high.
    */
-  readonly rule = 100;
+  readonly rule: number = 100;
   /**
    * The protocol for the network ACL rule.
    */
-  readonly protocol = -1;
+  readonly protocol: number = -1;
   /**
    * The port to start from in the network ACL rule.
    */
-  readonly fromPort = -1;
+  readonly fromPort: number = -1;
   /**
    * The port to end with in the network ACL rule.
    */
-  readonly toPort = -1;
+  readonly toPort: number = -1;
   /**
    * The action for the network ACL rule.
    */
-  readonly action = 'allow';
+  readonly action: t.AllowDeny = 'allow';
   /**
    * The source of the network ACL rule.
    *
@@ -2804,23 +2800,23 @@ export class NetworkAclOutboundRuleConfig implements t.TypeOf<typeof NetworkConf
    * @remarks
    * Rules are evaluated in order from low to high.
    */
-  readonly rule = 100;
+  readonly rule: number = 100;
   /**
    * The protocol for the network ACL rule.
    */
-  readonly protocol = -1;
+  readonly protocol: number = -1;
   /**
    * The port to start from in the network ACL rule.
    */
-  readonly fromPort = -1;
+  readonly fromPort: number = -1;
   /**
    * The port to end with in the network ACL rule.
    */
-  readonly toPort = -1;
+  readonly toPort: number = -1;
   /**
    * The action for the network ACL rule.
    */
-  readonly action = 'allow';
+  readonly action: t.AllowDeny = 'allow';
   /**
    * The destination of the network ACL rule.
    *
@@ -2867,7 +2863,7 @@ export class NetworkAclConfig implements t.TypeOf<typeof NetworkConfigTypes.netw
    * The value of this property will be utilized as the logical id for this
    * resource. Any references to this object should specify this value.
    */
-  readonly name = '';
+  readonly name: string = '';
 
   /**
    * A list of subnets to associate with the Network ACL
@@ -3075,7 +3071,7 @@ export class VpnConnectionConfig implements t.TypeOf<typeof NetworkConfigTypes.v
    * The value of this property will be utilized as the logical id for this
    * resource. Any references to this object should specify this value.
    */
-  readonly name = '';
+  readonly name: string = '';
 
   /**
    * The logical name of the Transit Gateway that the customer Gateway is attached to
@@ -3121,7 +3117,7 @@ export class VpnConnectionConfig implements t.TypeOf<typeof NetworkConfigTypes.v
    * If creating a VPN connection for a device that doesn't support Border Gateway Protocol (BGP)
    * declare true as a value, otherwise, use false.
    */
-  readonly staticRoutesOnly: boolean | undefined = true;
+  readonly staticRoutesOnly: boolean | undefined = undefined;
 
   /**
    * An array of tags for the VPN Connection.
@@ -3132,7 +3128,7 @@ export class VpnConnectionConfig implements t.TypeOf<typeof NetworkConfigTypes.v
    * Define the optional VPN Tunnel configuration
    * @see {@link VpnTunnelOptionsSpecificationsConfig}
    */
-  readonly tunnelSpecifications: VpnTunnelOptionsSpecificationsConfig[] = [];
+  readonly tunnelSpecifications: VpnTunnelOptionsSpecificationsConfig[] | undefined = undefined;
 }
 
 /**
@@ -3170,17 +3166,17 @@ export class CustomerGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes
    * The value of this property will be utilized as the logical id for this
    * resource. Any references to this object should specify this value.
    */
-  readonly name = '';
+  readonly name: string = '';
 
   /**
    * The logical name of the account to deploy the VPC to
    */
-  readonly account = '';
+  readonly account: string = '';
 
   /**
    * The AWS region to provision the customer gateway in
    */
-  readonly region = 'us-east-1';
+  readonly region: t.Region = 'us-east-1';
 
   /**
    * Defines the IP address of the Customer Gateway
@@ -3193,7 +3189,7 @@ export class CustomerGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes
    * @remarks
    * The private ASN range is 64512 to 65534. The default is 65000.
    */
-  readonly asn = 65000;
+  readonly asn: number = 65000;
 
   /**
    * Define tags for the Customer Gateway
@@ -3239,7 +3235,7 @@ export class VirtualPrivateGatewayConfig implements t.TypeOf<typeof NetworkConfi
    * @remarks
    * The private ASN range is 64512 to 65534. The default is 65000.
    */
-  readonly asn = 65000;
+  readonly asn: number = 65000;
 }
 
 /**
@@ -3292,17 +3288,17 @@ export class VpcConfig implements t.TypeOf<typeof NetworkConfigTypes.vpcConfig> 
    * The value of this property will be utilized as the logical id for this
    * resource. Any references to this object should specify this value.
    */
-  readonly name = '';
+  readonly name: string = '';
 
   /**
    * The logical name of the account to deploy the VPC to
    */
-  readonly account = '';
+  readonly account: string = '';
 
   /**
    * The AWS region to deploy the VPC to
    */
-  readonly region = 'us-east-1';
+  readonly region: t.Region = 'us-east-1';
 
   /**
    * A list of CIDRs to associate with the VPC.
@@ -3498,12 +3494,12 @@ export class VpcTemplatesConfig implements t.TypeOf<typeof NetworkConfigTypes.vp
    * The value of this property will be utilized as the logical id for this
    * resource. Any references to this object should specify this value.
    */
-  readonly name = '';
+  readonly name: string = '';
 
   /**
    * The AWS region to deploy the VPCs to
    */
-  readonly region = 'us-east-1';
+  readonly region: t.Region = 'us-east-1';
 
   /**
    * VPC deployment targets.
@@ -4451,7 +4447,7 @@ export class NfwRuleSourceStatelessRuleDefinitionConfig
    *
    * @see {@link NetworkConfigTypes.nfwStatelessRuleActionType}
    */
-  readonly actions: t.TypeOf<typeof NetworkConfigTypes.nfwStatelessRuleActionType>[] = ['aws:drop'];
+  readonly actions: t.TypeOf<typeof NetworkConfigTypes.nfwStatelessRuleActionType>[] | string[] = ['aws:drop'];
   /**
    * A Network Firewall stateless rule match attributes configuration.
    *
@@ -4946,11 +4942,13 @@ export class NfwFirewallPolicyPolicyConfig
   /**
    * An array of default actions to take on packets evaluated by the stateless engine.
    */
-  readonly statelessDefaultActions: string[] = [];
+  readonly statelessDefaultActions: string[] | t.TypeOf<typeof NetworkConfigTypes.nfwStatelessRuleActionType>[] = [];
   /**
    * An array of default actions to take on fragmented packets.
    */
-  readonly statelessFragmentDefaultActions: string[] = [];
+  readonly statelessFragmentDefaultActions:
+    | string[]
+    | t.TypeOf<typeof NetworkConfigTypes.nfwStatelessRuleActionType>[] = [];
   /**
    * An array of default actions to take on packets evaluated by the stateful engine.
    */
@@ -5555,7 +5553,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    *
    * @see {@link TransitGatewayPeeringConfig}
    */
-  readonly transitGatewayPeering: TransitGatewayPeeringConfig[] = [];
+  readonly transitGatewayPeering: TransitGatewayPeeringConfig[] | undefined = undefined;
 
   /**
    * An array of Customer Gateway configurations.
@@ -5682,7 +5680,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
     peeringName: string,
     peerType: 'requester' | 'accepter',
   ): TransitGatewayPeeringRequesterConfig | TransitGatewayPeeringAccepterConfig | undefined {
-    for (const transitGatewayPeering of this.transitGatewayPeering) {
+    for (const transitGatewayPeering of this.transitGatewayPeering ?? []) {
       if (transitGatewayPeering.name === peeringName) {
         if (peerType === 'requester') {
           return transitGatewayPeering.requester;

@@ -841,7 +841,7 @@ export class VpcValidator {
       if (!subnet) {
         errors.push(`[VPC ${vpcItem.name}]: interfaceEndpoints target subnet "${subnetName}" does not exist in VPC`);
       } else {
-        azs.push(subnet.availabilityZone);
+        azs.push(subnet.availabilityZone ? subnet.availabilityZone : '');
       }
     });
     // Validate there are no duplicate AZs
@@ -1918,6 +1918,7 @@ export class VpcValidator {
    */
   private validateSubnetStructure(vpcItem: VpcConfig | VpcTemplatesConfig, errors: string[]) {
     vpcItem.subnets?.forEach(subnet => {
+      // Validate a CIDR or IPAM allocation is defined
       if (subnet.ipv4CidrBlock && subnet.ipamAllocation) {
         errors.push(
           `[VPC ${vpcItem.name} subnet ${subnet.name}]: cannot define both ipv4CidrBlock and ipamAllocation properties`,
@@ -1926,6 +1927,17 @@ export class VpcValidator {
       if (!subnet.ipv4CidrBlock && !subnet.ipamAllocation) {
         errors.push(
           `[VPC ${vpcItem.name} subnet ${subnet.name}]: must define either ipv4CidrBlock or ipamAllocation property`,
+        );
+      }
+      // Validate an AZ is assigned
+      if (subnet.availabilityZone && subnet.outpost) {
+        errors.push(
+          `[VPC ${vpcItem.name} subnet ${subnet.name}]: cannot define both availabilityZone and outpost properties`,
+        );
+      }
+      if (!subnet.availabilityZone && !subnet.outpost) {
+        errors.push(
+          `[VPC ${vpcItem.name} subnet ${subnet.name}]: must define either availabilityZone or outpost property`,
         );
       }
     });
@@ -2128,7 +2140,7 @@ export class VpcValidator {
           `[VPC ${vpcItem.name} TGW attachment ${attach.name}]: target subnet "${subnetName}" does not exist in VPC "${vpcItem.name}"`,
         );
       } else {
-        subnetAzs.push(subnet.availabilityZone);
+        subnetAzs.push(subnet.availabilityZone ? subnet.availabilityZone : '');
       }
     });
 

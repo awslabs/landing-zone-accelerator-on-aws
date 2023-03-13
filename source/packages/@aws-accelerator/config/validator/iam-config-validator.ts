@@ -137,7 +137,7 @@ export class IamConfigValidator {
         vpcSubnetLists.push({
           vpcName: vpc.name,
           subnetName: subnet.name,
-          subnetAz: subnet.availabilityZone,
+          subnetAz: subnet.availabilityZone ? subnet.availabilityZone : '',
         });
       }
     }
