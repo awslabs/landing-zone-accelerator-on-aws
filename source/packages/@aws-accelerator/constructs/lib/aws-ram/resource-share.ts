@@ -104,7 +104,6 @@ export abstract class ResourceShareItem extends cdk.Resource implements IResourc
       constructor(scope: Construct, id: string) {
         super(scope, id);
 
-        console.log(options.resourceShare.resourceShareId);
         const GET_RESOURCE_SHARE_ITEM = 'Custom::GetResourceShareItem';
 
         const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, GET_RESOURCE_SHARE_ITEM, {

@@ -117,7 +117,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
   /**
    * Accelerator VPC flow log bucket arn SSM parameter name
    */
-  protected static readonly ACCELERATOR_VPC_FLOW_LOGS_DESTINATION_S3_BUCKET_ARN_PARAMETER_NAME =
+  public static readonly ACCELERATOR_VPC_FLOW_LOGS_DESTINATION_S3_BUCKET_ARN_PARAMETER_NAME =
     '/accelerator/vpc/flow-logs/destination/bucket/arn';
   /**
    * Accelerator Metadata bucket prefix
@@ -421,7 +421,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     }
   }
 
-  protected isIncluded(deploymentTargets: DeploymentTargets): boolean {
+  public isIncluded(deploymentTargets: DeploymentTargets): boolean {
     // Explicit Denies
     if (
       this.isRegionExcluded(deploymentTargets.excludedRegions) ||
@@ -478,7 +478,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     }
   }
 
-  protected getAccountIdsFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
+  public getAccountIdsFromDeploymentTarget(deploymentTargets: DeploymentTargets): string[] {
     const accountIds: string[] = [];
 
     for (const ou of deploymentTargets.organizationalUnits ?? []) {
@@ -525,7 +525,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     return accountIds;
   }
 
-  protected getVpcAccountIds(vpcItem: VpcConfig | VpcTemplatesConfig): string[] {
+  public getVpcAccountIds(vpcItem: VpcConfig | VpcTemplatesConfig): string[] {
     let vpcAccountIds: string[];
 
     if (NetworkConfigTypes.vpcConfig.is(vpcItem)) {
@@ -581,7 +581,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     return false;
   }
 
-  protected isAccountExcluded(accounts: string[]): boolean {
+  public isAccountExcluded(accounts: string[]): boolean {
     for (const account of accounts ?? []) {
       if (cdk.Stack.of(this).account === this.props.accountsConfig.getAccountId(account)) {
         this.logger.info(`${account} account explicitly excluded`);
