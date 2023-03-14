@@ -20,6 +20,7 @@ import {
   NfwRuleGroupConfig,
   ResolverRuleConfig,
   SubnetConfig,
+  TransitGatewayAttachmentConfig,
   TransitGatewayConfig,
   VpcConfig,
   VpcTemplatesConfig,
@@ -59,16 +60,30 @@ export enum LogLevel {
  * Abstract class definition and methods for network stacks
  */
 export abstract class NetworkStack extends AcceleratorStack {
+  /**
+   * Cloudwatch KMS key
+   */
   public readonly cloudwatchKey: cdk.aws_kms.Key;
+  /**
+   * Global CloudWatch logs retention setting
+   */
   public readonly logRetention: number;
+  /**
+   * VPCs and VPC templates in scope of the current stack context
+   */
+  public readonly vpcsInScope: (VpcConfig | VpcTemplatesConfig)[];
+  /**
+   * All VPC and VPC template resources in the network configuration
+   */
   public readonly vpcResources: (VpcConfig | VpcTemplatesConfig)[];
 
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
 
-    // Set protected properties
+    // Set properties
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
     this.vpcResources = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])];
+    this.vpcsInScope = this.getVpcsInScope(this.vpcResources);
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
       this,
@@ -78,6 +93,31 @@ export abstract class NetworkStack extends AcceleratorStack {
         AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
       ),
     ) as cdk.aws_kms.Key;
+  }
+
+  /**
+   *
+   *
+   *        Network Stack helper methods
+   *
+   */
+
+  /**
+   * Get VPCs in current scope of the stack context
+   * @param vpcResources
+   * @returns
+   */
+  private getVpcsInScope(vpcResources: (VpcConfig | VpcTemplatesConfig)[]): (VpcConfig | VpcTemplatesConfig)[] {
+    const vpcsInScope: (VpcConfig | VpcTemplatesConfig)[] = [];
+
+    for (const vpcItem of vpcResources) {
+      const vpcAccountIds = this.getVpcAccountIds(vpcItem);
+
+      if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
+        vpcsInScope.push(vpcItem);
+      }
+    }
+    return vpcsInScope;
   }
 
   /**
@@ -215,6 +255,69 @@ export abstract class NetworkStack extends AcceleratorStack {
       }
     }
     return securityGroupMap;
+  }
+
+  /**
+   * Returns a map of transit gateway resources being targeted based on the
+   * attachments for VPCs in a given stack
+   * @param vpcResources
+   * @returns
+   */
+  public setVpcTransitGatewayMap(vpcResources: (VpcConfig | VpcTemplatesConfig)[]): Map<string, string> {
+    const transitGatewayMap = new Map<string, string>();
+
+    for (const vpcItem of vpcResources) {
+      for (const attachment of vpcItem.transitGatewayAttachments ?? []) {
+        // If the map does not have the TGW ID, set it
+        if (!transitGatewayMap.has(attachment.transitGateway.name)) {
+          transitGatewayMap.set(attachment.transitGateway.name, this.getTransitGatewayItem(attachment));
+        }
+      }
+    }
+    return transitGatewayMap;
+  }
+
+  /**
+   * Returns the transit gateway ID for a given VPC attachment
+   * @param attachment
+   */
+  protected getTransitGatewayItem(attachment: TransitGatewayAttachmentConfig): string {
+    const owningAccountId = this.props.accountsConfig.getAccountId(attachment.transitGateway.account);
+    let tgwId: string;
+    // If owning account is this account, transit gateway id can be
+    // retrieved from ssm parameter store
+    if (owningAccountId === cdk.Stack.of(this).account) {
+      tgwId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        this.getSsmPath(SsmResourceType.TGW, [attachment.transitGateway.name]),
+      );
+    }
+    // Else, need to get the transit gateway from the resource shares
+    else {
+      // Get the resource share related to the transit gateway
+      tgwId = this.getResourceShare(
+        `${attachment.transitGateway.name}_TransitGatewayShare`,
+        'ec2:TransitGateway',
+        owningAccountId,
+        this.cloudwatchKey,
+      ).resourceShareItemId;
+    }
+    return tgwId;
+  }
+
+  /**
+   * Get Transit Gateway ID from a given map, if it exists
+   * @param transitGatewayMap
+   * @param tgwName
+   * @returns
+   */
+  public getTransitGatewayId(transitGatewayMap: Map<string, string>, tgwName: string) {
+    if (!transitGatewayMap.get(tgwName)) {
+      this.logger.error(`Transit Gateway ${tgwName} does not exist in map`);
+      throw new Error(`Configuration validation failed at runtime.`);
+    }
+
+    return transitGatewayMap.get(tgwName)!;
   }
 
   /**
@@ -404,7 +507,7 @@ export abstract class NetworkStack extends AcceleratorStack {
    * @param naclItem
    * @returns
    */
-  protected isCrossAccountNaclSource(naclItem: string | NetworkAclSubnetSelection): boolean {
+  public isCrossAccountNaclSource(naclItem: string | NetworkAclSubnetSelection): boolean {
     if (typeof naclItem === 'string') {
       return false;
     }
@@ -433,41 +536,36 @@ export abstract class NetworkStack extends AcceleratorStack {
         props.networkConfig.centralNetworkServices.delegatedAdminAccount,
       );
 
-      for (const vpcItem of this.vpcResources) {
-        // Get account IDs
-        const vpcAccountIds = this.getVpcAccountIds(vpcItem);
-
-        if (this.isTargetStack(vpcAccountIds, [vpcItem.region])) {
-          for (const alloc of vpcItem.ipamAllocations ?? []) {
-            const ipamPool = props.networkConfig.centralNetworkServices.ipams?.find(item =>
-              item.pools?.find(item => item.name === alloc.ipamPoolName),
-            );
-            if (ipamPool === undefined) {
-              this.logger.error(`Specified Ipam Pool not defined`);
-              throw new Error(`Configuration validation failed at runtime.`);
+      for (const vpcItem of this.vpcsInScope) {
+        for (const alloc of vpcItem.ipamAllocations ?? []) {
+          const ipamPool = props.networkConfig.centralNetworkServices.ipams?.find(item =>
+            item.pools?.find(item => item.name === alloc.ipamPoolName),
+          );
+          if (ipamPool === undefined) {
+            this.logger.error(`Specified Ipam Pool not defined`);
+            throw new Error(`Configuration validation failed at runtime.`);
+          }
+          if (!poolMap.has(alloc.ipamPoolName)) {
+            let poolId: string;
+            if (
+              delegatedAdminAccountId === cdk.Stack.of(this).account &&
+              ipamPool.region === cdk.Stack.of(this).region
+            ) {
+              poolId = cdk.aws_ssm.StringParameter.valueForStringParameter(
+                this,
+                this.getSsmPath(SsmResourceType.IPAM_POOL, [alloc.ipamPoolName]),
+              );
+            } else if (ipamPool.region !== cdk.Stack.of(this).region) {
+              poolId = this.getCrossRegionPoolId(delegatedAdminAccountId, alloc.ipamPoolName, ipamPool.region);
+            } else {
+              poolId = this.getResourceShare(
+                `${alloc.ipamPoolName}_IpamPoolShare`,
+                'ec2:IpamPool',
+                delegatedAdminAccountId,
+                this.cloudwatchKey,
+              ).resourceShareItemId;
             }
-            if (!poolMap.has(alloc.ipamPoolName)) {
-              let poolId: string;
-              if (
-                delegatedAdminAccountId === cdk.Stack.of(this).account &&
-                ipamPool.region === cdk.Stack.of(this).region
-              ) {
-                poolId = cdk.aws_ssm.StringParameter.valueForStringParameter(
-                  this,
-                  this.getSsmPath(SsmResourceType.IPAM_POOL, [alloc.ipamPoolName]),
-                );
-              } else if (ipamPool.region !== cdk.Stack.of(this).region) {
-                poolId = this.getCrossRegionPoolId(delegatedAdminAccountId, alloc.ipamPoolName, ipamPool.region);
-              } else {
-                poolId = this.getResourceShare(
-                  `${alloc.ipamPoolName}_IpamPoolShare`,
-                  'ec2:IpamPool',
-                  delegatedAdminAccountId,
-                  this.cloudwatchKey,
-                ).resourceShareItemId;
-              }
-              poolMap.set(alloc.ipamPoolName, poolId);
-            }
+            poolMap.set(alloc.ipamPoolName, poolId);
           }
         }
       }

@@ -66,7 +66,7 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
     destinationPrefixListId?: string,
     logGroupKmsKey?: cdk.aws_kms.Key,
     logRetentionInDays?: number,
-  ): void {
+  ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
     let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
 
     if (destinationPrefixListId) {
@@ -97,6 +97,7 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
     }
 
     route.node.addDependency(transitGatewayAttachment);
+    return route;
   }
 
   public addNatGatewayRoute(
@@ -106,7 +107,9 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
     destinationPrefixListId?: string,
     logGroupKmsKey?: cdk.aws_kms.Key,
     logRetentionInDays?: number,
-  ): void {
+  ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
+    let route: cdk.aws_ec2.CfnRoute | PrefixListRoute;
+
     if (destinationPrefixListId) {
       if (!logGroupKmsKey) {
         throw new Error('Attempting to add prefix list route without specifying log group KMS key');
@@ -115,7 +118,7 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
         throw new Error('Attempting to add prefix list route without specifying log group retention period');
       }
 
-      new PrefixListRoute(this, id, {
+      route = new PrefixListRoute(this, id, {
         routeTableId: this.routeTableId,
         destinationPrefixListId,
         logGroupKmsKey,
@@ -127,12 +130,13 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
         throw new Error('Attempting to add CIDR route without specifying destination');
       }
 
-      new cdk.aws_ec2.CfnRoute(this, id, {
+      route = new cdk.aws_ec2.CfnRoute(this, id, {
         routeTableId: this.routeTableId,
         destinationCidrBlock: destination,
         natGatewayId: natGatewayId,
       });
     }
+    return route;
   }
 
   public addInternetGatewayRoute(
@@ -141,7 +145,7 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
     destinationPrefixListId?: string,
     logGroupKmsKey?: cdk.aws_kms.Key,
     logRetentionInDays?: number,
-  ): void {
+  ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
     if (!this.vpc.internetGateway) {
       throw new Error('Attempting to add Internet Gateway route without an IGW defined.');
     }
@@ -182,6 +186,7 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
     // Need to add depends on for the attachment, as IGW needs to be part of
     // the network (vpc)
     route.node.addDependency(this.vpc.internetGatewayAttachment);
+    return route;
   }
 
   public addVirtualPrivateGatewayRoute(
@@ -190,7 +195,7 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
     destinationPrefixListId?: string,
     logGroupKmsKey?: cdk.aws_kms.Key,
     logRetentionInDays?: number,
-  ): void {
+  ): cdk.aws_ec2.CfnRoute | PrefixListRoute {
     if (!this.vpc.virtualPrivateGateway) {
       throw new Error('Attempting to add Virtual Private Gateway route without an VGW defined.');
     }
@@ -225,6 +230,7 @@ export class RouteTable extends cdk.Resource implements IRouteTable {
     // Need to add depends on for the attachment, as VGW needs to be part of
     // the network (vpc)
     route.node.addDependency(this.vpc.virtualPrivateGatewayAttachment!);
+    return route;
   }
 
   public addGatewayAssociation(type: string): void {
