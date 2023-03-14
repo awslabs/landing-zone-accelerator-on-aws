@@ -40,7 +40,7 @@ export class IpamResources {
     }
     const accountIds = [...new Set(vpcAccountIds)];
     if (cdk.Stack.of(this.stack).region === homeRegion && accountIds.includes(cdk.Stack.of(this.stack).account)) {
-      const role = new cdk.aws_iam.Role(this.stack, `GetIpamCidrRole`, {
+      const role = new cdk.aws_iam.Role(this.stack, `Get${cdk.Stack.of(this.stack).account}IpamCidrRole`, {
         roleName: `AWSAccelerator-GetIpamCidrRole-${cdk.Stack.of(this.stack).region}`,
         assumedBy: this.stack.getOrgPrincipals(orgId),
         inlinePolicies: {
