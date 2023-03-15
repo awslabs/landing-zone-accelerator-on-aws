@@ -246,7 +246,7 @@ export abstract class Accelerator {
     //
     const maxStacks = process.env['MAX_CONCURRENT_STACKS'] ?? 500;
 
-    const promises: Promise<void>[] = [];
+    let promises: Promise<void>[] = [];
 
     //
     // Execute Bootstrap stacks for all identified accounts
@@ -275,6 +275,7 @@ export abstract class Accelerator {
           //override to prevent errors
           if (promises.length >= 100) {
             await Promise.all(promises);
+            promises = [];
           }
         }
       }
@@ -355,6 +356,7 @@ export abstract class Accelerator {
         );
         if (promises.length >= maxStacks) {
           await Promise.all(promises);
+          promises = [];
         }
       }
     }
@@ -380,6 +382,7 @@ export abstract class Accelerator {
         );
         if (promises.length >= maxStacks) {
           await Promise.all(promises);
+          promises = [];
         }
       }
     }
@@ -445,6 +448,7 @@ export abstract class Accelerator {
 
           if (promises.length >= maxStacks) {
             await Promise.all(promises);
+            promises = [];
           }
         }
       }
@@ -480,6 +484,7 @@ export abstract class Accelerator {
           );
           if (promises.length >= maxStacks) {
             await Promise.all(promises);
+            promises = [];
           }
         }
       }
