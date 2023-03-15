@@ -63,8 +63,8 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:64
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:65
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:530
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:531
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:535
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:536
 
 # Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:143
