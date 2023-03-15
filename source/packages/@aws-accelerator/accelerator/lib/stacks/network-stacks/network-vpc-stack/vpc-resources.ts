@@ -15,7 +15,7 @@ import { DeleteDefaultSecurityGroupRules, DeleteDefaultVpc, Vpc, VpnConnection }
 import { AcceleratorStack, AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel, NetworkStack } from '../network-stack';
 import * as cdk from 'aws-cdk-lib';
-import { VpcConfig, VpcFlowLogsConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
+import { DefaultVpcsConfig, VpcConfig, VpcFlowLogsConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { SsmResourceType } from '@aws-accelerator/utils';
@@ -38,7 +38,7 @@ export class VpcResources {
     this.stack = networkStack;
 
     // Delete default VPC
-    this.deleteDefaultVpc = this.deleteDefaultVpcMethod(props);
+    this.deleteDefaultVpc = this.deleteDefaultVpcMethod(props.networkConfig.defaultVpc);
     // Create central endpoints role
     this.centralEndpointRole = this.createCentralEndpointRole(props);
     // Create VPC peering role
@@ -54,12 +54,10 @@ export class VpcResources {
    * @param props
    * @returns
    */
-  private deleteDefaultVpcMethod(props: AcceleratorStackProps): boolean {
-    if (
-      props.networkConfig.defaultVpc?.delete &&
-      props.networkConfig.defaultVpc.excludeAccounts &&
-      !this.stack.isAccountExcluded(props.networkConfig.defaultVpc.excludeAccounts)
-    ) {
+  private deleteDefaultVpcMethod(defaultVpc: DefaultVpcsConfig): boolean {
+    const accountExcluded = defaultVpc.excludeAccounts && this.stack.isAccountExcluded(defaultVpc.excludeAccounts);
+
+    if (defaultVpc.delete && !accountExcluded) {
       this.stack.addLogs(LogLevel.INFO, 'Add DeleteDefaultVpc');
       new DeleteDefaultVpc(this.stack, 'DeleteDefaultVpc', {
         kmsKey: this.stack.cloudwatchKey,
