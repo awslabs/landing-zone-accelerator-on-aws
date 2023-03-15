@@ -444,6 +444,45 @@ class VpcFlowLogsDestinationConfig implements t.TypeOf<typeof vpcFlowLogsDestina
 /**
  * VPC flow logs configuration.
  * Used to customize VPC flow log output.
+ *
+ * @example
+ * ```
+ * vpcFlowLogs:
+ *   trafficType: ALL
+ *   maxAggregationInterval: 600
+ *   destinations:
+ *     - s3
+ *     - cloud-watch-logs
+ *   defaultFormat: false
+ *   customFields:
+ *     - version
+ *     - account-id
+ *     - interface-id
+ *     - srcaddr
+ *     - dstaddr
+ *     - srcport
+ *     - dstport
+ *     - protocol
+ *     - packets
+ *     - bytes
+ *     - start
+ *     - end
+ *     - action
+ *     - log-status
+ *     - vpc-id
+ *     - subnet-id
+ *     - instance-id
+ *     - tcp-flags
+ *     - type
+ *     - pkt-srcaddr
+ *     - pkt-dstaddr
+ *     - region
+ *     - az-id
+ *     - pkt-src-aws-service
+ *     - pkt-dst-aws-service
+ *     - flow-direction
+ *     - traffic-path
+ * ```
  */
 export class VpcFlowLogsConfig implements t.TypeOf<typeof vpcFlowLogsConfig> {
   /**

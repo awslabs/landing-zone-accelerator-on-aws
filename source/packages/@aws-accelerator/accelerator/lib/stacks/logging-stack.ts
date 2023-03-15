@@ -589,7 +589,7 @@ export class LoggingStack extends AcceleratorStack {
    * Function to get VPC flow logs configuration when any VPC have S3 flow logs destination
    */
   private getS3FlowLogsDestinationConfig(): VpcFlowLogsConfig | undefined {
-    let vpcFlowLogs: VpcFlowLogsConfig;
+    let vpcFlowLogs: VpcFlowLogsConfig | undefined;
     for (const vpcItem of [...this.props.networkConfig.vpcs, ...(this.props.networkConfig.vpcTemplates ?? [])] ?? []) {
       // Get account IDs
       const vpcAccountIds = this.getVpcAccountIds(vpcItem);
@@ -599,7 +599,7 @@ export class LoggingStack extends AcceleratorStack {
         } else {
           vpcFlowLogs = this.props.networkConfig.vpcFlowLogs;
         }
-        if (vpcFlowLogs.destinations.includes('s3')) {
+        if (vpcFlowLogs && vpcFlowLogs.destinations.includes('s3')) {
           return vpcFlowLogs;
         }
       }

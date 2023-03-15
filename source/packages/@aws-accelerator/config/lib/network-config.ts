@@ -921,7 +921,7 @@ export class NetworkConfigTypes {
     transitGateways: t.array(this.transitGatewayConfig),
     transitGatewayPeering: t.optional(t.array(NetworkConfigTypes.transitGatewayPeeringConfig)),
     vpcs: t.array(this.vpcConfig),
-    vpcFlowLogs: t.vpcFlowLogsConfig,
+    vpcFlowLogs: t.optional(t.vpcFlowLogsConfig),
     centralNetworkServices: t.optional(this.centralNetworkServicesConfig),
     customerGateways: t.optional(t.array(this.customerGatewayConfig)),
     dhcpOptions: t.optional(t.array(this.dhcpOptsConfig)),
@@ -5582,7 +5582,7 @@ export class NetworkConfig implements t.TypeOf<typeof NetworkConfigTypes.network
    *
    * @see {@link t.VpcFlowLogsConfig}
    */
-  readonly vpcFlowLogs: t.VpcFlowLogsConfig = new t.VpcFlowLogsConfig();
+  readonly vpcFlowLogs: t.VpcFlowLogsConfig | undefined = undefined;
 
   /**
    * An optional list of DHCP options set configurations.
