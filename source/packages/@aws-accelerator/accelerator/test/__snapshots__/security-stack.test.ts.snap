@@ -1011,7 +1011,7 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
                     "Fn::Join": [
                       "",
                       [
-                        "ec2.111111111111.",
+                        "ec2.us-east-1.",
                         {
                           "Ref": "AWS::URLSuffix",
                         },
