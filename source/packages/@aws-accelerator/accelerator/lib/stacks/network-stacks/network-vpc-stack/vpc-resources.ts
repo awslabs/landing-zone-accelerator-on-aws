@@ -30,7 +30,6 @@ export class VpcResources {
 
   constructor(
     networkStack: NetworkStack,
-    // transitGatewayMap: Map<string, string>,
     ipamPoolMap: Map<string, string>,
     dhcpOptionsIds: Map<string, string>,
     props: AcceleratorStackProps,
@@ -279,6 +278,14 @@ export class VpcResources {
     return vpcMap;
   }
 
+  /**
+   * Create a VPC from a given configuration item
+   * @param vpcItem
+   * @param dhcpOptionsIds
+   * @param ipamPoolMap
+   * @param props
+   * @returns
+   */
   private createVpcItem(
     vpcItem: VpcConfig | VpcTemplatesConfig,
     dhcpOptionsIds: Map<string, string>,
@@ -341,9 +348,9 @@ export class VpcResources {
     //
     this.addCentralEndpointTags(vpc, vpcItem, props);
     //
-    // Add flow logs
+    // Add flow logs, if configured
     //
-    this.createVpcFlowLogs(vpc, vpcItem, props);
+    this.getVpcFlowLogConfig(vpc, vpcItem, props);
     //
     // Delete default security group rules
     //
@@ -420,22 +427,40 @@ export class VpcResources {
   }
 
   /**
-   * Function to create VPC flow logs
+   * Determines whether flow logs are created for a given VPC
    * @param vpc
    * @param vpcItem
    * @param props
    *
    */
-  private createVpcFlowLogs(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig, props: AcceleratorStackProps) {
-    let logFormat: string | undefined = undefined;
-    let vpcFlowLogs: VpcFlowLogsConfig;
-    let destinationBucketArn: string | undefined;
+  private getVpcFlowLogConfig(vpc: Vpc, vpcItem: VpcConfig | VpcTemplatesConfig, props: AcceleratorStackProps) {
+    let vpcFlowLogs: VpcFlowLogsConfig | undefined;
 
     if (vpcItem.vpcFlowLogs) {
       vpcFlowLogs = vpcItem.vpcFlowLogs;
     } else {
       vpcFlowLogs = props.networkConfig.vpcFlowLogs;
     }
+
+    if (vpcFlowLogs) {
+      this.createVpcFlowLogs(vpc, vpcFlowLogs);
+    } else {
+      NagSuppressions.addResourceSuppressions(vpc, [
+        { id: 'AwsSolutions-VPC7', reason: 'VPC does not have flow logs configured' },
+      ]);
+    }
+  }
+
+  /**
+   * Function to create VPC flow logs
+   * @param vpc
+   * @param vpcItem
+   * @param props
+   *
+   */
+  private createVpcFlowLogs(vpc: Vpc, vpcFlowLogs: VpcFlowLogsConfig) {
+    let logFormat: string | undefined = undefined;
+    let destinationBucketArn: string | undefined;
 
     if (vpcFlowLogs.destinations.includes('s3')) {
       destinationBucketArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
