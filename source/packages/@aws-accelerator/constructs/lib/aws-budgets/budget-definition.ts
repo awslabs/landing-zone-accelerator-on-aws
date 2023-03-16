@@ -13,6 +13,7 @@
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import path from 'path';
 
 type TimeUnit = 'DAILY' | 'WEEKLY' | 'MONTHLY' | string;
 
@@ -98,9 +99,18 @@ export interface BudgetDefinitionProps {
    * The unit of measurement that's used for the budget forecast, actual spend, or budget threshold, such as USD or GBP.
    */
   readonly unit: Unit;
+  /**
+   * Custom resource lambda log group encryption key
+   */
+  readonly kmsKey: cdk.aws_kms.Key;
+  /**
+   * Custom resource lambda log retention in days
+   */
+  readonly logRetentionInDays: number;
 }
 
 export class BudgetDefinition extends cdk.Resource {
+  readonly id!: string;
   constructor(scope: Construct, id: string, props: BudgetDefinitionProps) {
     super(scope, id);
     const notificationsWithSubscribers = [];
@@ -143,9 +153,87 @@ export class BudgetDefinition extends cdk.Resource {
       };
       notificationsWithSubscribers.push(notificationWithSubscriber);
     }
-    new cdk.aws_budgets.CfnBudget(this, `${budget.budgetName}`, {
-      budget,
-      notificationsWithSubscribers,
-    });
+
+    // List of available endpoints in AWS Budgets
+    // https://docs.aws.amazon.com/general/latest/gr/billing.html
+    const awsBudgetsSupportedRegions = [
+      'us-east-1',
+      'us-east-2',
+      'us-west-1',
+      'us-west-2',
+      'ap-northeast-2',
+      'ap-southeast-1',
+      'ap-southeast-2',
+      'ap-northeast-1',
+      'ca-central-1',
+      'eu-central-1',
+      'eu-west-1',
+      'eu-west-2',
+      'eu-west-3',
+      'sa-east-1',
+    ];
+
+    if (awsBudgetsSupportedRegions.includes(cdk.Stack.of(this).region)) {
+      new cdk.aws_budgets.CfnBudget(this, `${budget.budgetName}`, {
+        budget,
+        notificationsWithSubscribers,
+      });
+    } else {
+      // Use custom resource
+      const provider = cdk.CustomResourceProvider.getOrCreateProvider(this, 'Custom::CrossRegionBudget', {
+        codeDirectory: path.join(__dirname, 'cross-region-budget/dist'),
+        runtime: cdk.CustomResourceProviderRuntime.NODEJS_14_X,
+        policyStatements: [
+          {
+            Effect: 'Allow',
+            Action: ['budgets:DeleteBudget', 'budgets:ModifyBudget', 'budgets:PutBudget'],
+            Resource: '*',
+          },
+        ],
+      });
+
+      const resource = new cdk.CustomResource(this, 'CrossRegionResource', {
+        resourceType: 'Custom::CrossRegionBudget',
+        serviceToken: provider.serviceToken,
+        properties: {
+          budgetDefinition: {
+            amount: props.amount,
+            includeCredit: props.includeCredit,
+            includeDiscount: props.includeDiscount,
+            includeOtherSubscription: props.includeOtherSubscription,
+            includeRecurring: props.includeRecurring,
+            includeRefund: props.includeRefund,
+            includeSubscription: props.includeSubscription,
+            includeSupport: props.includeSupport,
+            includeTax: props.includeTax,
+            includeUpfront: props.includeUpfront,
+            name: props.name,
+            notifications: props.notifications,
+            timeUnit: props.timeUnit,
+            type: props.type,
+            useAmortized: props.useAmortized,
+            useBlended: props.useBlended,
+            unit: props.unit,
+          },
+        },
+      });
+
+      /**
+       * Singleton pattern to define the log group for the singleton function
+       * in the stack
+       */
+      const stack = cdk.Stack.of(scope);
+      const logGroup =
+        (stack.node.tryFindChild(`${provider.node.id}LogGroup`) as cdk.aws_logs.LogGroup) ??
+        new cdk.aws_logs.LogGroup(stack, `${provider.node.id}LogGroup`, {
+          logGroupName: `/aws/lambda/${(provider.node.findChild('Handler') as cdk.aws_lambda.CfnFunction).ref}`,
+          retention: props.logRetentionInDays,
+          encryptionKey: props.kmsKey,
+          removalPolicy: cdk.RemovalPolicy.DESTROY,
+        });
+      resource.node.addDependency(logGroup);
+
+      this.id = resource.ref;
+    }
   }
 }

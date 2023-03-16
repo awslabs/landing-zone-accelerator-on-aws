@@ -24,6 +24,12 @@ const app = new cdk.App();
 // Create stack for native Cfn construct
 const nativeEnv = { account: '333333333333', region: 'us-east-1' };
 const nativeStack = new cdk.Stack(app, 'NativeStack', { env: nativeEnv });
+const key = new cdk.aws_kms.Key(nativeStack, 'ManagementKey', {
+  alias: 'AcceleratorStack/ACCELERATOR_MANAGEMENT_KEY_ALIAS',
+  description: 'Test for the overall lambda',
+  enableKeyRotation: true,
+  removalPolicy: cdk.RemovalPolicy.RETAIN,
+});
 
 new BudgetDefinition(nativeStack, 'TestBudgetDefinition', {
   name: 'accel-budget',
@@ -52,6 +58,8 @@ new BudgetDefinition(nativeStack, 'TestBudgetDefinition', {
       address: 'myemail+pa-budg@example.com',
     },
   ],
+  kmsKey: key,
+  logRetentionInDays: 100,
 });
 
 /**

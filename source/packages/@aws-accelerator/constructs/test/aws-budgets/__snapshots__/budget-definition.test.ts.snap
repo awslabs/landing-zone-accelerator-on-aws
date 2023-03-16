@@ -3,6 +3,51 @@
 exports[`BudgetDefinition Construct(BudgetDefinition):  Snapshot Test 1`] = `
 {
   "Resources": {
+    "ManagementKey0813A4D9": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "Description": "Test for the overall lambda",
+        "EnableKeyRotation": true,
+        "KeyPolicy": {
+          "Statement": [
+            {
+              "Action": "kms:*",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::333333333333:root",
+                    ],
+                  ],
+                },
+              },
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::KMS::Key",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ManagementKeyAlias69A0A38F": {
+      "Properties": {
+        "AliasName": "alias/AcceleratorStack/ACCELERATOR_MANAGEMENT_KEY_ALIAS",
+        "TargetKeyId": {
+          "Fn::GetAtt": [
+            "ManagementKey0813A4D9",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::KMS::Alias",
+    },
     "TestBudgetDefinitionaccelbudgetBE1AA96C": {
       "Properties": {
         "Budget": {
