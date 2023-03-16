@@ -59,6 +59,7 @@ Use the following steps to deploy this solution on AWS. For detailed instruction
 
 - Launch the LZA AWS CloudFormation template into your AWS account. (Ensure the region is set to your desired home region, as it typically defaults to US East (N. Virginia);
 - Ensure that the Environment Configuration for Control Tower Environment is set to **No** (AWS Organizations deployment);
+- **Note:** If you are using the github source for the LZA code, you will need to follow the prerequisite step to [store a github token in secrets manager](https://docs.aws.amazon.com/solutions/latest/landing-zone-accelerator-on-aws/prerequisites.html#create-a-github-personal-access-token-and-store-in-secrets-manager)
 
 - Review the template’s parameters and enter or adjust the default values as needed.
 
