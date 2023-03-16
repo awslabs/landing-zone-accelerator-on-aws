@@ -256,7 +256,7 @@ export abstract class Accelerator {
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
           if (globalConfig.centralizeCdkBuckets) {
-            await delay(500);
+            await delay(1000);
           }
           promises.push(
             AcceleratorToolkit.execute({
