@@ -31,6 +31,16 @@ roleSets:
           awsManaged:
             - service-role/AWSBackupServiceRolePolicyForBackup
             - service-role/AWSBackupServiceRolePolicyForRestores
+      # This role is utilized by the Budgets Config defined in global-config.yaml
+      # We create this role in every account where we plan to have AWS Budgets
+      # A service linked role is not available for AWS Budgets
+      - name: Budgets-Role
+        assumedBy:
+          - type: service
+            principal: budgets.amazonaws.com
+        policies:
+          awsManaged:
+            - AWSBudgetsActionsWithAWSResourceControlAccess
 groupSets:
   - deploymentTargets:
       organizationalUnits:
