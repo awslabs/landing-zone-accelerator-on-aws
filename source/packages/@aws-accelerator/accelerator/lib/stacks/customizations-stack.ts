@@ -100,9 +100,7 @@ export class CustomizationsStack extends AcceleratorStack {
         const templateUrl = this.getAssetUrl(stackSet.name, stackSet.template);
 
         const parameters = stackSet.parameters?.map(parameter => {
-          return new cdk.CfnParameter(this, parameter.name, {
-            default: parameter.value,
-          });
+          return { parameterKey: parameter.name, parameterValue: parameter.value };
         });
 
         new cdk.aws_cloudformation.CfnStackSet(this, pascalCase(`AWSAccelerator-Custom-${stackSet.name}`), {
