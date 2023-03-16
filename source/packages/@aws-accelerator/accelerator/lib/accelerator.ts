@@ -255,6 +255,9 @@ export abstract class Accelerator {
       const trustedAccountId = accountsConfig.getManagementAccountId();
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+          if (globalConfig.centralizeCdkBuckets) {
+            await delay(500);
+          }
           promises.push(
             AcceleratorToolkit.execute({
               command: props.command,
