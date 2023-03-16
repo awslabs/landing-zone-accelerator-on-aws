@@ -532,11 +532,21 @@ export class OperationsStack extends AcceleratorStack {
    * Enables budget reports
    */
   private enableBudgetReports() {
+    this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
+      this,
+      'AcceleratorBudgetGetCloudWatchKey',
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+      ),
+    ) as cdk.aws_kms.Key;
     if (this.props.globalConfig.reports?.budgets) {
       for (const budget of this.props.globalConfig.reports.budgets ?? []) {
         if (this.isIncluded(budget.deploymentTargets ?? [])) {
           this.logger.info(`Add budget ${budget.name}`);
           new BudgetDefinition(this, `${budget.name}BudgetDefinition`, {
+            kmsKey: this.cloudwatchKey,
+            logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
             amount: budget.amount,
             includeCredit: budget.includeCredit,
             includeDiscount: budget.includeDiscount,
