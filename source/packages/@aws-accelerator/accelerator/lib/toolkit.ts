@@ -21,6 +21,7 @@ import { ToolkitInfo } from 'aws-cdk/lib/api/toolkit-info';
 import { CdkToolkit } from 'aws-cdk/lib/cdk-toolkit';
 import { RequireApproval } from 'aws-cdk/lib/diff';
 import { Command, Configuration } from 'aws-cdk/lib/settings';
+import { HotswapMode } from 'aws-cdk/lib/api/hotswap/common';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -151,7 +152,10 @@ export class AcceleratorToolkit {
     const cloudExecutable = new CloudExecutable({
       configuration,
       sdkProvider,
-      synthesizer: execProgram,
+      synthesizer: async (aws, config) => {
+        const { assembly } = await execProgram(aws, config);
+        return assembly;
+      },
     });
 
     const toolkitStackName: string = ToolkitInfo.determineName('AWSAccelerator-CDKToolkit');
@@ -292,6 +296,7 @@ export class AcceleratorToolkit {
             toolkitStackName,
             requireApproval: options.requireApproval,
             changeSetName: changeSetName,
+            hotswap: HotswapMode.FULL_DEPLOYMENT,
           })
           .catch(err => {
             logger.error(err);

@@ -3,55 +3,6 @@
 exports[`CentralLogsBucket Construct(CentralLogsBucket):  Snapshot Test 1`] = `
 {
   "Resources": {
-    "AccessLogsBucketCmkAliasD1876683": {
-      "Properties": {
-        "AliasName": "alias/accelerator/s3-access-logs/s3",
-        "TargetKeyId": {
-          "Fn::GetAtt": [
-            "AccessLogsBucketCmkECACF392",
-            "Arn",
-          ],
-        },
-      },
-      "Type": "AWS::KMS::Alias",
-    },
-    "AccessLogsBucketCmkECACF392": {
-      "DeletionPolicy": "Retain",
-      "Properties": {
-        "Description": "AWS Accelerator S3 Access Logs Bucket CMK",
-        "EnableKeyRotation": true,
-        "KeyPolicy": {
-          "Statement": [
-            {
-              "Action": "kms:*",
-              "Effect": "Allow",
-              "Principal": {
-                "AWS": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition",
-                      },
-                      ":iam::",
-                      {
-                        "Ref": "AWS::AccountId",
-                      },
-                      ":root",
-                    ],
-                  ],
-                },
-              },
-              "Resource": "*",
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-      },
-      "Type": "AWS::KMS::Key",
-      "UpdateReplacePolicy": "Retain",
-    },
     "AccessLogsBucketFA218D2A": {
       "DeletionPolicy": "Retain",
       "Properties": {
@@ -60,13 +11,7 @@ exports[`CentralLogsBucket Construct(CentralLogsBucket):  Snapshot Test 1`] = `
           "ServerSideEncryptionConfiguration": [
             {
               "ServerSideEncryptionByDefault": {
-                "KMSMasterKeyID": {
-                  "Fn::GetAtt": [
-                    "AccessLogsBucketCmkECACF392",
-                    "Arn",
-                  ],
-                },
-                "SSEAlgorithm": "aws:kms",
+                "SSEAlgorithm": "AES256",
               },
             },
           ],

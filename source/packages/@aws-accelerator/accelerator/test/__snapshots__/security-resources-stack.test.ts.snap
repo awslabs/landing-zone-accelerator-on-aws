@@ -81,7 +81,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
     },
     "AcceleratorAttachEc2InstanceProfile1DAEB489": {
       "DependsOn": [
-        "AcceleratorAttachEc2InstanceProfileFunctionPermissionF089A2FB",
+        "AcceleratorAttachEc2InstanceProfileFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI5AF7FE49",
         "AcceleratorAttachEc2InstanceProfileFunction2F25082F",
         "AcceleratorAttachEc2InstanceProfileFunctionServiceRoleF2BC24EC",
         "ConfigRecorder",
@@ -145,7 +145,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AcceleratorAttachEc2InstanceProfileFunctionPermissionF089A2FB": {
+    "AcceleratorAttachEc2InstanceProfileFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI5AF7FE49": {
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
@@ -724,7 +724,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
     },
     "AcceleratorEc2InstanceProfilePermission16FE7EFE": {
       "DependsOn": [
-        "AcceleratorEc2InstanceProfilePermissionFunctionPermission7A3C2DC0",
+        "AcceleratorEc2InstanceProfilePermissionFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI407CB1D2",
         "AcceleratorEc2InstanceProfilePermissionFunction65B8A331",
         "AcceleratorEc2InstanceProfilePermissionFunctionServiceRoleAA6A6427",
         "ConfigRecorder",
@@ -791,7 +791,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AcceleratorEc2InstanceProfilePermissionFunctionPermission7A3C2DC0": {
+    "AcceleratorEc2InstanceProfilePermissionFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI407CB1D2": {
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
@@ -1849,7 +1849,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
     },
     "AcceleratorTargetDocument01F99B0122": {
       "DependsOn": [
-        "AcceleratorTargetDocument01FunctionPermission756267A1",
+        "AcceleratorTargetDocument01FunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI866B82A5",
         "AcceleratorTargetDocument01Function89A6815D",
         "AcceleratorTargetDocument01FunctionServiceRoleCDB753E0",
         "ConfigRecorder",
@@ -1913,7 +1913,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AcceleratorTargetDocument01FunctionPermission756267A1": {
+    "AcceleratorTargetDocument01FunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI866B82A5": {
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
@@ -4244,7 +4244,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
     },
     "AcceleratorAttachEc2InstanceProfile1DAEB489": {
       "DependsOn": [
-        "AcceleratorAttachEc2InstanceProfileFunctionPermissionF089A2FB",
+        "AcceleratorAttachEc2InstanceProfileFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI5AF7FE49",
         "AcceleratorAttachEc2InstanceProfileFunction2F25082F",
         "AcceleratorAttachEc2InstanceProfileFunctionServiceRoleF2BC24EC",
         "ConfigRecorder",
@@ -4308,7 +4308,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AcceleratorAttachEc2InstanceProfileFunctionPermissionF089A2FB": {
+    "AcceleratorAttachEc2InstanceProfileFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI5AF7FE49": {
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
@@ -4760,7 +4760,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
     },
     "AcceleratorEc2InstanceProfilePermission16FE7EFE": {
       "DependsOn": [
-        "AcceleratorEc2InstanceProfilePermissionFunctionPermission7A3C2DC0",
+        "AcceleratorEc2InstanceProfilePermissionFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI407CB1D2",
         "AcceleratorEc2InstanceProfilePermissionFunction65B8A331",
         "AcceleratorEc2InstanceProfilePermissionFunctionServiceRoleAA6A6427",
         "ConfigRecorder",
@@ -4827,7 +4827,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
       },
       "Type": "AWS::Lambda::Function",
     },
-    "AcceleratorEc2InstanceProfilePermissionFunctionPermission7A3C2DC0": {
+    "AcceleratorEc2InstanceProfilePermissionFunctionCustomRulePermissionBjrlLxHBU2q1eflzaT436qiq4Iu5pKu7iRO6toNI407CB1D2": {
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
