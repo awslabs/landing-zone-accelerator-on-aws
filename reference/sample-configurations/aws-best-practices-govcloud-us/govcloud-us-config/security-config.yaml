@@ -33,12 +33,18 @@ centralSecurityServices:
     standards:
       - name: AWS Foundational Security Best Practices v1.0.0
         # https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards-fsbp-controls.html
+        deploymentTargets:
+          organizationalUnits:
+            - Root
         enable: true
         controlsToDisable:
           - IAM.1 # IAM policies should not allow for full admin privs
           - EC2.10 # checks for VPC endpoint for EC2
           - Lambda.4 # retired
       - name: CIS AWS Foundations Benchmark v1.2.0
+        deploymentTargets:
+          organizationalUnits:
+            - Root
         enable: true
         controlsToDisable:
           - CIS.1.20
