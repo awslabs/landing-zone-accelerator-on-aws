@@ -22,6 +22,8 @@ const stack = new cdk.Stack();
 
 new IdentityCenterOrganizationAdminAccount(stack, 'IdentityCenterOrganizationAdminAccount', {
   adminAccountId: 'adminAccountId',
+  lzaManagedAssignments: [],
+  lzaManagedPermissionSets: [],
 });
 
 /**

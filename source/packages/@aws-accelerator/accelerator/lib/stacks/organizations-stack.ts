@@ -17,7 +17,7 @@ import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
 import * as path from 'path';
 
-import { Region } from '@aws-accelerator/config';
+import { IdentityCenterAssignmentConfig, IdentityCenterPermissionSetConfig, Region } from '@aws-accelerator/config';
 import {
   AuditManagerOrganizationAdminAccount,
   Bucket,
@@ -45,7 +45,6 @@ import {
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-
 export interface OrganizationsStackProps extends AcceleratorStackProps {
   configDirPath: string;
 }
@@ -613,20 +612,34 @@ export class OrganizationsStack extends AcceleratorStack {
    * @param adminAccountId
    */
   private enableIdentityCenterDelegatedAdminAccount(adminAccountId: string) {
-    const managementAccountId = this.props.accountsConfig.getManagementAccountId();
+    let lzaManagedPermissionSets: IdentityCenterPermissionSetConfig[] = [];
+    let lzaManagedAssignments: IdentityCenterAssignmentConfig[] = [];
+    let assignmentList: { [x: string]: string[] }[] = [];
+    let delegatedAdminAccountId = adminAccountId;
+
     const identityCenterDelgatedAdminOverrideId = this.props.iamConfig.identityCenter?.delegatedAdminAccount;
     if (identityCenterDelgatedAdminOverrideId) {
-      adminAccountId = this.props.accountsConfig.getAccountId(identityCenterDelgatedAdminOverrideId);
+      delegatedAdminAccountId = this.props.accountsConfig.getAccountId(identityCenterDelgatedAdminOverrideId);
     }
 
-    if (
-      cdk.Stack.of(this).account === managementAccountId &&
-      (this.props.partition === 'aws' || this.props.partition === 'aws-us-gov')
-    ) {
+    if (this.props.iamConfig.identityCenter?.identityCenterPermissionSets) {
+      lzaManagedPermissionSets = this.props.iamConfig.identityCenter.identityCenterPermissionSets;
+    }
+
+    if (this.props.iamConfig.identityCenter?.identityCenterAssignments) {
+      lzaManagedAssignments = this.props.iamConfig.identityCenter.identityCenterAssignments;
+      assignmentList = lzaManagedAssignments.map(assignment => ({
+        [assignment.permissionSetName]: this.getAccountIdsFromDeploymentTarget(assignment.deploymentTargets),
+      }));
+    }
+
+    if (this.props.partition === 'aws' || this.props.partition === 'aws-us-gov') {
       new IdentityCenterOrganizationAdminAccount(this, `IdentityCenterAdmin`, {
-        adminAccountId: adminAccountId,
+        adminAccountId: delegatedAdminAccountId,
+        lzaManagedPermissionSets: lzaManagedPermissionSets,
+        lzaManagedAssignments: assignmentList,
       });
-      this.logger.info(`Delegated Admin account for Identity Center is: ${adminAccountId}`);
+      this.logger.info(`Delegated Admin account for Identity Center is: ${delegatedAdminAccountId}`);
     }
   }
 
