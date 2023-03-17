@@ -2374,6 +2374,8 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
           ],
         },
         "adminAccountId": "222222222222",
+        "lzaManagedAssignments": [],
+        "lzaManagedPermissionSets": [],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -4966,6 +4968,33 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
           ],
         },
         "adminAccountId": "222222222222",
+        "lzaManagedAssignments": [
+          {
+            "PermissionSet1": [
+              "333333333333",
+            ],
+          },
+          {
+            "PermissionSet1": [
+              "333333333333",
+              "222222222222",
+            ],
+          },
+        ],
+        "lzaManagedPermissionSets": [
+          {
+            "name": "PermissionSet1",
+            "policies": {
+              "awsManaged": [
+                "arn:aws:iam::aws:policy/AdministratorAccess",
+              ],
+              "customerManaged": [
+                "ResourceConfigurationCollectorPolicy",
+              ],
+            },
+            "sessionDuration": 60,
+          },
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
@@ -7817,6 +7846,34 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
           ],
         },
         "adminAccountId": "666666666666",
+        "lzaManagedAssignments": [
+          {
+            "PermissionSet1": [
+              "333333333333",
+            ],
+          },
+          {
+            "PermissionSet1": [
+              "333333333333",
+              "222222222222",
+              "666666666666",
+            ],
+          },
+        ],
+        "lzaManagedPermissionSets": [
+          {
+            "name": "PermissionSet1",
+            "policies": {
+              "awsManaged": [
+                "arn:aws:iam::aws:policy/AdministratorAccess",
+              ],
+              "customerManaged": [
+                "ResourceConfigurationCollectorPolicy",
+              ],
+            },
+            "sessionDuration": 60,
+          },
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
