@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
 import * as path from 'path';
+import { IdentityCenterPermissionSetConfig } from '@aws-accelerator/config';
 
 /**
  * Initialized IdentityCenterOrganizationalAdminAccountProps properties
@@ -24,6 +25,14 @@ export interface IdentityCenterOrganizationalAdminAccountProps {
    * Delegated Admin Account Id
    */
   readonly adminAccountId: string;
+  /**
+   * List of LZA Managed Permission Sets from IAM Config
+   */
+  readonly lzaManagedPermissionSets: IdentityCenterPermissionSetConfig[];
+  /**
+   * List of LZA Managed Assignments from IAM Config
+   */
+  readonly lzaManagedAssignments: { [x: string]: string[] }[];
 }
 
 /**
@@ -74,6 +83,8 @@ export class IdentityCenterOrganizationAdminAccount extends Construct {
       properties: {
         adminAccountId: props.adminAccountId,
         partition: cdk.Stack.of(scope).partition,
+        lzaManagedPermissionSets: props.lzaManagedPermissionSets,
+        lzaManagedAssignments: props.lzaManagedAssignments,
       },
     });
 

@@ -819,9 +819,16 @@ export class OperationsStack extends AcceleratorStack {
   }
 
   private addIdentityCenterResources(securityAdminAccountId: string) {
+    let delegatedAdminAccountId = securityAdminAccountId;
     if (this.props.iamConfig.identityCenter) {
-      if (cdk.Stack.of(this).account == securityAdminAccountId) {
-        const identityCenterInstanceId = this.getIdentityCenterInstanceId(securityAdminAccountId);
+      const identityCenterDelgatedAdminOverrideId = this.props.iamConfig.identityCenter?.delegatedAdminAccount;
+
+      if (identityCenterDelgatedAdminOverrideId) {
+        delegatedAdminAccountId = this.props.accountsConfig.getAccountId(identityCenterDelgatedAdminOverrideId);
+      }
+
+      if (cdk.Stack.of(this).account === delegatedAdminAccountId) {
+        const identityCenterInstanceId = this.getIdentityCenterInstanceId(delegatedAdminAccountId);
         if (!identityCenterInstanceId) {
           this.logger.error(
             `No Identity Center instance found. Please ensure that the Identity Service is enabled, and rerun the Code Pipeline`,
@@ -829,10 +836,10 @@ export class OperationsStack extends AcceleratorStack {
           throw new Error(`Configuration validation failed at runtime.`);
         }
         const permissionSetList = this.addIdentityCenterPermissionSets(
-          securityAdminAccountId,
+          delegatedAdminAccountId,
           identityCenterInstanceId,
         );
-        this.addIdentityCenterAssignments(securityAdminAccountId, permissionSetList, identityCenterInstanceId);
+        this.addIdentityCenterAssignments(delegatedAdminAccountId, permissionSetList, identityCenterInstanceId);
       }
     }
   }

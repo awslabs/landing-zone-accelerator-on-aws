@@ -1057,7 +1057,16 @@ export class IdentityCenterConfig implements t.TypeOf<typeof IamConfigTypes.iden
 
   /**
    * Override for Delegated Admin Account
-   */
+   * 
+   *  All LZA-managed Identity Center Permission Sets and Assignments must be removed before changing the service's delegated administrator. To change this property:
+
+   *  Remove or comment out the existing PermissionSets and Assignments from identityCenter configuration from iam-config.yaml.
+   *  Important: You must leave identityCenter, name, and delegatedAdminAccount. 
+   *  Run the pipeline to remove the resources.
+   *  Add or uncomment the desired identityCenter configuration to iam-config.yaml.
+   *  Set the delegatedAdminAccount property to the desired new delegated administrator account.
+   *  Run the pipeline to update the delegated admin and create Identity Center resources.
+  */
   readonly delegatedAdminAccount: string = '';
 
   /**

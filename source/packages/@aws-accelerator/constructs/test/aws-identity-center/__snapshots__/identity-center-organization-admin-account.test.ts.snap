@@ -252,6 +252,8 @@ exports[`IdentityCenterOrganizationAdminAccount Construct(IdentityCenterOrganiza
           ],
         },
         "adminAccountId": "adminAccountId",
+        "lzaManagedAssignments": [],
+        "lzaManagedPermissionSets": [],
         "partition": {
           "Ref": "AWS::Partition",
         },
