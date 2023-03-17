@@ -283,6 +283,11 @@ export class SecurityConfigTypes {
       'PCI DSS v3.2.1',
     ]),
     /**
+     * When defined, security standards will be enabled in the specified deployment targets.
+     * If omitted, security standards will be deployed in all govern accounts.
+     */
+    deploymentTargets: t.optional(t.deploymentTargets),
+    /**
      * Indicates whether given AWS SecurityHub standard enabled.
      */
     enable: t.boolean,
@@ -927,6 +932,9 @@ export class DetectiveConfig implements t.TypeOf<typeof SecurityConfigTypes.dete
  * @example
  * ```
  * - name: PCI DSS v3.2.1
+ *   deploymentTargets:
+ *    organizationalUnits:
+ *     -  Root
  *   enable: true
  *   controlsToDisable: []
  * ```
@@ -941,6 +949,10 @@ export class SecurityHubStandardConfig implements t.TypeOf<typeof SecurityConfig
    * and 'PCI DSS v3.2.1'
    */
   readonly name = '';
+  /**
+   * Deployment targets for AWS SecurityHub standard.
+   */
+  readonly deploymentTargets: t.DeploymentTargets | undefined = undefined;
   /**
    * Indicates whether given AWS SecurityHub standard enabled.
    */
@@ -964,6 +976,9 @@ export class SecurityHubStandardConfig implements t.TypeOf<typeof SecurityConfig
  *     excludeRegions: []
  *     standards:
  *       - name: AWS Foundational Security Best Practices v1.0.0
+ *         deploymentTargets:
+ *          organizationalUnits:
+ *            -  Root
  *         enable: true
  *         controlsToDisable:
  *           - IAM.1
@@ -1185,6 +1200,9 @@ export class SsmAutomationConfig implements t.TypeOf<typeof SecurityConfigTypes.
  *     excludeRegions: []
  *     standards:
  *       - name: AWS Foundational Security Best Practices v1.0.0
+ *         deploymentTargets:
+ *          organizationalUnits:
+ *            -  Root
  *         enable: true
  *         controlsToDisable: []
  *   ssmAutomation:
@@ -1327,6 +1345,9 @@ export class CentralSecurityServicesConfig
    *     excludeRegions: []
    *     standards:
    *       - name: AWS Foundational Security Best Practices v1.0.0
+   *         deploymentTargets:
+    *          organizationalUnits:
+    *            -  Root
    *         enable: true
    *         controlsToDisable:
    *           - IAM.1
