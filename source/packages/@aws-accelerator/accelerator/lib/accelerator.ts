@@ -255,9 +255,7 @@ export abstract class Accelerator {
       const trustedAccountId = accountsConfig.getManagementAccountId();
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
-          if (globalConfig.centralizeCdkBuckets) {
-            await delay(1000);
-          }
+          await delay(1500);
           promises.push(
             AcceleratorToolkit.execute({
               command: props.command,
@@ -341,7 +339,7 @@ export abstract class Accelerator {
     if (props.stage === AcceleratorStage.ORGANIZATIONS) {
       for (const region of globalConfig.enabledRegions) {
         logger.info(`Executing ${props.stage} for Management account in ${region} region.`);
-        await delay(1000);
+        await delay(1500);
         promises.push(
           AcceleratorToolkit.execute({
             command: props.command,
@@ -367,7 +365,7 @@ export abstract class Accelerator {
     if (props.stage === AcceleratorStage.KEY || props.stage === AcceleratorStage.SECURITY_AUDIT) {
       for (const region of globalConfig.enabledRegions) {
         logger.info(`Executing ${props.stage} for audit account in ${region} region.`);
-        await delay(1000);
+        await delay(1500);
         promises.push(
           AcceleratorToolkit.execute({
             command: props.command,
@@ -433,7 +431,7 @@ export abstract class Accelerator {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
           logger.info(`Executing ${props.stage} for ${account.name} account in ${region} region.`);
           const accountId = accountsConfig.getAccountId(account.name);
-          await delay(1000);
+          await delay(1500);
           if (accountId !== logAccountId) {
             promises.push(
               AcceleratorToolkit.execute({
@@ -469,7 +467,7 @@ export abstract class Accelerator {
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
           logger.info(`Executing ${props.stage} for ${account.name} account in ${region} region.`);
-          await delay(1000);
+          await delay(1500);
           promises.push(
             AcceleratorToolkit.execute({
               command: props.command,
