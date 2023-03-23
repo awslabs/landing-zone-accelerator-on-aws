@@ -3631,6 +3631,7 @@ exports[`SecurityResourcesStack Construct(SecurityResourcesStack):  Snapshot Tes
         },
         "Environment": {
           "Variables": {
+            "ACCELERATOR_PREFIX": "AWSAccelerator",
             "NOTIFICATION_LEVEL": "HIGH",
             "SNS_TOPIC_ARN": {
               "Fn::Join": [
@@ -6917,6 +6918,7 @@ exports[`delegatedAdminStack Construct(SecurityResourcesStack):  Snapshot Test 1
         },
         "Environment": {
           "Variables": {
+            "ACCELERATOR_PREFIX": "AWSAccelerator",
             "NOTIFICATION_LEVEL": "HIGH",
             "SNS_TOPIC_ARN": {
               "Fn::Join": [

@@ -45,6 +45,10 @@ export interface SsmParameterLookupProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays?: number;
+  /**
+   * Accelerator Prefix
+   */
+  readonly acceleratorPrefix: string;
 }
 
 /**
@@ -72,7 +76,7 @@ export class SsmParameterLookup extends Construct {
           Sid: 'StsAssumeRoleActions',
           Effect: cdk.aws_iam.Effect.ALLOW,
           Action: ['sts:AssumeRole'],
-          Resource: [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator*`],
+          Resource: [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}*`],
         },
       ],
     });

@@ -146,10 +146,7 @@ export class AwsSolutionAspect implements cdk.IAspect {
 // 1. Some resources do not support tag updates
 // 2. Using Aspects for stacks that use the fs.writeFileSync() operation
 // causes the application to quit during stack synthesis
-function addAcceleratorTags(node: IConstruct, partition: string): void {
-  // Current accelerator prefix is static
-  const acceleratorPrefix = 'AWSAccelerator';
-
+function addAcceleratorTags(node: IConstruct, partition: string, acceleratorPrefix: string): void {
   // Resource types that do not support tag updates
   const excludeResourceTypes = [
     'AWS::EC2::TransitGatewayRouteTable',
@@ -225,6 +222,50 @@ async function main() {
   };
 
   //
+  // Verify Pipeline and Tester pipeline ENV vars are set
+  if (!process.env['ACCELERATOR_PREFIX']) {
+    throw new Error(
+      'Attempting to deploy pipeline stage(s) and environment variables are not set [ACCELERATOR_PREFIX]',
+    );
+  }
+
+  //
+  // Set various resource name prefixes used in code base
+  const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'];
+  let repoNamePrefix = 'aws-accelerator';
+  let bucketNamePrefix = 'aws-accelerator';
+  let snsTopicNamePrefix = 'aws-accelerator';
+  let trailLogNamePrefix = 'aws-accelerator';
+  let databaseNamePrefix = 'aws-accelerator';
+  let kmsAliasPrefix = 'alias/accelerator';
+  let ssmParamNamePrefix = '/accelerator';
+  let secretNamePrefix = '/accelerator';
+
+  //
+  //Custom prefixes
+  if (acceleratorPrefix !== 'AWSAccelerator') {
+    bucketNamePrefix = acceleratorPrefix.toLocaleLowerCase();
+    databaseNamePrefix = acceleratorPrefix.toLocaleLowerCase();
+    kmsAliasPrefix = `alias/${acceleratorPrefix}`;
+    ssmParamNamePrefix = `/${acceleratorPrefix}`;
+    secretNamePrefix = acceleratorPrefix;
+    trailLogNamePrefix = acceleratorPrefix;
+    snsTopicNamePrefix = acceleratorPrefix;
+    repoNamePrefix = acceleratorPrefix;
+  }
+
+  // Config repo naming
+  let configRepositoryName = `${repoNamePrefix}-config`;
+  if (process.env['ACCELERATOR_CONFIG_REPOSITORY_NAME']) {
+    configRepositoryName = process.env['ACCELERATOR_CONFIG_REPOSITORY_NAME'];
+  } else {
+    if (process.env['ACCELERATOR_QUALIFIER']) {
+      configRepositoryName = `${process.env['ACCELERATOR_QUALIFIER']}-config`;
+    }
+  }
+  const configRepositoryBranchName = process.env['ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME'] ?? 'main';
+
+  //
   // PIPELINE Stack
   //
   if (includeStage({ stage: AcceleratorStage.PIPELINE, account, region })) {
@@ -235,9 +276,6 @@ async function main() {
     const enableApprovalStage = process.env['ACCELERATOR_ENABLE_APPROVAL_STAGE']
       ? process.env['ACCELERATOR_ENABLE_APPROVAL_STAGE'] === 'Yes'
       : true;
-
-    const configRepositoryName = process.env['ACCELERATOR_CONFIG_REPOSITORY_NAME'] ?? 'aws-accelerator-config';
-    const configRepositoryBranchName = process.env['ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME'] ?? 'main';
 
     // Verify ENV vars are set
     if (!sourceRepositoryName || !sourceBranchName) {
@@ -271,6 +309,17 @@ async function main() {
         partition,
         configRepositoryName,
         configRepositoryBranchName,
+        prefixes: {
+          accelerator: acceleratorPrefix,
+          repoName: repoNamePrefix,
+          bucketName: bucketNamePrefix,
+          ssmParamName: ssmParamNamePrefix,
+          kmsAlias: kmsAliasPrefix,
+          snsTopicName: snsTopicNamePrefix,
+          secretName: secretNamePrefix,
+          trailLogName: trailLogNamePrefix,
+          databaseName: databaseNamePrefix,
+        },
       },
     );
 
@@ -301,6 +350,13 @@ async function main() {
           managementAccountId: process.env['MANAGEMENT_ACCOUNT_ID'],
           managementAccountRoleName: process.env['MANAGEMENT_ACCOUNT_ROLE_NAME'],
           terminationProtection: true,
+          prefixes: {
+            accelerator: acceleratorPrefix,
+            repoName: repoNamePrefix,
+            bucketName: bucketNamePrefix,
+            ssmParamName: ssmParamNamePrefix,
+            kmsAlias: kmsAliasPrefix,
+          },
         },
       );
       cdk.Aspects.of(testerPipelineStack).add(new AwsSolutionsChecks());
@@ -319,17 +375,6 @@ async function main() {
     }
 
     //
-    // Make config repository name
-    let configRepoName = 'aws-accelerator-config';
-    if (process.env['ACCELERATOR_CONFIG_REPOSITORY_NAME']) {
-      configRepoName = process.env['ACCELERATOR_CONFIG_REPOSITORY_NAME'];
-    } else {
-      if (process.env['ACCELERATOR_QUALIFIER']) {
-        configRepoName = `${process.env['ACCELERATOR_QUALIFIER']}-config`;
-      }
-    }
-
-    //
     // Create properties to be used by AcceleratorStack types
     //
     const props = {
@@ -342,11 +387,22 @@ async function main() {
       organizationConfig: OrganizationConfig.load(configDirPath),
       securityConfig: SecurityConfig.load(configDirPath),
       partition: partition,
-      configRepositoryName: configRepoName,
+      configRepositoryName,
       qualifier: process.env['ACCELERATOR_QUALIFIER'],
       configCommitId: process.env['CONFIG_COMMIT_ID'],
       globalRegion: globalRegion,
       centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
+      prefixes: {
+        accelerator: acceleratorPrefix,
+        repoName: repoNamePrefix,
+        bucketName: bucketNamePrefix,
+        ssmParamName: ssmParamNamePrefix,
+        kmsAlias: kmsAliasPrefix,
+        snsTopicName: snsTopicNamePrefix,
+        secretName: secretNamePrefix,
+        trailLogName: trailLogNamePrefix,
+        databaseName: databaseNamePrefix,
+      },
     };
 
     //
@@ -388,7 +444,7 @@ async function main() {
           ...props,
         },
       );
-      addAcceleratorTags(prepareStack, partition);
+      addAcceleratorTags(prepareStack, partition, acceleratorPrefix);
       cdk.Aspects.of(prepareStack).add(new AwsSolutionsChecks());
     }
 
@@ -416,7 +472,7 @@ async function main() {
           ...props,
         },
       );
-      addAcceleratorTags(finalizeStack, partition);
+      addAcceleratorTags(finalizeStack, partition, acceleratorPrefix);
       cdk.Aspects.of(finalizeStack).add(new AwsSolutionsChecks());
     }
 
@@ -444,7 +500,7 @@ async function main() {
           ...props,
         },
       );
-      addAcceleratorTags(accountsStack, partition);
+      addAcceleratorTags(accountsStack, partition, acceleratorPrefix);
       cdk.Aspects.of(accountsStack).add(new AwsSolutionsChecks());
     }
 
@@ -475,7 +531,7 @@ async function main() {
             ...props,
           },
         );
-        addAcceleratorTags(organizationStack, partition);
+        addAcceleratorTags(organizationStack, partition, acceleratorPrefix);
         cdk.Aspects.of(organizationStack).add(new AwsSolutionsChecks());
       }
     }
@@ -509,7 +565,7 @@ async function main() {
             ...props,
           },
         );
-        addAcceleratorTags(keyStack, partition);
+        addAcceleratorTags(keyStack, partition, acceleratorPrefix);
         cdk.Aspects.of(keyStack).add(new AwsSolutionsChecks());
       }
 
@@ -534,7 +590,7 @@ async function main() {
             ...props,
           },
         );
-        addAcceleratorTags(auditStack, partition);
+        addAcceleratorTags(auditStack, partition, acceleratorPrefix);
         cdk.Aspects.of(auditStack).add(new AwsSolutionsChecks());
       }
     }
@@ -573,7 +629,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(bootstrapStack, partition);
+          addAcceleratorTags(bootstrapStack, partition, acceleratorPrefix);
           cdk.Aspects.of(bootstrapStack).add(new AwsSolutionsChecks());
         }
 
@@ -592,7 +648,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(loggingStack, partition);
+          addAcceleratorTags(loggingStack, partition, acceleratorPrefix);
           cdk.Aspects.of(loggingStack).add(new AwsSolutionsChecks());
         }
 
@@ -611,7 +667,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(securityStack, partition);
+          addAcceleratorTags(securityStack, partition, acceleratorPrefix);
           cdk.Aspects.of(securityStack).add(new AwsSolutionsChecks());
         }
 
@@ -631,7 +687,7 @@ async function main() {
               accountWarming: accountItem.warm ?? false,
             },
           );
-          addAcceleratorTags(operationsStack, partition);
+          addAcceleratorTags(operationsStack, partition, acceleratorPrefix);
           cdk.Aspects.of(operationsStack).add(new AwsSolutionsChecks());
         }
 
@@ -650,7 +706,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(networkPrepStack, partition);
+          addAcceleratorTags(networkPrepStack, partition, acceleratorPrefix);
           cdk.Aspects.of(networkPrepStack).add(new AwsSolutionsChecks());
         }
 
@@ -669,7 +725,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(securityResourcesStack, partition);
+          addAcceleratorTags(securityResourcesStack, partition, acceleratorPrefix);
           cdk.Aspects.of(securityResourcesStack).add(new AwsSolutionsChecks());
         }
 
@@ -710,6 +766,7 @@ async function main() {
                 templateFile: stack.stackConfig.template,
                 terminationProtection: stack.stackConfig.terminationProtection,
                 parameters: stack.stackConfig.parameters,
+                ssmParamNamePrefix: ssmParamNamePrefix,
                 ...props,
               });
 
@@ -734,7 +791,7 @@ async function main() {
                   props.organizationConfig,
                 )
               ) {
-                const applicationStackName = `AWSAccelerator-App-${application.name}-${accountId}-${enabledRegion}`;
+                const applicationStackName = `${acceleratorPrefix}-App-${application.name}-${accountId}-${enabledRegion}`;
                 const env = {
                   account: accountId,
                   region: enabledRegion,
@@ -768,7 +825,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(vpcStack, partition);
+          addAcceleratorTags(vpcStack, partition, acceleratorPrefix);
           cdk.Aspects.of(vpcStack).add(new AwsSolutionsChecks());
 
           const endpointsStack = new NetworkVpcEndpointsStack(
@@ -782,7 +839,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(endpointsStack, partition);
+          addAcceleratorTags(endpointsStack, partition, acceleratorPrefix);
           endpointsStack.addDependency(vpcStack);
           cdk.Aspects.of(endpointsStack).add(new AwsSolutionsChecks());
 
@@ -797,7 +854,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(dnsStack, partition);
+          addAcceleratorTags(dnsStack, partition, acceleratorPrefix);
           dnsStack.addDependency(endpointsStack);
           cdk.Aspects.of(dnsStack).add(new AwsSolutionsChecks());
         }
@@ -817,7 +874,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(networkAssociationsStack, partition);
+          addAcceleratorTags(networkAssociationsStack, partition, acceleratorPrefix);
           cdk.Aspects.of(networkAssociationsStack).add(new AwsSolutionsChecks());
 
           const networkGwlbStack = new NetworkAssociationsGwlbStack(
@@ -831,7 +888,7 @@ async function main() {
               ...props,
             },
           );
-          addAcceleratorTags(networkGwlbStack, partition);
+          addAcceleratorTags(networkGwlbStack, partition, acceleratorPrefix);
           cdk.Aspects.of(networkGwlbStack).add(new AwsSolutionsChecks());
         }
       }

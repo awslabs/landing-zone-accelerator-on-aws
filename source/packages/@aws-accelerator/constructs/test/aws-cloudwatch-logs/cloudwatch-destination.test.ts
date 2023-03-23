@@ -26,6 +26,7 @@ new CloudWatchDestination(stack, 'CloudWatchDestination', {
   kinesisStream: new cdk.aws_kinesis.Stream(stack, 'CustomStream', {}),
   organizationId: 'o-some-org-id',
   partition: 'aws',
+  destinationName: 'AWSAcceleratorCloudWatchToS3',
 });
 
 new CloudWatchDestination(cnStack, 'CloudWatchDestination', {
@@ -34,6 +35,7 @@ new CloudWatchDestination(cnStack, 'CloudWatchDestination', {
   organizationId: 'o-some-org-id',
   accountIds: ['111111111111', '222222222222'],
   partition: 'aws-cn',
+  destinationName: 'AWSAcceleratorCloudWatchToS3',
 });
 
 /**

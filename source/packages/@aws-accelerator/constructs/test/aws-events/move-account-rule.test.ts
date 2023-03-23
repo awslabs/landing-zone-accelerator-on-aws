@@ -27,6 +27,9 @@ new MoveAccountRule(stack, 'MoveAccountRule', {
   commitId: 'sample-commit-id',
   kmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 365,
+  acceleratorPrefix: 'AWSAccelerator',
+  configTableArnParameterName: '/accelerator/prepare-stack/configTable/arn',
+  configTableNameParameterName: '/accelerator/prepare-stack/configTable/name',
 });
 
 /**

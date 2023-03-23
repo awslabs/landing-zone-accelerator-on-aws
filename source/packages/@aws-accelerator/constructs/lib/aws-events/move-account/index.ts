@@ -40,6 +40,7 @@ const configTableName = process.env['CONFIG_TABLE_NAME'] ?? '';
 const commitId = process.env['COMMIT_ID'] ?? '';
 const homeRegion: string = process.env['HOME_REGION'] ?? '';
 const globalRegion: string = process.env['GLOBAL_REGION'] ?? '';
+const stackPrefix = process.env['STACK_PREFIX']!;
 
 const marshallOptions = {
   convertEmptyValues: false,
@@ -73,7 +74,7 @@ export async function handler(event: any): Promise<any> {
     const destinationParentId: string = event.detail.requestParameters.destinationParentId;
     const username: string = event.detail.userIdentity.sessionContext.sessionIssuer.userName;
 
-    if (!username.includes('AWSAccelerator-AccountsSt-') && !username.includes('AWSAccelerator-PrepareSta-')) {
+    if (!username.includes(`${stackPrefix}-AccountsSt-`) && !username.includes(`${stackPrefix}-PrepareSta-`)) {
       const organizationsClient = new AWS.Organizations({ region: globalRegion, customUserAgent: solutionId });
 
       // Get all Ou details

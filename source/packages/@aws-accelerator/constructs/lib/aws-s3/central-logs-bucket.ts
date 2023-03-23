@@ -35,14 +35,24 @@ export interface CentralLogsBucketProps {
    */
   awsPrincipalAccesses?: { name: string; principal: string; accessType: string }[];
   bucketPrefixProps?: BucketPrefixProps;
+  /**
+   * Accelerator Prefix
+   */
+  readonly acceleratorPrefix: string;
+  /**
+   * Accelerator central log bucket cross account ssm parameter access role name
+   */
+  readonly crossAccountAccessRoleName: string;
+  /**
+   * Accelerator central log bucket cmk arn ssm parameter name
+   */
+  readonly cmkArnSsmParameterName: string;
 }
 
 /**
  * Class to initialize Policy
  */
 export class CentralLogsBucket extends Construct {
-  public static readonly KEY_ARN_PARAMETER_NAME = '/accelerator/logging/central-bucket/kms/arn';
-  public static readonly CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME = 'AWSAccelerator-CentralBucket-KeyArnParam-Role';
   private readonly bucket: Bucket;
 
   constructor(scope: Construct, id: string, props: CentralLogsBucketProps) {
@@ -266,15 +276,14 @@ export class CentralLogsBucket extends Construct {
       this,
       'SsmParamCentralAccountBucketKMSArn',
       {
-        parameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
+        parameterName: props.cmkArnSsmParameterName,
         stringValue: this.bucket.getKey().keyArn,
       },
     );
 
     // SSM parameter access IAM Role for
     new cdk.aws_iam.Role(this, 'CrossAccountCentralBucketKMSArnSsmParamAccessRole', {
-      // roleName: `AWSAccelerator-CentralBucketKMSArnSsmParam-${cdk.Stack.of(this).region}`,
-      roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
+      roleName: props.crossAccountAccessRoleName,
       assumedBy: props.orgPrincipals,
       inlinePolicies: {
         default: new cdk.aws_iam.PolicyDocument({
@@ -285,7 +294,7 @@ export class CentralLogsBucket extends Construct {
               resources: [centralLogBucketKmsKeyArnSsmParameter.parameterArn],
               conditions: {
                 ArnLike: {
-                  'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                  'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}-*`],
                 },
               },
             }),
@@ -295,7 +304,7 @@ export class CentralLogsBucket extends Construct {
               resources: ['*'],
               conditions: {
                 ArnLike: {
-                  'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                  'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}-*`],
                 },
               },
             }),

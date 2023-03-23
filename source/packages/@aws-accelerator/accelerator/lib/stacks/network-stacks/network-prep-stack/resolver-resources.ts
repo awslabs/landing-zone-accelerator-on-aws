@@ -22,7 +22,7 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import path from 'path';
-import { AcceleratorStack, AcceleratorStackProps } from '../../accelerator-stack';
+import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
 import { NetworkPrepStack } from './network-prep-stack';
 
@@ -30,6 +30,7 @@ export class ResolverResources {
   public readonly domainListMap: Map<string, string>;
   public readonly queryLogsMap: Map<string, string>;
   public readonly ruleGroupMap: Map<string, string>;
+
   private stack: NetworkPrepStack;
 
   constructor(
@@ -227,7 +228,7 @@ export class ResolverResources {
           this.stack,
           'CentralLogsBucket',
           `${
-            AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+            this.stack.acceleratorResourceNames.bucketPrefixes.centralLogs
           }-${props.accountsConfig.getLogArchiveAccountId()}-${props.centralizedLoggingRegion}`,
         );
 

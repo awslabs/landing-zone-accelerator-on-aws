@@ -21,6 +21,7 @@ const stack = new GovCloudAccountVendingStack(new cdk.App(), 'AWSAccelerator-Tes
   synthesizer: new cdk.DefaultStackSynthesizer({
     generateBootstrapVersionRule: false,
   }),
+  acceleratorPrefix: 'AWSAccelerator',
 });
 /**
  * GovCloudAccountVendingStack construct test

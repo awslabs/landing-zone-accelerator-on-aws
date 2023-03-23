@@ -14,8 +14,12 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
+export interface GovCloudAccountVendingProductStackProps extends cdk.StackProps {
+  readonly acceleratorPrefix: string;
+}
+
 export class GovCloudAccountVendingProductStack extends cdk.aws_servicecatalog.ProductStack {
-  constructor(scope: Construct, id: string) {
+  constructor(scope: Construct, id: string, props: GovCloudAccountVendingProductStackProps) {
     super(scope, id);
 
     /** This stack creates service catalog product which can 
@@ -71,7 +75,7 @@ export class GovCloudAccountVendingProductStack extends cdk.aws_servicecatalog.P
     const accountVendingFunction = cdk.aws_lambda.Function.fromFunctionName(
       this,
       'AccountVendingFunction',
-      'AWSAccelerator-GovCloudAccountVending',
+      `${props.acceleratorPrefix}-GovCloudAccountVending`,
     );
 
     //

@@ -33,6 +33,7 @@ new PutSsmParameter(stack, 'SsmParameter', {
   kmsKey: new cdk.aws_kms.Key(stack, 'key'),
   logRetentionInDays: 3653,
   invokingAccountID: '333333333333',
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 /**

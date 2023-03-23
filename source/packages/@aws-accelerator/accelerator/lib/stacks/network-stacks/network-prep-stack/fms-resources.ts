@@ -40,9 +40,9 @@ export class FmsResources {
     const accountId = props.accountsConfig.getAccountId(fmsConfiguration.delegatedAdminAccount);
     const auditAccountId = props.accountsConfig.getAuditAccountId();
     const notificationChannelMap = new Map<string, string>();
-    const roleArn = `arn:${cdk.Stack.of(this.stack).partition}:iam::${
-      cdk.Stack.of(this.stack).account
-    }:role/AWSAccelerator-FMS-Notifications`;
+    const roleArn = `arn:${cdk.Stack.of(this.stack).partition}:iam::${cdk.Stack.of(this.stack).account}:role/${
+      props.prefixes.accelerator
+    }-FMS-Notifications`;
 
     for (const notificationChannel of fmsConfiguration.notificationChannels) {
       const snsTopicName = notificationChannel.snsTopic;
@@ -62,12 +62,12 @@ export class FmsResources {
         }
         let snsTopicArn = `arn:${cdk.Stack.of(this.stack).partition}:sns:${cdk.Stack.of(this.stack).region}:${
           cdk.Stack.of(this.stack).account
-        }:aws-accelerator-${snsTopicName}`;
+        }:${props.prefixes.snsTopicName}-${snsTopicName}`;
 
         if (snsTopicsSecurity.includes(snsTopicName)) {
           snsTopicArn = `arn:${cdk.Stack.of(this.stack).partition}:sns:${
             cdk.Stack.of(this.stack).region
-          }:${auditAccountId}:aws-accelerator-${snsTopicName}Notifications`;
+          }:${auditAccountId}:${props.prefixes.snsTopicName}-${snsTopicName}Notifications`;
         }
         this.stack.addLogs(
           LogLevel.INFO,

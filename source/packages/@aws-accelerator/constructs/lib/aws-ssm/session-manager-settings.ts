@@ -36,6 +36,10 @@ export interface SsmSessionManagerSettingsProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * Accelerator Prefix
+   */
+  readonly acceleratorPrefix: string;
 }
 
 export class SsmSessionManagerSettings extends Construct {
@@ -218,7 +222,7 @@ export class SsmSessionManagerSettings extends Construct {
 
     const sessionManagerRegionalEC2ManagedPolicy = new cdk.aws_iam.ManagedPolicy(this, 'SessionManagerEC2Policy', {
       document: sessionManagerRegionalEC2PolicyDocument,
-      managedPolicyName: `AWSAccelerator-SessionManagerLogging-${props.region}`,
+      managedPolicyName: `${props.acceleratorPrefix}-SessionManagerLogging-${props.region}`,
     });
 
     // Attach policies to configured roles
@@ -237,13 +241,13 @@ export class SsmSessionManagerSettings extends Construct {
       assumedBy: new cdk.aws_iam.ServicePrincipal(`ec2.${cdk.Stack.of(this).urlSuffix}`),
       description: 'IAM Role for an EC2 configured for Session Manager Logging',
       managedPolicies: [sessionManagerRegionalEC2ManagedPolicy],
-      roleName: `AWSAccelerator-SessionManagerEC2Role-${props.region}`,
+      roleName: `${props.acceleratorPrefix}-SessionManagerEC2Role-${props.region}`,
     });
 
     // Create an EC2 instance profile
     new cdk.aws_iam.CfnInstanceProfile(this, 'SessionManagerEC2InstanceProfile', {
       roles: [sessionManagerEC2Role.roleName],
-      instanceProfileName: `AWSAccelerator-SessionManagerEc2Role-${props.region}`,
+      instanceProfileName: `${props.acceleratorPrefix}-SessionManagerEc2Role-${props.region}`,
     });
 
     const sessionManagerUserPolicyDocument = new cdk.aws_iam.PolicyDocument({
@@ -259,7 +263,7 @@ export class SsmSessionManagerSettings extends Construct {
     // Create an IAM Policy for users to be able to use Session Manager with KMS encryption
     new cdk.aws_iam.ManagedPolicy(this, 'SessionManagerUserKMSPolicy', {
       document: sessionManagerUserPolicyDocument,
-      managedPolicyName: `AWSAccelerator-SessionManagerUserKMS-${props.region}`,
+      managedPolicyName: `${props.acceleratorPrefix}-SessionManagerUserKMS-${props.region}`,
     });
 
     //

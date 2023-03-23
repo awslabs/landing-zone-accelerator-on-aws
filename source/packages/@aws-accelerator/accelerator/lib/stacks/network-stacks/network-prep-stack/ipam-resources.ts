@@ -17,7 +17,6 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
-import { AcceleratorStack } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
 import { NetworkPrepStack } from './network-prep-stack';
 
@@ -25,14 +24,16 @@ export class IpamResources {
   public readonly ipamMap: Map<string, string>;
   public readonly poolMap: Map<string, string>;
   public readonly scopeMap: Map<string, string>;
-  private stack: NetworkPrepStack;
   public readonly ssmRole?: cdk.aws_iam.Role;
+
+  private stack: NetworkPrepStack;
 
   constructor(
     networkPrepStack: NetworkPrepStack,
     delegatedAdminAccountId: string,
     centralConfig: CentralNetworkServicesConfig,
     homeRegion: string,
+    ssmParamNamePrefix: string,
     orgId?: string,
   ) {
     this.stack = networkPrepStack;
@@ -40,7 +41,13 @@ export class IpamResources {
     // Create IPAMs
     [this.ipamMap, this.scopeMap, this.poolMap] = this.createIpamResources(delegatedAdminAccountId, centralConfig);
     // Create cross-account SSM role
-    this.ssmRole = this.createIpamSsmRole(centralConfig, delegatedAdminAccountId, homeRegion, orgId);
+    this.ssmRole = this.createIpamSsmRole(
+      centralConfig,
+      delegatedAdminAccountId,
+      homeRegion,
+      ssmParamNamePrefix,
+      orgId,
+    );
   }
 
   /**
@@ -254,12 +261,15 @@ export class IpamResources {
    * Create cross-account SSM role
    * @param centralConfig
    * @param delegatedAdminAccountId
+   * @param homeRegion
+   * @param ssmParamNamePrefix
    * @param orgId
    */
   private createIpamSsmRole(
     centralConfig: CentralNetworkServicesConfig,
     delegatedAdminAccountId: string,
     homeRegion: string,
+    ssmParamNamePrefix: string,
     orgId?: string,
   ): cdk.aws_iam.Role | undefined {
     if (
@@ -270,7 +280,7 @@ export class IpamResources {
       this.stack.addLogs(LogLevel.INFO, `IPAM Pool: Create IAM role for cross-account SSM Parameter pulls`);
 
       const role = new cdk.aws_iam.Role(this.stack, `GetIpamSsmParamRole`, {
-        roleName: AcceleratorStack.ACCELERATOR_IPAM_SSM_PARAM_ROLE_NAME,
+        roleName: this.stack.acceleratorResourceNames.roles.ipamSsmParameterAccess,
         assumedBy: this.stack.getOrgPrincipals(orgId),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
@@ -279,7 +289,7 @@ export class IpamResources {
                 effect: cdk.aws_iam.Effect.ALLOW,
                 actions: ['ssm:GetParameter', 'ssm:GetParameters'],
                 resources: [
-                  `arn:${cdk.Aws.PARTITION}:ssm:*:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/network/ipam/pools/*/id`,
+                  `arn:${cdk.Aws.PARTITION}:ssm:*:${cdk.Aws.ACCOUNT_ID}:parameter${ssmParamNamePrefix}/network/ipam/pools/*/id`,
                 ],
               }),
             ],

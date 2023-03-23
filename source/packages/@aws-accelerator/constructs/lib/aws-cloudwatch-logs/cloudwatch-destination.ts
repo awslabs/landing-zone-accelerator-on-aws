@@ -39,6 +39,10 @@ export interface CloudWatchDestinationProps {
    * Account IDs for the IAM condition.
    */
   accountIds?: string[];
+  /**
+   * Cloudwatch destination name.
+   */
+  destinationName: string;
 }
 /**
  * Class to configure CloudWatch Destination on logs receiving account
@@ -111,7 +115,7 @@ export class CloudWatchDestination extends Construct {
           Action: 'logs:PutSubscriptionFilter',
           Resource: `arn:${cdk.Stack.of(this).partition}:logs:${cdk.Stack.of(this).region}:${
             cdk.Stack.of(this).account
-          }:destination:AWSAcceleratorCloudWatchToS3`,
+          }:destination:${props.destinationName}`,
           Condition: principalOrgIdCondition,
         },
       ],
@@ -120,7 +124,7 @@ export class CloudWatchDestination extends Construct {
     new cdk.aws_logs.CfnDestination(this, 'Resource', {
       roleArn: logsKinesisRole.roleArn,
       targetArn: props.kinesisStream.streamArn,
-      destinationName: 'AWSAcceleratorCloudWatchToS3',
+      destinationName: props.destinationName,
       destinationPolicy: logDestinationPolicy,
     });
   }

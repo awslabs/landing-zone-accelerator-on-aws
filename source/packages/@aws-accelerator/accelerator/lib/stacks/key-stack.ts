@@ -27,8 +27,8 @@ export class KeyStack extends AcceleratorStack {
     const accountIds = props.accountsConfig.getAccountIds();
 
     const key = new cdk.aws_kms.Key(this, 'AcceleratorKey', {
-      alias: AcceleratorStack.ACCELERATOR_KEY_ALIAS,
-      description: AcceleratorStack.ACCELERATOR_KEY_DESCRIPTION,
+      alias: this.acceleratorResourceNames.customerManagedKeys.acceleratorKey.alias,
+      description: this.acceleratorResourceNames.customerManagedKeys.acceleratorKey.description,
       enableKeyRotation: true,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
@@ -46,7 +46,7 @@ export class KeyStack extends AcceleratorStack {
               ...this.getPrincipalOrgIdCondition(this.organizationId),
             },
             ArnLike: {
-              'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+              'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-*`],
             },
           },
         }),
@@ -122,7 +122,8 @@ export class KeyStack extends AcceleratorStack {
 
     this.ssmParameters.push({
       logicalId: 'AcceleratorKmsArnParameter',
-      parameterName: '/accelerator/kms/key-arn',
+      parameterName: this.acceleratorResourceNames.parameters.acceleratorCmkArn,
+
       stringValue: key.keyArn,
     });
 
@@ -131,7 +132,7 @@ export class KeyStack extends AcceleratorStack {
     if (cdk.Stack.of(this).region === props.globalConfig.homeRegion) {
       if (props.organizationConfig.enable) {
         new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
-          roleName: AcceleratorStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+          roleName: this.acceleratorResourceNames.roles.crossAccountCmkArnSsmParameterAccess,
           assumedBy: this.getOrgPrincipals(this.organizationId),
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({
@@ -140,19 +141,21 @@ export class KeyStack extends AcceleratorStack {
                   effect: cdk.aws_iam.Effect.ALLOW,
                   actions: ['ssm:GetParameters', 'ssm:GetParameter'],
                   resources: [
-                    `arn:${cdk.Stack.of(this).partition}:ssm:*:${
-                      cdk.Stack.of(this).account
-                    }:parameter/accelerator/kms/key-arn`,
-                    `arn:${cdk.Stack.of(this).partition}:ssm:*:${
-                      cdk.Stack.of(this).account
-                    }:parameter/accelerator/kms/s3/key-arn`,
+                    `arn:${cdk.Stack.of(this).partition}:ssm:*:${cdk.Stack.of(this).account}:parameter${
+                      this.acceleratorResourceNames.parameters.acceleratorCmkArn
+                    }`,
+                    `arn:${cdk.Stack.of(this).partition}:ssm:*:${cdk.Stack.of(this).account}:parameter${
+                      this.acceleratorResourceNames.parameters.s3CmkArn
+                    }`,
                   ],
                   conditions: {
                     StringEquals: {
                       ...this.getPrincipalOrgIdCondition(this.organizationId),
                     },
                     ArnLike: {
-                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                      'aws:PrincipalARN': [
+                        `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-*`,
+                      ],
                     },
                   },
                 }),
@@ -165,7 +168,9 @@ export class KeyStack extends AcceleratorStack {
                       ...this.getPrincipalOrgIdCondition(this.organizationId),
                     },
                     ArnLike: {
-                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                      'aws:PrincipalARN': [
+                        `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-*`,
+                      ],
                     },
                   },
                 }),
@@ -179,7 +184,7 @@ export class KeyStack extends AcceleratorStack {
           principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
         });
         new cdk.aws_iam.Role(this, 'CrossAccountAcceleratorSsmParamAccessRole', {
-          roleName: KeyStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
+          roleName: this.acceleratorResourceNames.roles.crossAccountCmkArnSsmParameterAccess,
           assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({
@@ -188,19 +193,21 @@ export class KeyStack extends AcceleratorStack {
                   effect: cdk.aws_iam.Effect.ALLOW,
                   actions: ['ssm:GetParameters', 'ssm:GetParameter'],
                   resources: [
-                    `arn:${cdk.Stack.of(this).partition}:ssm:*:${
-                      cdk.Stack.of(this).account
-                    }:parameter/accelerator/kms/key-arn`,
-                    `arn:${cdk.Stack.of(this).partition}:ssm:*:${
-                      cdk.Stack.of(this).account
-                    }:parameter/accelerator/kms/s3/key-arn`,
+                    `arn:${cdk.Stack.of(this).partition}:ssm:*:${cdk.Stack.of(this).account}:parameter${
+                      this.acceleratorResourceNames.parameters.acceleratorCmkArn
+                    }`,
+                    `arn:${cdk.Stack.of(this).partition}:ssm:*:${cdk.Stack.of(this).account}:parameter${
+                      this.acceleratorResourceNames.parameters.s3CmkArn
+                    }`,
                   ],
                   conditions: {
                     StringEquals: {
                       'aws:PrincipalAccount': [...accountIds],
                     },
                     ArnLike: {
-                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                      'aws:PrincipalARN': [
+                        `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-*`,
+                      ],
                     },
                   },
                 }),
@@ -213,7 +220,9 @@ export class KeyStack extends AcceleratorStack {
                       'aws:PrincipalAccount': [...accountIds],
                     },
                     ArnLike: {
-                      'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                      'aws:PrincipalARN': [
+                        `arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.prefixes.accelerator}-*`,
+                      ],
                     },
                   },
                 }),

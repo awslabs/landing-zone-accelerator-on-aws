@@ -22,7 +22,7 @@ const stack = new cdk.Stack();
 
 new AcceleratorMetadata(stack, 'AcceleratorMetadata', {
   acceleratorConfigRepositoryName: 'aws-config-test',
-  acceleratorPrefix: 'test',
+  acceleratorPrefix: 'AWSAccelerator',
   assumeRole: 'testRole',
   centralLogBucketName: 'centralLogBucketTest',
   cloudwatchKmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
@@ -31,6 +31,8 @@ new AcceleratorMetadata(stack, 'AcceleratorMetadata', {
   metadataLogBucketName: 'testMetadataLogBucket',
   organizationId: 'ou-test123',
   logRetentionInDays: 3653,
+  acceleratorSsmParamPrefix: '/accelerator',
+  globalRegion: 'us-east-1',
 });
 
 /**

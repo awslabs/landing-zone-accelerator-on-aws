@@ -33,7 +33,8 @@ describe('RequestCertificate', () => {
     cloudWatchLogsKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyImportCert', {}),
     logRetentionInDays: 363,
     homeRegion: 'us-east-1',
-    managementAccountId: '111111111111',
+    assetBucketName: 'aws-accelerator-assets',
+    assetFunctionRoleName: 'AWSAccelerator-AssetsAccessRole',
   });
   snapShotTest(testNamePrefix, stack);
 });
@@ -48,7 +49,8 @@ describe('ImportCertificate', () => {
     cloudWatchLogsKmsKey: new cdk.aws_kms.Key(stack, 'CustomKeyRequestCert', {}),
     logRetentionInDays: 363,
     homeRegion: 'us-east-1',
-    managementAccountId: '111111111111',
+    assetBucketName: 'aws-accelerator-assets',
+    assetFunctionRoleName: 'AWSAccelerator-AssetsAccessRole',
   });
   snapShotTest(testNamePrefix, stack);
 });

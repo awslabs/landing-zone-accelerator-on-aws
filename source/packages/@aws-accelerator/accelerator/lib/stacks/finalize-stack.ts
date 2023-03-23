@@ -27,16 +27,16 @@ export class FinalizeStack extends AcceleratorStack {
         'AcceleratorGetCloudWatchKey',
         cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+          this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
         ),
       ) as cdk.aws_kms.Key;
 
       if (process.env['CONFIG_COMMIT_ID']) {
         this.logger.debug(`Storing configuration commit id in SSM`);
         new cdk.aws_ssm.StringParameter(this, 'AcceleratorCommitIdParameter', {
-          parameterName: '/accelerator/configuration/configCommitId',
+          parameterName: `${props.prefixes.ssmParamName}/configuration/configCommitId`,
           stringValue: process.env['CONFIG_COMMIT_ID'],
-          description: `The commit hash of the latest ${AcceleratorStack.ACCELERATOR_CONFIGURATION_REPOSITORY_NAME} commit to deploy successfully`,
+          description: `The commit hash of the latest ${props.configRepositoryName} commit to deploy successfully`,
         });
       }
 
@@ -44,7 +44,7 @@ export class FinalizeStack extends AcceleratorStack {
         this.logger.debug(`Creating resources to detach quarantine scp`);
         const policyId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/organizations/scp/${props.organizationConfig.quarantineNewAccounts?.scpPolicyName}/id`,
+          `${props.prefixes.ssmParamName}/organizations/scp/${props.organizationConfig.quarantineNewAccounts?.scpPolicyName}/id`,
         );
 
         new DetachQuarantineScp(this, 'DetachQuarantineScp', {

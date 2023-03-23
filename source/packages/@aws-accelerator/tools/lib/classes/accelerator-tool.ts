@@ -193,51 +193,51 @@ export class AcceleratorTool {
       stage: 'Deploy',
       order: 7,
       actions: [
-        { order: 7, name: 'Finalize', stackPrefix: 'AWSAccelerator-FinalizeStack' },
-        { order: 6, name: 'Customizations', stackPrefix: 'AWSAccelerator-CustomizationsStack' },
-        { order: 5, name: 'Network_Associations', stackPrefix: 'AWSAccelerator-NetworkAssociationsStack' },
-        { order: 5, name: 'Network_Associations', stackPrefix: 'AWSAccelerator-NetworkAssociationsGwlbStack' },
-        { order: 2, name: 'Security_Resources', stackPrefix: 'AWSAccelerator-SecurityResourcesStack' },
-        { order: 4, name: 'Network_VPCs', stackPrefix: 'AWSAccelerator-NetworkVpcDnsStack' },
-        { order: 3, name: 'Network_VPCs', stackPrefix: 'AWSAccelerator-NetworkVpcEndpointsStack' },
-        { order: 2, name: 'Network_VPCs', stackPrefix: 'AWSAccelerator-NetworkVpcStack' },
-        { order: 1, name: 'Operations', stackPrefix: 'AWSAccelerator-OperationsStack' },
-        { order: 1, name: 'Security', stackPrefix: 'AWSAccelerator-SecurityStack' },
-        { order: 1, name: 'Network_Prepare', stackPrefix: 'AWSAccelerator-NetworkPrepStack' },
+        { order: 7, name: 'Finalize', stackPrefix: '-FinalizeStack' },
+        { order: 6, name: 'Customizations', stackPrefix: '-CustomizationsStack' },
+        { order: 5, name: 'Network_Associations', stackPrefix: '-NetworkAssociationsStack' },
+        { order: 5, name: 'Network_Associations', stackPrefix: '-NetworkAssociationsGwlbStack' },
+        { order: 2, name: 'Security_Resources', stackPrefix: '-SecurityResourcesStack' },
+        { order: 4, name: 'Network_VPCs', stackPrefix: '-NetworkVpcDnsStack' },
+        { order: 3, name: 'Network_VPCs', stackPrefix: '-NetworkVpcEndpointsStack' },
+        { order: 2, name: 'Network_VPCs', stackPrefix: '-NetworkVpcStack' },
+        { order: 1, name: 'Operations', stackPrefix: '-OperationsStack' },
+        { order: 1, name: 'Security', stackPrefix: '-SecurityStack' },
+        { order: 1, name: 'Network_Prepare', stackPrefix: '-NetworkPrepStack' },
       ],
     },
     {
       stage: 'SecurityAudit',
       order: 6,
-      actions: [{ order: 1, name: 'SecurityAudit', stackPrefix: 'AWSAccelerator-SecurityAuditStack' }],
+      actions: [{ order: 1, name: 'SecurityAudit', stackPrefix: '-SecurityAuditStack' }],
     },
     {
       stage: 'Organization',
       order: 5,
-      actions: [{ order: 1, name: 'Organizations', stackPrefix: 'AWSAccelerator-OrganizationsStack' }],
+      actions: [{ order: 1, name: 'Organizations', stackPrefix: '-OrganizationsStack' }],
     },
     {
       stage: 'Logging',
       order: 4,
       actions: [
-        { order: 2, name: 'Logging', stackPrefix: 'AWSAccelerator-LoggingStack' },
-        { order: 1, name: 'Key', stackPrefix: 'AWSAccelerator-KeyStack' },
+        { order: 2, name: 'Logging', stackPrefix: '-LoggingStack' },
+        { order: 1, name: 'Key', stackPrefix: '-KeyStack' },
       ],
     },
     {
       stage: 'Accounts',
       order: 3,
-      actions: [{ order: 1, name: 'Accounts', stackPrefix: 'AWSAccelerator-AccountsStack' }],
+      actions: [{ order: 1, name: 'Accounts', stackPrefix: '-AccountsStack' }],
     },
     {
       stage: 'Prepare',
       order: 2,
-      actions: [{ order: 1, name: 'Prepare', stackPrefix: 'AWSAccelerator-PrepareStack' }],
+      actions: [{ order: 1, name: 'Prepare', stackPrefix: '-PrepareStack' }],
     },
     {
       stage: 'Bootstrap',
       order: 1,
-      actions: [{ order: 1, name: 'Bootstrap', stackPrefix: 'AWSAccelerator-CDKToolkit' }],
+      actions: [{ order: 1, name: 'Bootstrap', stackPrefix: '-CDKToolkit' }],
     },
   ];
 
@@ -359,6 +359,7 @@ export class AcceleratorTool {
     // Accelerator tester configuration
     let testerPipelineStackNamePrefix = `${acceleratorQualifier}-TesterPipelineStack`;
     let testerStackNamePrefix = `${acceleratorQualifier}-TesterStack`;
+    let acceleratorPrefix = 'AWSAccelerator';
 
     for (const envVariable of batchGetProjectsCommandResponse.projects![0].environment!.environmentVariables!) {
       if (envVariable.name === 'ACCELERATOR_QUALIFIER') {
@@ -368,12 +369,14 @@ export class AcceleratorTool {
         testerStackNamePrefix = `${envVariable.value!}-tester-stack`;
         testerPipelineStackNamePrefix = `${envVariable.value!}-tester-pipeline-stack`;
         testerPipelineConfigRepositoryName = `${envVariable.value!}-test-config`;
-        break;
+      }
+      if (envVariable.name === 'ACCELERATOR_PREFIX') {
+        acceleratorPrefix = envVariable.value!;
       }
     }
 
     //Delete accelerator target cloudformation stacks
-    await this.deletePipelineCloudFormationStacks(acceleratorPipelineName);
+    await this.deletePipelineCloudFormationStacks(acceleratorPrefix, acceleratorPipelineName);
 
     // remaining cleanup is required when fullDestroy or deleteAccelerator option used
     if (this.acceleratorToolProps.fullDestroy || this.acceleratorToolProps.deleteAccelerator) {
@@ -403,10 +406,10 @@ export class AcceleratorTool {
         // Delete bootstrap stack only when pipeline not executed from external account
         if (!this.externalPipelineAccount.isUsed) {
           // AcceleratorTool.resetCredentialEnvironment();
-          await this.deleteStack(new CloudFormationClient({}), 'AWSAccelerator-CDKToolkit');
+          await this.deleteStack(new CloudFormationClient({}), `${acceleratorPrefix}-CDKToolkit`);
         }
         //start final resource cleanup, CWL logs are re-created post CFN stack deletion so these needs to be clean
-        await this.finalCleanup(acceleratorQualifier);
+        await this.finalCleanup(acceleratorPrefix, acceleratorQualifier);
       }
     }
     return true;
@@ -472,11 +475,11 @@ export class AcceleratorTool {
    * @param pipelineName
    * @private
    */
-  private async deletePipelineCloudFormationStacks(pipelineName: string): Promise<void> {
-    await this.initPipeline(pipelineName);
+  private async deletePipelineCloudFormationStacks(acceleratorPrefix: string, pipelineName: string): Promise<void> {
+    await this.initPipeline(acceleratorPrefix, pipelineName);
 
     for (const stack of this.acceleratorCloudFormationStacks) {
-      await this.deleteStacks(stack.stackName);
+      await this.deleteStacks(acceleratorPrefix, stack.stackName);
     }
   }
 
@@ -484,7 +487,7 @@ export class AcceleratorTool {
    * Private async function to initialize required properties to perform accelerator cleanup
    * @private
    */
-  private async initPipeline(pipelineName: string): Promise<void> {
+  private async initPipeline(acceleratorPrefix: string, pipelineName: string): Promise<void> {
     try {
       const response = await throttlingBackOff(() =>
         new CodePipelineClient({}).send(new GetPipelineCommand({ name: pipelineName })),
@@ -531,7 +534,7 @@ export class AcceleratorTool {
       this.organizationAccounts = await this.getOrganizationAccountList();
 
       // Order the stacks in delete order
-      this.acceleratorCloudFormationStacks = this.getPipelineCloudFormationStacks();
+      this.acceleratorCloudFormationStacks = this.getPipelineCloudFormationStacks(acceleratorPrefix);
     } catch (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       e: any
@@ -680,7 +683,7 @@ export class AcceleratorTool {
    * Function to get cloudformation stacks created by pipeline stage actions
    * @private
    */
-  private getPipelineCloudFormationStacks(): pipelineStackType[] {
+  private getPipelineCloudFormationStacks(acceleratorPrefix: string): pipelineStackType[] {
     const pipelineCloudFormationStacks: pipelineStackType[] = [];
 
     for (const stage of this.pipelineStageActions) {
@@ -689,8 +692,9 @@ export class AcceleratorTool {
         pipelineCloudFormationStacks.push({
           stageOrder: stage.order,
           order: action.order,
-          stackName: action.stackPrefix,
+          stackName: `${acceleratorPrefix}${action.stackPrefix}`,
         });
+
         // }
       }
     }
@@ -1184,7 +1188,7 @@ export class AcceleratorTool {
    * @param stackName
    * @private
    */
-  private async deleteStacks(stackName: string): Promise<void> {
+  private async deleteStacks(acceleratorPrefix: string, stackName: string): Promise<void> {
     // const promises: Promise<boolean>[] = [];
     // const deleteStackStartedPromises: Promise<DeleteStackCommandOutput>[] = [];
     // const deleteStackCompletedPromises: Promise<WaiterResult>[] = [];
@@ -1288,7 +1292,7 @@ export class AcceleratorTool {
           // cloudFormationStack &&
           !this.externalPipelineAccount.isUsed &&
           this.globalConfig?.homeRegion === region &&
-          stackName === 'AWSAccelerator-CDKToolkit' &&
+          stackName === `${acceleratorPrefix}-CDKToolkit` &&
           this.pipelineManagementAccount!.accountId === account.accountId &&
           !this.acceleratorToolProps.keepBootstraps
         ) {
@@ -1314,7 +1318,7 @@ export class AcceleratorTool {
         }
       }
     }
-    await this.completeStacksDeletion();
+    await this.completeStacksDeletion(acceleratorPrefix);
   }
 
   /**
@@ -1707,14 +1711,14 @@ export class AcceleratorTool {
     return cloudFormationStack;
   }
 
-  private async completeStacksDeletion() {
+  private async completeStacksDeletion(acceleratorPrefix: string) {
     const promises: Promise<void>[] = [];
     let stackName = '';
     for (const item of this.deleteStackLists) {
       stackName = item.stackName;
       const fullyQualifiedStackName =
-        item.stackName === 'AWSAccelerator-CDKToolkit'
-          ? 'AWSAccelerator-CDKToolkit'
+        item.stackName === `${acceleratorPrefix}-CDKToolkit`
+          ? `${acceleratorPrefix}-CDKToolkit`
           : `${item.stackName}-${item.accountID}-${item.region}`;
 
       const stackExists = await this.validateStackExistence(
@@ -1755,7 +1759,7 @@ export class AcceleratorTool {
 
     //
     // Network vpcs stack takes time to deallocate IPAM
-    if (promises.length > 0 && stackName === 'AWSAccelerator-NetworkVpcStack') {
+    if (promises.length > 0 && stackName === `${acceleratorPrefix}-NetworkVpcStack`) {
       await this.delay(360000);
     }
     this.deleteStackLists = [];
@@ -1866,9 +1870,9 @@ export class AcceleratorTool {
     }
   }
 
-  private async finalCleanup(acceleratorQualifier: string): Promise<void> {
+  private async finalCleanup(acceleratorPrefix: string, acceleratorQualifier: string): Promise<void> {
     //cleanup CWL logs
-    await this.deleteAllRemainingCloudWatchLogGroups(acceleratorQualifier);
+    await this.deleteAllRemainingCloudWatchLogGroups(acceleratorPrefix, acceleratorQualifier);
 
     await this.deleteAllEcrs();
     return;
@@ -1953,7 +1957,10 @@ export class AcceleratorTool {
     }
   }
 
-  private async deleteAllRemainingCloudWatchLogGroups(acceleratorQualifier: string): Promise<void> {
+  private async deleteAllRemainingCloudWatchLogGroups(
+    acceleratorPrefix: string,
+    acceleratorQualifier: string,
+  ): Promise<void> {
     const assumeRoleName = this.globalConfig?.managementAccountAccessRole || 'AWSControlTowerExecution';
     let cloudWatchLogsClient: CloudWatchLogsClient;
 
@@ -2025,7 +2032,7 @@ export class AcceleratorTool {
         } while (nextToken);
 
         // Add /AWSAccelerator-SecurityHub log groups for deletion
-        logGroupNames.push('/AWSAccelerator-SecurityHub');
+        logGroupNames.push(`/${acceleratorPrefix}-SecurityHub`);
 
         for (const logGroupName of logGroupNames) {
           this.debugLog(

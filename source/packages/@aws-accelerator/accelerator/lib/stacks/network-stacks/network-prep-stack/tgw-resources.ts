@@ -17,14 +17,15 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
-import { AcceleratorStack, AcceleratorStackProps } from '../../accelerator-stack';
+import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
 import { NetworkPrepStack } from './network-prep-stack';
 
 export class TgwResources {
-  private stack: NetworkPrepStack;
   public readonly transitGatewayMap: Map<string, string>;
   public readonly ssmRole?: cdk.aws_iam.Role;
+
+  private stack: NetworkPrepStack;
 
   constructor(networkPrepStack: NetworkPrepStack, props: AcceleratorStackProps) {
     // Set private stack property
@@ -127,7 +128,7 @@ export class TgwResources {
         });
 
         const role = new cdk.aws_iam.Role(this.stack, 'TgwPeeringRole', {
-          roleName: AcceleratorStack.ACCELERATOR_TGW_PEERING_ROLE_NAME,
+          roleName: this.stack.acceleratorResourceNames.roles.tgwPeering,
           assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({
@@ -136,7 +137,7 @@ export class TgwResources {
                   effect: cdk.aws_iam.Effect.ALLOW,
                   actions: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:PutParameter'],
                   resources: [
-                    `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/network/transitGateways/*`,
+                    `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${props.prefixes.ssmParamName}/network/transitGateways/*`,
                   ],
                 }),
                 new cdk.aws_iam.PolicyStatement({

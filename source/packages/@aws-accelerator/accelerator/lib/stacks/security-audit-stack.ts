@@ -24,7 +24,6 @@ import {
   Bucket,
   BucketEncryptionType,
   BucketReplicationProps,
-  CentralLogsBucket,
   Document,
   GuardDutyDetectorConfig,
   AuditManagerDefaultReportsDestination,
@@ -40,7 +39,6 @@ import {
 } from '@aws-accelerator/constructs';
 
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
-import { KeyStack } from './key-stack';
 import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 export class SecurityAuditStack extends AcceleratorStack {
@@ -55,14 +53,15 @@ export class SecurityAuditStack extends AcceleratorStack {
     super(scope, id, props);
 
     this.centralLogsBucketName = `${
-      AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+      this.acceleratorResourceNames.bucketPrefixes.centralLogs
     }-${props.accountsConfig.getLogArchiveAccountId()}-${props.centralizedLoggingRegion}`;
 
     this.s3Key = new KeyLookup(this, 'AcceleratorS3Key', {
       accountId: props.accountsConfig.getAuditAccountId(),
-      roleName: KeyStack.ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME,
-      keyArnParameterName: AcceleratorStack.ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME,
+      roleName: this.acceleratorResourceNames.roles.crossAccountCmkArnSsmParameterAccess,
+      keyArnParameterName: this.acceleratorResourceNames.parameters.s3CmkArn,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      acceleratorPrefix: props.prefixes.accelerator,
     }).getKey();
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
@@ -70,16 +69,17 @@ export class SecurityAuditStack extends AcceleratorStack {
       'AcceleratorGetCloudWatchKey',
       cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
       ),
     );
 
     this.centralLogsBucketKey = new KeyLookup(this, 'CentralLogsBucketKey', {
       accountId: props.accountsConfig.getLogArchiveAccountId(),
       keyRegion: props.centralizedLoggingRegion,
-      roleName: CentralLogsBucket.CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
-      keyArnParameterName: CentralLogsBucket.KEY_ARN_PARAMETER_NAME,
+      roleName: this.acceleratorResourceNames.roles.crossAccountCentralLogBucketCmkArnSsmParameterAccess,
+      keyArnParameterName: this.acceleratorResourceNames.parameters.centralLogBucketCmkArn,
       logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+      acceleratorPrefix: props.prefixes.accelerator,
     }).getKey();
 
     this.replicationProps = {
@@ -157,7 +157,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
     if (this.props.securityConfig.centralSecurityServices.macie.enable) {
       this.logger.info(
-        `Creating macie export config bucket - aws-accelerator-macie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        `Creating macie export config bucket - ${this.props.prefixes.bucketName}-macie-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
       );
 
       if (
@@ -233,9 +233,9 @@ export class SecurityAuditStack extends AcceleratorStack {
 
       const bucket = new Bucket(this, 'AuditManagerPublishingDestinationBucket', {
         encryptionType: BucketEncryptionType.SSE_KMS,
-        s3BucketName: `${AcceleratorStack.ACCELERATOR_AUDIT_MANAGER_BUCKET_NAME_PREFIX}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        s3BucketName: `${this.acceleratorResourceNames.bucketPrefixes.auditManager}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         kmsKey: this.s3Key,
-        serverAccessLogsBucketName: `${AcceleratorStack.ACCELERATOR_S3_ACCESS_LOGS_BUCKET_NAME_PREFIX}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
+        serverAccessLogsBucketName: `${this.acceleratorResourceNames.bucketPrefixes.s3AccessLogs}-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`,
         s3LifeCycleRules: this.getS3LifeCycleRules(
           this.props.securityConfig.centralSecurityServices.auditManager?.lifecycleRules,
         ),
@@ -273,7 +273,7 @@ export class SecurityAuditStack extends AcceleratorStack {
 
       this.ssmParameters.push({
         logicalId: 'SsmParamOrganizationAuditManagerPublishingDestinationBucketArn',
-        parameterName: '/accelerator/organization/security/auditManager/publishing-destination/bucket-arn',
+        parameterName: `${this.props.prefixes.ssmParamName}/organization/security/auditManager/publishing-destination/bucket-arn`,
         stringValue: bucket.getS3Bucket().bucketArn,
       });
 
@@ -449,8 +449,8 @@ export class SecurityAuditStack extends AcceleratorStack {
     let snsKey: cdk.aws_kms.Key | undefined;
     if (this.props.securityConfig.centralSecurityServices.snsSubscriptions ?? [].length > 0) {
       snsKey = new cdk.aws_kms.Key(this, 'AcceleratorSnsKey', {
-        alias: AcceleratorStack.ACCELERATOR_SNS_KEY_ALIAS,
-        description: AcceleratorStack.ACCELERATOR_SNS_KEY_DESCRIPTION,
+        alias: this.acceleratorResourceNames.customerManagedKeys.sns.alias,
+        description: this.acceleratorResourceNames.customerManagedKeys.sns.description,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
@@ -466,7 +466,9 @@ export class SecurityAuditStack extends AcceleratorStack {
                 ...this.getPrincipalOrgIdCondition(this.organizationId),
               },
               ArnLike: {
-                'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                'aws:PrincipalARN': [
+                  `arn:${cdk.Stack.of(this).partition}:iam::*:role/${this.props.prefixes.accelerator}-*`,
+                ],
               },
             },
           }),
@@ -479,7 +481,7 @@ export class SecurityAuditStack extends AcceleratorStack {
       this.logger.info(`Create SNS Topic: ${snsSubscriptionItem.level}`);
       const topic = new cdk.aws_sns.Topic(this, `${pascalCase(snsSubscriptionItem.level)}SnsTopic`, {
         displayName: `AWS Accelerator - ${snsSubscriptionItem.level} Notifications`,
-        topicName: `aws-accelerator-${snsSubscriptionItem.level}Notifications`,
+        topicName: `${this.props.prefixes.snsTopicName}-${snsSubscriptionItem.level}Notifications`,
         masterKey: snsKey,
       });
 
@@ -527,7 +529,9 @@ export class SecurityAuditStack extends AcceleratorStack {
     ) {
       const mgmtAccountSnsTopicArn = `arn:${cdk.Stack.of(this).partition}:sns:${
         cdk.Stack.of(this).region
-      }:${this.props.accountsConfig.getManagementAccountId()}:AWSAccelerator-ControlTowerNotification`;
+      }:${this.props.accountsConfig.getManagementAccountId()}:${
+        this.props.prefixes.snsTopicName
+      }-ControlTowerNotification`;
       const controlTowerNotificationsForwarderFunction = new cdk.aws_lambda.Function(
         this,
         'ControlTowerNotificationsForwarderFunction',

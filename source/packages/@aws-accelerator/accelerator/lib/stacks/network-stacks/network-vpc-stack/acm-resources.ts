@@ -69,7 +69,10 @@ export class AcmResources {
       cloudWatchLogsKmsKey: this.stack.cloudwatchKey,
       logRetentionInDays: this.stack.logRetention,
       homeRegion: props.globalConfig.homeRegion,
-      managementAccountId: props.accountsConfig.getManagementAccountId(),
+      assetFunctionRoleName: this.stack.acceleratorResourceNames.roles.assetFunctionRoleName,
+      assetBucketName: `${
+        this.stack.acceleratorResourceNames.bucketPrefixes.assets
+      }-${props.accountsConfig.getManagementAccountId()}-${props.globalConfig.homeRegion}`,
     });
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions and does not have a cdk_nag rule suppression with evidence for those permission

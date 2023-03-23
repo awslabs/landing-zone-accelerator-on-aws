@@ -72,7 +72,7 @@ import {
 import { SsmResourceType } from '@aws-accelerator/utils';
 
 import path from 'path';
-import { AcceleratorStack, AcceleratorStackProps } from '../../accelerator-stack';
+import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
 
 interface Peering {
@@ -114,7 +114,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         'AcceleratorGetLambdaKey',
         cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
+          this.acceleratorResourceNames.parameters.lambdaCmkArn,
         ),
       );
 
@@ -455,7 +455,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       if (nlbTargetsWithAccountIds && nlbTargetsWithAccountIds.length > 0) {
         const nlbAddresses = new NLBAddresses(this, `${targetGroupItem.name}-ipLookup`, {
           targets: [...nlbTargetsWithAccountIds, ...staticIpTargets],
-          assumeRoleName: 'AWSAccelerator-GetNLBIPAddressLookup',
+          assumeRoleName: `${this.props.prefixes.accelerator}-GetNLBIPAddressLookup`,
           partition: cdk.Stack.of(this).partition,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
@@ -594,6 +594,7 @@ export class NetworkAssociationsStack extends NetworkStack {
 
     if (createFramework) {
       const provider = new CrossAccountRouteFramework(this, 'CrossAccountRouteFramework', {
+        acceleratorPrefix: this.props.prefixes.accelerator,
         logGroupKmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
       }).provider;
@@ -685,9 +686,10 @@ export class NetworkAssociationsStack extends NetworkStack {
                 name: this.getSsmPath(SsmResourceType.PREFIX_LIST, [routeTableEntry.destinationPrefixList]),
                 accountId: accepterAccountId,
                 parameterRegion: peering.accepter.region,
-                roleName: `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`,
+                roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
                 kmsKey: this.cloudwatchKey,
                 logRetentionInDays: this.logRetention,
+                acceleratorPrefix: this.props.prefixes.accelerator,
               },
             ).value;
             prefixListMap.set(mapKey, prefixListId);
@@ -723,9 +725,10 @@ export class NetworkAssociationsStack extends NetworkStack {
               name: this.getSsmPath(SsmResourceType.ROUTE_TABLE, [peering.accepter.name, routeTable.name]),
               accountId: accepterAccountId,
               parameterRegion: peering.accepter.region,
-              roleName: `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`,
+              roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
               kmsKey: this.cloudwatchKey,
               logRetentionInDays: this.logRetention,
+              acceleratorPrefix: this.props.prefixes.accelerator,
             }).value;
             routeTableMap.set(`${peering.accepter.name}_${routeTable.name}`, routeTableId);
           }
@@ -873,7 +876,7 @@ export class NetworkAssociationsStack extends NetworkStack {
                   owningAccountId,
                   transitGatewayId,
                   type: TransitGatewayAttachmentType.VPC,
-                  roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
+                  roleName: `${this.props.prefixes.accelerator}-DescribeTgwAttachRole-${cdk.Stack.of(this).region}`,
                   kmsKey: this.cloudwatchKey,
                   logRetentionInDays: this.logRetention,
                 },
@@ -1185,7 +1188,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         accountIds: zoneAssociationAccountIds,
         hostedZoneIds,
         hostedZoneAccountId: cdk.Stack.of(this).account,
-        roleName: `AWSAccelerator-EnableCentralEndpointsRole-${cdk.Stack.of(this).region}`,
+        roleName: `${this.props.prefixes.accelerator}-EnableCentralEndpointsRole-${cdk.Stack.of(this).region}`,
         tagFilters: [
           {
             key: 'accelerator:use-central-endpoints',
@@ -1417,12 +1420,13 @@ export class NetworkAssociationsStack extends NetworkStack {
           name: this.getSsmPath(SsmResourceType.VPC, [peering.accepter.name]),
           accountId: accepterAccountId,
           parameterRegion: peering.accepter.region,
-          roleName: `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`,
+          roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
+          acceleratorPrefix: this.props.prefixes.accelerator,
         }).value;
 
-        accepterRoleName = `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`;
+        accepterRoleName = `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`;
       } else {
         accepterVpcId = cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
@@ -1459,10 +1463,11 @@ export class NetworkAssociationsStack extends NetworkStack {
           parameter: {
             name: this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
             accountId: accepterAccountId,
-            roleName: `AWSAccelerator-VpcPeeringRole-${peering.accepter.region}`,
+            roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
             value: vpcPeering.peeringId,
           },
           invokingAccountID: cdk.Stack.of(this).account,
+          acceleratorPrefix: this.props.prefixes.accelerator,
         });
       }
 
@@ -1608,7 +1613,7 @@ export class NetworkAssociationsStack extends NetworkStack {
               ownerRegion: accepterVpc.region,
               partition: this.props.partition,
               provider: this.crossAcctRouteProvider,
-              roleName: `AWSAccelerator-VpcPeeringRole-${accepterVpc.region}`,
+              roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${accepterVpc.region}`,
               routeTableId,
               destination,
               destinationPrefixListId,
@@ -1668,9 +1673,12 @@ export class NetworkAssociationsStack extends NetworkStack {
         name: this.getSsmPath(SsmResourceType.DXGW, [dxgwItem.name]),
         accountId: directConnectGatewayOwnerAccount,
         parameterRegion: this.props.globalConfig.homeRegion,
-        roleName: `AWSAccelerator-Get${pascalCase(dxgwItem.name)}SsmParamRole-${this.props.globalConfig.homeRegion}`,
+        roleName: `${this.props.prefixes.accelerator}-Get${pascalCase(dxgwItem.name)}SsmParamRole-${
+          this.props.globalConfig.homeRegion
+        }`,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
+        acceleratorPrefix: this.props.prefixes.accelerator,
       }).value;
       this.dxGatewayMap.set(dxgwItem.name, dxgwId);
     }
@@ -1688,9 +1696,12 @@ export class NetworkAssociationsStack extends NetworkStack {
           name: this.getSsmPath(SsmResourceType.DXGW, [dxgwItem.name]),
           accountId: cdk.Stack.of(this).account,
           parameterRegion: this.props.globalConfig.homeRegion,
-          roleName: `AWSAccelerator-Get${pascalCase(dxgwItem.name)}SsmParamRole-${this.props.globalConfig.homeRegion}`,
+          roleName: `${this.props.prefixes.accelerator}-Get${pascalCase(dxgwItem.name)}SsmParamRole-${
+            this.props.globalConfig.homeRegion
+          }`,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
+          acceleratorPrefix: this.props.prefixes.accelerator,
         }).value;
         this.dxGatewayMap.set(dxgwItem.name, dxgwId);
       }
@@ -1742,6 +1753,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         gatewayId,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
+        acceleratorPrefix: this.props.prefixes.accelerator,
       };
     }
 
@@ -1768,6 +1780,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         gatewayId,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
+        acceleratorPrefix: this.props.prefixes.accelerator,
       };
     }
 
@@ -2289,7 +2302,7 @@ export class NetworkAssociationsStack extends NetworkStack {
         owningAccountId: accountId,
         ssmSubnetIdPath: this.getSsmPath(SsmResourceType.SUBNET, [target.vpc, target.subnet]),
         region: target.region,
-        roleName: `AWSAccelerator-GetIpamCidrRole-${cdk.Stack.of(this).region}`,
+        roleName: `${this.props.prefixes.accelerator}-GetIpamCidrRole-${cdk.Stack.of(this).region}`,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
       },
@@ -2325,6 +2338,7 @@ export class NetworkAssociationsStack extends NetworkStack {
                 subnetName: subnet.name,
                 resourceLoggingKmsKey: this.cloudwatchKey,
                 logRetentionInDays: this.logRetention,
+                acceleratorSsmParamPrefix: this.props.prefixes.ssmParamName,
               });
             }
           }
@@ -2492,7 +2506,7 @@ export class NetworkAssociationsStack extends NetworkStack {
           logGroupName = managedActiveDirectory.logs.groupName;
         }
 
-        const secretName = `/accelerator/ad-user/${
+        const secretName = `${this.props.prefixes.secretName}/ad-user/${
           managedActiveDirectory.name
         }/${this.props.iamConfig.getManageActiveDirectoryAdminSecretName(managedActiveDirectory.name)}`;
 
@@ -2601,7 +2615,7 @@ export class NetworkAssociationsStack extends NetworkStack {
             {
               directoryId: activeDirectory.id,
               sharedTargetAccountIds: sharedAccountIds,
-              accountAccessRoleName: AcceleratorStack.ACCELERATOR_MAD_SHARE_ACCEPT_ROLE_NAME,
+              accountAccessRoleName: this.acceleratorResourceNames.roles.madShareAccept,
               lambdaKey: this.lambdaKey,
               cloudwatchKey: this.cloudwatchKey,
               cloudwatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
@@ -2704,7 +2718,7 @@ export class NetworkAssociationsStack extends NetworkStack {
     new ActiveDirectoryResolverRule(this, `${pascalCase(directoryName)}ResolverRule`, {
       route53ResolverRuleName: resolverRuleName,
       targetIps: dnsIpAddresses,
-      roleName: `AWSAccelerator-MAD-${resolverRuleName}`,
+      roleName: `${this.props.prefixes.accelerator}-MAD-${resolverRuleName}`,
       lambdaKmsKey: this.lambdaKey,
       cloudWatchLogsKmsKey: this.cloudwatchKey,
       cloudWatchLogRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
@@ -2822,9 +2836,10 @@ export class NetworkAssociationsStack extends NetworkStack {
       const secretKey = new KeyLookup(this, 'SecretsKmsKeyLookup', {
         accountId: props.adSecretAccountId,
         keyRegion: props.adSecretRegion,
-        roleName: AcceleratorStack.ACCELERATOR_CROSS_ACCOUNT_SECRETS_KMS_ARN_PARAMETER_ROLE_NAME,
-        keyArnParameterName: AcceleratorStack.ACCELERATOR_SECRET_MANAGER_KEY_ARN_PARAMETER_NAME,
+        roleName: this.acceleratorResourceNames.roles.crossAccountSecretsCmkParameterAccess,
+        keyArnParameterName: this.acceleratorResourceNames.parameters.secretsManagerCmkArn,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        acceleratorPrefix: this.props.prefixes.accelerator,
       }).getKey();
 
       const activeDirectoryConfiguration = new ActiveDirectoryConfiguration(

@@ -12,7 +12,7 @@
  */
 
 import { DeleteDefaultSecurityGroupRules, DeleteDefaultVpc, Vpc, VpnConnection } from '@aws-accelerator/constructs';
-import { AcceleratorStack, AcceleratorStackProps } from '../../accelerator-stack';
+import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel, NetworkStack } from '../network-stack';
 import * as cdk from 'aws-cdk-lib';
 import { DefaultVpcsConfig, VpcConfig, VpcFlowLogsConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
@@ -24,9 +24,10 @@ export class VpcResources {
   public readonly deleteDefaultVpc: boolean;
   public readonly vpcMap: Map<string, Vpc>;
   public readonly vpnMap: Map<string, string>;
-  private stack: NetworkStack;
   public readonly centralEndpointRole?: cdk.aws_iam.Role;
   public readonly vpcPeeringRole?: cdk.aws_iam.Role;
+
+  private stack: NetworkStack;
 
   constructor(
     networkStack: NetworkStack,
@@ -88,7 +89,7 @@ export class VpcResources {
             'Central endpoints VPC is in an external account, create a role to enable central endpoints',
           );
           const role = new cdk.aws_iam.Role(this.stack, 'EnableCentralEndpointsRole', {
-            roleName: `AWSAccelerator-EnableCentralEndpointsRole-${cdk.Stack.of(this.stack).region}`,
+            roleName: `${props.prefixes.accelerator}-EnableCentralEndpointsRole-${cdk.Stack.of(this.stack).region}`,
             assumedBy: new cdk.aws_iam.AccountPrincipal(centralEndpointVpcAccountId),
             inlinePolicies: {
               default: new cdk.aws_iam.PolicyDocument({
@@ -172,7 +173,7 @@ export class VpcResources {
         principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
       });
       const role = new cdk.aws_iam.Role(this.stack, 'VpcPeeringRole', {
-        roleName: `AWSAccelerator-VpcPeeringRole-${cdk.Stack.of(this.stack).region}`,
+        roleName: `${props.prefixes.accelerator}-VpcPeeringRole-${cdk.Stack.of(this.stack).region}`,
         assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
@@ -198,14 +199,14 @@ export class VpcResources {
                 effect: cdk.aws_iam.Effect.ALLOW,
                 actions: ['ssm:DeleteParameter', 'ssm:PutParameter'],
                 resources: [
-                  `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/network/vpcPeering/*`,
+                  `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${props.prefixes.ssmParamName}/network/vpcPeering/*`,
                 ],
               }),
               new cdk.aws_iam.PolicyStatement({
                 effect: cdk.aws_iam.Effect.ALLOW,
                 actions: ['ssm:GetParameter'],
                 resources: [
-                  `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/network/*`,
+                  `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${props.prefixes.ssmParamName}/network/*`,
                 ],
               }),
             ],
@@ -465,7 +466,7 @@ export class VpcResources {
     if (vpcFlowLogs.destinations.includes('s3')) {
       destinationBucketArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
         this.stack,
-        AcceleratorStack.ACCELERATOR_VPC_FLOW_LOGS_DESTINATION_S3_BUCKET_ARN_PARAMETER_NAME,
+        this.stack.acceleratorResourceNames.parameters.flowLogsDestinationBucketArn,
       );
     }
 

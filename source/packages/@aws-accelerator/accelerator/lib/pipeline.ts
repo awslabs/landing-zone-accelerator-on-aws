@@ -57,6 +57,49 @@ export interface AcceleratorPipelineProps {
    * User defined pre-existing config repository branch name
    */
   readonly configRepositoryBranchName: string;
+  /**
+   * Accelerator resource name prefixes
+   */
+  readonly prefixes: {
+    /**
+     * Use this prefix value to name resources like -
+     AWS IAM Role names, AWS Lambda Function names, AWS Cloudwatch log groups names, AWS CloudFormation stack names, AWS CodePipeline names, AWS CodeBuild project names
+     *
+     */
+    readonly accelerator: string;
+    /**
+     * Use this prefix value to name AWS CodeCommit repository
+     */
+    readonly repoName: string;
+    /**
+     * Use this prefix value to name AWS S3 bucket
+     */
+    readonly bucketName: string;
+    /**
+     * Use this prefix value to name AWS SSM parameter
+     */
+    readonly ssmParamName: string;
+    /**
+     * Use this prefix value to name AWS KMS alias
+     */
+    readonly kmsAlias: string;
+    /**
+     * Use this prefix value to name AWS SNS topic
+     */
+    readonly snsTopicName: string;
+    /**
+     * Use this prefix value to name AWS Secrets
+     */
+    readonly secretName: string;
+    /**
+     * Use this prefix value to name AWS CloudTrail CloudWatch log group
+     */
+    readonly trailLogName: string;
+    /**
+     * Use this prefix value to name AWS Glue database
+     */
+    readonly databaseName: string;
+  };
 }
 
 /**
@@ -80,20 +123,22 @@ export class AcceleratorPipeline extends Construct {
 
     //
     // Fields can be changed based on qualifier property
-    let acceleratorKeyArnSsmParameterName = '/accelerator/installer/kms/key-arn';
-    let secureBucketName = `aws-accelerator-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`;
-    let serverAccessLogsBucketName = '/accelerator/installer-access-logs-bucket-name';
-    let configRepositoryName = 'aws-accelerator-config';
-    let pipelineName = 'AWSAccelerator-Pipeline';
-    let buildProjectName = 'AWSAccelerator-BuildProject';
-    let toolkitProjectName = 'AWSAccelerator-ToolkitProject';
+    let acceleratorKeyArnSsmParameterName = `${props.prefixes.ssmParamName}/installer/kms/key-arn`;
+    let secureBucketName = `${props.prefixes.bucketName}-pipeline-${cdk.Stack.of(this).account}-${
+      cdk.Stack.of(this).region
+    }`;
+    let serverAccessLogsBucketNameSsmParam = `${props.prefixes.ssmParamName}/installer-access-logs-bucket-name`;
+    let configRepositoryName = `${props.prefixes.repoName}-config`;
+    let pipelineName = `${props.prefixes.accelerator}-Pipeline`;
+    let buildProjectName = `${props.prefixes.accelerator}-BuildProject`;
+    let toolkitProjectName = `${props.prefixes.accelerator}-ToolkitProject`;
 
     //
     // Change the fields when qualifier is present
     if (this.props.qualifier) {
-      acceleratorKeyArnSsmParameterName = `/accelerator/${this.props.qualifier}/installer/kms/key-arn`;
+      acceleratorKeyArnSsmParameterName = `${props.prefixes.ssmParamName}/${this.props.qualifier}/installer/kms/key-arn`;
       secureBucketName = `${this.props.qualifier}-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`;
-      serverAccessLogsBucketName = `/accelerator/${this.props.qualifier}/installer-access-logs-bucket-name`;
+      serverAccessLogsBucketNameSsmParam = `${props.prefixes.ssmParamName}/${this.props.qualifier}/installer-access-logs-bucket-name`;
       configRepositoryName = `${this.props.qualifier}-config`;
       pipelineName = `${this.props.qualifier}-pipeline`;
       buildProjectName = `${this.props.qualifier}-build-project`;
@@ -126,7 +171,10 @@ export class AcceleratorPipeline extends Construct {
       encryptionType: BucketEncryptionType.SSE_KMS,
       s3BucketName: secureBucketName,
       kmsKey: this.installerKey,
-      serverAccessLogsBucketName: cdk.aws_ssm.StringParameter.valueForStringParameter(this, serverAccessLogsBucketName),
+      serverAccessLogsBucketName: cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        serverAccessLogsBucketNameSsmParam,
+      ),
     });
 
     // When non default config repository name provided
@@ -330,6 +378,42 @@ export class AcceleratorPipeline extends Construct {
             type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.props.qualifier ? this.props.qualifier : 'aws-accelerator',
           },
+          ACCELERATOR_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.accelerator,
+          },
+          ACCELERATOR_REPO_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.repoName,
+          },
+          ACCELERATOR_BUCKET_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.bucketName,
+          },
+          ACCELERATOR_KMS_ALIAS_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.kmsAlias,
+          },
+          ACCELERATOR_SSM_PARAM_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.ssmParamName,
+          },
+          ACCELERATOR_SNS_TOPIC_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.snsTopicName,
+          },
+          ACCELERATOR_SECRET_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.secretName,
+          },
+          ACCELERATOR_TRAIL_LOG_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.trailLogName,
+          },
+          ACCELERATOR_DATABASE_NAME_PREFIX: {
+            type: codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: props.prefixes.databaseName,
+          },
           ...pipelineAccountEnvVariables,
         },
       },
@@ -470,8 +554,10 @@ export class AcceleratorPipeline extends Construct {
   private addReviewStage() {
     if (this.props.enableApprovalStage) {
       const notificationTopic = new cdk.aws_sns.Topic(this, 'ManualApprovalActionTopic', {
-        topicName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
-        displayName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-review-topic',
+        topicName:
+          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) + '-pipeline-review-topic',
+        displayName:
+          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) + '-pipeline-review-topic',
         masterKey: this.installerKey,
       });
 
@@ -581,8 +667,10 @@ export class AcceleratorPipeline extends Construct {
       this.pipeline.node.addDependency(codeStarNotificationsRole);
 
       const acceleratorStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorStatusTopic', {
-        topicName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-status-topic',
-        displayName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-status-topic',
+        topicName:
+          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) + '-pipeline-status-topic',
+        displayName:
+          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) + '-pipeline-status-topic',
         masterKey: this.installerKey,
       });
 
@@ -604,9 +692,12 @@ export class AcceleratorPipeline extends Construct {
 
       // Pipeline failure status topic and alarm
       const acceleratorFailedStatusTopic = new cdk.aws_sns.Topic(this, 'AcceleratorFailedStatusTopic', {
-        topicName: (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-failed-status-topic',
+        topicName:
+          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) +
+          '-pipeline-failed-status-topic',
         displayName:
-          (this.props.qualifier ? this.props.qualifier : 'aws-accelerator') + '-pipeline-failed-status-topic',
+          (this.props.qualifier ? this.props.qualifier : this.props.prefixes.snsTopicName) +
+          '-pipeline-failed-status-topic',
         masterKey: this.installerKey,
       });
 
@@ -625,7 +716,7 @@ export class AcceleratorPipeline extends Construct {
           treatMissingData: cdk.aws_cloudwatch.TreatMissingData.NOT_BREACHING,
           alarmName: this.props.qualifier
             ? this.props.qualifier + '-pipeline-failed-alarm'
-            : 'AwsAcceleratorFailedAlarm',
+            : `${this.props.prefixes.accelerator}FailedAlarm`,
           alarmDescription: 'AWS Accelerator pipeline failure alarm, created by accelerator',
         });
     }

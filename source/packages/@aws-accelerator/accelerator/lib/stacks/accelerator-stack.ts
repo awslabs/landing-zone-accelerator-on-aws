@@ -40,6 +40,7 @@ import { Organization, S3LifeCycleRule } from '@aws-accelerator/constructs';
 import { createLogger, policyReplacements, SsmParameterPath, SsmResourceType } from '@aws-accelerator/utils';
 
 import { version } from '../../../../../package.json';
+import { AcceleratorResourceNames } from '../accelerator-resource-names';
 
 export interface AcceleratorStackProps extends cdk.StackProps {
   readonly configDirPath: string;
@@ -54,8 +55,51 @@ export interface AcceleratorStackProps extends cdk.StackProps {
   readonly configRepositoryName: string;
   readonly qualifier?: string;
   readonly configCommitId?: string;
-  readonly globalRegion?: string;
+  readonly globalRegion: string;
   readonly centralizedLoggingRegion: string;
+  /**
+   * Accelerator resource name prefixes
+   */
+  readonly prefixes: {
+    /**
+     * Use this prefix value to name resources like -
+     AWS IAM Role names, AWS Lambda Function names, AWS Cloudwatch log groups names, AWS CloudFormation stack names, AWS CodePipeline names, AWS CodeBuild project names
+     *
+     */
+    readonly accelerator: string;
+    /**
+     * Use this prefix value to name AWS CodeCommit repository
+     */
+    readonly repoName: string;
+    /**
+     * Use this prefix value to name AWS S3 bucket
+     */
+    readonly bucketName: string;
+    /**
+     * Use this prefix value to name AWS SSM parameter
+     */
+    readonly ssmParamName: string;
+    /**
+     * Use this prefix value to name AWS KMS alias
+     */
+    readonly kmsAlias: string;
+    /**
+     * Use this prefix value to name AWS SNS topic
+     */
+    readonly snsTopicName: string;
+    /**
+     * Use this prefix value to name AWS Secrets
+     */
+    readonly secretName: string;
+    /**
+     * Use this prefix value to name AWS CloudTrail CloudWatch log group
+     */
+    readonly trailLogName: string;
+    /**
+     * Use this prefix value to name AWS Glue database
+     */
+    readonly databaseName: string;
+  };
 }
 
 process.on('uncaughtException', err => {
@@ -69,306 +113,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected props: AcceleratorStackProps;
 
   /**
-   * Accelerator ELB logs bucket name prefix
-   */
-  public static readonly ACCELERATOR_ELB_LOGS_BUCKET_PREFIX = 'aws-accelerator-elb-access-logs';
-
-  /**
-   * Accelerator cost and usage report bucket name prefix
-   */
-  public static readonly ACCELERATOR_COST_USAGE_REPORT_BUCKET_PREFIX = 'aws-accelerator-cur';
-
-  /**
-   * Accelerator configuration repository name
-   */
-  public static readonly ACCELERATOR_CONFIGURATION_REPOSITORY_NAME = 'aws-accelerator-config';
-
-  /**
-   * Accelerator S3 access logs bucket name prefix
-   */
-  public static readonly ACCELERATOR_S3_ACCESS_LOGS_BUCKET_NAME_PREFIX = 'aws-accelerator-s3-access-logs';
-
-  /**
-   * Accelerator Role Name for IPAM SSM Parameter Access
-   */
-  public static readonly ACCELERATOR_IPAM_SSM_PARAM_ROLE_NAME = 'AWSAccelerator-Ipam-GetSsmParamRole';
-
-  /**
-   * Accelerator Audit Manager bucket name prefix
-   */
-  public static readonly ACCELERATOR_AUDIT_MANAGER_BUCKET_NAME_PREFIX = 'aws-accelerator-auditmgr';
-
-  /**
-   * Accelerator cloudtrail bucket name prefix
-   */
-  public static readonly ACCELERATOR_CLOUDTRAIL_BUCKET_NAME_PREFIX = 'aws-accelerator-cloudtrail';
-
-  /**
-   * Accelerator cloudtrail bucket name SSM parameter name
-   */
-  protected static readonly ACCELERATOR_CLOUDTRAIL_BUCKET_NAME_PARAMETER_NAME =
-    '/accelerator/organization/security/cloudtrail/log/bucket-name';
-
-  /**
-   * Accelerator VPC flow log bucket name prefix
-   */
-  public static readonly ACCELERATOR_VPC_FLOW_LOGS_BUCKET_NAME_PREFIX = 'aws-accelerator-vpc';
-
-  /**
-   * Accelerator VPC flow log bucket arn SSM parameter name
-   */
-  public static readonly ACCELERATOR_VPC_FLOW_LOGS_DESTINATION_S3_BUCKET_ARN_PARAMETER_NAME =
-    '/accelerator/vpc/flow-logs/destination/bucket/arn';
-  /**
-   * Accelerator Metadata bucket prefix
-   */
-  public static readonly ACCELERATOR_METADATA_BUCKET_NAME_PREFIX = 'aws-accelerator-metadata';
-  /**
-   * Accelerator Metadata bucket arn SSM parameter name
-   */
-  public static readonly ACCELERATOR_METADATA_BUCKET_PARAMETER_NAME = '/accelerator/metadata/bucket/arn';
-
-  /**
-   * Accelerator Metadata KMS key alias
-   */
-
-  public static readonly ACCELERATOR_METADATA_KEY_ALIAS = '/alias/accelerator/kms/metadata/key';
-
-  /**
-   * Accelerator Metadata KMS key description
-   */
-  public static readonly ACCELERATOR_METADATA_KEY_DESCRIPTION = 'The s3 bucket key for accelerator metadata collection';
-
-  /**
-   * Accelerator Metadata KMS key arn
-   */
-
-  public static readonly ACCELERATOR_METADATA_KEY_ARN = '/accelerator/kms/metadata/key-arn';
-
-  /**
-   * Accelerator CentralLogs bucket name prefix
-   */
-  public static readonly ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX = 'aws-accelerator-central-logs';
-  /**
-   * Cross account IAM ROLE to read SSM parameter
-   * IAM role to access SSM parameter from different account or different region
-   * This role is created in Key stack
-   */
-  public static readonly ACCELERATOR_CROSS_ACCOUNT_ACCESS_ROLE_NAME = 'AWSAccelerator-CrossAccount-SsmParameter-Role';
-
-  /**
-   * Cross account IAM ROLE to read SSM parameter related to secrets manager kms arn
-   * IAM role to access SSM parameter from different region
-   * This role is created in logging stack where secrets manager kms keys were created
-   * Managed AD needs access to secrets in different account, so this role is used to access secret's kms key arn
-   */
-  public static readonly ACCELERATOR_CROSS_ACCOUNT_SECRETS_KMS_ARN_PARAMETER_ROLE_NAME =
-    'AWSAccelerator-CrossAccount-SecretsKms-Role';
-  /**
-   * Accelerator role to access account config table parameters
-   */
-  public static readonly ACCELERATOR_ACCOUNT_CONFIG_TABLE_PARAMETER_ACCESS_ROLE_NAME =
-    'AWSAccelerator-MoveAccountConfigRule-Role';
-  /**
-   * Transit Gateway peering role name, which gives permission on TGW related ssm parameters to configure tgw peering
-   */
-  public static readonly ACCELERATOR_TGW_PEERING_ROLE_NAME = 'AWSAccelerator-TgwPeering-Role';
-
-  /**
-   * Managed active directory share accept role name
-   */
-  public static readonly ACCELERATOR_MAD_SHARE_ACCEPT_ROLE_NAME = 'AWSAccelerator-MadAccept-Role';
-  /**
-   * Accelerator generic KMS Key
-   */
-  public static readonly ACCELERATOR_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/key-arn';
-  /**
-   * Accelerator ELB default encryption key arn SSM parameter name
-   */
-  protected static readonly ACCELERATOR_EBS_DEFAULT_KEY_ARN_PARAMETER_NAME =
-    '/accelerator/ebs/default-encryption/key-arn';
-  /**
-   * Accelerator ELB default encryption key alias, S3 CMK use to encrypt buckets
-   * This key is created in logging stack
-   */
-  protected static readonly ACCELERATOR_EBS_DEFAULT_KEY_ALIAS = 'alias/accelerator/ebs/default-encryption/key';
-  /**
-   * Accelerator ELB default encryption key description, S3 CMK use to encrypt buckets
-   * This key is created in logging stack
-   */
-  protected static readonly ACCELERATOR_EBS_DEFAULT_KEY_DESCRIPTION =
-    'AWS Accelerator default EBS Volume Encryption key';
-  /**
-   * Accelerator S3 encryption key arn SSM parameter name
-   */
-  protected static readonly ACCELERATOR_S3_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/s3/key-arn';
-  /**
-   * Accelerator Secret manager encryption key alias, Secret CMK use to encrypt secrets
-   * This key is created in logging stack
-   */
-  protected static readonly ACCELERATOR_SECRET_MANAGER_KEY_ALIAS = 'alias/accelerator/kms/secret-manager/key';
-  /**
-   * Accelerator Secret manager encryption key description, Secret manager CMK use to encrypt secrets
-   * This key is created in logging stack
-   */
-  protected static readonly ACCELERATOR_SECRET_MANAGER_KEY_DESCRIPTION = 'AWS Accelerator Secret manager Kms Key';
-
-  /**
-   * Accelerator secrets manager encryption key arn SSM parameter name
-   */
-  protected static readonly ACCELERATOR_SECRET_MANAGER_KEY_ARN_PARAMETER_NAME =
-    '/accelerator/kms/secret-manager/key-arn';
-  /**
-   * Accelerator S3 encryption key alias, S3 CMK use to encrypt buckets
-   * This key is created in logging stack
-   */
-  protected static readonly ACCELERATOR_S3_KEY_ALIAS = 'alias/accelerator/kms/s3/key';
-  /**
-   * Accelerator S3 encryption key description, S3 CMK use to encrypt buckets
-   * This key is created in logging stack
-   */
-  protected static readonly ACCELERATOR_S3_KEY_DESCRIPTION = 'AWS Accelerator S3 Kms Key';
-  /**
-   * Accelerator CloudWatch Log encryption key arn SSM parameter name
-   */
-  protected static readonly ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/cloudwatch/key-arn';
-  /**
-   * Accelerator CloudWatch Log encryption key alias used to encrypt cloudwatch log groups
-   * This key is created in Prepare, Accounts and Logging stacks
-   */
-  protected static readonly ACCELERATOR_CLOUDWATCH_LOG_KEY_ALIAS = 'alias/accelerator/kms/cloudwatch/key';
-  /**
-   * Accelerator CloudWatch Log encryption key description used to encrypt cloudwatch log groups
-   * This key is created in Prepare, Accounts and Logging stacks
-   */
-  protected static readonly ACCELERATOR_CLOUDWATCH_LOG_KEY_DESCRIPTION = 'AWS Accelerator CloudWatch Kms Key';
-
-  /**
-   * Accelerator CloudWatch Log replication encryption key alias used to encrypt kinesis data stream
-   * This key is created in Logging stack
-   */
-  protected static readonly ACCELERATOR_CLOUDWATCH_LOG_REPLICATION_KEY_ALIAS =
-    'alias/accelerator/kms/replication/cloudwatch/logs/key';
-  /**
-   * Accelerator CloudWatch Log encryption replication key description used to encrypt kinesis data stream
-   * This key is created in Logging stack
-   */
-  protected static readonly ACCELERATOR_CLOUDWATCH_LOG_REPLICATION_KEY_DESCRIPTION =
-    'AWS Accelerator CloudWatch Logs Replication Kms Key';
-  /**
-   * Accelerator Backup encryption key alias
-   * Organization stack creates this key to encrypt AWS backup
-   */
-  protected static readonly ACCELERATOR_AWS_BACKUP_KEY_ALIAS = 'alias/accelerator/kms/backup/key';
-
-  /**
-   * Accelerator Backup encryption key description
-   * Organization stack creates this key to encrypt AWS backup
-   */
-  protected static readonly ACCELERATOR_AWS_BACKUP_KEY_DESCRIPTION = 'AWS Accelerator Backup Kms Key';
-
-  /**
-   * Accelerator SNS encryption key alias
-   * SecurityAudit stack creates this key to encrypt AWS SNS topics
-   */
-  protected static readonly ACCELERATOR_SNS_KEY_ALIAS = 'alias/accelerator/kms/sns/key';
-  protected static readonly ACCELERATOR_SNS_TOPIC_KEY_ALIAS = 'alias/accelerator/kms/snstopic/key';
-  /**
-   * Accelerator SNS encryption key description
-   * SecurityAudit stack creates this key to encrypt AWS SNS topics
-   */
-  protected static readonly ACCELERATOR_SNS_KEY_DESCRIPTION = 'AWS Accelerator SNS Kms Key';
-  protected static readonly ACCELERATOR_SNS_TOPIC_KEY_DESCRIPTION = 'AWS Accelerator SNS Topic Kms Key';
-
-  /**
-   * Accelerator Secrets manager encryption key alias
-   */
-  protected static readonly ACCELERATOR_SECRETS_MANAGER_KEY_ALIAS = '/accelerator/kms/secrets-manager/key';
-  /**
-   * Accelerator Secrets manager encryption key description
-   */
-  protected static readonly ACCELERATOR_SECRETS_MANAGER_KEY_DESCRIPTION = 'AWS Accelerator Secrets Manager Kms Key';
-
-  /**
-   * Accelerator Central SNS Topic key arn
-   */
-  protected static readonly ACCELERATOR_SNS_TOPIC_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/snstopic/key-arn';
-  protected static readonly ACCELERATOR_SSM_SNS_TOPIC_PARAMETER_ACCESS_ROLE_NAME =
-    'AWSAccelerator-SnsTopic-KeyArnParam-Role';
-  /**
-   * Accelerator Lambda Log encryption key alias
-   * Accounts stack creates this key to encrypt lambda environment variables
-   */
-  protected static readonly ACCELERATOR_LAMBDA_KEY_ALIAS = 'alias/accelerator/kms/lambda/key';
-
-  /**
-   * Accelerator Lambda Log encryption key description
-   * Key stack creates this key to encrypt Accelerator Audit account S3 encryption.
-   * Audit account S3 buckets are accessed by every accounts to publish security services data
-   */
-  protected static readonly ACCELERATOR_LAMBDA_KEY_DESCRIPTION = 'AWS Accelerator Lambda Kms Key';
-  /**
-   * Accelerator  Lambda Log encryption key arn SSM parameter name
-   */
-  protected static readonly ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME = '/accelerator/kms/lambda/key-arn';
-
-  /**
-   * @Deprecated
-   * Accelerator encryption key alias, this key is no longer in use, it will be removed in future iteration
-   */
-  protected static readonly ACCELERATOR_KEY_ALIAS = 'alias/accelerator/kms/key';
-
-  /**
-   * @Deprecated
-   * Accelerator encryption key alias, this key is no longer in use, it will be removed in future iteration
-   */
-  protected static readonly ACCELERATOR_KEY_DESCRIPTION = 'AWS Accelerator Kms Key';
-
-  /**
-   * Accelerator management encryption key alias
-   * Prepare stack creates this key to encrypt DynamoDB and CT SNS notification
-   */
-  protected static readonly ACCELERATOR_MANAGEMENT_KEY_ALIAS = 'alias/accelerator/management/kms/key';
-
-  /**
-   * Accelerator management encryption key alias
-   * Prepare stack creates this key to encrypt DynamoDB and CT SNS notification
-   */
-  protected static readonly ACCELERATOR_MANAGEMENT_KEY_DESCRIPTION = 'AWS Accelerator Management Account Kms Key';
-
-  /**
-   * Accelerator management encryption key alias
-   * Prepare stack creates this key to encrypt DynamoDB and CT SNS notification
-   */
-  protected static readonly ACCELERATOR_MANAGEMENT_KEY_ARN_PARAMETER_NAME = '/accelerator/management/kms/key-arn';
-
-  /**
-   * Accelerator assets kms key alias
-   */
-  protected static readonly ACCELERATOR_ASSETS_KEY_ARN_PARAMETER_NAME = '/accelerator/assets/kms/key';
-
-  /**
-   * Accelerator assets kms key description
-   */
-  protected static readonly ACCELERATOR_ASSETS_KEY_DESCRIPTION = 'Key used to encrypt solution assets';
-
-  /**
-   * Accelerator assets kms key description
-   */
-  protected static readonly ACCELERATOR_ASSETS_CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME =
-    'AWSAccelerator-AssetsBucket-KeyArnParam-Role';
-
-  /**
-   * Service Catalog Principal Association Propagation Role
-   */
-  public static readonly ACCELERATOR_SERVICE_CATALOG_PROPAGATION_ROLE_NAME =
-    'AWSAccelerator-CrossAccount-ServiceCatalog-Role';
-
-  /**
    * Accelerator SSM parameters
    * This array is used to store SSM parameters that are created per-stack.
    */
   protected ssmParameters: { logicalId: string; parameterName: string; stringValue: string }[];
+
+  public acceleratorResourceNames: AcceleratorResourceNames;
 
   protected constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
     super(scope, id, props);
@@ -376,6 +126,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
     this.logger = createLogger([cdk.Stack.of(this).stackName]);
     this.props = props;
     this.ssmParameters = [];
+
+    //
+    // Initialize resource names
+    this.acceleratorResourceNames = new AcceleratorResourceNames({ prefixes: props.prefixes });
 
     new cdk.aws_ssm.StringParameter(this, 'SsmParamStackId', {
       parameterName: this.getSsmPath(SsmResourceType.STACK_ID, [cdk.Stack.of(this).stackName]),
@@ -690,7 +444,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
   public getSsmPath(resourceType: SsmResourceType, replacements: string[]) {
     // Prefix applied to all SSM parameters
     // Static for now, but leaving option to modify for future iterations
-    const ssmPrefix = '/accelerator';
+    const ssmPrefix = this.props.prefixes.ssmParamName;
     return new SsmParameterPath(ssmPrefix, resourceType, replacements).parameterPath;
   }
 
@@ -747,13 +501,13 @@ export abstract class AcceleratorStack extends cdk.Stack {
   protected generatePolicyReplacements(policyPath: string, returnTempPath: boolean, organizationId?: string): string {
     // Transform policy document
     let policyContent: string = JSON.stringify(require(policyPath));
-    const acceleratorPrefix = 'AWSAccelerator';
+    const acceleratorPrefix = this.props.prefixes.accelerator;
     const acceleratorPrefixNoDash = acceleratorPrefix.endsWith('-')
       ? acceleratorPrefix.slice(0, -1)
       : acceleratorPrefix;
 
     const additionalReplacements: { [key: string]: string | string[] } = {
-      '\\${ACCELERATOR_DEFAULT_PREFIX_SHORTHAND}': acceleratorPrefix === 'AWSAccelerator' ? 'AWSA' : acceleratorPrefix,
+      '\\${ACCELERATOR_DEFAULT_PREFIX_SHORTHAND}': acceleratorPrefix.substring(0, 4).toUpperCase(),
       '\\${ACCELERATOR_PREFIX_ND}': acceleratorPrefixNoDash,
       '\\${ACCELERATOR_PREFIX_LND}': acceleratorPrefixNoDash.toLowerCase(),
       '\\${ACCOUNT_ID}': cdk.Stack.of(this).account,
@@ -889,7 +643,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
           `-KmsKey`,
         cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/kms/${this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey}/key-arn`,
+          `${this.props.prefixes.ssmParamName}/kms/${this.props.securityConfig.centralSecurityServices.ebsDefaultVolumeEncryption.kmsKey}/key-arn`,
         ),
       ) as cdk.aws_kms.Key;
     } else {
@@ -900,7 +654,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
         pascalCase(`AcceleratorGetKey-${appName}-${device.deviceName}-${device.ebs!.kmsKeyId}`),
         cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          `/accelerator/security-stack/ebsDefaultVolumeEncryptionKeyArn`,
+          `${this.props.prefixes.ssmParamName}/security-stack/ebsDefaultVolumeEncryptionKeyArn`,
         ),
       ) as cdk.aws_kms.Key;
     }
@@ -920,7 +674,10 @@ export abstract class AcceleratorStack extends cdk.Stack {
     const kmsKeyEntity = cdk.aws_kms.Key.fromKeyArn(
       this,
       pascalCase(`AcceleratorGetKey-${appName}-${device.deviceName}-${device.ebs!.kmsKeyId}`),
-      cdk.aws_ssm.StringParameter.valueForStringParameter(this, `/accelerator/kms/${device.ebs!.kmsKeyId}/key-arn`),
+      cdk.aws_ssm.StringParameter.valueForStringParameter(
+        this,
+        `${this.props.prefixes.ssmParamName}/kms/${device.ebs!.kmsKeyId}/key-arn`,
+      ),
     ) as cdk.aws_kms.Key;
     return {
       deleteOnTermination: device.ebs!.deleteOnTermination,

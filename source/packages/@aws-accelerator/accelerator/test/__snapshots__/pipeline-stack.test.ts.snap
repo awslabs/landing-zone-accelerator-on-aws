@@ -2017,6 +2017,51 @@ exports[`PipelineStack Construct(PipelineStack):  Snapshot Test 1`] = `
               "Type": "PLAINTEXT",
               "Value": "aws-accelerator",
             },
+            {
+              "Name": "ACCELERATOR_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "AWSAccelerator",
+            },
+            {
+              "Name": "ACCELERATOR_REPO_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "aws-accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_BUCKET_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "aws-accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_KMS_ALIAS_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "alias/accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_SSM_PARAM_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "/accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_SNS_TOPIC_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_SECRET_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "/accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_TRAIL_LOG_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "aws-accelerator",
+            },
+            {
+              "Name": "ACCELERATOR_DATABASE_NAME_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": "aws-accelerator",
+            },
           ],
           "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",

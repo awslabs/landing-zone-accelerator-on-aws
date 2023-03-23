@@ -35,6 +35,7 @@ exports[`SecurityStack Construct(SecurityStack):  Snapshot Test 1`] = `
         "Environment": {
           "Variables": {
             "ACCELERATOR_PREFIX": "AWSAccelerator",
+            "ACCELERATOR_VERSION_SSM_PATH": "/accelerator/AWSAccelerator-InstallerStack/version",
             "CENTRAL_LOG_BUCKET": "aws-accelerator-central-logs-333333333333-us-west-2",
             "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
             "CROSS_ACCOUNT_ROLE": "AWSControlTowerExecution",
@@ -1268,6 +1269,7 @@ exports[`delegatedAdminStack Construct(SecurityStack):  Snapshot Test 1`] = `
         "Environment": {
           "Variables": {
             "ACCELERATOR_PREFIX": "AWSAccelerator",
+            "ACCELERATOR_VERSION_SSM_PATH": "/accelerator/AWSAccelerator-InstallerStack/version",
             "CENTRAL_LOG_BUCKET": "aws-accelerator-central-logs-333333333333-us-west-2",
             "CONFIG_REPOSITORY_NAME": "aws-accelerator-config",
             "CROSS_ACCOUNT_ROLE": "AWSControlTowerExecution",

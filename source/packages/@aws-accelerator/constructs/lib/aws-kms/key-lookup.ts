@@ -43,6 +43,10 @@ export interface KeyLookupProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays?: number;
+  /**
+   * Accelerator Prefix
+   */
+  readonly acceleratorPrefix: string;
 }
 
 /**
@@ -67,6 +71,7 @@ export class KeyLookup extends Construct {
         roleName: props.roleName,
         kmsKey: props.kmsKey,
         logRetentionInDays: props.logRetentionInDays,
+        acceleratorPrefix: props.acceleratorPrefix,
       }).value;
     }
 
