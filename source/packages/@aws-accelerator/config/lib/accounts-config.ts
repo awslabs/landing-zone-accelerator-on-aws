@@ -12,7 +12,6 @@
  */
 
 import * as AWS from 'aws-sdk';
-import * as emailValidator from 'email-validator';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
@@ -20,7 +19,6 @@ import * as path from 'path';
 import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
 
 import * as t from './common-types';
-import { OrganizationConfig } from './organization-config';
 
 const logger = createLogger(['accounts-config']);
 /**
@@ -240,37 +238,8 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
   constructor(
     props: { managementAccountEmail: string; logArchiveAccountEmail: string; auditAccountEmail: string },
     values?: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>,
-    configDir?: string,
-    validateConfig?: boolean,
   ) {
-    const errors: string[] = [];
-    const ouIdNames: string[] = ['Root'];
-
     if (values) {
-      if (configDir && validateConfig) {
-        //
-        // Get list of OU ID names from organization config file
-        this.getOuIdNames(configDir, ouIdNames);
-
-        //
-        // Validate OU name for account
-        this.validateAccountOrganizationalUnit(values, ouIdNames, errors);
-
-        //
-        // Verify mandatory account names did not change
-        //
-        this.validateMandatoryAccountNames(values, errors);
-
-        //
-        // Verify account names are unique and name without space
-        this.validateAccountNames(values, errors);
-
-        //
-        // Email validation
-        //
-        this.validateEmails(values, errors);
-      }
-
       Object.assign(this, values);
     } else {
       this.mandatoryAccounts = [
@@ -300,106 +269,6 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
         },
       ];
     }
-
-    if (errors.length) {
-      logger.error(`${AccountsConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
-      throw new Error('configuration validation failed.');
-    }
-  }
-
-  /**
-   * Function to validate email formats, default and duplicate email checks
-   * @param values
-   */
-  private validateEmails(values: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>, errors: string[]) {
-    const emails = [...values.mandatoryAccounts, ...values.workloadAccounts].map(item => item.email);
-    const defaultEmails = ['management-account@example.com', 'log-archive@example.com', 'audit@example.com'];
-
-    //
-    // validate email format
-    //
-    emails.forEach(item => {
-      if (!emailValidator.validate(item)) {
-        errors.push(`Invalid email ${item}.`);
-      }
-    });
-
-    //
-    // default email check
-    //
-    defaultEmails.forEach(item => {
-      if (emails.indexOf(item) !== -1) {
-        errors.push(`Default email (${item}) found.`);
-      }
-    });
-
-    if (new Set(emails).size !== emails.length) {
-      errors.push(`Duplicate emails defined [${emails}].`);
-    }
-  }
-
-  /**
-   * Function to verify account names are unique and name without space
-   * @param values
-   */
-  private validateAccountNames(values: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>, errors: string[]) {
-    const accountNames = [...values.mandatoryAccounts, ...values.workloadAccounts].map(item => item.name);
-    if (new Set(accountNames).size !== accountNames.length) {
-      errors.push(`Duplicate account names defined [${accountNames}].`);
-    }
-
-    for (const account of [...values.mandatoryAccounts, ...values.workloadAccounts]) {
-      if (account.name.indexOf(' ') > 0) {
-        errors.push(`Account name (${account.name}) found with spaces. Please remove spaces and retry the pipeline.`);
-      }
-    }
-  }
-
-  /**
-   * Function to verify mandatory account names did not change
-   * @param values
-   */
-  private validateMandatoryAccountNames(values: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>, errors: string[]) {
-    for (const accountName of [
-      AccountsConfig.MANAGEMENT_ACCOUNT,
-      AccountsConfig.AUDIT_ACCOUNT,
-      AccountsConfig.LOG_ARCHIVE_ACCOUNT,
-    ]) {
-      if (!values.mandatoryAccounts.find(item => item.name === accountName)) {
-        errors.push(`Unable to find mandatory account with name ${accountName}.`);
-      }
-    }
-  }
-
-  /**
-   * Function to validate existence of account deployment target OUs
-   * Make sure deployment target OUs are part of Organization config file
-   * @param values
-   */
-  private validateAccountOrganizationalUnit(
-    values: t.TypeOf<typeof AccountsConfigTypes.accountsConfig>,
-    ouIdNames: string[],
-    errors: string[],
-  ) {
-    for (const account of [...values.mandatoryAccounts, ...values.workloadAccounts] ?? []) {
-      if (account.organizationalUnit) {
-        if (ouIdNames.indexOf(account.organizationalUnit) === -1) {
-          errors.push(
-            `Deployment target OU ${account.organizationalUnit} for account ${account.name} not exists in organization-config.yaml file.`,
-          );
-        }
-      }
-    }
-  }
-
-  /**
-   * Prepare list of OU ids from organization config file
-   * @param configDir
-   */
-  private getOuIdNames(configDir: string, ouIdNames: string[]) {
-    for (const organizationalUnit of OrganizationConfig.load(configDir).organizationalUnits) {
-      ouIdNames.push(organizationalUnit.name);
-    }
   }
 
   // Helper function to add an account id to the list
@@ -415,7 +284,7 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
    * @param validateConfig
    * @returns
    */
-  static load(dir: string, validateConfig?: boolean): AccountsConfig {
+  static load(dir: string): AccountsConfig {
     const buffer = fs.readFileSync(path.join(dir, AccountsConfig.FILENAME), 'utf8');
     const values = t.parse(AccountsConfigTypes.accountsConfig, yaml.load(buffer));
 
@@ -436,8 +305,6 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
         auditAccountEmail,
       },
       values,
-      dir,
-      validateConfig,
     );
   }
 
