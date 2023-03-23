@@ -1857,6 +1857,7 @@ phases:
         "prefix": {
           "Ref": "AcceleratorPrefix",
         },
+        "prefixParameterName": "/accelerator/lza-prefix",
       },
       "Type": "Custom::GetPrefixes",
       "UpdateReplacePolicy": "Delete",
@@ -1895,8 +1896,7 @@ phases:
           
           let data = {};
           
-          let paramName = '/accelerator/lza-prefix';
-
+          let paramName = event.ResourceProperties.prefixParameterName;
           
           if (lowerCasePrefix === 'awsaccelerator') {
               data['acceleratorPrefix'] = 'AWSAccelerator';
@@ -4946,6 +4946,7 @@ phases:
         "prefix": {
           "Ref": "AcceleratorPrefix",
         },
+        "prefixParameterName": "/accelerator/lza-prefix",
       },
       "Type": "Custom::GetPrefixes",
       "UpdateReplacePolicy": "Delete",
@@ -4984,8 +4985,7 @@ phases:
           
           let data = {};
           
-          let paramName = '/accelerator/lza-prefix';
-
+          let paramName = event.ResourceProperties.prefixParameterName;
           
           if (lowerCasePrefix === 'awsaccelerator') {
               data['acceleratorPrefix'] = 'AWSAccelerator';
@@ -8050,7 +8050,11 @@ phases:
           "Fn::Join": [
             "",
             [
-              "/accelerator/AWSAccelerator-PipelineStack-",
+              "/accelerator/",
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-pipeline-stack-",
               {
                 "Ref": "AWS::AccountId",
               },
@@ -8064,6 +8068,18 @@ phases:
         },
         "prefix": {
           "Ref": "AcceleratorPrefix",
+        },
+        "prefixParameterName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/",
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/lza-prefix",
+            ],
+          ],
         },
       },
       "Type": "Custom::GetPrefixes",
@@ -8103,8 +8119,7 @@ phases:
           
           let data = {};
           
-          let paramName = '/accelerator/lza-prefix';
-
+          let paramName = event.ResourceProperties.prefixParameterName;
           
           if (lowerCasePrefix === 'awsaccelerator') {
               data['acceleratorPrefix'] = 'AWSAccelerator';
@@ -8303,7 +8318,11 @@ phases:
                       {
                         "Ref": "AWS::AccountId",
                       },
-                      ":parameter/accelerator/lza-prefix",
+                      ":parameter/accelerator/",
+                      {
+                        "Ref": "AcceleratorQualifier",
+                      },
+                      "/lza-prefix",
                     ],
                   ],
                 },
@@ -8323,7 +8342,11 @@ phases:
                       {
                         "Ref": "AWS::AccountId",
                       },
-                      ":parameter/accelerator/AWSAccelerator-PipelineStack-",
+                      ":parameter/accelerator/",
+                      {
+                        "Ref": "AcceleratorQualifier",
+                      },
+                      "-pipeline-stack-",
                       {
                         "Ref": "AWS::AccountId",
                       },
@@ -11129,7 +11152,11 @@ phases:
           "Fn::Join": [
             "",
             [
-              "/accelerator/AWSAccelerator-PipelineStack-",
+              "/accelerator/",
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "-pipeline-stack-",
               {
                 "Ref": "AWS::AccountId",
               },
@@ -11143,6 +11170,18 @@ phases:
         },
         "prefix": {
           "Ref": "AcceleratorPrefix",
+        },
+        "prefixParameterName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/",
+              {
+                "Ref": "AcceleratorQualifier",
+              },
+              "/lza-prefix",
+            ],
+          ],
         },
       },
       "Type": "Custom::GetPrefixes",
@@ -11182,8 +11221,7 @@ phases:
           
           let data = {};
           
-          let paramName = '/accelerator/lza-prefix';
-
+          let paramName = event.ResourceProperties.prefixParameterName;
           
           if (lowerCasePrefix === 'awsaccelerator') {
               data['acceleratorPrefix'] = 'AWSAccelerator';
@@ -11382,7 +11420,11 @@ phases:
                       {
                         "Ref": "AWS::AccountId",
                       },
-                      ":parameter/accelerator/lza-prefix",
+                      ":parameter/accelerator/",
+                      {
+                        "Ref": "AcceleratorQualifier",
+                      },
+                      "/lza-prefix",
                     ],
                   ],
                 },
@@ -11402,7 +11444,11 @@ phases:
                       {
                         "Ref": "AWS::AccountId",
                       },
-                      ":parameter/accelerator/AWSAccelerator-PipelineStack-",
+                      ":parameter/accelerator/",
+                      {
+                        "Ref": "AcceleratorQualifier",
+                      },
+                      "-pipeline-stack-",
                       {
                         "Ref": "AWS::AccountId",
                       },
