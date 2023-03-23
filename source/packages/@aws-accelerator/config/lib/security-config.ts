@@ -1346,8 +1346,8 @@ export class CentralSecurityServicesConfig
    *     standards:
    *       - name: AWS Foundational Security Best Practices v1.0.0
    *         deploymentTargets:
-    *          organizationalUnits:
-    *            -  Root
+   *          organizationalUnits:
+   *            -  Root
    *         enable: true
    *         controlsToDisable:
    *           - IAM.1
