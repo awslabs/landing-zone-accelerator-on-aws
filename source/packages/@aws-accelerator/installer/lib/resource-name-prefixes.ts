@@ -14,10 +14,10 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { NagSuppressions } from 'cdk-nag';
-// import { v4 as uuidv4 } from 'uuid';
 
 export interface ResourceNamePrefixesProps {
   readonly acceleratorPrefix: string;
+  readonly acceleratorQualifier?: string;
 }
 
 export class ResourceNamePrefixes extends Construct {
@@ -28,9 +28,11 @@ export class ResourceNamePrefixes extends Construct {
   constructor(scope: Construct, id: string, props: ResourceNamePrefixesProps) {
     super(scope, id);
 
-    const pipelineStackVersionSsmParamName = `/accelerator/AWSAccelerator-PipelineStack-${cdk.Stack.of(this).account}-${
-      cdk.Stack.of(this).region
-    }/version`;
+    const pipelineStackVersionSsmParamName = props.acceleratorQualifier
+      ? `/accelerator/${props.acceleratorQualifier}-pipeline-stack-${cdk.Stack.of(this).account}-${
+          cdk.Stack.of(this).region
+        }/version`
+      : `/accelerator/AWSAccelerator-PipelineStack-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}/version`;
 
     const lambdaFunction = new cdk.aws_lambda.Function(this, 'ResourceNamePrefixesFunction', {
       runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
@@ -50,8 +52,7 @@ export class ResourceNamePrefixes extends Construct {
           
           let data = {};
           
-          let paramName = '/accelerator/lza-prefix';
-
+          let paramName = event.ResourceProperties.prefixParameterName;
           
           if (lowerCasePrefix === 'awsaccelerator') {
               data['acceleratorPrefix'] = 'AWSAccelerator';
@@ -145,26 +146,49 @@ export class ResourceNamePrefixes extends Construct {
       }`),
     });
 
-    lambdaFunction.addToRolePolicy(
-      new cdk.aws_iam.PolicyStatement({
-        sid: 'SsmReadParameterAccess',
-        effect: cdk.aws_iam.Effect.ALLOW,
-        actions: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:PutParameter'],
-        resources: [
-          `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
-            cdk.Stack.of(this).account
-          }:parameter/accelerator/lza-prefix`,
-          `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
-            cdk.Stack.of(this).account
-          }:parameter${pipelineStackVersionSsmParamName}`,
-        ],
-        conditions: {
-          StringEquals: {
-            'aws:PrincipalAccount': cdk.Stack.of(this).account,
+    if (props.acceleratorQualifier) {
+      lambdaFunction.addToRolePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'SsmReadParameterAccess',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:PutParameter'],
+          resources: [
+            `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
+              cdk.Stack.of(this).account
+            }:parameter/accelerator/${props.acceleratorQualifier}/lza-prefix`,
+            `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
+              cdk.Stack.of(this).account
+            }:parameter${pipelineStackVersionSsmParamName}`,
+          ],
+          conditions: {
+            StringEquals: {
+              'aws:PrincipalAccount': cdk.Stack.of(this).account,
+            },
           },
-        },
-      }),
-    );
+        }),
+      );
+    } else {
+      lambdaFunction.addToRolePolicy(
+        new cdk.aws_iam.PolicyStatement({
+          sid: 'SsmReadParameterAccess',
+          effect: cdk.aws_iam.Effect.ALLOW,
+          actions: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:PutParameter'],
+          resources: [
+            `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
+              cdk.Stack.of(this).account
+            }:parameter/accelerator/lza-prefix`,
+            `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
+              cdk.Stack.of(this).account
+            }:parameter${pipelineStackVersionSsmParamName}`,
+          ],
+          conditions: {
+            StringEquals: {
+              'aws:PrincipalAccount': cdk.Stack.of(this).account,
+            },
+          },
+        }),
+      );
+    }
 
     NagSuppressions.addResourceSuppressions(
       lambdaFunction,
@@ -193,7 +217,9 @@ export class ResourceNamePrefixes extends Construct {
       properties: {
         prefix: props.acceleratorPrefix,
         pipelineStackVersionSsmParamName: pipelineStackVersionSsmParamName,
-        // uuid: uuidv4(),
+        prefixParameterName: props.acceleratorQualifier
+          ? `/accelerator/${props.acceleratorQualifier}/lza-prefix`
+          : '/accelerator/lza-prefix',
       },
       resourceType: 'Custom::GetPrefixes',
     });

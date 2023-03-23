@@ -240,37 +240,6 @@ export class InstallerStack extends cdk.Stack {
     let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
     let targetAcceleratorEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } | undefined;
 
-    const resourceNamePrefixes = new ResourceNamePrefixes(this, 'ResourceNamePrefixes', {
-      acceleratorPrefix: this.acceleratorPrefix.valueAsString,
-    });
-
-    const oneWordPrefix = resourceNamePrefixes.oneWordPrefix.endsWith('-')
-      ? resourceNamePrefixes.oneWordPrefix.slice(0, -1)
-      : resourceNamePrefixes.oneWordPrefix;
-
-    const lowerCasePrefix = resourceNamePrefixes.lowerCasePrefix.endsWith('-')
-      ? resourceNamePrefixes.lowerCasePrefix.slice(0, -1)
-      : resourceNamePrefixes.lowerCasePrefix;
-
-    const acceleratorPrefix = resourceNamePrefixes.acceleratorPrefix.endsWith('-')
-      ? resourceNamePrefixes.acceleratorPrefix.slice(0, -1)
-      : resourceNamePrefixes.acceleratorPrefix;
-
-    let stackIdSsmParameterName = `/${oneWordPrefix}/${cdk.Stack.of(this).stackName}/stack-id`;
-    let acceleratorVersionSsmParameterName = `/${oneWordPrefix}/${cdk.Stack.of(this).stackName}/version`;
-    let installerKeyAliasName = `alias/${oneWordPrefix}/installer/kms/key`;
-    let acceleratorManagementKmsArnSsmParameterName = `/${oneWordPrefix}/installer/kms/key-arn`;
-    let installerAccessLogsBucketName = `${lowerCasePrefix}-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
-    let installerAccessLogsBucketNameSsmParameterName = `/${oneWordPrefix}/installer-access-logs-bucket-name`;
-    let secureBucketName = `${lowerCasePrefix}-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
-    let acceleratorPipelineName = `${acceleratorPrefix}-Pipeline`;
-    let installerProjectName = `${acceleratorPrefix}-InstallerProject`;
-    let installerPipelineName = `${acceleratorPrefix}-Installer`;
-
-    let acceleratorPrincipalArn = `arn:${cdk.Stack.of(this).partition}:iam::${
-      cdk.Stack.of(this).account
-    }:role/${acceleratorPrefix}-*`;
-
     if (props.useExternalPipelineAccount) {
       this.acceleratorQualifier = new cdk.CfnParameter(this, 'AcceleratorQualifier', {
         type: 'String',
@@ -317,25 +286,67 @@ export class InstallerStack extends cdk.Stack {
           value: this.acceleratorQualifier.valueAsString,
         },
       };
+    }
 
+    const resourceNamePrefixes = new ResourceNamePrefixes(this, 'ResourceNamePrefixes', {
+      acceleratorPrefix: this.acceleratorPrefix.valueAsString,
+      acceleratorQualifier: this.acceleratorQualifier?.valueAsString,
+    });
+
+    const oneWordPrefix = resourceNamePrefixes.oneWordPrefix.endsWith('-')
+      ? resourceNamePrefixes.oneWordPrefix.slice(0, -1)
+      : resourceNamePrefixes.oneWordPrefix;
+
+    const lowerCasePrefix = resourceNamePrefixes.lowerCasePrefix.endsWith('-')
+      ? resourceNamePrefixes.lowerCasePrefix.slice(0, -1)
+      : resourceNamePrefixes.lowerCasePrefix;
+
+    const acceleratorPrefix = resourceNamePrefixes.acceleratorPrefix.endsWith('-')
+      ? resourceNamePrefixes.acceleratorPrefix.slice(0, -1)
+      : resourceNamePrefixes.acceleratorPrefix;
+
+    let stackIdSsmParameterName = `/${oneWordPrefix}/${cdk.Stack.of(this).stackName}/stack-id`;
+    let acceleratorVersionSsmParameterName = `/${oneWordPrefix}/${cdk.Stack.of(this).stackName}/version`;
+    let installerKeyAliasName = `alias/${oneWordPrefix}/installer/kms/key`;
+    let acceleratorManagementKmsArnSsmParameterName = `/${oneWordPrefix}/installer/kms/key-arn`;
+    let installerAccessLogsBucketName = `${lowerCasePrefix}-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+    let installerAccessLogsBucketNameSsmParameterName = `/${oneWordPrefix}/installer-access-logs-bucket-name`;
+    let secureBucketName = `${lowerCasePrefix}-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+    let acceleratorPipelineName = `${acceleratorPrefix}-Pipeline`;
+    let installerProjectName = `${acceleratorPrefix}-InstallerProject`;
+    let installerPipelineName = `${acceleratorPrefix}-Installer`;
+
+    let acceleratorPrincipalArn = `arn:${cdk.Stack.of(this).partition}:iam::${
+      cdk.Stack.of(this).account
+    }:role/${acceleratorPrefix}-*`;
+
+    if (props.useExternalPipelineAccount) {
       //
       // Change the variable to use qualifier
-      stackIdSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/${
+      stackIdSsmParameterName = `/accelerator/${this.acceleratorQualifier!.valueAsString}/${
         cdk.Stack.of(this).stackName
       }/stack-id`;
-      acceleratorVersionSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/${
+      acceleratorVersionSsmParameterName = `/accelerator/${this.acceleratorQualifier!.valueAsString}/${
         cdk.Stack.of(this).stackName
       }/version`;
-      installerKeyAliasName = `alias/accelerator/${this.acceleratorQualifier.valueAsString}/installer/kms/key`;
-      acceleratorManagementKmsArnSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/installer/kms/key-arn`;
-      installerAccessLogsBucketName = `${this.acceleratorQualifier.valueAsString}-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
-      installerAccessLogsBucketNameSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/installer-access-logs-bucket-name`;
-      secureBucketName = `${this.acceleratorQualifier.valueAsString}-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
-      acceleratorPipelineName = `${this.acceleratorQualifier.valueAsString}-pipeline`;
-      installerProjectName = `${this.acceleratorQualifier.valueAsString}-installer-project`;
-      installerPipelineName = `${this.acceleratorQualifier.valueAsString}-installer`;
+      installerKeyAliasName = `alias/accelerator/${this.acceleratorQualifier!.valueAsString}/installer/kms/key`;
+      acceleratorManagementKmsArnSsmParameterName = `/accelerator/${
+        this.acceleratorQualifier!.valueAsString
+      }/installer/kms/key-arn`;
+      installerAccessLogsBucketName = `${this.acceleratorQualifier!.valueAsString}-s3-logs-${cdk.Aws.ACCOUNT_ID}-${
+        cdk.Aws.REGION
+      }`;
+      installerAccessLogsBucketNameSsmParameterName = `/accelerator/${
+        this.acceleratorQualifier!.valueAsString
+      }/installer-access-logs-bucket-name`;
+      secureBucketName = `${this.acceleratorQualifier!.valueAsString}-installer-${cdk.Aws.ACCOUNT_ID}-${
+        cdk.Aws.REGION
+      }`;
+      acceleratorPipelineName = `${this.acceleratorQualifier!.valueAsString}-pipeline`;
+      installerProjectName = `${this.acceleratorQualifier!.valueAsString}-installer-project`;
+      installerPipelineName = `${this.acceleratorQualifier!.valueAsString}-installer`;
       acceleratorPrincipalArn = `arn:${cdk.Stack.of(this).partition}:iam::${cdk.Stack.of(this).account}:role/${
-        this.acceleratorQualifier.valueAsString
+        this.acceleratorQualifier!.valueAsString
       }-*`;
     }
 
