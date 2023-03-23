@@ -15,6 +15,7 @@ import * as path from 'path';
 
 import {
   AccountsConfig,
+  AccountsConfigValidator,
   CustomizationsConfigValidator,
   GlobalConfig,
   IamConfigValidator,
@@ -32,8 +33,26 @@ const errors: { file: string; message: any }[] = [];
 if (configDirPath) {
   logger.info(`Config source directory -  ${configDirPath}`);
 
+  // Load accounts config to be passed into validator
+  let accountsConfig: AccountsConfig | undefined = undefined;
   try {
-    AccountsConfig.load(configDirPath, true);
+    accountsConfig = AccountsConfig.load(configDirPath);
+  } catch (e) {
+    errors.push({ file: 'accounts-config.yaml', message: e });
+  }
+
+  let organizationConfig: OrganizationConfig | undefined = undefined;
+  try {
+    organizationConfig = OrganizationConfig.load(configDirPath, true);
+  } catch (e) {
+    errors.push({ file: 'organization-config.yaml', message: e });
+  }
+
+  // Accounts config validator
+  try {
+    if (accountsConfig && organizationConfig) {
+      new AccountsConfigValidator(accountsConfig, organizationConfig);
+    }
   } catch (e) {
     errors.push({ file: 'accounts-config.yaml', message: e });
   }
@@ -54,12 +73,6 @@ if (configDirPath) {
     new NetworkConfigValidator(configDirPath);
   } catch (e) {
     errors.push({ file: 'network-config.yaml', message: e });
-  }
-
-  try {
-    OrganizationConfig.load(configDirPath, true);
-  } catch (e) {
-    errors.push({ file: 'organization-config.yaml', message: e });
   }
 
   try {

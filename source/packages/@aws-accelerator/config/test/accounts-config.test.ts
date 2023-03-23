@@ -137,8 +137,6 @@ describe('accounts-config', () => {
         auditAccountEmail: 'some-audit-account@example.com',
       },
       accountsConfigObject,
-      path.resolve('../accelerator/test/configs/all-enabled'),
-      true,
     );
 
     it('is a govcloud account', () => {

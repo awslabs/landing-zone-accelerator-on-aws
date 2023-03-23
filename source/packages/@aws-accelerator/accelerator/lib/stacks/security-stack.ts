@@ -197,9 +197,9 @@ export class SecurityStack extends AcceleratorStack {
       ) === -1
     ) {
       if (this.props.accountsConfig.containsAccount(this.auditAccountName)) {
-        const standards: { name: string; enable: boolean; controlsToDisable: string[] }[] =  [];
-        for ( const standard of this.props.securityConfig.centralSecurityServices.securityHub.standards) {
-          if (standard.deploymentTargets){
+        const standards: { name: string; enable: boolean; controlsToDisable: string[] }[] = [];
+        for (const standard of this.props.securityConfig.centralSecurityServices.securityHub.standards) {
+          if (standard.deploymentTargets) {
             if (!this.isIncluded(standard.deploymentTargets)) {
               this.logger.info(`Item excluded`);
               continue;
@@ -209,10 +209,10 @@ export class SecurityStack extends AcceleratorStack {
           standards.push({
             name: standard.name,
             enable: standard.enable,
-            controlsToDisable: standard.controlsToDisable
-          })
+            controlsToDisable: standard.controlsToDisable,
+          });
         }
-        if (standards.length>0){
+        if (standards.length > 0) {
           new SecurityHubStandards(this, 'SecurityHubStandards', {
             standards,
             kmsKey: this.cloudwatchKey,
