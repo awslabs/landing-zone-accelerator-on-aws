@@ -17,6 +17,7 @@ import * as uuid from 'uuid';
 
 AWS.config.logger = console;
 const solutionId = process.env['SOLUTION_ID'];
+const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'];
 const logsClient = new AWS.CloudWatchLogs({ customUserAgent: solutionId });
 const snsClient = new AWS.SNS({ customUserAgent: solutionId });
 
@@ -38,7 +39,7 @@ export async function handler(event: AWSLambda.ScheduledEvent) {
 
 export async function publishEventToLogs(input: AWSLambda.ScheduledEvent) {
   const logStreamName = `${new Date().toISOString().slice(0, 10)}-${uuid.v4()}`;
-  const logGroupName = '/AWSAccelerator-SecurityHub';
+  const logGroupName = `/${acceleratorPrefix}-SecurityHub`;
   await throttlingBackOff(() => logsClient.createLogStream({ logGroupName, logStreamName }).promise());
   await throttlingBackOff(() =>
     logsClient
@@ -107,7 +108,7 @@ export async function publishEventToSns(input: AWSLambda.ScheduledEvent) {
 }
 
 export async function checkLogGroup() {
-  const securityHubLogGroupName = '/AWSAccelerator-SecurityHub';
+  const securityHubLogGroupName = `/${acceleratorPrefix}-SecurityHub`;
   const nextToken: string | undefined = undefined;
   do {
     const page = await throttlingBackOff(() =>

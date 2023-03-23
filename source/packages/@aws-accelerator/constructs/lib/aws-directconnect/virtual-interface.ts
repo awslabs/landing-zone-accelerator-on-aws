@@ -98,6 +98,10 @@ export interface VirtualInterfaceProps {
    * An array of tags for the virtual interface
    */
   readonly tags?: cdk.CfnTag[];
+  /**
+   * Accelerator Prefix
+   */
+  readonly acceleratorPrefix: string;
 }
 
 export class VirtualInterface extends cdk.Resource implements IVirtualInterface {
@@ -152,7 +156,7 @@ export class VirtualInterface extends cdk.Resource implements IVirtualInterface 
           Sid: 'InvokeSelf',
           Effect: 'Allow',
           Action: ['lambda:InvokeFunction'],
-          Resource: `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:AWSAccelerator-NetworkPre-CustomDirectConnect*`,
+          Resource: `arn:${cdk.Aws.PARTITION}:lambda:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:function:${props.acceleratorPrefix}-NetworkPre-CustomDirectConnect*`,
         },
       ];
     }

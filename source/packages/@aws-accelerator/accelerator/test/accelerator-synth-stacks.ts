@@ -106,6 +106,17 @@ export class AcceleratorSynthStacks {
       globalRegion: this.globalRegion,
       centralizedLoggingRegion: globalConfig.logging.centralizedLoggingRegion ?? globalConfig.homeRegion,
       configRepositoryName: 'aws-accelerator-config',
+      prefixes: {
+        accelerator: 'AWSAccelerator',
+        kmsAlias: 'alias/accelerator',
+        bucketName: 'aws-accelerator',
+        ssmParamName: '/accelerator',
+        snsTopicName: 'aws-accelerator',
+        repoName: 'aws-accelerator',
+        secretName: '/accelerator',
+        trailLogName: 'aws-accelerator',
+        databaseName: 'aws-accelerator',
+      },
     };
 
     this.homeRegion = this.props.globalConfig.homeRegion;
@@ -305,6 +316,7 @@ export class AcceleratorSynthStacks {
             terminationProtection: stack.stackConfig.terminationProtection,
             ...this.props,
             parameters: stack.stackConfig.parameters,
+            ssmParamNamePrefix: '/accelerator',
           });
 
           if (stack.dependsOn) {

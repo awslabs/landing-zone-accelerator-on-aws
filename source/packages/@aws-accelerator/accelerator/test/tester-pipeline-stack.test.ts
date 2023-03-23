@@ -29,6 +29,13 @@ const stack = new TesterPipelineStack(app, 'TesterPipelineStack', {
   managementCrossAccountRoleName: 'AWSControlTowerExecution',
   managementAccountId: app.account,
   managementAccountRoleName: 'AcceleratorAccountAccessRole',
+  prefixes: {
+    accelerator: 'AWSAccelerator',
+    repoName: 'aws-accelerator',
+    bucketName: 'aws-accelerator',
+    ssmParamName: '/accelerator',
+    kmsAlias: 'alias/accelerator',
+  },
 });
 
 describe('TesterPipelineStack', () => {

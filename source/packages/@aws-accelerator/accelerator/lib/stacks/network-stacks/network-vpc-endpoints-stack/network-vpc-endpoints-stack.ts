@@ -37,7 +37,7 @@ import {
 } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 
-import { AcceleratorStack, AcceleratorStackProps } from '../../accelerator-stack';
+import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
 
 export class NetworkVpcEndpointsStack extends NetworkStack {
@@ -62,9 +62,9 @@ export class NetworkVpcEndpointsStack extends NetworkStack {
     const firewallLogBucket = cdk.aws_s3.Bucket.fromBucketName(
       this,
       'FirewallLogsBucket',
-      `${
-        AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
-      }-${this.props.accountsConfig.getLogArchiveAccountId()}-${props.centralizedLoggingRegion}`,
+      `${this.acceleratorResourceNames.bucketPrefixes.centralLogs}-${props.accountsConfig.getLogArchiveAccountId()}-${
+        props.centralizedLoggingRegion
+      }`,
     );
     for (const vpcItem of this.vpcResources) {
       // Get account IDs

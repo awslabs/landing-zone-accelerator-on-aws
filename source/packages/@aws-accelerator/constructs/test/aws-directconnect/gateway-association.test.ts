@@ -29,6 +29,7 @@ new DirectConnectGatewayAssociation(stack, 'TestDxGatewayAssociation', {
   gatewayId: 'test-tgw-id',
   kmsKey: key,
   logRetentionInDays: 3653,
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 // Test DX Gateway Association Proposal
@@ -39,6 +40,7 @@ new DirectConnectGatewayAssociation(stack, 'TestDxGatewayAssociaionProposal', {
   gatewayId: 'test-tgw-id',
   kmsKey: key,
   logRetentionInDays: 3653,
+  acceleratorPrefix: 'AWSAccelerator',
 });
 
 /**

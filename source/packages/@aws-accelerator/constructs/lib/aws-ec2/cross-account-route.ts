@@ -17,6 +17,10 @@ import * as path from 'path';
 
 interface CrossAccountRouteFrameworkProps {
   /**
+   * Accelerator Prefix
+   */
+  readonly acceleratorPrefix: string;
+  /**
    * Custom resource lambda log group encryption key
    */
   readonly logGroupKmsKey: cdk.aws_kms.Key;
@@ -37,7 +41,7 @@ export class CrossAccountRouteFramework extends cdk.Resource {
       sid: 'StsAssumeRole',
       effect: cdk.aws_iam.Effect.ALLOW,
       actions: ['sts:AssumeRole'],
-      resources: [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator*`],
+      resources: [`arn:${cdk.Stack.of(this).partition}:iam::*:role/${props.acceleratorPrefix}*`],
     });
 
     const onEventRoutePolicy = new cdk.aws_iam.PolicyStatement({

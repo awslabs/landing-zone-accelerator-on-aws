@@ -372,7 +372,7 @@ export class BootstrapStack extends AcceleratorStack {
 
   createBucketCmk(props: { managementAccountId: string; partition: string }) {
     const s3Key = new cdk.aws_kms.Key(this, 'AssetEncryptionKey', {
-      alias: 'accelerator/kms/cdk/key',
+      alias: `${this.props.prefixes.kmsAlias}/kms/cdk/key`,
       description: 'Key used to encrypt centralized CDK assets',
       enableKeyRotation: true,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
@@ -428,7 +428,7 @@ export class BootstrapStack extends AcceleratorStack {
             ...this.getPrincipalOrgIdCondition(this.organizationId),
           },
           ArnLike: {
-            'aws:PrincipalARN': `arn:${props.partition}:iam::*:role/AWSAccelerator-*`,
+            'aws:PrincipalARN': `arn:${props.partition}:iam::*:role/${this.props.prefixes.accelerator}-*`,
           },
         },
       }),

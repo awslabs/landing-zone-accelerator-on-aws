@@ -67,8 +67,8 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:64
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:65
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:536
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:537
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:538
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:539
 
 # Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:143
@@ -87,36 +87,36 @@ source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:57
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1220
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1221
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1224
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1225
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1229
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1230
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1233
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1234
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1239
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1240
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1243
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1244
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1248
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1249
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1252
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1253
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1257
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1258
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1261
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1262
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1266
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1267
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1270
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1271
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1902
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1903
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1906
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1907
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1982
-source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1983
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1989
+source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1990
 
 reference/sample-configurations/aws-best-practices-us-slg-central-it/README.md:102
 
@@ -133,4 +133,4 @@ source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/ind
 source/packages/@aws-accelerator/constructs/lib/aws-ec2/get-ipam-subnet-cidr/index.ts:64
 
 # Internal Test file and Account. Not to be published.
-.gitlab-ci.yml:60
+.gitlab-ci.yml:61

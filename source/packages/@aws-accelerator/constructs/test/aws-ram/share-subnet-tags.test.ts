@@ -28,6 +28,7 @@ new ShareSubnetTags(stack, 'ShareSubnetTags', {
   subnetName: 'TestSubnet',
   resourceLoggingKmsKey: new cdk.aws_kms.Key(stack, 'CustomKey', {}),
   logRetentionInDays: 3653,
+  acceleratorSsmParamPrefix: '/accelerator',
 });
 
 /**

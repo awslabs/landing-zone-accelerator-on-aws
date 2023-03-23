@@ -317,6 +317,7 @@ exports[`MoveAccountRule Construct(MoveAccountRule):  Snapshot Test 1`] = `
             },
             "GLOBAL_REGION": "us-west-2",
             "HOME_REGION": "us-east-1",
+            "STACK_PREFIX": "AWSAccelerator",
           },
         },
         "Handler": "index.handler",

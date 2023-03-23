@@ -42,18 +42,18 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const validation = event.ResourceProperties['validation']!;
   const domain = event.ResourceProperties['domain']!;
   const sanString = event.ResourceProperties['san']!;
+  const assetBucket = event.ResourceProperties['assetBucketName'];
+
   let san: string[] | undefined = undefined;
   if (sanString) {
     san = sanString.split(',');
   }
   const homeRegion = event.ResourceProperties['homeRegion'];
-  const managementAccountId = event.ResourceProperties['managementAccountId'];
   const solutionId = process.env['SOLUTION_ID'];
 
   const acmClient = new AWS.ACM({ customUserAgent: solutionId });
   const s3Client = new S3Client({ customUserAgent: solutionId, region: homeRegion });
   const ssmClient = new AWS.SSM({ customUserAgent: solutionId });
-  const assetBucket = `aws-accelerator-assets-${managementAccountId}-${homeRegion}`;
 
   switch (event.RequestType) {
     case 'Create':

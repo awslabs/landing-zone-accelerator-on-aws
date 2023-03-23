@@ -37,6 +37,18 @@ export interface MoveAccountRuleProps {
    */
   readonly commitId: string;
   /**
+   * Accelerator Prefix
+   */
+  readonly acceleratorPrefix: string;
+  /**
+   * Accelerator SSM parameter name where config table name can be found
+   */
+  readonly configTableNameParameterName: string;
+  /**
+   * Accelerator SSM parameter name where config table arn can be found
+   */
+  readonly configTableArnParameterName: string;
+  /**
    * Custom resource lambda log group encryption key
    */
   readonly kmsKey: cdk.aws_kms.Key;
@@ -57,30 +69,26 @@ export class MoveAccountRule extends Construct {
     let configTableArn: string | undefined;
 
     if (props.homeRegion === props.globalRegion) {
-      configTableName = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        `/accelerator/prepare-stack/configTable/name`,
-      );
-      configTableArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
-        this,
-        `/accelerator/prepare-stack/configTable/arn`,
-      );
+      configTableName = cdk.aws_ssm.StringParameter.valueForStringParameter(this, props.configTableNameParameterName);
+      configTableArn = cdk.aws_ssm.StringParameter.valueForStringParameter(this, props.configTableArnParameterName);
     } else {
       configTableName = new SsmParameterLookup(this, 'AcceleratorConfigTableNameLookup', {
-        name: `/accelerator/prepare-stack/configTable/name`,
+        name: props.configTableNameParameterName,
         accountId: cdk.Stack.of(this).account,
         parameterRegion: props.homeRegion,
         roleName: props.moveAccountRoleName,
         kmsKey: props.kmsKey,
         logRetentionInDays: props.logRetentionInDays,
+        acceleratorPrefix: props.acceleratorPrefix,
       }).value;
       configTableArn = new SsmParameterLookup(this, 'AcceleratorConfigTableArnLookup', {
-        name: `/accelerator/prepare-stack/configTable/arn`,
+        name: props.configTableArnParameterName,
         accountId: cdk.Stack.of(this).account,
         parameterRegion: props.homeRegion,
         roleName: props.moveAccountRoleName,
         kmsKey: props.kmsKey,
         logRetentionInDays: props.logRetentionInDays,
+        acceleratorPrefix: props.acceleratorPrefix,
       }).value;
     }
 
@@ -96,6 +104,7 @@ export class MoveAccountRule extends Construct {
         GLOBAL_REGION: props.globalRegion,
         CONFIG_TABLE_NAME: configTableName,
         COMMIT_ID: props.commitId,
+        STACK_PREFIX: props.acceleratorPrefix,
       },
     });
 

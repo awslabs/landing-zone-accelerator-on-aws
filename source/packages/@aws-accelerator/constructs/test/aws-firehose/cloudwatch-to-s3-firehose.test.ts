@@ -34,6 +34,9 @@ describe('CloudWatchToS3Firehose', () => {
     dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
     homeRegion: 'someregion',
     configDir: `${__dirname}/../../../accelerator/test/configs/all-enabled`,
+    prefixProcessingFunctionName: 'AWSAccelerator-FirehoseRecordsProcessor',
+    glueDatabaseName: 'AWSAccelerator-Database',
+    transformationTableName: 'aws-accelerator-firehose-transformation-table',
   });
   snapShotTest(testNamePrefix, stack);
 });
@@ -48,6 +51,9 @@ describe('CloudWatchToS3FirehoseBucketName', () => {
     dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
     homeRegion: 'someregion',
     configDir: `${__dirname}/../../../accelerator/test/configs/all-enabled`,
+    prefixProcessingFunctionName: 'AWSAccelerator-FirehoseRecordsProcessor',
+    glueDatabaseName: 'AWSAccelerator-Database',
+    transformationTableName: 'aws-accelerator-firehose-transformation-table',
   });
   snapShotTest(testNamePrefix, stack);
 });
@@ -64,6 +70,9 @@ test('should throw an exception for bucket name and bucket are present', () => {
       dynamicPartitioningValue: 'dynamic-partitioning/log-filters.json',
       homeRegion: 'someregion',
       configDir: `${__dirname}/../../../accelerator/test/configs/all-enabled`,
+      prefixProcessingFunctionName: 'AWSAccelerator-FirehoseRecordsProcessor',
+      glueDatabaseName: 'AWSAccelerator-Database',
+      transformationTableName: 'aws-accelerator-firehose-transformation-table',
     });
   }
 

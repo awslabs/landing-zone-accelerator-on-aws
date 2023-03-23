@@ -37,6 +37,10 @@ export interface ShareSubnetTagsProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * Accelerator SSM parameter Prefix
+   */
+  readonly acceleratorSsmParamPrefix: string;
 }
 
 /**
@@ -87,6 +91,7 @@ export class ShareSubnetTags extends Construct {
         sharedSubnetId: props.sharedSubnetId,
         sharedSubnetName: props.subnetName,
         vpcName: props.vpcName,
+        acceleratorSsmParamPrefix: props.acceleratorSsmParamPrefix,
       },
       resourceType: SHARE_SUBNET_TAGS_TYPE,
       serviceToken: provider.serviceToken,

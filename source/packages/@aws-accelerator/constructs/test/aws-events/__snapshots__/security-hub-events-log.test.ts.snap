@@ -87,6 +87,7 @@ exports[`SecurityHubEventsLog Construct(SecurityHubEventsLog):  Snapshot Test 1`
         },
         "Environment": {
           "Variables": {
+            "ACCELERATOR_PREFIX": "AWSAccelerator",
             "NOTIFICATION_LEVEL": "INFORMATIONAL",
             "SNS_TOPIC_ARN": "arn:aws:us-east-1:999999999999:aws-accelerator-test",
           },

@@ -613,11 +613,12 @@ export class NetworkAssociationsGwlbStack extends NetworkStack {
               name: this.getSsmPath(SsmResourceType.GWLB_SERVICE, [loadBalancerItem.name]),
               accountId: delegatedAdminAccountId,
               parameterRegion: cdk.Stack.of(this).region,
-              roleName: `AWSAccelerator-Get${pascalCase(loadBalancerItem.name)}SsmParamRole-${
+              roleName: `${this.props.prefixes.accelerator}-Get${pascalCase(loadBalancerItem.name)}SsmParamRole-${
                 cdk.Stack.of(this).region
               }`,
               kmsKey: this.cloudwatchKey,
               logRetentionInDays: this.logRetention,
+              acceleratorPrefix: this.props.prefixes.accelerator,
             }).value;
           } else {
             endpointServiceId = cdk.aws_ssm.StringParameter.valueForStringParameter(

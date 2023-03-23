@@ -20,7 +20,7 @@ export class DependenciesStack extends AcceleratorStack {
     super(scope, id, props);
 
     new ssm.StringParameter(this, 'Parameter', {
-      parameterName: `/accelerator/dependencies-stack/dependencies`,
+      parameterName: `${props.prefixes.ssmParamName}/dependencies-stack/dependencies`,
       stringValue: 'value',
     });
   }

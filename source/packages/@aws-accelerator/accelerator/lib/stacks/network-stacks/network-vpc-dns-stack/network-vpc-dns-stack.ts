@@ -249,11 +249,13 @@ export class NetworkVpcDnsStack extends NetworkStack {
         this.logger.info(
           `Create Managed AD resolver rule update role for ${managedActiveDirectory.name} active directory`,
         );
-        new cdk.aws_iam.Role(this, pascalCase(`AWSAccelerator-MAD-${ruleName}`), {
-          roleName: `AWSAccelerator-MAD-${ruleName}`,
+        new cdk.aws_iam.Role(this, pascalCase(`${this.props.prefixes.accelerator}-MAD-${ruleName}`), {
+          roleName: `${this.props.prefixes.accelerator}-MAD-${ruleName}`,
           assumedBy: new cdk.aws_iam.PrincipalWithConditions(new cdk.aws_iam.AccountPrincipal(madAccountId), {
             ArnLike: {
-              'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::${madAccountId}:role/AWSAccelerator-*`],
+              'aws:PrincipalARN': [
+                `arn:${cdk.Stack.of(this).partition}:iam::${madAccountId}:role/${this.props.prefixes.accelerator}-*`,
+              ],
             },
           }),
           inlinePolicies: {
@@ -277,7 +279,7 @@ export class NetworkVpcDnsStack extends NetworkStack {
         // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
         NagSuppressions.addResourceSuppressionsByPath(
           this,
-          `${this.stackName}/` + pascalCase(`AWSAccelerator-MAD-${ruleName}`) + '/Resource',
+          `${this.stackName}/` + pascalCase(`${this.props.prefixes.accelerator}-MAD-${ruleName}`) + '/Resource',
           [
             {
               id: 'AwsSolutions-IAM5',

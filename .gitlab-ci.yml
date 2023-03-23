@@ -44,6 +44,7 @@ accelerator-test:
     - "yarn lint"
     - "yarn lerna link"
     - "yarn build"
+    - "export ACCELERATOR_PREFIX=AWSAccelerator"
     - "yarn test"
   artifacts:
     when: always
@@ -93,6 +94,7 @@ sonar-test:
     - "yarn lint"
     - "yarn lerna link"
     - "yarn build"
+    - "export ACCELERATOR_PREFIX=AWSAccelerator"
     - "yarn test"
     - "cd ../"
     # Run scanner and save results locally

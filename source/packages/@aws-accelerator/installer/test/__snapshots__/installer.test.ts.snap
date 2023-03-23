@@ -112,10 +112,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
           },
           "Parameters": [
             "ControlTowerEnabled",
+            "AcceleratorPrefix",
           ],
         },
       ],
       "ParameterLabels": {
+        "AcceleratorPrefix": {
+          "default": "Accelerator Resource name prefix",
+        },
         "ApprovalStageNotifyEmailList": {
           "default": "Manual Approval Stage notification email list",
         },
@@ -156,6 +160,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
     },
   },
   "Parameters": {
+    "AcceleratorPrefix": {
+      "AllowedPattern": "[A-Za-z0-9-]+",
+      "Default": "AwsAccelerator",
+      "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AwsAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.",
+      "MaxLength": 15,
+      "Type": "String",
+    },
     "ApprovalStageNotifyEmailList": {
       "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
       "Type": "CommaDelimitedList",
@@ -236,7 +247,21 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
   "Resources": {
     "AcceleratorManagementKmsArnParameter1E6975BF": {
       "Properties": {
-        "Name": "/accelerator/installer/kms/key-arn",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/installer/kms/key-arn",
+            ],
+          ],
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -269,7 +294,20 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
           },
           "Type": "S3",
         },
-        "Name": "AWSAccelerator-Installer",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-Installer",
+            ],
+          ],
+        },
         "RestartExecutionOnUpdate": true,
         "RoleArn": {
           "Fn::GetAtt": [
@@ -648,7 +686,20 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
           },
           "Type": "S3",
         },
-        "Name": "AWSAccelerator-Installer",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-Installer",
+            ],
+          ],
+        },
         "RestartExecutionOnUpdate": true,
         "RoleArn": {
           "Fn::GetAtt": [
@@ -882,7 +933,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
           "Fn::Join": [
             "",
             [
-              "aws-accelerator-s3-logs-",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "lowerCasePrefix",
+                ],
+              },
+              "-s3-logs-",
               {
                 "Ref": "AWS::AccountId",
               },
@@ -905,7 +962,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
                 "Fn::Join": [
                   "",
                   [
-                    "LifecycleRuleaws-accelerator-s3-logs-",
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-s3-logs-",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -957,7 +1021,21 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
     },
     "InstallerAccessLogsBucketName4F700F48": {
       "Properties": {
-        "Name": "/accelerator/installer-access-logs-bucket-name",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/installer-access-logs-bucket-name",
+            ],
+          ],
+        },
         "Type": "String",
         "Value": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -1295,7 +1373,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
                         {
                           "Ref": "AWS::AccountId",
                         },
-                        ":role/AWSAccelerator-*",
+                        ":role/",
+                        {
+                          "Fn::GetAtt": [
+                            "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                            "acceleratorPrefix",
+                          ],
+                        },
+                        "-*",
                       ],
                     ],
                   },
@@ -1382,7 +1467,21 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
     },
     "InstallerKeyAliasD5C174F0": {
       "Properties": {
-        "AliasName": "alias/accelerator/installer/kms/key",
+        "AliasName": {
+          "Fn::Join": [
+            "",
+            [
+              "alias/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/installer/kms/key",
+            ],
+          ],
+        },
         "TargetKeyId": {
           "Fn::GetAtt": [
             "InstallerKey2A6A8C6D",
@@ -1519,6 +1618,16 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
               },
             },
             {
+              "Name": "ACCELERATOR_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+            },
+            {
               "Name": "ENABLE_TESTER",
               "Type": "PLAINTEXT",
               "Value": "true",
@@ -1534,7 +1643,20 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
           "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER",
         },
-        "Name": "AWSAccelerator-InstallerProject",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-InstallerProject",
+            ],
+          ],
+        },
         "ServiceRole": {
           "Fn::GetAtt": [
             "InstallerAdminRole7DEE4AC8",
@@ -1679,10 +1801,24 @@ phases:
                 "; fi
   post_build:
     commands:
-      - "inprogress_status_count=$(aws codepipeline get-pipeline-state --name \\"AWSAccelerator-Pipeline\\" | grep '\\"status\\": \\"InProgress\\"' | grep -v grep | wc -l)"
+      - "inprogress_status_count=$(aws codepipeline get-pipeline-state --name \\"",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-Pipeline\\" | grep '\\"status\\": \\"InProgress\\"' | grep -v grep | wc -l)"
       - |-
         if [ $inprogress_status_count -eq 0 ]; then
-                        aws codepipeline start-pipeline-execution --name "AWSAccelerator-Pipeline";
+                        aws codepipeline start-pipeline-execution --name "",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-Pipeline";
                         fi
 ",
               ],
@@ -1692,6 +1828,319 @@ phases:
         },
       },
       "Type": "AWS::CodeBuild::Project",
+    },
+    "ResourceNamePrefixesGetPrefixResource96A10E6E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ResourceNamePrefixesResourceNamePrefixesFunction138C66F1",
+            "Arn",
+          ],
+        },
+        "pipelineStackVersionSsmParamName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/AWSAccelerator-PipelineStack-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              {
+                "Ref": "AWS::Region",
+              },
+              "/version",
+            ],
+          ],
+        },
+        "prefix": {
+          "Ref": "AcceleratorPrefix",
+        },
+      },
+      "Type": "Custom::GetPrefixes",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunction138C66F1": {
+      "DependsOn": [
+        "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159",
+        "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "ZipFile": "
+          const response = require('cfn-response'); 
+          const AWS = require('aws-sdk');
+          exports.handler = async function (event, context) { 
+          console.log(JSON.stringify(event, null, 4)); 
+          const prefix=event.ResourceProperties.prefix;
+          const pipelineStackVersionSsmParamName=event.ResourceProperties.pipelineStackVersionSsmParamName;
+          const lowerCasePrefix=prefix.toLowerCase();
+          
+          const ssm = new AWS.SSM({});
+          
+          let data = {};
+          
+          let paramName = '/accelerator/lza-prefix';
+
+          
+          if (lowerCasePrefix === 'awsaccelerator') {
+              data['acceleratorPrefix'] = 'AWSAccelerator';
+              data['lowerCasePrefix'] = 'aws-accelerator'; 
+              data['oneWordPrefix'] = 'accelerator';               
+          } else {
+              data['acceleratorPrefix'] = prefix;
+              data['lowerCasePrefix'] = lowerCasePrefix; 
+              data['oneWordPrefix'] = prefix; 
+          }
+                  
+
+          if (event.RequestType === 'Update'){
+
+            const oldPrefixLowerCase = event.OldResourceProperties.prefix.toLowerCase();
+              
+              var params = {
+                Name: paramName,
+              };
+              try {
+                  const ssmResponse = await ssm.getParameter(params).promise();
+                  // Fail stack if prefix was changed during update
+                  if (ssmResponse.Parameter.Value !== prefix) {
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'LZA does not allow changing AcceleratorPrefix parameter value after initial deploy !!! Existing prefix: ' + event.OldResourceProperties.prefix + ' New prefix: ' + prefix + '.' }, event.PhysicalResourceId);
+                      return;
+                  }
+                  await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
+              } catch (error) {
+                  console.log(error);
+                  if (error.code === 'ParameterNotFound'){
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'LZA prefix ssm parameter ' + paramName + ' not found!!! Recreate the parameter with existing AcceleratorPrefix parameter value to fix the issue'}, event.PhysicalResourceId);
+                      return;
+                  }
+                  else {
+                      await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA prefix ssm parameter ' + paramName }, event.PhysicalResourceId);
+                      return;
+                  }
+              }          
+          } 
+          
+          if (event.RequestType === 'Create') {
+          
+              if (lowerCasePrefix !== 'awsaccelerator') {
+                  // Fail stack if prefix starts with aws or ssm
+                  if (lowerCasePrefix.startsWith('aws') || lowerCasePrefix.startsWith('ssm')) { 
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'Accelerator prefix ' + prefix + ' can not be started with aws or ssm !!!'}, event.PhysicalResourceId);
+                      return;
+                  }
+
+                  // Check if this is an existing deployment and prefix changed with initial deployment of custom resource
+                  var versionParams = {
+                    Name: pipelineStackVersionSsmParamName,
+                  };
+                  try {
+                    await ssm.getParameter(versionParams).promise();
+                    await response.send(event, context, response.FAILED, {'FailureReason': 'Can not change AcceleratorPrefix parameter for existing deployment, existing prefix value is AWSAccelerator, keep AcceleratorPrefix parameter value to default value for successfully stack update !!!'}, event.PhysicalResourceId);
+                    return;
+                  }
+                  catch (error) {
+                    console.log(error);
+                    if (error.code !== 'ParameterNotFound'){
+                      await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA ssm parameter ' + pipelineStackVersionSsmParamName }, event.PhysicalResourceId);
+                      return;
+                    }
+                  }
+              }
+          
+              // Create /accelerator/lza-prefix SSM parameter to store prefix value to protect updating prefix
+              try {
+                  var newParams = {
+                        Name: paramName,
+                        Value: prefix,
+                        Description: 'LZA created SSM parameter for Accelerator prefix value, DO NOT MODIFY/DELETE this parameter',
+                        Type: 'String',
+                      };
+                  await ssm.putParameter(newParams).promise();
+                  console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
+                  await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
+              }
+              catch (error) {
+                  console.log(error);
+                  await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while creating LZA prefix ssm parameter ' + paramName }, event.PhysicalResourceId);
+                  return;
+              }
+          }
+          if (event.RequestType === 'Delete') {
+              await response.send(event, context, response.SUCCESS, {'Status': 'Custom resource deleted successfully' }, event.PhysicalResourceId);
+          }
+          
+          return;
+      }",
+        },
+        "Description": "This function converts accelerator prefix parameter to lower case to name s3 buckets in installer stack",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalAccount": {
+                    "Ref": "AWS::AccountId",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/accelerator/lza-prefix",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/accelerator/AWSAccelerator-PipelineStack-",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      "-",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      "/version",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "SsmReadParameterAccess",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159",
+        "Roles": [
+          {
+            "Ref": "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": {
       "DeletionPolicy": "Retain",
@@ -1715,7 +2164,13 @@ phases:
           "Fn::Join": [
             "",
             [
-              "aws-accelerator-installer-",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "lowerCasePrefix",
+                ],
+              },
+              "-installer-",
               {
                 "Ref": "AWS::AccountId",
               },
@@ -1738,7 +2193,14 @@ phases:
                 "Fn::Join": [
                   "",
                   [
-                    "LifecycleRuleaws-accelerator-installer-",
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -1776,7 +2238,13 @@ phases:
             "Fn::Join": [
               "",
               [
-                "aws-accelerator-installer-",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "lowerCasePrefix",
+                  ],
+                },
+                "-installer-",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -2086,7 +2554,21 @@ phases:
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
-        "Name": "/accelerator/AWSAccelerator-Test-InstallerStack/version",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/AWSAccelerator-Test-InstallerStack/version",
+            ],
+          ],
+        },
         "Type": "String",
         "Value": "1.3.2",
       },
@@ -2094,7 +2576,21 @@ phases:
     },
     "SsmParamStackId521A78D3": {
       "Properties": {
-        "Name": "/accelerator/AWSAccelerator-Test-InstallerStack/stack-id",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/AWSAccelerator-Test-InstallerStack/stack-id",
+            ],
+          ],
+        },
         "Type": "String",
         "Value": {
           "Ref": "AWS::StackId",
@@ -2234,8 +2730,34 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Description": "Lambda function to update CodePipeline OAuth Token",
         "Environment": {
           "Variables": {
-            "ACCELERATOR_PIPELINE_NAME": "AWSAccelerator-Pipeline",
-            "INSTALLER_PIPELINE_NAME": "AWSAccelerator-Installer",
+            "ACCELERATOR_PIPELINE_NAME": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Fn::GetAtt": [
+                      "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                      "acceleratorPrefix",
+                    ],
+                  },
+                  "-Pipeline",
+                ],
+              ],
+            },
+            "INSTALLER_PIPELINE_NAME": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Fn::GetAtt": [
+                      "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                      "acceleratorPrefix",
+                    ],
+                  },
+                  "-Installer",
+                ],
+              ],
+            },
           },
         },
         "Handler": "index.handler",
@@ -2415,7 +2937,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                       {
                         "Ref": "AWS::AccountId",
                       },
-                      ":AWSAccelerator-Installer*",
+                      ":",
+                      {
+                        "Fn::GetAtt": [
+                          "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                          "acceleratorPrefix",
+                        ],
+                      },
+                      "-Installer*",
                     ],
                   ],
                 },
@@ -2435,7 +2964,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                       {
                         "Ref": "AWS::AccountId",
                       },
-                      ":AWSAccelerator-Pipeline*",
+                      ":",
+                      {
+                        "Fn::GetAtt": [
+                          "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                          "acceleratorPrefix",
+                        ],
+                      },
+                      "-Pipeline*",
                     ],
                   ],
                 },
@@ -2500,7 +3036,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                       {
                         "Ref": "AWS::AccountId",
                       },
-                      ":role/AWSAccelerator-*",
+                      ":role/",
+                      {
+                        "Fn::GetAtt": [
+                          "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                          "acceleratorPrefix",
+                        ],
+                      },
+                      "-*",
                     ],
                   ],
                 },
@@ -2668,10 +3211,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
           },
           "Parameters": [
             "ControlTowerEnabled",
+            "AcceleratorPrefix",
           ],
         },
       ],
       "ParameterLabels": {
+        "AcceleratorPrefix": {
+          "default": "Accelerator Resource name prefix",
+        },
         "ApprovalStageNotifyEmailList": {
           "default": "Manual Approval Stage notification email list",
         },
@@ -2712,6 +3259,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
     },
   },
   "Parameters": {
+    "AcceleratorPrefix": {
+      "AllowedPattern": "[A-Za-z0-9-]+",
+      "Default": "AwsAccelerator",
+      "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AwsAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.",
+      "MaxLength": 15,
+      "Type": "String",
+    },
     "ApprovalStageNotifyEmailList": {
       "Description": "Provide comma(,) separated list of email ids to receive manual approval stage notification email",
       "Type": "CommaDelimitedList",
@@ -2792,7 +3346,21 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
   "Resources": {
     "AcceleratorManagementKmsArnParameter1E6975BF": {
       "Properties": {
-        "Name": "/accelerator/installer/kms/key-arn",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/installer/kms/key-arn",
+            ],
+          ],
+        },
         "Type": "String",
         "Value": {
           "Fn::GetAtt": [
@@ -2825,7 +3393,20 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
           },
           "Type": "S3",
         },
-        "Name": "AWSAccelerator-Installer",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-Installer",
+            ],
+          ],
+        },
         "RestartExecutionOnUpdate": true,
         "RoleArn": {
           "Fn::GetAtt": [
@@ -3204,7 +3785,20 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
           },
           "Type": "S3",
         },
-        "Name": "AWSAccelerator-Installer",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-Installer",
+            ],
+          ],
+        },
         "RestartExecutionOnUpdate": true,
         "RoleArn": {
           "Fn::GetAtt": [
@@ -3438,7 +4032,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
           "Fn::Join": [
             "",
             [
-              "aws-accelerator-s3-logs-",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "lowerCasePrefix",
+                ],
+              },
+              "-s3-logs-",
               {
                 "Ref": "AWS::AccountId",
               },
@@ -3461,7 +4061,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
                 "Fn::Join": [
                   "",
                   [
-                    "LifecycleRuleaws-accelerator-s3-logs-",
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-s3-logs-",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -3513,7 +4120,21 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
     },
     "InstallerAccessLogsBucketName4F700F48": {
       "Properties": {
-        "Name": "/accelerator/installer-access-logs-bucket-name",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/installer-access-logs-bucket-name",
+            ],
+          ],
+        },
         "Type": "String",
         "Value": {
           "Ref": "InstallerAccessLogsBucket647700E9",
@@ -3851,7 +4472,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
                         {
                           "Ref": "AWS::AccountId",
                         },
-                        ":role/AWSAccelerator-*",
+                        ":role/",
+                        {
+                          "Fn::GetAtt": [
+                            "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                            "acceleratorPrefix",
+                          ],
+                        },
+                        "-*",
                       ],
                     ],
                   },
@@ -3938,7 +4566,21 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
     },
     "InstallerKeyAliasD5C174F0": {
       "Properties": {
-        "AliasName": "alias/accelerator/installer/kms/key",
+        "AliasName": {
+          "Fn::Join": [
+            "",
+            [
+              "alias/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/installer/kms/key",
+            ],
+          ],
+        },
         "TargetKeyId": {
           "Fn::GetAtt": [
             "InstallerKey2A6A8C6D",
@@ -4074,13 +4716,36 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
                 "Ref": "ControlTowerEnabled",
               },
             },
+            {
+              "Name": "ACCELERATOR_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+            },
           ],
           "Image": "aws/codebuild/standard:6.0",
           "ImagePullCredentialsType": "CODEBUILD",
           "PrivilegedMode": false,
           "Type": "LINUX_CONTAINER",
         },
-        "Name": "AWSAccelerator-InstallerProject",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+              "-InstallerProject",
+            ],
+          ],
+        },
         "ServiceRole": {
           "Fn::GetAtt": [
             "InstallerAdminRole7DEE4AC8",
@@ -4225,10 +4890,24 @@ phases:
                 "; fi
   post_build:
     commands:
-      - "inprogress_status_count=$(aws codepipeline get-pipeline-state --name \\"AWSAccelerator-Pipeline\\" | grep '\\"status\\": \\"InProgress\\"' | grep -v grep | wc -l)"
+      - "inprogress_status_count=$(aws codepipeline get-pipeline-state --name \\"",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-Pipeline\\" | grep '\\"status\\": \\"InProgress\\"' | grep -v grep | wc -l)"
       - |-
         if [ $inprogress_status_count -eq 0 ]; then
-                        aws codepipeline start-pipeline-execution --name "AWSAccelerator-Pipeline";
+                        aws codepipeline start-pipeline-execution --name "",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-Pipeline";
                         fi
 ",
               ],
@@ -4238,6 +4917,319 @@ phases:
         },
       },
       "Type": "AWS::CodeBuild::Project",
+    },
+    "ResourceNamePrefixesGetPrefixResource96A10E6E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ResourceNamePrefixesResourceNamePrefixesFunction138C66F1",
+            "Arn",
+          ],
+        },
+        "pipelineStackVersionSsmParamName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/AWSAccelerator-PipelineStack-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              {
+                "Ref": "AWS::Region",
+              },
+              "/version",
+            ],
+          ],
+        },
+        "prefix": {
+          "Ref": "AcceleratorPrefix",
+        },
+      },
+      "Type": "Custom::GetPrefixes",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunction138C66F1": {
+      "DependsOn": [
+        "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159",
+        "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "ZipFile": "
+          const response = require('cfn-response'); 
+          const AWS = require('aws-sdk');
+          exports.handler = async function (event, context) { 
+          console.log(JSON.stringify(event, null, 4)); 
+          const prefix=event.ResourceProperties.prefix;
+          const pipelineStackVersionSsmParamName=event.ResourceProperties.pipelineStackVersionSsmParamName;
+          const lowerCasePrefix=prefix.toLowerCase();
+          
+          const ssm = new AWS.SSM({});
+          
+          let data = {};
+          
+          let paramName = '/accelerator/lza-prefix';
+
+          
+          if (lowerCasePrefix === 'awsaccelerator') {
+              data['acceleratorPrefix'] = 'AWSAccelerator';
+              data['lowerCasePrefix'] = 'aws-accelerator'; 
+              data['oneWordPrefix'] = 'accelerator';               
+          } else {
+              data['acceleratorPrefix'] = prefix;
+              data['lowerCasePrefix'] = lowerCasePrefix; 
+              data['oneWordPrefix'] = prefix; 
+          }
+                  
+
+          if (event.RequestType === 'Update'){
+
+            const oldPrefixLowerCase = event.OldResourceProperties.prefix.toLowerCase();
+              
+              var params = {
+                Name: paramName,
+              };
+              try {
+                  const ssmResponse = await ssm.getParameter(params).promise();
+                  // Fail stack if prefix was changed during update
+                  if (ssmResponse.Parameter.Value !== prefix) {
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'LZA does not allow changing AcceleratorPrefix parameter value after initial deploy !!! Existing prefix: ' + event.OldResourceProperties.prefix + ' New prefix: ' + prefix + '.' }, event.PhysicalResourceId);
+                      return;
+                  }
+                  await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
+              } catch (error) {
+                  console.log(error);
+                  if (error.code === 'ParameterNotFound'){
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'LZA prefix ssm parameter ' + paramName + ' not found!!! Recreate the parameter with existing AcceleratorPrefix parameter value to fix the issue'}, event.PhysicalResourceId);
+                      return;
+                  }
+                  else {
+                      await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA prefix ssm parameter ' + paramName }, event.PhysicalResourceId);
+                      return;
+                  }
+              }          
+          } 
+          
+          if (event.RequestType === 'Create') {
+          
+              if (lowerCasePrefix !== 'awsaccelerator') {
+                  // Fail stack if prefix starts with aws or ssm
+                  if (lowerCasePrefix.startsWith('aws') || lowerCasePrefix.startsWith('ssm')) { 
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'Accelerator prefix ' + prefix + ' can not be started with aws or ssm !!!'}, event.PhysicalResourceId);
+                      return;
+                  }
+
+                  // Check if this is an existing deployment and prefix changed with initial deployment of custom resource
+                  var versionParams = {
+                    Name: pipelineStackVersionSsmParamName,
+                  };
+                  try {
+                    await ssm.getParameter(versionParams).promise();
+                    await response.send(event, context, response.FAILED, {'FailureReason': 'Can not change AcceleratorPrefix parameter for existing deployment, existing prefix value is AWSAccelerator, keep AcceleratorPrefix parameter value to default value for successfully stack update !!!'}, event.PhysicalResourceId);
+                    return;
+                  }
+                  catch (error) {
+                    console.log(error);
+                    if (error.code !== 'ParameterNotFound'){
+                      await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA ssm parameter ' + pipelineStackVersionSsmParamName }, event.PhysicalResourceId);
+                      return;
+                    }
+                  }
+              }
+          
+              // Create /accelerator/lza-prefix SSM parameter to store prefix value to protect updating prefix
+              try {
+                  var newParams = {
+                        Name: paramName,
+                        Value: prefix,
+                        Description: 'LZA created SSM parameter for Accelerator prefix value, DO NOT MODIFY/DELETE this parameter',
+                        Type: 'String',
+                      };
+                  await ssm.putParameter(newParams).promise();
+                  console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
+                  await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
+              }
+              catch (error) {
+                  console.log(error);
+                  await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while creating LZA prefix ssm parameter ' + paramName }, event.PhysicalResourceId);
+                  return;
+              }
+          }
+          if (event.RequestType === 'Delete') {
+              await response.send(event, context, response.SUCCESS, {'Status': 'Custom resource deleted successfully' }, event.PhysicalResourceId);
+          }
+          
+          return;
+      }",
+        },
+        "Description": "This function converts accelerator prefix parameter to lower case to name s3 buckets in installer stack",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalAccount": {
+                    "Ref": "AWS::AccountId",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/accelerator/lza-prefix",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/accelerator/AWSAccelerator-PipelineStack-",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      "-",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      "/version",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "SsmReadParameterAccess",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159",
+        "Roles": [
+          {
+            "Ref": "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": {
       "DeletionPolicy": "Retain",
@@ -4261,7 +5253,13 @@ phases:
           "Fn::Join": [
             "",
             [
-              "aws-accelerator-installer-",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "lowerCasePrefix",
+                ],
+              },
+              "-installer-",
               {
                 "Ref": "AWS::AccountId",
               },
@@ -4284,7 +5282,14 @@ phases:
                 "Fn::Join": [
                   "",
                   [
-                    "LifecycleRuleaws-accelerator-installer-",
+                    "LifecycleRule",
+                    {
+                      "Fn::GetAtt": [
+                        "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                        "lowerCasePrefix",
+                      ],
+                    },
+                    "-installer-",
                     {
                       "Ref": "AWS::AccountId",
                     },
@@ -4322,7 +5327,13 @@ phases:
             "Fn::Join": [
               "",
               [
-                "aws-accelerator-installer-",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "lowerCasePrefix",
+                  ],
+                },
+                "-installer-",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -4632,7 +5643,21 @@ phases:
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
-        "Name": "/accelerator/AWSAccelerator-Test-InstallerStack/version",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/AWSAccelerator-Test-InstallerStack/version",
+            ],
+          ],
+        },
         "Type": "String",
         "Value": "1.3.2",
       },
@@ -4640,7 +5665,21 @@ phases:
     },
     "SsmParamStackId521A78D3": {
       "Properties": {
-        "Name": "/accelerator/AWSAccelerator-Test-InstallerStack/stack-id",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              "/",
+              {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "oneWordPrefix",
+                ],
+              },
+              "/AWSAccelerator-Test-InstallerStack/stack-id",
+            ],
+          ],
+        },
         "Type": "String",
         "Value": {
           "Ref": "AWS::StackId",
@@ -4780,8 +5819,34 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
         "Description": "Lambda function to update CodePipeline OAuth Token",
         "Environment": {
           "Variables": {
-            "ACCELERATOR_PIPELINE_NAME": "AWSAccelerator-Pipeline",
-            "INSTALLER_PIPELINE_NAME": "AWSAccelerator-Installer",
+            "ACCELERATOR_PIPELINE_NAME": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Fn::GetAtt": [
+                      "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                      "acceleratorPrefix",
+                    ],
+                  },
+                  "-Pipeline",
+                ],
+              ],
+            },
+            "INSTALLER_PIPELINE_NAME": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Fn::GetAtt": [
+                      "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                      "acceleratorPrefix",
+                    ],
+                  },
+                  "-Installer",
+                ],
+              ],
+            },
           },
         },
         "Handler": "index.handler",
@@ -4961,7 +6026,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                       {
                         "Ref": "AWS::AccountId",
                       },
-                      ":AWSAccelerator-Installer*",
+                      ":",
+                      {
+                        "Fn::GetAtt": [
+                          "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                          "acceleratorPrefix",
+                        ],
+                      },
+                      "-Installer*",
                     ],
                   ],
                 },
@@ -4981,7 +6053,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                       {
                         "Ref": "AWS::AccountId",
                       },
-                      ":AWSAccelerator-Pipeline*",
+                      ":",
+                      {
+                        "Fn::GetAtt": [
+                          "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                          "acceleratorPrefix",
+                        ],
+                      },
+                      "-Pipeline*",
                     ],
                   ],
                 },
@@ -5046,7 +6125,14 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
                       {
                         "Ref": "AWS::AccountId",
                       },
-                      ":role/AWSAccelerator-*",
+                      ":role/",
+                      {
+                        "Fn::GetAtt": [
+                          "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                          "acceleratorPrefix",
+                        ],
+                      },
+                      "-*",
                     ],
                   ],
                 },
@@ -5214,6 +6300,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
           },
           "Parameters": [
             "ControlTowerEnabled",
+            "AcceleratorPrefix",
           ],
         },
         {
@@ -5228,6 +6315,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
         },
       ],
       "ParameterLabels": {
+        "AcceleratorPrefix": {
+          "default": "Accelerator Resource name prefix",
+        },
         "AcceleratorQualifier": {
           "default": "Accelerator Qualifier",
         },
@@ -5277,6 +6367,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
     },
   },
   "Parameters": {
+    "AcceleratorPrefix": {
+      "AllowedPattern": "[A-Za-z0-9-]+",
+      "Default": "AwsAccelerator",
+      "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AwsAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.",
+      "MaxLength": 15,
+      "Type": "String",
+    },
     "AcceleratorQualifier": {
       "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
       "Description": "Accelerator assets arn qualifier",
@@ -6717,6 +7814,16 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
               },
             },
             {
+              "Name": "ACCELERATOR_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+            },
+            {
               "Name": "MANAGEMENT_ACCOUNT_ID",
               "Type": "PLAINTEXT",
               "Value": {
@@ -6929,6 +8036,319 @@ phases:
         },
       },
       "Type": "AWS::CodeBuild::Project",
+    },
+    "ResourceNamePrefixesGetPrefixResource96A10E6E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ResourceNamePrefixesResourceNamePrefixesFunction138C66F1",
+            "Arn",
+          ],
+        },
+        "pipelineStackVersionSsmParamName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/AWSAccelerator-PipelineStack-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              {
+                "Ref": "AWS::Region",
+              },
+              "/version",
+            ],
+          ],
+        },
+        "prefix": {
+          "Ref": "AcceleratorPrefix",
+        },
+      },
+      "Type": "Custom::GetPrefixes",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunction138C66F1": {
+      "DependsOn": [
+        "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159",
+        "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "ZipFile": "
+          const response = require('cfn-response'); 
+          const AWS = require('aws-sdk');
+          exports.handler = async function (event, context) { 
+          console.log(JSON.stringify(event, null, 4)); 
+          const prefix=event.ResourceProperties.prefix;
+          const pipelineStackVersionSsmParamName=event.ResourceProperties.pipelineStackVersionSsmParamName;
+          const lowerCasePrefix=prefix.toLowerCase();
+          
+          const ssm = new AWS.SSM({});
+          
+          let data = {};
+          
+          let paramName = '/accelerator/lza-prefix';
+
+          
+          if (lowerCasePrefix === 'awsaccelerator') {
+              data['acceleratorPrefix'] = 'AWSAccelerator';
+              data['lowerCasePrefix'] = 'aws-accelerator'; 
+              data['oneWordPrefix'] = 'accelerator';               
+          } else {
+              data['acceleratorPrefix'] = prefix;
+              data['lowerCasePrefix'] = lowerCasePrefix; 
+              data['oneWordPrefix'] = prefix; 
+          }
+                  
+
+          if (event.RequestType === 'Update'){
+
+            const oldPrefixLowerCase = event.OldResourceProperties.prefix.toLowerCase();
+              
+              var params = {
+                Name: paramName,
+              };
+              try {
+                  const ssmResponse = await ssm.getParameter(params).promise();
+                  // Fail stack if prefix was changed during update
+                  if (ssmResponse.Parameter.Value !== prefix) {
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'LZA does not allow changing AcceleratorPrefix parameter value after initial deploy !!! Existing prefix: ' + event.OldResourceProperties.prefix + ' New prefix: ' + prefix + '.' }, event.PhysicalResourceId);
+                      return;
+                  }
+                  await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
+              } catch (error) {
+                  console.log(error);
+                  if (error.code === 'ParameterNotFound'){
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'LZA prefix ssm parameter ' + paramName + ' not found!!! Recreate the parameter with existing AcceleratorPrefix parameter value to fix the issue'}, event.PhysicalResourceId);
+                      return;
+                  }
+                  else {
+                      await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA prefix ssm parameter ' + paramName }, event.PhysicalResourceId);
+                      return;
+                  }
+              }          
+          } 
+          
+          if (event.RequestType === 'Create') {
+          
+              if (lowerCasePrefix !== 'awsaccelerator') {
+                  // Fail stack if prefix starts with aws or ssm
+                  if (lowerCasePrefix.startsWith('aws') || lowerCasePrefix.startsWith('ssm')) { 
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'Accelerator prefix ' + prefix + ' can not be started with aws or ssm !!!'}, event.PhysicalResourceId);
+                      return;
+                  }
+
+                  // Check if this is an existing deployment and prefix changed with initial deployment of custom resource
+                  var versionParams = {
+                    Name: pipelineStackVersionSsmParamName,
+                  };
+                  try {
+                    await ssm.getParameter(versionParams).promise();
+                    await response.send(event, context, response.FAILED, {'FailureReason': 'Can not change AcceleratorPrefix parameter for existing deployment, existing prefix value is AWSAccelerator, keep AcceleratorPrefix parameter value to default value for successfully stack update !!!'}, event.PhysicalResourceId);
+                    return;
+                  }
+                  catch (error) {
+                    console.log(error);
+                    if (error.code !== 'ParameterNotFound'){
+                      await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA ssm parameter ' + pipelineStackVersionSsmParamName }, event.PhysicalResourceId);
+                      return;
+                    }
+                  }
+              }
+          
+              // Create /accelerator/lza-prefix SSM parameter to store prefix value to protect updating prefix
+              try {
+                  var newParams = {
+                        Name: paramName,
+                        Value: prefix,
+                        Description: 'LZA created SSM parameter for Accelerator prefix value, DO NOT MODIFY/DELETE this parameter',
+                        Type: 'String',
+                      };
+                  await ssm.putParameter(newParams).promise();
+                  console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
+                  await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
+              }
+              catch (error) {
+                  console.log(error);
+                  await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while creating LZA prefix ssm parameter ' + paramName }, event.PhysicalResourceId);
+                  return;
+              }
+          }
+          if (event.RequestType === 'Delete') {
+              await response.send(event, context, response.SUCCESS, {'Status': 'Custom resource deleted successfully' }, event.PhysicalResourceId);
+          }
+          
+          return;
+      }",
+        },
+        "Description": "This function converts accelerator prefix parameter to lower case to name s3 buckets in installer stack",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalAccount": {
+                    "Ref": "AWS::AccountId",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/accelerator/lza-prefix",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/accelerator/AWSAccelerator-PipelineStack-",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      "-",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      "/version",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "SsmReadParameterAccess",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159",
+        "Roles": [
+          {
+            "Ref": "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": {
       "DeletionPolicy": "Retain",
@@ -7969,6 +9389,7 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
           },
           "Parameters": [
             "ControlTowerEnabled",
+            "AcceleratorPrefix",
           ],
         },
         {
@@ -7983,6 +9404,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
         },
       ],
       "ParameterLabels": {
+        "AcceleratorPrefix": {
+          "default": "Accelerator Resource name prefix",
+        },
         "AcceleratorQualifier": {
           "default": "Accelerator Qualifier",
         },
@@ -8032,6 +9456,13 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
     },
   },
   "Parameters": {
+    "AcceleratorPrefix": {
+      "AllowedPattern": "[A-Za-z0-9-]+",
+      "Default": "AwsAccelerator",
+      "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AwsAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.",
+      "MaxLength": 15,
+      "Type": "String",
+    },
     "AcceleratorQualifier": {
       "AllowedPattern": "^[a-z]+[a-z0-9-]{1,61}[a-z0-9]+$",
       "Description": "Accelerator assets arn qualifier",
@@ -9472,6 +10903,16 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
               },
             },
             {
+              "Name": "ACCELERATOR_PREFIX",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Fn::GetAtt": [
+                  "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                  "acceleratorPrefix",
+                ],
+              },
+            },
+            {
               "Name": "MANAGEMENT_ACCOUNT_ID",
               "Type": "PLAINTEXT",
               "Value": {
@@ -9674,6 +11115,319 @@ phases:
         },
       },
       "Type": "AWS::CodeBuild::Project",
+    },
+    "ResourceNamePrefixesGetPrefixResource96A10E6E": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ResourceNamePrefixesResourceNamePrefixesFunction138C66F1",
+            "Arn",
+          ],
+        },
+        "pipelineStackVersionSsmParamName": {
+          "Fn::Join": [
+            "",
+            [
+              "/accelerator/AWSAccelerator-PipelineStack-",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              "-",
+              {
+                "Ref": "AWS::Region",
+              },
+              "/version",
+            ],
+          ],
+        },
+        "prefix": {
+          "Ref": "AcceleratorPrefix",
+        },
+      },
+      "Type": "Custom::GetPrefixes",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunction138C66F1": {
+      "DependsOn": [
+        "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159",
+        "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "ZipFile": "
+          const response = require('cfn-response'); 
+          const AWS = require('aws-sdk');
+          exports.handler = async function (event, context) { 
+          console.log(JSON.stringify(event, null, 4)); 
+          const prefix=event.ResourceProperties.prefix;
+          const pipelineStackVersionSsmParamName=event.ResourceProperties.pipelineStackVersionSsmParamName;
+          const lowerCasePrefix=prefix.toLowerCase();
+          
+          const ssm = new AWS.SSM({});
+          
+          let data = {};
+          
+          let paramName = '/accelerator/lza-prefix';
+
+          
+          if (lowerCasePrefix === 'awsaccelerator') {
+              data['acceleratorPrefix'] = 'AWSAccelerator';
+              data['lowerCasePrefix'] = 'aws-accelerator'; 
+              data['oneWordPrefix'] = 'accelerator';               
+          } else {
+              data['acceleratorPrefix'] = prefix;
+              data['lowerCasePrefix'] = lowerCasePrefix; 
+              data['oneWordPrefix'] = prefix; 
+          }
+                  
+
+          if (event.RequestType === 'Update'){
+
+            const oldPrefixLowerCase = event.OldResourceProperties.prefix.toLowerCase();
+              
+              var params = {
+                Name: paramName,
+              };
+              try {
+                  const ssmResponse = await ssm.getParameter(params).promise();
+                  // Fail stack if prefix was changed during update
+                  if (ssmResponse.Parameter.Value !== prefix) {
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'LZA does not allow changing AcceleratorPrefix parameter value after initial deploy !!! Existing prefix: ' + event.OldResourceProperties.prefix + ' New prefix: ' + prefix + '.' }, event.PhysicalResourceId);
+                      return;
+                  }
+                  await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
+              } catch (error) {
+                  console.log(error);
+                  if (error.code === 'ParameterNotFound'){
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'LZA prefix ssm parameter ' + paramName + ' not found!!! Recreate the parameter with existing AcceleratorPrefix parameter value to fix the issue'}, event.PhysicalResourceId);
+                      return;
+                  }
+                  else {
+                      await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA prefix ssm parameter ' + paramName }, event.PhysicalResourceId);
+                      return;
+                  }
+              }          
+          } 
+          
+          if (event.RequestType === 'Create') {
+          
+              if (lowerCasePrefix !== 'awsaccelerator') {
+                  // Fail stack if prefix starts with aws or ssm
+                  if (lowerCasePrefix.startsWith('aws') || lowerCasePrefix.startsWith('ssm')) { 
+                      await response.send(event, context, response.FAILED, {'FailureReason': 'Accelerator prefix ' + prefix + ' can not be started with aws or ssm !!!'}, event.PhysicalResourceId);
+                      return;
+                  }
+
+                  // Check if this is an existing deployment and prefix changed with initial deployment of custom resource
+                  var versionParams = {
+                    Name: pipelineStackVersionSsmParamName,
+                  };
+                  try {
+                    await ssm.getParameter(versionParams).promise();
+                    await response.send(event, context, response.FAILED, {'FailureReason': 'Can not change AcceleratorPrefix parameter for existing deployment, existing prefix value is AWSAccelerator, keep AcceleratorPrefix parameter value to default value for successfully stack update !!!'}, event.PhysicalResourceId);
+                    return;
+                  }
+                  catch (error) {
+                    console.log(error);
+                    if (error.code !== 'ParameterNotFound'){
+                      await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while accessing LZA ssm parameter ' + pipelineStackVersionSsmParamName }, event.PhysicalResourceId);
+                      return;
+                    }
+                  }
+              }
+          
+              // Create /accelerator/lza-prefix SSM parameter to store prefix value to protect updating prefix
+              try {
+                  var newParams = {
+                        Name: paramName,
+                        Value: prefix,
+                        Description: 'LZA created SSM parameter for Accelerator prefix value, DO NOT MODIFY/DELETE this parameter',
+                        Type: 'String',
+                      };
+                  await ssm.putParameter(newParams).promise();
+                  console.log('LZA prefix parameter ' + paramName  + ' created successfully.');
+                  await response.send(event, context, response.SUCCESS, data, event.PhysicalResourceId);
+              }
+              catch (error) {
+                  console.log(error);
+                  await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while creating LZA prefix ssm parameter ' + paramName }, event.PhysicalResourceId);
+                  return;
+              }
+          }
+          if (event.RequestType === 'Delete') {
+              await response.send(event, context, response.SUCCESS, {'Status': 'Custom resource deleted successfully' }, event.PhysicalResourceId);
+          }
+          
+          return;
+      }",
+        },
+        "Description": "This function converts accelerator prefix parameter to lower case to name s3 buckets in installer stack",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Needed to create SSM parameter for prefix",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+                "ssm:PutParameter",
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "aws:PrincipalAccount": {
+                    "Ref": "AWS::AccountId",
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/accelerator/lza-prefix",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":ssm:",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      ":parameter/accelerator/AWSAccelerator-PipelineStack-",
+                      {
+                        "Ref": "AWS::AccountId",
+                      },
+                      "-",
+                      {
+                        "Ref": "AWS::Region",
+                      },
+                      "/version",
+                    ],
+                  ],
+                },
+              ],
+              "Sid": "SsmReadParameterAccess",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRoleDefaultPolicyDC1CC159",
+        "Roles": [
+          {
+            "Ref": "ResourceNamePrefixesResourceNamePrefixesFunctionServiceRole17DDBBF2",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "SecureBucket747CD8C0": {
       "DeletionPolicy": "Retain",

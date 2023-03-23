@@ -24,15 +24,16 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
-import { AcceleratorStack, AcceleratorStackProps } from '../../accelerator-stack';
+import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class TgwResources {
   public readonly tgwAttachmentMap: Map<string, TransitGatewayAttachment>;
   public readonly tgwPeeringMap: Map<string, string>;
-  private stack: NetworkVpcStack;
   public readonly vpcAttachmentRole?: cdk.aws_iam.Role;
+
+  private stack: NetworkVpcStack;
 
   constructor(
     networkVpcStack: NetworkVpcStack,
@@ -81,7 +82,7 @@ export class TgwResources {
         principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
       });
       const role = new cdk.aws_iam.Role(this.stack, 'DescribeTgwAttachRole', {
-        roleName: `AWSAccelerator-DescribeTgwAttachRole-${cdk.Stack.of(this.stack).region}`,
+        roleName: `${props.prefixes.accelerator}-DescribeTgwAttachRole-${cdk.Stack.of(this.stack).region}`,
         assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
         inlinePolicies: {
           default: new cdk.aws_iam.PolicyDocument({
@@ -253,9 +254,10 @@ export class TgwResources {
           name: this.stack.getSsmPath(SsmResourceType.TGW, [transitGatewayPeeringItem.accepter.transitGatewayName]),
           accountId: props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
           parameterRegion: transitGatewayPeeringItem.accepter.region,
-          roleName: AcceleratorStack.ACCELERATOR_TGW_PEERING_ROLE_NAME,
+          roleName: this.stack.acceleratorResourceNames.roles.tgwPeering,
           kmsKey: this.stack.cloudwatchKey,
           logRetentionInDays: this.stack.logRetention ?? 365,
+          acceleratorPrefix: props.prefixes.accelerator,
         }).value;
 
         const accepterTransitGatewayRouteTableId = new SsmParameterLookup(
@@ -268,9 +270,10 @@ export class TgwResources {
             ]),
             accountId: props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
             parameterRegion: transitGatewayPeeringItem.accepter.region,
-            roleName: AcceleratorStack.ACCELERATOR_TGW_PEERING_ROLE_NAME,
+            roleName: this.stack.acceleratorResourceNames.roles.tgwPeering,
             kmsKey: this.stack.cloudwatchKey,
             logRetentionInDays: this.stack.logRetention ?? 365,
+            acceleratorPrefix: props.prefixes.accelerator,
           },
         ).value;
 
@@ -296,7 +299,7 @@ export class TgwResources {
             },
             accepter: {
               accountId: props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
-              accountAccessRoleName: AcceleratorStack.ACCELERATOR_TGW_PEERING_ROLE_NAME,
+              accountAccessRoleName: this.stack.acceleratorResourceNames.roles.tgwPeering,
               region: transitGatewayPeeringItem.accepter.region,
               transitGatewayName: transitGatewayPeeringItem.accepter.transitGatewayName,
               transitGatewayId: accepterTransitGatewayId,
@@ -340,10 +343,11 @@ export class TgwResources {
                   transitGatewayPeeringItem.name,
                 ]),
                 accountId: props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
-                roleName: AcceleratorStack.ACCELERATOR_TGW_PEERING_ROLE_NAME,
+                roleName: this.stack.acceleratorResourceNames.roles.tgwPeering,
                 value: peeringAttachmentId,
               },
               invokingAccountID: cdk.Stack.of(this.stack).account,
+              acceleratorPrefix: props.prefixes.accelerator,
             },
           );
         } else {

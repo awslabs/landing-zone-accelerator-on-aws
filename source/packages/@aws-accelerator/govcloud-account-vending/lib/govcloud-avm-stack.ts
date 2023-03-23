@@ -17,8 +17,12 @@ import * as path from 'path';
 import { GovCloudAccountVendingProductStack } from './govcloud-avm-product-stack';
 import * as fs from 'fs';
 
+export interface GovCloudAccountVendingStackProps extends cdk.StackProps {
+  readonly acceleratorPrefix: string;
+}
+
 export class GovCloudAccountVendingStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: GovCloudAccountVendingStackProps) {
     super(scope, id, props);
 
     /** This stack creates service catalog product which can 
@@ -53,7 +57,9 @@ export class GovCloudAccountVendingStack extends cdk.Stack {
       productVersions: [
         {
           cloudFormationTemplate: cdk.aws_servicecatalog.CloudFormationTemplate.fromProductStack(
-            new GovCloudAccountVendingProductStack(this, 'GovCloudAccountVendingProductStack'),
+            new GovCloudAccountVendingProductStack(this, 'GovCloudAccountVendingProductStack', {
+              acceleratorPrefix: props.acceleratorPrefix,
+            }),
           ),
           productVersionName: 'v1.0.0',
           description:
@@ -72,7 +78,7 @@ export class GovCloudAccountVendingStack extends cdk.Stack {
       runtime: cdk.aws_lambda.Runtime.NODEJS_14_X,
       handler: 'index.handler',
       timeout: cdk.Duration.seconds(900),
-      functionName: 'AWSAccelerator-GovCloudAccountVending',
+      functionName: `${props.acceleratorPrefix}-GovCloudAccountVending`,
       description: 'Create AWS GovCloud (US) Accounts',
       initialPolicy: [
         new cdk.aws_iam.PolicyStatement({

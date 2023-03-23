@@ -21,6 +21,7 @@ import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 
 import { version } from '../../../../package.json';
 import { SolutionHelper } from './solutions-helper';
+import { ResourceNamePrefixes } from './resource-name-prefixes';
 
 export enum RepositorySources {
   GITHUB = 'github',
@@ -110,6 +111,15 @@ export class InstallerStack extends cdk.Stack {
     description: 'Select yes if you deploying to a Control Tower environment.  Select no if using just Organizations',
     allowedValues: ['Yes', 'No'],
     default: 'Yes',
+  });
+
+  private readonly acceleratorPrefix = new cdk.CfnParameter(this, 'AcceleratorPrefix', {
+    type: 'String',
+    description:
+      'The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AwsAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.',
+    default: 'AwsAccelerator',
+    allowedPattern: '[A-Za-z0-9-]+',
+    maxLength: 15,
   });
 
   /**
@@ -207,7 +217,7 @@ export class InstallerStack extends cdk.Stack {
       },
       {
         Label: { default: 'Environment Configuration' },
-        Parameters: [this.controlTowerEnabled.logicalId],
+        Parameters: [this.controlTowerEnabled.logicalId, this.acceleratorPrefix.logicalId],
       },
     ];
 
@@ -224,27 +234,42 @@ export class InstallerStack extends cdk.Stack {
       [this.logArchiveAccountEmail.logicalId]: { default: 'Log Archive Account Email' },
       [this.auditAccountEmail.logicalId]: { default: 'Audit Account Email' },
       [this.controlTowerEnabled.logicalId]: { default: 'Control Tower Environment' },
+      [this.acceleratorPrefix.logicalId]: { default: 'Accelerator Resource name prefix' },
     };
 
     let targetAcceleratorParameterLabels: { [p: string]: { default: string } } = {};
     let targetAcceleratorEnvVariables: { [p: string]: cdk.aws_codebuild.BuildEnvironmentVariable } | undefined;
 
-    //
-    // Variables to be changed based on qualifier parameter
-    let stackIdSsmParameterName = `/accelerator/${cdk.Stack.of(this).stackName}/stack-id`;
-    let acceleratorVersionSsmParameterName = `/accelerator/${cdk.Stack.of(this).stackName}/version`;
-    let installerKeySsmParameterName = 'alias/accelerator/installer/kms/key';
-    let acceleratorManagementKmsArnSsmParameterName = '/accelerator/installer/kms/key-arn';
-    let installerAccessLogsBucketName = `aws-accelerator-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
-    let installerAccessLogsBucketNameSsmParameterName = `/accelerator/installer-access-logs-bucket-name`;
-    let secureBucketName = `aws-accelerator-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
-    let acceleratorPipelineName = 'AWSAccelerator-Pipeline';
-    let installerProjectName = 'AWSAccelerator-InstallerProject';
-    let installerPipelineName = 'AWSAccelerator-Installer';
+    const resourceNamePrefixes = new ResourceNamePrefixes(this, 'ResourceNamePrefixes', {
+      acceleratorPrefix: this.acceleratorPrefix.valueAsString,
+    });
+
+    const oneWordPrefix = resourceNamePrefixes.oneWordPrefix.endsWith('-')
+      ? resourceNamePrefixes.oneWordPrefix.slice(0, -1)
+      : resourceNamePrefixes.oneWordPrefix;
+
+    const lowerCasePrefix = resourceNamePrefixes.lowerCasePrefix.endsWith('-')
+      ? resourceNamePrefixes.lowerCasePrefix.slice(0, -1)
+      : resourceNamePrefixes.lowerCasePrefix;
+
+    const acceleratorPrefix = resourceNamePrefixes.acceleratorPrefix.endsWith('-')
+      ? resourceNamePrefixes.acceleratorPrefix.slice(0, -1)
+      : resourceNamePrefixes.acceleratorPrefix;
+
+    let stackIdSsmParameterName = `/${oneWordPrefix}/${cdk.Stack.of(this).stackName}/stack-id`;
+    let acceleratorVersionSsmParameterName = `/${oneWordPrefix}/${cdk.Stack.of(this).stackName}/version`;
+    let installerKeyAliasName = `alias/${oneWordPrefix}/installer/kms/key`;
+    let acceleratorManagementKmsArnSsmParameterName = `/${oneWordPrefix}/installer/kms/key-arn`;
+    let installerAccessLogsBucketName = `${lowerCasePrefix}-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+    let installerAccessLogsBucketNameSsmParameterName = `/${oneWordPrefix}/installer-access-logs-bucket-name`;
+    let secureBucketName = `${lowerCasePrefix}-installer-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
+    let acceleratorPipelineName = `${acceleratorPrefix}-Pipeline`;
+    let installerProjectName = `${acceleratorPrefix}-InstallerProject`;
+    let installerPipelineName = `${acceleratorPrefix}-Installer`;
 
     let acceleratorPrincipalArn = `arn:${cdk.Stack.of(this).partition}:iam::${
       cdk.Stack.of(this).account
-    }:role/AWSAccelerator-*`;
+    }:role/${acceleratorPrefix}-*`;
 
     if (props.useExternalPipelineAccount) {
       this.acceleratorQualifier = new cdk.CfnParameter(this, 'AcceleratorQualifier', {
@@ -301,7 +326,7 @@ export class InstallerStack extends cdk.Stack {
       acceleratorVersionSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/${
         cdk.Stack.of(this).stackName
       }/version`;
-      installerKeySsmParameterName = `alias/accelerator/${this.acceleratorQualifier.valueAsString}/installer/kms/key`;
+      installerKeyAliasName = `alias/accelerator/${this.acceleratorQualifier.valueAsString}/installer/kms/key`;
       acceleratorManagementKmsArnSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/installer/kms/key-arn`;
       installerAccessLogsBucketName = `${this.acceleratorQualifier.valueAsString}-s3-logs-${cdk.Aws.ACCOUNT_ID}-${cdk.Aws.REGION}`;
       installerAccessLogsBucketNameSsmParameterName = `/accelerator/${this.acceleratorQualifier.valueAsString}/installer-access-logs-bucket-name`;
@@ -363,7 +388,7 @@ export class InstallerStack extends cdk.Stack {
 
     // Create Accelerator Installer KMS Key
     const installerKey = new cdk.aws_kms.Key(this, 'InstallerKey', {
-      alias: installerKeySsmParameterName,
+      alias: installerKeyAliasName,
       description: 'AWS Accelerator Management Account Kms Key',
       enableKeyRotation: true,
       policy: undefined,
@@ -636,6 +661,10 @@ export class InstallerStack extends cdk.Stack {
           CONTROL_TOWER_ENABLED: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.controlTowerEnabled.valueAsString,
+          },
+          ACCELERATOR_PREFIX: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: acceleratorPrefix,
           },
           ...targetAcceleratorEnvVariables,
           ...targetAcceleratorTestEnvVariables,

@@ -89,7 +89,7 @@ export class OperationsStack extends AcceleratorStack {
       'AcceleratorGetCloudWatchKey',
       cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
       ),
     ) as cdk.aws_kms.Key;
 
@@ -400,9 +400,9 @@ export class OperationsStack extends AcceleratorStack {
 
           const secretArn = `arn:${
             cdk.Stack.of(this).partition
-          }:secretsmanager:${madAdminSecretRegion}:${madAdminSecretAccountId}:secret:/accelerator/ad-user/${
-            managedActiveDirectory.name
-          }/*`;
+          }:secretsmanager:${madAdminSecretRegion}:${madAdminSecretAccountId}:secret:${
+            this.props.prefixes.secretName
+          }/ad-user/${managedActiveDirectory.name}/*`;
           // Attach MAD instance role access to MAD secrets
           this.logger.info(`Granting mad secret access to ${roleName}`);
           role.attachInlinePolicy(
@@ -499,7 +499,7 @@ export class OperationsStack extends AcceleratorStack {
             secretStringTemplate: JSON.stringify({ username: user.username }),
             generateStringKey: 'password',
           },
-          secretName: `/accelerator/${user.username}`,
+          secretName: `${this.props.prefixes.secretName}/${user.username}`,
         });
 
         // AwsSolutions-SMG4: The secret does not have automatic rotation scheduled.
@@ -515,7 +515,7 @@ export class OperationsStack extends AcceleratorStack {
           ],
         );
 
-        this.logger.info(`User - password stored to /accelerator/${user.username}`);
+        this.logger.info(`User - password stored to ${this.props.prefixes.secretName}/${user.username}`);
 
         this.users[user.username] = new cdk.aws_iam.User(this, pascalCase(user.username), {
           userName: user.username,
@@ -537,7 +537,7 @@ export class OperationsStack extends AcceleratorStack {
       'AcceleratorBudgetGetCloudWatchKey',
       cdk.aws_ssm.StringParameter.valueForStringParameter(
         this,
-        AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
       ),
     ) as cdk.aws_kms.Key;
     if (this.props.globalConfig.reports?.budgets) {
@@ -581,8 +581,8 @@ export class OperationsStack extends AcceleratorStack {
         // Only create the key if a vault is defined for this account
         if (backupKey === undefined) {
           backupKey = new cdk.aws_kms.Key(this, 'BackupKey', {
-            alias: AcceleratorStack.ACCELERATOR_AWS_BACKUP_KEY_ALIAS,
-            description: AcceleratorStack.ACCELERATOR_AWS_BACKUP_KEY_DESCRIPTION,
+            alias: this.acceleratorResourceNames.customerManagedKeys.awsBackup.alias,
+            description: this.acceleratorResourceNames.customerManagedKeys.awsBackup.description,
             enableKeyRotation: true,
             removalPolicy: cdk.RemovalPolicy.RETAIN,
           });
@@ -601,11 +601,11 @@ export class OperationsStack extends AcceleratorStack {
 
     new Inventory(this, 'AcceleratorSsmInventory', {
       bucketName: `${
-        AcceleratorStack.ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME_PREFIX
+        this.acceleratorResourceNames.bucketPrefixes.centralLogs
       }-${this.props.accountsConfig.getLogArchiveAccountId()}-${this.props.centralizedLoggingRegion}`,
       bucketRegion: this.props.centralizedLoggingRegion,
       accountId: cdk.Stack.of(this).account,
-      prefix: 'aws-accelerator',
+      prefix: this.props.prefixes.bucketName,
     });
   }
 
@@ -645,7 +645,7 @@ export class OperationsStack extends AcceleratorStack {
 
   private createServiceCatalogPropagationRole() {
     new cdk.aws_iam.Role(this, 'ServiceCatalogPropagationRole', {
-      roleName: AcceleratorStack.ACCELERATOR_SERVICE_CATALOG_PROPAGATION_ROLE_NAME,
+      roleName: this.acceleratorResourceNames.roles.crossAccountServiceCatalogPropagation,
       assumedBy: this.getOrgPrincipals(this.organizationId),
       inlinePolicies: {
         default: new cdk.aws_iam.PolicyDocument({
@@ -666,7 +666,9 @@ export class OperationsStack extends AcceleratorStack {
               resources: ['*'],
               conditions: {
                 ArnLike: {
-                  'aws:PrincipalARN': [`arn:${cdk.Stack.of(this).partition}:iam::*:role/AWSAccelerator-*`],
+                  'aws:PrincipalARN': [
+                    `arn:${cdk.Stack.of(this).partition}:iam::*:role/${this.props.prefixes.accelerator}-*`,
+                  ],
                 },
               },
             }),
@@ -873,17 +875,15 @@ export class OperationsStack extends AcceleratorStack {
   }
 
   private createAssetAccessRole() {
-    const accessBucketArn = `arn:${
-      this.props.partition
-    }:s3:::aws-accelerator-assets-${this.props.accountsConfig.getManagementAccountId()}-${
-      this.props.globalConfig.homeRegion
-    }`;
+    const accessBucketArn = `arn:${this.props.partition}:s3:::${
+      this.acceleratorResourceNames.bucketPrefixes.assets
+    }-${this.props.accountsConfig.getManagementAccountId()}-${this.props.globalConfig.homeRegion}`;
 
     const accountId = cdk.Stack.of(this).account;
 
     const accessRoleResourceName = `AssetAccessRole${accountId}`;
     const assetsAccessRole = new cdk.aws_iam.Role(this, accessRoleResourceName, {
-      roleName: `AWSAccelerator-AssetsAccessRole`,
+      roleName: `${this.props.prefixes.accelerator}-AssetsAccessRole`,
       assumedBy: new cdk.aws_iam.ServicePrincipal('lambda.amazonaws.com'),
       description: 'AWS Accelerator assets access role in workload accounts deploy ACM imported certificates.',
     });
@@ -918,10 +918,11 @@ export class OperationsStack extends AcceleratorStack {
     const assetsBucketKmsKey = new KeyLookup(this, 'AssetsBucketKms', {
       accountId: this.props.accountsConfig.getManagementAccountId(),
       keyRegion: this.props.globalConfig.homeRegion,
-      roleName: AcceleratorStack.ACCELERATOR_ASSETS_CROSS_ACCOUNT_SSM_PARAMETER_ACCESS_ROLE_NAME,
-      keyArnParameterName: AcceleratorStack.ACCELERATOR_ASSETS_KEY_ARN_PARAMETER_NAME,
+      roleName: this.acceleratorResourceNames.roles.crossAccountAssetsBucketCmkArnSsmParameterAccess,
+      keyArnParameterName: this.acceleratorResourceNames.parameters.assetsBucketCmkArn,
       kmsKey: this.cloudwatchKey,
       logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays,
+      acceleratorPrefix: this.props.prefixes.accelerator,
     }).getKey();
 
     assetsAccessRole.addToPolicy(

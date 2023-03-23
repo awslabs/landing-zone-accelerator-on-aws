@@ -23,7 +23,7 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
-import { AcceleratorStack, AcceleratorStackProps } from '../../accelerator-stack';
+import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
 import { NetworkVpcStack } from './network-vpc-stack';
 
@@ -96,7 +96,7 @@ export class LoadBalancerResources {
         principals.push(new cdk.aws_iam.AccountPrincipal(accountId));
       });
       const role = new cdk.aws_iam.Role(this.stack, `Get${pascalCase(loadBalancerItem.name)}SsmParamRole`, {
-        roleName: `AWSAccelerator-Get${pascalCase(loadBalancerItem.name)}SsmParamRole-${
+        roleName: `${props.prefixes.accelerator}-Get${pascalCase(loadBalancerItem.name)}SsmParamRole-${
           cdk.Stack.of(this.stack).region
         }`,
         assumedBy: new cdk.aws_iam.CompositePrincipal(...principals),
@@ -107,7 +107,7 @@ export class LoadBalancerResources {
                 effect: cdk.aws_iam.Effect.ALLOW,
                 actions: ['ssm:GetParameter'],
                 resources: [
-                  `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/accelerator/network/gwlb/${loadBalancerItem.name}/*`,
+                  `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${props.prefixes.ssmParamName}/network/gwlb/${loadBalancerItem.name}/*`,
                 ],
               }),
             ],
@@ -246,7 +246,7 @@ export class LoadBalancerResources {
   ): Map<string, ApplicationLoadBalancer> {
     const albMap = new Map<string, ApplicationLoadBalancer>();
     const accessLogsBucket = `${
-      AcceleratorStack.ACCELERATOR_ELB_LOGS_BUCKET_PREFIX
+      this.stack.acceleratorResourceNames.bucketPrefixes.elbLogs
     }-${props.accountsConfig.getLogArchiveAccountId()}-${props.centralizedLoggingRegion}`;
 
     for (const vpcItem of vpcResources) {
@@ -316,7 +316,7 @@ export class LoadBalancerResources {
     const nlbMap = new Map<string, NetworkLoadBalancer>();
 
     const accessLogsBucket = `${
-      AcceleratorStack.ACCELERATOR_ELB_LOGS_BUCKET_PREFIX
+      this.stack.acceleratorResourceNames.bucketPrefixes.elbLogs
     }-${props.accountsConfig.getLogArchiveAccountId()}-${props.centralizedLoggingRegion}`;
 
     for (const vpcItem of vpcResources) {
@@ -363,7 +363,7 @@ export class LoadBalancerResources {
         vpcItem.loadBalancers?.networkLoadBalancers.length > 0
       ) {
         new cdk.aws_iam.Role(this.stack, `GetNLBIPAddressLookup`, {
-          roleName: `AWSAccelerator-GetNLBIPAddressLookup`,
+          roleName: `${props.prefixes.accelerator}-GetNLBIPAddressLookup`,
           assumedBy: new cdk.aws_iam.CompositePrincipal(...principals!),
           inlinePolicies: {
             default: new cdk.aws_iam.PolicyDocument({

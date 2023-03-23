@@ -788,7 +788,7 @@ def script_handler(events, context):
                   {
                     "Ref": "AWS::Partition",
                   },
-                  ":sns:us-east-1:111111111111:AWSAccelerator-ControlTowerNotification",
+                  ":sns:us-east-1:111111111111:aws-accelerator-ControlTowerNotification",
                 ],
               ],
             },
@@ -831,7 +831,7 @@ def script_handler(events, context):
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":sns:us-east-1:111111111111:AWSAccelerator-ControlTowerNotification",
+                    ":sns:us-east-1:111111111111:aws-accelerator-ControlTowerNotification",
                   ],
                 ],
               },
@@ -3473,7 +3473,7 @@ def script_handler(events, context):
                   {
                     "Ref": "AWS::Partition",
                   },
-                  ":sns:us-east-1:111111111111:AWSAccelerator-ControlTowerNotification",
+                  ":sns:us-east-1:111111111111:aws-accelerator-ControlTowerNotification",
                 ],
               ],
             },
@@ -3516,7 +3516,7 @@ def script_handler(events, context):
                     {
                       "Ref": "AWS::Partition",
                     },
-                    ":sns:us-east-1:111111111111:AWSAccelerator-ControlTowerNotification",
+                    ":sns:us-east-1:111111111111:aws-accelerator-ControlTowerNotification",
                   ],
                 ],
               },

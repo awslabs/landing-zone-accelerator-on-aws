@@ -47,13 +47,13 @@ export class AccountsStack extends AcceleratorStack {
         'AcceleratorGetCloudWatchKey',
         cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+          this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
         ),
       ) as cdk.aws_kms.Key;
     } else {
       this.cloudwatchKey = new cdk.aws_kms.Key(this, 'AcceleratorCloudWatchKey', {
-        alias: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ALIAS,
-        description: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_DESCRIPTION,
+        alias: this.acceleratorResourceNames.customerManagedKeys.cloudWatchLog.alias,
+        description: this.acceleratorResourceNames.customerManagedKeys.cloudWatchLog.description,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
@@ -79,7 +79,7 @@ export class AccountsStack extends AcceleratorStack {
 
       this.ssmParameters.push({
         logicalId: 'AcceleratorCloudWatchKmsArnParameter',
-        parameterName: AcceleratorStack.ACCELERATOR_CLOUDWATCH_LOG_KEY_ARN_PARAMETER_NAME,
+        parameterName: this.acceleratorResourceNames.parameters.cloudWatchLogCmkArn,
         stringValue: this.cloudwatchKey.keyArn,
       });
     }
@@ -92,21 +92,21 @@ export class AccountsStack extends AcceleratorStack {
         'AcceleratorGetLambdaKey',
         cdk.aws_ssm.StringParameter.valueForStringParameter(
           this,
-          AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
+          this.acceleratorResourceNames.parameters.lambdaCmkArn,
         ),
       ) as cdk.aws_kms.Key;
     } else {
       // Create KMS Key for Lambda environment variable encryption
       this.lambdaKey = new cdk.aws_kms.Key(this, 'AcceleratorLambdaKey', {
-        alias: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ALIAS,
-        description: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_DESCRIPTION,
+        alias: this.acceleratorResourceNames.customerManagedKeys.lambda.alias,
+        description: this.acceleratorResourceNames.customerManagedKeys.lambda.description,
         enableKeyRotation: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
       });
 
       this.ssmParameters.push({
         logicalId: 'AcceleratorLambdaKmsArnParameter',
-        parameterName: AcceleratorStack.ACCELERATOR_LAMBDA_KEY_ARN_PARAMETER_NAME,
+        parameterName: this.acceleratorResourceNames.parameters.lambdaCmkArn,
         stringValue: this.lambdaKey.keyArn,
       });
     }
@@ -119,8 +119,11 @@ export class AccountsStack extends AcceleratorStack {
         new MoveAccountRule(this, 'MoveAccountRule', {
           globalRegion: props.globalRegion,
           homeRegion: props.globalConfig.homeRegion,
-          moveAccountRoleName: AcceleratorStack.ACCELERATOR_ACCOUNT_CONFIG_TABLE_PARAMETER_ACCESS_ROLE_NAME,
+          moveAccountRoleName: this.acceleratorResourceNames.roles.moveAccountConfig,
           commitId: props.configCommitId ?? '',
+          acceleratorPrefix: props.prefixes.accelerator,
+          configTableNameParameterName: this.acceleratorResourceNames.parameters.configTableName,
+          configTableArnParameterName: this.acceleratorResourceNames.parameters.configTableArn,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
         });
@@ -193,7 +196,7 @@ export class AccountsStack extends AcceleratorStack {
             ) {
               this.ssmParameters.push({
                 logicalId: pascalCase(`SsmParam${scp.name}ScpPolicyId`),
-                parameterName: `/accelerator/organizations/scp/${scp.name}/id`,
+                parameterName: `${props.prefixes.ssmParamName}/organizations/scp/${scp.name}/id`,
                 stringValue: scp.id,
               });
               quarantineScpId = scp.id;
@@ -267,6 +270,7 @@ export class AccountsStack extends AcceleratorStack {
             kmsKeyLambda: this.lambdaKey,
             logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             managementAccountAccessRole: props.globalConfig.managementAccountAccessRole,
+            acceleratorTopicNamePrefix: props.prefixes.snsTopicName,
             snsTopicName: props.securityConfig.centralSecurityServices.scpRevertChangesConfig?.snsTopicName,
             scpFilePaths: props.organizationConfig.serviceControlPolicies?.map(a => a.policy) ?? [],
           });

@@ -30,6 +30,7 @@ new RevertScpChanges(stack, 'RevertScpChanges', {
   kmsKeyLambda: new cdk.aws_kms.Key(stack, 'CustomLambdaKey', {}),
   logRetentionInDays: 365,
   managementAccountAccessRole: 'LZARole',
+  acceleratorTopicNamePrefix: 'aws-accelerator',
   snsTopicName: 'Security',
   scpFilePaths: ['service-control-policies/guardrails-1.json', 'service-control-policies/guardrails-2.json'],
 });
