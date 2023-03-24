@@ -116,8 +116,8 @@ export class InstallerStack extends cdk.Stack {
   private readonly acceleratorPrefix = new cdk.CfnParameter(this, 'AcceleratorPrefix', {
     type: 'String',
     description:
-      'The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AwsAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.',
-    default: 'AwsAccelerator',
+      'The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AWSAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.',
+    default: 'AWSAccelerator',
     allowedPattern: '[A-Za-z0-9-]+',
     maxLength: 15,
   });
