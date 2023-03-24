@@ -3,10 +3,10 @@
 exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissionRoleArn):  Snapshot Test 1`] = `
 {
   "Resources": {
-    "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambda460834BA": {
+    "IdentityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambda87CD5EC8": {
       "DependsOn": [
-        "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleDefaultPolicy64D8678B",
-        "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleA2C9E0BD",
+        "IdentityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambdaServiceRoleDefaultPolicy478A7CE9",
+        "IdentityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambdaServiceRole603853E2",
       ],
       "Properties": {
         "Code": {
@@ -18,7 +18,7 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
         "Handler": "index.handler",
         "Role": {
           "Fn::GetAtt": [
-            "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleA2C9E0BD",
+            "IdentityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambdaServiceRole603853E2",
             "Arn",
           ],
         },
@@ -27,7 +27,7 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
       },
       "Type": "AWS::Lambda::Function",
     },
-    "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleA2C9E0BD": {
+    "IdentityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambdaServiceRole603853E2": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -68,7 +68,7 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
       },
       "Type": "AWS::IAM::Role",
     },
-    "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleDefaultPolicy64D8678B": {
+    "IdentityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambdaServiceRoleDefaultPolicy478A7CE9": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -90,19 +90,19 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleDefaultPolicy64D8678B",
+        "PolicyName": "entityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambdaServiceRoleDefaultPolicy478A7CE9",
         "Roles": [
           {
-            "Ref": "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambdaServiceRoleA2C9E0BD",
+            "Ref": "IdentityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambdaServiceRole603853E2",
           },
         ],
       },
       "Type": "AWS::IAM::Policy",
     },
-    "IdentityCenterGetPermissionRoleArnframeworkonEventCA48BE05": {
+    "IdentityCenterGetPermissionRoleArnProviderframeworkonEventA87093F8": {
       "DependsOn": [
-        "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleDefaultPolicy80148248",
-        "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleD442AB4D",
+        "IdentityCenterGetPermissionRoleArnProviderframeworkonEventServiceRoleDefaultPolicy05245BF3",
+        "IdentityCenterGetPermissionRoleArnProviderframeworkonEventServiceRoleAA6883AA",
       ],
       "Properties": {
         "Code": {
@@ -111,12 +111,12 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
           },
           "S3Key": "REPLACED-GENERATED-NAME.zip",
         },
-        "Description": "AWS CDK resource provider framework - onEvent (Default/IdentityCenterGetPermissionRoleArn/Resource)",
+        "Description": "AWS CDK resource provider framework - onEvent (Default/IdentityCenterGetPermissionRoleArnProvider/Resource)",
         "Environment": {
           "Variables": {
             "USER_ON_EVENT_FUNCTION_ARN": {
               "Fn::GetAtt": [
-                "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambda460834BA",
+                "IdentityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambda87CD5EC8",
                 "Arn",
               ],
             },
@@ -125,7 +125,7 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
         "Handler": "framework.onEvent",
         "Role": {
           "Fn::GetAtt": [
-            "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleD442AB4D",
+            "IdentityCenterGetPermissionRoleArnProviderframeworkonEventServiceRoleAA6883AA",
             "Arn",
           ],
         },
@@ -134,7 +134,7 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
       },
       "Type": "AWS::Lambda::Function",
     },
-    "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleD442AB4D": {
+    "IdentityCenterGetPermissionRoleArnProviderframeworkonEventServiceRoleAA6883AA": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -175,7 +175,7 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
       },
       "Type": "AWS::IAM::Role",
     },
-    "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleDefaultPolicy80148248": {
+    "IdentityCenterGetPermissionRoleArnProviderframeworkonEventServiceRoleDefaultPolicy05245BF3": {
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -195,7 +195,7 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
               "Resource": [
                 {
                   "Fn::GetAtt": [
-                    "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambda460834BA",
+                    "IdentityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambda87CD5EC8",
                     "Arn",
                   ],
                 },
@@ -205,7 +205,7 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
                     [
                       {
                         "Fn::GetAtt": [
-                          "IdentityCenterGetPermissionRoleArnIdentityCenterGetPermissionRoleArnProviderLambda460834BA",
+                          "IdentityCenterGetPermissionRoleArnProviderIdentityCenterGetPermissionRoleArnProviderProviderLambda87CD5EC8",
                           "Arn",
                         ],
                       },
@@ -218,10 +218,10 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
           ],
           "Version": "2012-10-17",
         },
-        "PolicyName": "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleDefaultPolicy80148248",
+        "PolicyName": "IdentityCenterGetPermissionRoleArnProviderframeworkonEventServiceRoleDefaultPolicy05245BF3",
         "Roles": [
           {
-            "Ref": "IdentityCenterGetPermissionRoleArnframeworkonEventServiceRoleD442AB4D",
+            "Ref": "IdentityCenterGetPermissionRoleArnProviderframeworkonEventServiceRoleAA6883AA",
           },
         ],
       },
@@ -232,7 +232,7 @@ exports[`IdentityCenterGetPermissionRoleArn Construct(IdentityCenterGetPermissio
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
-            "IdentityCenterGetPermissionRoleArnframeworkonEventCA48BE05",
+            "IdentityCenterGetPermissionRoleArnProviderframeworkonEventA87093F8",
             "Arn",
           ],
         },
