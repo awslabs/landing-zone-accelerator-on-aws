@@ -12,7 +12,10 @@
  */
 
 import * as cdk from 'aws-cdk-lib';
-import { IdentityCenterGetPermissionRoleArn } from '../../lib/aws-identity-center/identity-center-get-permission-set-role-arn';
+import {
+  IdentityCenterGetPermissionRoleArn,
+  IdentityCenterGetPermissionRoleArnProvider,
+} from '../../lib/aws-identity-center/identity-center-get-permission-set-role-arn';
 import { snapShotTest } from '../snapshot-test';
 import { describe } from '@jest/globals';
 const testNamePrefix = 'Construct(IdentityCenterGetPermissionRoleArn): ';
@@ -20,9 +23,13 @@ const testNamePrefix = 'Construct(IdentityCenterGetPermissionRoleArn): ';
 //Initialize stack for snapshot test and resource configuration test
 const stack = new cdk.Stack();
 
+const provider = new IdentityCenterGetPermissionRoleArnProvider(stack, 'IdentityCenterGetPermissionRoleArnProvider');
+const serviceToken = provider.serviceToken;
+
 new IdentityCenterGetPermissionRoleArn(stack, 'IdentityCenterGetPermissionRoleArn', {
   permissionSetName: 'Test',
   accountId: '111111111111',
+  serviceToken: serviceToken,
 });
 
 /**

@@ -19,6 +19,7 @@ import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
 import { PortfolioAssociationConfig, PortfolioConfig, ProductConfig } from '@aws-accelerator/config';
 import {
   IdentityCenterGetPermissionRoleArn,
+  IdentityCenterGetPermissionRoleArnProvider,
   Organization,
   SharePortfolioWithOrg,
   PropagatePortfolioAssociations,
@@ -68,7 +69,8 @@ export class CustomizationsStack extends AcceleratorStack {
 
     // Create Service Catalog Portfolios
     if (props.customizationsConfig?.customizations?.serviceCatalogPortfolios?.length > 0) {
-      this.createServiceCatalogResources();
+      const serviceToken = this.getPortfolioAssociationsRoleArnProviderServiceToken();
+      this.createServiceCatalogResources(serviceToken);
     }
 
     this.logger.info('Completed stack synthesis');
@@ -135,7 +137,7 @@ export class CustomizationsStack extends AcceleratorStack {
   /**
    * Create Service Catalog resources
    */
-  private createServiceCatalogResources() {
+  private createServiceCatalogResources(serviceToken: string) {
     const serviceCatalogPortfolios = this.props.customizationsConfig?.customizations?.serviceCatalogPortfolios;
     for (const portfolioItem of serviceCatalogPortfolios ?? []) {
       const regions = portfolioItem.regions.map(item => {
@@ -153,7 +155,7 @@ export class CustomizationsStack extends AcceleratorStack {
         this.createPortfolioProducts(portfolio, portfolioItem);
 
         // Create portfolio associations
-        this.createPortfolioAssociations(portfolio, portfolioItem);
+        this.createPortfolioAssociations(portfolio, portfolioItem, serviceToken);
       }
     }
   }
@@ -203,7 +205,9 @@ export class CustomizationsStack extends AcceleratorStack {
       for (const account of portfolioItem?.shareTargets?.accounts ?? []) {
         const accountId = this.props.accountsConfig.getAccountId(account);
         if (accountId !== cdk.Stack.of(this).account) {
-          portfolio.shareWithAccount(accountId, { shareTagOptions: portfolioItem.shareTagOptions ?? false });
+          portfolio.shareWithAccount(accountId, {
+            shareTagOptions: portfolioItem.shareTagOptions ?? false,
+          });
         }
       }
 
@@ -310,20 +314,33 @@ export class CustomizationsStack extends AcceleratorStack {
   }
 
   /**
+   * Get service token of the IdentityCenterGetPermissionRoleArnProvider
+   */
+  private getPortfolioAssociationsRoleArnProviderServiceToken(): string {
+    const provider = new IdentityCenterGetPermissionRoleArnProvider(
+      this,
+      'Custom::PortfolioAssociationsRoleArnProvider',
+    );
+    return provider.serviceToken;
+  }
+
+  /**
    * Create portfolio principal associations
    * @param portfolio
    * @param portfolioItem
+   * @param serviceToken
    */
   private createPortfolioAssociations(
     portfolio: cdk.aws_servicecatalog.Portfolio,
     portfolioItem: PortfolioConfig,
+    serviceToken: string,
   ): void {
     // Add portfolio Associations
     let propagateAssociationsFlag = false;
     for (const portfolioAssociation of portfolioItem.portfolioAssociations ?? []) {
       const principalType = 'IAM';
 
-      const principalArn = this.getPrincipalArnForAssociation(portfolioAssociation, portfolioItem.name);
+      const principalArn = this.getPrincipalArnForAssociation(portfolioAssociation, portfolioItem.name, serviceToken);
       new cdk.aws_servicecatalog.CfnPortfolioPrincipalAssociation(
         this,
         `${portfolioItem.name}-${portfolioAssociation.name}-${portfolioAssociation.type}`,
@@ -348,10 +365,12 @@ export class CustomizationsStack extends AcceleratorStack {
    * Get the IAM resource ARN to associate with a portfolio
    * @param portfolioAssociation
    * @param portfolioName
+   * @param serviceToken
    */
   private getPrincipalArnForAssociation(
     portfolioAssociation: PortfolioAssociationConfig,
     portfolioName: string,
+    serviceToken: string,
   ): string {
     const associationType = portfolioAssociation.type.toLowerCase();
     const account = cdk.Stack.of(this).account;
@@ -359,7 +378,7 @@ export class CustomizationsStack extends AcceleratorStack {
     let principalArn = '';
 
     if (associationType === 'permissionset') {
-      principalArn = this.getPermissionSetRoleArn(portfolioAssociation.name, account);
+      principalArn = this.getPermissionSetRoleArn(portfolioName, portfolioAssociation.name, account, serviceToken);
       if (principalArn === '') {
         throw new Error(
           `Role ARN for SSO Permission Set ${portfolioAssociation.name} not found for Service Catalog portfolio ${portfolioName}`,
@@ -375,17 +394,24 @@ export class CustomizationsStack extends AcceleratorStack {
    * Retrieve the ARN of an IAM Role associated with an SSO Permission Set
    * @param permissionSetName
    * @param accountId
+   * @param serviceToken
    */
-  private getPermissionSetRoleArn(permissionSetName: string, accountId: string): string {
+  private getPermissionSetRoleArn(
+    portfolioName: string,
+    permissionSetName: string,
+    accountId: string,
+    serviceToken: string,
+  ): string {
     this.logger.info(
       `Looking up IAM Role ARN associated with AWS Identity Center Permission Set ${permissionSetName} in account ${accountId}`,
     );
     const permissionSetRoleArn = new IdentityCenterGetPermissionRoleArn(
       this,
-      pascalCase(`${permissionSetName}-${accountId}`),
+      pascalCase(`${portfolioName}-${permissionSetName}-${accountId}`),
       {
         permissionSetName: permissionSetName,
         accountId: accountId,
+        serviceToken: serviceToken,
       },
     );
     return permissionSetRoleArn.roleArn;
