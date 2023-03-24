@@ -162,8 +162,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
   "Parameters": {
     "AcceleratorPrefix": {
       "AllowedPattern": "[A-Za-z0-9-]+",
-      "Default": "AwsAccelerator",
-      "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AwsAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.",
+      "Default": "AWSAccelerator",
+      "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AWSAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.",
       "MaxLength": 15,
       "Type": "String",
     },
@@ -3261,8 +3261,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
   "Parameters": {
     "AcceleratorPrefix": {
       "AllowedPattern": "[A-Za-z0-9-]+",
-      "Default": "AwsAccelerator",
-      "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AwsAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.",
+      "Default": "AWSAccelerator",
+      "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AWSAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.",
       "MaxLength": 15,
       "Type": "String",
     },
@@ -6369,8 +6369,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
   "Parameters": {
     "AcceleratorPrefix": {
       "AllowedPattern": "[A-Za-z0-9-]+",
-      "Default": "AwsAccelerator",
-      "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AwsAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.",
+      "Default": "AWSAccelerator",
+      "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AWSAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.",
       "MaxLength": 15,
       "Type": "String",
     },
@@ -9481,8 +9481,8 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
   "Parameters": {
     "AcceleratorPrefix": {
       "AllowedPattern": "[A-Za-z0-9-]+",
-      "Default": "AwsAccelerator",
-      "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AwsAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.",
+      "Default": "AWSAccelerator",
+      "Description": "The prefix value for accelerator deployed resources. Leave the default value if using solution defined resource name prefix, the solution will use AWSAccelerator as resource name prefix. Note: Updating this value after initial installation will cause stack failure. Non-default value can not start with keyword "aws" or "ssm". Trailing dash (-) in non-default value will be ignored.",
       "MaxLength": 15,
       "Type": "String",
     },
