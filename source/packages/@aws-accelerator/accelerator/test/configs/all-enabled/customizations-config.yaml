@@ -66,6 +66,8 @@ customizations:
           name: EC2-Default-SSM-AD-Role
         - type: User
           name: breakGlassUser01
+        - type: PermissionSet
+          name: PermissionSet1
       products:
         - name: My-Product
           description: Sample product by lZA.
