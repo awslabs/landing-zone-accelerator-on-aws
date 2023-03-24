@@ -67,8 +67,6 @@ export class ResourceNamePrefixes extends Construct {
 
           if (event.RequestType === 'Update'){
 
-            const oldPrefixLowerCase = event.OldResourceProperties.prefix.toLowerCase();
-              
               var params = {
                 Name: paramName,
               };
@@ -139,7 +137,22 @@ export class ResourceNamePrefixes extends Construct {
               }
           }
           if (event.RequestType === 'Delete') {
-              await response.send(event, context, response.SUCCESS, {'Status': 'Custom resource deleted successfully' }, event.PhysicalResourceId);
+
+            var deleteParams = {
+              Name: paramName,
+            };
+            try {
+              await ssm.deleteParameter(deleteParams).promise();
+              console.log('LZA prefix parameter ' + paramName  + ' deleted successfully.');
+            }
+            catch (error) {
+              console.log(error);
+              if (error.code !== 'ParameterNotFound'){
+                await response.send(event, context, response.FAILED, {'FailureReason': error.code + ' error occurred while deleting LZA ssm parameter ' + paramName }, event.PhysicalResourceId);
+                return;
+              }
+            }
+            await response.send(event, context, response.SUCCESS, {'Status': 'Custom resource deleted successfully' }, event.PhysicalResourceId);
           }
           
           return;
@@ -151,7 +164,7 @@ export class ResourceNamePrefixes extends Construct {
         new cdk.aws_iam.PolicyStatement({
           sid: 'SsmReadParameterAccess',
           effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:PutParameter'],
+          actions: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:PutParameter', 'ssm:DeleteParameter'],
           resources: [
             `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
               cdk.Stack.of(this).account
@@ -172,7 +185,7 @@ export class ResourceNamePrefixes extends Construct {
         new cdk.aws_iam.PolicyStatement({
           sid: 'SsmReadParameterAccess',
           effect: cdk.aws_iam.Effect.ALLOW,
-          actions: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:PutParameter'],
+          actions: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:PutParameter', 'ssm:DeleteParameter'],
           resources: [
             `arn:${cdk.Stack.of(this).partition}:ssm:${cdk.Stack.of(this).region}:${
               cdk.Stack.of(this).account
