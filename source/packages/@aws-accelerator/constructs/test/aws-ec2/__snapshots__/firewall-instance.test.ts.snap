@@ -34,10 +34,7 @@ exports[`LaunchTemplate Construct(FirewallInstance):  Snapshot Test 1`] = `
           ],
         },
         "NetworkInterfaceId": {
-          "Fn::GetAtt": [
-            "TestFirewallNetworkInterface045307B6A",
-            "Id",
-          ],
+          "Ref": "TestFirewallNetworkInterface045307B6A",
         },
       },
       "Type": "AWS::EC2::EIPAssociation",
@@ -69,10 +66,7 @@ exports[`LaunchTemplate Construct(FirewallInstance):  Snapshot Test 1`] = `
             {
               "DeviceIndex": 0,
               "NetworkInterfaceId": {
-                "Fn::GetAtt": [
-                  "TestFirewallNetworkInterface045307B6A",
-                  "Id",
-                ],
+                "Ref": "TestFirewallNetworkInterface045307B6A",
               },
             },
           ],
