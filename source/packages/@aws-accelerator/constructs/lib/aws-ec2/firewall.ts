@@ -62,7 +62,6 @@ export class Firewall extends cdk.Resource implements IFirewall {
     this.networkInterfaces = this.setNetworkInterfaceProps();
     // Create launch template
     this.launchTemplate = this.createLaunchTemplate();
-    console.log(this.launchTemplate.launchTemplateName);
   }
 
   /**
@@ -101,7 +100,7 @@ export class Firewall extends cdk.Resource implements IFirewall {
         networkInterfaces.push(
           this.createEipInterface(
             networkInterface,
-            networkInterface.deviceIndex ? networkInterface.deviceIndex : deviceIndex,
+            networkInterface.deviceIndex !== undefined ? networkInterface.deviceIndex : deviceIndex,
           ),
         );
         deviceIndex += 1;
@@ -113,7 +112,7 @@ export class Firewall extends cdk.Resource implements IFirewall {
         networkInterfaces.push(
           this.createRouterInterface(
             networkInterface,
-            networkInterface.deviceIndex ? networkInterface.deviceIndex : deviceIndex,
+            networkInterface.deviceIndex !== undefined ? networkInterface.deviceIndex : deviceIndex,
           ),
         );
         deviceIndex += 1;
@@ -174,12 +173,12 @@ export class Firewall extends cdk.Resource implements IFirewall {
     // Associate EIP
     new cdk.aws_ec2.CfnEIPAssociation(this, `EipAssociation${deviceIndex}`, {
       allocationId: eip.attrAllocationId,
-      networkInterfaceId: eipInterface.attrId,
+      networkInterfaceId: eipInterface.ref,
     });
 
     return {
       deviceIndex: deviceIndex,
-      networkInterfaceId: eipInterface.attrId,
+      networkInterfaceId: eipInterface.ref,
     } as NetworkInterfaceItemConfig;
   }
 
@@ -209,7 +208,7 @@ export class Firewall extends cdk.Resource implements IFirewall {
 
     return {
       deviceIndex: deviceIndex,
-      networkInterfaceId: routerInterface.attrId,
+      networkInterfaceId: routerInterface.ref,
     } as NetworkInterfaceItemConfig;
   }
 }
