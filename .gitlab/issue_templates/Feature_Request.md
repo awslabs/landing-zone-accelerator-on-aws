@@ -21,7 +21,7 @@ Please complete all fields to ensure your submission is properly reviewed and pr
 ## Proposed Solution
 <!-- What steps would you take to solve the problem? !-->
 
-## Acceptance Criteia
+## Acceptance Criteria
 <!-- Please describe through the Given/When/Then (GWT) sequence:
 
     - Given some precondition
