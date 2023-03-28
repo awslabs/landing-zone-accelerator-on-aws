@@ -497,6 +497,7 @@ export class SecurityResourcesStack extends AcceleratorStack {
           configSnapshotDeliveryProperties: {
             deliveryFrequency: 'One_Hour',
           },
+          s3KeyPrefix: 'config',
         });
       }
     }
