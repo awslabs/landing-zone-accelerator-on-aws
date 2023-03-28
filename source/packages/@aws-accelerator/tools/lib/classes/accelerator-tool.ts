@@ -349,30 +349,37 @@ export class AcceleratorTool {
       new CodeBuildClient({}).send(new BatchGetProjectsCommand({ names: [installerCodeBuildProjectName] })),
     );
 
-    // Default assignments when no qualifier present
+    let isQualifierUsed = false;
     let acceleratorQualifier = 'AWSAccelerator';
-    let testerPipelineConfigRepositoryName = 'aws-accelerator-test-config';
-
-    let acceleratorPipelineStackNamePrefix = `${acceleratorQualifier}-PipelineStack`;
-    let acceleratorPipelineName = `${acceleratorQualifier}-Pipeline`;
-
-    // Accelerator tester configuration
-    let testerPipelineStackNamePrefix = `${acceleratorQualifier}-TesterPipelineStack`;
-    let testerStackNamePrefix = `${acceleratorQualifier}-TesterStack`;
     let acceleratorPrefix = 'AWSAccelerator';
+    let repoNamePrefix = 'aws-accelerator';
 
     for (const envVariable of batchGetProjectsCommandResponse.projects![0].environment!.environmentVariables!) {
       if (envVariable.name === 'ACCELERATOR_QUALIFIER') {
         acceleratorQualifier = envVariable.value!;
-        acceleratorPipelineStackNamePrefix = `${envVariable.value!}-pipeline-stack`;
-        acceleratorPipelineName = `${envVariable.value!}-pipeline`;
-        testerStackNamePrefix = `${envVariable.value!}-tester-stack`;
-        testerPipelineStackNamePrefix = `${envVariable.value!}-tester-pipeline-stack`;
-        testerPipelineConfigRepositoryName = `${envVariable.value!}-test-config`;
+        isQualifierUsed = true;
       }
       if (envVariable.name === 'ACCELERATOR_PREFIX') {
         acceleratorPrefix = envVariable.value!;
+        repoNamePrefix = envVariable.value!;
       }
+    }
+
+    // Default assignments with prefix when no qualifier present
+    let testerPipelineConfigRepositoryName = `${repoNamePrefix}-test-config`;
+    let acceleratorPipelineStackNamePrefix = `${acceleratorPrefix}-PipelineStack`;
+    let acceleratorPipelineName = `${acceleratorPrefix}-Pipeline`;
+    // Accelerator tester configuration
+    let testerPipelineStackNamePrefix = `${acceleratorPrefix}-TesterPipelineStack`;
+    let testerStackNamePrefix = `${acceleratorPrefix}-TesterStack`;
+
+    // Name resources based on qualifier
+    if (isQualifierUsed) {
+      acceleratorPipelineStackNamePrefix = `${acceleratorQualifier}-pipeline-stack`;
+      acceleratorPipelineName = `${acceleratorQualifier}-pipeline`;
+      testerStackNamePrefix = `${acceleratorQualifier}-tester-stack`;
+      testerPipelineStackNamePrefix = `${acceleratorQualifier}-tester-pipeline-stack`;
+      testerPipelineConfigRepositoryName = `${acceleratorQualifier}-test-config`;
     }
 
     //Delete accelerator target cloudformation stacks
