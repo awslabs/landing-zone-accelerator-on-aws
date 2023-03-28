@@ -224,7 +224,7 @@ export class GatewayLoadBalancersValidator {
     }
 
     if (targetGroup && !targetGroup.targets) {
-      this.validateTargetGroupAsg(gwlb, targetGroup, autoscalingGroups!, errors);
+      this.validateTargetGroupAsg(gwlb, targetGroup, errors, autoscalingGroups);
     }
   }
 
@@ -288,23 +288,30 @@ export class GatewayLoadBalancersValidator {
   private validateTargetGroupAsg(
     gwlb: GwlbConfig,
     targetGroup: TargetGroupItemConfig,
-    autoscalingGroups: Ec2FirewallAutoScalingGroupConfig[],
     errors: string[],
+    autoscalingGroups?: Ec2FirewallAutoScalingGroupConfig[],
   ) {
-    const asg = autoscalingGroups.find(
-      group => group.autoscaling.targetGroups && group.autoscaling.targetGroups[0] === targetGroup.name,
-    );
-
-    if (!asg) {
+    // Validate ASGs exist in customizations-config
+    if (!autoscalingGroups) {
       errors.push(
-        `[Gateway Load Balancer ${gwlb.name} target group ${targetGroup.name}]: firewall ASG for target group not found in customizations-config.yaml`,
+        `[Gateway Load Balancer ${gwlb.name} target group ${targetGroup.name}]: target group contains no targets and is not referenced in a firewall ASG. Either define instance targets or reference this target group in an ASG in customizations-config.yaml`,
       );
-    }
+    } else {
+      const asg = autoscalingGroups.find(
+        group => group.autoscaling.targetGroups && group.autoscaling.targetGroups[0] === targetGroup.name,
+      );
 
-    if (asg && asg.vpc !== gwlb.vpc) {
-      errors.push(
-        `[Gateway Load Balancer ${gwlb.name} target group ${targetGroup.name}]: targets do not exist in the same VPC as the load balancer`,
-      );
+      if (!asg) {
+        errors.push(
+          `[Gateway Load Balancer ${gwlb.name} target group ${targetGroup.name}]: firewall ASG for target group not found in customizations-config.yaml`,
+        );
+      }
+
+      if (asg && asg.vpc !== gwlb.vpc) {
+        errors.push(
+          `[Gateway Load Balancer ${gwlb.name} target group ${targetGroup.name}]: targets do not exist in the same VPC as the load balancer`,
+        );
+      }
     }
   }
 }
