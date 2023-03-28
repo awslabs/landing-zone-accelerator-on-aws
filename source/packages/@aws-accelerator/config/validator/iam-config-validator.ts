@@ -33,13 +33,16 @@ type VpcSubnetListsType = {
  * Validates iam configuration
  */
 export class IamConfigValidator {
-  constructor(configDir: string) {
-    const values = IamConfig.load(configDir);
-    const securityConfig = SecurityConfig.load(configDir);
+  constructor(
+    values: IamConfig,
+    accountsConfig: AccountsConfig,
+    networkConfig: NetworkConfig,
+    organizationConfig: OrganizationConfig,
+    securityConfig: SecurityConfig,
+    configDir: string,
+  ) {
     const ouIdNames: string[] = ['Root'];
-    const accountNames: string[] = [];
     const keyNames: string[] = [];
-    const vpcSubnetLists: VpcSubnetListsType[] = [];
 
     const errors: string[] = [];
     const logger = createLogger(['iam-config-validator']);
@@ -48,11 +51,11 @@ export class IamConfigValidator {
 
     //
     // Get list of OU ID names from organization config file
-    this.getOuIdNames(configDir, ouIdNames);
+    ouIdNames.push(...this.getOuIdNames(organizationConfig));
 
     //
     // Get list of Account names from account config file
-    this.getAccountNames(configDir, accountNames);
+    const accountNames = this.getAccountNames(accountsConfig);
 
     //
     // Get list of Kms key names from security config file
@@ -61,7 +64,7 @@ export class IamConfigValidator {
     //
     // Get Vpc and subnet lists
     //
-    this.getVpcSubnetLists(configDir, vpcSubnetLists);
+    const vpcSubnetLists = this.getVpcSubnetLists(networkConfig);
 
     //
     // Start Validation
@@ -84,31 +87,34 @@ export class IamConfigValidator {
     new ManagedActiveDirectoryValidator(values, vpcSubnetLists, ouIdNames, accountNames, errors);
 
     if (errors.length) {
-      throw new Error(`${IamConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      throw new Error(`${IamConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
   }
 
   /**
    * Prepare list of OU ids from organization config file
-   * @param configDir
+   * @param organizationConfig
+   * @returns
    */
-  private getOuIdNames(configDir: string, ouIdNames: string[]) {
-    for (const organizationalUnit of OrganizationConfig.load(configDir).organizationalUnits) {
+  private getOuIdNames(organizationConfig: OrganizationConfig): string[] {
+    const ouIdNames: string[] = [];
+    for (const organizationalUnit of organizationConfig.organizationalUnits) {
       ouIdNames.push(organizationalUnit.name);
     }
+    return ouIdNames;
   }
 
   /**
    * Prepare list of Account names from account config file
-   * @param configDir
+   * @param accountsConfig
+   * @returns
    */
-  private getAccountNames(configDir: string, accountNames: string[]) {
-    for (const accountItem of [
-      ...AccountsConfig.load(configDir).mandatoryAccounts,
-      ...AccountsConfig.load(configDir).workloadAccounts,
-    ]) {
+  private getAccountNames(accountsConfig: AccountsConfig): string[] {
+    const accountNames: string[] = [];
+    for (const accountItem of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
       accountNames.push(accountItem.name);
     }
+    return accountNames;
   }
 
   /**
@@ -127,11 +133,12 @@ export class IamConfigValidator {
 
   /**
    * Function to create vpc and subnet lists
-   * @param configDir
+   * @param networkConfig
+   * @returns
    */
-  private getVpcSubnetLists(configDir: string, vpcSubnetLists: VpcSubnetListsType[]) {
-    const networkConfigValues = NetworkConfig.load(configDir);
-    const vpcs = [...networkConfigValues.vpcs, ...(networkConfigValues.vpcTemplates ?? [])];
+  private getVpcSubnetLists(networkConfig: NetworkConfig): VpcSubnetListsType[] {
+    const vpcSubnetLists: VpcSubnetListsType[] = [];
+    const vpcs = [...networkConfig.vpcs, ...(networkConfig.vpcTemplates ?? [])];
     for (const vpc of vpcs) {
       for (const subnet of vpc.subnets ?? []) {
         vpcSubnetLists.push({
@@ -141,6 +148,7 @@ export class IamConfigValidator {
         });
       }
     }
+    return vpcSubnetLists;
   }
 
   /**
