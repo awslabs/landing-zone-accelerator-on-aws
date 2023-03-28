@@ -14,6 +14,7 @@
 import { createLogger } from '@aws-accelerator/utils';
 
 import { AccountConfig, AccountsConfig, GovCloudAccountConfig } from '../../lib/accounts-config';
+import { CustomizationsConfig } from '../../lib/customizations-config';
 import { GlobalConfig } from '../../lib/global-config';
 import { NetworkConfig } from '../../lib/network-config';
 import { OrganizationConfig } from '../../lib/organization-config';
@@ -35,11 +36,16 @@ import { VpcValidator } from './vpc-validator';
  * Validates network configuration
  */
 export class NetworkConfigValidator {
-  constructor(configDir: string) {
-    const values = NetworkConfig.load(configDir);
+  constructor(
+    values: NetworkConfig,
+    accountsConfig: AccountsConfig,
+    globalConfig: GlobalConfig,
+    organizationConfig: OrganizationConfig,
+    securityConfig: SecurityConfig,
+    configDir: string,
+    customizationsConfig?: CustomizationsConfig,
+  ) {
     const ouIdNames: string[] = ['Root'];
-    const accounts: (AccountConfig | GovCloudAccountConfig)[] = [];
-    const snsTopicNames: string[] = [];
 
     const errors: string[] = [];
     const logger = createLogger(['network-config-validator']);
@@ -48,15 +54,15 @@ export class NetworkConfigValidator {
 
     //
     // Get list of OU ID names from organization config file
-    this.getOuIdNames(configDir, ouIdNames);
+    ouIdNames.push(...this.getOuIdNames(organizationConfig));
 
     //
     // Get list of Account names from account config file
-    this.getAccounts(configDir, accounts);
+    const accounts = this.getAccounts(accountsConfig);
 
     //
     // Get the list of sns topic names from global and security config files
-    this.getSnsTopicNames(configDir, snsTopicNames);
+    const snsTopicNames = this.getSnsTopicNames(globalConfig, securityConfig);
 
     //
     // Instantiate helper method class
@@ -64,7 +70,7 @@ export class NetworkConfigValidator {
 
     //
     // Start Validation
-    new CentralNetworkValidator(values, configDir, helpers, errors);
+    new CentralNetworkValidator(values, configDir, helpers, errors, customizationsConfig);
     new TransitGatewayValidator(values, helpers, errors);
     new DhcpOptionsValidator(values, helpers, errors);
     new EndpointPoliciesValidator(values, configDir, helpers, errors);
@@ -76,42 +82,46 @@ export class NetworkConfigValidator {
     new CertificatesValidator(values, errors);
 
     if (errors.length) {
-      throw new Error(`${NetworkConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      throw new Error(`${NetworkConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
   }
   /**
    * Prepare list of OU ids from organization config file
-   * @param configDir
+   * @param organizationConfig
+   * @returns
    */
-  private getOuIdNames(configDir: string, ouIdNames: string[]) {
-    for (const organizationalUnit of OrganizationConfig.load(configDir).organizationalUnits) {
+  private getOuIdNames(organizationConfig: OrganizationConfig): string[] {
+    const ouIdNames: string[] = [];
+    for (const organizationalUnit of organizationConfig.organizationalUnits) {
       ouIdNames.push(organizationalUnit.name);
     }
+    return ouIdNames;
   }
 
   /**
    * Prepare list of Account names from account config file
-   * @param configDir
+   * @param accountsConfig
    */
-  private getAccounts(configDir: string, accounts: (AccountConfig | GovCloudAccountConfig)[]) {
-    for (const accountItem of [
-      ...AccountsConfig.load(configDir).mandatoryAccounts,
-      ...AccountsConfig.load(configDir).workloadAccounts,
-    ]) {
+  private getAccounts(accountsConfig: AccountsConfig): (AccountConfig | GovCloudAccountConfig)[] {
+    const accounts: (AccountConfig | GovCloudAccountConfig)[] = [];
+
+    for (const accountItem of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
       accounts.push(accountItem);
     }
+    return accounts;
   }
   /**
    * Prepare list of SNS Topic names from global and security config files
    * @param configDir
    */
-  private getSnsTopicNames(configDir: string, snsTopicNames: string[]) {
-    const securityConfig = SecurityConfig.load(configDir);
-    const globalConfig = GlobalConfig.load(configDir);
+  private getSnsTopicNames(globalConfig: GlobalConfig, securityConfig: SecurityConfig): string[] {
+    const snsTopicNames: string[] = [];
     const securtiySnsSubscriptions =
       securityConfig.centralSecurityServices.snsSubscriptions?.map(snsSubscription => snsSubscription.level) ?? [];
     const globalSnsSubscriptions = globalConfig.snsTopics?.topics.map(topic => topic.name) ?? [];
     snsTopicNames.push(...securtiySnsSubscriptions);
     snsTopicNames.push(...globalSnsSubscriptions);
+
+    return snsTopicNames;
   }
 }

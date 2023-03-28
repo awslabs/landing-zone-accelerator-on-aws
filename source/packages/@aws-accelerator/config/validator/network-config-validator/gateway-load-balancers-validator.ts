@@ -31,7 +31,12 @@ import { NetworkValidatorFunctions } from './network-validator-functions';
  * Class to validate Gateway LoadBalancers
  */
 export class GatewayLoadBalancersValidator {
-  constructor(values: NetworkConfig, configDir: string, helpers: NetworkValidatorFunctions, errors: string[]) {
+  constructor(
+    values: NetworkConfig,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+    customizationsConfig?: CustomizationsConfig,
+  ) {
     //
     // Validate gateway load balancers deployment account names
     //
@@ -40,7 +45,7 @@ export class GatewayLoadBalancersValidator {
     //
     // Validate GWLB configuration
     //
-    this.validateGwlbConfiguration(values, configDir, helpers, errors);
+    this.validateGwlbConfiguration(values, helpers, errors, customizationsConfig);
   }
 
   /**
@@ -93,12 +98,15 @@ export class GatewayLoadBalancersValidator {
   /**
    * Validate Gateway Load Balancer configuration
    * @param values
+   * @param helpers
+   * @param errors
+   * @param customizationsConfig
    */
   private validateGwlbConfiguration(
     values: NetworkConfig,
-    configDir: string,
     helpers: NetworkValidatorFunctions,
     errors: string[],
+    customizationsConfig?: CustomizationsConfig,
   ) {
     for (const gwlb of values.centralNetworkServices?.gatewayLoadBalancers ?? []) {
       const vpc = helpers.getVpc(gwlb.vpc);
@@ -115,7 +123,7 @@ export class GatewayLoadBalancersValidator {
       this.validateGwlbEndpoints(gwlb, helpers, errors);
       // Validate target groups
       if (gwlb.targetGroup) {
-        this.validateGwlbTargetGroup(gwlb, configDir, errors);
+        this.validateGwlbTargetGroup(gwlb, errors, customizationsConfig);
       }
     }
   }
@@ -189,15 +197,14 @@ export class GatewayLoadBalancersValidator {
   /**
    * Validate Gateway Load Balancer target group
    * @param gwlb
-   * @param configDir
    * @param errors
+   * @param customizationsConfig
    */
-  private validateGwlbTargetGroup(gwlb: GwlbConfig, configDir: string, errors: string[]) {
+  private validateGwlbTargetGroup(gwlb: GwlbConfig, errors: string[], customizationsConfig?: CustomizationsConfig) {
     // Pull values from customizations config
-    const customizationsConfig = CustomizationsConfig.load(configDir);
-    const firewallInstances = customizationsConfig.firewalls?.instances;
-    const autoscalingGroups = customizationsConfig.firewalls?.autoscalingGroups;
-    const targetGroups = customizationsConfig.firewalls?.targetGroups;
+    const firewallInstances = customizationsConfig?.firewalls?.instances;
+    const autoscalingGroups = customizationsConfig?.firewalls?.autoscalingGroups;
+    const targetGroups = customizationsConfig?.firewalls?.targetGroups;
 
     // Fetch target group from customizations config
     let targetGroup: TargetGroupItemConfig | undefined = undefined;

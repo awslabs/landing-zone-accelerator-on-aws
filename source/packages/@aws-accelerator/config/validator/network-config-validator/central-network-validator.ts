@@ -11,6 +11,7 @@
  *  and limitations under the License.
  */
 
+import { CustomizationsConfig } from '../../lib/customizations-config';
 import { NetworkConfig } from '../../lib/network-config';
 import { GatewayLoadBalancersValidator } from './gateway-load-balancers-validator';
 import { IpamValidator } from './ipam-validator';
@@ -22,12 +23,18 @@ import { Route53ResolverValidator } from './route53-resolver-validator';
  * Class to validate central network services
  */
 export class CentralNetworkValidator {
-  constructor(values: NetworkConfig, configDir: string, helpers: NetworkValidatorFunctions, errors: string[]) {
+  constructor(
+    values: NetworkConfig,
+    configDir: string,
+    helpers: NetworkValidatorFunctions,
+    errors: string[],
+    customizationsConfig?: CustomizationsConfig,
+  ) {
     // Validate delegated admin account name
     this.validateDelegatedAdmin(values, helpers, errors);
 
     // Validate central network services
-    new GatewayLoadBalancersValidator(values, configDir, helpers, errors);
+    new GatewayLoadBalancersValidator(values, helpers, errors, customizationsConfig);
     new IpamValidator(values, helpers, errors);
     new NetworkFirewallValidator(values, configDir, helpers, errors);
     new Route53ResolverValidator(values, configDir, helpers, errors);

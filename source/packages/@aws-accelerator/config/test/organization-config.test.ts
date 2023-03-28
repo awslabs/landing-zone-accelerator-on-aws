@@ -17,10 +17,7 @@ import * as path from 'path';
 
 describe('OrganizationConfig', () => {
   describe('Test config', () => {
-    const organizationConfigFromFile = OrganizationConfig.load(
-      path.resolve('../accelerator/test/configs/all-enabled'),
-      true,
-    );
+    const organizationConfigFromFile = OrganizationConfig.load(path.resolve('../accelerator/test/configs/all-enabled'));
     const organizationConfig = new OrganizationConfig();
     it('has loaded successfully', () => {
       expect(organizationConfigFromFile.enable).toBe(true);

@@ -416,124 +416,9 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * @param configDir
    * @param validateConfig
    */
-  constructor(
-    values?: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
-    configDir?: string,
-    validateConfig?: boolean,
-  ) {
-    const errors: string[] = [];
-
+  constructor(values?: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>) {
     if (values) {
-      if (configDir && validateConfig) {
-        // Validate presence of service control policy file
-        this.validateServiceControlPolicyFile(configDir, values, errors);
-
-        // Validate presence of tagging policy file
-        this.validateTaggingPolicyFile(configDir, values, errors);
-
-        // Validate presence of backup policy file
-        this.validateBackupPolicyFile(configDir, values, errors);
-      }
-
-      if (errors.length) {
-        logger.error(`${OrganizationConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
-        throw new Error('configuration validation failed');
-      }
       Object.assign(this, values);
-    }
-  }
-
-  /**
-   * Function to validate service control policy file existence
-   * @param configDir
-   * @param values
-   */
-  private validateServiceControlPolicyFile(
-    configDir: string,
-    values: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
-    errors: string[],
-  ) {
-    type validateScpItem = {
-      orgEntity: string;
-      orgEntityType: string;
-      appliedScpName: string[];
-    };
-    const validateScpCountForOrg: validateScpItem[] = [];
-    for (const serviceControlPolicy of values.serviceControlPolicies ?? []) {
-      if (!fs.existsSync(path.join(configDir, serviceControlPolicy.policy))) {
-        errors.push(
-          `Invalid policy file ${serviceControlPolicy.policy} for service control policy ${serviceControlPolicy.name} !!!`,
-        );
-      }
-
-      for (const orgUnitScp of serviceControlPolicy.deploymentTargets.organizationalUnits ?? []) {
-        //check in array to see if OU is already there
-        const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(orgUnitScp);
-        if (index > -1) {
-          validateScpCountForOrg[index].appliedScpName.push(serviceControlPolicy.name);
-        } else {
-          validateScpCountForOrg.push({
-            orgEntity: orgUnitScp,
-            orgEntityType: 'Organization Unit',
-            appliedScpName: [serviceControlPolicy.name],
-          });
-        }
-      }
-      for (const accUnitScp of serviceControlPolicy.deploymentTargets.accounts ?? []) {
-        //check in array to see if account is already there
-        const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(accUnitScp);
-        if (index > -1) {
-          validateScpCountForOrg[index].appliedScpName.push(serviceControlPolicy.name);
-        } else {
-          validateScpCountForOrg.push({
-            orgEntity: accUnitScp,
-            orgEntityType: 'Account',
-            appliedScpName: [serviceControlPolicy.name],
-          });
-        }
-      }
-    }
-    for (const validateOrgEntity of validateScpCountForOrg) {
-      if (validateOrgEntity.appliedScpName.length > 5) {
-        errors.push(
-          `${validateOrgEntity.orgEntityType} - ${validateOrgEntity.orgEntity} has ${validateOrgEntity.appliedScpName.length} out of 5 allowed scps`,
-        );
-      }
-    }
-  }
-
-  /**
-   * Function to validate tagging policy file existence
-   * @param configDir
-   * @param values
-   */
-  private validateTaggingPolicyFile(
-    configDir: string,
-    values: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
-    errors: string[],
-  ) {
-    for (const taggingPolicy of values.taggingPolicies ?? []) {
-      if (!fs.existsSync(path.join(configDir, taggingPolicy.policy))) {
-        errors.push(`Invalid policy file ${taggingPolicy.policy} for tagging policy ${taggingPolicy.name} !!!`);
-      }
-    }
-  }
-
-  /**
-   * Function to validate presence of backup policy file existence
-   * @param configDir
-   * @param values
-   */
-  private validateBackupPolicyFile(
-    configDir: string,
-    values: t.TypeOf<typeof OrganizationConfigTypes.organizationConfig>,
-    errors: string[],
-  ) {
-    // Validate presence of backup policy file
-    for (const backupPolicy of values.backupPolicies ?? []) {
-      if (!fs.existsSync(path.join(configDir, backupPolicy.policy))) {
-        errors.push(`Invalid policy file ${backupPolicy.policy} for backup policy ${backupPolicy.name} !!!`);
-      }
     }
   }
 
@@ -543,10 +428,10 @@ export class OrganizationConfig implements t.TypeOf<typeof OrganizationConfigTyp
    * @param validateConfig
    * @returns
    */
-  static load(dir: string, validateConfig?: boolean): OrganizationConfig {
+  static load(dir: string): OrganizationConfig {
     const buffer = fs.readFileSync(path.join(dir, OrganizationConfig.FILENAME), 'utf8');
     const values = t.parse(OrganizationConfigTypes.organizationConfig, yaml.load(buffer));
-    return new OrganizationConfig(values, dir, validateConfig);
+    return new OrganizationConfig(values);
   }
 
   /**
