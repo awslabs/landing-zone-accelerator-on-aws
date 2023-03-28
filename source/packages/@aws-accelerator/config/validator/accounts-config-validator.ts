@@ -17,8 +17,7 @@ import { AccountsConfig } from '../lib/accounts-config';
 import { OrganizationConfig } from '../lib/organization-config';
 
 export class AccountsConfigValidator {
-  constructor(accountsConfig: AccountsConfig, organizationConfig: OrganizationConfig) {
-    const values = accountsConfig;
+  constructor(values: AccountsConfig, organizationConfig: OrganizationConfig) {
     const ouIdNames: string[] = ['Root'];
 
     const errors: string[] = [];
@@ -49,7 +48,7 @@ export class AccountsConfigValidator {
     this.validateEmails(values, errors);
 
     if (errors.length) {
-      throw new Error(`${AccountsConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      throw new Error(`${AccountsConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
   }
 

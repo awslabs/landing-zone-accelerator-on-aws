@@ -35,10 +35,16 @@ import { SecurityConfig } from '../lib/security-config';
  * Validates customization configuration
  */
 export class CustomizationsConfigValidator {
-  constructor(configDir: string) {
-    const values = CustomizationsConfig.load(configDir);
+  constructor(
+    values: CustomizationsConfig,
+    accountsConfig: AccountsConfig,
+    globalConfig: GlobalConfig,
+    networkConfig: NetworkConfig,
+    organizationConfig: OrganizationConfig,
+    securityConfig: SecurityConfig,
+    configDir: string,
+  ) {
     const ouIdNames: string[] = ['Root'];
-    const accountNames: string[] = [];
 
     const errors: string[] = [];
     const logger = createLogger(['customizations-config-validator']);
@@ -47,45 +53,58 @@ export class CustomizationsConfigValidator {
 
     //
     // Get list of OU ID names from organization config file
-    this.getOuIdNames(configDir, ouIdNames);
+    ouIdNames.push(...this.getOuIdNames(organizationConfig));
 
     //
     // Get list of Account names from account config file
-    this.getAccountNames(configDir, accountNames);
+    const accountNames = this.getAccountNames(accountsConfig);
 
     //
     // Start Validation
     // Validate customizations
-    new CustomizationValidator(values, ouIdNames, configDir, accountNames, errors);
+    new CustomizationValidator(
+      values,
+      accountsConfig,
+      globalConfig,
+      networkConfig,
+      securityConfig,
+      ouIdNames,
+      configDir,
+      accountNames,
+      errors,
+    );
 
     // Validate firewalls
-    new FirewallValidator(values, configDir, errors);
+    new FirewallValidator(values, networkConfig, securityConfig, configDir, errors);
 
     if (errors.length) {
-      throw new Error(`${CustomizationsConfig.FILENAME} has ${errors.length} issues: ${errors.join(' ')}`);
+      throw new Error(`${CustomizationsConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
   }
   /**
    * Prepare list of OU ids from organization config file
-   * @param configDir
+   * @param organizationConfig
+   * @returns
    */
-  private getOuIdNames(configDir: string, ouIdNames: string[]) {
-    for (const organizationalUnit of OrganizationConfig.load(configDir).organizationalUnits) {
+  private getOuIdNames(organizationConfig: OrganizationConfig): string[] {
+    const ouIdNames: string[] = [];
+    for (const organizationalUnit of organizationConfig.organizationalUnits) {
       ouIdNames.push(organizationalUnit.name);
     }
+    return ouIdNames;
   }
 
   /**
    * Prepare list of Account names from account config file
    * @param configDir
    */
-  private getAccountNames(configDir: string, accountNames: string[]) {
-    for (const accountItem of [
-      ...AccountsConfig.load(configDir).mandatoryAccounts,
-      ...AccountsConfig.load(configDir).workloadAccounts,
-    ]) {
+  private getAccountNames(accountsConfig: AccountsConfig): string[] {
+    const accountNames: string[] = [];
+
+    for (const accountItem of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
       accountNames.push(accountItem.name);
     }
+    return accountNames;
   }
 }
 
@@ -95,6 +114,10 @@ export class CustomizationsConfigValidator {
 class CustomizationValidator {
   constructor(
     values: CustomizationsConfig,
+    accountsConfig: AccountsConfig,
+    globalConfig: GlobalConfig,
+    networkConfig: NetworkConfig,
+    securityConfig: SecurityConfig,
     ouIdNames: string[],
     configDir: string,
     accountNames: string[],
@@ -116,10 +139,10 @@ class CustomizationValidator {
     this.validateTemplateFile(configDir, values, errors);
 
     // Validate applications inputs
-    this.validateApplicationsInputs(configDir, values, errors);
+    this.validateApplicationsInputs(configDir, values, globalConfig, networkConfig, securityConfig, errors);
 
     // Validate Service Catalog portfolio inputs
-    this.validateServiceCatalogInputs(configDir, values, errors, accountNames, ouIdNames);
+    this.validateServiceCatalogInputs(values, accountsConfig, errors, accountNames, ouIdNames);
   }
 
   /**
@@ -276,11 +299,11 @@ class CustomizationValidator {
   private validateApplicationsInputs(
     configDir: string,
     values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    globalConfig: GlobalConfig,
+    networkConfig: NetworkConfig,
+    securityConfig: SecurityConfig,
     errors: string[],
   ) {
-    const loadNetworkConfig = NetworkConfig.load(configDir);
-    const loadSecurityConfig = SecurityConfig.load(configDir);
-    const loadGlobalConfig = GlobalConfig.load(configDir);
     const helpers = new CustomizationHelperMethods();
     const appNames: string[] = [];
     for (const app of values.applications ?? []) {
@@ -288,9 +311,9 @@ class CustomizationValidator {
 
       //check if appName with prefixes is over 128 characters
       // @ts-ignore
-      this.checkAppName(app, loadGlobalConfig, errors);
+      this.checkAppName(app, globalConfig, errors);
       // check if vpc actually exists
-      const vpcCheck = helpers.checkVpcInConfig(app.vpc, loadNetworkConfig);
+      const vpcCheck = helpers.checkVpcInConfig(app.vpc, networkConfig);
       if (!vpcCheck) {
         errors.push(`[Application ${app.name}: VPC ${app.vpc} does not exist in file network-config.yaml]`);
       }
@@ -310,7 +333,7 @@ class CustomizationValidator {
         // @ts-ignore
         this.checkNlb(app, vpcCheck, helpers, errors);
         // @ts-ignore
-        this.checkLaunchTemplate(app, vpcCheck, helpers, loadSecurityConfig, errors);
+        this.checkLaunchTemplate(app, vpcCheck, helpers, securityConfig, errors);
         // @ts-ignore
         this.checkAutoScaling(app, vpcCheck, helpers, errors);
       }
@@ -548,13 +571,12 @@ class CustomizationValidator {
    * @param errors
    */
   private validateServiceCatalogInputs(
-    configDir: string,
     values: t.TypeOf<typeof CustomizationsConfigTypes.customizationsConfig>,
+    accountsConfig: AccountsConfig,
     errors: string[],
     accountNames: string[],
     ouIdNames: string[],
   ) {
-    const accountsConfig = AccountsConfig.load(configDir);
     const managementAccount = accountsConfig.getManagementAccount().name;
 
     this.validateServiceCatalogShareTargetAccounts(values, accountNames, errors);
@@ -806,15 +828,25 @@ class CustomizationHelperMethods {
 }
 
 class FirewallValidator {
-  constructor(values: CustomizationsConfig, configDir: string, errors: string[]) {
+  constructor(
+    values: CustomizationsConfig,
+    networkConfig: NetworkConfig,
+    securityConfig: SecurityConfig,
+    configDir: string,
+    errors: string[],
+  ) {
     // Validate firewall instances
-    this.validateFirewalls(values, configDir, errors);
+    this.validateFirewalls(values, networkConfig, securityConfig, configDir, errors);
   }
 
-  private validateFirewalls(values: CustomizationsConfig, configDir: string, errors: string[]) {
-    // Load configs and helper methods
-    const networkConfig = NetworkConfig.load(configDir);
-    const securityConfig = SecurityConfig.load(configDir);
+  private validateFirewalls(
+    values: CustomizationsConfig,
+    networkConfig: NetworkConfig,
+    securityConfig: SecurityConfig,
+    configDir: string,
+    errors: string[],
+  ) {
+    // Load helper methods
     const helpers = new CustomizationHelperMethods();
 
     // Validate firewall instance configs
