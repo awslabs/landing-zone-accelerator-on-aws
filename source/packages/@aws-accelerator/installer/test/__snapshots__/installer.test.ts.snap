@@ -80,15 +80,6 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
         },
         {
           "Label": {
-            "default": "Config Repository Configuration",
-          },
-          "Parameters": [
-            "ConfigRepositoryName",
-            "ConfigRepositoryBranchName",
-          ],
-        },
-        {
-          "Label": {
             "default": "Pipeline Configuration",
           },
           "Parameters": [
@@ -113,6 +104,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
           "Parameters": [
             "ControlTowerEnabled",
             "AcceleratorPrefix",
+            "UseExistingConfigRepo",
+            "ExistingConfigRepositoryName",
+            "ExistingConfigRepositoryBranchName",
           ],
         },
       ],
@@ -126,17 +120,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
         "AuditAccountEmail": {
           "default": "Audit Account Email",
         },
-        "ConfigRepositoryBranchName": {
-          "default": "Config Repository Branch Name",
-        },
-        "ConfigRepositoryName": {
-          "default": "Config Repository Name",
-        },
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
         },
         "EnableApprovalStage": {
           "default": "Enable Approval Stage",
+        },
+        "ExistingConfigRepositoryBranchName": {
+          "default": "Existing Config Repository Branch Name",
+        },
+        "ExistingConfigRepositoryName": {
+          "default": "Existing Config Repository Name",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -155,6 +149,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
         },
         "RepositorySource": {
           "default": "Source",
+        },
+        "UseExistingConfigRepo": {
+          "default": "Use Existing Config Repository",
         },
       },
     },
@@ -177,16 +174,6 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
-    "ConfigRepositoryBranchName": {
-      "Default": "main",
-      "Description": "If using a CodeCommit repository that already exists, specify the branch name to pull the accelerator configuration from. Leave the default value if using the solution-deployed repository or if using the main branch of an existing repository. Note: Updating this value after initial installation may cause adverse affects.",
-      "Type": "String",
-    },
-    "ConfigRepositoryName": {
-      "Default": "aws-accelerator-config",
-      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration. Leave the default value if using the solution-deployed repository, the solution will deploy a new repository (aws-accelerator-config). Note: Updating this value after initial installation may cause adverse affects.",
-      "Type": "String",
-    },
     "ControlTowerEnabled": {
       "AllowedValues": [
         "Yes",
@@ -203,6 +190,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
       ],
       "Default": "Yes",
       "Description": "Select yes to add a Manual Approval stage to accelerator pipeline",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryBranchName": {
+      "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryName": {
+      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -241,6 +236,15 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
       ],
       "Default": "github",
       "Description": "Specify the git host",
+      "Type": "String",
+    },
+    "UseExistingConfigRepo": {
+      "AllowedValues": [
+        "Yes",
+        "No",
+      ],
+      "Default": "No",
+      "Description": "Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
   },
@@ -1557,17 +1561,24 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 1`] = `
               },
             },
             {
-              "Name": "ACCELERATOR_CONFIG_REPOSITORY_NAME",
+              "Name": "USE_EXISTING_CONFIG_REPO",
               "Type": "PLAINTEXT",
               "Value": {
-                "Ref": "ConfigRepositoryName",
+                "Ref": "UseExistingConfigRepo",
               },
             },
             {
-              "Name": "ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Name": "EXISTING_CONFIG_REPOSITORY_NAME",
               "Type": "PLAINTEXT",
               "Value": {
-                "Ref": "ConfigRepositoryBranchName",
+                "Ref": "ExistingConfigRepositoryName",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryBranchName",
               },
             },
             {
@@ -1677,12 +1688,26 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+      - if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Ref": "AWS::Region",
                 },
                 "; then BOOTSTRAPPED_HOME="no"; fi
-      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+      - if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -1709,7 +1734,14 @@ phases:
       - yarn lerna link
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -1718,7 +1750,14 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi
-      - if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -1740,12 +1779,26 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 ":iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));
-                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                          if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Ref": "AWS::Region",
                 },
                 "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                          if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -1756,12 +1809,26 @@ phases:
                   ],
                 },
                 "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 {
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -3106,6 +3173,121 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
           "Version": "2012-10-17",
         },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateInstallerValidateResource24181D5D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ValidateInstallerValidationFunction21674768",
+            "Arn",
+          ],
+        },
+        "existingConfigRepositoryBranchName": {
+          "Ref": "ExistingConfigRepositoryBranchName",
+        },
+        "existingConfigRepositoryName": {
+          "Ref": "ExistingConfigRepositoryName",
+        },
+        "resourceType": "Custom::ValidateInstallerStack",
+        "useExistingConfigRepo": {
+          "Ref": "UseExistingConfigRepo",
+        },
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateInstallerValidationFunction21674768": {
+      "DependsOn": [
+        "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "ZipFile": "
+          const response = require('cfn-response'); 
+          exports.handler = async function (event, context) { 
+          console.log(JSON.stringify(event, null, 4)); 
+
+          const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
+          const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
+          const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+
+          if (useExistingConfigRepo === 'Yes') {
+            console.log('Here - 1');
+            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName ===''){
+                console.log('Here - 2');
+                await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
+                return;
+            }
+          }
+
+          // End of Validation
+          await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+          return;
+      }",
+        },
+        "Description": "This function validates installer parameters",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
@@ -3193,15 +3375,6 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
         },
         {
           "Label": {
-            "default": "Config Repository Configuration",
-          },
-          "Parameters": [
-            "ConfigRepositoryName",
-            "ConfigRepositoryBranchName",
-          ],
-        },
-        {
-          "Label": {
             "default": "Pipeline Configuration",
           },
           "Parameters": [
@@ -3226,6 +3399,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
           "Parameters": [
             "ControlTowerEnabled",
             "AcceleratorPrefix",
+            "UseExistingConfigRepo",
+            "ExistingConfigRepositoryName",
+            "ExistingConfigRepositoryBranchName",
           ],
         },
       ],
@@ -3239,17 +3415,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
         "AuditAccountEmail": {
           "default": "Audit Account Email",
         },
-        "ConfigRepositoryBranchName": {
-          "default": "Config Repository Branch Name",
-        },
-        "ConfigRepositoryName": {
-          "default": "Config Repository Name",
-        },
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
         },
         "EnableApprovalStage": {
           "default": "Enable Approval Stage",
+        },
+        "ExistingConfigRepositoryBranchName": {
+          "default": "Existing Config Repository Branch Name",
+        },
+        "ExistingConfigRepositoryName": {
+          "default": "Existing Config Repository Name",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -3268,6 +3444,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
         },
         "RepositorySource": {
           "default": "Source",
+        },
+        "UseExistingConfigRepo": {
+          "default": "Use Existing Config Repository",
         },
       },
     },
@@ -3290,16 +3469,6 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
-    "ConfigRepositoryBranchName": {
-      "Default": "main",
-      "Description": "If using a CodeCommit repository that already exists, specify the branch name to pull the accelerator configuration from. Leave the default value if using the solution-deployed repository or if using the main branch of an existing repository. Note: Updating this value after initial installation may cause adverse affects.",
-      "Type": "String",
-    },
-    "ConfigRepositoryName": {
-      "Default": "aws-accelerator-config",
-      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration. Leave the default value if using the solution-deployed repository, the solution will deploy a new repository (aws-accelerator-config). Note: Updating this value after initial installation may cause adverse affects.",
-      "Type": "String",
-    },
     "ControlTowerEnabled": {
       "AllowedValues": [
         "Yes",
@@ -3316,6 +3485,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
       ],
       "Default": "Yes",
       "Description": "Select yes to add a Manual Approval stage to accelerator pipeline",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryBranchName": {
+      "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryName": {
+      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -3354,6 +3531,15 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
       ],
       "Default": "github",
       "Description": "Specify the git host",
+      "Type": "String",
+    },
+    "UseExistingConfigRepo": {
+      "AllowedValues": [
+        "Yes",
+        "No",
+      ],
+      "Default": "No",
+      "Description": "Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
   },
@@ -4670,17 +4856,24 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 2`] = `
               },
             },
             {
-              "Name": "ACCELERATOR_CONFIG_REPOSITORY_NAME",
+              "Name": "USE_EXISTING_CONFIG_REPO",
               "Type": "PLAINTEXT",
               "Value": {
-                "Ref": "ConfigRepositoryName",
+                "Ref": "UseExistingConfigRepo",
               },
             },
             {
-              "Name": "ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Name": "EXISTING_CONFIG_REPOSITORY_NAME",
               "Type": "PLAINTEXT",
               "Value": {
-                "Ref": "ConfigRepositoryBranchName",
+                "Ref": "ExistingConfigRepositoryName",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryBranchName",
               },
             },
             {
@@ -4780,12 +4973,26 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+      - if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Ref": "AWS::Region",
                 },
                 "; then BOOTSTRAPPED_HOME="no"; fi
-      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+      - if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -4812,7 +5019,14 @@ phases:
       - yarn lerna link
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -4821,7 +5035,14 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi
-      - if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -4843,12 +5064,26 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 ":iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));
-                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                          if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Ref": "AWS::Region",
                 },
                 "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                          if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -4859,12 +5094,26 @@ phases:
                   ],
                 },
                 "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 {
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -6212,6 +6461,121 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       },
       "Type": "AWS::IAM::Role",
     },
+    "ValidateInstallerValidateResource24181D5D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ValidateInstallerValidationFunction21674768",
+            "Arn",
+          ],
+        },
+        "existingConfigRepositoryBranchName": {
+          "Ref": "ExistingConfigRepositoryBranchName",
+        },
+        "existingConfigRepositoryName": {
+          "Ref": "ExistingConfigRepositoryName",
+        },
+        "resourceType": "Custom::ValidateInstallerStack",
+        "useExistingConfigRepo": {
+          "Ref": "UseExistingConfigRepo",
+        },
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateInstallerValidationFunction21674768": {
+      "DependsOn": [
+        "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "ZipFile": "
+          const response = require('cfn-response'); 
+          exports.handler = async function (event, context) { 
+          console.log(JSON.stringify(event, null, 4)); 
+
+          const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
+          const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
+          const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+
+          if (useExistingConfigRepo === 'Yes') {
+            console.log('Here - 1');
+            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName ===''){
+                console.log('Here - 2');
+                await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
+                return;
+            }
+          }
+
+          // End of Validation
+          await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+          return;
+      }",
+        },
+        "Description": "This function validates installer parameters",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
   },
 }
 `;
@@ -6296,15 +6660,6 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
         },
         {
           "Label": {
-            "default": "Config Repository Configuration",
-          },
-          "Parameters": [
-            "ConfigRepositoryName",
-            "ConfigRepositoryBranchName",
-          ],
-        },
-        {
-          "Label": {
             "default": "Pipeline Configuration",
           },
           "Parameters": [
@@ -6329,6 +6684,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
           "Parameters": [
             "ControlTowerEnabled",
             "AcceleratorPrefix",
+            "UseExistingConfigRepo",
+            "ExistingConfigRepositoryName",
+            "ExistingConfigRepositoryBranchName",
           ],
         },
         {
@@ -6355,17 +6713,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
         "AuditAccountEmail": {
           "default": "Audit Account Email",
         },
-        "ConfigRepositoryBranchName": {
-          "default": "Config Repository Branch Name",
-        },
-        "ConfigRepositoryName": {
-          "default": "Config Repository Name",
-        },
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
         },
         "EnableApprovalStage": {
           "default": "Enable Approval Stage",
+        },
+        "ExistingConfigRepositoryBranchName": {
+          "default": "Existing Config Repository Branch Name",
+        },
+        "ExistingConfigRepositoryName": {
+          "default": "Existing Config Repository Name",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -6390,6 +6748,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
         },
         "RepositorySource": {
           "default": "Source",
+        },
+        "UseExistingConfigRepo": {
+          "default": "Use Existing Config Repository",
         },
       },
     },
@@ -6417,16 +6778,6 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
-    "ConfigRepositoryBranchName": {
-      "Default": "main",
-      "Description": "If using a CodeCommit repository that already exists, specify the branch name to pull the accelerator configuration from. Leave the default value if using the solution-deployed repository or if using the main branch of an existing repository. Note: Updating this value after initial installation may cause adverse affects.",
-      "Type": "String",
-    },
-    "ConfigRepositoryName": {
-      "Default": "aws-accelerator-config",
-      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration. Leave the default value if using the solution-deployed repository, the solution will deploy a new repository (aws-accelerator-config). Note: Updating this value after initial installation may cause adverse affects.",
-      "Type": "String",
-    },
     "ControlTowerEnabled": {
       "AllowedValues": [
         "Yes",
@@ -6443,6 +6794,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
       ],
       "Default": "Yes",
       "Description": "Select yes to add a Manual Approval stage to accelerator pipeline",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryBranchName": {
+      "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryName": {
+      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -6489,6 +6848,15 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
       ],
       "Default": "github",
       "Description": "Specify the git host",
+      "Type": "String",
+    },
+    "UseExistingConfigRepo": {
+      "AllowedValues": [
+        "Yes",
+        "No",
+      ],
+      "Default": "No",
+      "Description": "Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
   },
@@ -7781,17 +8149,24 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 3`] = `
               },
             },
             {
-              "Name": "ACCELERATOR_CONFIG_REPOSITORY_NAME",
+              "Name": "USE_EXISTING_CONFIG_REPO",
               "Type": "PLAINTEXT",
               "Value": {
-                "Ref": "ConfigRepositoryName",
+                "Ref": "UseExistingConfigRepo",
               },
             },
             {
-              "Name": "ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Name": "EXISTING_CONFIG_REPOSITORY_NAME",
               "Type": "PLAINTEXT",
               "Value": {
-                "Ref": "ConfigRepositoryBranchName",
+                "Ref": "ExistingConfigRepositoryName",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryBranchName",
               },
             },
             {
@@ -7919,12 +8294,26 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+      - if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Ref": "AWS::Region",
                 },
                 "; then BOOTSTRAPPED_HOME="no"; fi
-      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+      - if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -7951,7 +8340,14 @@ phases:
       - yarn lerna link
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -7960,7 +8356,14 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi
-      - if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -7982,12 +8385,26 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 ":iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));
-                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                          if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Ref": "AWS::Region",
                 },
                 "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                          if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -7998,12 +8415,26 @@ phases:
                   ],
                 },
                 "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 {
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -9338,6 +9769,121 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
       },
       "Type": "AWS::IAM::Role",
     },
+    "ValidateInstallerValidateResource24181D5D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ValidateInstallerValidationFunction21674768",
+            "Arn",
+          ],
+        },
+        "existingConfigRepositoryBranchName": {
+          "Ref": "ExistingConfigRepositoryBranchName",
+        },
+        "existingConfigRepositoryName": {
+          "Ref": "ExistingConfigRepositoryName",
+        },
+        "resourceType": "Custom::ValidateInstallerStack",
+        "useExistingConfigRepo": {
+          "Ref": "UseExistingConfigRepo",
+        },
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateInstallerValidationFunction21674768": {
+      "DependsOn": [
+        "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "ZipFile": "
+          const response = require('cfn-response'); 
+          exports.handler = async function (event, context) { 
+          console.log(JSON.stringify(event, null, 4)); 
+
+          const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
+          const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
+          const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+
+          if (useExistingConfigRepo === 'Yes') {
+            console.log('Here - 1');
+            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName ===''){
+                console.log('Here - 2');
+                await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
+                return;
+            }
+          }
+
+          // End of Validation
+          await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+          return;
+      }",
+        },
+        "Description": "This function validates installer parameters",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
   },
 }
 `;
@@ -9422,15 +9968,6 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
         },
         {
           "Label": {
-            "default": "Config Repository Configuration",
-          },
-          "Parameters": [
-            "ConfigRepositoryName",
-            "ConfigRepositoryBranchName",
-          ],
-        },
-        {
-          "Label": {
             "default": "Pipeline Configuration",
           },
           "Parameters": [
@@ -9455,6 +9992,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
           "Parameters": [
             "ControlTowerEnabled",
             "AcceleratorPrefix",
+            "UseExistingConfigRepo",
+            "ExistingConfigRepositoryName",
+            "ExistingConfigRepositoryBranchName",
           ],
         },
         {
@@ -9481,17 +10021,17 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
         "AuditAccountEmail": {
           "default": "Audit Account Email",
         },
-        "ConfigRepositoryBranchName": {
-          "default": "Config Repository Branch Name",
-        },
-        "ConfigRepositoryName": {
-          "default": "Config Repository Name",
-        },
         "ControlTowerEnabled": {
           "default": "Control Tower Environment",
         },
         "EnableApprovalStage": {
           "default": "Enable Approval Stage",
+        },
+        "ExistingConfigRepositoryBranchName": {
+          "default": "Existing Config Repository Branch Name",
+        },
+        "ExistingConfigRepositoryName": {
+          "default": "Existing Config Repository Name",
         },
         "LogArchiveAccountEmail": {
           "default": "Log Archive Account Email",
@@ -9516,6 +10056,9 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
         },
         "RepositorySource": {
           "default": "Source",
+        },
+        "UseExistingConfigRepo": {
+          "default": "Use Existing Config Repository",
         },
       },
     },
@@ -9543,16 +10086,6 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
       "Description": "The security audit account (also referred to as the audit account)",
       "Type": "String",
     },
-    "ConfigRepositoryBranchName": {
-      "Default": "main",
-      "Description": "If using a CodeCommit repository that already exists, specify the branch name to pull the accelerator configuration from. Leave the default value if using the solution-deployed repository or if using the main branch of an existing repository. Note: Updating this value after initial installation may cause adverse affects.",
-      "Type": "String",
-    },
-    "ConfigRepositoryName": {
-      "Default": "aws-accelerator-config",
-      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration. Leave the default value if using the solution-deployed repository, the solution will deploy a new repository (aws-accelerator-config). Note: Updating this value after initial installation may cause adverse affects.",
-      "Type": "String",
-    },
     "ControlTowerEnabled": {
       "AllowedValues": [
         "Yes",
@@ -9569,6 +10102,14 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
       ],
       "Default": "Yes",
       "Description": "Select yes to add a Manual Approval stage to accelerator pipeline",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryBranchName": {
+      "Description": "Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.",
+      "Type": "String",
+    },
+    "ExistingConfigRepositoryName": {
+      "Description": "The name of an existing CodeCommit repository hosting the accelerator configuration.",
       "Type": "String",
     },
     "LogArchiveAccountEmail": {
@@ -9615,6 +10156,15 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
       ],
       "Default": "github",
       "Description": "Specify the git host",
+      "Type": "String",
+    },
+    "UseExistingConfigRepo": {
+      "AllowedValues": [
+        "Yes",
+        "No",
+      ],
+      "Default": "No",
+      "Description": "Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.",
       "Type": "String",
     },
   },
@@ -10907,17 +11457,24 @@ exports[`InstallerStack Stack(installer):  Snapshot Test 4`] = `
               },
             },
             {
-              "Name": "ACCELERATOR_CONFIG_REPOSITORY_NAME",
+              "Name": "USE_EXISTING_CONFIG_REPO",
               "Type": "PLAINTEXT",
               "Value": {
-                "Ref": "ConfigRepositoryName",
+                "Ref": "UseExistingConfigRepo",
               },
             },
             {
-              "Name": "ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Name": "EXISTING_CONFIG_REPOSITORY_NAME",
               "Type": "PLAINTEXT",
               "Value": {
-                "Ref": "ConfigRepositoryBranchName",
+                "Ref": "ExistingConfigRepositoryName",
+              },
+            },
+            {
+              "Name": "EXISTING_CONFIG_REPOSITORY_BRANCH_NAME",
+              "Type": "PLAINTEXT",
+              "Value": {
+                "Ref": "ExistingConfigRepositoryBranchName",
               },
             },
             {
@@ -11035,12 +11592,26 @@ phases:
     commands:
       - ENABLE_EXTERNAL_PIPELINE_ACCOUNT="no"
       - if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; fi
-      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+      - if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Ref": "AWS::Region",
                 },
                 "; then BOOTSTRAPPED_HOME="no"; fi
-      - if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+      - if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -11067,7 +11638,14 @@ phases:
       - yarn lerna link
       - yarn build
       - cd packages/@aws-accelerator/installer
-      - if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -11076,7 +11654,14 @@ phases:
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi
-      - if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://",
+      - if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://",
                 {
                   "Ref": "AWS::AccountId",
                 },
@@ -11098,12 +11683,26 @@ phases:
                   "Ref": "AWS::Partition",
                 },
                 ":iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));
-                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                          if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Ref": "AWS::Region",
                 },
                 "; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                          if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ",
+                          if ! aws cloudformation describe-stacks --stack-name ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit --region ",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -11114,12 +11713,26 @@ phases:
                   ],
                 },
                 "; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 {
                   "Ref": "AWS::Region",
                 },
                 " --qualifier accel; fi;
-                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
+                          if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ",
+                {
+                  "Fn::GetAtt": [
+                    "ResourceNamePrefixesGetPrefixResource96A10E6E",
+                    "acceleratorPrefix",
+                  ],
+                },
+                "-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/",
                 {
                   "Fn::FindInMap": [
                     "GlobalRegionMap",
@@ -12451,6 +13064,121 @@ async function updatePipelineDetailsForBothPipelines(secretValue) {
           ],
           "Version": "2012-10-17",
         },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ValidateInstallerValidateResource24181D5D": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "ValidateInstallerValidationFunction21674768",
+            "Arn",
+          ],
+        },
+        "existingConfigRepositoryBranchName": {
+          "Ref": "ExistingConfigRepositoryBranchName",
+        },
+        "existingConfigRepositoryName": {
+          "Ref": "ExistingConfigRepositoryName",
+        },
+        "resourceType": "Custom::ValidateInstallerStack",
+        "useExistingConfigRepo": {
+          "Ref": "UseExistingConfigRepo",
+        },
+      },
+      "Type": "AWS::CloudFormation::CustomResource",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ValidateInstallerValidationFunction21674768": {
+      "DependsOn": [
+        "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+      ],
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "Code": {
+          "ZipFile": "
+          const response = require('cfn-response'); 
+          exports.handler = async function (event, context) { 
+          console.log(JSON.stringify(event, null, 4)); 
+
+          const useExistingConfigRepo=event.ResourceProperties.useExistingConfigRepo;
+          const existingConfigRepositoryName=event.ResourceProperties.existingConfigRepositoryName;
+          const existingConfigRepositoryBranchName=event.ResourceProperties.existingConfigRepositoryBranchName;
+
+          if (useExistingConfigRepo === 'Yes') {
+            console.log('Here - 1');
+            if (existingConfigRepositoryName === '' || existingConfigRepositoryBranchName ===''){
+                console.log('Here - 2');
+                await response.send(event, context, response.FAILED, {'FailureReason': 'UseExistingConfigRepo parameter set to Yes, but ExistingConfigRepositoryName or ExistingConfigRepositoryBranchName parameter value missing!!!'}, event.PhysicalResourceId);
+                return;
+            }
+          }
+
+          // End of Validation
+          await response.send(event, context, response.SUCCESS, {}, event.PhysicalResourceId);
+          return;
+      }",
+        },
+        "Description": "This function validates installer parameters",
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ValidateInstallerValidationFunctionServiceRoleF5BE8F9B": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "Needed to write to CWL group",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
       },
       "Type": "AWS::IAM::Role",
     },
