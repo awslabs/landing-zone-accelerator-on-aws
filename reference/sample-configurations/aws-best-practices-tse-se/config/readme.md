@@ -14,7 +14,7 @@ AWS developed the sample configuration files herein for use with the Landing Zon
 
 Deploying the TSE-SE with the LZA automation engine reduces customers foundational build effort by months over manual approaches. It allows customers to rapidly establish a baseline set of technical security controls in alignment with sensitive security frameworks. The TSE-SE is deployed by customers on the customer side of the responsibility model and builds on the [security of the AWS cloud](https://aws.amazon.com/compliance/services-in-scope/).
 
-The sample config files define a log retention period of 2 years based on consultation with regional policy and cybersecurity authorities.  Customers are encouraged to consider defining longer retention periods, such as 10 years, so that you'll have the data you need to investigate and reconstruct events long after they occur.
+The sample config files define a log retention period of 2 years based on consultation with regional policy and cybersecurity authorities. Customers are encouraged to consider defining longer retention periods, such as 10 years, so that you'll have the data you need to investigate and reconstruct events long after they occur.
 
 Customers are encouraged to work with their local AWS Account Teams to learn more about customizing this configuration, to learn more about the TSE-SE reference architecture, the Landing Zone Accelerator on AWS solution, or global national security and defense solutions.
 
@@ -71,7 +71,7 @@ Step 3. Copy the configuration files
 
 - Clone the `aws-accelerator-config` AWS CodeCommit repository.
 - Clone the `landing-zone-accelerator-on-aws` repo
-- Copy the contents from the `aws-best-practice-cccs-medium` folder under reference/sample-configurations to your local `aws-accelerator-config` repo. You may be prompted to over-write duplicate configs, such as accounts-config.yaml.
+- Copy the contents from the `aws-best-practice-tse-se` folder under reference/sample-configurations to your local `aws-accelerator-config` repo. You may be prompted to over-write duplicate configs, such as accounts-config.yaml.
 
 Step 4. Update the configuration files and release a change.
 
