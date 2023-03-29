@@ -1,0 +1,39 @@
+name: Create Release Branch
+on:
+  push:
+    branches: [ ft_* ]
+
+permissions: write-all
+
+jobs:
+  CreateTags:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check for previous tag on AWS Source
+        run: |
+          git config --global --add safe.directory /github/workspace
+          git remote add upstream https://github.com/awslabs/landing-zone-accelerator-on-aws.git
+          git fetch upstream --tags
+          git push origin --tags
+
+      - name: GitHub Tag Name latest tag
+        id: latest_tag
+        run: |
+          echo "TAG_NAME=$(git tag --sort=committerdate | tail -1|| true)" >> $GITHUB_ENV
+
+      - name: Create release branch
+        run: git checkout release/${{ env.TAG_NAME  }}
+  
+      - name: Push new branch
+        run: git push origin release/${{ env.TAG_NAME }}
+
+      - name: Create Release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: Release ${{ env.TAG_NAME }}
