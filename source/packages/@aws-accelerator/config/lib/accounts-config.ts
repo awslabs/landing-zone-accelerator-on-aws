@@ -381,11 +381,10 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     const accountIds: string[] = [];
 
     for (const ou of deploymentTargets.organizationalUnits ?? []) {
-      // debug: processing ou
       if (ou === 'Root') {
-        for (const account of this.accountIds ?? []) {
-          // debug: accountId
-          this._addAccountId(accountIds, account.accountId);
+        for (const account of [...this.mandatoryAccounts, ...this.workloadAccounts]) {
+          const accountId = this.getAccountId(account.name);
+          this._addAccountId(accountIds, accountId);
         }
       } else {
         for (const account of [...this.mandatoryAccounts, ...this.workloadAccounts]) {

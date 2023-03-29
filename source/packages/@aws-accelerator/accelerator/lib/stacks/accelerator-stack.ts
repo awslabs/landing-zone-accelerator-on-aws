@@ -238,9 +238,12 @@ export abstract class AcceleratorStack extends cdk.Stack {
     for (const ou of deploymentTargets.organizationalUnits ?? []) {
       // debug: processing ou
       if (ou === 'Root') {
-        for (const account of this.props.accountsConfig.accountIds ?? []) {
-          // debug: accountId
-          this._addAccountId(accountIds, account.accountId);
+        for (const account of [
+          ...this.props.accountsConfig.mandatoryAccounts,
+          ...this.props.accountsConfig.workloadAccounts,
+        ]) {
+          const accountId = this.props.accountsConfig.getAccountId(account.name);
+          this._addAccountId(accountIds, accountId);
         }
       } else {
         for (const account of [
@@ -249,7 +252,6 @@ export abstract class AcceleratorStack extends cdk.Stack {
         ]) {
           if (ou === account.organizationalUnit) {
             const accountId = this.props.accountsConfig.getAccountId(account.name);
-            // debug: accountId
             this._addAccountId(accountIds, accountId);
           }
         }
@@ -298,11 +300,13 @@ export abstract class AcceleratorStack extends cdk.Stack {
     const accountIds: string[] = [];
 
     for (const ou of shareTargets.organizationalUnits ?? []) {
-      // debug: processing ou
       if (ou === 'Root') {
-        for (const account of this.props.accountsConfig.accountIds ?? []) {
-          // debug: accountId
-          this._addAccountId(accountIds, account.accountId);
+        for (const account of [
+          ...this.props.accountsConfig.mandatoryAccounts,
+          ...this.props.accountsConfig.workloadAccounts,
+        ]) {
+          const accountId = this.props.accountsConfig.getAccountId(account.name);
+          this._addAccountId(accountIds, accountId);
         }
       } else {
         for (const account of [
@@ -311,7 +315,6 @@ export abstract class AcceleratorStack extends cdk.Stack {
         ]) {
           if (ou === account.organizationalUnit) {
             const accountId = this.props.accountsConfig.getAccountId(account.name);
-            // debug: accountId
             this._addAccountId(accountIds, accountId);
           }
         }
@@ -320,7 +323,6 @@ export abstract class AcceleratorStack extends cdk.Stack {
 
     for (const account of shareTargets.accounts ?? []) {
       const accountId = this.props.accountsConfig.getAccountId(account);
-      // debug: accountId
       this._addAccountId(accountIds, accountId);
     }
 
