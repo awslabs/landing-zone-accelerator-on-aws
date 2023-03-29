@@ -38,6 +38,10 @@ export interface PipelineStackProps extends cdk.StackProps {
   readonly approvalStageNotifyEmailList?: string;
   readonly partition: string;
   /**
+   * Flag indicating installer using existing CodeCommit repository
+   */
+  readonly useExistingConfigRepo: boolean;
+  /**
    * User defined pre-existing config repository name
    */
   readonly configRepositoryName: string;

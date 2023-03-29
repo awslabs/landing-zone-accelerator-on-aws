@@ -50,6 +50,10 @@ export interface AcceleratorPipelineProps {
   readonly approvalStageNotifyEmailList?: string;
   readonly partition: string;
   /**
+   * Flag indicating installer using existing CodeCommit repository
+   */
+  readonly useExistingConfigRepo: boolean;
+  /**
    * User defined pre-existing config repository name
    */
   readonly configRepositoryName: string;
@@ -128,7 +132,6 @@ export class AcceleratorPipeline extends Construct {
       cdk.Stack.of(this).region
     }`;
     let serverAccessLogsBucketNameSsmParam = `${props.prefixes.ssmParamName}/installer-access-logs-bucket-name`;
-    let configRepositoryName = `${props.prefixes.repoName}-config`;
     let pipelineName = `${props.prefixes.accelerator}-Pipeline`;
     let buildProjectName = `${props.prefixes.accelerator}-BuildProject`;
     let toolkitProjectName = `${props.prefixes.accelerator}-ToolkitProject`;
@@ -139,7 +142,6 @@ export class AcceleratorPipeline extends Construct {
       acceleratorKeyArnSsmParameterName = `${props.prefixes.ssmParamName}/${this.props.qualifier}/installer/kms/key-arn`;
       secureBucketName = `${this.props.qualifier}-pipeline-${cdk.Stack.of(this).account}-${cdk.Stack.of(this).region}`;
       serverAccessLogsBucketNameSsmParam = `${props.prefixes.ssmParamName}/${this.props.qualifier}/installer-access-logs-bucket-name`;
-      configRepositoryName = `${this.props.qualifier}-config`;
       pipelineName = `${this.props.qualifier}-pipeline`;
       buildProjectName = `${this.props.qualifier}-build-project`;
       toolkitProjectName = `${this.props.qualifier}-toolkit-project`;
@@ -181,7 +183,7 @@ export class AcceleratorPipeline extends Construct {
     let configRepository: cdk.aws_codecommit.IRepository | Repository;
     let configRepositoryBranchName = 'main';
 
-    if (props.configRepositoryName !== configRepositoryName) {
+    if (props.useExistingConfigRepo) {
       configRepository = cdk.aws_codecommit.Repository.fromRepositoryName(
         this,
         'ConfigRepository',
@@ -190,7 +192,7 @@ export class AcceleratorPipeline extends Construct {
       configRepositoryBranchName = props.configRepositoryBranchName ?? 'main';
     } else {
       configRepository = new config_repository.ConfigRepository(this, 'ConfigRepository', {
-        repositoryName: configRepositoryName,
+        repositoryName: props.configRepositoryName,
         repositoryBranchName: configRepositoryBranchName,
         description:
           'AWS Accelerator configuration repository, created and initialized with default config file by pipeline',

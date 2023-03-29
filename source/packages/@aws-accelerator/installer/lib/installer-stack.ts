@@ -22,6 +22,7 @@ import { Bucket, BucketEncryptionType } from '@aws-accelerator/constructs';
 import { version } from '../../../../package.json';
 import { SolutionHelper } from './solutions-helper';
 import { ResourceNamePrefixes } from './resource-name-prefixes';
+import { Validate } from './validate';
 
 export enum RepositorySources {
   GITHUB = 'github',
@@ -123,26 +124,39 @@ export class InstallerStack extends cdk.Stack {
   });
 
   /**
-   * LZ Accelerator configuration repository name
+   * Use existing configuration repository name flag
    * @private
    */
-  private readonly configRepositoryName = new cdk.CfnParameter(this, 'ConfigRepositoryName', {
+  private readonly useExistingConfigRepo = new cdk.CfnParameter(this, 'UseExistingConfigRepo', {
     type: 'String',
-    default: 'aws-accelerator-config',
+    allowedValues: ['Yes', 'No'],
+    default: 'No',
     description:
-      'The name of an existing CodeCommit repository hosting the accelerator configuration. Leave the default value if using the solution-deployed repository, the solution will deploy a new repository (aws-accelerator-config). Note: Updating this value after initial installation may cause adverse affects.',
+      'Select Yes if deploying the solution with an existing CodeCommit configuration repository. Leave the default value if using the solution-deployed repository. If the AcceleratorPrefix parameter is set to the default value, the solution will deploy a repository named "aws-accelerator-config." Otherwise, the solution-deployed repository will be named "AcceleratorPrefix-config." Note: Updating this value after initial installation may cause adverse affects.',
   });
 
   /**
-   * LZ Accelerator configuration repository branch name
+   * Existing LZ Accelerator configuration repository name
    * @private
    */
-  private readonly configRepositoryBranchName = new cdk.CfnParameter(this, 'ConfigRepositoryBranchName', {
+  private readonly existingConfigRepositoryName = new cdk.CfnParameter(this, 'ExistingConfigRepositoryName', {
     type: 'String',
-    description:
-      'If using a CodeCommit repository that already exists, specify the branch name to pull the accelerator configuration from. Leave the default value if using the solution-deployed repository or if using the main branch of an existing repository. Note: Updating this value after initial installation may cause adverse affects.',
-    default: 'main',
+    description: 'The name of an existing CodeCommit repository hosting the accelerator configuration.',
   });
+
+  /**
+   * Existing LZ Accelerator configuration repository branch name
+   * @private
+   */
+  private readonly existingConfigRepositoryBranchName = new cdk.CfnParameter(
+    this,
+    'ExistingConfigRepositoryBranchName',
+    {
+      type: 'String',
+      description:
+        'Specify the branch name of existing CodeCommit repository to pull the accelerator configuration from.',
+    },
+  );
 
   /**
    * Management Account ID Parameter
@@ -200,10 +214,6 @@ export class InstallerStack extends cdk.Stack {
         ],
       },
       {
-        Label: { default: 'Config Repository Configuration' },
-        Parameters: [this.configRepositoryName.logicalId, this.configRepositoryBranchName.logicalId],
-      },
-      {
         Label: { default: 'Pipeline Configuration' },
         Parameters: [this.enableApprovalStage.logicalId, this.approvalStageNotifyEmailList.logicalId],
       },
@@ -217,7 +227,13 @@ export class InstallerStack extends cdk.Stack {
       },
       {
         Label: { default: 'Environment Configuration' },
-        Parameters: [this.controlTowerEnabled.logicalId, this.acceleratorPrefix.logicalId],
+        Parameters: [
+          this.controlTowerEnabled.logicalId,
+          this.acceleratorPrefix.logicalId,
+          this.useExistingConfigRepo.logicalId,
+          this.existingConfigRepositoryName.logicalId,
+          this.existingConfigRepositoryBranchName.logicalId,
+        ],
       },
     ];
 
@@ -226,8 +242,9 @@ export class InstallerStack extends cdk.Stack {
       [this.repositoryOwner.logicalId]: { default: 'Repository Owner' },
       [this.repositoryName.logicalId]: { default: 'Repository Name' },
       [this.repositoryBranchName.logicalId]: { default: 'Branch Name' },
-      [this.configRepositoryName.logicalId]: { default: 'Config Repository Name' },
-      [this.configRepositoryBranchName.logicalId]: { default: 'Config Repository Branch Name' },
+      [this.useExistingConfigRepo.logicalId]: { default: 'Use Existing Config Repository' },
+      [this.existingConfigRepositoryName.logicalId]: { default: 'Existing Config Repository Name' },
+      [this.existingConfigRepositoryBranchName.logicalId]: { default: 'Existing Config Repository Branch Name' },
       [this.enableApprovalStage.logicalId]: { default: 'Enable Approval Stage' },
       [this.approvalStageNotifyEmailList.logicalId]: { default: 'Manual Approval Stage notification email list' },
       [this.managementAccountEmail.logicalId]: { default: 'Management Account Email' },
@@ -287,6 +304,14 @@ export class InstallerStack extends cdk.Stack {
         },
       };
     }
+
+    // Validate Installer Parameters
+
+    new Validate(this, 'ValidateInstaller', {
+      useExistingConfigRepo: this.useExistingConfigRepo.valueAsString,
+      existingConfigRepositoryName: this.existingConfigRepositoryName.valueAsString,
+      existingConfigRepositoryBranchName: this.existingConfigRepositoryBranchName.valueAsString,
+    });
 
     const resourceNamePrefixes = new ResourceNamePrefixes(this, 'ResourceNamePrefixes', {
       acceleratorPrefix: this.acceleratorPrefix.valueAsString,
@@ -560,10 +585,10 @@ export class InstallerStack extends cdk.Stack {
               'if [ ! -z "$MANAGEMENT_ACCOUNT_ID" ] && [ ! -z "$MANAGEMENT_ACCOUNT_ROLE_NAME" ]; then ' +
                 'ENABLE_EXTERNAL_PIPELINE_ACCOUNT="yes"; ' +
                 'fi',
-              `if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ${cdk.Aws.REGION}; then ` +
+              `if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${cdk.Aws.REGION}; then ` +
                 'BOOTSTRAPPED_HOME="no"; ' +
                 'fi',
-              `if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ${globalRegion}; then ` +
+              `if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${globalRegion}; then ` +
                 'BOOTSTRAPPED_GLOBAL="no"; ' +
                 'fi',
             ],
@@ -579,20 +604,20 @@ export class InstallerStack extends cdk.Stack {
               'yarn lerna link',
               'yarn build',
               'cd packages/@aws-accelerator/installer',
-              `if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel; fi`,
-              `if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${globalRegion} --qualifier accel; fi`,
+              `if [ "$BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${cdk.Aws.REGION} --qualifier accel; fi`,
+              `if [ "$BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://${cdk.Aws.ACCOUNT_ID}/${globalRegion} --qualifier accel; fi`,
               `if [ $ENABLE_EXTERNAL_PIPELINE_ACCOUNT = "yes" ]; then
                   export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn arn:${
                     cdk.Stack.of(this).partition
                   }:iam::"$MANAGEMENT_ACCOUNT_ID":role/"$MANAGEMENT_ACCOUNT_ROLE_NAME" --role-session-name acceleratorAssumeRoleSession --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" --output text));
-                  if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ${
-                    cdk.Aws.REGION
-                  }; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
-                  if ! aws cloudformation describe-stacks --stack-name AWSAccelerator-CDKToolkit --region ${globalRegion}; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
-                  if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${
-                    cdk.Aws.REGION
-                  } --qualifier accel; fi;
-                  if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName AWSAccelerator-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${globalRegion} --qualifier accel; fi;
+                  if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${
+                cdk.Aws.REGION
+              }; then MGMT_BOOTSTRAPPED_HOME="no"; fi;
+                  if ! aws cloudformation describe-stacks --stack-name ${acceleratorPrefix}-CDKToolkit --region ${globalRegion}; then MGMT_BOOTSTRAPPED_GLOBAL="no"; fi;
+                  if [ "$MGMT_BOOTSTRAPPED_HOME" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${
+                cdk.Aws.REGION
+              } --qualifier accel; fi;
+                  if [ "$MGMT_BOOTSTRAPPED_GLOBAL" = "no" ]; then yarn run cdk bootstrap --toolkitStackName ${acceleratorPrefix}-CDKToolkit aws://$MANAGEMENT_ACCOUNT_ID/${globalRegion} --qualifier accel; fi;
                   unset AWS_ACCESS_KEY_ID;
                   unset AWS_SECRET_ACCESS_KEY;
                   unset AWS_SESSION_TOKEN;
@@ -641,13 +666,17 @@ export class InstallerStack extends cdk.Stack {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
             value: this.repositoryBranchName.valueAsString,
           },
-          ACCELERATOR_CONFIG_REPOSITORY_NAME: {
+          USE_EXISTING_CONFIG_REPO: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: this.configRepositoryName.valueAsString,
+            value: this.useExistingConfigRepo.valueAsString,
           },
-          ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME: {
+          EXISTING_CONFIG_REPOSITORY_NAME: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
-            value: this.configRepositoryBranchName.valueAsString,
+            value: this.existingConfigRepositoryName.valueAsString,
+          },
+          EXISTING_CONFIG_REPOSITORY_BRANCH_NAME: {
+            type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,
+            value: this.existingConfigRepositoryBranchName.valueAsString,
           },
           ACCELERATOR_ENABLE_APPROVAL_STAGE: {
             type: cdk.aws_codebuild.BuildEnvironmentVariableType.PLAINTEXT,

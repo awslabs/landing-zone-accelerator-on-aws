@@ -222,16 +222,8 @@ async function main() {
   };
 
   //
-  // Verify Pipeline and Tester pipeline ENV vars are set
-  if (!process.env['ACCELERATOR_PREFIX']) {
-    throw new Error(
-      'Attempting to deploy pipeline stage(s) and environment variables are not set [ACCELERATOR_PREFIX]',
-    );
-  }
-
-  //
   // Set various resource name prefixes used in code base
-  const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'];
+  const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
   let repoNamePrefix = 'aws-accelerator';
   let bucketNamePrefix = 'aws-accelerator';
   let snsTopicNamePrefix = 'aws-accelerator';
@@ -255,15 +247,27 @@ async function main() {
   }
 
   // Config repo naming
+  const useExistingConfigRepo = process.env['USE_EXISTING_CONFIG_REPO']
+    ? process.env['USE_EXISTING_CONFIG_REPO'] === 'Yes'
+    : false;
+
+  if (
+    useExistingConfigRepo &&
+    (!process.env['EXISTING_CONFIG_REPOSITORY_NAME'] || !process.env['EXISTING_CONFIG_REPOSITORY_BRANCH_NAME'])
+  ) {
+    throw new Error(
+      'Attempting to deploy pipeline stage(s) and environment variables are not set [EXISTING_CONFIG_REPOSITORY_NAME, EXISTING_CONFIG_REPOSITORY_BRANCH_NAME], when USE_EXISTING_CONFIG_REPO environment is set to Yes',
+    );
+  }
   let configRepositoryName = `${repoNamePrefix}-config`;
-  if (process.env['ACCELERATOR_CONFIG_REPOSITORY_NAME']) {
-    configRepositoryName = process.env['ACCELERATOR_CONFIG_REPOSITORY_NAME'];
+  if (useExistingConfigRepo) {
+    configRepositoryName = process.env['EXISTING_CONFIG_REPOSITORY_NAME']!;
   } else {
     if (process.env['ACCELERATOR_QUALIFIER']) {
       configRepositoryName = `${process.env['ACCELERATOR_QUALIFIER']}-config`;
     }
   }
-  const configRepositoryBranchName = process.env['ACCELERATOR_CONFIG_REPOSITORY_BRANCH_NAME'] ?? 'main';
+  const configRepositoryBranchName = process.env['EXISTING_CONFIG_REPOSITORY_BRANCH_NAME'] ?? 'main';
 
   //
   // PIPELINE Stack
@@ -307,6 +311,7 @@ async function main() {
         controlTowerEnabled: process.env['CONTROL_TOWER_ENABLED']!,
         approvalStageNotifyEmailList: process.env['APPROVAL_STAGE_NOTIFY_EMAIL_LIST'],
         partition,
+        useExistingConfigRepo,
         configRepositoryName,
         configRepositoryBranchName,
         prefixes: {
