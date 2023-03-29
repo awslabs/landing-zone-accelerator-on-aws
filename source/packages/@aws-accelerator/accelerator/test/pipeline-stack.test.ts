@@ -41,6 +41,7 @@ const stack = new PipelineStack(app, 'PipelineStack', {
     account: '000000000000',
     region: 'us-east-1',
   },
+  useExistingConfigRepo: false,
   configRepositoryName: 'aws-accelerator-config',
   configRepositoryBranchName: 'main',
   prefixes: {

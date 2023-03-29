@@ -78,7 +78,7 @@ export const OptInRegions = [
   'me-south-1',
 ];
 
-const stackPrefix = process.env['ACCELERATOR_PREFIX']!;
+const stackPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
 
 /**
  * constant maintaining cloudformation stack names
