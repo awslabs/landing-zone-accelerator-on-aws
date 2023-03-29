@@ -19,7 +19,9 @@
     - [@aws-cdk-extensions/tester](#aws-cdk-extensionstester)
   - [Creating an Installer Stack](#creating-an-installer-stack)
     - [1. Build the Installer stack for deployment](#1-build-the-installer-stack-for-deployment)
-    - [2. Deploy the Installer stack](#2-deploy-the-installer-stack)
+    - [2. Create a GitHub personal access token](#2-create-a-github-personal-access-token)
+    - [3. Store Token in Secrets Manager](#3-store-token-in-secrets-manager)
+    - [4. Deploy the Installer stack](#4-deploy-the-installer-stack)
 
 # Landing Zone Accelerator on AWS
 
@@ -265,7 +267,7 @@ directly via the AWS CLI or console. Below are the commands for completing the d
 ```
 
 - Install project dependencies
-  
+
 ```
 cd <rootDir>/source
 yarn install && yarn lerna link
@@ -280,18 +282,46 @@ yarn build && yarn cdk synth
 
 After running these commands, the Installer stack template will be saved to `<rootDir>/source/packages/@aws-accelerator/installer/cdk.out/AWSAccelerator-InstallerStack.template.json`
 
-### 2. Deploy the Installer stack
+### 2. Create a GitHub personal access token
+
+Follow the instructions on [GitHub Docs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic) to create a personal access token (Classic).
+
+When creating the token select public_repo for the selected scope.
+
+### 3. Store Token in Secrets Manager
+
+Store the personal access token in Secrets Manager.
+
+1. In the AWS Management Console, navigate to Secrets Manager
+2. Click Store a new secret
+3. On the Choose secret type step select Other type of secret
+4. Select the Plaintext tab
+5. Completely remove the example text and paste your secret with no formatting no leading or trailing spaces
+6. Select the aws/secretsmanager encryption key
+7. Click Next
+8. On the Configure secret step set the Secret name to accelerator/github-token
+9. On the Configure rotation step click Next
+10. On the Review step click Store
+
+### 4. Deploy the Installer stack
 
 - Configure the AWS CLI CloudFormation command for the Installer stack
 
+- Create an S3 bucket and copy the generated template file.
+
 ```
-aws cloudformation create-stack --stack-name AWSAccelerator-InstallerStack --template-body file://cdk.out/AWSAccelerator-InstallerStack.template.json \
+cd <rootDir>/source/packages/@aws-accelerator/installer
+aws s3 mb s3://<bucket name>
+aws s3 cp ./cdk.out/AWSAccelerator-InstallerStack.template.json s3://<bucket name>
+```
+
+- Create the Installer stack with AWS CLI command:
+
+```
+aws cloudformation create-stack --stack-name AWSAccelerator-InstallerStack --template-body https://<bucket name>.s3.<region>.amazonaws.com/AWSAccelerator-InstallerStack.template.json \
 --parameters ParameterKey=RepositoryName,ParameterValue=<Repository_Name> \
 ParameterKey=RepositoryBranchName,ParameterValue=<Branch_Name> \
-ParameterKey=AcceleratorQualifier,ParameterValue=<Accelerator_Qualifier> \
-ParameterKey=ManagementAccountId,ParameterValue=<Management_Id> \
 ParameterKey=ManagementAccountEmail,ParameterValue=<Management_Email> \
-ParameterKey=ManagementAccountRoleName,ParameterValue= \
 ParameterKey=LogArchiveAccountEmail,ParameterValue=<LogArchive_Email> \
 ParameterKey=AuditAccountEmail,ParameterValue=<Audit_Email> \
 ParameterKey=EnableApprovalStage,ParameterValue=Yes \
@@ -303,12 +333,14 @@ ParameterKey=ControlTowerEnabled,ParameterValue=Yes \
 - Alternate deployment of CloudFormation via AWS console:
 
 ```
+
 - From your Management account, navigate to CloudFormation page in the AWS console
 - Select ‘Create Stack’ and from the dropdown pick ‘with new resources (standard)’
 - For the prerequisite template, select ‘Template is ready’
 - When specifying the template, select ‘Upload a template file’
 - Ensure that you select the correct file ‘AWSLandingZoneAccelerator-InstallerStack.template.json’
 - Fill out the required parameters in the UI, and create the stack once the parameters are inputted.
+
 ```
 
 ---
