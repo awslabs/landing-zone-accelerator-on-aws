@@ -5,7 +5,7 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
   "Outputs": {
     "BootstrapVersion": {
       "Description": "The version of the bootstrap resources that are currently mastered in this stack",
-      "Value": "14",
+      "Value": "16",
     },
     "BucketDomainName": {
       "Description": "The domain name of the S3 bucket owned by the CDK toolkit stack",
@@ -55,7 +55,7 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
       "Type": "String",
     },
     "TrustedAccounts": {
-      "Type": "String",
+      "Type": "CommaDelimitedList",
     },
     "TrustedAccountsForLookup": {
       "Type": "String",
@@ -103,6 +103,8 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
                 "kms:ScheduleKeyDeletion",
                 "kms:CancelKeyDeletion",
                 "kms:GenerateDataKey",
+                "kms:TagResource",
+                "kms:UntagResource",
               ],
               "Effect": "Allow",
               "Principal": {
@@ -247,7 +249,7 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
       "Properties": {
         "Name": "/cdk-bootstrap/accel/version",
         "Type": "String",
-        "Value": "14",
+        "Value": "16",
       },
       "Type": "AWS::SSM::Parameter",
     },
@@ -424,23 +426,6 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
                     },
                   ],
                   "Sid": "PipelineCrossAccountArtifactsBucket",
-                },
-                {
-                  "Action": [
-                    "kms:Decrypt",
-                    "kms:DescribeKey",
-                    "kms:Encrypt",
-                    "kms:ReEncrypt*",
-                    "kms:GenerateDataKey*",
-                  ],
-                  "Condition": {
-                    "StringEquals": {
-                      "kms:ViaService": "s3.us-east-1.amazonaws.com",
-                    },
-                  },
-                  "Effect": "Allow",
-                  "Resource": "*",
-                  "Sid": "PipelineCrossAccountArtifactsKey",
                 },
                 {
                   "Action": "iam:PassRole",
@@ -793,6 +778,68 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "PipelineCrossAccountArtifactsKey6069D325": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "kms:ViaService": "s3.us-east-1.amazonaws.com",
+                },
+              },
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Split": [
+                  "|",
+                  {
+                    "Fn::Sub": [
+                      "arn:aws:kms:*:\${JoinedAccounts}:*",
+                      {
+                        "JoinedAccounts": {
+                          "Fn::Join": [
+                            ":*|arn:aws:kms:*:",
+                            {
+                              "Ref": "TrustedAccounts",
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+              "Sid": "PipelineCrossAccountArtifactsKey",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "PipelineCrossAccountArtifactsKey6069D325",
+        "Roles": [
+          {
+            "Ref": "DeploymentActionRole",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
         "Name": "/accelerator/AWSAccelerator-BootstrapStack-111111111111-us-east-1/version",
@@ -844,6 +891,17 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
           ],
         },
         "BucketName": "cdk-accel-assets-111111111111-us-east-1",
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "Id": "CleanupOldVersions",
+              "NoncurrentVersionExpiration": {
+                "NoncurrentDays": 365,
+              },
+              "Status": "Enabled",
+            },
+          ],
+        },
         "OwnershipControls": {
           "Rules": [
             {
