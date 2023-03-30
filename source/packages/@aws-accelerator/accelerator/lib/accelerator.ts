@@ -271,7 +271,8 @@ export abstract class Accelerator {
               caBundlePath: props.caBundlePath,
               ec2Creds: props.ec2Creds,
               proxyAddress: props.proxyAddress,
-              centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+              centralizeCdkBootstrap:
+                globalConfig?.centralizeCdkBuckets?.enable || globalConfig?.cdkOptions?.centralizeBuckets,
             }),
           );
 

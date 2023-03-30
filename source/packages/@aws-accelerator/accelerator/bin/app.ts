@@ -166,6 +166,31 @@ function addAcceleratorTags(node: IConstruct, partition: string, acceleratorPref
   }
 }
 
+// This function returns a CDK stack synthesizer based on configuration options.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getDefaultStackSynthesizer(props: any, accountId: string, region: string) {
+  const partition = props.partition;
+  const managementAccountId = props.accountsConfig.getManagementAccountId();
+  const managementAccountAccessRole = props.globalConfig.managementAccountAccessRole;
+  const cdkRoleArn =
+    accountId !== managementAccountId
+      ? `arn:${partition}:iam::${accountId}:role/${managementAccountAccessRole}`
+      : undefined;
+  const centralizeBuckets =
+    props.globalConfig.centralizeCdkBuckets?.enable || props.globalConfig.cdkOptions?.centralizeBuckets;
+  const useManagementRole = props.globalConfig.cdkOptions?.useManagementAccessRole;
+
+  return new cdk.DefaultStackSynthesizer({
+    generateBootstrapVersionRule: false,
+    bucketPrefix: centralizeBuckets ? `${accountId}/` : undefined,
+    fileAssetsBucketName: centralizeBuckets ? `cdk-accel-assets-${managementAccountId}-${region}` : undefined,
+    fileAssetPublishingRoleArn: useManagementRole ? cdkRoleArn : undefined,
+    imageAssetPublishingRoleArn: useManagementRole ? cdkRoleArn : undefined,
+    lookupRoleArn: useManagementRole ? cdkRoleArn : undefined,
+    deployRoleArn: useManagementRole ? cdkRoleArn : undefined,
+  });
+}
+
 async function main() {
   logger.info('Begin Accelerator CDK App');
   const app = new cdk.App();
@@ -438,13 +463,7 @@ async function main() {
             region: homeRegion,
           },
           description: `(SO0199-prepare) Landing Zone Accelerator on AWS. Version ${version}.`,
-          synthesizer: new cdk.DefaultStackSynthesizer({
-            generateBootstrapVersionRule: false,
-            bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${managementAccountId}/` : undefined,
-            fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
-              ? `cdk-accel-assets-${managementAccountId}-${homeRegion}`
-              : undefined,
-          }),
+          synthesizer: getDefaultStackSynthesizer(props, managementAccountId, homeRegion),
           terminationProtection: props.globalConfig.terminationProtection ?? true,
           ...props,
         },
@@ -466,13 +485,7 @@ async function main() {
             region: globalRegion,
           },
           description: `(SO0199-finalize) Landing Zone Accelerator on AWS. Version ${version}.`,
-          synthesizer: new cdk.DefaultStackSynthesizer({
-            generateBootstrapVersionRule: false,
-            bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${managementAccountId}/` : undefined,
-            fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
-              ? `cdk-accel-assets-${managementAccountId}-${globalRegion}`
-              : undefined,
-          }),
+          synthesizer: getDefaultStackSynthesizer(props, managementAccountId, globalRegion),
           terminationProtection: props.globalConfig.terminationProtection ?? true,
           ...props,
         },
@@ -494,13 +507,7 @@ async function main() {
             region: globalRegion,
           },
           description: `(SO0199-accounts) Landing Zone Accelerator on AWS. Version ${version}.`,
-          synthesizer: new cdk.DefaultStackSynthesizer({
-            generateBootstrapVersionRule: false,
-            bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${managementAccountId}/` : undefined,
-            fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
-              ? `cdk-accel-assets-${managementAccountId}-${globalRegion}`
-              : undefined,
-          }),
+          synthesizer: getDefaultStackSynthesizer(props, managementAccountId, globalRegion),
           terminationProtection: props.globalConfig.terminationProtection ?? true,
           ...props,
         },
@@ -525,13 +532,7 @@ async function main() {
               region: enabledRegion,
             },
             description: `(SO0199-organizations) Landing Zone Accelerator on AWS. Version ${version}.`,
-            synthesizer: new cdk.DefaultStackSynthesizer({
-              generateBootstrapVersionRule: false,
-              bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${managementAccountId}/` : undefined,
-              fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
-                ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
-                : undefined,
-            }),
+            synthesizer: getDefaultStackSynthesizer(props, managementAccountId, enabledRegion),
             terminationProtection: props.globalConfig.terminationProtection ?? true,
             ...props,
           },
@@ -559,13 +560,7 @@ async function main() {
               region: enabledRegion,
             },
             description: `(SO0199-key) Landing Zone Accelerator on AWS. Version ${version}.`,
-            synthesizer: new cdk.DefaultStackSynthesizer({
-              generateBootstrapVersionRule: false,
-              bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${auditAccountId}/` : undefined,
-              fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
-                ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
-                : undefined,
-            }),
+            synthesizer: getDefaultStackSynthesizer(props, auditAccountId, enabledRegion),
             terminationProtection: props.globalConfig.terminationProtection ?? true,
             ...props,
           },
@@ -584,13 +579,7 @@ async function main() {
               region: enabledRegion,
             },
             description: `(SO0199-securityaudit) Landing Zone Accelerator on AWS. Version ${version}.`,
-            synthesizer: new cdk.DefaultStackSynthesizer({
-              generateBootstrapVersionRule: false,
-              bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${auditAccountId}/` : undefined,
-              fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
-                ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
-                : undefined,
-            }),
+            synthesizer: getDefaultStackSynthesizer(props, auditAccountId, enabledRegion),
             terminationProtection: props.globalConfig.terminationProtection ?? true,
             ...props,
           },
@@ -612,13 +601,7 @@ async function main() {
           account: accountId,
           region: enabledRegion,
         };
-        const stackSynthesizerProps = {
-          generateBootstrapVersionRule: false,
-          bucketPrefix: props.globalConfig.centralizeCdkBuckets?.enable ? `${accountId}/` : undefined,
-          fileAssetsBucketName: props.globalConfig.centralizeCdkBuckets?.enable
-            ? `cdk-accel-assets-${managementAccountId}-${enabledRegion}`
-            : undefined,
-        };
+
         //
         // BOOTSTRAP Stack
         //
@@ -629,7 +612,7 @@ async function main() {
             {
               env,
               description: `(SO0199-bootstrap) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
               terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
@@ -648,7 +631,7 @@ async function main() {
             {
               env,
               description: `(SO0199-logging) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
               terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
@@ -667,7 +650,7 @@ async function main() {
             {
               env,
               description: `(SO0199-security) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
               terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
@@ -686,7 +669,7 @@ async function main() {
             {
               env,
               description: `(SO0199-operations) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
               terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
               accountWarming: accountItem.warm ?? false,
@@ -706,7 +689,7 @@ async function main() {
             {
               env,
               description: `(SO0199-networkprep) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
               terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
@@ -725,7 +708,7 @@ async function main() {
             {
               env,
               description: `(SO0199-securityresources) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
               terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
@@ -744,7 +727,7 @@ async function main() {
             {
               env,
               description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
               terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
@@ -767,7 +750,7 @@ async function main() {
                 description: stack.stackConfig.description,
                 runOrder: stack.stackConfig.runOrder,
                 stackName: stack.stackConfig.name,
-                synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
                 templateFile: stack.stackConfig.template,
                 terminationProtection: stack.stackConfig.terminationProtection,
                 parameters: stack.stackConfig.parameters,
@@ -804,7 +787,7 @@ async function main() {
                 const applicationStack = new ApplicationsStack(app, applicationStackName, {
                   env,
                   description: `(SO0199-customizations) Landing Zone Accelerator on AWS. Version ${version}.`,
-                  synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+                  synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
                   terminationProtection: props.globalConfig.terminationProtection ?? true,
                   ...props,
                   appConfigItem: application,
@@ -825,7 +808,7 @@ async function main() {
             {
               env,
               description: `(SO0199-networkvpc) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
               terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
@@ -839,7 +822,7 @@ async function main() {
             {
               env,
               description: `(SO0199-networkendpoints) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
               terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
@@ -854,7 +837,7 @@ async function main() {
             {
               env,
               description: `(SO0199-networkdns) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
               terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
@@ -874,7 +857,7 @@ async function main() {
             {
               env,
               description: `(SO0199-networkassociations) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
               terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },
@@ -888,7 +871,7 @@ async function main() {
             {
               env,
               description: `(SO0199-networkgwlb) Landing Zone Accelerator on AWS. Version ${version}.`,
-              synthesizer: new cdk.DefaultStackSynthesizer(stackSynthesizerProps),
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
               terminationProtection: props.globalConfig.terminationProtection ?? true,
               ...props,
             },

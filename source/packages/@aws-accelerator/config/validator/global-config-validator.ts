@@ -92,6 +92,10 @@ export class GlobalConfigValidator {
     // metadata validation
     //
     this.validateAcceleratorMetadata(values, accountNames, errors);
+    //
+    // cdkOptions validation
+    //
+    this.validateCdkOptions(values, errors);
 
     if (errors.length) {
       throw new Error(`${GlobalConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
@@ -460,6 +464,18 @@ export class GlobalConfigValidator {
     if (!accountNames.find(account => account === values.acceleratorMetadata?.account)) {
       errors.push(
         `The account with the name ${values.acceleratorMetadata.account} defined in acceleratorMetadata does not exist in the accounts config`,
+      );
+    }
+  }
+
+  /* Function to validate cdkOptions configuration
+   * We currently have two valid settings to enable centralizing CDK buckets: cdkOptions.centralizeBuckets and centralizeCdkBuckets
+   * We want to ensure users only specify one before centralizeCdkBuckets is no longer supported.
+   */
+  private validateCdkOptions(values: GlobalConfig, errors: string[]) {
+    if (values?.cdkOptions && values?.centralizeCdkBuckets) {
+      errors.push(
+        `Cannot specify values for both cdkOptions and centralizeCdkBuckets. Please delete centralizeCdkBuckets and use cdkOptions`,
       );
     }
   }
