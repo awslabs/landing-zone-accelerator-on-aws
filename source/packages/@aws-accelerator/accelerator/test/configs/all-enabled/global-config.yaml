@@ -20,8 +20,9 @@ snsTopics:
 terminationProtection: true
 controlTower:
   enable: true
-centralizeCdkBuckets:
-  enable: true
+cdkOptions:
+  centralizeBuckets: true
+  useManagementAccessRole: true
 logging:
   account: LogArchive
   centralizedLoggingRegion: us-west-2

@@ -44,7 +44,7 @@ export class BootstrapStack extends AcceleratorStack {
     new cdk.CfnParameter(this, 'FileAssetsBucketName', { default: '' });
     new cdk.CfnParameter(this, 'PublicAccessBlockConfiguration');
     new cdk.CfnParameter(this, 'Qualifier');
-    new cdk.CfnParameter(this, 'TrustedAccounts');
+    const trustedAccountsParam = new cdk.CfnParameter(this, 'TrustedAccounts', { type: 'CommaDelimitedList' });
     new cdk.CfnParameter(this, 'TrustedAccountsForLookup');
 
     if (this.account === this.managementAccount) {
@@ -65,7 +65,7 @@ export class BootstrapStack extends AcceleratorStack {
     // Create SSM Parameter for CDK Bootstrap Version
     const cdkBootstrapVersionParam = new cdk.aws_ssm.StringParameter(this, 'CdkBootstrapVersion', {
       parameterName: `/cdk-bootstrap/${this.qualifier}/version`,
-      stringValue: '14',
+      stringValue: '16',
     });
     // Override logical Id
     const cfnCdkBootstrapVersionParam = cdkBootstrapVersionParam.node.defaultChild as cdk.aws_ssm.CfnParameter;
@@ -258,18 +258,6 @@ export class BootstrapStack extends AcceleratorStack {
               actions: ['s3:GetObject*', 's3:GetBucket*', 's3:List*', 's3:Abort*', 's3:DeleteObject*', 's3:PutObject*'],
               resources: [`arn:${partition}:s3:::${assetBucketName}`, `arn:${partition}:s3:::${assetBucketName}/*`],
             }),
-
-            new cdk.aws_iam.PolicyStatement({
-              sid: 'PipelineCrossAccountArtifactsKey',
-              effect: cdk.aws_iam.Effect.ALLOW,
-              actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
-              resources: ['*'],
-              conditions: {
-                StringEquals: {
-                  'kms:ViaService': `s3.${this.region}.amazonaws.com`,
-                },
-              },
-            }),
             new cdk.aws_iam.PolicyStatement({
               sid: 'CliPermissions',
               effect: cdk.aws_iam.Effect.ALLOW,
@@ -306,12 +294,46 @@ export class BootstrapStack extends AcceleratorStack {
         }),
       },
     });
+
+    if (trustedAccountsParam.valueAsList && trustedAccountsParam.valueAsList.length > 0) {
+      deploymentActionRole.attachInlinePolicy(
+        new cdk.aws_iam.Policy(this, 'PipelineCrossAccountArtifactsKey', {
+          statements: [
+            new cdk.aws_iam.PolicyStatement({
+              sid: 'PipelineCrossAccountArtifactsKey',
+              effect: cdk.aws_iam.Effect.ALLOW,
+              actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:Encrypt', 'kms:ReEncrypt*', 'kms:GenerateDataKey*'],
+              resources: cdk.Fn.split(
+                '|',
+                cdk.Fn.sub('arn:aws:kms:*:${JoinedAccounts}:*', {
+                  JoinedAccounts: cdk.Fn.join(':*|arn:aws:kms:*:', trustedAccountsParam.valueAsList),
+                }),
+              ),
+              conditions: {
+                StringEquals: {
+                  'kms:ViaService': `s3.${this.region}.amazonaws.com`,
+                },
+              },
+            }),
+          ],
+        }),
+      );
+    }
+
     // Override logical Id
     const cfnDeploymentActionRole = deploymentActionRole.node.defaultChild as cdk.aws_iam.CfnRole;
     cfnDeploymentActionRole.overrideLogicalId('DeploymentActionRole');
 
     // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
     NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/DeploymentActionRole/Resource`, [
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'Allows only specific policy.',
+      },
+    ]);
+
+    // AwsSolutions-IAM5: The IAM entity contains wildcard permissions
+    NagSuppressions.addResourceSuppressionsByPath(this, `${this.stackName}/PipelineCrossAccountArtifactsKey/Resource`, [
       {
         id: 'AwsSolutions-IAM5',
         reason: 'Allows only specific policy.',
@@ -344,7 +366,7 @@ export class BootstrapStack extends AcceleratorStack {
 
     // Outputs
     new cdk.CfnOutput(this, 'BootstrapVersion', {
-      value: '14',
+      value: '16',
       description: 'The version of the bootstrap resources that are currently mastered in this stack',
     });
 
@@ -397,6 +419,8 @@ export class BootstrapStack extends AcceleratorStack {
           'kms:ScheduleKeyDeletion',
           'kms:CancelKeyDeletion',
           'kms:GenerateDataKey',
+          'kms:TagResource',
+          'kms:UntagResource',
         ],
         resources: ['*'],
       }),
@@ -442,14 +466,23 @@ export class BootstrapStack extends AcceleratorStack {
     accessRoleNames: string[];
     partition: string;
   }) {
+    const lifecycleRules: cdk.aws_s3.LifecycleRule[] = [
+      {
+        id: 'CleanupOldVersions',
+        enabled: true,
+        noncurrentVersionExpiration: cdk.Duration.days(365),
+      },
+    ];
+
     const assetBucket = new cdk.aws_s3.Bucket(this, 'StagingBucket', {
-      encryption: cdk.aws_s3.BucketEncryption.KMS,
-      encryptionKey: props.kmsKey,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
       blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
       bucketName: props.bucketName,
-      versioned: true,
+      encryption: cdk.aws_s3.BucketEncryption.KMS,
+      encryptionKey: props.kmsKey,
+      lifecycleRules: lifecycleRules,
       objectOwnership: cdk.aws_s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      versioned: true,
     });
 
     assetBucket.grantReadWrite(this.getOrgPrincipals(this.organizationId));
