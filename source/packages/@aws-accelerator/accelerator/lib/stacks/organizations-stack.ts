@@ -358,16 +358,21 @@ export class OrganizationsStack extends AcceleratorStack {
    * Function to enable FMS delegated admin account
    */
   private enableFMSDelegatedAdminAccount() {
+    const fmsServiceLinkedRole = new cdk.aws_iam.CfnServiceLinkedRole(this, 'FirewallManagerServiceLinkedRole', {
+      awsServiceName: 'fms.amazonaws.com',
+    });
     const fmsConfig = this.stackProperties.networkConfig.firewallManagerService;
     if (fmsConfig && cdk.Stack.of(this).region === this.stackProperties.globalConfig.homeRegion) {
       const adminAccountName = fmsConfig.delegatedAdminAccount;
       const adminAccountId = this.stackProperties.accountsConfig.getAccountId(adminAccountName);
-      new FMSOrganizationAdminAccount(this, 'FMSOrganizationAdminAccount', {
+      const createFmsDelegatedAdmin = new FMSOrganizationAdminAccount(this, 'FMSOrganizationAdminAccount', {
         adminAccountId,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
         assumeRole: this.stackProperties.globalConfig.managementAccountAccessRole,
       });
+      // Add dependency to prevent race condition between delegated admin and service linked role
+      createFmsDelegatedAdmin.node.addDependency(fmsServiceLinkedRole);
     }
   }
 

@@ -1854,6 +1854,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
     },
     "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E": {
       "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
         "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy83E36C98",
         "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
       ],
@@ -1875,6 +1876,9 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "Type": "AWS::Lambda::Function",
     },
     "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566": {
+      "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -1916,6 +1920,9 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "Type": "AWS::IAM::Role",
     },
     "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy83E36C98": {
+      "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -1968,6 +1975,9 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
     },
     "FMSOrganizationAdminAccountfmsAdmin222222222222B4E8A399": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -1987,6 +1997,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
     },
     "FMSOrganizationAdminAccountframeworkonEvent17783F2B": {
       "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
         "FMSOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicyD56A7BD5",
         "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
       ],
@@ -2019,6 +2030,9 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "Type": "AWS::Lambda::Function",
     },
     "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101": {
+      "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -2060,6 +2074,9 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "Type": "AWS::IAM::Role",
     },
     "FMSOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicyD56A7BD5": {
+      "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -2110,6 +2127,12 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "FirewallManagerServiceLinkedRole": {
+      "Properties": {
+        "AWSServiceName": "fms.amazonaws.com",
+      },
+      "Type": "AWS::IAM::ServiceLinkedRole",
     },
     "GuardDutyEnableOrganizationAdminAccount90D7393E": {
       "DeletionPolicy": "Delete",
@@ -4724,6 +4747,12 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       },
       "Type": "Custom::EnableSharingWithAwsOrganization",
       "UpdateReplacePolicy": "Delete",
+    },
+    "FirewallManagerServiceLinkedRole": {
+      "Properties": {
+        "AWSServiceName": "fms.amazonaws.com",
+      },
+      "Type": "AWS::IAM::ServiceLinkedRole",
     },
     "GuardDutyEnableOrganizationAdminAccount90D7393E": {
       "DeletionPolicy": "Delete",
@@ -7346,6 +7375,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
     },
     "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambda2D69B84E": {
       "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
         "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy83E36C98",
         "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566",
       ],
@@ -7367,6 +7397,9 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "Type": "AWS::Lambda::Function",
     },
     "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRole28F3C566": {
+      "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -7408,6 +7441,9 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "Type": "AWS::IAM::Role",
     },
     "FMSOrganizationAdminAccountFMSOrganizationAdminAccountProviderLambdaServiceRoleDefaultPolicy83E36C98": {
+      "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -7460,6 +7496,9 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
     },
     "FMSOrganizationAdminAccountfmsAdmin222222222222B4E8A399": {
       "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
+      ],
       "Properties": {
         "ServiceToken": {
           "Fn::GetAtt": [
@@ -7479,6 +7518,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
     },
     "FMSOrganizationAdminAccountframeworkonEvent17783F2B": {
       "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
         "FMSOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicyD56A7BD5",
         "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101",
       ],
@@ -7511,6 +7551,9 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "Type": "AWS::Lambda::Function",
     },
     "FMSOrganizationAdminAccountframeworkonEventServiceRole6775A101": {
+      "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -7552,6 +7595,9 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "Type": "AWS::IAM::Role",
     },
     "FMSOrganizationAdminAccountframeworkonEventServiceRoleDefaultPolicyD56A7BD5": {
+      "DependsOn": [
+        "FirewallManagerServiceLinkedRole",
+      ],
       "Metadata": {
         "cdk_nag": {
           "rules_to_suppress": [
@@ -7602,6 +7648,12 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
         ],
       },
       "Type": "AWS::IAM::Policy",
+    },
+    "FirewallManagerServiceLinkedRole": {
+      "Properties": {
+        "AWSServiceName": "fms.amazonaws.com",
+      },
+      "Type": "AWS::IAM::ServiceLinkedRole",
     },
     "GuardDutyEnableOrganizationAdminAccount90D7393E": {
       "DeletionPolicy": "Delete",
