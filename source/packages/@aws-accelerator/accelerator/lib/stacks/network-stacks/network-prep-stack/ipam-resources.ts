@@ -259,6 +259,7 @@ export class IpamResources {
 
   /**
    * Create cross-account SSM role
+   *
    * @param centralConfig
    * @param delegatedAdminAccountId
    * @param homeRegion

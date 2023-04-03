@@ -586,9 +586,7 @@ export abstract class NetworkStack extends AcceleratorStack {
         name: this.getSsmPath(SsmResourceType.IPAM_POOL, [poolName]),
         accountId: delegatedAdminAccountId,
         parameterRegion: ipamPoolRegion,
-        roleName: `${this.acceleratorResourceNames.roles.crossAccountIpamPoolAccessRolePrefix}-${
-          cdk.Stack.of(this).region
-        }`,
+        roleName: this.acceleratorResourceNames.roles.ipamSsmParameterAccess,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.props.globalConfig.cloudwatchLogRetentionInDays ?? 365,
         acceleratorPrefix: this.props.prefixes.accelerator,
