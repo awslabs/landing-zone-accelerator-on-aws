@@ -147,6 +147,7 @@ export abstract class Accelerator {
    * @returns
    */
   static async run(props: AcceleratorProps): Promise<void> {
+    let managementAccountCredentials: AWS.STS.Credentials | undefined;
     let globalConfig = undefined;
     let assumeRolePlugin = undefined;
 
@@ -164,6 +165,8 @@ export abstract class Accelerator {
 
     if (props.stage !== AcceleratorStage.PIPELINE && props.stage !== AcceleratorStage.TESTER_PIPELINE) {
       // Get management account credential when pipeline is executing outside of management account
+      managementAccountCredentials = await this.getManagementAccountCredentials(props.partition);
+
       // Load in the global config to read in the management account access roles
       globalConfig = GlobalConfig.load(props.configDirPath);
 
@@ -175,6 +178,7 @@ export abstract class Accelerator {
         assumeRoleName: globalConfig.managementAccountAccessRole,
         partition: props.partition,
         caBundlePath: props.caBundlePath,
+        credentials: managementAccountCredentials,
       });
       assumeRolePlugin.init(PluginHost.instance);
     }
@@ -279,6 +283,7 @@ export abstract class Accelerator {
         assumeRoleName: globalConfig.managementAccountAccessRole,
         partition: props.partition,
         caBundlePath: props.caBundlePath,
+        credentials: managementAccountCredentials,
       });
       assumeRolePlugin.init(PluginHost.instance);
       credentialExpiration = new Date(+new Date() + 60000 * 30);
@@ -321,6 +326,7 @@ export abstract class Accelerator {
               assumeRoleName: globalConfig.managementAccountAccessRole,
               partition: props.partition,
               caBundlePath: props.caBundlePath,
+              credentials: managementAccountCredentials,
             });
             assumeRolePlugin.init(PluginHost.instance);
             credentialExpiration = new Date(+new Date() + 60000 * 30);
@@ -506,6 +512,7 @@ export abstract class Accelerator {
                 assumeRoleName: globalConfig.managementAccountAccessRole,
                 partition: props.partition,
                 caBundlePath: props.caBundlePath,
+                credentials: managementAccountCredentials,
               });
               assumeRolePlugin.init(PluginHost.instance);
               credentialExpiration = new Date(+new Date() + 60000 * 30);
@@ -550,6 +557,7 @@ export abstract class Accelerator {
           assumeRoleName: globalConfig.managementAccountAccessRole,
           partition: props.partition,
           caBundlePath: props.caBundlePath,
+          credentials: managementAccountCredentials,
         });
         assumeRolePlugin.init(PluginHost.instance);
         credentialExpiration = new Date(+new Date() + 60000 * 30);
@@ -585,6 +593,7 @@ export abstract class Accelerator {
                   assumeRoleName: globalConfig.managementAccountAccessRole,
                   partition: props.partition,
                   caBundlePath: props.caBundlePath,
+                  credentials: managementAccountCredentials,
                 });
                 assumeRolePlugin.init(PluginHost.instance);
                 credentialExpiration = new Date(+new Date() + 60000 * 30);
@@ -653,13 +662,13 @@ export abstract class Accelerator {
     assumeRoleName: string | undefined;
     partition: string;
     caBundlePath: string | undefined;
+    credentials?: AWS.STS.Credentials;
   }) {
-    const credentials = await this.getManagementAccountCredentials(props.partition);
     const assumeRolePlugin = new AssumeProfilePlugin({
       region: props.region,
       assumeRoleName: props.assumeRoleName,
       assumeRoleDuration: 3600,
-      credentials,
+      credentials: props.credentials,
       partition: props.partition,
       caBundlePath: props.caBundlePath,
     });
