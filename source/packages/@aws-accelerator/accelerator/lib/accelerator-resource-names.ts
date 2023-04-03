@@ -26,7 +26,6 @@ interface RoleNames {
   snsTopicCmkArnParameterAccess: string;
   crossAccountAssetsBucketCmkArnSsmParameterAccess: string;
   crossAccountServiceCatalogPropagation: string;
-  crossAccountIpamPoolAccessRolePrefix: string;
   assetFunctionRoleName: string;
 }
 interface ParameterNames {
@@ -90,7 +89,6 @@ export class AcceleratorResourceNames {
     snsTopicCmkArnParameterAccess: 'PLACE_HOLDER',
     crossAccountAssetsBucketCmkArnSsmParameterAccess: 'PLACE_HOLDER',
     crossAccountServiceCatalogPropagation: 'PLACE_HOLDER',
-    crossAccountIpamPoolAccessRolePrefix: 'PLACE_HOLDER',
     assetFunctionRoleName: 'PLACE_HOLDER',
   };
   public parameters: ParameterNames = {
@@ -159,7 +157,6 @@ export class AcceleratorResourceNames {
     this.roles.crossAccountAssetsBucketCmkArnSsmParameterAccess =
       props.prefixes.accelerator + '-AssetsBucket-KeyArnParam-Role';
     this.roles.crossAccountServiceCatalogPropagation = props.prefixes.accelerator + '-CrossAccount-ServiceCatalog-Role';
-    this.roles.crossAccountIpamPoolAccessRolePrefix = props.prefixes.accelerator + '-GetAcceleratorIpamSsmParamRole';
     this.roles.assetFunctionRoleName = props.prefixes.accelerator + '-AssetsAccessRole';
 
     //
