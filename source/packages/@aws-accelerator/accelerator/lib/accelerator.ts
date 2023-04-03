@@ -18,6 +18,8 @@ import { RequireApproval } from 'aws-cdk/lib/diff';
 import { Command } from 'aws-cdk/lib/settings';
 import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
+import { STSClient, AssumeRoleCommand, AssumeRoleCommandInput } from '@aws-sdk/client-sts';
+import { SSMClient, GetParameterCommand, GetParameterCommandInput } from '@aws-sdk/client-ssm';
 
 import { AccountsConfig, GlobalConfig } from '@aws-accelerator/config';
 import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
@@ -133,8 +135,6 @@ export interface AcceleratorProps {
  * - z
  */
 export abstract class Accelerator {
-  // private static readonly DEFAULT_MAX_CONCURRENT_STACKS = 20;
-
   static isSupportedStage(stage: AcceleratorStage): boolean {
     if (stage === undefined) {
       return false;
@@ -147,7 +147,6 @@ export abstract class Accelerator {
    * @returns
    */
   static async run(props: AcceleratorProps): Promise<void> {
-    let managementAccountCredentials = undefined;
     let globalConfig = undefined;
     let assumeRolePlugin = undefined;
 
@@ -165,24 +164,21 @@ export abstract class Accelerator {
 
     if (props.stage !== AcceleratorStage.PIPELINE && props.stage !== AcceleratorStage.TESTER_PIPELINE) {
       // Get management account credential when pipeline is executing outside of management account
-      managementAccountCredentials = await this.getManagementAccountCredentials(props.partition);
-
       // Load in the global config to read in the management account access roles
       globalConfig = GlobalConfig.load(props.configDirPath);
 
       //
       // Load Plugins
       //
-      assumeRolePlugin = new AssumeProfilePlugin({
+      assumeRolePlugin = await this.initializeAssumeRolePlugin({
         region: props.region ?? globalRegion,
         assumeRoleName: globalConfig.managementAccountAccessRole,
-        assumeRoleDuration: 3600,
-        credentials: managementAccountCredentials,
         partition: props.partition,
         caBundlePath: props.caBundlePath,
       });
       assumeRolePlugin.init(PluginHost.instance);
     }
+    let credentialExpiration = new Date(+new Date() + 60000 * 30);
 
     //
     // When an account and region is specified, execute as single stack
@@ -246,7 +242,7 @@ export abstract class Accelerator {
     //
     // When running parallel, this will be the max concurrent stacks
     //
-    const maxStacks = process.env['MAX_CONCURRENT_STACKS'] ?? 500;
+    const maxStacks = process.env['MAX_CONCURRENT_STACKS'] ?? 100;
 
     let promises: Promise<void>[] = [];
 
@@ -255,34 +251,87 @@ export abstract class Accelerator {
     //
     if (props.command == 'bootstrap') {
       const trustedAccountId = accountsConfig.getManagementAccountId();
+      // bootstrap management account
+      for (const region of globalConfig.enabledRegions) {
+        await delay(500);
+        promises.push(
+          AcceleratorToolkit.execute({
+            command: props.command,
+            accountId: accountsConfig.getManagementAccountId(),
+            region,
+            partition: props.partition,
+            trustedAccountId,
+            configDirPath: props.configDirPath,
+            requireApproval: props.requireApproval,
+            app: props.app,
+            caBundlePath: props.caBundlePath,
+            ec2Creds: props.ec2Creds,
+            proxyAddress: props.proxyAddress,
+            centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+          }),
+        );
+        await Promise.all(promises);
+        promises = [];
+      }
+
+      assumeRolePlugin = await this.initializeAssumeRolePlugin({
+        region: props.region ?? globalRegion,
+        assumeRoleName: globalConfig.managementAccountAccessRole,
+        partition: props.partition,
+        caBundlePath: props.caBundlePath,
+      });
+      assumeRolePlugin.init(PluginHost.instance);
+      credentialExpiration = new Date(+new Date() + 60000 * 30);
+
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
-          await delay(1500);
-          promises.push(
-            AcceleratorToolkit.execute({
-              command: props.command,
-              accountId: accountsConfig.getAccountId(account.name),
+          const accountId = accountsConfig.getAccountId(account.name);
+          if (accountId !== trustedAccountId) {
+            const needsBootstrapping = await bootstrapRequired(
+              accountId,
               region,
-              partition: props.partition,
-              trustedAccountId,
-              configDirPath: props.configDirPath,
-              requireApproval: props.requireApproval,
-              app: props.app,
-              caBundlePath: props.caBundlePath,
-              ec2Creds: props.ec2Creds,
-              proxyAddress: props.proxyAddress,
-              centralizeCdkBootstrap:
-                globalConfig?.centralizeCdkBuckets?.enable || globalConfig?.cdkOptions?.centralizeBuckets,
-            }),
-          );
+              props.partition,
+              globalConfig.managementAccountAccessRole,
+            );
+            if (needsBootstrapping) {
+              await delay(500);
+              promises.push(
+                AcceleratorToolkit.execute({
+                  command: props.command,
+                  accountId: accountId,
+                  region,
+                  partition: props.partition,
+                  trustedAccountId,
+                  configDirPath: props.configDirPath,
+                  requireApproval: props.requireApproval,
+                  app: props.app,
+                  caBundlePath: props.caBundlePath,
+                  ec2Creds: props.ec2Creds,
+                  proxyAddress: props.proxyAddress,
+                  centralizeCdkBootstrap:
+                    globalConfig?.centralizeCdkBuckets?.enable || globalConfig?.cdkOptions?.centralizeBuckets,
+                }),
+              );
+            }
+          }
 
-          //override to prevent errors
+          if (new Date() > credentialExpiration) {
+            assumeRolePlugin = await this.initializeAssumeRolePlugin({
+              region: props.region ?? globalRegion,
+              assumeRoleName: globalConfig.managementAccountAccessRole,
+              partition: props.partition,
+              caBundlePath: props.caBundlePath,
+            });
+            assumeRolePlugin.init(PluginHost.instance);
+            credentialExpiration = new Date(+new Date() + 60000 * 30);
+          }
           if (promises.length >= 100) {
             await Promise.all(promises);
             promises = [];
           }
         }
       }
+
       await Promise.all(promises);
       return;
     }
@@ -342,7 +391,6 @@ export abstract class Accelerator {
     if (props.stage === AcceleratorStage.ORGANIZATIONS) {
       for (const region of globalConfig.enabledRegions) {
         logger.info(`Executing ${props.stage} for Management account in ${region} region.`);
-        await delay(1500);
         promises.push(
           AcceleratorToolkit.execute({
             command: props.command,
@@ -368,7 +416,6 @@ export abstract class Accelerator {
     if (props.stage === AcceleratorStage.KEY || props.stage === AcceleratorStage.SECURITY_AUDIT) {
       for (const region of globalConfig.enabledRegions) {
         logger.info(`Executing ${props.stage} for audit account in ${region} region.`);
-        await delay(1500);
         promises.push(
           AcceleratorToolkit.execute({
             command: props.command,
@@ -429,13 +476,13 @@ export abstract class Accelerator {
           });
         }
       }
-      // execute in all other regions for all accounts, except logging account home region
+      // execute in all other regions for all accounts, except logging account
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
           logger.info(`Executing ${props.stage} for ${account.name} account in ${region} region.`);
           const accountId = accountsConfig.getAccountId(account.name);
-          await delay(1500);
           if (accountId !== logAccountId) {
+            await delay(1000);
             promises.push(
               AcceleratorToolkit.execute({
                 command: props.command,
@@ -453,6 +500,16 @@ export abstract class Accelerator {
           if (promises.length >= maxStacks) {
             await Promise.all(promises);
             promises = [];
+            if (new Date() > credentialExpiration) {
+              assumeRolePlugin = await this.initializeAssumeRolePlugin({
+                region: props.region ?? globalRegion,
+                assumeRoleName: globalConfig.managementAccountAccessRole,
+                partition: props.partition,
+                caBundlePath: props.caBundlePath,
+              });
+              assumeRolePlugin.init(PluginHost.instance);
+              credentialExpiration = new Date(+new Date() + 60000 * 30);
+            }
           }
         }
       }
@@ -467,28 +524,72 @@ export abstract class Accelerator {
       props.stage === AcceleratorStage.NETWORK_ASSOCIATIONS ||
       props.stage === AcceleratorStage.CUSTOMIZATIONS
     ) {
+      const managementAccountId = accountsConfig.getManagementAccountId();
+      for (const region of globalConfig.enabledRegions) {
+        promises.push(
+          AcceleratorToolkit.execute({
+            command: props.command,
+            accountId: managementAccountId,
+            region,
+            partition: props.partition,
+            stage: props.stage,
+            configDirPath: props.configDirPath,
+            requireApproval: props.requireApproval,
+            app: props.app,
+            caBundlePath: props.caBundlePath,
+            ec2Creds: props.ec2Creds,
+            proxyAddress: props.proxyAddress,
+          }),
+        );
+        await Promise.all(promises);
+      }
+
+      if (new Date() > credentialExpiration) {
+        assumeRolePlugin = await this.initializeAssumeRolePlugin({
+          region: props.region ?? globalRegion,
+          assumeRoleName: globalConfig.managementAccountAccessRole,
+          partition: props.partition,
+          caBundlePath: props.caBundlePath,
+        });
+        assumeRolePlugin.init(PluginHost.instance);
+        credentialExpiration = new Date(+new Date() + 60000 * 30);
+      }
+
       for (const region of globalConfig.enabledRegions) {
         for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
-          logger.info(`Executing ${props.stage} for ${account.name} account in ${region} region.`);
-          await delay(1500);
-          promises.push(
-            AcceleratorToolkit.execute({
-              command: props.command,
-              accountId: accountsConfig.getAccountId(account.name),
-              region,
-              partition: props.partition,
-              stage: props.stage,
-              configDirPath: props.configDirPath,
-              requireApproval: props.requireApproval,
-              app: props.app,
-              caBundlePath: props.caBundlePath,
-              ec2Creds: props.ec2Creds,
-              proxyAddress: props.proxyAddress,
-            }),
-          );
-          if (promises.length >= maxStacks) {
-            await Promise.all(promises);
-            promises = [];
+          const accountId = accountsConfig.getAccountId(account.name);
+          if (accountId !== managementAccountId) {
+            await delay(1000);
+            logger.info(`Executing ${props.stage} for ${account.name} account in ${region} region.`);
+            promises.push(
+              AcceleratorToolkit.execute({
+                command: props.command,
+                accountId: accountId,
+                region,
+                partition: props.partition,
+                stage: props.stage,
+                configDirPath: props.configDirPath,
+                requireApproval: props.requireApproval,
+                app: props.app,
+                caBundlePath: props.caBundlePath,
+                ec2Creds: props.ec2Creds,
+                proxyAddress: props.proxyAddress,
+              }),
+            );
+            if (promises.length >= maxStacks) {
+              await Promise.all(promises);
+              promises = [];
+              if (new Date() > credentialExpiration) {
+                assumeRolePlugin = await this.initializeAssumeRolePlugin({
+                  region: props.region ?? globalRegion,
+                  assumeRoleName: globalConfig.managementAccountAccessRole,
+                  partition: props.partition,
+                  caBundlePath: props.caBundlePath,
+                });
+                assumeRolePlugin.init(PluginHost.instance);
+                credentialExpiration = new Date(+new Date() + 60000 * 30);
+              }
+            }
           }
         }
       }
@@ -546,8 +647,62 @@ export abstract class Accelerator {
       return undefined;
     }
   }
+
+  static async initializeAssumeRolePlugin(props: {
+    region: string | undefined;
+    assumeRoleName: string | undefined;
+    partition: string;
+    caBundlePath: string | undefined;
+  }) {
+    const credentials = await this.getManagementAccountCredentials(props.partition);
+    const assumeRolePlugin = new AssumeProfilePlugin({
+      region: props.region,
+      assumeRoleName: props.assumeRoleName,
+      assumeRoleDuration: 3600,
+      credentials,
+      partition: props.partition,
+      caBundlePath: props.caBundlePath,
+    });
+    assumeRolePlugin.init(PluginHost.instance);
+    return assumeRolePlugin;
+  }
 }
 
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function bootstrapRequired(
+  accountId: string,
+  region: string,
+  partition: string,
+  managementAccountAccessRole: string,
+): Promise<boolean> {
+  const stsClient = new STSClient({ region: region });
+  const stsParams: AssumeRoleCommandInput = {
+    RoleArn: `arn:${partition}:iam::${accountId}:role/${managementAccountAccessRole}`,
+    RoleSessionName: 'acceleratorBootstrapCheck',
+    DurationSeconds: 900,
+  };
+  const assumeRoleCredential = await throttlingBackOff(() => stsClient.send(new AssumeRoleCommand(stsParams)));
+
+  const ssmParams: GetParameterCommandInput = {
+    Name: ' /cdk-bootstrap/accel/version',
+  };
+  const ssmClient = new SSMClient({
+    credentials: {
+      accessKeyId: assumeRoleCredential.Credentials!.AccessKeyId!,
+      secretAccessKey: assumeRoleCredential.Credentials!.SecretAccessKey!,
+      sessionToken: assumeRoleCredential.Credentials?.SessionToken,
+    },
+    region: region,
+  });
+
+  const parameter = await throttlingBackOff(() => ssmClient.send(new GetParameterCommand(ssmParams)));
+  if (parameter.Parameter && parameter.Parameter.Value === '15') {
+    logger.info(`Skipping bootstrap for account-region: ${accountId}-${region}`);
+    return false;
+  }
+
+  return true;
 }

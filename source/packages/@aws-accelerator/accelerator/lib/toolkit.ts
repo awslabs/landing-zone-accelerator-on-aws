@@ -17,6 +17,7 @@ import { CloudFormationDeployments } from 'aws-cdk/lib/api/cloudformation-deploy
 import { StackSelector } from 'aws-cdk/lib/api/cxapp/cloud-assembly';
 import { CloudExecutable } from 'aws-cdk/lib/api/cxapp/cloud-executable';
 import { execProgram } from 'aws-cdk/lib/api/cxapp/exec';
+import { ILock } from 'aws-cdk/lib/api/util/rwlock';
 import { ToolkitInfo } from 'aws-cdk/lib/api/toolkit-info';
 import { CdkToolkit } from 'aws-cdk/lib/cdk-toolkit';
 import { RequireApproval } from 'aws-cdk/lib/diff';
@@ -151,11 +152,14 @@ export class AcceleratorToolkit {
 
     const cloudFormation = new CloudFormationDeployments({ sdkProvider });
 
+    let outDirLock: ILock | undefined;
     const cloudExecutable = new CloudExecutable({
       configuration,
       sdkProvider,
       synthesizer: async (aws, config) => {
-        const { assembly } = await execProgram(aws, config);
+        await outDirLock?.release();
+        const { assembly, lock } = await execProgram(aws, config);
+        outDirLock = lock;
         return assembly;
       },
     });
