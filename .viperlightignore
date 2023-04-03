@@ -3,7 +3,7 @@ Config
 # Use of opensource-codeofconduct email for amazon is expected
 CODE_OF_CONDUCT.md:4
 
-^cdk.out/
+cdk.out/
 ^dist/
 node_modules/
 
@@ -35,8 +35,6 @@ error.log
 #
 
 # ELB Root Account References https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html#attach-bucket-policy
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:40
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:41
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:42
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:43
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:44
@@ -61,10 +59,14 @@ source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:62
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:63
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:64
 source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:65
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:66
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:67
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:539
-source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:540
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:640
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:641
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:694
+source/packages/@aws-accelerator/accelerator/lib/accelerator.ts:695
 
 # Accelerator specific assume role declaration
 source/packages/@aws-accelerator/constructs/lib/aws-directory-service/share-directory/index.ts:143
