@@ -236,6 +236,13 @@ export class AcceleratorToolkit {
             : [`${AcceleratorStackNames[options.stage]}-${options.accountId}-${options.region}`];
         }
 
+        if (options.stage === AcceleratorStage.KEY) {
+          stackName = [
+            `${AcceleratorStackNames[AcceleratorStage.KEY]}-${options.accountId}-${options.region}`,
+            `${AcceleratorStackNames[AcceleratorStage.DEPENDENCIES]}-${options.accountId}-${options.region}`,
+          ];
+        }
+
         if (options.stage === AcceleratorStage.NETWORK_VPC) {
           stackName = [
             `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC_DNS]}-${options.accountId}-${options.region}`,
