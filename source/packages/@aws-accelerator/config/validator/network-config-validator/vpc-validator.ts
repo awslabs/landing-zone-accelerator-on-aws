@@ -1591,10 +1591,22 @@ export class VpcValidator {
             } else {
               // Validate subnets
               source.subnets.forEach(subnet => {
-                if (!helpers.getSubnet(vpc, subnet)) {
+                const subnetItem = helpers.getSubnet(vpc, subnet);
+                if (!subnetItem) {
                   errors.push(
                     `[VPC ${vpcItem.name} security group ${group.name}]: subnet "${subnet}" does not exist in source VPC "${source.vpc}"`,
                   );
+                } else {
+                  // Check cross-account IPAM subnet condition
+                  const sourceVpcAccountNames = helpers.getVpcAccountNames(vpcItem);
+                  if (
+                    (!sourceVpcAccountNames.includes(source.account) || vpc.region !== vpcItem.region) &&
+                    subnetItem.ipamAllocation
+                  ) {
+                    errors.push(
+                      `[VPC ${vpcItem.name} security group ${group.name}]: accelerator does not currently support cross-account/cross-region IPAM subnets as security group references (source VPC: ${source.vpc}, source subnet: ${subnet}, source account: ${source.account})`,
+                    );
+                  }
                 }
               });
 
@@ -1636,10 +1648,22 @@ export class VpcValidator {
             } else {
               // Validate subnets
               source.subnets.forEach(subnet => {
-                if (!helpers.getSubnet(vpc, subnet)) {
+                const subnetItem = helpers.getSubnet(vpc, subnet);
+                if (!subnetItem) {
                   errors.push(
                     `[VPC ${vpcItem.name} security group ${group.name}]: subnet "${subnet}" does not exist in source VPC "${source.vpc}"`,
                   );
+                } else {
+                  // Check cross-account IPAM subnet condition
+                  const sourceVpcAccountNames = helpers.getVpcAccountNames(vpcItem);
+                  if (
+                    (!sourceVpcAccountNames.includes(source.account) || vpc.region !== vpcItem.region) &&
+                    subnetItem.ipamAllocation
+                  ) {
+                    errors.push(
+                      `[VPC ${vpcItem.name} security group ${group.name}]: accelerator does not currently support cross-account/cross-region IPAM subnets as security group references (source VPC: ${source.vpc}, source subnet: ${subnet}, source account: ${source.account})`,
+                    );
+                  }
                 }
               });
 

@@ -27,6 +27,7 @@ import {
   SecurityGroup,
   SecurityGroupEgressRuleProps,
   SecurityGroupIngressRuleProps,
+  Subnet,
   Vpc,
 } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
@@ -63,23 +64,30 @@ export class SecurityGroupResources {
   public readonly securityGroupMap: Map<string, SecurityGroup>;
   private stack: NetworkVpcStack;
 
-  constructor(networkVpcStack: NetworkVpcStack, vpcMap: Map<string, Vpc>, prefixListMap: Map<string, PrefixList>) {
+  constructor(
+    networkVpcStack: NetworkVpcStack,
+    vpcMap: Map<string, Vpc>,
+    subnetMap: Map<string, Subnet>,
+    prefixListMap: Map<string, PrefixList>,
+  ) {
     this.stack = networkVpcStack;
 
     // Create security groups
-    this.securityGroupMap = this.createSecurityGroups(this.stack.vpcsInScope, vpcMap, prefixListMap);
+    this.securityGroupMap = this.createSecurityGroups(this.stack.vpcsInScope, vpcMap, subnetMap, prefixListMap);
   }
 
   /**
    * Create security group resources
    * @param vpcResources
    * @param vpcMap
+   * @param subnetMap
    * @param prefixListMap
    * @returns
    */
   private createSecurityGroups(
     vpcResources: (VpcConfig | VpcTemplatesConfig)[],
     vpcMap: Map<string, Vpc>,
+    subnetMap: Map<string, Subnet>,
     prefixListMap: Map<string, PrefixList>,
   ): Map<string, SecurityGroup> {
     const securityGroupMap = new Map<string, SecurityGroup>();
@@ -89,9 +97,9 @@ export class SecurityGroupResources {
         this.stack.addLogs(LogLevel.INFO, `Processing rules for ${securityGroupItem.name} in VPC ${vpcItem.name}`);
 
         // Process configured rules
-        const processedIngressRules = this.setSecurityGroupIngressRules(securityGroupItem, prefixListMap);
+        const processedIngressRules = this.setSecurityGroupIngressRules(securityGroupItem, subnetMap, prefixListMap);
         const allIngressRule = this.containsAllIngressRule(processedIngressRules);
-        const processedEgressRules = this.setSecurityGroupEgressRules(securityGroupItem, prefixListMap);
+        const processedEgressRules = this.setSecurityGroupEgressRules(securityGroupItem, subnetMap, prefixListMap);
 
         // Get VPC
         const vpc = this.stack.getVpc(vpcMap, vpcItem.name);
@@ -108,8 +116,8 @@ export class SecurityGroupResources {
         securityGroupMap.set(`${vpcItem.name}_${securityGroupItem.name}`, securityGroup);
       }
       // Create security group rules that reference other security groups
-      this.createSecurityGroupSgIngressSources(vpcItem, prefixListMap, securityGroupMap);
-      this.createSecurityGroupSgEgressSources(vpcItem, prefixListMap, securityGroupMap);
+      this.createSecurityGroupSgIngressSources(vpcItem, subnetMap, prefixListMap, securityGroupMap);
+      this.createSecurityGroupSgEgressSources(vpcItem, subnetMap, prefixListMap, securityGroupMap);
     }
     return securityGroupMap;
   }
@@ -117,16 +125,25 @@ export class SecurityGroupResources {
   /**
    * Process and set security group ingress rules
    * @param securityGroupItem
+   * @param subnetMap
    * @param prefixListMap
    * @returns
    */
-  private setSecurityGroupIngressRules(securityGroupItem: SecurityGroupConfig, prefixListMap: Map<string, PrefixList>) {
+  private setSecurityGroupIngressRules(
+    securityGroupItem: SecurityGroupConfig,
+    subnetMap: Map<string, Subnet>,
+    prefixListMap: Map<string, PrefixList>,
+  ) {
     const processedIngressRules: SecurityGroupIngressRuleProps[] = [];
 
     for (const [ruleId, ingressRuleItem] of securityGroupItem.inboundRules.entries() ?? []) {
       this.stack.addLogs(LogLevel.INFO, `Adding ingress rule ${ruleId} to ${securityGroupItem.name}`);
 
-      const ingressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(ingressRuleItem, prefixListMap);
+      const ingressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
+        ingressRuleItem,
+        subnetMap,
+        prefixListMap,
+      );
 
       this.stack.addLogs(LogLevel.INFO, `Adding ${ingressRules.length} ingress rules`);
 
@@ -166,16 +183,25 @@ export class SecurityGroupResources {
   /**
    * Process and set security group ingress rules
    * @param securityGroupItem
+   * @param subnetMap
    * @param prefixListMap
    * @returns
    */
-  private setSecurityGroupEgressRules(securityGroupItem: SecurityGroupConfig, prefixListMap: Map<string, PrefixList>) {
+  private setSecurityGroupEgressRules(
+    securityGroupItem: SecurityGroupConfig,
+    subnetMap: Map<string, Subnet>,
+    prefixListMap: Map<string, PrefixList>,
+  ) {
     const processedEgressRules: SecurityGroupEgressRuleProps[] = [];
 
     for (const [ruleId, egressRuleItem] of securityGroupItem.outboundRules.entries() ?? []) {
       this.stack.addLogs(LogLevel.INFO, `Adding egress rule ${ruleId} to ${securityGroupItem.name}`);
 
-      const egressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(egressRuleItem, prefixListMap);
+      const egressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
+        egressRuleItem,
+        subnetMap,
+        prefixListMap,
+      );
 
       this.stack.addLogs(LogLevel.INFO, `Adding ${egressRules.length} egress rules`);
 
@@ -199,11 +225,13 @@ export class SecurityGroupResources {
   /**
    * Create security group ingress rules that reference other security groups
    * @param vpcItem
+   * @param subnetMap
    * @param prefixListMap
    * @param securityGroupMap
    */
   private createSecurityGroupSgIngressSources(
     vpcItem: VpcConfig | VpcTemplatesConfig,
+    subnetMap: Map<string, Subnet>,
     prefixListMap: Map<string, PrefixList>,
     securityGroupMap: Map<string, SecurityGroup>,
   ) {
@@ -223,6 +251,7 @@ export class SecurityGroupResources {
 
           const ingressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
             ingressRuleItem,
+            subnetMap,
             prefixListMap,
             securityGroupMap,
             vpcItem.name,
@@ -244,11 +273,13 @@ export class SecurityGroupResources {
   /**
    * Create security group egress rules that reference other security groups
    * @param vpcItem
+   * @param subnetMap
    * @param prefixListMap
    * @param securityGroupMap
    */
   private createSecurityGroupSgEgressSources(
     vpcItem: VpcConfig | VpcTemplatesConfig,
+    subnetMap: Map<string, Subnet>,
     prefixListMap: Map<string, PrefixList>,
     securityGroupMap: Map<string, SecurityGroup>,
   ) {
@@ -268,6 +299,7 @@ export class SecurityGroupResources {
 
           const egressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
             egressRuleItem,
+            subnetMap,
             prefixListMap,
             securityGroupMap,
             vpcItem.name,
@@ -289,12 +321,14 @@ export class SecurityGroupResources {
   /**
    * Process security group rules based on configured type
    * @param item
+   * @param subnetMap
    * @param prefixListMap
    * @param securityGroupMap
    * @returns
    */
   private processSecurityGroupRules(
     item: SecurityGroupRuleConfig,
+    subnetMap: Map<string, Subnet>,
     prefixListMap: Map<string, PrefixList>,
     securityGroupMap?: Map<string, SecurityGroup>,
     vpcName?: string,
@@ -307,6 +341,7 @@ export class SecurityGroupResources {
         rules.push(
           ...this.processSecurityGroupRuleSources(
             item.sources,
+            subnetMap,
             prefixListMap,
             {
               ipProtocol: cdk.aws_ec2.Protocol.TCP,
@@ -325,6 +360,7 @@ export class SecurityGroupResources {
         rules.push(
           ...this.processSecurityGroupRuleSources(
             item.sources,
+            subnetMap,
             prefixListMap,
             {
               ipProtocol: cdk.aws_ec2.Protocol.UDP,
@@ -345,6 +381,7 @@ export class SecurityGroupResources {
         rules.push(
           ...this.processSecurityGroupRuleSources(
             item.sources,
+            subnetMap,
             prefixListMap,
             {
               ipProtocol: cdk.aws_ec2.Protocol.ALL,
@@ -358,6 +395,7 @@ export class SecurityGroupResources {
         rules.push(
           ...this.processSecurityGroupRuleSources(
             item.sources,
+            subnetMap,
             prefixListMap,
             {
               ipProtocol: cdk.aws_ec2.Protocol.TCP,
@@ -373,6 +411,7 @@ export class SecurityGroupResources {
         rules.push(
           ...this.processSecurityGroupRuleSources(
             item.sources,
+            subnetMap,
             prefixListMap,
             {
               ipProtocol: type,
@@ -393,6 +432,7 @@ export class SecurityGroupResources {
    * Processes individual security group source references.
    *
    * @param sources
+   * @param subnetMap
    * @param prefixListMap
    * @param securityGroupMap
    * @param props
@@ -400,6 +440,7 @@ export class SecurityGroupResources {
    */
   private processSecurityGroupRuleSources(
     sources: string[] | SecurityGroupSourceConfig[] | PrefixListSourceConfig[] | SubnetSourceConfig[],
+    subnetMap: Map<string, Subnet>,
     prefixListMap: Map<string, PrefixList>,
     props: {
       ipProtocol: string;
@@ -452,15 +493,24 @@ export class SecurityGroupResources {
           // Loop through all subnets to add
           for (const subnet of source.subnets) {
             // Locate the Subnet
-            const subnetItem = vpcItem.subnets?.find(item => item.name === subnet);
-            if (!subnetItem) {
-              this.stack.addLogs(LogLevel.INFO, `Specified subnet ${subnet} not defined`);
+            const subnetConfigItem = vpcItem.subnets?.find(item => item.name === subnet);
+            if (!subnetConfigItem) {
+              this.stack.addLogs(LogLevel.ERROR, `Specified subnet ${subnet} not defined`);
               throw new Error(`Configuration validation failed at runtime.`);
             }
-            rules.push({
-              cidrIp: subnetItem.ipv4CidrBlock,
-              ...props,
-            });
+
+            if (subnetConfigItem.ipamAllocation) {
+              const subnetItem = this.stack.getSubnet(subnetMap, vpcItem.name, subnetConfigItem.name);
+              rules.push({
+                cidrIp: subnetItem.ipv4CidrBlock,
+                ...props,
+              });
+            } else {
+              rules.push({
+                cidrIp: subnetConfigItem.ipv4CidrBlock,
+                ...props,
+              });
+            }
           }
         }
 

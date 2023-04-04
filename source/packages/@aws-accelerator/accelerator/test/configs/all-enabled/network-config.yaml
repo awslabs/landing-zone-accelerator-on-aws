@@ -606,6 +606,36 @@ vpcs:
               vpc: Network-Endpoints
               subnet: Network-Endpoints-B
               region: us-east-1
+          - rule: 105
+            action: allow
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination:
+              account: SharedServices
+              vpc: SharedServices-Ipam-East
+              subnet: SharedServices-A
+              region: us-east-1
+          - rule: 106
+            action: deny
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination:
+              account: SharedServices
+              vpc: SharedServices-Ipam-West
+              subnet: SharedServices-A
+              region: us-west-2
+          - rule: 107
+            action: deny
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            destination:
+              account: SharedServices
+              vpc: SharedServices-Main
+              subnet: SharedServices-App-A
+              region: us-east-1
         inboundRules:
           - rule: 101
             action: allow
@@ -642,6 +672,36 @@ vpcs:
               account: Network
               vpc: Network-Endpoints
               subnet: Network-Endpoints-B
+              region: us-east-1
+          - rule: 105
+            action: allow
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: SharedServices
+              vpc: SharedServices-Ipam-East
+              subnet: SharedServices-A
+              region: us-east-1
+          - rule: 106
+            action: deny
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: SharedServices
+              vpc: SharedServices-Ipam-West
+              subnet: SharedServices-A
+              region: us-west-2
+          - rule: 107
+            action: deny
+            fromPort: -1
+            toPort: -1
+            protocol: -1
+            source:
+              account: SharedServices
+              vpc: SharedServices-Main
+              subnet: SharedServices-App-A
               region: us-east-1
     gatewayEndpoints:
       defaultPolicy: Default
