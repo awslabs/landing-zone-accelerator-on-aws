@@ -104,7 +104,12 @@ export class NetworkVpcStack extends NetworkStack {
     //
     // Create security groups
     //
-    const sgResources = new SecurityGroupResources(this, vpcResources.vpcMap, plResources.prefixListMap);
+    const sgResources = new SecurityGroupResources(
+      this,
+      vpcResources.vpcMap,
+      subnetResources.subnetMap,
+      plResources.prefixListMap,
+    );
     //
     // Create NACLs
     //

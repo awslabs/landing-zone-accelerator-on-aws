@@ -1603,110 +1603,6 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "AWS::EC2::TransitGatewayRouteTablePropagation",
     },
-    "NetworkEndpointsTestNACLinbound1": {
-      "Properties": {
-        "CidrBlock": {
-          "Fn::GetAtt": [
-            "NetworkEndpointsTestNacl20IngressNaclRule139869A8",
-            "ipv4CidrBlock",
-          ],
-        },
-        "Egress": false,
-        "NetworkAclId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsnetworkAclTestNACLidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "PortRange": {
-          "From": -1,
-          "To": -1,
-        },
-        "Protocol": -1,
-        "RuleAction": "allow",
-        "RuleNumber": 20,
-      },
-      "Type": "AWS::EC2::NetworkAclEntry",
-    },
-    "NetworkEndpointsTestNACLoutbound1": {
-      "Properties": {
-        "CidrBlock": {
-          "Fn::GetAtt": [
-            "NetworkEndpointsTestNacl20EgressNaclRuleDD93F104",
-            "ipv4CidrBlock",
-          ],
-        },
-        "Egress": true,
-        "NetworkAclId": {
-          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkEndpointsnetworkAclTestNACLidC96584B6F00A464EAD1953AFF4B05118Parameter",
-        },
-        "PortRange": {
-          "From": -1,
-          "To": -1,
-        },
-        "Protocol": -1,
-        "RuleAction": "allow",
-        "RuleNumber": 20,
-      },
-      "Type": "AWS::EC2::NetworkAclEntry",
-    },
-    "NetworkEndpointsTestNacl20EgressNaclRuleDD93F104": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
-            "Arn",
-          ],
-        },
-        "roleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::555555555555:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
-            ],
-          ],
-        },
-        "ssmSubnetIdPath": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetIpamSubnetCidr",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "NetworkEndpointsTestNacl20IngressNaclRule139869A8": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
-            "Arn",
-          ],
-        },
-        "roleArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:",
-              {
-                "Ref": "AWS::Partition",
-              },
-              ":iam::555555555555:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
-            ],
-          ],
-        },
-        "ssmSubnetIdPath": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
-        "uuid": "REPLACED-UUID",
-      },
-      "Type": "Custom::GetIpamSubnetCidr",
-      "UpdateReplacePolicy": "Delete",
-    },
     "NetworkEndpointsToInspectionVpcPeeringE81AF602": {
       "Properties": {
         "PeerOwnerId": "555555555555",
@@ -2046,6 +1942,218 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
       },
       "Type": "Custom::GetTransitGatewayAttachment",
       "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryTestNacl105EgressNaclRuleA32FBE84": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
+            "Arn",
+          ],
+        },
+        "region": "us-east-1",
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
+            ],
+          ],
+        },
+        "ssmSubnetIdPath": "/accelerator/network/vpc/SharedServices-Ipam-East/subnet/SharedServices-A/id",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetIpamSubnetCidr",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryTestNacl105IngressNaclRule02EE83A1": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
+            "Arn",
+          ],
+        },
+        "region": "us-east-1",
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
+            ],
+          ],
+        },
+        "ssmSubnetIdPath": "/accelerator/network/vpc/SharedServices-Ipam-East/subnet/SharedServices-A/id",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetIpamSubnetCidr",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryTestNacl106EgressNaclRule04845A6D": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
+            "Arn",
+          ],
+        },
+        "region": "us-west-2",
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
+            ],
+          ],
+        },
+        "ssmSubnetIdPath": "/accelerator/network/vpc/SharedServices-Ipam-West/subnet/SharedServices-A/id",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetIpamSubnetCidr",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryTestNacl106IngressNaclRuleCBC09801": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomGetIpamSubnetCidrCustomResourceProviderLogGroup655A9FB7",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomGetIpamSubnetCidrCustomResourceProviderHandler8C11DBB5",
+            "Arn",
+          ],
+        },
+        "region": "us-west-2",
+        "roleArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":iam::444444444444:role/AWSAccelerator-GetIpamCidrRole-us-east-1",
+            ],
+          ],
+        },
+        "ssmSubnetIdPath": "/accelerator/network/vpc/SharedServices-Ipam-West/subnet/SharedServices-A/id",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::GetIpamSubnetCidr",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "NetworkSecondaryTestNaclinbound4": {
+      "Properties": {
+        "CidrBlock": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryTestNacl105IngressNaclRule02EE83A1",
+            "ipv4CidrBlock",
+          ],
+        },
+        "Egress": false,
+        "NetworkAclId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarynetworkAclTestNaclidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "PortRange": {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 105,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryTestNaclinbound5": {
+      "Properties": {
+        "CidrBlock": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryTestNacl106IngressNaclRuleCBC09801",
+            "ipv4CidrBlock",
+          ],
+        },
+        "Egress": false,
+        "NetworkAclId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarynetworkAclTestNaclidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "PortRange": {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "deny",
+        "RuleNumber": 106,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryTestNacloutbound4": {
+      "Properties": {
+        "CidrBlock": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryTestNacl105EgressNaclRuleA32FBE84",
+            "ipv4CidrBlock",
+          ],
+        },
+        "Egress": true,
+        "NetworkAclId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarynetworkAclTestNaclidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "PortRange": {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "allow",
+        "RuleNumber": 105,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
+    },
+    "NetworkSecondaryTestNacloutbound5": {
+      "Properties": {
+        "CidrBlock": {
+          "Fn::GetAtt": [
+            "NetworkSecondaryTestNacl106EgressNaclRule04845A6D",
+            "ipv4CidrBlock",
+          ],
+        },
+        "Egress": true,
+        "NetworkAclId": {
+          "Ref": "SsmParameterValueacceleratornetworkvpcNetworkSecondarynetworkAclTestNaclidC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "PortRange": {
+          "From": -1,
+          "To": -1,
+        },
+        "Protocol": -1,
+        "RuleAction": "deny",
+        "RuleNumber": 106,
+      },
+      "Type": "AWS::EC2::NetworkAclEntry",
     },
     "SharedServicesMainNetworkMainCorePropagationB8A9444B": {
       "Properties": {

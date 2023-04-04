@@ -79,7 +79,7 @@ export class NaclResources {
         // Create subnet associations
         this.createNaclSubnetAssociations(vpcItem, naclItem, networkAcl, subnetMap);
         // Create NACL entries
-        this.createNaclEntries(vpcItem, naclItem, networkAcl);
+        this.createNaclEntries(vpcItem, naclItem, networkAcl, subnetMap);
       }
     }
     return naclMap;
@@ -121,14 +121,18 @@ export class NaclResources {
     vpcItem: VpcConfig | VpcTemplatesConfig,
     naclItem: NetworkAclConfig,
     networkAcl: NetworkAcl,
+    subnetMap: Map<string, Subnet>,
   ) {
     for (const inboundRuleItem of naclItem.inboundRules ?? []) {
-      const inboundAclTargetProps: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
-        inboundRuleItem.source,
-      );
       // If logic to determine if the VPC is not IPAM-based
-      if (!this.stack.isCrossAccountNaclSource(inboundRuleItem.source)) {
+      if (!this.stack.isIpamCrossAccountNaclSource(inboundRuleItem.source)) {
         this.stack.addLogs(LogLevel.INFO, `Adding inbound rule ${inboundRuleItem.rule} to ${naclItem.name}`);
+
+        const inboundAclTargetProps: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
+          inboundRuleItem.source,
+          subnetMap,
+        );
+
         networkAcl.addEntry(
           `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}-Inbound-${inboundRuleItem.rule}`,
           {
@@ -156,11 +160,14 @@ export class NaclResources {
     }
 
     for (const outboundRuleItem of naclItem.outboundRules ?? []) {
-      const outboundAclTargetProps: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
-        outboundRuleItem.destination,
-      );
-      if (!this.stack.isCrossAccountNaclSource(outboundRuleItem.destination)) {
+      if (!this.stack.isIpamCrossAccountNaclSource(outboundRuleItem.destination)) {
         this.stack.addLogs(LogLevel.INFO, `Adding outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`);
+
+        const outboundAclTargetProps: { cidrBlock?: string; ipv6CidrBlock?: string } = this.processNetworkAclTarget(
+          outboundRuleItem.destination,
+          subnetMap,
+        );
+
         networkAcl.addEntry(
           `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}-Outbound-${outboundRuleItem.rule}`,
           {
@@ -192,7 +199,10 @@ export class NaclResources {
    * @param target
    * @returns
    */
-  private processNetworkAclTarget(target: string | NetworkAclSubnetSelection): {
+  private processNetworkAclTarget(
+    target: string | NetworkAclSubnetSelection,
+    subnetMap: Map<string, Subnet>,
+  ): {
     cidrBlock?: string;
     ipv6CidrBlock?: string;
   } {
@@ -225,12 +235,18 @@ export class NaclResources {
       }
 
       // Locate the Subnet
-      const subnetItem = vpcItem.subnets?.find(item => item.name === target.subnet);
-      if (!subnetItem) {
+      const subnetConfigItem = vpcItem.subnets?.find(item => item.name === target.subnet);
+      if (!subnetConfigItem) {
         this.stack.addLogs(LogLevel.ERROR, `Specified subnet ${target.subnet} not defined`);
         throw new Error(`Configuration validation failed at runtime.`);
       }
-      return { cidrBlock: subnetItem.ipv4CidrBlock };
+
+      if (subnetConfigItem.ipamAllocation) {
+        const subnetItem = this.stack.getSubnet(subnetMap, vpcItem.name, subnetConfigItem.name);
+        return { cidrBlock: subnetItem.ipv4CidrBlock };
+      } else {
+        return { cidrBlock: subnetConfigItem.ipv4CidrBlock };
+      }
     }
 
     this.stack.addLogs(LogLevel.ERROR, `Invalid input to processNetworkAclTargets`);
