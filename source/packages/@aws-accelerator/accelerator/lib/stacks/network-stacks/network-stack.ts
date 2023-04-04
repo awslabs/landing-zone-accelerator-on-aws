@@ -507,7 +507,7 @@ export abstract class NetworkStack extends AcceleratorStack {
    * @param naclItem
    * @returns
    */
-  public isCrossAccountNaclSource(naclItem: string | NetworkAclSubnetSelection): boolean {
+  public isIpamCrossAccountNaclSource(naclItem: string | NetworkAclSubnetSelection): boolean {
     if (typeof naclItem === 'string') {
       return false;
     }
@@ -516,10 +516,30 @@ export abstract class NetworkStack extends AcceleratorStack {
     const region = cdk.Stack.of(this).region;
     const naclRegion = naclItem.region;
 
-    if (naclRegion && accountId === naclAccount && region === naclRegion) {
-      return false;
+    const crossAccountCondition = naclRegion
+      ? accountId !== naclAccount || region !== naclRegion
+      : accountId !== naclAccount;
+
+    if (crossAccountCondition) {
+      const vpcItem = this.vpcResources.find(item => item.name === naclItem.vpc);
+      if (!vpcItem) {
+        this.logger.error(`Specified VPC ${naclItem.vpc} not defined`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+
+      const subnetItem = vpcItem.subnets?.find(item => item.name === naclItem.subnet);
+      if (!subnetItem) {
+        this.logger.error(`Specified subnet ${naclItem.subnet} not defined`);
+        throw new Error(`Configuration validation failed at runtime.`);
+      }
+
+      if (subnetItem.ipamAllocation) {
+        return true;
+      } else {
+        return false;
+      }
     } else {
-      return true;
+      return false;
     }
   }
 

@@ -2199,7 +2199,7 @@ export class NetworkAssociationsStack extends NetworkStack {
           );
           const nacl = cdk.aws_ec2.NetworkAcl.fromNetworkAclId(this, `${naclItem.name}-${vpcItem.name}`, naclId);
           for (const inboundRuleItem of naclItem.inboundRules ?? []) {
-            if (this.isCrossAccountNaclSource(inboundRuleItem.source)) {
+            if (this.isIpamCrossAccountNaclSource(inboundRuleItem.source)) {
               this.logger.info(`Checking inbound rule ${inboundRuleItem.rule} to ${naclItem.name}`);
               const inboundAclTargetProps = this.getIpamSubnetCidr(
                 vpcItem.name,
@@ -2237,8 +2237,8 @@ export class NetworkAssociationsStack extends NetworkStack {
           }
 
           for (const outboundRuleItem of naclItem.outboundRules ?? []) {
-            if (this.isCrossAccountNaclSource(outboundRuleItem.destination)) {
-              this.logger.info(`]Checking outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`);
+            if (this.isIpamCrossAccountNaclSource(outboundRuleItem.destination)) {
+              this.logger.info(`Checking outbound rule ${outboundRuleItem.rule} to ${naclItem.name}`);
               const outboundAclTargetProps = this.getIpamSubnetCidr(
                 vpcItem.name,
                 naclItem,
@@ -2301,7 +2301,7 @@ export class NetworkAssociationsStack extends NetworkStack {
       {
         owningAccountId: accountId,
         ssmSubnetIdPath: this.getSsmPath(SsmResourceType.SUBNET, [target.vpc, target.subnet]),
-        region: target.region,
+        region: target.region ?? cdk.Stack.of(this).region,
         roleName: `${this.props.prefixes.accelerator}-GetIpamCidrRole-${cdk.Stack.of(this).region}`,
         kmsKey: this.cloudwatchKey,
         logRetentionInDays: this.logRetention,
