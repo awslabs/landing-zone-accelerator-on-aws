@@ -95,3 +95,12 @@ Several helper scripts are built into the project that support performing common
  - `yarn test:clean` - remove test reports
  - `yarn validate-config /path/to/aws-accelerator-config` - shorthand for the configuration validator script documented in the previous section
 
+## Feature development
+
+This section outlines guidance for developing features for Landing Zone Accelerator.
+
+### Deploying resource dependencies via Landing Zone Accelerator
+
+When developing features for the accelerator, you may encounter situations where resources in one stack may need to reference resources created in prior stages of the pipeline. This is especially true if you need to ensure a certain resource is available in all accounts and regions managed by the solution before that resource is consumed by subsequent stacks (e.g. cross-account IAM roles, S3 buckets). `DependenciesStack` has been introduced to the pipeline for this use case. Deployed during the `Key` stage of the pipeline, any resources added to this stack may be utilized globally by the accelerator in subsequent stacks. This stack may be considered a means to "bootstrap" the environment with accelerator-specific (non-CDK) dependencies.
+
+The `DependenciesStack` may be found in `./source/packages/@aws-accelerator/accelerator/stacks/dependencies-stack.ts`.

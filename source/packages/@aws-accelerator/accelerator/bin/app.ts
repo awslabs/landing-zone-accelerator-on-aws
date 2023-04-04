@@ -40,6 +40,7 @@ import { ApplicationsStack } from '../lib/stacks/applications-stack';
 import { BootstrapStack } from '../lib/stacks/bootstrap-stack';
 import { CustomStack, generateCustomStackMappings, isIncluded } from '../lib/stacks/custom-stack';
 import { CustomizationsStack } from '../lib/stacks/customizations-stack';
+import { DependenciesStack } from '../lib/stacks/dependencies-stack';
 import { FinalizeStack } from '../lib/stacks/finalize-stack';
 import { KeyStack } from '../lib/stacks/key-stack';
 import { LoggingStack } from '../lib/stacks/logging-stack';
@@ -547,28 +548,9 @@ async function main() {
     // other stacks
     logger.info(`Audit AccountId ${auditAccountId}`);
     //
-    // KEY and SECURITY AUDIT Stack
+    // SECURITY AUDIT Stack
     //
     for (const enabledRegion of props.globalConfig.enabledRegions) {
-      if (includeStage({ stage: AcceleratorStage.KEY, account: auditAccountId, region: enabledRegion })) {
-        const keyStack = new KeyStack(
-          app,
-          `${AcceleratorStackNames[AcceleratorStage.KEY]}-${auditAccountId}-${enabledRegion}`,
-          {
-            env: {
-              account: auditAccountId,
-              region: enabledRegion,
-            },
-            description: `(SO0199-key) Landing Zone Accelerator on AWS. Version ${version}.`,
-            synthesizer: getDefaultStackSynthesizer(props, auditAccountId, enabledRegion),
-            terminationProtection: props.globalConfig.terminationProtection ?? true,
-            ...props,
-          },
-        );
-        addAcceleratorTags(keyStack, partition, acceleratorPrefix);
-        cdk.Aspects.of(keyStack).add(new AwsSolutionsChecks());
-      }
-
       if (includeStage({ stage: AcceleratorStage.SECURITY_AUDIT, account: auditAccountId, region: enabledRegion })) {
         const auditStack = new SecurityAuditStack(
           app,
@@ -601,6 +583,39 @@ async function main() {
           account: accountId,
           region: enabledRegion,
         };
+
+        //
+        // KEY and DEPENDENCY Stacks
+        //
+        if (includeStage({ stage: AcceleratorStage.KEY, account: accountId, region: enabledRegion })) {
+          const keyStack = new KeyStack(
+            app,
+            `${AcceleratorStackNames[AcceleratorStage.KEY]}-${accountId}-${enabledRegion}`,
+            {
+              env,
+              description: `(SO0199-key) Landing Zone Accelerator on AWS. Version ${version}.`,
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
+              terminationProtection: props.globalConfig.terminationProtection ?? true,
+              ...props,
+            },
+          );
+          addAcceleratorTags(keyStack, partition, acceleratorPrefix);
+          cdk.Aspects.of(keyStack).add(new AwsSolutionsChecks());
+
+          const dependencyStack = new DependenciesStack(
+            app,
+            `${AcceleratorStackNames[AcceleratorStage.DEPENDENCIES]}-${accountId}-${enabledRegion}`,
+            {
+              env,
+              description: `(SO0199-dependencies) Landing Zone Accelerator on AWS. Version ${version}.`,
+              synthesizer: getDefaultStackSynthesizer(props, accountId, enabledRegion),
+              terminationProtection: props.globalConfig.terminationProtection ?? true,
+              ...props,
+            },
+          );
+          addAcceleratorTags(dependencyStack, partition, acceleratorPrefix);
+          cdk.Aspects.of(dependencyStack).add(new AwsSolutionsChecks());
+        }
 
         //
         // BOOTSTRAP Stack
