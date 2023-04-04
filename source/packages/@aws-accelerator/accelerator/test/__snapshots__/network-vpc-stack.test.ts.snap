@@ -3363,7 +3363,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
           },
           {
             "Key": "access_logs.s3.bucket",
-            "Value": "aws-accelerator-elb-access-logs-333333333333-us-west-2",
+            "Value": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
           },
           {
             "Key": "access_logs.s3.prefix",
@@ -3431,7 +3431,7 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
           },
           {
             "Key": "access_logs.s3.bucket",
-            "Value": "aws-accelerator-elb-access-logs-333333333333-us-west-2",
+            "Value": "aws-accelerator-elb-access-logs-333333333333-us-east-1",
           },
           {
             "Key": "access_logs.s3.prefix",
