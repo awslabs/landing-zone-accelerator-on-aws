@@ -1466,9 +1466,6 @@ export class NlbTargetTypeConfig implements t.TypeOf<typeof CustomizationsConfig
  *   port: 80
  *   protocol: TCP
  *   type: instance
- *   connectionTermination: true
- *   preserveClientIp: true
- *   proxyProtocolV2: true
  *   healthCheck:
  *    enabled: true
  *    port: 80
@@ -1477,9 +1474,6 @@ export class NlbTargetTypeConfig implements t.TypeOf<typeof CustomizationsConfig
  *   port: 80
  *   protocol: HTTP
  *   type: instance
- *   connectionTermination: true
- *   preserveClientIp: true
- *   proxyProtocolV2: true
  *   healthCheck:
  *    enabled: true
  *    port: 80

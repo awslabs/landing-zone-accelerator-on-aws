@@ -386,20 +386,19 @@ export class ApplicationsStack extends AcceleratorStack {
           subnets,
         },
       );
+      NagSuppressions.addResourceSuppressionsByPath(
+        this,
+        `${this.stackName}/AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(
+          appConfigItem.autoscaling.name,
+        )}/Resource`,
+        [
+          {
+            id: 'AwsSolutions-AS3',
+            reason: 'Scaling policies are not offered as a part of this solution',
+          },
+        ],
+      );
     }
-
-    NagSuppressions.addResourceSuppressionsByPath(
-      this,
-      `${this.stackName}/AutoScalingGroup${pascalCase(appConfigItem.name)}${pascalCase(
-        appConfigItem.autoscaling!.name,
-      )}/Resource`,
-      [
-        {
-          id: 'AwsSolutions-AS3',
-          reason: 'Scaling policies are not offered as a part of this solution',
-        },
-      ],
-    );
   }
 
   private createNetworkLoadBalancer(
