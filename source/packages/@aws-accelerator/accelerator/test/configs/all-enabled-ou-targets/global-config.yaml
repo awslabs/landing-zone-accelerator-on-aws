@@ -56,8 +56,8 @@ reports:
     reportVersioning: CREATE_NEW_REPORT
   budgets:
     - deploymentTargets:
-        organizationalUnits:
-          - Root
+        accounts:
+          - Management
       name: accel-budget
       timeUnit: MONTHLY
       type: COST
