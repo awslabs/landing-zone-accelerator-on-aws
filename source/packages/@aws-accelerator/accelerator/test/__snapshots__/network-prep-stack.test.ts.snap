@@ -1828,7 +1828,6 @@ drop http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"example.com"; 
                   "Action": [
                     "ssm:GetParameters",
                     "ssm:GetParameter",
-                    "ssm:PutParameter",
                   ],
                   "Effect": "Allow",
                   "Resource": {

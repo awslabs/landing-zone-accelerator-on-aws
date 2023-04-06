@@ -333,20 +333,21 @@ export class TgwResources {
               `CrossAcctSsmParam${transitGatewayPeeringItem.accepter.transitGatewayName}${transitGatewayPeeringItem.name}PeeringAttachmentId`,
             ),
             {
+              accountIds: [props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account)],
               region: transitGatewayPeeringItem.accepter.region,
-              partition: props.partition,
+              roleName: this.stack.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
               kmsKey: this.stack.cloudwatchKey,
               logRetentionInDays: this.stack.logRetention,
-              parameter: {
-                name: this.stack.getSsmPath(SsmResourceType.TGW_PEERING, [
-                  transitGatewayPeeringItem.accepter.transitGatewayName,
-                  transitGatewayPeeringItem.name,
-                ]),
-                accountId: props.accountsConfig.getAccountId(transitGatewayPeeringItem.accepter.account),
-                roleName: this.stack.acceleratorResourceNames.roles.tgwPeering,
-                value: peeringAttachmentId,
-              },
-              invokingAccountID: cdk.Stack.of(this.stack).account,
+              parameters: [
+                {
+                  name: this.stack.getSsmPath(SsmResourceType.TGW_PEERING, [
+                    transitGatewayPeeringItem.accepter.transitGatewayName,
+                    transitGatewayPeeringItem.name,
+                  ]),
+                  value: peeringAttachmentId,
+                },
+              ],
+              invokingAccountId: cdk.Stack.of(this.stack).account,
               acceleratorPrefix: props.prefixes.accelerator,
             },
           );

@@ -83,8 +83,8 @@ source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts
 source/packages/@aws-accelerator/constructs/lib/aws-ssm/get-param-value/index.ts:58
 
 # Accelerator specific assume role declaration
-source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:56
-source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:57
+source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:129
+source/packages/@aws-accelerator/constructs/lib/aws-ssm/put-param-value/index.ts:130
 
 # Accelerator specific assume role declaration
 source/packages/@aws-accelerator/tools/lib/classes/accelerator-tool.ts:1231

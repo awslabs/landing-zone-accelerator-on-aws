@@ -18,8 +18,13 @@ import { throttlingBackOff } from '@aws-accelerator/utils';
 
 AWS.config.logger = console;
 
+interface SsmParameterProps {
+  readonly name: string;
+  readonly value: string;
+}
+
 /**
- * put ssm parameter custom control
+ * Put SSM parameter custom resource
  *
  * @param event
  * @returns
@@ -31,16 +36,84 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     }
   | undefined
 > {
-  const region = event.ResourceProperties['region'];
-  const invokingAccountID = event.ResourceProperties['invokingAccountID'];
-  const parameterAccountID = event.ResourceProperties['parameterAccountID'];
-  const assumeRoleArn = event.ResourceProperties['assumeRoleArn'];
-  const parameterName = event.ResourceProperties['parameterName'];
-  const parameterValue = event.ResourceProperties['parameterValue'];
+  const region: string = event.ResourceProperties['region'];
+  const invokingAccountId: string = event.ResourceProperties['invokingAccountId'];
+  const parameterAccountIds: string[] = event.ResourceProperties['parameterAccountIds'];
+  const roleName: string = event.ResourceProperties['roleName'];
+  const parameters: SsmParameterProps[] = event.ResourceProperties['parameters'];
   const solutionId = process.env['SOLUTION_ID'];
 
+  for (const parameterAccountId of parameterAccountIds) {
+    // Get SSM client for the parameter account
+    const partition = event.ServiceToken.split(':')[1];
+    const assumeRoleArn = setRoleArn(partition, parameterAccountId, roleName);
+    const ssmClient = await getSsmClient(invokingAccountId, parameterAccountId, region, assumeRoleArn, solutionId);
+
+    switch (event.RequestType) {
+      case 'Create':
+        // Put parameters
+        for (const parameter of parameters) {
+          console.log(`Put SSM parameter ${parameter.name} to account ${parameterAccountId}`);
+          await throttlingBackOff(() =>
+            ssmClient
+              .putParameter({ Name: parameter.name, Value: parameter.value, Type: 'String', Overwrite: true })
+              .promise(),
+          );
+        }
+        break;
+
+      case 'Update':
+        // Process creation, updates, and deletes
+        await processParameterUpdates(
+          parameters,
+          ssmClient,
+          parameterAccountId,
+          event.OldResourceProperties['parameters'],
+        );
+        break;
+
+      case 'Delete':
+        // Delete all parameters
+        for (const parameter of parameters) {
+          console.log(`Delete SSM parameter ${parameter.name} from account ${parameterAccountId}`);
+          await throttlingBackOff(() => ssmClient.deleteParameter({ Name: parameter.name }).promise());
+        }
+        break;
+    }
+  }
+  return {
+    PhysicalResourceId: parameters[0].name, // required for backwards compatibility
+    Status: 'SUCCESS',
+  };
+}
+
+/**
+ * Set role ARN for a given partition, account ID and role name
+ *
+ * @param partition
+ * @param parameterAccountId
+ * @param roleName
+ * @returns
+ */
+function setRoleArn(partition: string, parameterAccountId: string, roleName: string): string {
+  return `arn:${partition}:iam::${parameterAccountId}:role/${roleName}`;
+}
+
+/**
+ * Returns an SSM client based on the account ID and region
+ * @param accountId
+ * @param region
+ * @returns
+ */
+async function getSsmClient(
+  invokingAccountId: string,
+  parameterAccountId: string,
+  region: string,
+  assumeRoleArn: string,
+  solutionId?: string,
+): Promise<AWS.SSM> {
   let ssmClient: AWS.SSM;
-  if (invokingAccountID !== parameterAccountID) {
+  if (invokingAccountId !== parameterAccountId) {
     const stsClient = new AWS.STS({ region: region, customUserAgent: solutionId });
     const assumeRoleCredential = await throttlingBackOff(() =>
       stsClient
@@ -63,28 +136,55 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   } else {
     ssmClient = new AWS.SSM({ region: region, customUserAgent: solutionId });
   }
+  return ssmClient;
+}
 
-  switch (event.RequestType) {
-    case 'Create':
-    case 'Update':
-      console.log(`Put SSM parameter ${parameterName}`);
+/**
+ * Process parameter updates
+ * @param oldParameters
+ * @param newParameters
+ * @param ssmClient
+ * @param parameterAccountId
+ */
+async function processParameterUpdates(
+  newParameters: SsmParameterProps[],
+  ssmClient: AWS.SSM,
+  parameterAccountId: string,
+  oldParameters?: SsmParameterProps[],
+): Promise<void> {
+  const oldParameterNames = oldParameters ? oldParameters.map(oldParam => oldParam.name) : [];
+  const oldParameterValues = oldParameters ? oldParameters.map(oldParam => oldParam.value) : [];
+  const newParameterNames = newParameters.map(newParam => newParam.name);
 
-      await throttlingBackOff(() =>
-        ssmClient
-          .putParameter({ Name: parameterName, Value: parameterValue, Type: 'String', Overwrite: true })
-          .promise(),
-      );
+  const removedParameters = oldParameterNames.filter(name => !newParameterNames.includes(name));
+  const addedParameters = newParameters.filter(param => !oldParameterNames.includes(param.name));
+  const modifiedParameters = newParameters.filter(
+    param => oldParameterNames.includes(param.name) && !oldParameterValues.includes(param.value),
+  );
 
-      return { PhysicalResourceId: parameterName, Status: 'SUCCESS' };
+  // Remove parameters
+  for (const parameter of removedParameters) {
+    console.log(`Delete SSM parameter ${parameter} from account ${parameterAccountId}`);
+    await throttlingBackOff(() => ssmClient.deleteParameter({ Name: parameter }).promise());
+  }
 
-    case 'Delete':
-      console.log(`Delete SSM parameter ${event.PhysicalResourceId}`);
+  // Create new parameters
+  for (const parameter of addedParameters) {
+    console.log(`Put SSM parameter ${parameter} to account ${parameterAccountId}`);
+    await throttlingBackOff(() =>
+      ssmClient
+        .putParameter({ Name: parameter.name, Value: parameter.value, Type: 'String', Overwrite: true })
+        .promise(),
+    );
+  }
 
-      await throttlingBackOff(() => ssmClient.deleteParameter({ Name: event.PhysicalResourceId }).promise());
-
-      return {
-        PhysicalResourceId: event.PhysicalResourceId,
-        Status: 'SUCCESS',
-      };
+  // Modify existing parameters if their values have changed
+  for (const parameter of modifiedParameters) {
+    console.log(`Modify SSM parameter ${parameter.name} in account ${parameterAccountId}`);
+    await throttlingBackOff(() =>
+      ssmClient
+        .putParameter({ Name: parameter.name, Value: parameter.value, Type: 'String', Overwrite: true })
+        .promise(),
+    );
   }
 }
