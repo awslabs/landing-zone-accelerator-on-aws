@@ -3145,18 +3145,19 @@ export class VpnConnectionConfig implements t.TypeOf<typeof NetworkConfigTypes.v
  *     region: *HOME_REGION
  *     ipAddress: 1.1.1.1
  *     asn: 65500
- *   vpnConnections:
- *     - name: accelerator-vpn
- *       transitGateway: Network-Main
- *       routeTableAssociations:
- *         - Network-Main-Core
- *       routeTablePropagations:
- *         - Network-Main-Core
- *       staticRoutesOnly: false
- *       tunnelSpecifications:
- *         - tunnelInsideCidr: 169.254.200.0/30
- *           preSharedKey: Key1-AbcXyz
- *         - tunnelInsideCidr: 169.254.200.100/30
+ *     vpnConnections:
+ *       - name: accelerator-vpn
+ *         transitGateway: Network-Main
+ *         routeTableAssociations:
+ *           - Network-Main-Core
+ *         routeTablePropagations:
+ *           - Network-Main-Core
+ *         staticRoutesOnly: false
+ *         tunnelSpecifications:
+ *           - tunnelInsideCidr: 169.254.200.0/30
+ *             preSharedKey: Key1-AbcXyz
+ *           - tunnelInsideCidr: 169.254.200.100/30
+ *             preSharedKey: Key2-AbcXyz
  * ```
  */
 export class CustomerGatewayConfig implements t.TypeOf<typeof NetworkConfigTypes.customerGatewayConfig> {

@@ -1081,7 +1081,7 @@ export class IdentityCenterConfig implements t.TypeOf<typeof IamConfigTypes.iden
 }
 
 /**
- * *{@link IamConfig} / {@link IdentityCenterPermissionSetConfig}*
+ * *{@link IamConfig} / {@link IdentityCenterConfig} / {@link IdentityCenterPermissionSetConfig}*
  *
  * Identity Center Permission Set Configuration
  *
@@ -1118,7 +1118,7 @@ export class IdentityCenterPermissionSetConfig
 }
 
 /**
- * *{@link IamConfig} / {@link IdentityCenterAssignmentConfig}*
+ * *{@link IamConfig} / {@link IdentityCenterConfig} / {@link IdentityCenterAssignmentConfig}*
  *
  * Identity Center Assignment Configuration
  *
