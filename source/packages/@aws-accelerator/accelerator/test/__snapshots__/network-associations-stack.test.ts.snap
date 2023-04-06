@@ -666,14 +666,20 @@ exports[`NetworkAssociationsStack Construct(NetworkAssociationsStack):  Snapshot
             "Arn",
           ],
         },
-        "assumeRoleArn": "arn:aws:iam::444444444444:role/AWSAccelerator-VpcPeeringRole-us-east-1",
-        "invokingAccountID": "555555555555",
-        "parameterAccountID": "444444444444",
-        "parameterName": "/accelerator/network/vpcPeering/CrossAccount/id",
-        "parameterValue": {
-          "Ref": "CrossAccountVpcPeering9E0C69A2",
-        },
+        "invokingAccountId": "555555555555",
+        "parameterAccountIds": [
+          "444444444444",
+        ],
+        "parameters": [
+          {
+            "name": "/accelerator/network/vpcPeering/CrossAccount/id",
+            "value": {
+              "Ref": "CrossAccountVpcPeering9E0C69A2",
+            },
+          },
+        ],
         "region": "us-east-1",
+        "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::SsmPutParameterValue",
