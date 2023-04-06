@@ -1456,17 +1456,18 @@ export class NetworkAssociationsStack extends NetworkStack {
       // Put cross-account SSM parameter if necessary
       if (crossAccountCondition) {
         new PutSsmParameter(this, pascalCase(`CrossAcctSsmParam${pascalCase(peering.name)}VpcPeering`), {
+          accountIds: [accepterAccountId],
           region: peering.accepter.region,
-          partition: this.props.partition,
+          roleName: this.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
-          parameter: {
-            name: this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
-            accountId: accepterAccountId,
-            roleName: `${this.props.prefixes.accelerator}-VpcPeeringRole-${peering.accepter.region}`,
-            value: vpcPeering.peeringId,
-          },
-          invokingAccountID: cdk.Stack.of(this).account,
+          parameters: [
+            {
+              name: this.getSsmPath(SsmResourceType.VPC_PEERING, [peering.name]),
+              value: vpcPeering.peeringId,
+            },
+          ],
+          invokingAccountId: cdk.Stack.of(this).account,
           acceleratorPrefix: this.props.prefixes.accelerator,
         });
       }

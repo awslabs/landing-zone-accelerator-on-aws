@@ -135,7 +135,7 @@ export class TgwResources {
               statements: [
                 new cdk.aws_iam.PolicyStatement({
                   effect: cdk.aws_iam.Effect.ALLOW,
-                  actions: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:PutParameter'],
+                  actions: ['ssm:GetParameters', 'ssm:GetParameter'],
                   resources: [
                     `arn:${cdk.Aws.PARTITION}:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${props.prefixes.ssmParamName}/network/transitGateways/*`,
                   ],

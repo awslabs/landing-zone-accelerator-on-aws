@@ -16,15 +16,33 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
+interface SsmParameterProps {
+  /**
+   * Name of the parameter
+   */
+  readonly name: string;
+  /**
+   * Value of the parameter
+   */
+  readonly value: string;
+}
+
 /**
  * SsmParameterProps
  */
-export interface SsmParameterProps {
-  readonly region: string;
-  readonly partition: string;
+export interface PutSsmParameterProps {
   /**
-   * SSM Parameter
+   * The AWS account IDs the parameters will be created in
    */
+  readonly accountIds: string[];
+  /**
+   * The AWS region the parameter will be created in
+   */
+  readonly region: string;
+  /**
+   * The role name to assume
+   */
+  readonly roleName: string;
   /**
    * Custom resource lambda log group encryption key
    */
@@ -33,26 +51,14 @@ export interface SsmParameterProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
-
-  readonly parameter: {
-    /**
-     * Name of the parameter
-     */
-    name: string;
-    /**
-     * Target account id of the parameter
-     */
-    accountId: string;
-    /**
-     * Role name to assume to access the parameter in target account
-     */
-    roleName: string;
-    /**
-     * Value to put when when using SsmParameterType.PUT
-     */
-    value: string;
-  };
-  readonly invokingAccountID: string;
+  /**
+   * The parameters to be created
+   */
+  readonly parameters: SsmParameterProps[];
+  /**
+   * The account ID invoking the request
+   */
+  readonly invokingAccountId: string;
   /**
    * Accelerator Prefix
    */
@@ -63,15 +69,8 @@ export interface SsmParameterProps {
  * SsmParameter class - to get ssm parameter value from other account
  */
 export class PutSsmParameter extends Construct {
-  public readonly parameterName: string;
-  public readonly value: string = '';
-
-  constructor(scope: Construct, id: string, props: SsmParameterProps) {
+  constructor(scope: Construct, id: string, props: PutSsmParameterProps) {
     super(scope, id);
-
-    this.parameterName = props.parameter.name;
-    this.value = props.parameter.value;
-    const assumeRoleArn = `arn:${props.partition}:iam::${props.parameter.accountId}:role/${props.parameter.roleName}`;
 
     const policyStatements = [];
     const RESOURCE_TYPE = 'Custom::SsmPutParameterValue';
@@ -105,11 +104,10 @@ export class PutSsmParameter extends Construct {
       serviceToken: provider.serviceToken,
       properties: {
         region: props.region,
-        parameterAccountID: props.parameter.accountId,
-        parameterName: props.parameter.name,
-        parameterValue: props.parameter.value,
-        assumeRoleArn: assumeRoleArn,
-        invokingAccountID: props.invokingAccountID,
+        parameterAccountIds: props.accountIds,
+        parameters: props.parameters,
+        roleName: props.roleName,
+        invokingAccountId: props.invokingAccountId,
         uuid: uuidv4(),
       },
     });
