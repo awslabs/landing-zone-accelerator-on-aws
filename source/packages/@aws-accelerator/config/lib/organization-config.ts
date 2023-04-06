@@ -179,6 +179,7 @@ export abstract class QuarantineNewAccountsConfig
  * ```
  * serviceControlPolicies:
  *   - name: QuarantineAccounts
+ *     description: Quarantine accounts
  *     policy: path/to/policy.json
  *     type: customerManaged
  *     deploymentTargets:
@@ -194,7 +195,7 @@ export abstract class ServiceControlPolicyConfig
    */
   readonly name: string = '';
   /**
-   * An optional description to assign to the policy.
+   * A description to assign to the policy.
    */
   readonly description: string = '';
   /**
@@ -237,7 +238,7 @@ export abstract class TaggingPolicyConfig implements t.TypeOf<typeof Organizatio
    */
   readonly name: string = '';
   /**
-   * An optional description to assign to the policy.
+   * A description to assign to the policy.
    */
   readonly description: string = '';
   /**
@@ -275,9 +276,12 @@ export abstract class BackupPolicyConfig implements t.TypeOf<typeof Organization
    * The regex pattern that is used to validate this parameter is a string of any of the characters in the ASCII character range.
    */
   readonly name: string = '';
+  /**
+   * A description to assign to the policy.
+   */
   readonly description: string = '';
   /**
-   * An optional description to assign to the policy.
+   * Backup policy definition json file. This file must be present in config repository
    */
   readonly policy: string = '';
   /**
