@@ -26,6 +26,14 @@ import { CloudFormationClient, DescribeStacksCommand } from '@aws-sdk/client-clo
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { throttlingBackOff } from '@aws-accelerator/utils';
 
+type scpTargetType = 'ou' | 'account';
+
+type serviceControlPolicyType = {
+  name: string;
+  targetType: scpTargetType;
+  targets: { name: string; id: string }[];
+};
+
 const marshallOptions = {
   convertEmptyValues: false,
   //overriding default value of false
@@ -101,8 +109,10 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const newCTAccountsTableName = event.ResourceProperties['newCTAccountsTableName'];
   const controlTowerEnabled = event.ResourceProperties['controlTowerEnabled'];
   const organizationsEnabled = event.ResourceProperties['organizationsEnabled'];
+  const policyTagKey = event.ResourceProperties['policyTagKey'];
   const commitId = event.ResourceProperties['commitId'];
   const stackName = event.ResourceProperties['stackName'];
+  const serviceControlPolicies: serviceControlPolicyType[] = event.ResourceProperties['serviceControlPolicies'];
   driftDetectionParameterName = event.ResourceProperties['driftDetectionParameterName'];
   driftDetectionMessageParameterName = event.ResourceProperties['driftDetectionMessageParameterName'];
 
@@ -278,6 +288,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         }
       }
 
+      //
+      // Validate SCP count
+      //
+      await validateServiceControlPolicyCount(organizationsClient, serviceControlPolicies, policyTagKey);
+
       console.log(`validationErrors: ${JSON.stringify(validationErrors)}`);
 
       if (validationErrors.length > 0) {
@@ -294,6 +309,190 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
         Status: 'SUCCESS',
       };
   }
+}
+
+/**
+ * Function to validate number of SCPs attached to ou and account is not more than 5
+ * @param organizationsClient
+ * @param serviceControlPolicies
+ */
+async function validateServiceControlPolicyCount(
+  organizationsClient: AWS.Organizations,
+  serviceControlPolicies: serviceControlPolicyType[],
+
+  policyTagKey: string,
+) {
+  const processedTargets: string[] = [];
+  for (const scpItem of serviceControlPolicies) {
+    for (const target of scpItem.targets ?? []) {
+      const existingAttachedScps: string[] = [];
+      if (processedTargets.indexOf(target.name) === -1) {
+        const response = await throttlingBackOff(() =>
+          organizationsClient
+            .listPoliciesForTarget({
+              Filter: 'SERVICE_CONTROL_POLICY',
+              TargetId: target.id,
+              MaxResults: 10,
+            })
+            .promise(),
+        );
+
+        if (response.Policies && response.Policies.length > 0) {
+          response.Policies.forEach(item => existingAttachedScps.push(item.Name!));
+        }
+
+        const totalScps = await getTotalScps(
+          target.name,
+          scpItem.targetType,
+          existingAttachedScps,
+          serviceControlPolicies,
+          policyTagKey,
+        );
+
+        const totalScpCount = totalScps.length;
+
+        console.log(`Scp count validation started for target ${target.name}, target type is ${scpItem.targetType}`);
+        console.log(`${target.name} ${scpItem.targetType} existing attached scps are - ${existingAttachedScps}`);
+        console.log(`${target.name} ${scpItem.targetType} updated list of scps for attachment - ${totalScps}`);
+        console.log(`${target.name} ${scpItem.targetType} total scp count is ${totalScpCount}`);
+
+        if (totalScpCount > 5) {
+          console.log(
+            `${target.name} ${scpItem.targetType} scp count validation failed, total scp count is ${totalScpCount}`,
+          );
+          validationErrors.push(
+            `Max Allowed SCPs for ${scpItem.targetType} "${target.name}" is 5, found total ${totalScps.length} scps in updated list to attach. Updated list of scps for attachment is ${totalScps}`,
+          );
+        } else {
+          console.log(
+            `${target.name} ${scpItem.targetType} scp count validation successful, total scp count is ${totalScpCount}`,
+          );
+        }
+
+        processedTargets.push(target.name);
+      }
+    }
+  }
+}
+
+/**
+ * Function to get total scps to be attached to the target
+ * @param targetName
+ * @param targetType
+ * @param existingScps
+ * @param serviceControlPolicies
+ * @returns
+ */
+async function getTotalScps(
+  targetName: string,
+  targetType: scpTargetType,
+  existingScps: string[],
+  serviceControlPolicies: serviceControlPolicyType[],
+  policyTagKey: string,
+): Promise<string[]> {
+  const totalScps: string[] = getNewScps(targetName, targetType, existingScps, serviceControlPolicies);
+
+  for (const existingScp of existingScps) {
+    // check for control tower drift
+    let nextToken: string | undefined = undefined;
+    do {
+      const page = await throttlingBackOff(() =>
+        organizationsClient
+          .listPolicies({
+            Filter: 'SERVICE_CONTROL_POLICY',
+            NextToken: nextToken,
+          })
+          .promise(),
+      );
+      for (const policy of page.Policies ?? []) {
+        if (policy.Name === existingScp) {
+          const configScp = serviceControlPolicies.find(item => item.name === existingScp);
+          const isAwsManaged = policy.AwsManaged ?? false;
+          const isLzaManaged = isAwsManaged ? false : await isLzaManagedPolicy(policy.Id!, policyTagKey);
+
+          // When attached policy is AWS managed, add to list of policies
+          if (isAwsManaged) {
+            totalScps.push(existingScp);
+            break;
+          }
+
+          // When attached policy is NOT AWS managed and NOT LZA managed, add to list of policies, policies attached by other sources
+          if (!isLzaManaged) {
+            totalScps.push(existingScp);
+            break;
+          }
+
+          // When attached policy is LZA managed, check if this is still present in config before adding to list of policies
+          if (isLzaManaged) {
+            if (
+              configScp &&
+              configScp.targetType === targetType &&
+              configScp.targets.find(item => item.name === targetName)
+            ) {
+              totalScps.push(existingScp);
+              break;
+            }
+          }
+        }
+      }
+      nextToken = page.NextToken;
+    } while (nextToken);
+  }
+
+  return totalScps;
+}
+
+/**
+ * Function to check if policy is managed by LZA, this is by checking lzaManaged tag with Yes value
+ * @param policyId
+ * @returns
+ */
+async function isLzaManagedPolicy(policyId: string, policyTagKey: string): Promise<boolean> {
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      organizationsClient
+        .listTagsForResource({
+          ResourceId: policyId,
+          NextToken: nextToken,
+        })
+        .promise(),
+    );
+    for (const tag of page.Tags ?? []) {
+      if (tag.Key === policyTagKey && tag.Value === 'Yes') {
+        return true;
+      }
+    }
+    nextToken = page.NextToken;
+  } while (nextToken);
+
+  return false;
+}
+
+/**
+ * Function to get list of new scps to be attached from organization config file
+ * @param targetName
+ * @param targetType
+ * @param existingScps
+ * @param serviceControlPolicies
+ * @returns
+ */
+function getNewScps(
+  targetName: string,
+  targetType: scpTargetType,
+  existingScps: string[],
+  serviceControlPolicies: serviceControlPolicyType[],
+): string[] {
+  const configScps: string[] = [];
+
+  for (const scpItem of serviceControlPolicies) {
+    for (const target of scpItem.targets ?? []) {
+      if (scpItem.targetType === targetType && target.name === targetName) {
+        configScps.push(scpItem.name);
+      }
+    }
+  }
+  return configScps.filter(x => existingScps.indexOf(x) === -1);
 }
 
 async function validateControlTower() {

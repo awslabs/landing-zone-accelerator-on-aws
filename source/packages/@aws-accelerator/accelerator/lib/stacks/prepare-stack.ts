@@ -24,12 +24,13 @@ import {
   GetPortfolioId,
   MoveAccounts,
   OrganizationalUnits,
-  ValidateScpCount,
 } from '@aws-accelerator/constructs';
 
 import { LoadAcceleratorConfigTable } from '../load-config-table';
 import { ValidateEnvironmentConfig } from '../validate-environment-config';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+
+type scpTargetType = 'ou' | 'account';
 
 export class PrepareStack extends AcceleratorStack {
   constructor(scope: Construct, id: string, props: AcceleratorStackProps) {
@@ -429,6 +430,8 @@ export class PrepareStack extends AcceleratorStack {
             managementAccountId: props.accountsConfig.getManagementAccountId(),
             partition: props.partition,
             kmsKey: cloudwatchKey,
+            serviceControlPolicies: this.createScpListsForValidation(),
+            policyTagKey: `${props.prefixes.accelerator}Managed`,
             logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             driftDetectionParameter: driftDetectedParameter,
             driftDetectionMessageParameter: driftMessageParameter,
@@ -680,27 +683,6 @@ export class PrepareStack extends AcceleratorStack {
             );
           }
         }
-        this.logger.info(`SCP Validation`);
-        const scpValidateInput = this.validateScp();
-        // cannot add 5 scps from console or cli externally.
-        // LZA needs to have some value in configScps - which are scps from config file
-        // putting an if condition here to only create custom resource; optimize performance
-        if (scpValidateInput.configScps.length) {
-          const validateScp = new ValidateScpCount(this, 'ValidateScpCount', {
-            organizationUnits: scpValidateInput.configOu,
-            accounts: scpValidateInput.configAccounts,
-            scps: scpValidateInput.configScps,
-            kmsKey: cloudwatchKey,
-            logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-          });
-
-          if (controlTowerAccounts) {
-            validateScp.node.addDependency(controlTowerAccounts);
-          }
-          if (organizationAccounts) {
-            validateScp.node.addDependency(moveAccounts);
-          }
-        }
       }
     }
     //
@@ -711,102 +693,52 @@ export class PrepareStack extends AcceleratorStack {
     this.logger.info('Completed stack synthesis');
   }
 
-  /*
-   * Function to parse accounts, Organization Units and Service Control Policies
-   * Validate the config input and fail if SCP count > 5
-   * Output of this function will populate a custom resource
-   */
-  private validateScp() {
-    type accountOutputItem = {
-      accountId: string;
+  private createScpListsForValidation(): {
+    name: string;
+    targetType: scpTargetType;
+    targets: { name: string; id: string }[];
+  }[] {
+    const serviceControlPolicies: {
       name: string;
-    };
-    type orgOutputItem = {
-      id: string;
-      name: string;
-    };
-
-    type validateScpItem = {
-      orgEntity: string;
-      orgEntityType: string;
-      orgEntityId: string;
-      appliedScpName: string[];
-    };
-
-    this.logger.info('Validate SCP Count');
-
-    // Get all account and organization unit for custom resource
-    const accounts: accountOutputItem[] = [];
-    const orgUnits: orgOutputItem[] = [];
-
-    // Get all accelerator applied scps in one place for custom resource
-    const validateScpCountForOrg: validateScpItem[] = [];
-
+      targetType: scpTargetType;
+      targets: { name: string; id: string }[];
+    }[] = [];
     for (const scpItem of this.props.organizationConfig.serviceControlPolicies) {
-      const orgArray = scpItem.deploymentTargets.organizationalUnits ?? [];
-      const accountArray = scpItem.deploymentTargets.accounts ?? [];
+      if (scpItem.deploymentTargets.organizationalUnits && scpItem.deploymentTargets.organizationalUnits.length > 0) {
+        const targets: { name: string; id: string }[] = [];
+        scpItem.deploymentTargets.organizationalUnits.forEach(item =>
+          targets.push({ name: item, id: this.props.organizationConfig.getOrganizationalUnitId(item) }),
+        );
 
-      //only check scp that is being applied to either account or orgUnit
-      if (orgArray.length > 0 || accountArray.length > 0) {
-        for (const orgUnitScp of orgArray) {
-          //check in array to see if OU is already there
-          const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(orgUnitScp);
-          if (index > -1) {
-            validateScpCountForOrg[index].appliedScpName.push(scpItem.name);
-          } else {
-            let orgUnitId = '';
-            try {
-              orgUnitId = this.props.organizationConfig.getOrganizationalUnitId(orgUnitScp);
-            } catch (error) {
-              let message;
-              if (error instanceof Error) message = error.message;
-              else message = String(error);
-
-              if (message.startsWith('configuration validation failed')) continue;
-              else throw error;
-            }
-            validateScpCountForOrg.push({
-              orgEntity: orgUnitScp,
-              orgEntityType: 'OU',
-              orgEntityId: orgUnitId,
-              appliedScpName: [scpItem.name],
-            });
-          }
+        if (targets.length > 0) {
+          serviceControlPolicies.push({
+            name: scpItem.name,
+            targetType: 'ou',
+            targets,
+          });
         }
-        for (const acc of accountArray) {
-          //check in array to see if OU is already there
-          const index = validateScpCountForOrg.map(object => object.orgEntity).indexOf(acc);
-          if (index > -1) {
-            validateScpCountForOrg[index].appliedScpName.push(scpItem.name);
-          } else {
-            validateScpCountForOrg.push({
-              orgEntity: acc,
-              orgEntityType: 'Account',
-              orgEntityId: this.props.accountsConfig.getAccountId(acc),
-              appliedScpName: [scpItem.name],
-            });
+      }
+
+      if (scpItem.deploymentTargets.accounts && scpItem.deploymentTargets.accounts.length > 0) {
+        const targets: { name: string; id: string }[] = [];
+
+        scpItem.deploymentTargets.accounts.forEach(item => {
+          try {
+            targets.push({ name: item, id: this.props.accountsConfig.getAccountId(item) });
+          } catch {
+            this.logger.warn(`Account ID not found for ${item}. Scp count validation skipped for the account ${item}.`);
           }
+        });
+
+        if (targets.length > 0) {
+          serviceControlPolicies.push({
+            name: scpItem.name,
+            targetType: 'account',
+            targets,
+          });
         }
       }
     }
-
-    const allAccounts = [...this.props.accountsConfig.mandatoryAccounts, ...this.props.accountsConfig.workloadAccounts];
-    for (const accountItem of allAccounts) {
-      try {
-        accounts.push({ accountId: this.props.accountsConfig.getAccountId(accountItem.name), name: accountItem.name });
-      } catch (e) {
-        this.logger.info(`Account ${accountItem.name} not found to validate scp count.`);
-      }
-    }
-
-    for (const orgItem of this.props.organizationConfig.organizationalUnitIds!) {
-      try {
-        orgUnits.push({ id: orgItem.id, name: orgItem.name });
-      } catch (e) {
-        this.logger.info(`Organization ${orgItem.name} not found to validate scp count.`);
-      }
-    }
-
-    return { configAccounts: accounts, configOu: orgUnits, configScps: validateScpCountForOrg };
+    return serviceControlPolicies;
   }
 }

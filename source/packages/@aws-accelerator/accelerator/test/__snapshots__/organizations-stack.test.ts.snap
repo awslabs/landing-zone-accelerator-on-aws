@@ -12,6 +12,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
     "AttachBackupPolicyInfrastructure61051A6A": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
+        "BackupPolicy8656A81D",
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
       ],
       "Properties": {
@@ -21,12 +22,17 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
             "Arn",
           ],
         },
+        "configPolicyNames": [
+          "AcceleratorGuardrails1",
+          "AcceleratorGuardrails2",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
         "policyId": {
           "Ref": "BackupPolicy8656A81D",
         },
+        "policyTagKey": "AWSAcceleratorManaged",
         "targetId": "ou-asdf-22222222",
         "type": "BACKUP_POLICY",
         "uuid": "REPLACED-UUID",
@@ -37,6 +43,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
     "AttachBackupPolicySecurity64CA87BA": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
+        "BackupPolicy8656A81D",
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
       ],
       "Properties": {
@@ -46,12 +53,14 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
             "Arn",
           ],
         },
+        "configPolicyNames": [],
         "partition": {
           "Ref": "AWS::Partition",
         },
         "policyId": {
           "Ref": "BackupPolicy8656A81D",
         },
+        "policyTagKey": "AWSAcceleratorManaged",
         "targetId": "ou-asdf-11111111",
         "type": "BACKUP_POLICY",
         "uuid": "REPLACED-UUID",
@@ -63,6 +72,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+        "TagPolicy00F603BF",
       ],
       "Properties": {
         "ServiceToken": {
@@ -71,12 +81,17 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
             "Arn",
           ],
         },
+        "configPolicyNames": [
+          "AcceleratorGuardrails1",
+          "AcceleratorGuardrails2",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
         "policyId": {
           "Ref": "TagPolicy00F603BF",
         },
+        "policyTagKey": "AWSAcceleratorManaged",
         "targetId": "ou-asdf-22222222",
         "type": "TAG_POLICY",
         "uuid": "REPLACED-UUID",
@@ -88,6 +103,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+        "TagPolicy00F603BF",
       ],
       "Properties": {
         "ServiceToken": {
@@ -96,12 +112,14 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
             "Arn",
           ],
         },
+        "configPolicyNames": [],
         "partition": {
           "Ref": "AWS::Partition",
         },
         "policyId": {
           "Ref": "TagPolicy00F603BF",
         },
+        "policyTagKey": "AWSAcceleratorManaged",
         "targetId": "ou-asdf-11111111",
         "type": "TAG_POLICY",
         "uuid": "REPLACED-UUID",
@@ -148,6 +166,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
         "key": "REPLACED-JSON-PATH.json",
         "name": "BackupPolicy",
         "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
         "type": "BACKUP_POLICY",
         "uuid": "REPLACED-UUID",
       },
@@ -1154,6 +1173,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                     "organizations:AttachPolicy",
                     "organizations:DetachPolicy",
                     "organizations:ListPoliciesForTarget",
+                    "organizations:ListTagsForResource",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
@@ -1238,8 +1258,12 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
                 {
                   "Action": [
                     "organizations:CreatePolicy",
+                    "organizations:DeletePolicy",
+                    "organizations:DetachPolicy",
                     "organizations:ListPolicies",
+                    "organizations:ListTargetsForPolicy",
                     "organizations:UpdatePolicy",
+                    "organizations:TagResource",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
@@ -2876,6 +2900,7 @@ exports[`MultiOuOrganizationsStack Construct(OrganizationsStack):  Snapshot Test
         "key": "REPLACED-JSON-PATH.json",
         "name": "TagPolicy",
         "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
         "type": "TAG_POLICY",
         "uuid": "REPLACED-UUID",
       },
@@ -2938,6 +2963,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
     "AttachBackupPolicyRootB4A999CE": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
+        "BackupPolicy8656A81D",
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
       ],
       "Properties": {
@@ -2947,12 +2973,14 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
+        "configPolicyNames": [],
         "partition": {
           "Ref": "AWS::Partition",
         },
         "policyId": {
           "Ref": "BackupPolicy8656A81D",
         },
+        "policyTagKey": "AWSAcceleratorManaged",
         "targetId": "r-asdf",
         "type": "BACKUP_POLICY",
         "uuid": "REPLACED-UUID",
@@ -2964,6 +2992,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+        "TagPolicy00F603BF",
       ],
       "Properties": {
         "ServiceToken": {
@@ -2972,12 +3001,14 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
+        "configPolicyNames": [],
         "partition": {
           "Ref": "AWS::Partition",
         },
         "policyId": {
           "Ref": "TagPolicy00F603BF",
         },
+        "policyTagKey": "AWSAcceleratorManaged",
         "targetId": "r-asdf",
         "type": "TAG_POLICY",
         "uuid": "REPLACED-UUID",
@@ -3024,6 +3055,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
         "key": "REPLACED-JSON-PATH.json",
         "name": "BackupPolicy",
         "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
         "type": "BACKUP_POLICY",
         "uuid": "REPLACED-UUID",
       },
@@ -4030,6 +4062,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                     "organizations:AttachPolicy",
                     "organizations:DetachPolicy",
                     "organizations:ListPoliciesForTarget",
+                    "organizations:ListTagsForResource",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
@@ -4114,8 +4147,12 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
                 {
                   "Action": [
                     "organizations:CreatePolicy",
+                    "organizations:DeletePolicy",
+                    "organizations:DetachPolicy",
                     "organizations:ListPolicies",
+                    "organizations:ListTargetsForPolicy",
                     "organizations:UpdatePolicy",
+                    "organizations:TagResource",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
@@ -5501,6 +5538,7 @@ exports[`OrganizationsStack Construct(OrganizationsStack):  Snapshot Test 1`] = 
         "key": "REPLACED-JSON-PATH.json",
         "name": "TagPolicy",
         "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
         "type": "TAG_POLICY",
         "uuid": "REPLACED-UUID",
       },
@@ -5563,6 +5601,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
     "AttachBackupPolicyRootB4A999CE": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
+        "BackupPolicy8656A81D",
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
       ],
       "Properties": {
@@ -5572,12 +5611,14 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
             "Arn",
           ],
         },
+        "configPolicyNames": [],
         "partition": {
           "Ref": "AWS::Partition",
         },
         "policyId": {
           "Ref": "BackupPolicy8656A81D",
         },
+        "policyTagKey": "AWSAcceleratorManaged",
         "targetId": "r-asdf",
         "type": "BACKUP_POLICY",
         "uuid": "REPLACED-UUID",
@@ -5589,6 +5630,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
       "DeletionPolicy": "Delete",
       "DependsOn": [
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
+        "TagPolicy00F603BF",
       ],
       "Properties": {
         "ServiceToken": {
@@ -5597,12 +5639,14 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
             "Arn",
           ],
         },
+        "configPolicyNames": [],
         "partition": {
           "Ref": "AWS::Partition",
         },
         "policyId": {
           "Ref": "TagPolicy00F603BF",
         },
+        "policyTagKey": "AWSAcceleratorManaged",
         "targetId": "r-asdf",
         "type": "TAG_POLICY",
         "uuid": "REPLACED-UUID",
@@ -5649,6 +5693,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
         "key": "REPLACED-JSON-PATH.json",
         "name": "BackupPolicy",
         "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
         "type": "BACKUP_POLICY",
         "uuid": "REPLACED-UUID",
       },
@@ -6655,6 +6700,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                     "organizations:AttachPolicy",
                     "organizations:DetachPolicy",
                     "organizations:ListPoliciesForTarget",
+                    "organizations:ListTagsForResource",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
@@ -6739,8 +6785,12 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
                 {
                   "Action": [
                     "organizations:CreatePolicy",
+                    "organizations:DeletePolicy",
+                    "organizations:DetachPolicy",
                     "organizations:ListPolicies",
+                    "organizations:ListTargetsForPolicy",
                     "organizations:UpdatePolicy",
+                    "organizations:TagResource",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
@@ -8403,6 +8453,7 @@ exports[`delegatedAdminStack Construct(OrganizationsStack):  Snapshot Test 1`] =
         "key": "REPLACED-JSON-PATH.json",
         "name": "TagPolicy",
         "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
         "type": "TAG_POLICY",
         "uuid": "REPLACED-UUID",
       },

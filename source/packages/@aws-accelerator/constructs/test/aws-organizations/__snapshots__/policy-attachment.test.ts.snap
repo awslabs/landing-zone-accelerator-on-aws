@@ -115,6 +115,7 @@ exports[`PolicyAttachment Construct(PolicyAttachment):  Snapshot Test 1`] = `
                     "organizations:AttachPolicy",
                     "organizations:DetachPolicy",
                     "organizations:ListPoliciesForTarget",
+                    "organizations:ListTagsForResource",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
@@ -140,10 +141,15 @@ exports[`PolicyAttachment Construct(PolicyAttachment):  Snapshot Test 1`] = `
             "Arn",
           ],
         },
+        "configPolicyNames": [
+          "AcceleratorGuardrails1",
+          "AcceleratorGuardrails2",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
         "policyId": "policyId",
+        "policyTagKey": "AWSAcceleratorManaged",
         "targetId": "targetId",
         "type": "SERVICE_CONTROL_POLICY",
         "uuid": "REPLACED-UUID",

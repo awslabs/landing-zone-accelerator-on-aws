@@ -203,6 +203,7 @@ export class OrganizationsStack extends AcceleratorStack {
             true,
           ),
           type: PolicyType.BACKUP_POLICY,
+          acceleratorPrefix: this.props.prefixes.accelerator,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
         });
@@ -210,13 +211,21 @@ export class OrganizationsStack extends AcceleratorStack {
         policy.node.addDependency(enablePolicyTypeBackup);
 
         for (const orgUnit of backupPolicies.deploymentTargets.organizationalUnits) {
-          new PolicyAttachment(this, pascalCase(`Attach_${backupPolicies.name}_${orgUnit}`), {
-            policyId: policy.id,
-            targetId: this.stackProperties.organizationConfig.getOrganizationalUnitId(orgUnit),
-            type: PolicyType.BACKUP_POLICY,
-            kmsKey: this.cloudwatchKey,
-            logRetentionInDays: this.logRetention,
-          });
+          const backupPolicyAttachment = new PolicyAttachment(
+            this,
+            pascalCase(`Attach_${backupPolicies.name}_${orgUnit}`),
+            {
+              policyId: policy.id,
+              targetId: this.stackProperties.organizationConfig.getOrganizationalUnitId(orgUnit),
+              type: PolicyType.BACKUP_POLICY,
+              configPolicyNames: this.getScpNamesForTarget(orgUnit, 'ou'),
+              acceleratorPrefix: this.props.prefixes.accelerator,
+              kmsKey: this.cloudwatchKey,
+              logRetentionInDays: this.logRetention,
+            },
+          );
+
+          backupPolicyAttachment.node.addDependency(policy);
         }
       }
     }
@@ -594,18 +603,26 @@ export class OrganizationsStack extends AcceleratorStack {
             true,
           ),
           type: PolicyType.TAG_POLICY,
+          acceleratorPrefix: this.props.prefixes.accelerator,
           kmsKey: this.cloudwatchKey,
           logRetentionInDays: this.logRetention,
         });
         policy.node.addDependency(enablePolicyTypeTag);
         for (const orgUnit of taggingPolicy.deploymentTargets.organizationalUnits ?? []) {
-          new PolicyAttachment(this, pascalCase(`Attach_${taggingPolicy.name}_${orgUnit}`), {
-            policyId: policy.id,
-            targetId: this.stackProperties.organizationConfig.getOrganizationalUnitId(orgUnit),
-            type: PolicyType.TAG_POLICY,
-            kmsKey: this.cloudwatchKey,
-            logRetentionInDays: this.logRetention,
-          });
+          const tagPolicyAttachment = new PolicyAttachment(
+            this,
+            pascalCase(`Attach_${taggingPolicy.name}_${orgUnit}`),
+            {
+              policyId: policy.id,
+              targetId: this.stackProperties.organizationConfig.getOrganizationalUnitId(orgUnit),
+              type: PolicyType.TAG_POLICY,
+              configPolicyNames: this.getScpNamesForTarget(orgUnit, 'ou'),
+              acceleratorPrefix: this.props.prefixes.accelerator,
+              kmsKey: this.cloudwatchKey,
+              logRetentionInDays: this.logRetention,
+            },
+          );
+          tagPolicyAttachment.node.addDependency(policy);
         }
       }
     }
