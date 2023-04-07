@@ -37,6 +37,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const type: string = event.ResourceProperties['type'];
   const tags: AWS.Organizations.Tag[] = event.ResourceProperties['tags'] || [];
   const partition: string = event.ResourceProperties['partition'];
+  const policyTagKey: string = event.ResourceProperties['policyTagKey'];
+
   const solutionId = process.env['SOLUTION_ID'];
 
   let organizationsClient: AWS.Organizations;
@@ -84,6 +86,16 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
                 .promise(),
             );
 
+            // update tags for existing resources
+            await throttlingBackOff(() =>
+              organizationsClient
+                .tagResource({
+                  ResourceId: policy.Id!,
+                  Tags: [...tags, { Key: policyTagKey, Value: 'Yes' }],
+                })
+                .promise(),
+            );
+
             console.log(updatePolicyResponse.Policy?.PolicySummary?.Id);
 
             return {
@@ -100,7 +112,13 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       //
       const createPolicyResponse = await throttlingBackOff(() =>
         organizationsClient
-          .createPolicy({ Content: content, Description: description, Name: name, Tags: tags, Type: type })
+          .createPolicy({
+            Content: content,
+            Description: description,
+            Name: name,
+            Type: type,
+            Tags: [...tags, { Key: policyTagKey, Value: 'Yes' }],
+          })
           .promise(),
       );
 
@@ -112,10 +130,102 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
       };
 
     case 'Delete':
-      // Do Nothing
+      const policyId = await getPolicyId(organizationsClient, name, type);
+
+      if (policyId) {
+        console.log(`${type} ${name} found for deletion`);
+        console.log(`Checking policy ${name} have any attachment before deletion`);
+        await detachPolicyFromAllAttachedTargets(organizationsClient, { name: name, id: policyId });
+
+        console.log(`Deleting policy ${name}, policy type is ${type}`);
+        await throttlingBackOff(() =>
+          organizationsClient
+            .deletePolicy({
+              PolicyId: policyId,
+            })
+            .promise(),
+        );
+        console.log(`Policy ${name} deleted successfully!`);
+      }
+
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Status: 'SUCCESS',
       };
+  }
+}
+
+/**
+ * Function to get policy Id required for deletion
+ * @param organizationsClient
+ * @param removePolicy
+ */
+async function getPolicyId(
+  organizationsClient: AWS.Organizations,
+  policyName: string,
+  type: string,
+): Promise<string | undefined> {
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      organizationsClient.listPolicies({ Filter: type, NextToken: nextToken }).promise(),
+    );
+    for (const policy of page.Policies ?? []) {
+      if (policy.Name === policyName) {
+        return policy.Id!;
+      }
+    }
+    nextToken = page.NextToken;
+  } while (nextToken);
+
+  return undefined;
+}
+
+/**
+ * Function to detach all targets from given policy, before deleting the policy
+ * @param organizationsClient
+ * @param removePolicy
+ */
+async function detachPolicyFromAllAttachedTargets(
+  organizationsClient: AWS.Organizations,
+  removePolicy: {
+    name: string;
+    id: string;
+  },
+): Promise<void> {
+  let nextToken: string | undefined = undefined;
+  const targetIds: string[] = [];
+  do {
+    const page = await throttlingBackOff(() =>
+      organizationsClient.listTargetsForPolicy({ PolicyId: removePolicy.id, NextToken: nextToken }).promise(),
+    );
+    for (const target of page.Targets ?? []) {
+      targetIds.push(target.TargetId!);
+    }
+    nextToken = page.NextToken;
+  } while (nextToken);
+
+  for (const targetId of targetIds) {
+    console.log(`Started detach of target ${targetId} from policy ${removePolicy.id}`);
+    try {
+      await throttlingBackOff(() =>
+        organizationsClient.detachPolicy({ PolicyId: removePolicy.id, TargetId: targetId }).promise(),
+      );
+      console.log(`Completed detach of target ${targetId} from policy ${removePolicy.id}`);
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      e: any
+    ) {
+      if (
+        // SDKv2 Error Structure
+        e.code === 'PolicyNotAttachedException' ||
+        // SDKv3 Error Structure
+        e.name === 'PolicyNotAttachedException'
+      ) {
+        console.log(`${removePolicy.name} policy not found to detach`);
+      } else {
+        throw new Error(`Policy detach error message - ${e}`);
+      }
+    }
   }
 }

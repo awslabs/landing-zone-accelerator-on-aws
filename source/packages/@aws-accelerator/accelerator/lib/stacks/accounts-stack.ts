@@ -185,6 +185,7 @@ export class AccountsStack extends AcceleratorStack {
               partition: props.partition,
               path: this.generatePolicyReplacements(path.join(props.configDirPath, serviceControlPolicy.policy), true),
               type: PolicyType.SERVICE_CONTROL_POLICY,
+              acceleratorPrefix: props.prefixes.accelerator,
               kmsKey: this.cloudwatchKey,
               logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
             });
@@ -207,23 +208,37 @@ export class AccountsStack extends AcceleratorStack {
                 `Attaching service control policy (${serviceControlPolicy.name}) to organizational unit (${organizationalUnit})`,
               );
 
-              new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${organizationalUnit}`), {
-                policyId: scp.id,
-                targetId: props.organizationConfig.getOrganizationalUnitId(organizationalUnit),
-                type: PolicyType.SERVICE_CONTROL_POLICY,
-                kmsKey: this.cloudwatchKey,
-                logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
-              });
+              const ouPolicyAttachment = new PolicyAttachment(
+                this,
+                pascalCase(`Attach_${scp.name}_${organizationalUnit}`),
+                {
+                  policyId: scp.id,
+                  targetId: props.organizationConfig.getOrganizationalUnitId(organizationalUnit),
+                  type: PolicyType.SERVICE_CONTROL_POLICY,
+                  configPolicyNames: this.getScpNamesForTarget(organizationalUnit, 'ou'),
+                  acceleratorPrefix: props.prefixes.accelerator,
+                  kmsKey: this.cloudwatchKey,
+                  logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+                },
+              );
+              ouPolicyAttachment.node.addDependency(scp);
             }
 
             for (const account of serviceControlPolicy.deploymentTargets.accounts ?? []) {
-              new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${account}`), {
+              this.logger.info(
+                `Attaching service control policy (${serviceControlPolicy.name}) to account (${account})`,
+              );
+
+              const accountPolicyAttachment = new PolicyAttachment(this, pascalCase(`Attach_${scp.name}_${account}`), {
                 policyId: scp.id,
                 targetId: props.accountsConfig.getAccountId(account),
                 type: PolicyType.SERVICE_CONTROL_POLICY,
+                configPolicyNames: this.getScpNamesForTarget(account, 'account'),
+                acceleratorPrefix: props.prefixes.accelerator,
                 kmsKey: this.cloudwatchKey,
                 logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
               });
+              accountPolicyAttachment.node.addDependency(scp);
             }
           }
         }

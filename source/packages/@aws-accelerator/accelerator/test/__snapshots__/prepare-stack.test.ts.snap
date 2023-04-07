@@ -3781,6 +3781,8 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
                     "organizations:ListRoots",
                     "organizations:ListAccountsForParent",
                     "organizations:ListParents",
+                    "organizations:ListPolicies",
+                    "organizations:ListTagsForResource",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
@@ -3895,103 +3897,6 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
                     },
                   ],
                   "Sid": "sms",
-                },
-              ],
-              "Version": "2012-10-17",
-            },
-            "PolicyName": "Inline",
-          },
-        ],
-      },
-      "Type": "AWS::IAM::Role",
-    },
-    "CustomValidateScpCountCustomResourceProviderHandlerEE8CD0C0": {
-      "DependsOn": [
-        "CustomValidateScpCountCustomResourceProviderRole6657C548",
-      ],
-      "Properties": {
-        "Code": {
-          "S3Bucket": "cdk-hnb659fds-assets-111111111111-us-east-1",
-          "S3Key": "REPLACED-GENERATED-NAME.zip",
-        },
-        "Handler": "__entrypoint__.handler",
-        "MemorySize": 128,
-        "Role": {
-          "Fn::GetAtt": [
-            "CustomValidateScpCountCustomResourceProviderRole6657C548",
-            "Arn",
-          ],
-        },
-        "Runtime": "nodejs14.x",
-        "Timeout": 900,
-      },
-      "Type": "AWS::Lambda::Function",
-    },
-    "CustomValidateScpCountCustomResourceProviderLogGroup79E9A7D0": {
-      "DeletionPolicy": "Delete",
-      "Properties": {
-        "KmsKeyId": {
-          "Fn::GetAtt": [
-            "AcceleratorManagementCloudWatchKeyE630915F",
-            "Arn",
-          ],
-        },
-        "LogGroupName": {
-          "Fn::Join": [
-            "",
-            [
-              "/aws/lambda/",
-              {
-                "Ref": "CustomValidateScpCountCustomResourceProviderHandlerEE8CD0C0",
-              },
-            ],
-          ],
-        },
-        "RetentionInDays": 3653,
-      },
-      "Type": "AWS::Logs::LogGroup",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "CustomValidateScpCountCustomResourceProviderRole6657C548": {
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRole",
-              "Effect": "Allow",
-              "Principal": {
-                "Service": "lambda.amazonaws.com",
-              },
-            },
-          ],
-          "Version": "2012-10-17",
-        },
-        "ManagedPolicyArns": [
-          {
-            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          },
-        ],
-        "Policies": [
-          {
-            "PolicyDocument": {
-              "Statement": [
-                {
-                  "Action": [
-                    "organizations:DescribeOrganization",
-                    "organizations:ListRoots",
-                    "organizations:ListPoliciesForTarget",
-                    "organizations:ListTargetsForPolicy",
-                    "organizations:DescribePolicy",
-                    "organizations:DescribeAccount",
-                    "organizations:ListPolicies",
-                    "organizations:ListAccountsForParent",
-                    "organizations:ListAccounts",
-                    "organizations:DescribeOrganizationalUnit",
-                    "organizations:ListParents",
-                    "organizations:ListOrganizationalUnitsForParent",
-                  ],
-                  "Effect": "Allow",
-                  "Resource": "*",
                 },
               ],
               "Version": "2012-10-17",
@@ -4414,108 +4319,32 @@ exports[`PrepareStack Construct(PrepareStack):  Snapshot Test 1`] = `
         },
         "organizationsEnabled": true,
         "partition": "aws",
+        "serviceControlPolicies": [
+          {
+            "name": "AcceleratorGuardrails1",
+            "targetType": "ou",
+            "targets": [
+              {
+                "id": "ou-asdf-22222222",
+                "name": "Infrastructure",
+              },
+            ],
+          },
+          {
+            "name": "AcceleratorGuardrails2",
+            "targetType": "account",
+            "targets": [
+              {
+                "id": "444444444444",
+                "name": "SharedServices",
+              },
+            ],
+          },
+        ],
         "stackName": "AWSAccelerator-PrepareStack-111111111111-us-east-1",
         "uuid": "REPLACED-UUID",
       },
       "Type": "Custom::ValidateEnvironmentConfig",
-      "UpdateReplacePolicy": "Delete",
-    },
-    "ValidateScpCount271EA5CB": {
-      "DeletionPolicy": "Delete",
-      "DependsOn": [
-        "CreateCTAccountsCreateControlTowerAcccountsProviderframeworkisComplete97C67C8F",
-        "CreateCTAccountsCreateControlTowerAcccountsProviderframeworkisCompleteServiceRoleDefaultPolicy3785920A",
-        "CreateCTAccountsCreateControlTowerAcccountsProviderframeworkisCompleteServiceRoleBB950C19",
-        "CreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEvent8503E7D4",
-        "CreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEventServiceRoleDefaultPolicyADBC2803",
-        "CreateCTAccountsCreateControlTowerAcccountsProviderframeworkonEventServiceRole773985D8",
-        "CreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeout9340F558",
-        "CreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutServiceRoleDefaultPolicy40BA7D0E",
-        "CreateCTAccountsCreateControlTowerAcccountsProviderframeworkonTimeoutServiceRole8A0E95FA",
-        "CreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachineA6C8A44E",
-        "CreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachineRoleDefaultPolicy987F4739",
-        "CreateCTAccountsCreateControlTowerAcccountsProviderwaiterstatemachineRoleE4D3D067",
-        "CreateCTAccountsCreateControlTowerAccount8636115B",
-        "CreateCTAccountsCreateControlTowerAccountServiceRoleAEFB3CA3",
-        "CreateCTAccountsCreateControlTowerAccountLogGroup7DD19087",
-        "CreateCTAccountsCreateControlTowerAccountStatusE993FA04",
-        "CreateCTAccountsCreateControlTowerAccountStatusServiceRoleDefaultPolicy9BE6F791",
-        "CreateCTAccountsCreateControlTowerAccountStatusServiceRole999B76C4",
-        "CreateCTAccountsCreateControlTowerAccountStatusLogGroup18D2531C",
-        "CreateCTAccountsLambdaPrincipalAssociationFAD34BEB",
-        "CreateCTAccounts3049A752",
-        "CustomValidateScpCountCustomResourceProviderLogGroup79E9A7D0",
-      ],
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "CustomValidateScpCountCustomResourceProviderHandlerEE8CD0C0",
-            "Arn",
-          ],
-        },
-        "accounts": [
-          {
-            "accountId": "111111111111",
-            "name": "Management",
-          },
-          {
-            "accountId": "333333333333",
-            "name": "LogArchive",
-          },
-          {
-            "accountId": "222222222222",
-            "name": "Audit",
-          },
-          {
-            "accountId": "444444444444",
-            "name": "SharedServices",
-          },
-          {
-            "accountId": "555555555555",
-            "name": "Network",
-          },
-          {
-            "accountId": "666666666666",
-            "name": "GovCloudWorkloadAccount01",
-          },
-        ],
-        "organizationUnits": [
-          {
-            "id": "r-asdf",
-            "name": "Root",
-          },
-          {
-            "id": "ou-asdf-11111111",
-            "name": "Security",
-          },
-          {
-            "id": "ou-asdf-22222222",
-            "name": "Infrastructure",
-          },
-        ],
-        "partition": {
-          "Ref": "AWS::Partition",
-        },
-        "scps": [
-          {
-            "appliedScpName": [
-              "AcceleratorGuardrails1",
-            ],
-            "orgEntity": "Infrastructure",
-            "orgEntityId": "ou-asdf-22222222",
-            "orgEntityType": "OU",
-          },
-          {
-            "appliedScpName": [
-              "AcceleratorGuardrails2",
-            ],
-            "orgEntity": "SharedServices",
-            "orgEntityId": "444444444444",
-            "orgEntityType": "Account",
-          },
-        ],
-      },
-      "Type": "Custom::ValidateScpCount",
       "UpdateReplacePolicy": "Delete",
     },
     "govCloudAccountMapping0E3D2AD8": {

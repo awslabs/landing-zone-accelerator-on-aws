@@ -29,6 +29,12 @@ export interface ValidateEnvironmentConfigProps {
   readonly partition: string;
   readonly driftDetectionParameter: cdk.aws_ssm.IParameter;
   readonly driftDetectionMessageParameter: cdk.aws_ssm.IParameter;
+  readonly serviceControlPolicies: {
+    name: string;
+    targetType: 'ou' | 'account';
+    targets: { name: string; id: string }[];
+  }[];
+  readonly policyTagKey: string;
   /**
    * Custom resource lambda log group encryption key
    */
@@ -70,6 +76,8 @@ export class ValidateEnvironmentConfig extends Construct {
             'organizations:ListRoots',
             'organizations:ListAccountsForParent',
             'organizations:ListParents',
+            'organizations:ListPolicies',
+            'organizations:ListTagsForResource',
           ],
           Resource: '*',
         },
@@ -127,6 +135,7 @@ export class ValidateEnvironmentConfig extends Construct {
         partition: props.partition,
         driftDetectionParameterName: props.driftDetectionParameter.parameterName,
         driftDetectionMessageParameterName: props.driftDetectionMessageParameter.parameterName,
+        serviceControlPolicies: props.serviceControlPolicies,
         uuid: uuidv4(), // Generates a new UUID to force the resource to update
       },
     });

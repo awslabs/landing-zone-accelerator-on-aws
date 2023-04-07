@@ -32,6 +32,8 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   const targetId: string = event.ResourceProperties['targetId'] ?? undefined;
   const type: string = event.ResourceProperties['type'];
   const partition: string = event.ResourceProperties['partition'];
+  const configPolicyNames: string[] = event.ResourceProperties['configPolicyNames'];
+  const policyTagKey: string = event.ResourceProperties['policyTagKey'];
   const solutionId = process.env['SOLUTION_ID'];
 
   let organizationsClient: AWS.Organizations;
@@ -48,6 +50,11 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
   switch (event.RequestType) {
     case 'Create':
     case 'Update':
+      //
+      // First detach all non config policies from target
+      //
+      await detachNonConfigPolicies(organizationsClient, targetId, configPolicyNames, policyTagKey);
+
       //
       // Check if already exists, update and return the ID
       //
@@ -122,4 +129,105 @@ async function getListPoliciesForTarget(
   return throttlingBackOff(() =>
     organizationsClient.listPoliciesForTarget({ Filter: type, TargetId: targetId, NextToken: nextToken }).promise(),
   );
+}
+
+async function detachNonConfigPolicies(
+  organizationsClient: AWS.Organizations,
+  targetId: string,
+  configPolicyNames: string[],
+  policyTagKey: string,
+): Promise<void> {
+  console.log(`Detaching non config policies from target ${targetId}`);
+  console.log(`Config policies are ${configPolicyNames.join(',')}`);
+  const attachedPolicies: { name: string; id: string }[] = [];
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      organizationsClient
+        .listPoliciesForTarget({ Filter: 'SERVICE_CONTROL_POLICY', TargetId: targetId, NextToken: nextToken })
+        .promise(),
+    );
+    for (const policy of page.Policies ?? []) {
+      attachedPolicies.push({ name: policy.Name!, id: policy.Id! });
+    }
+    nextToken = page.NextToken;
+  } while (nextToken);
+
+  const attachedPolicyNames: string[] = [];
+  for (const attachedPolicy of attachedPolicies) {
+    attachedPolicyNames.push(attachedPolicy.name);
+  }
+  console.log(`Existing attached polices are [${attachedPolicyNames.join(',')}]`);
+
+  const removePolicies = attachedPolicies.filter(item => configPolicyNames.indexOf(item.name) === -1);
+
+  const removePolicyNames: string[] = [];
+  const removeLzaPolicies: { name: string; id: string }[] = [];
+  for (const removePolicy of removePolicies) {
+    if (await isLzaManagedPolicy(organizationsClient, removePolicy.id, policyTagKey)) {
+      removePolicyNames.push(removePolicy.name);
+      removeLzaPolicies.push(removePolicy);
+    }
+  }
+
+  console.log(`Polices to be detached [${removePolicyNames.join(',')}]`);
+
+  for (const removeLzaPolicy of removeLzaPolicies) {
+    console.log(`Detaching ${removeLzaPolicy.name} policy from ${targetId} target`);
+    try {
+      await throttlingBackOff(() =>
+        organizationsClient.detachPolicy({ PolicyId: removeLzaPolicy.id, TargetId: targetId }).promise(),
+      );
+      console.log(`${removeLzaPolicy.name} policy detached successfully from ${targetId} target`);
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      e: any
+    ) {
+      if (
+        // SDKv2 Error Structure
+        e.code === 'PolicyNotAttachedException' ||
+        // SDKv3 Error Structure
+        e.name === 'PolicyNotAttachedException'
+      ) {
+        console.log(`${removeLzaPolicy.name} policy not found to detach`);
+      } else {
+        throw new Error(`Policy detach error message - ${e}`);
+      }
+    }
+  }
+}
+
+/**
+ * Function to check if policy is managed by LZA, this is by checking lzaManaged tag with Yes value
+ * @param policyId
+ * @returns
+ */
+async function isLzaManagedPolicy(
+  organizationsClient: AWS.Organizations,
+  policyId: string,
+  policyTagKey: string,
+): Promise<boolean> {
+  if (policyId === 'p-FullAWSAccess') {
+    return false;
+  }
+
+  let nextToken: string | undefined = undefined;
+  do {
+    const page = await throttlingBackOff(() =>
+      organizationsClient
+        .listTagsForResource({
+          ResourceId: policyId,
+          NextToken: nextToken,
+        })
+        .promise(),
+    );
+    for (const tag of page.Tags ?? []) {
+      if (tag.Key === policyTagKey && tag.Value === 'Yes') {
+        return true;
+      }
+    }
+    nextToken = page.NextToken;
+  } while (nextToken);
+
+  return false;
 }

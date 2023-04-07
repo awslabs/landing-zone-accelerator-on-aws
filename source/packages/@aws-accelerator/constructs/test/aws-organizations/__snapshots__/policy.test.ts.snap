@@ -114,8 +114,12 @@ exports[`Policy Construct(Policy):  Snapshot Test 1`] = `
                 {
                   "Action": [
                     "organizations:CreatePolicy",
+                    "organizations:DeletePolicy",
+                    "organizations:DetachPolicy",
                     "organizations:ListPolicies",
+                    "organizations:ListTargetsForPolicy",
                     "organizations:UpdatePolicy",
+                    "organizations:TagResource",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
@@ -170,6 +174,7 @@ exports[`Policy Construct(Policy):  Snapshot Test 1`] = `
         "key": "REPLACED-GENERATED-NAME.zip",
         "name": "TestPolicy",
         "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
         "tags": [
           {
             "Key": "name",
