@@ -18,8 +18,13 @@ import { RequireApproval } from 'aws-cdk/lib/diff';
 import { Command } from 'aws-cdk/lib/settings';
 import * as AWS from 'aws-sdk';
 import * as fs from 'fs';
-import { STSClient, AssumeRoleCommand, AssumeRoleCommandInput } from '@aws-sdk/client-sts';
-import { SSMClient, GetParameterCommand, GetParameterCommandInput } from '@aws-sdk/client-ssm';
+import { STSClient, AssumeRoleCommand, AssumeRoleCommandInput, AssumeRoleCommandOutput } from '@aws-sdk/client-sts';
+import {
+  SSMClient,
+  GetParameterCommand,
+  GetParameterCommandInput,
+  GetParameterCommandOutput,
+} from '@aws-sdk/client-ssm';
 
 import { AccountsConfig, GlobalConfig } from '@aws-accelerator/config';
 import { createLogger, throttlingBackOff } from '@aws-accelerator/utils';
@@ -79,6 +84,8 @@ export const OptInRegions = [
   'me-central-1',
   'me-south-1',
 ];
+
+export const BootstrapVersion = 16;
 
 const stackPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
 
@@ -246,7 +253,7 @@ export abstract class Accelerator {
     //
     // When running parallel, this will be the max concurrent stacks
     //
-    const maxStacks = process.env['MAX_CONCURRENT_STACKS'] ?? 100;
+    const maxStacks = Number(process.env['MAX_CONCURRENT_STACKS'] ?? 250);
 
     let promises: Promise<void>[] = [];
 
@@ -271,13 +278,13 @@ export abstract class Accelerator {
             caBundlePath: props.caBundlePath,
             ec2Creds: props.ec2Creds,
             proxyAddress: props.proxyAddress,
-            centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+            centralizeCdkBootstrap:
+              globalConfig?.centralizeCdkBuckets?.enable || globalConfig?.cdkOptions?.centralizeBuckets,
           }),
         );
         await Promise.all(promises);
         promises = [];
       }
-
       assumeRolePlugin = await this.initializeAssumeRolePlugin({
         region: props.region ?? globalRegion,
         assumeRoleName: globalConfig.managementAccountAccessRole,
@@ -693,8 +700,14 @@ async function bootstrapRequired(
     RoleSessionName: 'acceleratorBootstrapCheck',
     DurationSeconds: 900,
   };
-  const assumeRoleCredential = await throttlingBackOff(() => stsClient.send(new AssumeRoleCommand(stsParams)));
-
+  let assumeRoleCredential: AssumeRoleCommandOutput | undefined = undefined;
+  try {
+    assumeRoleCredential = await throttlingBackOff(() => stsClient.send(new AssumeRoleCommand(stsParams)));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    logger.error(JSON.stringify(e));
+    throw new Error(e.message);
+  }
   const ssmParams: GetParameterCommandInput = {
     Name: ' /cdk-bootstrap/accel/version',
   };
@@ -707,8 +720,18 @@ async function bootstrapRequired(
     region: region,
   });
 
-  const parameter = await throttlingBackOff(() => ssmClient.send(new GetParameterCommand(ssmParams)));
-  if (parameter.Parameter && parameter.Parameter.Value === '15') {
+  let parameter: GetParameterCommandOutput | undefined = undefined;
+  try {
+    parameter = await throttlingBackOff(() => ssmClient.send(new GetParameterCommand(ssmParams)));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    if (e.name === 'ParameterNotFound') {
+      return true;
+    }
+    logger.error(JSON.stringify(e));
+    throw new Error(e.message);
+  }
+  if (parameter.Parameter && Number(parameter.Parameter.Value) >= BootstrapVersion) {
     logger.info(`Skipping bootstrap for account-region: ${accountId}-${region}`);
     return false;
   }

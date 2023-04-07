@@ -15,6 +15,7 @@ import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
 import { AcceleratorStack, AcceleratorStackProps } from './accelerator-stack';
+import { BootstrapVersion } from '../accelerator';
 
 export class BootstrapStack extends AcceleratorStack {
   readonly qualifier: string;
@@ -65,7 +66,7 @@ export class BootstrapStack extends AcceleratorStack {
     // Create SSM Parameter for CDK Bootstrap Version
     const cdkBootstrapVersionParam = new cdk.aws_ssm.StringParameter(this, 'CdkBootstrapVersion', {
       parameterName: `/cdk-bootstrap/${this.qualifier}/version`,
-      stringValue: '16',
+      stringValue: BootstrapVersion.toString(),
     });
     // Override logical Id
     const cfnCdkBootstrapVersionParam = cdkBootstrapVersionParam.node.defaultChild as cdk.aws_ssm.CfnParameter;
@@ -366,7 +367,7 @@ export class BootstrapStack extends AcceleratorStack {
 
     // Outputs
     new cdk.CfnOutput(this, 'BootstrapVersion', {
-      value: '16',
+      value: BootstrapVersion.toString(),
       description: 'The version of the bootstrap resources that are currently mastered in this stack',
     });
 
