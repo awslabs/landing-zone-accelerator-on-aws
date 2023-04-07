@@ -478,5 +478,9 @@ export class GlobalConfigValidator {
         `Cannot specify values for both cdkOptions and centralizeCdkBuckets. Please delete centralizeCdkBuckets and use cdkOptions`,
       );
     }
+
+    if (!values?.cdkOptions?.centralizeBuckets && values?.cdkOptions?.useManagementAccessRole) {
+      errors.push(`cdkOptions.centralizeBuckets must be set to true to enable cdkOptions.useManagementAccessRole`);
+    }
   }
 }
