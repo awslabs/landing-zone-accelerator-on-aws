@@ -26,7 +26,7 @@ import { HotswapMode } from 'aws-cdk/lib/api/hotswap/common';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { AccountsConfig, CustomizationsConfig, OrganizationConfig } from '@aws-accelerator/config';
+import { AccountsConfig, cdkOptionsConfig, CustomizationsConfig, OrganizationConfig } from '@aws-accelerator/config';
 import { createLogger } from '@aws-accelerator/utils';
 
 import { AcceleratorStackNames } from './accelerator';
@@ -93,6 +93,7 @@ export class AcceleratorToolkit {
     ec2Creds?: boolean;
     proxyAddress?: string;
     centralizeCdkBootstrap?: boolean;
+    cdkOptions?: cdkOptionsConfig;
   }): Promise<void> {
     if (options.accountId || options.region) {
       if (options.stage) {
@@ -194,8 +195,12 @@ export class AcceleratorToolkit {
           },
         };
 
-        // Use custom bootstrapping template if centralizing CDK assets in a single S3 bucket
-        if (options.centralizeCdkBootstrap) {
+        // Use custom bootstrapping template if cdk options are set
+        if (
+          options.centralizeCdkBootstrap ||
+          options.cdkOptions?.centralizeBuckets ||
+          options.cdkOptions?.useManagementAccessRole
+        ) {
           process.env['CDK_NEW_BOOTSTRAP'] = '1';
           const templatePath = `./cdk.out/${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${options.accountId}-${
             options.region
