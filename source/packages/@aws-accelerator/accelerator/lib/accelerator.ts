@@ -278,8 +278,8 @@ export abstract class Accelerator {
             caBundlePath: props.caBundlePath,
             ec2Creds: props.ec2Creds,
             proxyAddress: props.proxyAddress,
-            centralizeCdkBootstrap:
-              globalConfig?.centralizeCdkBuckets?.enable || globalConfig?.cdkOptions?.centralizeBuckets,
+            centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+            cdkOptions: globalConfig?.cdkOptions,
           }),
         );
         await Promise.all(promises);
@@ -320,8 +320,8 @@ export abstract class Accelerator {
                   caBundlePath: props.caBundlePath,
                   ec2Creds: props.ec2Creds,
                   proxyAddress: props.proxyAddress,
-                  centralizeCdkBootstrap:
-                    globalConfig?.centralizeCdkBuckets?.enable || globalConfig?.cdkOptions?.centralizeBuckets,
+                  centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+                  cdkOptions: globalConfig?.cdkOptions,
                 }),
               );
             }
