@@ -451,6 +451,30 @@ export abstract class AcceleratorStack extends cdk.Stack {
   }
 
   /**
+   * Function to get list of targets by type organization unit or account for given scp
+   * @param targetName
+   * @param targetType
+   * @returns
+   */
+  protected getScpNamesForTarget(targetName: string, targetType: 'ou' | 'account'): string[] {
+    const scps: string[] = [];
+
+    for (const serviceControlPolicy of this.props.organizationConfig.serviceControlPolicies) {
+      if (targetType === 'ou' && serviceControlPolicy.deploymentTargets.organizationalUnits) {
+        if (serviceControlPolicy.deploymentTargets.organizationalUnits.indexOf(targetName) !== -1) {
+          scps.push(serviceControlPolicy.name);
+        }
+      }
+      if (targetType === 'account' && serviceControlPolicy.deploymentTargets.accounts) {
+        if (serviceControlPolicy.deploymentTargets.accounts.indexOf(targetName) !== -1) {
+          scps.push(serviceControlPolicy.name);
+        }
+      }
+    }
+    return scps;
+  }
+
+  /**
    * Get the IAM condition context key for the organization.
    */
   protected getPrincipalOrgIdCondition(organizationId: string | undefined): { [key: string]: string | string[] } {

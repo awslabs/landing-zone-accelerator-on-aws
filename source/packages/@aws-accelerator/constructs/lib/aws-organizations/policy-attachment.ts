@@ -25,6 +25,8 @@ export interface PolicyAttachmentProps {
   readonly policyId: string;
   readonly targetId?: string;
   readonly type: PolicyType;
+  readonly configPolicyNames: string[];
+  readonly acceleratorPrefix: string;
   /**
    * Custom resource lambda log group encryption key
    */
@@ -60,7 +62,12 @@ export class PolicyAttachment extends Construct {
       policyStatements: [
         {
           Effect: 'Allow',
-          Action: ['organizations:AttachPolicy', 'organizations:DetachPolicy', 'organizations:ListPoliciesForTarget'],
+          Action: [
+            'organizations:AttachPolicy',
+            'organizations:DetachPolicy',
+            'organizations:ListPoliciesForTarget',
+            'organizations:ListTagsForResource',
+          ],
           Resource: '*',
         },
       ],
@@ -80,6 +87,8 @@ export class PolicyAttachment extends Construct {
         policyId: props.policyId,
         targetId: props.targetId,
         type: props.type,
+        configPolicyNames: props.configPolicyNames,
+        policyTagKey: `${props.acceleratorPrefix}Managed`,
       },
     });
 

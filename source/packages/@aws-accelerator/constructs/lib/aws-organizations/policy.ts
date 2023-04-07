@@ -66,6 +66,10 @@ export interface PolicyProps {
    */
   readonly type: PolicyType;
   /**
+   * Accelerator prefix
+   */
+  readonly acceleratorPrefix: string;
+  /**
    * An optional description of the policy
    */
   readonly description?: string;
@@ -112,7 +116,15 @@ export class Policy extends Construct {
       policyStatements: [
         {
           Effect: 'Allow',
-          Action: ['organizations:CreatePolicy', 'organizations:ListPolicies', 'organizations:UpdatePolicy'],
+          Action: [
+            'organizations:CreatePolicy',
+            'organizations:DeletePolicy',
+            'organizations:DetachPolicy',
+            'organizations:ListPolicies',
+            'organizations:ListTargetsForPolicy',
+            'organizations:UpdatePolicy',
+            'organizations:TagResource',
+          ],
           Resource: '*',
         },
         {
@@ -142,6 +154,7 @@ export class Policy extends Construct {
         bucket: asset.s3BucketName,
         key: asset.s3ObjectKey,
         partition: props.partition,
+        policyTagKey: `${props.acceleratorPrefix}Managed`,
         uuid: uuidv4(),
         name: props.name,
         description: props.description,

@@ -32,6 +32,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "key": "REPLACED-JSON-PATH.json",
         "name": "AcceleratorGuardrails1",
         "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
         "type": "SERVICE_CONTROL_POLICY",
         "uuid": "REPLACED-UUID",
       },
@@ -57,6 +58,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "key": "REPLACED-JSON-PATH.json",
         "name": "AcceleratorGuardrails2",
         "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
         "type": "SERVICE_CONTROL_POLICY",
         "uuid": "REPLACED-UUID",
       },
@@ -72,6 +74,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
     "AttachAcceleratorGuardrails1Infrastructure84C16E51": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
+        "AcceleratorGuardrails10AD44C7D",
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
       ],
       "Properties": {
@@ -81,12 +84,16 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
+        "configPolicyNames": [
+          "AcceleratorGuardrails1",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
         "policyId": {
           "Ref": "AcceleratorGuardrails10AD44C7D",
         },
+        "policyTagKey": "AWSAcceleratorManaged",
         "targetId": "ou-asdf-22222222",
         "type": "SERVICE_CONTROL_POLICY",
         "uuid": "REPLACED-UUID",
@@ -97,6 +104,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
     "AttachAcceleratorGuardrails2SharedServices7F9682DF": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
+        "AcceleratorGuardrails26DF90F53",
         "CustomOrganizationsAttachPolicyCustomResourceProviderLogGroup03FEC039",
       ],
       "Properties": {
@@ -106,12 +114,16 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
             "Arn",
           ],
         },
+        "configPolicyNames": [
+          "AcceleratorGuardrails2",
+        ],
         "partition": {
           "Ref": "AWS::Partition",
         },
         "policyId": {
           "Ref": "AcceleratorGuardrails26DF90F53",
         },
+        "policyTagKey": "AWSAcceleratorManaged",
         "targetId": "444444444444",
         "type": "SERVICE_CONTROL_POLICY",
         "uuid": "REPLACED-UUID",
@@ -575,6 +587,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
                     "organizations:AttachPolicy",
                     "organizations:DetachPolicy",
                     "organizations:ListPoliciesForTarget",
+                    "organizations:ListTagsForResource",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
@@ -659,8 +672,12 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
                 {
                   "Action": [
                     "organizations:CreatePolicy",
+                    "organizations:DeletePolicy",
+                    "organizations:DetachPolicy",
                     "organizations:ListPolicies",
+                    "organizations:ListTargetsForPolicy",
                     "organizations:UpdatePolicy",
+                    "organizations:TagResource",
                   ],
                   "Effect": "Allow",
                   "Resource": "*",
@@ -724,6 +741,7 @@ exports[`AccountsStack us-east-1 Construct(AccountsStack):  Snapshot Test 1`] = 
         "key": "REPLACED-JSON-PATH.json",
         "name": "Quarantine",
         "partition": "aws",
+        "policyTagKey": "AWSAcceleratorManaged",
         "type": "SERVICE_CONTROL_POLICY",
         "uuid": "REPLACED-UUID",
       },
