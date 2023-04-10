@@ -26,6 +26,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
+import { getSubnet, getTransitGatewayId, getVpc } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class TgwResources {
@@ -164,11 +165,8 @@ export class TgwResources {
     for (const vpcItem of vpcResources) {
       for (const tgwAttachmentItem of vpcItem.transitGatewayAttachments ?? []) {
         // Retrieve resources from maps
-        const transitGatewayId = this.stack.getTransitGatewayId(
-          transitGatewayIds,
-          tgwAttachmentItem.transitGateway.name,
-        );
-        const vpc = this.stack.getVpc(vpcMap, vpcItem.name);
+        const transitGatewayId = getTransitGatewayId(transitGatewayIds, tgwAttachmentItem.transitGateway.name);
+        const vpc = getVpc(vpcMap, vpcItem.name) as Vpc;
         const subnetIds = this.getAttachmentSubnetIds(tgwAttachmentItem, vpcItem.name, subnetMap);
 
         this.stack.addLogs(
@@ -216,7 +214,7 @@ export class TgwResources {
   ): string[] {
     const subnetIds: string[] = [];
     for (const subnetItem of tgwAttachmentItem.subnets ?? []) {
-      const subnet = this.stack.getSubnet(subnetMap, vpcName, subnetItem);
+      const subnet = getSubnet(subnetMap, vpcName, subnetItem) as Subnet;
       subnetIds.push(subnet.subnetId);
     }
     return subnetIds;

@@ -14,15 +14,7 @@
 import { Construct } from 'constructs';
 
 import { OutpostsConfig, VpcConfig } from '@aws-accelerator/config';
-import {
-  NatGateway,
-  PrefixList,
-  RouteTable,
-  SecurityGroup,
-  Subnet,
-  TransitGatewayAttachment,
-  Vpc,
-} from '@aws-accelerator/constructs';
+import { NatGateway, TransitGatewayAttachment } from '@aws-accelerator/constructs';
 
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { NetworkStack } from '../network-stack';
@@ -151,39 +143,6 @@ export class NetworkVpcStack extends NetworkStack {
   }
 
   /**
-   * Returns a VPC construct object from a given map if it exists
-   * @param vpcMap
-   * @param vpcName
-   * @returns
-   */
-  public getVpc(vpcMap: Map<string, Vpc>, vpcName: string): Vpc {
-    if (!vpcMap.get(vpcName)) {
-      this.logger.error(`VPC ${vpcName} does not exist in map`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-
-    return vpcMap.get(vpcName)!;
-  }
-
-  /**
-   * Returns a route table construct object from a given map if it exists
-   * @param routeTableMap
-   * @param vpcName
-   * @param routeTableName
-   * @returns
-   */
-  public getRouteTable(routeTableMap: Map<string, RouteTable>, vpcName: string, routeTableName: string): RouteTable {
-    const key = `${vpcName}_${routeTableName}`;
-
-    if (!routeTableMap.get(key)) {
-      this.logger.error(`VPC ${vpcName} route table ${routeTableName} does not exist in map`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-
-    return routeTableMap.get(key)!;
-  }
-
-  /**
    * Returns a transit gateway attachment object from a given map if it exists
    * @param tgwAttachmentMap
    * @param vpcName
@@ -203,24 +162,6 @@ export class NetworkVpcStack extends NetworkStack {
     }
 
     return tgwAttachmentMap.get(key)!;
-  }
-
-  /**
-   * Returns a subnet construct object from a given map if it exists
-   * @param subnetMap
-   * @param vpcName
-   * @param subnetName
-   * @returns
-   */
-  public getSubnet(subnetMap: Map<string, Subnet>, vpcName: string, subnetName: string): Subnet {
-    const key = `${vpcName}_${subnetName}`;
-
-    if (!subnetMap.get(key)) {
-      this.logger.error(`VPC ${vpcName} subnet ${subnetName} does not exist in map`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-
-    return subnetMap.get(key)!;
   }
 
   /**
@@ -257,42 +198,5 @@ export class NetworkVpcStack extends NetworkStack {
     }
 
     return outpostMap.get(key)!;
-  }
-
-  /**
-   * Returns a prefix list object from a given map if it exists
-   * @param prefixListMap
-   * @param prefixListName
-   * @returns
-   */
-  public getPrefixList(prefixListMap: Map<string, PrefixList>, prefixListName: string): PrefixList {
-    if (!prefixListMap.get(prefixListName)) {
-      this.logger.error(`Prefix list ${prefixListName} does not exist in map`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-
-    return prefixListMap.get(prefixListName)!;
-  }
-
-  /**
-   * Returns a security group construct object from a given map if it exists
-   * @param subnetMap
-   * @param vpcName
-   * @param securityGroupName
-   * @returns
-   */
-  public getSecurityGroup(
-    securityGroupMap: Map<string, SecurityGroup>,
-    vpcName: string,
-    securityGroupName: string,
-  ): SecurityGroup {
-    const key = `${vpcName}_${securityGroupName}`;
-
-    if (!securityGroupMap.get(key)) {
-      this.logger.error(`VPC ${vpcName} security group ${securityGroupName} does not exist in map`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-
-    return securityGroupMap.get(key)!;
   }
 }

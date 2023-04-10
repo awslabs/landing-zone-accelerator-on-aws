@@ -12,14 +12,16 @@
  */
 
 import { IpamConfig, OutpostsConfig, SubnetConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
-import { RouteTable, Subnet, Vpc } from '@aws-accelerator/constructs';
+import { PutSsmParameter, RouteTable, SsmParameterProps, Subnet, Vpc } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
+import { getRouteTable, getSubnet, getVpc } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class SubnetResources {
+  public readonly sharedParameterMap: Map<string, SsmParameterProps[]>;
   public readonly subnetMap: Map<string, Subnet>;
   private stack: NetworkVpcStack;
 
@@ -34,8 +36,19 @@ export class SubnetResources {
 
     // Create subnets
     this.subnetMap = this.createSubnets(this.stack.vpcsInScope, vpcMap, routeTableMap, outpostMap, ipamConfig);
+    // Create shared SSM parameters
+    this.sharedParameterMap = this.createSharedParameters(this.stack.vpcsInScope, vpcMap, this.subnetMap);
   }
 
+  /**
+   * Create subnets for each VPC
+   * @param vpcResources
+   * @param vpcMap
+   * @param routeTableMap
+   * @param outpostMap
+   * @param ipamConfig
+   * @returns
+   */
   private createSubnets(
     vpcResources: (VpcConfig | VpcTemplatesConfig)[],
     vpcMap: Map<string, Vpc>,
@@ -52,8 +65,8 @@ export class SubnetResources {
 
       for (const subnetItem of vpcItem.subnets ?? []) {
         // Retrieve items required to create subnet
-        const vpc = this.stack.getVpc(vpcMap, vpcItem.name);
-        const routeTable = this.stack.getRouteTable(routeTableMap, vpcItem.name, subnetItem.routeTable);
+        const vpc = getVpc(vpcMap, vpcItem.name) as Vpc;
+        const routeTable = getRouteTable(routeTableMap, vpcItem.name, subnetItem.routeTable) as RouteTable;
         const basePool = subnetItem.ipamAllocation ? this.getBasePool(subnetItem, ipamConfig) : undefined;
         const outpost = subnetItem.outpost
           ? this.stack.getOutpost(outpostMap, vpcItem.name, subnetItem.outpost)
@@ -188,5 +201,87 @@ export class SubnetResources {
       this.stack.addResourceShare(subnetItem, `${subnetItem.name}_SubnetShare`, [subnet.subnetArn]);
     }
     return subnet;
+  }
+
+  /**
+   * Create SSM parameters in shared subnet accounts
+   * @param vpcResources
+   * @param vpcMap
+   * @param subnetMap
+   * @returns
+   */
+  private createSharedParameters(
+    vpcResources: (VpcConfig | VpcTemplatesConfig)[],
+    vpcMap: Map<string, Vpc>,
+    subnetMap: Map<string, Subnet>,
+  ): Map<string, SsmParameterProps[]> {
+    const sharedParameterMap = new Map<string, SsmParameterProps[]>();
+
+    for (const vpcItem of vpcResources) {
+      const accountIds: string[] = [];
+      const parameters: SsmParameterProps[] = [];
+      const vpc = getVpc(vpcMap, vpcItem.name) as Vpc;
+      const sharedSubnets = vpcItem.subnets ? vpcItem.subnets.filter(subnet => subnet.shareTargets) : [];
+
+      // Add VPC to parameters
+      if (sharedSubnets.length > 0) {
+        parameters.push({
+          name: this.stack.getSsmPath(SsmResourceType.VPC, [vpcItem.name]),
+          value: vpc.vpcId,
+        });
+
+        // Add shared subnet parameters and account IDs
+        this.setSharedSubnetParameters(vpcItem, sharedSubnets, subnetMap, parameters, accountIds);
+
+        // Put SSM parameters
+        new PutSsmParameter(this.stack, pascalCase(`${vpcItem.name}VpcSharedParameters`), {
+          accountIds,
+          region: cdk.Stack.of(this.stack).region,
+          roleName: this.stack.acceleratorResourceNames.roles.crossAccountSsmParameterShare,
+          kmsKey: this.stack.cloudwatchKey,
+          logRetentionInDays: this.stack.logRetention,
+          parameters,
+          invokingAccountId: cdk.Stack.of(this.stack).account,
+          acceleratorPrefix: this.stack.acceleratorPrefix,
+        });
+        sharedParameterMap.set(vpcItem.name, parameters);
+      }
+    }
+    return sharedParameterMap;
+  }
+
+  /**
+   * Set shared subnet parameters and account IDs
+   * @param vpcItem
+   * @param sharedSubnets
+   * @param subnetMap
+   * @param parameters
+   * @param accountIds
+   */
+  private setSharedSubnetParameters(
+    vpcItem: VpcConfig | VpcTemplatesConfig,
+    sharedSubnets: SubnetConfig[],
+    subnetMap: Map<string, Subnet>,
+    parameters: SsmParameterProps[],
+    accountIds: string[],
+  ) {
+    for (const subnetItem of sharedSubnets) {
+      // Add subnet to parameters
+      const subnet = getSubnet(subnetMap, vpcItem.name, subnetItem.name) as Subnet;
+      parameters.push({
+        name: this.stack.getSsmPath(SsmResourceType.SUBNET, [vpcItem.name, subnetItem.name]),
+        value: subnet.subnetId,
+      });
+
+      // Retrieve accounts to share parameters with
+      const subnetAccountIds = this.stack.getAccountIdsFromShareTarget(subnetItem.shareTargets!);
+      subnetAccountIds.forEach(accountId => {
+        // Only add account IDs not already in the array and are not for this account
+        // SSM parameters for this account are managed by native SSM resources
+        if (!accountIds.includes(accountId) && accountId !== cdk.Stack.of(this.stack).account) {
+          accountIds.push(accountId);
+        }
+      });
+    }
   }
 }

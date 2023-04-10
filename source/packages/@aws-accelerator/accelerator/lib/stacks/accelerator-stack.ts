@@ -296,7 +296,7 @@ export abstract class AcceleratorStack extends cdk.Stack {
     return vpcAccountIds;
   }
 
-  protected getAccountIdsFromShareTarget(shareTargets: ShareTargets): string[] {
+  public getAccountIdsFromShareTarget(shareTargets: ShareTargets): string[] {
     const accountIds: string[] = [];
 
     for (const ou of shareTargets.organizationalUnits ?? []) {

@@ -22,6 +22,7 @@ import {
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
+import { getPrefixList, getRouteTable, getTransitGatewayId } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class RouteEntryResources {
@@ -71,7 +72,7 @@ export class RouteEntryResources {
 
     for (const vpcItem of vpcResources) {
       for (const routeTableItem of vpcItem.routeTables ?? []) {
-        const routeTable = this.stack.getRouteTable(routeTableMap, vpcItem.name, routeTableItem.name);
+        const routeTable = getRouteTable(routeTableMap, vpcItem.name, routeTableItem.name) as RouteTable;
         const routeTableItemEntryMap = this.createRouteTableItemEntries(
           vpcItem,
           routeTableItem,
@@ -122,7 +123,7 @@ export class RouteEntryResources {
         let destinationPrefixListId: string | undefined = undefined;
         if (routeTableEntryItem.destinationPrefixList) {
           // Get PL ID from map
-          const prefixList = this.stack.getPrefixList(prefixListMap, routeTableEntryItem.destinationPrefixList);
+          const prefixList = getPrefixList(prefixListMap, routeTableEntryItem.destinationPrefixList) as PrefixList;
           destinationPrefixListId = prefixList.prefixListId;
         } else {
           destination = routeTableEntryItem.destination;
@@ -132,7 +133,7 @@ export class RouteEntryResources {
         if (routeTableEntryItem.type === 'transitGateway') {
           this.stack.addLogs(LogLevel.INFO, `Adding Transit Gateway Route Table Entry ${routeTableEntryItem.name}`);
 
-          const transitGatewayId = this.stack.getTransitGatewayId(transitGatewayIds, routeTableEntryItem.target!);
+          const transitGatewayId = getTransitGatewayId(transitGatewayIds, routeTableEntryItem.target!);
           const transitGatewayAttachment = this.stack.getTgwAttachment(
             tgwAttachmentMap,
             vpcItem.name,
