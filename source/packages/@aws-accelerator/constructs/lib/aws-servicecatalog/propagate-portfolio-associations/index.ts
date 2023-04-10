@@ -303,7 +303,12 @@ export async function getPermissionSetRoleArn(
   iamClient: AWS.IAM,
 ): Promise<string> {
   const iamRoleList = await getIamRoleList(iamClient);
-  const roleArn = iamRoleList.find(role => role.RoleName.split('_')[1] === permissionSetName)?.Arn;
+  const roleArn = iamRoleList.find(role => {
+    const regex = new RegExp(`AWSReservedSSO_${permissionSetName}_([0-9a-fA-F]{16})`);
+    const match = regex.test(role.RoleName);
+    console.log(`Test ${role} for pattern ${regex} result: ${match}`);
+    return match;
+  })?.Arn;
 
   if (roleArn) {
     console.log(`Found provisioned role for permission set ${permissionSetName} with ARN: ${roleArn}`);
