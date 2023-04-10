@@ -43,9 +43,14 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
     case 'Update':
       console.log('Getting Role ARN for Permission Set...');
       const roleArn = await getPermissionSetRoleArn(permissionSetName);
-      const responseData = { roleArn: roleArn };
-      console.log(responseData);
-      return { Status: 'Success', Data: responseData, StatusCode: 200 };
+
+      if (roleArn) {
+        const responseData = { roleArn: roleArn };
+        console.log(responseData);
+        return { Status: 'Success', Data: responseData, StatusCode: 200 };
+      } else {
+        throw new Error(`No Permission Set with name ${permissionSetName} found`);
+      }
 
     case 'Delete':
       return { Status: 'Success', StatusCode: 200 };
@@ -54,8 +59,19 @@ export async function handler(event: AWSLambda.CloudFormationCustomResourceEvent
 
 async function getPermissionSetRoleArn(permissionSetName: string) {
   const iamRoleList = await getIamRoleList();
-  const roleArn = iamRoleList.find(role => role.RoleName.split('_')[1] === permissionSetName)?.Arn;
-  console.log(`Found provisioned role for permission set ${permissionSetName} with ARN: ${roleArn}`);
+  const roleArn = iamRoleList.find(role => {
+    const regex = new RegExp(`AWSReservedSSO_${permissionSetName}_([0-9a-fA-F]{16})`);
+    const match = regex.test(role.RoleName);
+    console.log(`Test ${role} for pattern ${regex} result: ${match}`);
+    return match;
+  })?.Arn;
+
+  if (roleArn) {
+    console.log(`Found provisioned role for permission set ${permissionSetName} with ARN: ${roleArn}`);
+  } else {
+    console.log(`Permission set with name ${permissionSetName} not found`);
+  }
+
   return roleArn;
 }
 

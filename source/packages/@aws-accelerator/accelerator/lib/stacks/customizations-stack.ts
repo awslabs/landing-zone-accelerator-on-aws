@@ -428,7 +428,7 @@ export class CustomizationsStack extends AcceleratorStack {
   ): void {
     // propagate portfolio Associations
     if (!portfolioItem.shareTargets) {
-      this.logger.warning(
+      this.logger.warn(
         `Cannot propagate principal associations for portfolio ${portfolioItem.name} because portfolio has no shareTargets`,
       );
       return;
