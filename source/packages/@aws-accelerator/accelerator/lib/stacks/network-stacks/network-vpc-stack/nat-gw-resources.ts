@@ -16,6 +16,7 @@ import { NatGateway, Subnet } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
+import { getSubnet } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class NatGwResources {
@@ -43,7 +44,7 @@ export class NatGwResources {
 
     for (const vpcItem of vpcResources) {
       for (const natGatewayItem of vpcItem.natGateways ?? []) {
-        const subnet = this.stack.getSubnet(subnetMap, vpcItem.name, natGatewayItem.subnet);
+        const subnet = getSubnet(subnetMap, vpcItem.name, natGatewayItem.subnet) as Subnet;
 
         this.stack.addLogs(
           LogLevel.INFO,

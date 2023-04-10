@@ -24,6 +24,7 @@ import { SsmResourceType } from '@aws-accelerator/utils';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
+import { getSubnet, getVpc } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class NaclResources {
@@ -47,7 +48,7 @@ export class NaclResources {
     for (const vpcItem of vpcResources) {
       for (const naclItem of vpcItem.networkAcls ?? []) {
         // Retrieve VPC from map
-        const vpc = this.stack.getVpc(vpcMap, vpcItem.name);
+        const vpc = getVpc(vpcMap, vpcItem.name) as Vpc;
 
         // Create NACL
         this.stack.addLogs(LogLevel.INFO, `Adding Network ACL ${naclItem.name} in VPC ${vpcItem.name}`);
@@ -100,7 +101,7 @@ export class NaclResources {
   ) {
     for (const subnetItem of naclItem.subnetAssociations) {
       this.stack.addLogs(LogLevel.INFO, `Associate ${naclItem.name} to subnet ${subnetItem}`);
-      const subnet = this.stack.getSubnet(subnetMap, vpcItem.name, subnetItem);
+      const subnet = getSubnet(subnetMap, vpcItem.name, subnetItem) as Subnet;
 
       networkAcl.associateSubnet(
         `${pascalCase(vpcItem.name)}Vpc${pascalCase(naclItem.name)}NaclAssociate${pascalCase(subnetItem)}`,
@@ -242,7 +243,7 @@ export class NaclResources {
       }
 
       if (subnetConfigItem.ipamAllocation) {
-        const subnetItem = this.stack.getSubnet(subnetMap, vpcItem.name, subnetConfigItem.name);
+        const subnetItem = getSubnet(subnetMap, vpcItem.name, subnetConfigItem.name) as Subnet;
         return { cidrBlock: subnetItem.ipv4CidrBlock };
       } else {
         return { cidrBlock: subnetConfigItem.ipv4CidrBlock };

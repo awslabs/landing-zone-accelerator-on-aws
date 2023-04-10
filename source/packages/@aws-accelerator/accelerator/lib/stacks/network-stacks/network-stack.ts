@@ -38,7 +38,9 @@ import { Construct } from 'constructs';
 import { pascalCase } from 'pascal-case';
 import { AcceleratorStack, AcceleratorStackProps } from '../accelerator-stack';
 
-// Resource share type for RAM resource shares
+/**
+ * Resource share type for RAM resource shares
+ */
 type ResourceShareType =
   | DnsFirewallRuleGroupConfig
   | DnsQueryLogsConfig
@@ -49,7 +51,9 @@ type ResourceShareType =
   | ResolverRuleConfig
   | TransitGatewayConfig;
 
-// Enum for log levle
+/**
+ * Enum for log level
+ */
 export enum LogLevel {
   INFO = 'info',
   WARN = 'warn',
@@ -61,6 +65,10 @@ export enum LogLevel {
  */
 export abstract class NetworkStack extends AcceleratorStack {
   /**
+   * The accelerator prefix value
+   */
+  public readonly acceleratorPrefix: string;
+  /**
    * Cloudwatch KMS key
    */
   public readonly cloudwatchKey: cdk.aws_kms.Key;
@@ -68,6 +76,10 @@ export abstract class NetworkStack extends AcceleratorStack {
    * Global CloudWatch logs retention setting
    */
   public readonly logRetention: number;
+  /**
+   * VPCs with subnets shared via Resource Access Manager (RAM) in scope of the current stack context
+   */
+  public readonly sharedVpcs: (VpcConfig | VpcTemplatesConfig)[];
   /**
    * VPCs and VPC templates in scope of the current stack context
    */
@@ -81,8 +93,10 @@ export abstract class NetworkStack extends AcceleratorStack {
     super(scope, id, props);
 
     // Set properties
+    this.acceleratorPrefix = props.prefixes.accelerator;
     this.logRetention = props.globalConfig.cloudwatchLogRetentionInDays;
     this.vpcResources = [...props.networkConfig.vpcs, ...(props.networkConfig.vpcTemplates ?? [])];
+    this.sharedVpcs = this.getSharedVpcs(this.vpcResources);
     this.vpcsInScope = this.getVpcsInScope(this.vpcResources);
 
     this.cloudwatchKey = cdk.aws_kms.Key.fromKeyArn(
@@ -101,6 +115,34 @@ export abstract class NetworkStack extends AcceleratorStack {
    *        Network Stack helper methods
    *
    */
+
+  /**
+   * Get VPCs with shared subnets in scope of the current stack context
+   * @param vpcResources
+   * @returns
+   */
+  private getSharedVpcs(vpcResources: (VpcConfig | VpcTemplatesConfig)[]): (VpcConfig | VpcTemplatesConfig)[] {
+    const sharedVpcs: (VpcConfig | VpcTemplatesConfig)[] = [];
+
+    for (const vpcItem of vpcResources) {
+      const accountIds: string[] = [];
+      const sharedSubnets = vpcItem.subnets ? vpcItem.subnets.filter(subnet => subnet.shareTargets) : [];
+
+      for (const subnetItem of sharedSubnets) {
+        const subnetAccountIds = this.getAccountIdsFromShareTarget(subnetItem.shareTargets!);
+        subnetAccountIds.forEach(accountId => {
+          if (!accountIds.includes(accountId)) {
+            accountIds.push(accountId);
+          }
+        });
+      }
+      // Add VPC to array if it has shared subnets in scope of the current stack
+      if (this.isTargetStack(accountIds, [vpcItem.region])) {
+        sharedVpcs.push(vpcItem);
+      }
+    }
+    return sharedVpcs;
+  }
 
   /**
    * Get VPCs in current scope of the stack context
@@ -303,21 +345,6 @@ export abstract class NetworkStack extends AcceleratorStack {
       ).resourceShareItemId;
     }
     return tgwId;
-  }
-
-  /**
-   * Get Transit Gateway ID from a given map, if it exists
-   * @param transitGatewayMap
-   * @param tgwName
-   * @returns
-   */
-  public getTransitGatewayId(transitGatewayMap: Map<string, string>, tgwName: string) {
-    if (!transitGatewayMap.get(tgwName)) {
-      this.logger.error(`Transit Gateway ${tgwName} does not exist in map`);
-      throw new Error(`Configuration validation failed at runtime.`);
-    }
-
-    return transitGatewayMap.get(tgwName)!;
   }
 
   /**
