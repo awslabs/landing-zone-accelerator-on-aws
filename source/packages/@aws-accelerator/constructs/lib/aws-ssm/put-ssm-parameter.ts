@@ -16,7 +16,7 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-interface SsmParameterProps {
+export interface SsmParameterProps {
   /**
    * Name of the parameter
    */

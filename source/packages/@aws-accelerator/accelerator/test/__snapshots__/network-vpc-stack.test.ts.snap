@@ -626,6 +626,115 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::IAM::Role",
     },
+    "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F": {
+      "DependsOn": [
+        "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-555555555555-us-east-1",
+          "S3Key": "REPLACED-GENERATED-NAME.zip",
+        },
+        "Description": "Custom resource provider to put cross-account ssm parameter value",
+        "Handler": "__entrypoint__.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs14.x",
+        "Timeout": 900,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "KmsKeyId": {
+          "Ref": "SsmParameterValueacceleratorkmscloudwatchkeyarnC96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "LogGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "/aws/lambda/",
+              {
+                "Ref": "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+              },
+            ],
+          ],
+        },
+        "RetentionInDays": 3653,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "CustomSsmPutParameterValueCustomResourceProviderRole9E1F101A": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:\${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ssm:DeleteParameter",
+                    "ssm:PutParameter",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    "*",
+                  ],
+                  "Sid": "SsmPutParameterActions",
+                },
+                {
+                  "Action": [
+                    "sts:AssumeRole",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":iam::*:role/AWSAccelerator*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "StsAssumeRoleActions",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "Inline",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "DeleteDefaultVpc4DBAE36C": {
       "DeletionPolicy": "Delete",
       "DependsOn": [
@@ -1551,6 +1660,43 @@ exports[`NetworkVpcStack Construct(NetworkVpcStack):  Snapshot Test 1`] = `
         "TrafficType": "ALL",
       },
       "Type": "AWS::EC2::FlowLog",
+    },
+    "NetworkEndpointsVpcSharedParameters07793E5F": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "CustomSsmPutParameterValueCustomResourceProviderLogGroupB0109C68",
+      ],
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomSsmPutParameterValueCustomResourceProviderHandler2A0BDE7F",
+            "Arn",
+          ],
+        },
+        "invokingAccountId": "555555555555",
+        "parameterAccountIds": [
+          "444444444444",
+        ],
+        "parameters": [
+          {
+            "name": "/accelerator/network/vpc/Network-Endpoints/id",
+            "value": {
+              "Ref": "NetworkEndpointsVpc619A1F01",
+            },
+          },
+          {
+            "name": "/accelerator/network/vpc/Network-Endpoints/subnet/Network-Endpoints-A/id",
+            "value": {
+              "Ref": "NetworkEndpointsVpcNetworkEndpointsASubnet758434F8",
+            },
+          },
+        ],
+        "region": "us-east-1",
+        "roleName": "AWSAccelerator-CrossAccountSsmParameterShare",
+        "uuid": "REPLACED-UUID",
+      },
+      "Type": "Custom::SsmPutParameterValue",
+      "UpdateReplacePolicy": "Delete",
     },
     "NetworkEndpointsVpcTestNaclNaclD97515C3": {
       "Metadata": {

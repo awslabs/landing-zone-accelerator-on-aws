@@ -25,6 +25,7 @@ import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { AcceleratorStackProps } from '../../accelerator-stack';
 import { LogLevel } from '../network-stack';
+import { getSubnet } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class LoadBalancerResources {
@@ -186,7 +187,7 @@ export class LoadBalancerResources {
     // Set subnets
     const subnets: string[] = [];
     for (const subnetItem of loadBalancerItem.subnets) {
-      const subnet = this.stack.getSubnet(subnetMap, vpcItem.name, subnetItem);
+      const subnet = getSubnet(subnetMap, vpcItem.name, subnetItem) as Subnet;
 
       if (!subnets.includes(subnet.subnetId)) {
         subnets.push(subnet.subnetId);

@@ -16,6 +16,7 @@ import { RouteTable, Vpc } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
 import * as cdk from 'aws-cdk-lib';
 import { pascalCase } from 'pascal-case';
+import { getVpc } from '../utils/getter-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
 
 export class RouteTableResources {
@@ -42,7 +43,7 @@ export class RouteTableResources {
     const routeTableMap = new Map<string, RouteTable>();
 
     for (const vpcItem of vpcResources) {
-      const vpc = this.stack.getVpc(vpcMap, vpcItem.name);
+      const vpc = getVpc(vpcMap, vpcItem.name) as Vpc;
       //
       // Create outpost route tables
       //

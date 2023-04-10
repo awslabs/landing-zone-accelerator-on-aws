@@ -11,17 +11,7 @@
  *  and limitations under the License.
  */
 
-import {
-  NetworkConfigTypes,
-  nonEmptyString,
-  PrefixListSourceConfig,
-  SecurityGroupConfig,
-  SecurityGroupRuleConfig,
-  SecurityGroupSourceConfig,
-  SubnetSourceConfig,
-  VpcConfig,
-  VpcTemplatesConfig,
-} from '@aws-accelerator/config';
+import { SecurityGroupConfig, VpcConfig, VpcTemplatesConfig } from '@aws-accelerator/config';
 import {
   PrefixList,
   SecurityGroup,
@@ -31,34 +21,18 @@ import {
   Vpc,
 } from '@aws-accelerator/constructs';
 import { SsmResourceType } from '@aws-accelerator/utils';
-import * as cdk from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
 import { pascalCase } from 'pascal-case';
 import { LogLevel } from '../network-stack';
+import { getSecurityGroup, getVpc } from '../utils/getter-utils';
+import {
+  containsAllIngressRule,
+  processSecurityGroupEgressRules,
+  processSecurityGroupIngressRules,
+  processSecurityGroupSgEgressSources,
+  processSecurityGroupSgIngressSources,
+} from '../utils/security-group-utils';
 import { NetworkVpcStack } from './network-vpc-stack';
-
-interface SecurityGroupRuleProps {
-  ipProtocol: string;
-  cidrIp?: string;
-  cidrIpv6?: string;
-  fromPort?: number;
-  toPort?: number;
-  targetSecurityGroup?: SecurityGroup;
-  targetPrefixList?: PrefixList;
-  description?: string;
-}
-
-const TCP_PROTOCOLS_PORT: { [key: string]: number } = {
-  RDP: 3389,
-  SSH: 22,
-  HTTP: 80,
-  HTTPS: 443,
-  MSSQL: 1433,
-  'MYSQL/AURORA': 3306,
-  REDSHIFT: 5439,
-  POSTGRESQL: 5432,
-  'ORACLE-RDS': 1521,
-};
 
 export class SecurityGroupResources {
   public readonly securityGroupMap: Map<string, SecurityGroup>;
@@ -97,12 +71,22 @@ export class SecurityGroupResources {
         this.stack.addLogs(LogLevel.INFO, `Processing rules for ${securityGroupItem.name} in VPC ${vpcItem.name}`);
 
         // Process configured rules
-        const processedIngressRules = this.setSecurityGroupIngressRules(securityGroupItem, subnetMap, prefixListMap);
-        const allIngressRule = this.containsAllIngressRule(processedIngressRules);
-        const processedEgressRules = this.setSecurityGroupEgressRules(securityGroupItem, subnetMap, prefixListMap);
+        const processedIngressRules = processSecurityGroupIngressRules(
+          this.stack.vpcResources,
+          securityGroupItem,
+          subnetMap,
+          prefixListMap,
+        );
+        const allIngressRule = containsAllIngressRule(processedIngressRules);
+        const processedEgressRules = processSecurityGroupEgressRules(
+          this.stack.vpcResources,
+          securityGroupItem,
+          subnetMap,
+          prefixListMap,
+        );
 
         // Get VPC
-        const vpc = this.stack.getVpc(vpcMap, vpcItem.name);
+        const vpc = getVpc(vpcMap, vpcItem.name) as Vpc;
 
         // Create security group
         const securityGroup = this.createSecurityGroupItem(
@@ -116,438 +100,59 @@ export class SecurityGroupResources {
         securityGroupMap.set(`${vpcItem.name}_${securityGroupItem.name}`, securityGroup);
       }
       // Create security group rules that reference other security groups
-      this.createSecurityGroupSgIngressSources(vpcItem, subnetMap, prefixListMap, securityGroupMap);
-      this.createSecurityGroupSgEgressSources(vpcItem, subnetMap, prefixListMap, securityGroupMap);
+      this.createSecurityGroupSgSources(vpcItem, subnetMap, prefixListMap, securityGroupMap);
     }
     return securityGroupMap;
   }
 
   /**
-   * Process and set security group ingress rules
-   * @param securityGroupItem
-   * @param subnetMap
-   * @param prefixListMap
-   * @returns
-   */
-  private setSecurityGroupIngressRules(
-    securityGroupItem: SecurityGroupConfig,
-    subnetMap: Map<string, Subnet>,
-    prefixListMap: Map<string, PrefixList>,
-  ) {
-    const processedIngressRules: SecurityGroupIngressRuleProps[] = [];
-
-    for (const [ruleId, ingressRuleItem] of securityGroupItem.inboundRules.entries() ?? []) {
-      this.stack.addLogs(LogLevel.INFO, `Adding ingress rule ${ruleId} to ${securityGroupItem.name}`);
-
-      const ingressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
-        ingressRuleItem,
-        subnetMap,
-        prefixListMap,
-      );
-
-      this.stack.addLogs(LogLevel.INFO, `Adding ${ingressRules.length} ingress rules`);
-
-      for (const ingressRule of ingressRules) {
-        if (ingressRule.targetPrefixList) {
-          processedIngressRules.push({
-            description: ingressRule.description,
-            fromPort: ingressRule.fromPort,
-            ipProtocol: ingressRule.ipProtocol,
-            sourcePrefixListId: ingressRule.targetPrefixList.prefixListId,
-            toPort: ingressRule.toPort,
-          });
-        } else {
-          processedIngressRules.push({ ...ingressRule });
-        }
-      }
-    }
-    return processedIngressRules;
-  }
-
-  /**
-   * Returns true if any ingress rules contain an all ingress rule
-   * @param ingressRules
-   * @returns
-   */
-  private containsAllIngressRule(ingressRules: SecurityGroupIngressRuleProps[]): boolean {
-    let allIngressRule = false;
-
-    for (const ingressRule of ingressRules) {
-      if (ingressRule.cidrIp && ingressRule.cidrIp === '0.0.0.0/0') {
-        allIngressRule = true;
-      }
-    }
-    return allIngressRule;
-  }
-
-  /**
-   * Process and set security group ingress rules
-   * @param securityGroupItem
-   * @param subnetMap
-   * @param prefixListMap
-   * @returns
-   */
-  private setSecurityGroupEgressRules(
-    securityGroupItem: SecurityGroupConfig,
-    subnetMap: Map<string, Subnet>,
-    prefixListMap: Map<string, PrefixList>,
-  ) {
-    const processedEgressRules: SecurityGroupEgressRuleProps[] = [];
-
-    for (const [ruleId, egressRuleItem] of securityGroupItem.outboundRules.entries() ?? []) {
-      this.stack.addLogs(LogLevel.INFO, `Adding egress rule ${ruleId} to ${securityGroupItem.name}`);
-
-      const egressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
-        egressRuleItem,
-        subnetMap,
-        prefixListMap,
-      );
-
-      this.stack.addLogs(LogLevel.INFO, `Adding ${egressRules.length} egress rules`);
-
-      for (const egressRule of egressRules) {
-        if (egressRule.targetPrefixList) {
-          processedEgressRules.push({
-            description: egressRule.description,
-            destinationPrefixListId: egressRule.targetPrefixList.prefixListId,
-            fromPort: egressRule.fromPort,
-            ipProtocol: egressRule.ipProtocol,
-            toPort: egressRule.toPort,
-          });
-        } else {
-          processedEgressRules.push({ ...egressRule });
-        }
-      }
-    }
-    return processedEgressRules;
-  }
-
-  /**
-   * Create security group ingress rules that reference other security groups
+   * Create security group rules that reference other security groups
    * @param vpcItem
    * @param subnetMap
    * @param prefixListMap
    * @param securityGroupMap
    */
-  private createSecurityGroupSgIngressSources(
+  private createSecurityGroupSgSources(
     vpcItem: VpcConfig | VpcTemplatesConfig,
     subnetMap: Map<string, Subnet>,
     prefixListMap: Map<string, PrefixList>,
     securityGroupMap: Map<string, SecurityGroup>,
   ) {
     for (const securityGroupItem of vpcItem.securityGroups ?? []) {
-      for (const [ruleId, ingressRuleItem] of securityGroupItem.inboundRules.entries() ?? []) {
-        // Check if rule sources include a security group reference
-        let includesSecurityGroupSource = false;
-        for (const source of ingressRuleItem.sources) {
-          if (NetworkConfigTypes.securityGroupSourceConfig.is(source)) {
-            includesSecurityGroupSource = true;
-          }
-        }
+      const securityGroup = getSecurityGroup(securityGroupMap, vpcItem.name, securityGroupItem.name) as SecurityGroup;
+      const ingressRules = processSecurityGroupSgIngressSources(
+        this.stack.vpcResources,
+        vpcItem,
+        securityGroupItem,
+        subnetMap,
+        prefixListMap,
+        securityGroupMap,
+      );
+      const egressRules = processSecurityGroupSgEgressSources(
+        this.stack.vpcResources,
+        vpcItem,
+        securityGroupItem,
+        subnetMap,
+        prefixListMap,
+        securityGroupMap,
+      );
 
-        // Add security group sources if they exist
-        if (includesSecurityGroupSource) {
-          const securityGroup = this.stack.getSecurityGroup(securityGroupMap, vpcItem.name, securityGroupItem.name);
+      // Create ingress rules
+      ingressRules.forEach(ingressRule => {
+        securityGroup.addIngressRule(ingressRule.logicalId, {
+          sourceSecurityGroup: ingressRule.rule.targetSecurityGroup,
+          ...ingressRule.rule,
+        });
+      });
 
-          const ingressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
-            ingressRuleItem,
-            subnetMap,
-            prefixListMap,
-            securityGroupMap,
-            vpcItem.name,
-          );
-
-          for (const [ingressRuleIndex, ingressRule] of ingressRules.entries()) {
-            if (ingressRule.targetSecurityGroup) {
-              securityGroup.addIngressRule(`${securityGroupItem.name}-Ingress-${ruleId}-${ingressRuleIndex}`, {
-                sourceSecurityGroup: ingressRule.targetSecurityGroup,
-                ...ingressRule,
-              });
-            }
-          }
-        }
-      }
+      // Create egress rules
+      egressRules.forEach(egressRule => {
+        securityGroup.addEgressRule(egressRule.logicalId, {
+          destinationSecurityGroup: egressRule.rule.targetSecurityGroup,
+          ...egressRule.rule,
+        });
+      });
     }
-  }
-
-  /**
-   * Create security group egress rules that reference other security groups
-   * @param vpcItem
-   * @param subnetMap
-   * @param prefixListMap
-   * @param securityGroupMap
-   */
-  private createSecurityGroupSgEgressSources(
-    vpcItem: VpcConfig | VpcTemplatesConfig,
-    subnetMap: Map<string, Subnet>,
-    prefixListMap: Map<string, PrefixList>,
-    securityGroupMap: Map<string, SecurityGroup>,
-  ) {
-    for (const securityGroupItem of vpcItem.securityGroups ?? []) {
-      for (const [ruleId, egressRuleItem] of securityGroupItem.outboundRules.entries() ?? []) {
-        // Check if rule sources include a security group reference
-        let includesSecurityGroupSource = false;
-        for (const source of egressRuleItem.sources) {
-          if (NetworkConfigTypes.securityGroupSourceConfig.is(source)) {
-            includesSecurityGroupSource = true;
-          }
-        }
-
-        // Add security group sources if they exist
-        if (includesSecurityGroupSource) {
-          const securityGroup = this.stack.getSecurityGroup(securityGroupMap, vpcItem.name, securityGroupItem.name);
-
-          const egressRules: SecurityGroupRuleProps[] = this.processSecurityGroupRules(
-            egressRuleItem,
-            subnetMap,
-            prefixListMap,
-            securityGroupMap,
-            vpcItem.name,
-          );
-
-          for (const [egressRuleIndex, egressRule] of egressRules.entries()) {
-            if (egressRule.targetSecurityGroup) {
-              securityGroup.addEgressRule(`${securityGroupItem.name}-Egress-${ruleId}-${egressRuleIndex}`, {
-                destinationSecurityGroup: egressRule.targetSecurityGroup,
-                ...egressRule,
-              });
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Process security group rules based on configured type
-   * @param item
-   * @param subnetMap
-   * @param prefixListMap
-   * @param securityGroupMap
-   * @returns
-   */
-  private processSecurityGroupRules(
-    item: SecurityGroupRuleConfig,
-    subnetMap: Map<string, Subnet>,
-    prefixListMap: Map<string, PrefixList>,
-    securityGroupMap?: Map<string, SecurityGroup>,
-    vpcName?: string,
-  ): SecurityGroupRuleProps[] {
-    const rules: SecurityGroupRuleProps[] = [];
-
-    if (!item.types) {
-      for (const port of item.tcpPorts ?? []) {
-        this.stack.addLogs(LogLevel.INFO, `Adding TCP port ${port}`);
-        rules.push(
-          ...this.processSecurityGroupRuleSources(
-            item.sources,
-            subnetMap,
-            prefixListMap,
-            {
-              ipProtocol: cdk.aws_ec2.Protocol.TCP,
-              fromPort: port,
-              toPort: port,
-              description: item.description,
-            },
-            securityGroupMap,
-            vpcName,
-          ),
-        );
-      }
-
-      for (const port of item.udpPorts ?? []) {
-        this.stack.addLogs(LogLevel.INFO, `Adding UDP port ${port}`);
-        rules.push(
-          ...this.processSecurityGroupRuleSources(
-            item.sources,
-            subnetMap,
-            prefixListMap,
-            {
-              ipProtocol: cdk.aws_ec2.Protocol.UDP,
-              fromPort: port,
-              toPort: port,
-              description: item.description,
-            },
-            securityGroupMap,
-            vpcName,
-          ),
-        );
-      }
-    }
-
-    for (const type of item.types ?? []) {
-      this.stack.addLogs(LogLevel.INFO, `Adding type ${type}`);
-      if (type === 'ALL') {
-        rules.push(
-          ...this.processSecurityGroupRuleSources(
-            item.sources,
-            subnetMap,
-            prefixListMap,
-            {
-              ipProtocol: cdk.aws_ec2.Protocol.ALL,
-              description: item.description,
-            },
-            securityGroupMap,
-            vpcName,
-          ),
-        );
-      } else if (Object.keys(TCP_PROTOCOLS_PORT).includes(type)) {
-        rules.push(
-          ...this.processSecurityGroupRuleSources(
-            item.sources,
-            subnetMap,
-            prefixListMap,
-            {
-              ipProtocol: cdk.aws_ec2.Protocol.TCP,
-              fromPort: TCP_PROTOCOLS_PORT[type],
-              toPort: TCP_PROTOCOLS_PORT[type],
-              description: item.description,
-            },
-            securityGroupMap,
-            vpcName,
-          ),
-        );
-      } else {
-        rules.push(
-          ...this.processSecurityGroupRuleSources(
-            item.sources,
-            subnetMap,
-            prefixListMap,
-            {
-              ipProtocol: type,
-              fromPort: item.fromPort,
-              toPort: item.toPort,
-              description: item.description,
-            },
-            securityGroupMap,
-            vpcName,
-          ),
-        );
-      }
-    }
-    return rules;
-  }
-
-  /**
-   * Processes individual security group source references.
-   *
-   * @param sources
-   * @param subnetMap
-   * @param prefixListMap
-   * @param securityGroupMap
-   * @param props
-   * @returns
-   */
-  private processSecurityGroupRuleSources(
-    sources: string[] | SecurityGroupSourceConfig[] | PrefixListSourceConfig[] | SubnetSourceConfig[],
-    subnetMap: Map<string, Subnet>,
-    prefixListMap: Map<string, PrefixList>,
-    props: {
-      ipProtocol: string;
-      fromPort?: number;
-      toPort?: number;
-      description?: string;
-    },
-    securityGroupMap?: Map<string, SecurityGroup>,
-    vpcName?: string,
-  ): SecurityGroupRuleProps[] {
-    const rules: SecurityGroupRuleProps[] = [];
-
-    for (const source of sources ?? []) {
-      // Conditional to only process non-security group sources
-      if (!securityGroupMap) {
-        //
-        // IP source
-        //
-        if (nonEmptyString.is(source)) {
-          this.stack.addLogs(LogLevel.INFO, `Evaluate IP Source ${source}`);
-          if (source.includes('::')) {
-            rules.push({
-              cidrIpv6: source,
-              ...props,
-            });
-          } else {
-            rules.push({
-              cidrIp: source,
-              ...props,
-            });
-          }
-        }
-
-        //
-        // Subnet source
-        //
-        if (NetworkConfigTypes.subnetSourceConfig.is(source)) {
-          this.stack.addLogs(
-            LogLevel.INFO,
-            `Evaluate Subnet Source account:${source.account} vpc:${source.vpc} subnets:[${source.subnets}]`,
-          );
-
-          // Locate the VPC
-          const vpcItem = this.stack.vpcResources.find(item => item.name === source.vpc);
-          if (!vpcItem) {
-            this.stack.addLogs(LogLevel.INFO, `Specified VPC ${source.vpc} not defined`);
-            throw new Error(`Configuration validation failed at runtime.`);
-          }
-
-          // Loop through all subnets to add
-          for (const subnet of source.subnets) {
-            // Locate the Subnet
-            const subnetConfigItem = vpcItem.subnets?.find(item => item.name === subnet);
-            if (!subnetConfigItem) {
-              this.stack.addLogs(LogLevel.ERROR, `Specified subnet ${subnet} not defined`);
-              throw new Error(`Configuration validation failed at runtime.`);
-            }
-
-            if (subnetConfigItem.ipamAllocation) {
-              const subnetItem = this.stack.getSubnet(subnetMap, vpcItem.name, subnetConfigItem.name);
-              rules.push({
-                cidrIp: subnetItem.ipv4CidrBlock,
-                ...props,
-              });
-            } else {
-              rules.push({
-                cidrIp: subnetConfigItem.ipv4CidrBlock,
-                ...props,
-              });
-            }
-          }
-        }
-
-        //
-        // Prefix List Source
-        //
-        if (NetworkConfigTypes.prefixListSourceConfig.is(source)) {
-          this.stack.addLogs(LogLevel.INFO, `Evaluate Prefix List Source prefixLists:[${source.prefixLists}]`);
-
-          for (const prefixList of source.prefixLists ?? []) {
-            const targetPrefixList = this.stack.getPrefixList(prefixListMap, prefixList);
-            rules.push({
-              targetPrefixList,
-              ...props,
-            });
-          }
-        }
-      }
-
-      if (securityGroupMap && vpcName) {
-        //
-        // Security Group Source
-        //
-        if (NetworkConfigTypes.securityGroupSourceConfig.is(source)) {
-          this.stack.addLogs(LogLevel.INFO, `Evaluate Security Group Source securityGroups:[${source.securityGroups}]`);
-
-          for (const securityGroup of source.securityGroups ?? []) {
-            const targetSecurityGroup = this.stack.getSecurityGroup(securityGroupMap, vpcName, securityGroup);
-            rules.push({
-              targetSecurityGroup,
-              ...props,
-            });
-          }
-        }
-      }
-    }
-    return rules;
   }
 
   /**
