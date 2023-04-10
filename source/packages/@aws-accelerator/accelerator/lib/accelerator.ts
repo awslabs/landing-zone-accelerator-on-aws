@@ -426,7 +426,7 @@ export abstract class Accelerator {
       }
     }
 
-    if (props.stage === AcceleratorStage.KEY || props.stage === AcceleratorStage.SECURITY_AUDIT) {
+    if (props.stage === AcceleratorStage.SECURITY_AUDIT) {
       for (const region of globalConfig.enabledRegions) {
         logger.info(`Executing ${props.stage} for audit account in ${region} region.`);
         promises.push(
@@ -536,7 +536,8 @@ export abstract class Accelerator {
       props.stage === AcceleratorStage.NETWORK_PREP ||
       props.stage === AcceleratorStage.NETWORK_VPC ||
       props.stage === AcceleratorStage.NETWORK_ASSOCIATIONS ||
-      props.stage === AcceleratorStage.CUSTOMIZATIONS
+      props.stage === AcceleratorStage.CUSTOMIZATIONS ||
+      props.stage === AcceleratorStage.KEY
     ) {
       const managementAccountId = accountsConfig.getManagementAccountId();
       for (const region of globalConfig.enabledRegions) {
