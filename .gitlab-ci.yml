@@ -1,10 +1,39 @@
 image: public.ecr.aws/bitnami/node:14
 
+before_script:
+  - rm -rf /var/lib/apt/lists/*
+  - apt-get update
+  - apt-cache gencaches
+  - apt-get install -y zip
+  - apt-get install -y jq
+
 stages:
+  - workshop
   - build
   - test
   - metadata
 
+accelerator-workshop-session:
+  stage: workshop
+  script:
+    - "export NODE_OPTIONS=--max_old_space_size=16384"
+    - "cd source"
+    - "npm install --global yarn"
+    - "yarn install"
+    - "yarn lerna link"
+    - "yarn build"
+    - "export version=$(cat package.json | jq -r '.version')"
+    - "cd packages/@aws-accelerator/installer"
+    - "yarn run cdk synth -c enable-single-account-mode=true > $CI_PROJECT_DIR/AWSAccelerator-InstallerStack-Workshop.template.json"
+    - "cd ../../../../deployment"
+    - "chmod +x ./build-open-source-dist.sh && ./build-open-source-dist.sh lza-on-aws-workshop"
+    - "cp ./open-source/lza-on-aws-workshop.zip $CI_PROJECT_DIR/lza-on-aws-workshop.zip"
+  artifacts:
+    name: "lza-on-aws-workshop"
+    when: on_success
+    paths:
+      - lza-on-aws-workshop.zip
+      - AWSAccelerator-InstallerStack-Workshop.template.json
 accelerator-build:
   stage: build
   tags:

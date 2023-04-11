@@ -312,32 +312,43 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
    * Loads account ids by utilizing the organizations client if account ids are
    * not provided in the config.
    */
-  public async loadAccountIds(partition: string): Promise<void> {
+  public async loadAccountIds(partition: string, enableSingleAccountMode: boolean): Promise<void> {
     if (this.accountIds === undefined) {
       this.accountIds = [];
     }
     if (this.accountIds.length == 0) {
-      let organizationsClient: AWS.Organizations;
-      if (partition === 'aws-us-gov') {
-        organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
-      } else if (partition === 'aws-cn') {
-        organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
-      } else {
-        organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
-      }
-
-      let nextToken: string | undefined = undefined;
-      do {
-        const page = await throttlingBackOff(() =>
-          organizationsClient.listAccounts({ NextToken: nextToken }).promise(),
-        );
-        page.Accounts?.forEach(item => {
-          if (item.Email && item.Id) {
-            this.accountIds?.push({ email: item.Email, accountId: item.Id });
-          }
+      if (enableSingleAccountMode) {
+        const stsClient = new AWS.STS({ region: process.env['AWS_REGION'] });
+        const stsCallerIdentity = await throttlingBackOff(() => stsClient.getCallerIdentity({}).promise());
+        const currentAccountId = stsCallerIdentity.Account!;
+        this.mandatoryAccounts.forEach(item => {
+          this.accountIds?.push({ email: item.email, accountId: currentAccountId });
         });
-        nextToken = page.NextToken;
-      } while (nextToken);
+      } else {
+        let organizationsClient: AWS.Organizations;
+        if (partition === 'aws-us-gov') {
+          organizationsClient = new AWS.Organizations({ region: 'us-gov-west-1' });
+        } else if (partition === 'aws-cn') {
+          organizationsClient = new AWS.Organizations({ region: 'cn-northwest-1' });
+        } else {
+          organizationsClient = new AWS.Organizations({ region: 'us-east-1' });
+        }
+
+        let nextToken: string | undefined = undefined;
+
+        do {
+          const page = await throttlingBackOff(() =>
+            organizationsClient.listAccounts({ NextToken: nextToken }).promise(),
+          );
+
+          page.Accounts?.forEach(item => {
+            if (item.Email && item.Id) {
+              this.accountIds?.push({ email: item.Email, accountId: item.Id });
+            }
+          });
+          nextToken = page.NextToken;
+        } while (nextToken);
+      }
     }
   }
 
@@ -375,6 +386,14 @@ export class AccountsConfig implements t.TypeOf<typeof AccountsConfigTypes.accou
     }
 
     return false;
+  }
+
+  public getAccounts(enableSingleAccountMode: boolean): (AccountConfig | GovCloudAccountConfig)[] {
+    if (enableSingleAccountMode) {
+      return [this.getManagementAccount()];
+    } else {
+      return [...this.mandatoryAccounts, ...this.workloadAccounts];
+    }
   }
 
   public getAccountIdsFromDeploymentTarget(deploymentTargets: t.DeploymentTargets): string[] {

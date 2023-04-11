@@ -94,6 +94,7 @@ export class AcceleratorToolkit {
     proxyAddress?: string;
     centralizeCdkBootstrap?: boolean;
     cdkOptions?: cdkOptionsConfig;
+    enableSingleAccountMode: boolean;
   }): Promise<void> {
     if (options.accountId || options.region) {
       if (options.stage) {
@@ -271,7 +272,7 @@ export class AcceleratorToolkit {
           if (fs.existsSync(path.join(options.configDirPath, 'customizations-config.yaml'))) {
             const customizationsConfig = CustomizationsConfig.load(options.configDirPath);
             const accountsConfig = AccountsConfig.load(options.configDirPath);
-            await accountsConfig.loadAccountIds(options.partition);
+            await accountsConfig.loadAccountIds(options.partition, options.enableSingleAccountMode);
             const customStacks = customizationsConfig.getCustomStacks();
             for (const stack of customStacks) {
               const deploymentAccts = accountsConfig.getAccountIdsFromDeploymentTarget(stack.deploymentTargets);

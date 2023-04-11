@@ -23,11 +23,14 @@ import {
 import * as cdk_extensions from '@aws-cdk-extensions/cdk-extensions';
 import * as cdk from 'aws-cdk-lib';
 import * as s3_assets from 'aws-cdk-lib/aws-s3-assets';
+// import AWS from 'aws-sdk';
 import { Construct } from 'constructs';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as os from 'os';
 import * as path from 'path';
+
+// import { GetCallerIdentityCommand, STSClient } from '@aws-sdk/client-sts';
 
 export interface ConfigRepositoryProps {
   readonly repositoryName: string;
@@ -37,6 +40,7 @@ export interface ConfigRepositoryProps {
   readonly logArchiveAccountEmail: string;
   readonly auditAccountEmail: string;
   readonly controlTowerEnabled: string;
+  readonly enableSingleAccountMode: boolean;
 }
 
 /**
@@ -58,6 +62,11 @@ export class ConfigRepository extends Construct {
     if (props.controlTowerEnabled.toLowerCase() === 'no') {
       controlTowerEnabledValue = false;
       managementAccountAccessRole = 'OrganizationAccountAccessRole';
+    }
+
+    let enableOrganizations = true;
+    if (props.enableSingleAccountMode) {
+      enableOrganizations = false;
     }
 
     fs.writeFileSync(
@@ -84,7 +93,20 @@ export class ConfigRepository extends Construct {
     );
     fs.writeFileSync(path.join(tempDirPath, IamConfig.FILENAME), yaml.dump(new IamConfig()), 'utf8');
     fs.writeFileSync(path.join(tempDirPath, NetworkConfig.FILENAME), yaml.dump(new NetworkConfig()), 'utf8');
-    fs.writeFileSync(path.join(tempDirPath, OrganizationConfig.FILENAME), yaml.dump(new OrganizationConfig()), 'utf8');
+    fs.writeFileSync(
+      path.join(tempDirPath, OrganizationConfig.FILENAME),
+      yaml.dump(
+        new OrganizationConfig({
+          enable: enableOrganizations,
+          organizationalUnits: [],
+          organizationalUnitIds: [],
+          taggingPolicies: [],
+          backupPolicies: [],
+          serviceControlPolicies: [],
+        }),
+      ),
+      'utf8',
+    );
     fs.writeFileSync(path.join(tempDirPath, SecurityConfig.FILENAME), yaml.dump(new SecurityConfig()), 'utf8');
 
     const configurationDefaultsAssets = new s3_assets.Asset(this, 'ConfigurationDefaultsAssets', {

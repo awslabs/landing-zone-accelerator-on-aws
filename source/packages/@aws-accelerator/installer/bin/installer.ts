@@ -25,6 +25,7 @@ cdk.Aspects.of(app).add(new AwsSolutionsChecks());
 const useExternalPipelineAccount = app.node.tryGetContext('use-external-pipeline-account') === 'true';
 const enableTester = app.node.tryGetContext('enable-tester') === 'true';
 const managementCrossAccountRoleName = app.node.tryGetContext('management-cross-account-role-name');
+const enableSingleAccountMode = app.node.tryGetContext('enable-single-account-mode') === 'true';
 
 if (enableTester && managementCrossAccountRoleName === undefined) {
   console.log(`Invalid --management-cross-account-role-name ${managementCrossAccountRoleName}`);
@@ -41,4 +42,5 @@ new installer.InstallerStack(app, 'AWSAccelerator-InstallerStack', {
   useExternalPipelineAccount: useExternalPipelineAccount,
   enableTester: enableTester,
   managementCrossAccountRoleName: managementCrossAccountRoleName,
+  enableSingleAccountMode,
 });

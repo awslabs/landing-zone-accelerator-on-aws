@@ -53,14 +53,19 @@ export interface OrganizationsStackProps extends AcceleratorStackProps {
  * Organizations Management (Root) account
  */
 export class OrganizationsStack extends AcceleratorStack {
-  private cloudwatchKey: cdk.aws_kms.Key;
-  private centralLogsBucketKey: cdk.aws_kms.Key;
-  private bucketReplicationProps: BucketReplicationProps;
-  private logRetention: number;
-  private stackProperties: AcceleratorStackProps;
+  private cloudwatchKey!: cdk.aws_kms.Key;
+  private centralLogsBucketKey!: cdk.aws_kms.Key;
+  private bucketReplicationProps!: BucketReplicationProps;
+  private logRetention!: number;
+  private stackProperties!: AcceleratorStackProps;
 
   constructor(scope: Construct, id: string, props: OrganizationsStackProps) {
     super(scope, id, props);
+
+    // Only deploy resources in this stack if organizations is enabled
+    if (!props.organizationConfig.enable) {
+      return;
+    }
 
     // Security Services delegated admin account configuration
     // Global decoration for security services

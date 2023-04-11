@@ -222,7 +222,7 @@ async function getOrganizationConfig(): Promise<OrganizationConfig> {
 
 async function getAccountConfig(): Promise<AccountsConfig> {
   const accountsConfig = AccountsConfig.load(path.join(__dirname, '/config'));
-  await accountsConfig.loadAccountIds(partition);
+  await accountsConfig.loadAccountIds(partition, false);
   if (!accountsConfig) {
     await publishErrorToSns(`Error automatically remediating SCP modification. Investigate recent changes to SCPs.`);
     throw Error('Error parsing account-config file, object undefined');

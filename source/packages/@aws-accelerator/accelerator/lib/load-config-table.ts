@@ -38,6 +38,10 @@ export interface LoadAcceleratorConfigTableProps {
    * Custom resource lambda log retention in days
    */
   readonly logRetentionInDays: number;
+  /**
+   * Boolean for single account mode (i.e. AWS Jam or Workshop)
+   */
+  readonly enableSingleAccountMode: boolean;
 }
 
 /**
@@ -50,6 +54,14 @@ export class LoadAcceleratorConfigTable extends Construct {
     super(scope, id);
 
     const LOAD_CONFIG_TABLE_RESOURCE_TYPE = 'Custom::LoadAcceleratorConfigTable';
+
+    const environment: {
+      [key: string]: string;
+    } = {};
+
+    if (props.enableSingleAccountMode) {
+      environment['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] = 'true';
+    }
 
     //
     // Function definition for the custom resource

@@ -247,6 +247,11 @@ async function main() {
     return false;
   };
 
+  // Boolean to set single account deployment mode
+  const enableSingleAccountMode = process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE']
+    ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
+    : false;
+
   //
   // Set various resource name prefixes used in code base
   const acceleratorPrefix = process.env['ACCELERATOR_PREFIX'] ?? 'AWSAccelerator';
@@ -351,13 +356,17 @@ async function main() {
           trailLogName: trailLogNamePrefix,
           databaseName: databaseNamePrefix,
         },
+        enableSingleAccountMode,
       },
     );
 
     cdk.Aspects.of(pipelineStack).add(new AwsSolutionsChecks());
 
     NagSuppressions.addStackSuppressions(pipelineStack, [
-      { id: 'AwsSolutions-IAM5', reason: 'IAM role requires wildcard permissions.' },
+      {
+        id: 'AwsSolutions-IAM5',
+        reason: 'IAM role requires wildcard permissions.',
+      },
     ]);
   }
 
@@ -434,27 +443,33 @@ async function main() {
         trailLogName: trailLogNamePrefix,
         databaseName: databaseNamePrefix,
       },
+      enableSingleAccountMode,
     };
 
     //
     // Load in account IDs using the Organizations client if not provided as
     // inputs in accountsConfig
     //
-    await props.accountsConfig.loadAccountIds(partition);
+    await props.accountsConfig.loadAccountIds(partition, enableSingleAccountMode);
 
     //
     // Load in organizational unit IDs using the Organizations client if not
     // provided as inputs in accountsConfig
     //
     await props.organizationConfig.loadOrganizationalUnitIds(partition);
-
     const homeRegion = props.globalConfig.homeRegion;
     const managementAccountId = props.accountsConfig.getManagementAccountId();
 
     //
     // PREPARE Stack
     //
-    if (includeStage({ stage: AcceleratorStage.PREPARE, account: managementAccountId, region: homeRegion })) {
+    if (
+      includeStage({
+        stage: AcceleratorStage.PREPARE,
+        account: managementAccountId,
+        region: homeRegion,
+      })
+    ) {
       const prepareStack = new PrepareStack(
         app,
         `${AcceleratorStackNames[AcceleratorStage.PREPARE]}-${managementAccountId}-${homeRegion}`,
@@ -476,7 +491,13 @@ async function main() {
     //
     // FINALIZE Stack
     //
-    if (includeStage({ stage: AcceleratorStage.FINALIZE, account: managementAccountId, region: globalRegion })) {
+    if (
+      includeStage({
+        stage: AcceleratorStage.FINALIZE,
+        account: managementAccountId,
+        region: globalRegion,
+      })
+    ) {
       const finalizeStack = new FinalizeStack(
         app,
         `${AcceleratorStackNames[AcceleratorStage.FINALIZE]}-${managementAccountId}-${globalRegion}`,
@@ -498,7 +519,13 @@ async function main() {
     //
     // ACCOUNTS Stack
     //
-    if (includeStage({ stage: AcceleratorStage.ACCOUNTS, account: managementAccountId, region: globalRegion })) {
+    if (
+      includeStage({
+        stage: AcceleratorStage.ACCOUNTS,
+        account: managementAccountId,
+        region: globalRegion,
+      })
+    ) {
       const accountsStack = new AccountsStack(
         app,
         `${AcceleratorStackNames[AcceleratorStage.ACCOUNTS]}-${managementAccountId}-${globalRegion}`,
@@ -522,7 +549,11 @@ async function main() {
     //
     for (const enabledRegion of props.globalConfig.enabledRegions) {
       if (
-        includeStage({ stage: AcceleratorStage.ORGANIZATIONS, account: managementAccountId, region: enabledRegion })
+        includeStage({
+          stage: AcceleratorStage.ORGANIZATIONS,
+          account: managementAccountId,
+          region: enabledRegion,
+        })
       ) {
         const organizationStack = new OrganizationsStack(
           app,
@@ -551,7 +582,13 @@ async function main() {
     // SECURITY AUDIT Stack
     //
     for (const enabledRegion of props.globalConfig.enabledRegions) {
-      if (includeStage({ stage: AcceleratorStage.SECURITY_AUDIT, account: auditAccountId, region: enabledRegion })) {
+      if (
+        includeStage({
+          stage: AcceleratorStage.SECURITY_AUDIT,
+          account: auditAccountId,
+          region: enabledRegion,
+        })
+      ) {
         const auditStack = new SecurityAuditStack(
           app,
           `${AcceleratorStackNames[AcceleratorStage.SECURITY_AUDIT]}-${auditAccountId}-${enabledRegion}`,
@@ -573,7 +610,7 @@ async function main() {
 
     for (const enabledRegion of props.globalConfig.enabledRegions) {
       let accountId = '';
-      for (const accountItem of [...props.accountsConfig.mandatoryAccounts, ...props.accountsConfig.workloadAccounts]) {
+      for (const accountItem of props.accountsConfig.getAccounts(enableSingleAccountMode)) {
         try {
           accountId = props.accountsConfig.getAccountId(accountItem.name);
         } catch (error) {
@@ -587,7 +624,13 @@ async function main() {
         //
         // KEY and DEPENDENCY Stacks
         //
-        if (includeStage({ stage: AcceleratorStage.KEY, account: accountId, region: enabledRegion })) {
+        if (
+          includeStage({
+            stage: AcceleratorStage.KEY,
+            account: accountId,
+            region: enabledRegion,
+          })
+        ) {
           const keyStack = new KeyStack(
             app,
             `${AcceleratorStackNames[AcceleratorStage.KEY]}-${accountId}-${enabledRegion}`,
@@ -620,7 +663,13 @@ async function main() {
         //
         // BOOTSTRAP Stack
         //
-        if (includeStage({ stage: AcceleratorStage.BOOTSTRAP, account: accountId, region: enabledRegion })) {
+        if (
+          includeStage({
+            stage: AcceleratorStage.BOOTSTRAP,
+            account: accountId,
+            region: enabledRegion,
+          })
+        ) {
           const bootstrapStack = new BootstrapStack(
             app,
             `${AcceleratorStackNames[AcceleratorStage.BOOTSTRAP]}-${accountId}-${enabledRegion}`,
@@ -639,7 +688,13 @@ async function main() {
         //
         // LOGGING Stack
         //
-        if (includeStage({ stage: AcceleratorStage.LOGGING, account: accountId, region: enabledRegion })) {
+        if (
+          includeStage({
+            stage: AcceleratorStage.LOGGING,
+            account: accountId,
+            region: enabledRegion,
+          })
+        ) {
           const loggingStack = new LoggingStack(
             app,
             `${AcceleratorStackNames[AcceleratorStage.LOGGING]}-${accountId}-${enabledRegion}`,
@@ -658,7 +713,13 @@ async function main() {
         //
         // SECURITY Stack
         //
-        if (includeStage({ stage: AcceleratorStage.SECURITY, account: accountId, region: enabledRegion })) {
+        if (
+          includeStage({
+            stage: AcceleratorStage.SECURITY,
+            account: accountId,
+            region: enabledRegion,
+          })
+        ) {
           const securityStack = new SecurityStack(
             app,
             `${AcceleratorStackNames[AcceleratorStage.SECURITY]}-${accountId}-${enabledRegion}`,
@@ -677,7 +738,13 @@ async function main() {
         //
         // OPERATIONS Stack
         //
-        if (includeStage({ stage: AcceleratorStage.OPERATIONS, account: accountId, region: enabledRegion })) {
+        if (
+          includeStage({
+            stage: AcceleratorStage.OPERATIONS,
+            account: accountId,
+            region: enabledRegion,
+          })
+        ) {
           const operationsStack = new OperationsStack(
             app,
             `${AcceleratorStackNames[AcceleratorStage.OPERATIONS]}-${accountId}-${enabledRegion}`,
@@ -697,7 +764,13 @@ async function main() {
         //
         // NETWORK PREP Stack
         //
-        if (includeStage({ stage: AcceleratorStage.NETWORK_PREP, account: accountId, region: enabledRegion })) {
+        if (
+          includeStage({
+            stage: AcceleratorStage.NETWORK_PREP,
+            account: accountId,
+            region: enabledRegion,
+          })
+        ) {
           const networkPrepStack = new NetworkPrepStack(
             app,
             `${AcceleratorStackNames[AcceleratorStage.NETWORK_PREP]}-${accountId}-${enabledRegion}`,
@@ -716,7 +789,13 @@ async function main() {
         //
         // SECURITY_RESOURCES Stack
         //
-        if (includeStage({ stage: AcceleratorStage.SECURITY_RESOURCES, account: accountId, region: enabledRegion })) {
+        if (
+          includeStage({
+            stage: AcceleratorStage.SECURITY_RESOURCES,
+            account: accountId,
+            region: enabledRegion,
+          })
+        ) {
           const securityResourcesStack = new SecurityResourcesStack(
             app,
             `${AcceleratorStackNames[AcceleratorStage.SECURITY_RESOURCES]}-${accountId}-${enabledRegion}`,
@@ -735,7 +814,13 @@ async function main() {
         //
         // CUSTOMIZATIONS Stack
         //
-        if (includeStage({ stage: AcceleratorStage.CUSTOMIZATIONS, account: accountId, region: enabledRegion })) {
+        if (
+          includeStage({
+            stage: AcceleratorStage.CUSTOMIZATIONS,
+            account: accountId,
+            region: enabledRegion,
+          })
+        ) {
           const customizationsStack = new CustomizationsStack(
             app,
             `${AcceleratorStackNames[AcceleratorStage.CUSTOMIZATIONS]}-${accountId}-${enabledRegion}`,
@@ -816,7 +901,13 @@ async function main() {
         //
         // NETWORK VPC Stack
         //
-        if (includeStage({ stage: AcceleratorStage.NETWORK_VPC, account: accountId, region: enabledRegion })) {
+        if (
+          includeStage({
+            stage: AcceleratorStage.NETWORK_VPC,
+            account: accountId,
+            region: enabledRegion,
+          })
+        ) {
           const vpcStack = new NetworkVpcStack(
             app,
             `${AcceleratorStackNames[AcceleratorStage.NETWORK_VPC]}-${accountId}-${enabledRegion}`,
@@ -865,7 +956,13 @@ async function main() {
         //
         // NETWORK ASSOCIATIONS Stack
         //
-        if (includeStage({ stage: AcceleratorStage.NETWORK_ASSOCIATIONS, account: accountId, region: enabledRegion })) {
+        if (
+          includeStage({
+            stage: AcceleratorStage.NETWORK_ASSOCIATIONS,
+            account: accountId,
+            region: enabledRegion,
+          })
+        ) {
           const networkAssociationsStack = new NetworkAssociationsStack(
             app,
             `${AcceleratorStackNames[AcceleratorStage.NETWORK_ASSOCIATIONS]}-${accountId}-${enabledRegion}`,

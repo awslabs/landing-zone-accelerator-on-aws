@@ -131,6 +131,7 @@ export interface AcceleratorProps {
   readonly caBundlePath?: string;
   readonly ec2Creds?: boolean;
   readonly proxyAddress?: string;
+  readonly enableSingleAccountMode: boolean;
 }
 
 /**
@@ -218,6 +219,7 @@ export abstract class Accelerator {
         proxyAddress: props.proxyAddress,
         centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
         cdkOptions: globalConfig?.cdkOptions,
+        enableSingleAccountMode: props.enableSingleAccountMode,
       });
     }
 
@@ -237,6 +239,7 @@ export abstract class Accelerator {
         proxyAddress: props.proxyAddress,
         centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
         cdkOptions: globalConfig?.cdkOptions,
+        enableSingleAccountMode: props.enableSingleAccountMode,
       });
     }
 
@@ -252,7 +255,7 @@ export abstract class Accelerator {
     // Will load in account IDs using the Organizations client if not provided
     // as inputs in accountsConfig
     //
-    await accountsConfig.loadAccountIds(props.partition);
+    await accountsConfig.loadAccountIds(props.partition, props.enableSingleAccountMode);
 
     //
     // When running parallel, this will be the max concurrent stacks
@@ -284,6 +287,7 @@ export abstract class Accelerator {
             proxyAddress: props.proxyAddress,
             centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
             cdkOptions: globalConfig?.cdkOptions,
+            enableSingleAccountMode: props.enableSingleAccountMode,
           }),
         );
         await Promise.all(promises);
@@ -300,7 +304,7 @@ export abstract class Accelerator {
       credentialExpiration = new Date(+new Date() + 60000 * 30);
 
       for (const region of globalConfig.enabledRegions) {
-        for (const account of [...accountsConfig.mandatoryAccounts, ...accountsConfig.workloadAccounts]) {
+        for (const account of accountsConfig.getAccounts(props.enableSingleAccountMode)) {
           const accountId = accountsConfig.getAccountId(account.name);
           if (accountId !== trustedAccountId) {
             const needsBootstrapping = await bootstrapRequired(
@@ -326,6 +330,7 @@ export abstract class Accelerator {
                   proxyAddress: props.proxyAddress,
                   centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
                   cdkOptions: globalConfig?.cdkOptions,
+                  enableSingleAccountMode: props.enableSingleAccountMode,
                 }),
               );
             }
@@ -373,6 +378,7 @@ export abstract class Accelerator {
         proxyAddress: props.proxyAddress,
         centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
         cdkOptions: globalConfig?.cdkOptions,
+        enableSingleAccountMode: props.enableSingleAccountMode,
       });
     }
 
@@ -392,6 +398,7 @@ export abstract class Accelerator {
         proxyAddress: props.proxyAddress,
         centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
         cdkOptions: globalConfig?.cdkOptions,
+        enableSingleAccountMode: props.enableSingleAccountMode,
       });
     }
 
@@ -408,6 +415,7 @@ export abstract class Accelerator {
         app: props.app,
         centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
         cdkOptions: globalConfig?.cdkOptions,
+        enableSingleAccountMode: props.enableSingleAccountMode,
       });
     }
 
@@ -429,6 +437,7 @@ export abstract class Accelerator {
             proxyAddress: props.proxyAddress,
             centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
             cdkOptions: globalConfig?.cdkOptions,
+            enableSingleAccountMode: props.enableSingleAccountMode,
           }),
         );
         if (promises.length >= maxStacks) {
@@ -456,6 +465,7 @@ export abstract class Accelerator {
             proxyAddress: props.proxyAddress,
             centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
             cdkOptions: globalConfig?.cdkOptions,
+            enableSingleAccountMode: props.enableSingleAccountMode,
           }),
         );
         if (promises.length >= maxStacks) {
@@ -488,6 +498,7 @@ export abstract class Accelerator {
         app: props.app,
         centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
         cdkOptions: globalConfig?.cdkOptions,
+        enableSingleAccountMode: props.enableSingleAccountMode,
       });
       // execute in all other regions for Logging account, except home region
       for (const region of globalConfig.enabledRegions) {
@@ -504,6 +515,7 @@ export abstract class Accelerator {
             app: props.app,
             centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
             cdkOptions: globalConfig?.cdkOptions,
+            enableSingleAccountMode: props.enableSingleAccountMode,
           });
         }
       }
@@ -526,6 +538,7 @@ export abstract class Accelerator {
                 app: props.app,
                 centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
                 cdkOptions: globalConfig?.cdkOptions,
+                enableSingleAccountMode: props.enableSingleAccountMode,
               }),
             );
           }
@@ -576,6 +589,7 @@ export abstract class Accelerator {
             proxyAddress: props.proxyAddress,
             centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
             cdkOptions: globalConfig?.cdkOptions,
+            enableSingleAccountMode: props.enableSingleAccountMode,
           }),
         );
         await Promise.all(promises);
@@ -614,6 +628,7 @@ export abstract class Accelerator {
                 proxyAddress: props.proxyAddress,
                 centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
                 cdkOptions: globalConfig?.cdkOptions,
+                enableSingleAccountMode: props.enableSingleAccountMode,
               }),
             );
             if (promises.length >= maxStacks) {

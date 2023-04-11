@@ -55,6 +55,7 @@ const stack = new PipelineStack(app, 'PipelineStack', {
     trailLogName: 'aws-accelerator',
     databaseName: 'aws-accelerator',
   },
+  enableSingleAccountMode: false,
 });
 
 describe('PipelineStack', () => {
