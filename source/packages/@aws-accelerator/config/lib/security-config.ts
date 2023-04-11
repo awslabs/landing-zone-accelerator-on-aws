@@ -513,9 +513,24 @@ export class SecurityConfigTypes {
     alarms: t.array(this.alarmConfig),
   });
 
+  static readonly encryptionConfig = t.interface({
+    kmsKeyName: t.optional(t.nonEmptyString),
+    kmsKeyArn: t.optional(t.nonEmptyString),
+    useLzaManagedKey: t.optional(t.boolean),
+  });
+
+  static readonly logGroupsConfig = t.interface({
+    logGroupName: t.nonEmptyString,
+    logRetentionInDays: t.number,
+    terminationProtected: t.optional(t.boolean),
+    encryption: t.optional(this.encryptionConfig),
+    deploymentTargets: t.deploymentTargets,
+  });
+
   static readonly cloudWatchConfig = t.interface({
     metricSets: t.array(this.metricSetConfig),
     alarmSets: t.array(this.alarmSetConfig),
+    logGroups: t.optional(t.array(this.logGroupsConfig)),
   });
 
   static readonly securityConfig = t.interface({
@@ -2119,6 +2134,83 @@ export class AlarmSetConfig implements t.TypeOf<typeof SecurityConfigTypes.alarm
   readonly alarms: AlarmConfig[] = [];
 }
 
+export class EncryptionConfig implements t.TypeOf<typeof SecurityConfigTypes.encryptionConfig> {
+  /**
+   * Kms Key Name reference that is created by Landing Zone Accelerator.
+   */
+  readonly kmsKeyName: string | undefined = undefined;
+
+  /**
+   * Reference the KMS Key Arn that is used to encrypt the AWS CloudWatch Logs Group. This should be a
+   * KMS Key that is not managed by Landing Zone Accelerator.
+   */
+  readonly kmsKeyArn: string | undefined = undefined;
+
+  /**
+   * Provide a boolean value if the AWS CloudWatch Logs
+   */
+  readonly useLzaManagedKey: boolean | undefined = undefined;
+}
+
+export class LogGroupsConfig implements t.TypeOf<typeof SecurityConfigTypes.logGroupsConfig> {
+  /**
+   * CAUTION: If importing an existing AWS CloudWatch Log Group that has encryption enabled. If specifying the
+   * encryption configuration with any KMS parameter, Landing Zone Accelerator on AWS will associate a new
+   * key with the log group. The same situation is applied for a log group that is created by Landing Zone Accelerator on AWS
+   * where specifying a new KMS parameter will update the KMS key used to encrypt the log group. It is recommend to verify
+   * if any processes or applications are using the previous key, and has access to the new key before updating.
+   */
+  readonly encryption: EncryptionConfig | undefined = undefined;
+  /**
+   * List of AWS CloudWatch Log Groups example
+   * @example
+   * ```
+   * cloudWatch:
+   *   logGroups:
+   *     - logGroupName: Log1
+   *       logRetentionInDays: 365
+   *       terminationProtected: true
+   *       encryption:
+   *         kmsKeyName: key1
+   *       deploymentTarget:
+   *         account: Production
+   *     - logGroupName: Log2
+   *       terminationProtected: false
+   *       deploymentTarget:
+   *         organization: Infrastructure
+   * ```
+   */
+
+  /**
+   * Name of the CloudWatch Logs
+   */
+  readonly logGroupName: string = '';
+
+  /**
+   * Kms Key reference
+   */
+  readonly kmsKeyName: string = '';
+
+  /**
+   * How long, in days, the log contents will be retained.
+   *
+   * To retain all logs, set this value to undefined.
+   *
+   * @default undefined
+   */
+  readonly logRetentionInDays = 3653;
+
+  /**
+   * Determine of CloudWatch Log Group is retained.
+   */
+  readonly terminationProtected: boolean | undefined = undefined;
+
+  /**
+   * Deployment targets for CloudWatch Logs
+   */
+  readonly deploymentTargets: t.DeploymentTargets = new t.DeploymentTargets();
+}
+
 /**
  * *{@link SecurityConfig} / {@link CloudWatchConfig}*
  *
@@ -2159,6 +2251,17 @@ export class AlarmSetConfig implements t.TypeOf<typeof SecurityConfigTypes.alarm
  *           statistic: Sum
  *           threshold: 1
  *           treatMissingData: notBreaching
+ *   logGroups:
+ *     - name: Log1
+ *       terminationProtected: true
+ *       encryption:
+ *          kmsKeyName: key1
+ *       deploymentTarget:
+ *         account: Production
+ *     - name: Log2
+ *       terminationProtected: false
+ *       deploymentTarget:
+ *         organization: Infrastructure
  * ```
  */
 export class CloudWatchConfig implements t.TypeOf<typeof SecurityConfigTypes.cloudWatchConfig> {
@@ -2204,6 +2307,28 @@ export class CloudWatchConfig implements t.TypeOf<typeof SecurityConfigTypes.clo
    * ```
    */
   readonly alarmSets: AlarmSetConfig[] = [];
+
+  /**
+   * List CloudWatch Logs configuration
+   *
+   * The Following is an example of deploying CloudWatch Logs to multiple regions
+   *
+   * @example
+   * ```
+   *   logGroups:
+   *     - logGroupName: Log1
+   *       terminationProtected: true
+   *       encryption:
+   *         useLzaManagedKey: true
+   *       deploymentTarget:
+   *         account: Production
+   *     - logGroupName: Log2
+   *       terminationProtected: false
+   *       deploymentTarget:
+   *         organization: Infrastructure
+   * ```
+   */
+  readonly logGroups: LogGroupsConfig[] | undefined = undefined;
 }
 
 /**

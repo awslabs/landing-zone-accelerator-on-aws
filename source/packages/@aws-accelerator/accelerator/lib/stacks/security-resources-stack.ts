@@ -22,6 +22,7 @@ import { Tag as ConfigRuleTag } from '@aws-sdk/client-config-service';
 import { AwsConfigRuleSet, ConfigRule, Tag } from '@aws-accelerator/config';
 
 import {
+  CloudWatchLogGroups,
   ConfigServiceTags,
   KeyLookup,
   Organization,
@@ -183,6 +184,11 @@ export class SecurityResourcesStack extends AcceleratorStack {
     // CloudWatch Alarms
     //
     this.configureCloudwatchAlarm();
+
+    //
+    // CloudWatch Log Groups
+    //
+    this.configureCloudwatchLogGroups();
 
     //
     // SessionManager Configuration
@@ -422,6 +428,35 @@ export class SecurityResourcesStack extends AcceleratorStack {
             ),
           );
         }
+      }
+    }
+  }
+
+  private configureCloudwatchLogGroups() {
+    for (const logGroupItem of this.props.securityConfig.cloudWatch.logGroups ?? []) {
+      if (
+        this.isAccountIncluded(logGroupItem.deploymentTargets.accounts) &&
+        !this.isRegionExcluded(logGroupItem.deploymentTargets.excludedRegions)
+      ) {
+        let keyArn: string | undefined = undefined;
+        if (logGroupItem.encryption?.kmsKeyName) {
+          keyArn = cdk.aws_ssm.StringParameter.valueForStringParameter(
+            this,
+            `${this.props.prefixes.ssmParamName}/kms/${logGroupItem.encryption?.kmsKeyName}/key-arn`,
+          ).toString();
+        } else if (logGroupItem.encryption?.useLzaManagedKey) {
+          keyArn = this.cloudwatchKey.keyArn;
+        } else if (logGroupItem.encryption?.kmsKeyArn) {
+          keyArn = logGroupItem.encryption?.kmsKeyArn;
+        }
+        new CloudWatchLogGroups(this, pascalCase(logGroupItem.logGroupName) + '-LogGroup', {
+          logGroupName: logGroupItem.logGroupName,
+          logRetentionInDays: logGroupItem.logRetentionInDays,
+          keyArn,
+          terminationProtected: logGroupItem.terminationProtected ?? false,
+          customLambdaLogKmsKey: this.cloudwatchKey,
+          customLambdaLogRetention: this.props.globalConfig.cloudwatchLogRetentionInDays,
+        });
       }
     }
   }
