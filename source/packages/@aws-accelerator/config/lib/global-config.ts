@@ -588,7 +588,7 @@ export class AccessLogBucketConfig implements t.TypeOf<typeof GlobalConfigTypes.
  *           transitionAfter: 365
  *   s3ResourcePolicyAttachments:
  *     - policy: s3-policies/policy1.json
- *   s3KmsPolicyAttachments:
+ *   kmsResourcePolicyAttachments:
  *     - policy: kms-policies/policy1.json
  * ```
  */

@@ -1325,7 +1325,7 @@ export class LoggingStack extends AcceleratorStack {
         ],
       );
 
-      this.centralLogBucketAddResourcePolicies();
+      this.centralLogBucketAddResourcePolicies(this.centralLogsBucket);
     }
   }
 
@@ -1688,9 +1688,9 @@ export class LoggingStack extends AcceleratorStack {
     return snsKey;
   }
 
-  private centralLogBucketAddResourcePolicies() {
+  private centralLogBucketAddResourcePolicies(centralLogsBucket: CentralLogsBucket) {
     this.logger.info(`Adding central log bucket resource policies to KMS`);
-
+    const centralLogsBucketKey = centralLogsBucket.getS3Bucket().getKey();
     for (const attachment of this.props.globalConfig.logging.centralLogBucket?.kmsResourcePolicyAttachments ?? []) {
       const policyDocument = JSON.parse(
         this.generatePolicyReplacements(path.join(this.props.configDirPath, attachment.policy), false),
@@ -1701,24 +1701,23 @@ export class LoggingStack extends AcceleratorStack {
       for (const statement of policyDocument.Statement) {
         statements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
         for (const statement of statements) {
-          this.centralLogBucketKey?.addToResourcePolicy(statement);
+          centralLogsBucketKey?.addToResourcePolicy(statement);
         }
       }
-
-      this.logger.info(`Adding central log bucket resource policies to S3`);
-      const realCentralLogBucket = this.centralLogsBucket?.getS3Bucket().getS3Bucket();
-      for (const attachment of this.props.globalConfig.logging.centralLogBucket?.s3ResourcePolicyAttachments ?? []) {
-        const policyDocument = JSON.parse(
-          this.generatePolicyReplacements(path.join(this.props.configDirPath, attachment.policy), false),
-        );
-        // Create a statements list using the PolicyStatement factory
-        const statements: cdk.aws_iam.PolicyStatement[] = [];
-        for (const statement of policyDocument.Statement) {
-          statements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
-        }
-        for (const statement of statements) {
-          realCentralLogBucket?.addToResourcePolicy(statement);
-        }
+    }
+    this.logger.info(`Adding central log bucket resource policies to S3`);
+    const realCentralLogBucket = centralLogsBucket?.getS3Bucket().getS3Bucket();
+    for (const attachment of this.props.globalConfig.logging.centralLogBucket?.s3ResourcePolicyAttachments ?? []) {
+      const policyDocument = JSON.parse(
+        this.generatePolicyReplacements(path.join(this.props.configDirPath, attachment.policy), false),
+      );
+      // Create a statements list using the PolicyStatement factory
+      const statements: cdk.aws_iam.PolicyStatement[] = [];
+      for (const statement of policyDocument.Statement) {
+        statements.push(cdk.aws_iam.PolicyStatement.fromJson(statement));
+      }
+      for (const statement of statements) {
+        realCentralLogBucket?.addToResourcePolicy(statement);
       }
     }
   }
