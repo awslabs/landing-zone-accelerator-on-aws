@@ -261,6 +261,7 @@ export class PrepareStack extends AcceleratorStack {
           stackName: cdk.Stack.of(this).stackName,
           kmsKey: cloudwatchKey,
           logRetentionInDays: props.globalConfig.cloudwatchLogRetentionInDays,
+          enableSingleAccountMode: props.enableSingleAccountMode,
         });
 
         this.logger.info(`Call create ou construct`);

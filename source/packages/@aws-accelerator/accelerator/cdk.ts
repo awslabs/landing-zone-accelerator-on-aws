@@ -89,6 +89,11 @@ import { AcceleratorToolkit } from './lib/toolkit';
     }
   }
 
+  // Boolean to set single account deployment mode
+  const enableSingleAccountMode = process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE']
+    ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
+    : false;
+
   //
   // Execute the Accelerator engine
   //
@@ -104,6 +109,7 @@ import { AcceleratorToolkit } from './lib/toolkit';
     caBundlePath,
     ec2Creds,
     proxyAddress,
+    enableSingleAccountMode: enableSingleAccountMode,
   }).catch(function (err) {
     console.log(err.message);
     process.exit(1);

@@ -78,7 +78,13 @@ export class AccountsConfigValidator {
       }
     });
 
-    if (new Set(emails).size !== emails.length) {
+    // Check for duplicates altered to allow for single account deployment
+    const singleAccountDeployment = process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE']
+      ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
+      : true;
+    if (singleAccountDeployment) {
+      console.log('Duplicate emails allowed', singleAccountDeployment);
+    } else if (new Set(emails).size !== emails.length) {
       errors.push(`Duplicate emails defined [${emails}].`);
     }
   }

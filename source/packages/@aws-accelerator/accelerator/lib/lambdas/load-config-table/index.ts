@@ -266,7 +266,14 @@ async function onCreateUpdateFunction(
     },
     accountsValues,
   );
-  await accountsConfig.loadAccountIds(partition);
+
+  // Boolean to set single account deployment mode
+  const enableSingleAccountMode = process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE']
+    ? process.env['ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE'] === 'true'
+    : false;
+
+  await accountsConfig.loadAccountIds(partition, enableSingleAccountMode);
+
   for (const account of accountsConfig.mandatoryAccounts) {
     switch (account.name) {
       case 'Management':
