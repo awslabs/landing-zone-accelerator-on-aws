@@ -92,9 +92,16 @@ export class SecurityConfigValidator {
 
     this.validateAwsConfigAggregation(globalConfig, accountNames, values, errors);
 
+    this.validateAwsCloudWatchLogGroups(values, errors);
+    this.validateAwsCloudWatchLogGroupsRetention(values, errors);
+
     if (errors.length) {
       logger.error(`${SecurityConfig.FILENAME} has ${errors.length} issues:\n${errors.join('\n')}`);
     }
+  }
+
+  public hasDuplicates(arr: string[]): boolean {
+    return new Set(arr).size !== arr.length;
   }
 
   /**
@@ -243,6 +250,52 @@ export class SecurityConfigValidator {
   }
 
   /**
+   * Function to validate AWS CloudWatch Log Groups configuration
+   */
+  private validateAwsCloudWatchLogGroups(values: SecurityConfig, errors: string[]) {
+    const logGroupNames: string[] = [];
+    for (const logGroupItem of values.cloudWatch.logGroups ?? []) {
+      logGroupNames.push(logGroupItem.logGroupName);
+      const kmsKeyArn = logGroupItem.encryption?.kmsKeyArn;
+      const kmsKeyName = logGroupItem.encryption?.kmsKeyName;
+      const lzaKey = logGroupItem.encryption?.useLzaManagedKey;
+      if ((kmsKeyArn && kmsKeyName) || (kmsKeyArn && lzaKey) || (kmsKeyName && lzaKey)) {
+        errors.push(
+          `The Log Group ${logGroupItem.logGroupName} is specifying more than one encryption parameter. Please specify one of kmsKeyArn, kmsKeyName, or lzaKey.`,
+        );
+      }
+      if (logGroupItem.encryption?.kmsKeyName) {
+        if (!values.keyManagementService.keySets?.find(item => item.name === logGroupItem.encryption?.kmsKeyName)) {
+          errors.push(
+            `The KMS Key Name ${logGroupItem.encryption?.kmsKeyName} provided in the config for ${logGroupItem.logGroupName} does not exist.`,
+          );
+        }
+      }
+    }
+    if (this.hasDuplicates(logGroupNames)) {
+      errors.push(
+        `Duplicate CloudWatch Log Groups names exist. Log Group names must be unique. Log Group names in file: ${logGroupNames}`,
+      );
+    }
+  }
+
+  /**
+   * Function to validate AWS CloudWatch Log Groups retention values
+   */
+  private validateAwsCloudWatchLogGroupsRetention(values: SecurityConfig, errors: string[]) {
+    const validRetentionValues = [
+      1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653,
+    ];
+    for (const logGroupItem of values.cloudWatch.logGroups ?? []) {
+      if (validRetentionValues.indexOf(logGroupItem.logRetentionInDays) === -1) {
+        errors.push(
+          `${logGroupItem.logGroupName} has a retention value of ${logGroupItem.logRetentionInDays}. Valid values for retention are: ${validRetentionValues}`,
+        );
+      }
+    }
+  }
+
+  /**
    * Function to validate existence of custom config rule deployment target Accounts
    * Make sure deployment target Accounts are part of account config file
    * @param values
@@ -306,6 +359,26 @@ export class SecurityConfigValidator {
   }
 
   /**
+   * Function to validate existence of CloudWatch LogGroups deployment target Accounts
+   * Make sure deployment target Accounts are part of account config file
+   * @param values
+   */
+  private validateCloudWatchLogGroupsDeploymentTargetAccounts(
+    values: t.TypeOf<typeof SecurityConfigTypes.securityConfig>,
+    accountNames: string[],
+    errors: string[],
+  ) {
+    for (const logGroupSet of values.cloudWatch.logGroups ?? []) {
+      for (const account of logGroupSet.deploymentTargets.accounts ?? []) {
+        if (accountNames.indexOf(account) === -1) {
+          errors.push(
+            `Deployment target account ${account} for CloudWatch LogGroups does not exists in accounts-config.yaml file.`,
+          );
+        }
+      }
+    }
+  }
+  /**
    * Function to validate existence of SSM documents deployment target Accounts
    * Make sure deployment target Accounts are part of account config file
    * @param values
@@ -339,6 +412,7 @@ export class SecurityConfigValidator {
     this.validateCloudWatchMetricsDeploymentTargetAccounts(values, accountNames, errors);
     this.validateCloudWatchAlarmsDeploymentTargetAccounts(values, accountNames, errors);
     this.validateSsmDocumentsDeploymentTargetAccounts(values, accountNames, errors);
+    this.validateCloudWatchLogGroupsDeploymentTargetAccounts(values, accountNames, errors);
   }
 
   /**

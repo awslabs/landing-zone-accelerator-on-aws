@@ -14,6 +14,7 @@
 export * from './lib/aws-accelerator/get-accelerator-metadata';
 export * from './lib/aws-budgets/budget-definition';
 export * from './lib/aws-cloudwatch-logs/cloudwatch-destination';
+export * from './lib/aws-cloudwatch-logs/cloudwatch-log-group';
 export * from './lib/aws-cloudwatch-logs/cloudwatch-logs-subscription-filter';
 export * from './lib/aws-configservice/config-tags';
 export * from './lib/aws-configservice/config-aggregation';
