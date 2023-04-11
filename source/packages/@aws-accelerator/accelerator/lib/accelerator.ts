@@ -216,6 +216,8 @@ export abstract class Accelerator {
         caBundlePath: props.caBundlePath,
         ec2Creds: props.ec2Creds,
         proxyAddress: props.proxyAddress,
+        centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+        cdkOptions: globalConfig?.cdkOptions,
       });
     }
 
@@ -233,6 +235,8 @@ export abstract class Accelerator {
         caBundlePath: props.caBundlePath,
         ec2Creds: props.ec2Creds,
         proxyAddress: props.proxyAddress,
+        centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+        cdkOptions: globalConfig?.cdkOptions,
       });
     }
 
@@ -367,6 +371,8 @@ export abstract class Accelerator {
         caBundlePath: props.caBundlePath,
         ec2Creds: props.ec2Creds,
         proxyAddress: props.proxyAddress,
+        centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+        cdkOptions: globalConfig?.cdkOptions,
       });
     }
 
@@ -384,6 +390,8 @@ export abstract class Accelerator {
         caBundlePath: props.caBundlePath,
         ec2Creds: props.ec2Creds,
         proxyAddress: props.proxyAddress,
+        centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+        cdkOptions: globalConfig?.cdkOptions,
       });
     }
 
@@ -398,6 +406,8 @@ export abstract class Accelerator {
         configDirPath: props.configDirPath,
         requireApproval: props.requireApproval,
         app: props.app,
+        centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+        cdkOptions: globalConfig?.cdkOptions,
       });
     }
 
@@ -417,6 +427,8 @@ export abstract class Accelerator {
             caBundlePath: props.caBundlePath,
             ec2Creds: props.ec2Creds,
             proxyAddress: props.proxyAddress,
+            centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+            cdkOptions: globalConfig?.cdkOptions,
           }),
         );
         if (promises.length >= maxStacks) {
@@ -442,6 +454,8 @@ export abstract class Accelerator {
             caBundlePath: props.caBundlePath,
             ec2Creds: props.ec2Creds,
             proxyAddress: props.proxyAddress,
+            centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+            cdkOptions: globalConfig?.cdkOptions,
           }),
         );
         if (promises.length >= maxStacks) {
@@ -472,6 +486,8 @@ export abstract class Accelerator {
         configDirPath: props.configDirPath,
         requireApproval: props.requireApproval,
         app: props.app,
+        centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+        cdkOptions: globalConfig?.cdkOptions,
       });
       // execute in all other regions for Logging account, except home region
       for (const region of globalConfig.enabledRegions) {
@@ -486,6 +502,8 @@ export abstract class Accelerator {
             configDirPath: props.configDirPath,
             requireApproval: props.requireApproval,
             app: props.app,
+            centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+            cdkOptions: globalConfig?.cdkOptions,
           });
         }
       }
@@ -506,6 +524,8 @@ export abstract class Accelerator {
                 configDirPath: props.configDirPath,
                 requireApproval: props.requireApproval,
                 app: props.app,
+                centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+                cdkOptions: globalConfig?.cdkOptions,
               }),
             );
           }
@@ -554,6 +574,8 @@ export abstract class Accelerator {
             caBundlePath: props.caBundlePath,
             ec2Creds: props.ec2Creds,
             proxyAddress: props.proxyAddress,
+            centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+            cdkOptions: globalConfig?.cdkOptions,
           }),
         );
         await Promise.all(promises);
@@ -590,6 +612,8 @@ export abstract class Accelerator {
                 caBundlePath: props.caBundlePath,
                 ec2Creds: props.ec2Creds,
                 proxyAddress: props.proxyAddress,
+                centralizeCdkBootstrap: globalConfig?.centralizeCdkBuckets?.enable,
+                cdkOptions: globalConfig?.cdkOptions,
               }),
             );
             if (promises.length >= maxStacks) {
