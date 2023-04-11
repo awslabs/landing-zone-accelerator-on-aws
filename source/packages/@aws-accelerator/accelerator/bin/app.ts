@@ -177,11 +177,13 @@ function getStackSynthesizer(props: AcceleratorStackProps, accountId: string, re
   const bucketPrefix = centralizeBuckets ? `${accountId}/` : undefined;
 
   if (props.globalConfig.cdkOptions?.useManagementAccessRole) {
+    logger.info(`Stack in account ${accountId} and region ${region} using CliCredentialSynthesizer`);
     return new cdk.CliCredentialsStackSynthesizer({
       bucketPrefix: bucketPrefix,
       fileAssetsBucketName: fileAssetBucketName,
     });
   } else {
+    logger.info(`Stack in account ${accountId} and region ${region} using DefaultSynthesizer`);
     return new cdk.DefaultStackSynthesizer({
       generateBootstrapVersionRule: false,
       bucketPrefix: bucketPrefix,

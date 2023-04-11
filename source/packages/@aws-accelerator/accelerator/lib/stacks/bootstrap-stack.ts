@@ -71,11 +71,7 @@ export class BootstrapStack extends AcceleratorStack {
     cfnCdkBootstrapVersionParam.overrideLogicalId('CdkBootstrapVersion');
 
     // Create CDK roles for default CDK stack synthesis
-    if (this.props.globalConfig.cdkOptions?.useManagementAccessRole === true) {
-      this.logger.info(`Skipping creation of default CDK Roles`);
-    } else {
-      this.createCdkRoles(cdkBootstrapVersionParam.parameterName, trustedAccountsParam.valueAsList);
-    }
+    this.createCdkRoles(cdkBootstrapVersionParam.parameterName, trustedAccountsParam.valueAsList);
 
     // Create ECR repository
     this.createEcrRepository();

@@ -253,6 +253,48 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::SSM::Parameter",
     },
+    "CloudFormationExecutionRole": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "cloudformation.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/AdministratorAccess",
+              ],
+            ],
+          },
+        ],
+        "RoleName": "cdk-accel-cfn-exec-role-111111111111-us-east-1",
+      },
+      "Type": "AWS::IAM::Role",
+    },
     "ContainerAssetsRepository": {
       "DeletionPolicy": "Retain",
       "Properties": {
@@ -293,6 +335,510 @@ exports[`BootstrapStack Construct(BootstrapStack):  Snapshot Test 1`] = `
       },
       "Type": "AWS::ECR::Repository",
       "UpdateReplacePolicy": "Retain",
+    },
+    "DeploymentActionRole": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "cloudformation:CreateChangeSet",
+                    "cloudformation:DeleteChangeSet",
+                    "cloudformation:DescribeChangeSet",
+                    "cloudformation:DescribeStacks",
+                    "cloudformation:ExecuteChangeSet",
+                    "cloudformation:CreateStack",
+                    "cloudformation:UpdateStack",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "CloudFormationPermissions",
+                },
+                {
+                  "Action": [
+                    "s3:GetObject*",
+                    "s3:GetBucket*",
+                    "s3:List*",
+                    "s3:Abort*",
+                    "s3:DeleteObject*",
+                    "s3:PutObject*",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":s3:::cdk-accel-assets-111111111111-us-east-1",
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":s3:::cdk-accel-assets-111111111111-us-east-1/*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "PipelineCrossAccountArtifactsBucket",
+                },
+                {
+                  "Action": "iam:PassRole",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "CloudFormationExecutionRole",
+                      "Arn",
+                    ],
+                  },
+                  "Sid": "CliPermissions",
+                },
+                {
+                  "Action": [
+                    "cloudformation:DescribeStackEvents",
+                    "cloudformation:GetTemplate",
+                    "cloudformation:DeleteStack",
+                    "cloudformation:UpdateTerminationProtection",
+                    "sts:GetCallerIdentity",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*",
+                  "Sid": "CfnPermissions",
+                },
+                {
+                  "Action": [
+                    "s3:GetObject*",
+                    "s3:GetBucket*",
+                    "s3:List*",
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":s3:::cdk-accel-assets-111111111111-us-east-1",
+                        ],
+                      ],
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition",
+                          },
+                          ":s3:::cdk-accel-assets-111111111111-us-east-1/*",
+                        ],
+                      ],
+                    },
+                  ],
+                  "Sid": "CliStagingBucket",
+                },
+                {
+                  "Action": "ssm:GetParameter",
+                  "Effect": "Allow",
+                  "Resource": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":ssm:us-east-1:111111111111:parameter",
+                        {
+                          "Ref": "CdkBootstrapVersion",
+                        },
+                      ],
+                    ],
+                  },
+                  "Sid": "ReadVersion",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "default",
+          },
+        ],
+        "RoleName": "cdk-accel-deploy-role-111111111111-us-east-1",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "FilePublishingRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "RoleName": "cdk-accel-file-publishing-role-111111111111-us-east-1",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "FilePublishingRoleDefaultPolicy": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetObject*",
+                "s3:GetBucket*",
+                "s3:GetEncryptionConfiguration",
+                "s3:List*",
+                "s3:DeleteObject*",
+                "s3:PutObject*",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::cdk-accel-assets-111111111111-us-east-1",
+                    ],
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":s3:::cdk-accel-assets-111111111111-us-east-1/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "cdk-accel-file-publishing-role-default-policy-111111111111-us-east-1",
+        "Roles": [
+          {
+            "Ref": "FilePublishingRole",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ImagePublishingRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "RoleName": "cdk-accel-image-publishing-role-111111111111-us-east-1",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ImagePublishingRoleDefaultPolicy": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ecr:PutImage",
+                "ecr:InitiateLayerUpload",
+                "ecr:UploadLayerPart",
+                "ecr:CompleteLayerUpload",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:DescribeRepositories",
+                "ecr:DescribeImages",
+                "ecr:BatchGetImage",
+                "ecr:GetDownloadUrlForLayer",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ecr:us-east-1:111111111111:repository/cdk-accel-container-assets-111111111111-us-east-1",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "ecr:GetAuthorizationToken",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "cdk-accel-image-publishing-role-default-policy-111111111111-us-east-1",
+        "Roles": [
+          {
+            "Ref": "ImagePublishingRole",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "LookupRole": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM4",
+              "reason": "AWS Custom resource provider framework-role created by cdk.",
+            },
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition",
+                      },
+                      ":iam::111111111111:root",
+                    ],
+                  ],
+                },
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/ReadOnlyAccess",
+              ],
+            ],
+          },
+        ],
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": "kms:Decrypt",
+                  "Effect": "Deny",
+                  "Resource": "*",
+                  "Sid": "DontReadSecrets",
+                },
+              ],
+              "Version": "2012-10-17",
+            },
+            "PolicyName": "LookupRolePolicy",
+          },
+        ],
+        "RoleName": "cdk-accel-lookup-role-111111111111-us-east-1",
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "PipelineCrossAccountArtifactsKey6069D325": {
+      "Metadata": {
+        "cdk_nag": {
+          "rules_to_suppress": [
+            {
+              "id": "AwsSolutions-IAM5",
+              "reason": "Allows only specific policy.",
+            },
+          ],
+        },
+      },
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kms:Decrypt",
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "kms:ViaService": "s3.us-east-1.amazonaws.com",
+                },
+              },
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Split": [
+                  "|",
+                  {
+                    "Fn::Sub": [
+                      "arn:aws:kms:*:\${JoinedAccounts}:*",
+                      {
+                        "JoinedAccounts": {
+                          "Fn::Join": [
+                            ":*|arn:aws:kms:*:",
+                            {
+                              "Ref": "TrustedAccounts",
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+              "Sid": "PipelineCrossAccountArtifactsKey",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "PipelineCrossAccountArtifactsKey6069D325",
+        "Roles": [
+          {
+            "Ref": "DeploymentActionRole",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "SsmParamAcceleratorVersionFF83282D": {
       "Properties": {
