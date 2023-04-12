@@ -116,6 +116,7 @@ export class SecurityStack extends AcceleratorStack {
       elbLogBucketName,
       this.cloudwatchKey,
     );
+
     //
     // Create SSM Parameters
     //
