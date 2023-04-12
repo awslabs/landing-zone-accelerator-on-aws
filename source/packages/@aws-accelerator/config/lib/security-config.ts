@@ -472,7 +472,9 @@ export class SecurityConfigTypes {
 
   static readonly awsConfig = t.interface({
     enableConfigurationRecorder: t.boolean,
-    enableDeliveryChannel: t.boolean,
+    // enableDeliveryChannel deprecated
+    enableDeliveryChannel: t.optional(t.boolean),
+    overrideExisting: t.optional(t.boolean),
     aggregation: t.optional(this.awsConfigAggregation),
     ruleSets: t.array(this.awsConfigRuleSet),
   });
@@ -1848,7 +1850,9 @@ export class AwsConfigRuleSet implements t.TypeOf<typeof SecurityConfigTypes.aws
  * ```
  * awsConfig:
  *   enableConfigurationRecorder: true
+ *   ** enableDeliveryChannel DEPRECATED
  *   enableDeliveryChannel: true
+ *   overrideExisting: false
  *   aggregation:
  *     enable: true
  *     delegatedAdminAccount: LogArchive
@@ -1867,7 +1871,7 @@ export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig>
   /**
    * Indicates whether AWS Config recorder enabled.
    *
-   * To enable AWS Config, you must create a configuration recorder and a delivery channel.
+   * To enable AWS Config, you must create a configuration recorder
    *
    * ConfigurationRecorder resource describes the AWS resource types for which AWS Config records configuration changes. The configuration recorder stores the configurations of the supported resources in your account as configuration items.
    */
@@ -1875,9 +1879,18 @@ export class AwsConfig implements t.TypeOf<typeof SecurityConfigTypes.awsConfig>
   /**
    * Indicates whether delivery channel enabled.
    *
-   * AWS Config uses the delivery channel to deliver the configuration changes to your Amazon S3 bucket or Amazon SNS topic.
+   * AWS Config uses the delivery channel to deliver the configuration changes to your Amazon S3 bucket.
+   * DEPRECATED
    */
-  readonly enableDeliveryChannel = true;
+  readonly enableDeliveryChannel: boolean | undefined;
+  /**
+   * Indicates whether or not to override existing config recorder settings
+   * Must be enabled if any account and region combination has an
+   * existing config recorder, even if config recording is turned off
+   * The Landing Zone Accelerator will override the settings in all configured
+   * accounts and regions
+   */
+  readonly overrideExisting: boolean | undefined;
   /**
    * Config Recorder Aggregation configuration
    */
